@@ -133,7 +133,7 @@ This is the first release so there aren't any frequent questions yet, but here's
 
 *Q. Why aren't you using regular expressions?*
 
-> A. See https://www.explainxkcd.com/wiki/index.php/1171 for details.
+> A. See https://xkcd.com/1171/ for details.
 
 
 *Q. Can I use the `SwiftFormat.framework` inside another app?*

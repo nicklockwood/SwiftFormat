@@ -670,6 +670,12 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [indent]), output)
     }
     
+    func testIndentIfCase() {
+        let input = "{\nif case .Foo = error {}\n}"
+        let output = "{\n    if case .Foo = error {}\n}"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+    
     // MARK: indent comments
     
     func testCommentIndenting() {

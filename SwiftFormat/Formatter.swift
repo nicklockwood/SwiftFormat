@@ -776,8 +776,10 @@ public func indent(formatter: Formatter) {
                         setIndent(indent, atIndex: startOfLine(atIndex: i))
                     }
                     // Handle switch/case
-                        else if token.string == "case" || token.string == "default" {
-                        if scope.string == "{" {
+                    else if token.string == "case" || token.string == "default" {
+                        if formatter.tokenAtIndex(lastNonWhitespaceIndex)?.string == "if" {
+                            // it was an if case statement
+                        } else if scope.string == "{" {
                             // walk backwards to see if this is an switch or enum
                             var isSwitch = true
                             var subscopeStack: [Token] = []

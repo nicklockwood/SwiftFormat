@@ -541,7 +541,7 @@ func tokenize(source: String) -> [Token] {
                     case .StartOfScope:
                         wasOperator = (token.string == "\"")
                     case .Operator:
-                        wasOperator = ![">", ",", ":", ";", "?", "!", "."].contains(token.string)
+                        wasOperator = !["->", ">", ",", ":", ";", "?", "!", "."].contains(token.string)
                     default:
                         wasOperator = false
                     }

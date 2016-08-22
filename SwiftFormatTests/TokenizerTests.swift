@@ -589,4 +589,19 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }
+    
+    func testGenericAsFunctionArg() {
+        let input = "Foo<Bar,Baz>->Void"
+        let output = [
+            Token(.Identifier, "Foo"),
+            Token(.StartOfScope, "<"),
+            Token(.Identifier, "Bar"),
+            Token(.Operator, ","),
+            Token(.Identifier, "Baz"),
+            Token(.EndOfScope, ">"),
+            Token(.Operator, "->"),
+            Token(.Identifier, "Void"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
 }

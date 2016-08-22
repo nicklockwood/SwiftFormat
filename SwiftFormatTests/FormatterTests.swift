@@ -39,8 +39,8 @@ class FormatterTests: XCTestCase {
     // MARK: spaceAroundParens
     
     func testSpaceAfterSet() {
-        let input = "private (set)var foo: Int"
-        let output = "private (set) var foo: Int"
+        let input = "private(set)var foo: Int"
+        let output = "private(set) var foo: Int"
         XCTAssertEqual(format(input, rules: [spaceAroundParens]), output)
     }
     
@@ -81,8 +81,8 @@ class FormatterTests: XCTestCase {
     }
     
     func testSpaceBetweenPrivateAndSet() {
-        let input = "private(set) var foo: Int"
-        let output = "private (set) var foo: Int"
+        let input = "private (set) var foo: Int"
+        let output = "private(set) var foo: Int"
         XCTAssertEqual(format(input, rules: [spaceAroundParens]), output)
     }
     

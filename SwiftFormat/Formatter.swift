@@ -175,9 +175,6 @@ public func spaceAroundParens(formatter: Formatter) {
     func spaceAfter(identifier: String) -> Bool {
         switch identifier {
         case "internal",
-                "fileprivate",
-                "private",
-                "public",
                 "case",
                 "for",
                 "guard",

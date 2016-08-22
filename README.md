@@ -66,7 +66,7 @@ Do that as follows:
 
 2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `${SRCROOT}/path/to/swiftformat -f /path/to/your/swift/code/`
 
-**Note:** This will slightly increase your build time, but shouldn't impact it too much, as swiftformat is quite fast compared to compilation. If you find that it has a noticable impact, file a bug report and I'll try to diagnose why it's running so slowly.
+**Note:** This will slightly increase your build time, but shouldn't impact it too much, as swiftformat is quite fast compared to compilation. If you find that it has a noticeable impact, file a bug report and I'll try to diagnose why it's running so slowly.
 
 
 FAQ
@@ -190,9 +190,9 @@ What's next?
 
 I imagine people will discover (and hopefully report) a lot of bugs in this first release, so the next step will be to fix all of those.
 
-There are a bunch of addtional rules I'd like to add, such as removing trailing semicolons, or correctly formatting headerdoc comments.
+There are a bunch of additional rules I'd like to add, such as removing trailing semicolons, or correctly formatting headerdoc comments.
 
-At some point I should probably add an intermediate parsing stage that identifies high-level constructs such as classes and functions and assembles them into a syntax tree. I did't bother doing this originally because I thought it would be easier to implemement formatting at the token level, but in fact this just meant that the logic for distinguishing between syntax constructs had to be split between the tokenizer and the formatting rules, making both of them more complex than they aught to be.
+At some point I should probably add an intermediate parsing stage that identifies high-level constructs such as classes and functions and assembles them into a syntax tree. I did't bother doing this originally because I thought it would be easier to implement formatting at the token level, but in fact this just meant that the logic for distinguishing between syntax constructs had to be split between the tokenizer and the formatting rules, making both of them more complex than they aught to be.
      
      
 Release notes

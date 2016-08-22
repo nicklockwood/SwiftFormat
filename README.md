@@ -174,7 +174,7 @@ Here are all the rules that SwiftFormat currently applies:
 FAQ
 -----
 
-This is the first release so there aren't any frequent questions yet, but here's what I imagine you might ask:
+There haven't been many questions yet, but here's what I'd like to think people are wondering:
 
 
 *Q. Does SwiftFormat support Swift 3?*
@@ -304,6 +304,7 @@ Version 0.2
 
 - Fixed formatting of generic function types
 - Fixed indenting of `if case` statements
+- Fixed indenting of else if separated from if statement by a comment
 - Changed `private(set)` indenting to match Apple standard
 - Added swiftformat as a build phase to SwiftFormat, so I'm eating my own dogfood
 

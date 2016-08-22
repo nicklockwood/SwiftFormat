@@ -69,6 +69,108 @@ Do that as follows:
 **Note:** This will slightly increase your build time, but shouldn't impact it too much, as swiftformat is quite fast compared to compilation. If you find that it has a noticeable impact, file a bug report and I'll try to diagnose why it's running so slowly.
 
 
+So what does it actually do?
+------------------------------
+
+Here are all the rules that SwiftFormat currently applies:
+
+*spaceAroundParens* - contextually adjusts the space around ( ). For example:
+
+    init (foo) --> init(foo)
+
+    switch(x){ --> switch (x) {
+    
+*spaceInsideParens* - removes the space inside ( ). For example:
+
+	( a, b ) --> (a, b)
+	
+*spaceAroundBrackets* - contextually adjusts the space around [ ]. For example:
+
+	foo as[String] --> foo as [String]
+	
+	foo = bar [5] --> foo = bar[5]
+
+*spaceInsideBrackets* - removes the space inside [ ]. For example:
+
+	[ 1, 2, 3 ] --> [1, 2, 3]
+
+*spaceAroundBraces* - contextually removes the space around { }. For example:
+
+	foo.filter{ return true }.map{ $0 } --> foo.filter { return true }.map { $0 }
+	
+	foo({}) --> foo({})
+
+*spaceInsideBraces* - adds space inside { }. For example:
+
+	foo.filter {return true} --> foo.filter { return true }
+
+*spaceAroundGenerics* - removes the space around < >. For example:
+
+	Foo <Bar> () --> Foo<Bar>()
+
+*spaceInsideGenerics* - removes the space inside < >. For example:
+
+	Foo< Bar, Baz > --> Foo<Bar, Baz>
+
+*spaceAroundOperators* - contextually adjusts the space around infix operators:
+
+	foo . bar() --> foo.bar()
+	
+	a+b+c --> a + b + c
+
+*noConsecutiveSpaces* - reduces a sequence of spaces to a single space:
+
+    let  foo =  5 --> let foo = 5
+
+*noTrailingWhitespace* - removes the whitespace at the end of a line
+
+*noConsecutiveBlankLines* - reduces multiple sequential blank lines to a single blank line
+
+*linebreakAtEndOfFile* - ensures that the last line of the file is empty
+
+*indent* - adjusts leading whitespace based on scope and line wrapping:
+
+    if x {           if x {
+     //foo               //foo
+    } else {   -->   } else {
+        //bar            //bar
+       }             }
+       
+    foo = [            foo = [
+           foo,            foo,
+          bar,  -->        bar,
+         baz               baz
+         ]             ]
+
+*knrBraces* - implements K&R style braces, where the opening brace is on the same line as related code:
+
+    if x              if x {
+    {                     //foo
+        //foo   -->   } 
+    }    	          else {
+    else                  //bar
+    {                 }
+    	//bar
+    }
+
+*elseOnSameLine* - ensures the else following an if statement appears on the same line as the closing }
+
+    if x {            if x {
+        //foo             //foo
+    }           -->   } else {
+    else {                //bar
+        //bar         }
+    }
+
+*trailingCommas* - adds a trailing , to the last line in a multiline array or dictionary literal:
+
+    foo = [         foo = [
+        foo,            foo,
+        bar,  -->       bar,
+        baz             baz,
+    ]               ]
+
+
 FAQ
 -----
 
@@ -90,7 +192,7 @@ This is the first release so there aren't any frequent questions yet, but here's
 > A. Almost certainly. If you figure out how, please create a pull request with the instructions.
 
 
-*Q. I don't like how SwiftFormat indented my code*
+*Q. I don't like how SwiftFormat formatted my code*
 
 > A. That's not a question (but see below).
 

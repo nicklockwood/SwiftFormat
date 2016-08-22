@@ -2,5 +2,5 @@ language: objective-c
 osx_image: xcode7.3
 before_script:
 - brew update
-- brew upgrade xctool
+- brew upgrade xctool || true
 script: xctool test -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx

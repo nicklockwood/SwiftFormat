@@ -151,6 +151,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 01A0EAB81D5DB4D000A0A8E3 /* Build configuration list for PBXNativeTarget "SwiftFormat" */;
 			buildPhases = (
+				0120A1351D6BB010006EFF5D /* ShellScript */,
 				01A0EA9F1D5DB4CF00A0A8E3 /* Sources */,
 				01A0EAA01D5DB4CF00A0A8E3 /* Frameworks */,
 				01A0EAA11D5DB4CF00A0A8E3 /* Headers */,
@@ -257,6 +258,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0120A1351D6BB010006EFF5D /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "CommandLineTool/swiftformat .";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		01A0EA9F1D5DB4CF00A0A8E3 /* Sources */ = {

@@ -300,6 +300,13 @@ At some point I should probably add an intermediate parsing stage that identifie
 Release notes
 ----------------
 
+Version 0.2
+
+- Fixed formatting of generic function types
+- Fixed indenting of `if case` statements
+- Changed `private(set)` indenting to match Apple standard
+- Added swiftformat as a build phase to SwiftFormat, so I'm eating my own dogfood
+
 Version 0.1
 
 - First release

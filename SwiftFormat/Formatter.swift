@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  Formatter.swift
 //
-//  Version 0.1
+//  Version 0.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -46,7 +46,7 @@ public struct FormattingOptions {
 /// directly is that it allows mutation during enumeration, and
 /// transparently handles changes that affect the current token index.
 public class Formatter {
-    private (set) var tokens: [Token]
+    private(set) var tokens: [Token]
     let options: FormattingOptions
     
     private var indexStack: [Int] = []
@@ -129,7 +129,7 @@ public class Formatter {
         }
         indexStack.popLast()
     }
-
+    
     /// As above, but only loops through tokens with the specified type
     public func forEachToken(ofType type: TokenType, _ body: (Int, Token) -> Void) {
         forEachToken(matching: { $0.type == type }, body)
@@ -480,7 +480,7 @@ public func spaceAroundOperators(formatter: Formatter) {
                             (previousNonWhitespaceToken.string == "?" && scopeStack.last?.string != "?") ||
                             (previousNonWhitespaceToken.string == "!" && scopeStack.last?.string != "!")) &&
                             (previousNonWhitespaceToken.type != .Identifier ||
-                                !spaceAfter(previousNonWhitespaceToken.string)) {
+                            !spaceAfter(previousNonWhitespaceToken.string)) {
                             if previousTokenWasWhitespace {
                                 formatter.removeTokenAtIndex(i - 1)
                             }
@@ -616,6 +616,7 @@ public func indent(formatter: Formatter) {
     
     var scopeIndexStack: [Int] = []
     var scopeStartLineIndexes: [Int] = []
+    var lastNonWhitespaceOrLinebreakIndex = -1
     var lastNonWhitespaceIndex = -1
     var indentStack = [""]
     var lineIndex = 0
@@ -704,8 +705,7 @@ public func indent(formatter: Formatter) {
             case .Identifier:
                 // TODO: handle in
                 switch token.string {
-                case "else",
-                        "as",
+                case "as",
                         "dynamicType",
                         "false",
                         "is",
@@ -713,6 +713,11 @@ public func indent(formatter: Formatter) {
                         "rethrows",
                         "throws",
                         "true":
+                    return false
+                case "else":
+                    if let token = formatter.tokenAtIndex(lastNonWhitespaceOrLinebreakIndex) {
+                        return token.string == "}"
+                    }
                     return false
                 default:
                     return true
@@ -838,6 +843,9 @@ public func indent(formatter: Formatter) {
                 setIndent(indent, atIndex: startOfLine(atIndex: i))
             }
             lastNonWhitespaceIndex = i
+            if token.type != .Linebreak {
+                lastNonWhitespaceOrLinebreakIndex = i
+            }
         }
     }
 }

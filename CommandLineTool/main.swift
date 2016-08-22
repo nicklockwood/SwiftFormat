@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  main.swift
 //
-//  Version 0.1
+//  Version 0.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -33,7 +33,7 @@
 
 import Foundation
 
-let version = "0.1"
+let version = "0.2"
 
 func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOptions options: FormattingOptions) -> Int {
     let manager = NSFileManager.defaultManager()
@@ -116,7 +116,7 @@ func preprocessArguments(args: [String], _ names: [String]) -> [String: String]?
             // Handle quotes and spaces
             var arg = arg
             var unterminated = false
-            if quoted  {
+            if quoted {
                 if arg.hasSuffix("\"") {
                     arg = arg.substringToIndex(arg.endIndex.advancedBy(-1))
                     unterminated = false

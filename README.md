@@ -12,11 +12,11 @@ It applies a set of rules to the whitespace around the code, while leaving the m
 Why would I want to do that?
 -----------------------------
 
-Many programmers have a preferred style for formatting their code, and other programmers seems to be entirely blind to the existing formatting conventions of a project (to the enragement of their colleagues).
+Many programmers have a preferred style for formatting their code, and others seem entirely blind to the existing formatting conventions of a project (to the enragement of their colleagues).
 
-When collaborating on a project, it can be helpful to agree on a common coding style, but enforcing that manually is tedious and error-prone, and can lead to bad feeling if some developers take it more seriously than others.
+When collaborating on a project, it can be helpful to agree on a common coding style, but enforcing that manually is tedious and error-prone, and can lead to bad feeling if some participants take it more seriously than others.
 
-Having a tool to automatically enforce a common style eliminates those issues, and lets you focus on the operation of the code, not its presentation.
+Having a tool to automatically enforce a common style eliminates those issues, and lets you focus on the *operation* of the code, not its presentation.
 
 
 How do I install it?
@@ -38,7 +38,7 @@ How do I use it?
 
 If you followed the installation instructions above, you can now just type `swiftformat .` (that's a space and then a period after the command) in the terminal to format any swift files in the current directory.
 
-**WARNING:** `swiftformat .` will overwrite any swift files it finds in the current directory or any subfolders therein. If you run it from your home directory, it will probably reformat every swift file on your hard drive.
+**WARNING:** `swiftformat .` will overwrite any swift files it finds in the current directory, and any subfolders therein. If you run it from your home directory, it will probably reformat every swift file on your hard drive.
 
 To use it safely, do the following:
 
@@ -46,19 +46,19 @@ To use it safely, do the following:
 
 2. Make sure that you have committed all your changes to that code safely in git (or whatever source control system you use. If you don't use source control, rethink your life choices).
 
-3. In Terminal, type `swiftformat /path/to/your/code/` (the path can either be absolute, or relative to the current directory)
+3. In Terminal, type `swiftformat /path/to/your/code/` (the path can either be absolute, or relative to the current directory. Absolute is safer).
 
-4. Use your source control system to check the changes, and verify that no undesirable changes have been introduced (if they have, file a bug)
+4. Use your source control system to check the changes, and verify that no undesirable changes have been introduced (if they have, file a bug).
 
-5. Commit the changes
+5. (Optional) commit the changes.
 
-This *should* ensure that you avoid catastrophic data loss, but in the unlikely event that it wipes your hard drive, please note that I accept no responsibility.
+This *should* ensure that you avoid catastrophic data loss, but in the unlikely event that it wipes your hard drive, **please note that I accept no responsibility**.
 
 
-That seems like an awkward process - can I automate it?
----------------------------------------------------------
+That seems like an cumbersome process - can I automate it?
+----------------------------------------------------------
 
-Yes. Once you are confident that SwiftFormat isn't going to wreck your code, you might want to add it as a build phase to your Xcode project, so  it will run each time you press Cmd-R or Cmd-B.
+Yes. Once you are confident that SwiftFormat isn't going to wreck your code, you might want to add a build phase to your Xcode project, so it will run each time you press Cmd-R or Cmd-B.
 
 Do that as follows:
 
@@ -66,11 +66,11 @@ Do that as follows:
 
 2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `${SRCROOT}/path/to/swiftformat -f /path/to/your/swift/code/`
 
-**Note:** This will slightly increase your build time, but shouldn't impact it too much, as swiftformat is quite fast compared to compilation. If you find that it has a noticeable impact, file a bug report and I'll try to diagnose why it's running so slowly.
+**Note:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
 
 
 So what does it actually do?
-------------------------------
+----------------------------
 
 Here are all the rules that SwiftFormat currently applies:
 
@@ -204,7 +204,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 > With a bit more effort, you can also edit the existing rules or create new ones. If you think your changes might be generally useful, make a pull request.
 
 
-*Q. Why did you write *yet another* Swift formatting tool?*
+*Q. Why did you write yet another Swift formatting tool?*
 
 > A. Surprisingly, there really aren't that many other options out there, and none of them currently support all the rules I wanted. The only other comparable ones I'm aware of are Realm's [SwiftLint](https://github.com/realm/SwiftLint) and Jintin's [Swimat](https://github.com/Jintin/Swimat) - you might want to try those if SwiftFormat doesn't meet your requirements.
 
@@ -228,7 +228,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 > A. First it loops through the source file character-by-character and breaks it into tokens, such as `Number`, `Identifier`, `Whitespace`, etc. That's handled by the functions in `Tokenizer.swift`.
 
-> Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening { appears on the same line as the preceding non-whitespace token". Each rule is designed to be relatively independent of the others, so they can be enabled or disabled individually. The rules are all defined as floating functions in `Formatter.swift`.
+> Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening `{` appears on the same line as the preceding non-whitespace token". Each rule is designed to be relatively independent of the others, so they can be enabled or disabled individually (the order matters though). The rules are all defined as floating functions in `Formatter.swift`.
 
 > Finally, the modified token array is stitched back together to re-generate the source file.
 
@@ -290,11 +290,11 @@ Or begin each line with a `*` (or any other non-whitespace character)
 What's next?
 --------------
 
-I imagine people will discover (and hopefully report) a lot of bugs in this first release, so the next step will be to fix all of those.
+I expect people will discover (and hopefully report) a lot of bugs in this first release, so the next step will be to fix all of those.
 
 There are a bunch of additional rules I'd like to add, such as removing trailing semicolons, or correctly formatting headerdoc comments.
 
-At some point I should probably add an intermediate parsing stage that identifies high-level constructs such as classes and functions and assembles them into a syntax tree. I did't bother doing this originally because I thought it would be easier to implement formatting at the token level, but in fact this just meant that the logic for distinguishing between syntax constructs had to be split between the tokenizer and the formatting rules, making both of them more complex than they aught to be.
+At some point I should probably add an intermediate parsing stage that identifies high-level constructs such as classes and functions and assembles them into a syntax tree. I did't bother doing this originally because I thought it would be easier to implement formatting at the token level, but in fact this just meant that the logic for distinguishing between syntax constructs had to be split between the tokenizer and the formatting rules, making both of them more complex than they ought to be.
      
      
 Release notes
@@ -304,7 +304,7 @@ Version 0.2
 
 - Fixed formatting of generic function types
 - Fixed indenting of `if case` statements
-- Fixed indenting of else if separated from if statement by a comment
+- Fixed indenting of `else` when separated from `if` statement by a comment
 - Changed `private(set)` indenting to match Apple standard
 - Added swiftformat as a build phase to SwiftFormat, so I'm eating my own dogfood
 

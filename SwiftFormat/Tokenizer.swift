@@ -206,7 +206,7 @@ private extension String.CharacterView {
     
     mutating func parseOperator() -> Token? {
         func isHead(c: Character) -> Bool {
-            if "./=­-+!*%<>&|^~?".characters.contains(c) {
+            if "./=­-+!*%&|^~?".characters.contains(c) {
                 return true
             }
             switch c.unicodeValue {
@@ -250,10 +250,9 @@ private extension String.CharacterView {
         
         func scanOperator() -> String? {
             if let head = scanCharacter(isHead) {
-                if let tail = scanCharacters(isTail) {
-                    return head + tail
-                }
-                return head
+                let tail = scanCharacters(isTail) ?? ""
+                let chevron = scanCharacter({ $0 == ">" }) ?? ""
+                return head + tail + chevron
             }
             return nil
         }
@@ -265,11 +264,11 @@ private extension String.CharacterView {
     }
     
     mutating func parseStartOfScope() -> Token? {
-        return parseToken(.StartOfScope, oneOf: "([{\"".characters)
+        return parseToken(.StartOfScope, oneOf: "<([{\"".characters)
     }
     
     mutating func parseEndOfScope() -> Token? {
-        return parseToken(.EndOfScope, oneOf: "}])".characters)
+        return parseToken(.EndOfScope, oneOf: "}])>".characters)
     }
     
     mutating func parseIdentifier() -> Token? {
@@ -488,6 +487,9 @@ func tokenize(source: String) -> [Token] {
     
     func processCommentBody() {
         var comment = ""
+        if let whitespace = characters.parseWhitespace() {
+            tokens.append(whitespace)
+        }
         while let c = characters.scanCharacter({ _ in true }) {
             if c == "/" {
                 if characters.scanCharacter({ $0 == "*" }) != nil {
@@ -584,81 +586,20 @@ func tokenize(source: String) -> [Token] {
             let scope = tokens[scopeIndex]
             if token.closesScopeForToken(scope) {
                 scopeIndexStack.popLast()
-                if token.string.hasPrefix(">") {
-                    // Check if it was a confirmed generic
-                    assert(scope.string == "<")
-                    if scope.type == .StartOfScope {
-                        closedGenericScopeIndexes.append(scopeIndex)
-                        tokens[tokens.count - 1] = Token(.EndOfScope, ">")
-                        if token.string != ">" {
-                            // Need to split the token
-                            let suffix = String(token.string.characters.dropFirst())
-                            tokens.append(Token(.Operator, suffix))
-                            processToken()
-                            return
-                        }
-                    }
+                if token.string == ">" {
+                    closedGenericScopeIndexes.append(scopeIndex)
                 } else if scopeIndexStack.last != nil && tokens[scopeIndexStack.last!].string == "\"" {
                     processStringBody()
                 }
                 return
             } else if scope.string == "<" {
-                if scope.type == .Operator {
-                    // Scope hasn't been confirmed as a generic yet
-                    switch token.type {
-                    case .StartOfScope:
-                        if ["<", "[", "("].contains(token.string) {
-                            // Assume token is an identifier until proven otherwise
-                            tokens[scopeIndex] = Token(.StartOfScope, "<")
-                            processToken()
-                            return
-                        }
-                        // Opening < must have been an operator
-                        scopeIndexStack.removeAtIndex(scopeIndexStack.count - 2)
-                    case .Identifier:
-                        // If the first token is an identifier, we'll assume
-                        // that it's a generic until proven otherwise
-                        tokens[scopeIndex] = Token(.StartOfScope, "<")
-                        processToken()
-                        return
-                    case .Whitespace, .Linebreak:
-                        // Might be generic or operator - can't tell yet
-                        return
-                    default:
-                        // Opening < must have been an operator
-                        scopeIndexStack.popLast()
-                    }
-                } else {
-                    // We think it's a generic at this point, but could be wrong
-                    switch token.type {
-                    case .Operator:
-                        if !["?>", "!>"].contains(token.string) {
-                            fallthrough
-                        }
-                        // Need to split token
-                        tokens[tokens.count - 1] = Token(.Operator, "?")
-                        let suffix = String(token.string.characters.dropFirst())
-                        tokens.append(Token(.Operator, suffix))
-                        processToken()
-                        return
-                    case .StartOfScope:
-                        if !["<", "[", "(", ".", ",", ":", "==", "?", "!"].contains(token.string) {
-                            // Not a generic scope
-                            tokens[scopeIndex] = Token(.Operator, "<")
-                            scopeIndexStack.popLast()
-                            processToken()
-                            return
-                        }
-                    case .EndOfScope:
-                        // If we encountered a scope token that wasn't a < or >
-                        // then the opening < must have been an operator after all
-                        tokens[scopeIndex] = Token(.Operator, "<")
-                        scopeIndexStack.popLast()
-                        processToken()
-                        return
-                    default:
-                        break
-                    }
+                // We think it's a generic at this point, but could be wrong
+                if ["?>", "!>"].contains(token.string) {
+                    // Need to split token
+                    tokens[tokens.count - 1] = Token(.Operator, "?")
+                    tokens.append(Token(.EndOfScope, ">"))
+                    processToken()
+                    return
                 }
             }
         }
@@ -667,9 +608,6 @@ func tokenize(source: String) -> [Token] {
             if token.string == "\"" {
                 processStringBody()
             } else if token.string == "/*" {
-                if let whitespace = characters.parseWhitespace() {
-                    tokens.append(whitespace)
-                }
                 processCommentBody()
             } else if token.string == "//" {
                 if let whitespace = characters.parseWhitespace() {
@@ -680,9 +618,6 @@ func tokenize(source: String) -> [Token] {
                 }
                 scopeIndexStack.popLast()
             }
-        } else if token.type == .Operator && token.string == "<" {
-            // Potentially the start of a generic, so we'll add to scope stack
-            scopeIndexStack.append(tokens.count - 1)
         }
     }
     
@@ -691,14 +626,11 @@ func tokenize(source: String) -> [Token] {
         processToken()
     }
     
-    if let scopeIndex = scopeIndexStack.last {
-        let scope = tokens[scopeIndex]
-        if scope.type == .StartOfScope && scope.string == "<" {
-            // If we encountered an end-of-file while a generic scope was
-            // still open, the opening < must have been an operator after all
-            tokens[scopeIndex] = Token(.Operator, "<")
-            scopeIndexStack.popLast()
-        }
+    if let scopeIndex = scopeIndexStack.last where tokens[scopeIndex].string == "<" {
+        // If we encountered an end-of-file while a generic scope was
+        // still open, the opening < must have been an operator after all
+        tokens[scopeIndex] = Token(.Operator, "<")
+        scopeIndexStack.popLast()
     }
     
     return tokens

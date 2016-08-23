@@ -713,4 +713,19 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }
+    
+    func testNestedOptionalGenericType() {
+        let input = "Foo<Bar<T?>>"
+        let output = [
+            Token(.Identifier, "Foo"),
+            Token(.StartOfScope, "<"),
+            Token(.Identifier, "Bar"),
+            Token(.StartOfScope, "<"),
+            Token(.Identifier, "T"),
+            Token(.Operator, "?"),
+            Token(.EndOfScope, ">"),
+            Token(.EndOfScope, ">"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
 }

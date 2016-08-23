@@ -667,8 +667,14 @@ func tokenize(source: String) -> [Token] {
             if token.string == "\"" {
                 processStringBody()
             } else if token.string == "/*" {
+                if let whitespace = characters.parseWhitespace() {
+                    tokens.append(whitespace)
+                }
                 processCommentBody()
             } else if token.string == "//" {
+                if let whitespace = characters.parseWhitespace() {
+                    tokens.append(whitespace)
+                }
                 if let comment = characters.scanCharacters({ $0 != "\n" && $0 != "\r" }) {
                     tokens.append(Token(.CommentBody, comment))
                 }

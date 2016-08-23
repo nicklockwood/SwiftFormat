@@ -115,6 +115,16 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqualArrays(tokenize(input), output)
     }
     
+    func testSingleLineCommentWithSpace() {
+        let input = "// foo"
+        let output = [
+            Token(.StartOfScope, "//"),
+            Token(.Whitespace, " "),
+            Token(.CommentBody, "foo"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
     func testSingleLineCommentWithLinebreak() {
         let input = "//foo\nbar"
         let output = [
@@ -132,6 +142,17 @@ class TokenizerTests: XCTestCase {
         let input = "/*foo*/"
         let output = [
             Token(.StartOfScope, "/*"),
+            Token(.CommentBody, "foo"),
+            Token(.EndOfScope, "*/"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testSingleLineMultilineCommentWithSpace() {
+        let input = "/* foo*/"
+        let output = [
+            Token(.StartOfScope, "/*"),
+            Token(.Whitespace, " "),
             Token(.CommentBody, "foo"),
             Token(.EndOfScope, "*/"),
         ]

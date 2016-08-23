@@ -452,6 +452,19 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [noConsecutiveSpaces]), output)
     }
     
+    func testNoConsecutiveSpacesAtStartOfMultilineComment() {
+        // NOTE: this is kind of an unintended side-effect, but I think it's OK
+        let input = "/*    comment */"
+        let output = "/* comment */"
+        XCTAssertEqual(format(input, rules: [noConsecutiveSpaces]), output)
+    }
+    
+    func testNoConsecutiveSpacesDoesntAffectSingleLineComments() {
+        let input = "//    comment"
+        let output = "//    comment"
+        XCTAssertEqual(format(input, rules: [noConsecutiveSpaces]), output)
+    }
+    
     // MARK: noTrailingWhitespace
     
     func testNoTrailingWhitespace() {
@@ -811,4 +824,37 @@ class FormatterTests: XCTestCase {
         let output = "foo[bar]"
         XCTAssertEqual(format(input, rules: [trailingCommas]), output)
     }
+    
+    // MARK: todos
+    
+    func testMarkIsUpdated() {
+        let input = "//MARK foo"
+        let output = "//MARK: foo"
+        XCTAssertEqual(format(input, rules: [todos]), output)
+    }
+    
+    func testTodoIsUpdated() {
+        let input = "// TODO foo"
+        let output = "// TODO: foo"
+        XCTAssertEqual(format(input, rules: [todos]), output)
+    }
+    
+    func testFixmeIsUpdated() {
+        let input = "//    FIXME foo"
+        let output = "//    FIXME: foo"
+        XCTAssertEqual(format(input, rules: [todos]), output)
+    }
+    
+    func testCorrectMarkIsIgnored() {
+        let input = "//MARK: foo"
+        let output = "//MARK: foo"
+        XCTAssertEqual(format(input, rules: [todos]), output)
+    }
+    
+    func testMarkInsideMultilineComment() {
+        let input = "/* MARK foo */"
+        let output = "/* MARK: foo */"
+        XCTAssertEqual(format(input, rules: [todos]), output)
+    }
+    
 }

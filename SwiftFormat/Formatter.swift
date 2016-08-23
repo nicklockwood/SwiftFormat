@@ -525,7 +525,8 @@ public func spaceAroundOperators(formatter: Formatter) {
 /// meaning and lead to noise in commits.
 public func noConsecutiveSpaces(formatter: Formatter) {
     formatter.forEachToken(ofType: .Whitespace) { i, token in
-        if let previous = formatter.tokenAtIndex(i - 1) where previous.type != .Linebreak {
+        if let previous = formatter.tokenAtIndex(i - 1) where
+            previous.type != .Linebreak && previous.string != "//" {
             formatter.replaceTokenAtIndex(i, with: Token(.Whitespace, " "))
         }
     }
@@ -707,7 +708,7 @@ public func indent(formatter: Formatter) {
         if let token = formatter.tokenAtIndex(i) {
             switch token.type {
             case .Identifier:
-                // TODO: handle in
+                // TODO: handle "in"
                 switch token.string {
                 case "as",
                         "dynamicType",
@@ -936,6 +937,19 @@ public func trailingCommas(formatter: Formatter) {
     }
 }
 
+/// Ensure that TODO, MARK and FIXME comments are followed by a : as required
+public func todos(formatter: Formatter) {
+    formatter.forEachToken(ofType: .CommentBody) { i, token in
+        let string = token.string
+        for tag in ["TODO", "MARK", "FIXME"] {
+            if string.hasPrefix(tag) && !string.hasPrefix(tag + ":") {
+                let suffix = string.substringFromIndex(tag.endIndex)
+                formatter.replaceTokenAtIndex(i, with: Token(.CommentBody, tag + ":" + suffix))
+            }
+        }
+    }
+}
+
 public let defaultRules: [FormatRule] = [
     spaceAroundParens,
     spaceInsideParens,
@@ -954,4 +968,5 @@ public let defaultRules: [FormatRule] = [
     knrBraces,
     elseOnSameLine,
     trailingCommas,
+    todos,
 ]

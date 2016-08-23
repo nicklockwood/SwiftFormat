@@ -170,6 +170,12 @@ Here are all the rules that SwiftFormat currently applies:
         baz             baz,
     ]               ]
 
+*todos* - ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon (else they're ignored by Xcode)
+
+    /* TODO fix this properly */  -->  /* TODO: fix this properly */
+    
+    // MARK - UIScrollViewDelegate  -->  // MARK: - UIScrollViewDelegate
+
 
 FAQ
 -----
@@ -305,6 +311,8 @@ Version 0.3
 - Fixed several cases where generics were misidentified as operators
 - Fixed a bug where a comment on a line before a brace broke K&R indenting
 - Fixed a bug where a comment on a previous line caused incorrect indenting for wrapped lines
+- Added new `todos` rule, for ensuring `TODO:`, `MARK:`, and `FIXME:` comments are formatted correctly
+- Whitespace at the start of comments is now handled differently, but it shouldn't affect output
 
 Version 0.2
 

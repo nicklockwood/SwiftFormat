@@ -730,6 +730,18 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [knrBraces]), output)
     }
     
+    func testBracesAfterComment() {
+        let input = "func foo() //comment\n{\n    statement\n}"
+        let output = "func foo() { //comment\n    statement\n}"
+        XCTAssertEqual(format(input, rules: [knrBraces]), output)
+    }
+    
+    func testBracesAfterMultilineComment() {
+        let input = "func foo() /* comment/ncomment */\n{\n    statement\n}"
+        let output = "func foo() { /* comment/ncomment */\n    statement\n}"
+        XCTAssertEqual(format(input, rules: [knrBraces]), output)
+    }
+
     func testExtraSpaceNotAddedBeforeBrace() {
         let input = "foo({ bar })"
         let output = "foo({ bar })"

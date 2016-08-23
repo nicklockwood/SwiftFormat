@@ -74,7 +74,7 @@ public class Formatter {
         }
     }
     
-    /// Returns the tokens in the specified range with new tokens
+    /// Replaces the tokens in the specified range with new tokens
     public func replaceTokensInRange(range: Range<Int>, with tokens: Token...) {
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
@@ -99,6 +99,11 @@ public class Formatter {
                 indexStack[i] -= 1
             }
         }
+    }
+    
+    /// Removes the tokens in the specified range
+    public func removeTokensInRange(range: Range<Int>) {
+        replaceTokensInRange(range)
     }
     
     /// Removes the last token
@@ -147,7 +152,6 @@ public class Formatter {
     /// can't be usefully identified by their string value
     public func forEachToken(string: String, _ body: (Int, Token) -> Void) {
         forEachToken(matching: {
-            // Exclude string and comment bodies as this will cause false-positive matches
             return $0.string == string && $0.type != .StringBody && $0.type != .CommentBody
         }, body)
     }
@@ -856,16 +860,26 @@ public func indent(formatter: Formatter) {
 public func knrBraces(formatter: Formatter) {
     formatter.forEachToken("{") { i, token in
         var index = i - 1
-        var containsLinebreak = false
+        var linebreakIndex: Int?
         while let token = formatter.tokenAtIndex(index) {
             switch token.type {
             case .Linebreak:
-                containsLinebreak = true
-            case .Whitespace:
+                linebreakIndex = index
+            case .Whitespace, .CommentBody:
                 break
+            case .StartOfScope:
+                if token.string != "/*" && token.string != "//" {
+                    fallthrough
+                }
+            case .EndOfScope:
+                if token.string != "*/" {
+                    fallthrough
+                }
             default:
-                if containsLinebreak {
-                    formatter.replaceTokensInRange(index + 1 ..< i, with: Token(.Whitespace, " "))
+                if let linebreakIndex = linebreakIndex {
+                    formatter.removeTokensInRange(linebreakIndex ... i)
+                    formatter.insertToken(Token(.Whitespace, " "), atIndex: index + 1)
+                    formatter.insertToken(Token(.StartOfScope, "{"), atIndex: index + 2)
                 }
                 return
             }

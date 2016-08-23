@@ -590,7 +590,7 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqualArrays(tokenize(input), output)
     }
     
-    func testGenericAsFunctionArg() {
+    func testGenericAsFunctionType() {
         let input = "Foo<Bar,Baz>->Void"
         let output = [
             Token(.Identifier, "Foo"),
@@ -601,6 +601,94 @@ class TokenizerTests: XCTestCase {
             Token(.EndOfScope, ">"),
             Token(.Operator, "->"),
             Token(.Identifier, "Void"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testGenericContainingArrayType() {
+        let input = "Foo<[Bar],Baz>"
+        let output = [
+            Token(.Identifier, "Foo"),
+            Token(.StartOfScope, "<"),
+            Token(.StartOfScope, "["),
+            Token(.Identifier, "Bar"),
+            Token(.EndOfScope, "]"),
+            Token(.Operator, ","),
+            Token(.Identifier, "Baz"),
+            Token(.EndOfScope, ">"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testGenericContainingTupleType() {
+        let input = "Foo<(Bar,Baz)>"
+        let output = [
+            Token(.Identifier, "Foo"),
+            Token(.StartOfScope, "<"),
+            Token(.StartOfScope, "("),
+            Token(.Identifier, "Bar"),
+            Token(.Operator, ","),
+            Token(.Identifier, "Baz"),
+            Token(.EndOfScope, ")"),
+            Token(.EndOfScope, ">"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testGenericContainingArrayAndTupleType() {
+        let input = "Foo<[Bar],(Baz)>"
+        let output = [
+            Token(.Identifier, "Foo"),
+            Token(.StartOfScope, "<"),
+            Token(.StartOfScope, "["),
+            Token(.Identifier, "Bar"),
+            Token(.EndOfScope, "]"),
+            Token(.Operator, ","),
+            Token(.StartOfScope, "("),
+            Token(.Identifier, "Baz"),
+            Token(.EndOfScope, ")"),
+            Token(.EndOfScope, ">"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testGenericFollowedByIn() {
+        let input = "Foo<Bar,Baz> in"
+        let output = [
+            Token(.Identifier, "Foo"),
+            Token(.StartOfScope, "<"),
+            Token(.Identifier, "Bar"),
+            Token(.Operator, ","),
+            Token(.Identifier, "Baz"),
+            Token(.EndOfScope, ">"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "in"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testOptionalGenericType() {
+        let input = "Foo<T?,U>"
+        let output = [
+            Token(.Identifier, "Foo"),
+            Token(.StartOfScope, "<"),
+            Token(.Identifier, "T"),
+            Token(.Operator, "?"),
+            Token(.Operator, ","),
+            Token(.Identifier, "U"),
+            Token(.EndOfScope, ">"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testTrailingOptionalGenericType() {
+        let input = "Foo<T?>"
+        let output = [
+            Token(.Identifier, "Foo"),
+            Token(.StartOfScope, "<"),
+            Token(.Identifier, "T"),
+            Token(.Operator, "?"),
+            Token(.EndOfScope, ">"),
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }

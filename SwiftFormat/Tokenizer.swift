@@ -537,7 +537,12 @@ func tokenize(source: String) -> [Token] {
                     var wasOperator = false
                     switch token.type {
                     case .Identifier, .Number:
-                        wasOperator = true
+                        switch token.string {
+                        case "in", "is", "as", "where", "else":
+                            wasOperator = false
+                        default:
+                            wasOperator = true
+                        }
                     case .StartOfScope:
                         wasOperator = (token.string == "\"")
                     case .Operator:
@@ -601,10 +606,20 @@ func tokenize(source: String) -> [Token] {
                 if scope.type == .Operator {
                     // Scope hasn't been confirmed as a generic yet
                     switch token.type {
+                    case .StartOfScope:
+                        if ["<", "[", "("].contains(token.string) {
+                            // Assume token is an identifier until proven otherwise
+                            tokens[scopeIndex] = Token(.StartOfScope, "<")
+                            processToken()
+                            return
+                        }
+                        // Opening < must have been an operator
+                        scopeIndexStack.removeAtIndex(scopeIndexStack.count - 2)
                     case .Identifier:
                         // If the first token is an identifier, we'll assume
                         // that it's a generic until proven otherwise
                         tokens[scopeIndex] = Token(.StartOfScope, "<")
+                        processToken()
                         return
                     case .Whitespace, .Linebreak:
                         // Might be generic or operator - can't tell yet
@@ -617,12 +632,22 @@ func tokenize(source: String) -> [Token] {
                     // We think it's a generic at this point, but could be wrong
                     switch token.type {
                     case .Operator:
-                        if ![".", ",", ":", "=="].contains(token.string) {
+                        if !["?>", "!>"].contains(token.string) {
                             fallthrough
                         }
+                        // Need to split token
+                        tokens[tokens.count - 1] = Token(.Operator, "?")
+                        let suffix = String(token.string.characters.dropFirst())
+                        tokens.append(Token(.Operator, suffix))
+                        processToken()
+                        return
                     case .StartOfScope:
-                        if token.string != "<" {
-                            fallthrough
+                        if !["<", "[", "(", ".", ",", ":", "==", "?", "!"].contains(token.string) {
+                            // Not a generic scope
+                            tokens[scopeIndex] = Token(.Operator, "<")
+                            scopeIndexStack.popLast()
+                            processToken()
+                            return
                         }
                     case .EndOfScope:
                         // If we encountered a scope token that wasn't a < or >

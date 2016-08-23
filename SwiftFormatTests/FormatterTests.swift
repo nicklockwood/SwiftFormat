@@ -432,9 +432,21 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
     
-    func testSpaceAroundCommentInExpression() {
+    func testSpaceAroundCommentInInfixExpression() {
         let input = "foo/* hello */-bar"
         let output = "foo/* hello */ - bar"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+    }
+    
+    func testSpaceAroundCommentInPrefixExpression() {
+        let input = "a + /* hello */ -bar"
+        let output = "a + /* hello */ -bar"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+    }
+    
+    func testSpaceAroundCommentsInInfixExpression() {
+        let input = "a/* */+/* */b"
+        let output = "a/* */ + /* */b"
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
     
@@ -842,6 +854,19 @@ class FormatterTests: XCTestCase {
     func testFixmeIsUpdated() {
         let input = "//    FIXME foo"
         let output = "//    FIXME: foo"
+        XCTAssertEqual(format(input, rules: [todos]), output)
+    }
+    
+    func testMarkWithColonSeparatedBySpace() {
+        let input = "//MARK : foo"
+        let output = "//MARK: foo"
+        XCTAssertEqual(format(input, rules: [todos]), output)
+    }
+    
+    func testMarkWithNoSpaceAfterColon() {
+        // NOTE: this was an unintended side-effect, but I like it
+        let input = "//MARK:foo"
+        let output = "//MARK: foo"
         XCTAssertEqual(format(input, rules: [todos]), output)
     }
     

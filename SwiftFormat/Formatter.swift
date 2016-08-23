@@ -942,9 +942,12 @@ public func todos(formatter: Formatter) {
     formatter.forEachToken(ofType: .CommentBody) { i, token in
         let string = token.string
         for tag in ["TODO", "MARK", "FIXME"] {
-            if string.hasPrefix(tag) && !string.hasPrefix(tag + ":") {
-                let suffix = string.substringFromIndex(tag.endIndex)
-                formatter.replaceTokenAtIndex(i, with: Token(.CommentBody, tag + ":" + suffix))
+            if string.hasPrefix(tag) {
+                var suffix = string.substringFromIndex(tag.endIndex)
+                while suffix.characters.first == " " || suffix.characters.first == ":" {
+                    suffix = suffix.substringFromIndex(suffix.startIndex.advancedBy(1))
+                }
+                formatter.replaceTokenAtIndex(i, with: Token(.CommentBody, tag + ": " + suffix))
             }
         }
     }

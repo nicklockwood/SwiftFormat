@@ -206,7 +206,7 @@ private extension String.CharacterView {
     
     mutating func parseOperator() -> Token? {
         func isHead(c: Character) -> Bool {
-            if "./=­-+!*%&|^~?".characters.contains(c) {
+            if "./=­-+!*%<>&|^~?".characters.contains(c) {
                 return true
             }
             switch c.unicodeValue {
@@ -248,27 +248,43 @@ private extension String.CharacterView {
             }
         }
         
-        func scanOperator() -> String? {
-            if let head = scanCharacter(isHead) {
-                let tail = scanCharacters(isTail) ?? ""
-                let chevron = scanCharacter({ $0 == ">" }) ?? ""
-                return head + tail + chevron
+        if var tail = scanCharacter(isHead) {
+            var head = ""
+            while let c = scanCharacter(isTail) {
+                if tail == "/" {
+                    if c == "*" {
+                        if head == "" {
+                            return Token(.StartOfScope, "/*")
+                        }
+                        self = "/*".characters + self
+                        return Token(.Operator, head)
+                    } else if c == "/" {
+                        if head == "" {
+                            return Token(.StartOfScope, "//")
+                        }
+                        self = "//".characters + self
+                        return Token(.Operator, head)
+                    }
+                }
+                head += tail
+                tail = c
             }
-            return nil
+            let op = head + tail
+            return Token(op == "<" ? .StartOfScope : .Operator, op)
         }
-        
-        if let op = scanOperator() {
-            return Token(.Operator, op)
-        }
+        return nil
+    }
+    
+    mutating func parsePunctuation() -> Token? {
         return parseToken(.Operator, ":;,".characters)
     }
     
     mutating func parseStartOfScope() -> Token? {
-        return parseToken(.StartOfScope, oneOf: "<([{\"".characters)
+        return parseToken(.StartOfScope, oneOf: "([{\"".characters)
     }
     
     mutating func parseEndOfScope() -> Token? {
-        return parseToken(.EndOfScope, oneOf: "}])>".characters)
+        return parseToken(.EndOfScope, oneOf: "}])".characters)
     }
     
     mutating func parseIdentifier() -> Token? {
@@ -410,31 +426,18 @@ private extension String.CharacterView {
         return parseToken(.Linebreak, "\n")
     }
     
-    mutating func parseComment() -> Token? {
-        let start = self
-        if scanCharacter({ $0 == "/" }) != nil {
-            if let c = scanCharacter({ $0 == "*" || $0 == "/" }) {
-                return Token(.StartOfScope, "/" + c)
-            }
-            // TODO: Must be an operator starting with / so we could
-            // shortcut the parsing process here if we wanted to
-            self = start
-        }
-        return nil
-    }
-    
     mutating func parseToken() -> Token? {
         // Have to split into groups for Swift to be able to process this
         if let token = parseWhitespace() ??
-            parseComment() ??
+            parseLineBreak() ??
             parseIdentifier() ??
             parseNumber() {
             return token
         }
         if let token = parseOperator() ??
+            parsePunctuation() ??
             parseStartOfScope() ??
-            parseEndOfScope() ??
-            parseLineBreak() {
+            parseEndOfScope() {
             return token
         }
         if count > 0 {
@@ -487,9 +490,6 @@ func tokenize(source: String) -> [Token] {
     
     func processCommentBody() {
         var comment = ""
-        if let whitespace = characters.parseWhitespace() {
-            tokens.append(whitespace)
-        }
         while let c = characters.scanCharacter({ _ in true }) {
             if c == "/" {
                 if characters.scanCharacter({ $0 == "*" }) != nil {
@@ -586,20 +586,51 @@ func tokenize(source: String) -> [Token] {
             let scope = tokens[scopeIndex]
             if token.closesScopeForToken(scope) {
                 scopeIndexStack.popLast()
-                if token.string == ">" {
+                if token.string.hasPrefix(">") {
                     closedGenericScopeIndexes.append(scopeIndex)
+                    tokens[tokens.count - 1] = Token(.EndOfScope, ">")
+                    if token.string != ">" {
+                        // Need to split the token
+                        let suffix = String(token.string.characters.dropFirst())
+                        tokens.append(Token(.Operator, suffix))
+                        processToken()
+                        return
+                    }
+                    
                 } else if scopeIndexStack.last != nil && tokens[scopeIndexStack.last!].string == "\"" {
                     processStringBody()
                 }
                 return
             } else if scope.string == "<" {
                 // We think it's a generic at this point, but could be wrong
-                if ["?>", "!>"].contains(token.string) {
+                switch token.type {
+                case .Operator:
+                    if !token.string.hasPrefix("?>") && !token.string.hasPrefix("!>") {
+                        fallthrough
+                    }
                     // Need to split token
-                    tokens[tokens.count - 1] = Token(.Operator, "?")
-                    tokens.append(Token(.EndOfScope, ">"))
+                    tokens[tokens.count - 1] = Token(.Operator, String(token.string.characters.first!))
+                    let suffix = String(token.string.characters.dropFirst())
+                    tokens.append(Token(.Operator, suffix))
                     processToken()
                     return
+                case .StartOfScope:
+                    if !["<", "[", "(", ".", ",", ":", "==", "?", "!"].contains(token.string) {
+                        // Not a generic scope
+                        tokens[scopeIndex] = Token(.Operator, "<")
+                        scopeIndexStack.popLast()
+                        processToken()
+                        return
+                    }
+                case .EndOfScope:
+                    // If we encountered a scope token that wasn't a < or >
+                    // then the opening < must have been an operator after all
+                    tokens[scopeIndex] = Token(.Operator, "<")
+                    scopeIndexStack.popLast()
+                    processToken()
+                    return
+                default:
+                    break
                 }
             }
         }
@@ -608,6 +639,9 @@ func tokenize(source: String) -> [Token] {
             if token.string == "\"" {
                 processStringBody()
             } else if token.string == "/*" {
+                if let whitespace = characters.parseWhitespace() {
+                    tokens.append(whitespace)
+                }
                 processCommentBody()
             } else if token.string == "//" {
                 if let whitespace = characters.parseWhitespace() {
@@ -628,7 +662,7 @@ func tokenize(source: String) -> [Token] {
     
     if let scopeIndex = scopeIndexStack.last where tokens[scopeIndex].string == "<" {
         // If we encountered an end-of-file while a generic scope was
-        // still open, the opening < must have been an operator after all
+        // still open, the opening < must have been an operator
         tokens[scopeIndex] = Token(.Operator, "<")
         scopeIndexStack.popLast()
     }

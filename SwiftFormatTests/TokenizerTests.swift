@@ -398,7 +398,34 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqualArrays(tokenize(input), output)
     }
     
-    // MARK: chevrons
+    func testOperatorFollowedByComment() {
+        let input = "a +/* b */"
+        let output = [
+            Token(.Identifier, "a"),
+            Token(.Whitespace, " "),
+            Token(.Operator, "+"),
+            Token(.StartOfScope, "/*"),
+            Token(.Whitespace, " "),
+            Token(.CommentBody, "b "),
+            Token(.EndOfScope, "*/"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testOperatorPrecededByComment() {
+        let input = "/* a */-b"
+        let output = [
+            Token(.StartOfScope, "/*"),
+            Token(.Whitespace, " "),
+            Token(.CommentBody, "a "),
+            Token(.EndOfScope, "*/"),
+            Token(.Operator, "-"),
+            Token(.Identifier, "b"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    // MARK: chevrons (might be operators or generics)
     
     func testLessThanGreaterThan() {
         let input = "a<b == a>c"
@@ -417,6 +444,36 @@ class TokenizerTests: XCTestCase {
     }
     
     func testBitshift() {
+        let input = "a>>b"
+        let output = [
+            Token(.Identifier, "a"),
+            Token(.Operator, ">>"),
+            Token(.Identifier, "b"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testTripleShift() {
+        let input = "a>>>b"
+        let output = [
+            Token(.Identifier, "a"),
+            Token(.Operator, ">>>"),
+            Token(.Identifier, "b"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testTripleShiftEquals() {
+        let input = "a>>=b"
+        let output = [
+            Token(.Identifier, "a"),
+            Token(.Operator, ">>="),
+            Token(.Identifier, "b"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testBitshiftThatLooksLikeAGeneric() {
         let input = "a<b, b<c, d>>e"
         let output = [
             Token(.Identifier, "a"),
@@ -611,6 +668,20 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqualArrays(tokenize(input), output)
     }
     
+    func testCustomChevronOperatorThatLooksLikeGeneric() {
+        let input = "Foo<Bar,Baz>>>5"
+        let output = [
+            Token(.Identifier, "Foo"),
+            Token(.Operator, "<"),
+            Token(.Identifier, "Bar"),
+            Token(.Operator, ","),
+            Token(.Identifier, "Baz"),
+            Token(.Operator, ">>>"),
+            Token(.Number, "5"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
     func testGenericAsFunctionType() {
         let input = "Foo<Bar,Baz>->Void"
         let output = [
@@ -725,6 +796,46 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "?"),
             Token(.EndOfScope, ">"),
             Token(.EndOfScope, ">"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testCustomOperatorStartingWithOpenChevron() {
+        let input = "foo<--bar"
+        let output = [
+            Token(.Identifier, "foo"),
+            Token(.Operator, "<--"),
+            Token(.Identifier, "bar"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testCustomOperatorEndingWithCloseChevron() {
+        let input = "foo-->bar"
+        let output = [
+            Token(.Identifier, "foo"),
+            Token(.Operator, "-->"),
+            Token(.Identifier, "bar"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testGreaterThanLessThanOperator() {
+        let input = "foo><bar"
+        let output = [
+            Token(.Identifier, "foo"),
+            Token(.Operator, "><"),
+            Token(.Identifier, "bar"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testLessThanGreaterThanOperator() {
+        let input = "foo<>bar"
+        let output = [
+            Token(.Identifier, "foo"),
+            Token(.Operator, "<>"),
+            Token(.Identifier, "bar"),
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }

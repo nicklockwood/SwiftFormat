@@ -824,7 +824,7 @@ public func indent(formatter: Formatter) {
             }
             // Indent each new line
             if token.type == .Linebreak {
-                linewrapped = !tokenIsEndOfStatement(lastNonWhitespaceIndex)
+                linewrapped = !tokenIsEndOfStatement(lastNonWhitespaceOrLinebreakIndex)
                 if linewrapped && lineIndex == scopeStartLineIndexes.last {
                     indentStack.popLast()
                     indentStack.append(indentStack.last ?? "")

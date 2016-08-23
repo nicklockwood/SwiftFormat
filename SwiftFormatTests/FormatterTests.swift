@@ -682,6 +682,12 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [indent]), output)
     }
     
+    func testWrappedLinesWithComments() {
+        let input = "let foo = bar ||\n//baz||\nquux"
+        let output = "let foo = bar ||\n    //baz||\n    quux"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+    
     // MARK: indent comments
     
     func testCommentIndenting() {
@@ -741,7 +747,7 @@ class FormatterTests: XCTestCase {
         let output = "func foo() { /* comment/ncomment */\n    statement\n}"
         XCTAssertEqual(format(input, rules: [knrBraces]), output)
     }
-
+    
     func testExtraSpaceNotAddedBeforeBrace() {
         let input = "foo({ bar })"
         let output = "foo({ bar })"

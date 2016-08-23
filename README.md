@@ -300,6 +300,12 @@ At some point I should probably add an intermediate parsing stage that identifie
 Release notes
 ----------------
 
+Version 0.3
+
+- Fixed several cases where generics were misidentified as operators
+- Fixed a bug where a comment on a line before a brace broke K&R indenting
+- Fixed a bug where a comment on a previous line caused incorrect indenting for wrapped lines
+
 Version 0.2
 
 - Fixed formatting of generic function types

@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  main.swift
 //
-//  Version 0.3
+//  Version 0.4
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -33,7 +33,7 @@
 
 import Foundation
 
-let version = "0.3"
+let version = "0.4"
 
 func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOptions options: FormattingOptions) -> Int {
     let manager = NSFileManager.defaultManager()
@@ -144,22 +144,23 @@ func processArguments(args: [String]) {
     guard let args = preprocessArguments(args, [
         "output",
         "indent",
+        "semicolons",
         "help",
         "version",
     ]) else {
         return
     }
-    
+
     // Version
     if args["version"] != nil {
         print("swiftformat, version \(version)")
         return
     }
-    
+
     // Get input / output paths
-    let inputPath = args["1"]
-    let outputPath = args["output"] ?? inputPath
-    
+    var inputPath = args["1"]
+    var outputPath = args["output"] ?? inputPath
+
     // Show help if requested specifically or if no arguments are passed
     if args["help"] != nil || inputPath == nil {
         print("swiftformat, version \(version)")
@@ -167,22 +168,27 @@ func processArguments(args: [String]) {
         print("")
         print("usage: swiftformat <file> [-o path] [-i spaces]")
         print("")
-        print("  <file>         input file or directory path")
-        print("  -o, --output   output path (defaults to input path)")
-        print("  -i, --indent   number of spaces to indent, or \"tab\" to use tabs")
-        print("  -h, --help     this help page")
-        print("  -v, --version  version information")
+        print("  <file>            input file or directory path")
+        print("  -o, --output      output path (defaults to input path)")
+        print("  -i, --indent      number of spaces to indent, or \"tab\" to use tabs")
+        print("  -s, --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
+        print("  -h, --help        this help page")
+        print("  -v, --version     version information")
         print("")
         return
     }
-    
+
     print("running swiftformat...")
-    
+
+    // Expand input / output paths
+    inputPath = NSString(string: inputPath!).stringByExpandingTildeInPath
+    outputPath = NSString(string: outputPath!).stringByExpandingTildeInPath
+
     // Convert paths to file URLs relative to current directory
     let directoryURL = NSURL(fileURLWithPath: NSFileManager.defaultManager().currentDirectoryPath)
     let inputURL = NSURL(fileURLWithPath: inputPath!, relativeToURL: directoryURL)
     let outputURL = NSURL(fileURLWithPath: outputPath!, relativeToURL: directoryURL)
-    
+
     // Get options
     var options = FormattingOptions()
     if let indent = args["indent"] {
@@ -195,7 +201,17 @@ func processArguments(args: [String]) {
             return
         }
     }
-    
+    if let semicolons = args["semicolons"] {
+        if semicolons == "inline" {
+            options.allowInlineSemicolons = true
+        } else if semicolons == "never" {
+            options.allowInlineSemicolons = false
+        } else {
+            print("error: unsupported semicolons value: \(semicolons).")
+            return
+        }
+    }
+
     // Format the code
     let filesWritten = processInput(inputURL, andWriteToOutput: outputURL, withOptions: options)
     print("swiftformat completed. \(filesWritten) file(s) updated.")

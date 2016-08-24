@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  Formatter.swift
 //
-//  Version 0.3
+//  Version 0.4
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -36,7 +36,15 @@ import Foundation
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormattingOptions {
-    var indent: String = "    "
+    public var indent: String
+    public var allowInlineSemicolons: Bool
+
+    public init(indent: String = "    ",
+        allowInlineSemicolons: Bool = true) {
+
+        self.indent = indent
+        self.allowInlineSemicolons = allowInlineSemicolons
+    }
 }
 
 /// This is a utility class used for manipulating a tokenized source file.
@@ -48,20 +56,20 @@ public struct FormattingOptions {
 public class Formatter {
     private(set) var tokens: [Token]
     let options: FormattingOptions
-    
+
     private var indexStack: [Int] = []
-    
+
     init(_ tokens: [Token], options: FormattingOptions) {
         self.tokens = tokens
         self.options = options
     }
-    
+
     /// Returns the token at the specified index, or nil if index is invalid
     public func tokenAtIndex(index: Int) -> Token? {
         guard index >= 0 && index < tokens.count else { return nil }
         return tokens[index]
     }
-    
+
     /// Replaces the token at the specified index with one or more new tokens
     public func replaceTokenAtIndex(index: Int, with tokens: Token...) {
         if tokens.count == 0 {
@@ -73,7 +81,7 @@ public class Formatter {
             }
         }
     }
-    
+
     /// Replaces the tokens in the specified range with new tokens
     public func replaceTokensInRange(range: Range<Int>, with tokens: Token...) {
         let max = min(range.count, tokens.count)
@@ -90,7 +98,7 @@ public class Formatter {
             }
         }
     }
-    
+
     /// Removes the token at the specified indez
     public func removeTokenAtIndex(index: Int) {
         tokens.removeAtIndex(index)
@@ -100,17 +108,17 @@ public class Formatter {
             }
         }
     }
-    
+
     /// Removes the tokens in the specified range
     public func removeTokensInRange(range: Range<Int>) {
         replaceTokensInRange(range)
     }
-    
+
     /// Removes the last token
     public func removeLastToken() {
         tokens.removeLast()
     }
-    
+
     /// Inserts a tokens at the specified index
     public func insertToken(token: Token, atIndex index: Int) {
         tokens.insert(token, atIndex: index)
@@ -120,7 +128,7 @@ public class Formatter {
             }
         }
     }
-    
+
     /// Loops through each token in the array. It is safe to mutate the token
     /// array inside the body block, but note that the index and token arguments
     /// may not reflect the current token any more after a mutation
@@ -134,19 +142,19 @@ public class Formatter {
         }
         indexStack.popLast()
     }
-    
+
     /// As above, but only loops through tokens with the specified type
     public func forEachToken(ofType type: TokenType, _ body: (Int, Token) -> Void) {
         forEachToken(matching: { $0.type == type }, body)
     }
-    
+
     /// As above, but only loops through tokens with the specified type and string
     public func forEachToken(string: String, ofType type: TokenType, _ body: (Int, Token) -> Void) {
         forEachToken(matching: {
             return $0.type == type && $0.string == string
         }, body)
     }
-    
+
     /// As above, but only loops through tokens with the specified string.
     /// Tokens of type `StringBody` and `CommentBody` are ignored, as these
     /// can't be usefully identified by their string value
@@ -155,7 +163,7 @@ public class Formatter {
             return $0.string == string && $0.type != .StringBody && $0.type != .CommentBody
         }, body)
     }
-    
+
     private func forEachToken(matching condition: (Token) -> Bool, _ body: (Int, Token) -> Void) {
         forEachToken { index, token in
             if condition(token) {
@@ -200,7 +208,7 @@ public func spaceAroundParens(formatter: Formatter) {
             return false
         }
     }
-    
+
     formatter.forEachToken("(") { i, token in
         guard let previousToken = formatter.tokenAtIndex(i - 1) else {
             return
@@ -268,7 +276,7 @@ public func spaceAroundBrackets(formatter: Formatter) {
             return false
         }
     }
-    
+
     formatter.forEachToken("[") { i, token in
         guard let previousToken = formatter.tokenAtIndex(i - 1) else {
             return
@@ -396,7 +404,7 @@ public func spaceAroundOperators(formatter: Formatter) {
             return false
         }
     }
-    
+
     func isRvalue(token: Token) -> Bool {
         switch token.type {
         case .Identifier, .Number, .StartOfScope:
@@ -405,7 +413,7 @@ public func spaceAroundOperators(formatter: Formatter) {
             return false
         }
     }
-    
+
     func spaceAfter(identifier: String) -> Bool {
         switch identifier {
         case "case",
@@ -423,7 +431,7 @@ public func spaceAroundOperators(formatter: Formatter) {
             return false
         }
     }
-    
+
     var scopeStack: [Token] = []
     formatter.forEachToken { i, token in
         switch token.type {
@@ -595,7 +603,7 @@ public func indent(formatter: Formatter) {
         }
         return index
     }
-    
+
     func nextNonWhitespaceToken(fromIndex index: Int) -> Token? {
         var index = index
         while let token = formatter.tokenAtIndex(index) {
@@ -606,7 +614,7 @@ public func indent(formatter: Formatter) {
         }
         return nil
     }
-    
+
     func setIndent(indent: String, atIndex index: Int) {
         if formatter.tokenAtIndex(index)?.type == .Whitespace {
             if indent != "" {
@@ -618,7 +626,7 @@ public func indent(formatter: Formatter) {
             formatter.insertToken(Token(.Whitespace, indent), atIndex: index)
         }
     }
-    
+
     var scopeIndexStack: [Int] = []
     var scopeStartLineIndexes: [Int] = []
     var lastNonWhitespaceOrLinebreakIndex = -1
@@ -626,14 +634,14 @@ public func indent(formatter: Formatter) {
     var indentStack = [""]
     var lineIndex = 0
     var linewrapped = false
-    
+
     func currentScope() -> Token? {
         if let scopeIndex = scopeIndexStack.last {
             return formatter.tokens[scopeIndex]
         }
         return nil
     }
-    
+
     func tokenIsEndOfStatement(i: Int) -> Bool {
         if let token = formatter.tokenAtIndex(i) {
             switch token.type {
@@ -703,7 +711,7 @@ public func indent(formatter: Formatter) {
         }
         return true
     }
-    
+
     func tokenIsStartOfStatement(i: Int) -> Bool {
         if let token = formatter.tokenAtIndex(i) {
             switch token.type {
@@ -744,7 +752,7 @@ public func indent(formatter: Formatter) {
         }
         return true
     }
-    
+
     formatter.forEachToken { i, token in
         if token.type == .StartOfScope {
             // Handle start of scope
@@ -831,8 +839,12 @@ public func indent(formatter: Formatter) {
                     indentStack.append(indentStack.last ?? "")
                 }
                 lineIndex += 1
-                let indent = (indentStack.last ?? "") + (linewrapped ? formatter.options.indent : "")
-                setIndent(indent, atIndex: i + 1)
+                setIndent("", atIndex: i + 1)
+                // Only indent if line isn't blank
+                if let nextToken = formatter.tokenAtIndex(i + 1) where nextToken.type != .Linebreak {
+                    let indent = (indentStack.last ?? "") + (linewrapped ? formatter.options.indent : "")
+                    setIndent(indent, atIndex: i + 1)
+                }
             }
         }
         // Track token for line wraps
@@ -953,7 +965,161 @@ public func todos(formatter: Formatter) {
     }
 }
 
+/// Remove semicolons, except where doing so would change the meaning of the code
+public func semicolons(formatter: Formatter) {
+    func firstNonWhitespaceOrComment(fromIndex index: Int) -> Token? {
+        var i = index
+        var scopeStack: [Token] = []
+        while let token = formatter.tokenAtIndex(i) {
+            if let scope = scopeStack.last {
+                if token.closesScopeForToken(scope) {
+                    scopeStack.popLast()
+                    if token.type == .Linebreak {
+                        return token
+                    }
+                }
+            } else {
+                switch token.type {
+                case .Whitespace:
+                    break
+                case .StartOfScope:
+                    if token.string == "/*" || token.string == "//" {
+                        scopeStack.append(token)
+                    } else {
+                        return token
+                    }
+                default:
+                    return token
+                }
+            }
+            i += 1
+        }
+        return nil
+    }
+
+    func firstNonWhitespaceOrCommentOrLinebreak(fromIndex index: Int) -> Token? {
+        var i = index
+        var scopeStack: [Token] = []
+        while let token = formatter.tokenAtIndex(i) {
+            if let scope = scopeStack.last {
+                if token.closesScopeForToken(scope) {
+                    scopeStack.popLast()
+                }
+            } else {
+                switch token.type {
+                case .Whitespace, .Linebreak:
+                    break
+                case .StartOfScope:
+                    if token.string == "/*" || token.string == "//" {
+                        scopeStack.append(token)
+                    } else {
+                        return token
+                    }
+                default:
+                    return token
+                }
+            }
+            i += 1
+        }
+        return nil
+    }
+
+    func lastNonWhitespaceOrCommentOrLinebreak(fromIndex index: Int) -> Token? {
+        var i = index
+        var scopeStack: [Token] = []
+        while let token = formatter.tokenAtIndex(i) {
+            if let scope = scopeStack.last {
+                if token.type == .StartOfScope && scope.closesScopeForToken(token) {
+                    scopeStack.popLast()
+                } else {
+                    return token
+                }
+            } else {
+                switch token.type {
+                case .Whitespace, .Linebreak:
+                    break
+                case .EndOfScope:
+                    if token.string == "*/" {
+                        scopeStack.append(token)
+                    } else {
+                        return token
+                    }
+                default:
+                    return token
+                }
+            }
+            i -= 1
+        }
+        return nil
+    }
+
+    func currentScopeAtIndex(index: Int) -> Token? {
+        var i = index
+        var scopeStack: [Token] = []
+        while let token = formatter.tokenAtIndex(i) {
+            if token.type == .StartOfScope {
+                if let scope = scopeStack.last where scope.closesScopeForToken(token) {
+                    scopeStack.popLast()
+                } else {
+                    return token
+                }
+            } else if token.type == .EndOfScope {
+                scopeStack.append(token)
+            }
+            i -= 1
+        }
+        return nil
+    }
+
+    func indentAtIndex(index: Int) -> Token? {
+        var i = index
+        while let token = formatter.tokenAtIndex(i) {
+            if token.type == .Linebreak {
+                break
+            }
+            i -= 1
+        }
+        if let token = formatter.tokenAtIndex(i + 1) {
+            if token.type == .Whitespace {
+                return token
+            }
+        }
+        return nil
+    }
+
+    formatter.forEachToken(";") { i, token in
+        if let nextToken = firstNonWhitespaceOrCommentOrLinebreak(fromIndex: i + 1) {
+            let lastToken = lastNonWhitespaceOrCommentOrLinebreak(fromIndex: i - 1)
+            if lastToken == nil || nextToken.string == "}" {
+                // Safe to remove
+                formatter.removeTokenAtIndex(i)
+            } else if lastToken?.string == "return" || currentScopeAtIndex(i)?.string == "(" {
+                // Not safe to remove or replace
+            } else if firstNonWhitespaceOrComment(fromIndex: i + 1)?.type == .Linebreak {
+                // Safe to remove
+                formatter.removeTokenAtIndex(i)
+            } else if !formatter.options.allowInlineSemicolons {
+                // Replace with a linebreak
+                if formatter.tokenAtIndex(i + 1)?.type == .Whitespace {
+                    formatter.removeTokenAtIndex(i + 1)
+                }
+                if let indent = indentAtIndex(i) {
+                    formatter.insertToken(indent, atIndex: i + 1)
+                }
+                formatter.replaceTokenAtIndex(i, with: Token(.Linebreak, "\n"))
+            }
+        } else {
+            // Safe to remove
+            formatter.removeTokenAtIndex(i)
+        }
+    }
+}
+
 public let defaultRules: [FormatRule] = [
+    semicolons,
+    knrBraces,
+    elseOnSameLine,
+    indent,
     spaceAroundParens,
     spaceInsideParens,
     spaceAroundBrackets,
@@ -967,9 +1133,6 @@ public let defaultRules: [FormatRule] = [
     noTrailingWhitespace,
     noConsecutiveBlankLines,
     linebreakAtEndOfFile,
-    indent,
-    knrBraces,
-    elseOnSameLine,
     trailingCommas,
     todos,
 ]

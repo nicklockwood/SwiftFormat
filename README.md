@@ -176,6 +176,16 @@ Here are all the rules that SwiftFormat currently applies:
     
     // MARK - UIScrollViewDelegate  -->  // MARK: - UIScrollViewDelegate
 
+*semicolons* - removes semicolons at the end of lines and (optionally) replaces inline semicolons with a linebreak:
+
+    let foo = 5;              -->  let foo = 5
+    
+    let foo = 5; let bar = 6  -->  let foo = 5
+                                   let bar = 6
+                                   
+    return; 	              -->  return;
+    goto(fail)                     goto(fail)
+
 
 FAQ
 -----
@@ -296,15 +306,24 @@ Or begin each line with a `*` (or any other non-whitespace character)
 What's next?
 --------------
 
-I expect people will discover (and hopefully report) a lot of bugs in this first release, so the next step will be to fix all of those.
-
-There are a bunch of additional rules I'd like to add, such as removing trailing semicolons, or correctly formatting headerdoc comments.
+There are a bunch of additional rules I'd like to add, such as correctly formatting headerdoc comments.
 
 At some point I should probably add an intermediate parsing stage that identifies high-level constructs such as classes and functions and assembles them into a syntax tree. I did't bother doing this originally because I thought it would be easier to implement formatting at the token level, but in fact this just meant that the logic for distinguishing between syntax constructs had to be split between the tokenizer and the formatting rules, making both of them more complex than they ought to be.
+
+With a syntax tree in place, it should become possible to add much more sophisticated rules, such as converting uppercase enums to lowercase for Swift 3, etc.
      
      
 Release notes
 ----------------
+
+Version 0.4
+
+- Added new `semicolons` rule, which removes semicolons wherever it's safe to do so
+- Added `--semicolons` command-line argument for enabling inline semicolon stripping
+- The `todos` rule now corrects `MARK :` to `MARK:` instead of `MARK: :`
+- Paths containing ~ are now handled correctly by the command line tool
+- Fixed some bugs in generics and custom operator parsing, and added more tests
+- Removed trailing whitespace on blank lines caused by the `indent` rule
 
 Version 0.3
 

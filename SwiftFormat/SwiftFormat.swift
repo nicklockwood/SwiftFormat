@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  SwiftFormat.swift
 //
-//  Version 0.3
+//  Version 0.4
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -37,15 +37,15 @@ import Foundation
 public func format(source: String,
     rules: [FormatRule] = defaultRules,
     options: FormattingOptions = FormattingOptions()) -> String {
-    
+
     // Parse
     var tokens = tokenize(source)
-    
+
     // Format
     let formatter = Formatter(tokens, options: options)
     rules.forEach { $0(formatter) }
     tokens = formatter.tokens
-    
+
     // Output
     return tokens.reduce("", combine: { $0 + $1.string })
 }

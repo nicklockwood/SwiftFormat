@@ -112,26 +112,12 @@ private extension Character {
 
     var isAlpha: Bool { return isalpha(Int32(unicodeValue)) > 0 }
     var isDigit: Bool { return isdigit(Int32(unicodeValue)) > 0 }
+    var isWhitespace: Bool { return self == " " || self == "\t" || unicodeValue == 0x0b }
+    var isLinebreak: Bool { return self == "\r" || self == "\n" || self == "\r\n" }
 }
 
 private extension String.CharacterView {
-
-    mutating func scanCharacter(matching: (Character) -> Bool) -> String? {
-        if let c = first where matching(c) {
-            self = suffixFrom(startIndex.advancedBy(1))
-            return String(c)
-        }
-        return nil
-    }
-
-    mutating func scanString(matching string: String) -> String? {
-        if startsWith(string.characters) {
-            self = suffixFrom(startIndex.advancedBy(string.characters.count))
-            return string
-        }
-        return nil
-    }
-
+    
     mutating func scanCharacters(matching: (Character) -> Bool) -> String? {
         var index = endIndex
         for (i, c) in enumerate() {
@@ -147,6 +133,18 @@ private extension String.CharacterView {
         }
         return nil
     }
+    
+    mutating func scanCharacter(matching: (Character) -> Bool) -> String? {
+        if let c = first where matching(c) {
+            self = suffixFrom(startIndex.advancedBy(1))
+            return String(c)
+        }
+        return nil
+    }
+    
+    mutating func scanCharacter(character: Character) -> Bool {
+        return scanCharacter({ $0 == character }) != nil
+    }
 
     mutating func scanInteger() -> String? {
         return scanCharacters({ $0.isDigit })
@@ -155,53 +153,39 @@ private extension String.CharacterView {
 
 private extension String.CharacterView {
 
-    mutating func parseToken(type: TokenType, _ character: Character) -> Token? {
-        if let _ = scanCharacter({ $0 == character }) {
-            return Token(type, String(character))
-        }
-        return nil
+    mutating func parseToken(type: TokenType, oneOf matching: (Character) -> Bool) -> Token? {
+        return scanCharacter(matching).map { Token(type, $0) }
     }
-
-    mutating func parseToken(type: TokenType, _ string: String) -> Token? {
-        if let string = scanString(matching: string) {
-            return Token(type, string)
-        }
-        return nil
+    
+    mutating func parseToken(type: TokenType, oneOrMore matching: (Character) -> Bool) -> Token? {
+        return scanCharacters(matching).map { Token(type, $0) }
     }
-
+    
     mutating func parseToken(type: TokenType, oneOf characters: String.CharacterView) -> Token? {
-        if let string = scanCharacter({ characters.contains($0) }) {
-            return Token(type, String(string))
-        }
-        return nil
-    }
-
-    mutating func parseToken(type: TokenType, _ characters: String.CharacterView) -> Token? {
-        if let string = scanCharacters({ characters.contains($0) }) {
-            return Token(type, string)
-        }
-        return nil
-    }
-
-    mutating func parseToken(type: TokenType, upTo characters: String.CharacterView) -> Token? {
-        if let string = scanCharacters({ !characters.contains($0) }) {
-            return Token(type, string)
-        }
-        return nil
-    }
-
-    mutating func parseToken(type: TokenType, upTo character: Character) -> Token? {
-        if let string = scanCharacters({ $0 != character }) {
-            return Token(type, string)
-        }
-        return nil
+        return parseToken(type, oneOf: { characters.contains($0) })
     }
 }
 
 private extension String.CharacterView {
 
     mutating func parseWhitespace() -> Token? {
-        return parseToken(.Whitespace, " \t".characters) // TODO: vertical tab
+        return parseToken(.Whitespace, oneOrMore: { $0.isWhitespace })
+    }
+    
+    mutating func parseLineBreak() -> Token? {
+        return parseToken(.Linebreak, oneOf: { $0.isLinebreak })
+    }
+    
+    mutating func parsePunctuation() -> Token? {
+        return parseToken(.Operator, oneOf: ":;,".characters)
+    }
+    
+    mutating func parseStartOfScope() -> Token? {
+        return parseToken(.StartOfScope, oneOf: "([{\"".characters)
+    }
+    
+    mutating func parseEndOfScope() -> Token? {
+        return parseToken(.EndOfScope, oneOf: "}])".characters)
     }
 
     mutating func parseOperator() -> Token? {
@@ -256,12 +240,14 @@ private extension String.CharacterView {
                         if head == "" {
                             return Token(.StartOfScope, "/*")
                         }
+                        // Can't return two tokens, so put /* back to be parsed next time
                         self = "/*".characters + self
                         return Token(.Operator, head)
                     } else if c == "/" {
                         if head == "" {
                             return Token(.StartOfScope, "//")
                         }
+                        // Can't return two tokens, so put // back to be parsed next time
                         self = "//".characters + self
                         return Token(.Operator, head)
                     }
@@ -273,18 +259,6 @@ private extension String.CharacterView {
             return Token(op == "<" ? .StartOfScope : .Operator, op)
         }
         return nil
-    }
-
-    mutating func parsePunctuation() -> Token? {
-        return parseToken(.Operator, ":;,".characters)
-    }
-
-    mutating func parseStartOfScope() -> Token? {
-        return parseToken(.StartOfScope, oneOf: "([{\"".characters)
-    }
-
-    mutating func parseEndOfScope() -> Token? {
-        return parseToken(.EndOfScope, oneOf: "}])".characters)
     }
 
     mutating func parseIdentifier() -> Token? {
@@ -362,7 +336,7 @@ private extension String.CharacterView {
 
         func scanIdentifier() -> String? {
             if let head = scanCharacter({ isHead($0) || $0 == "@" || $0 == "#" }) {
-                if let tail = scanCharacters({ isTail($0) }) {
+                if let tail = scanCharacters(isTail) {
                     return head + tail
                 }
                 return head
@@ -371,9 +345,9 @@ private extension String.CharacterView {
         }
 
         let start = self
-        if scanCharacter({ $0 == "`" }) != nil {
+        if scanCharacter("`") {
             if let identifier = scanIdentifier() {
-                if scanCharacter({ $0 == "`" }) != nil {
+                if scanCharacter("`") {
                     return Token(.Identifier, "`" + identifier + "`")
                 }
             }
@@ -395,7 +369,7 @@ private extension String.CharacterView {
         if let integer = scanInteger() {
             number = integer
             let endOfInt = self
-            if scanCharacter({ $0 == "." }) != nil {
+            if scanCharacter(".") {
                 if let fraction = scanInteger() {
                     number += "." + fraction
                 } else {
@@ -414,16 +388,6 @@ private extension String.CharacterView {
             return Token(.Number, number)
         }
         return nil
-    }
-
-    mutating func parseLineBreak() -> Token? {
-        if scanCharacter({ $0 == "\r" }) != nil {
-            if scanCharacter({ $0 == "\n" }) != nil {
-                return Token(.Linebreak, "\r\n")
-            }
-            return Token(.Linebreak, "\r")
-        }
-        return parseToken(.Linebreak, "\n")
     }
 
     mutating func parseToken() -> Token? {
@@ -487,46 +451,82 @@ func tokenize(source: String) -> [Token] {
             string += c
         }
     }
+    
+    var comment = ""
+    var whitespace = ""
+    func flushCommentBodyTokens() {
+        if comment != "" {
+            tokens.append(Token(.CommentBody, comment))
+            comment = ""
+        }
+        if whitespace != "" {
+            tokens.append(Token(.Whitespace, whitespace))
+            whitespace = ""
+        }
+    }
 
     func processCommentBody() {
-        var comment = ""
         while let c = characters.scanCharacter({ _ in true }) {
-            if c == "/" {
-                if characters.scanCharacter({ $0 == "*" }) != nil {
-                    if comment != "" {
-                        tokens.append(Token(.CommentBody, comment))
-                    }
+            switch c {
+            case "/":
+                if characters.scanCharacter("*") {
+                    flushCommentBodyTokens()
                     scopeIndexStack.append(tokens.count)
                     tokens.append(Token(.StartOfScope, "/*"))
-                    comment = ""
                     continue
                 }
-            } else if c == "*" {
-                if characters.scanCharacter({ $0 == "/" }) != nil {
-                    if comment != "" {
-                        tokens.append(Token(.CommentBody, comment))
-                    }
+            case "*":
+                if characters.scanCharacter("/") {
+                    flushCommentBodyTokens()
                     tokens.append(Token(.EndOfScope, "*/"))
                     scopeIndexStack.popLast()
                     if scopeIndexStack.last == nil || tokens[scopeIndexStack.last!].string != "/*" {
                         return
                     }
-                    comment = ""
                     continue
                 }
-            } else if c == "\n" {
-                if comment != "" {
-                    tokens.append(Token(.CommentBody, comment))
+            default:
+                if c.characters.first?.isLinebreak == true {
+                    flushCommentBodyTokens()
+                    tokens.append(Token(.Linebreak, c))
+                    continue
                 }
-                tokens.append(Token(.Linebreak, "\n"))
-                if let token = characters.parseWhitespace() {
-                    tokens.append(token)
+                if c.characters.first?.isWhitespace == true {
+                    whitespace += c
+                    continue
                 }
-                comment = ""
-                continue
+            }
+            if whitespace != "" {
+                if comment == "" {
+                    tokens.append(Token(.Whitespace, whitespace))
+                } else {
+                    comment += whitespace
+                }
+                whitespace = ""
             }
             comment += c
         }
+        // We shouldn't actually get here, unless code is malformed
+        flushCommentBodyTokens()
+    }
+    
+    func processSingleLineCommentBody() {
+        while let c = characters.scanCharacter({ !$0.isLinebreak }) {
+            if c.characters.first?.isWhitespace == true {
+                whitespace += c
+                continue
+            }
+            if whitespace != "" {
+                if comment == "" {
+                    tokens.append(Token(.Whitespace, whitespace))
+                } else {
+                    comment += whitespace
+                }
+                whitespace = ""
+            }
+            comment += c
+        }
+        flushCommentBodyTokens()
     }
 
     func processToken() {
@@ -639,18 +639,9 @@ func tokenize(source: String) -> [Token] {
             if token.string == "\"" {
                 processStringBody()
             } else if token.string == "/*" {
-                if let whitespace = characters.parseWhitespace() {
-                    tokens.append(whitespace)
-                }
                 processCommentBody()
             } else if token.string == "//" {
-                if let whitespace = characters.parseWhitespace() {
-                    tokens.append(whitespace)
-                }
-                if let comment = characters.scanCharacters({ $0 != "\n" && $0 != "\r" }) {
-                    tokens.append(Token(.CommentBody, comment))
-                }
-                scopeIndexStack.popLast()
+                processSingleLineCommentBody()
             }
         }
     }

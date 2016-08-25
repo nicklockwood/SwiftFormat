@@ -40,6 +40,24 @@ func XCTAssertEqualArrays<T: Equatable>(first: [T], _ second: [T]) {
 
 class TokenizerTests: XCTestCase {
 
+    // MARK: Whitespace
+    
+    func testSpaces() {
+        let input = "    "
+        let output = [
+            Token(.Whitespace, "    "),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testSpacesAndTabs() {
+        let input = "  \t  \t"
+        let output = [
+            Token(.Whitespace, "  \t  \t"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
     // MARK: Strings
 
     func testEmptyString() {
@@ -116,11 +134,12 @@ class TokenizerTests: XCTestCase {
     }
 
     func testSingleLineCommentWithSpace() {
-        let input = "// foo"
+        let input = "// foo "
         let output = [
             Token(.StartOfScope, "//"),
             Token(.Whitespace, " "),
             Token(.CommentBody, "foo"),
+            Token(.Whitespace, " "),
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }
@@ -149,11 +168,12 @@ class TokenizerTests: XCTestCase {
     }
 
     func testSingleLineMultilineCommentWithSpace() {
-        let input = "/* foo*/"
+        let input = "/* foo */"
         let output = [
             Token(.StartOfScope, "/*"),
             Token(.Whitespace, " "),
             Token(.CommentBody, "foo"),
+            Token(.Whitespace, " "),
             Token(.EndOfScope, "*/"),
         ]
         XCTAssertEqualArrays(tokenize(input), output)
@@ -193,6 +213,26 @@ class TokenizerTests: XCTestCase {
             Token(.CommentBody, "bar"),
             Token(.EndOfScope, "*/"),
             Token(.CommentBody, "baz"),
+            Token(.EndOfScope, "*/"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testNestedCommentsWithWhitespace() {
+        let input = "/* foo /* bar */ baz */"
+        let output = [
+            Token(.StartOfScope, "/*"),
+            Token(.Whitespace, " "),
+            Token(.CommentBody, "foo"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "/*"),
+            Token(.Whitespace, " "),
+            Token(.CommentBody, "bar"),
+            Token(.Whitespace, " "),
+            Token(.EndOfScope, "*/"),
+            Token(.Whitespace, " "),
+            Token(.CommentBody, "baz"),
+            Token(.Whitespace, " "),
             Token(.EndOfScope, "*/"),
         ]
         XCTAssertEqualArrays(tokenize(input), output)
@@ -406,7 +446,8 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "+"),
             Token(.StartOfScope, "/*"),
             Token(.Whitespace, " "),
-            Token(.CommentBody, "b "),
+            Token(.CommentBody, "b"),
+            Token(.Whitespace, " "),
             Token(.EndOfScope, "*/"),
         ]
         XCTAssertEqualArrays(tokenize(input), output)
@@ -417,7 +458,8 @@ class TokenizerTests: XCTestCase {
         let output = [
             Token(.StartOfScope, "/*"),
             Token(.Whitespace, " "),
-            Token(.CommentBody, "a "),
+            Token(.CommentBody, "a"),
+            Token(.Whitespace, " "),
             Token(.EndOfScope, "*/"),
             Token(.Operator, "-"),
             Token(.Identifier, "b"),
@@ -856,6 +898,62 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "="),
             Token(.Whitespace, " "),
             Token(.Number, "5"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+
+    // MARK: linebreaks
+
+    func testLF() {
+        let input = "foo\nbar"
+        let output = [
+            Token(.Identifier, "foo"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "bar"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+
+    func testCR() {
+        let input = "foo\rbar"
+        let output = [
+            Token(.Identifier, "foo"),
+            Token(.Linebreak, "\r"),
+            Token(.Identifier, "bar"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+
+    func testCRLF() {
+        let input = "foo\r\nbar"
+        let output = [
+            Token(.Identifier, "foo"),
+            Token(.Linebreak, "\r\n"),
+            Token(.Identifier, "bar"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+
+    func testCRLFAfterComment() {
+        let input = "//foo\r\n//bar"
+        let output = [
+            Token(.StartOfScope, "//"),
+            Token(.CommentBody, "foo"),
+            Token(.Linebreak, "\r\n"),
+            Token(.StartOfScope, "//"),
+            Token(.CommentBody, "bar"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+
+    func testCRLFInMultilineComment() {
+        let input = "/*foo\r\nbar*/"
+        let output = [
+            Token(.StartOfScope, "/*"),
+            Token(.CommentBody, "foo"),
+            Token(.Linebreak, "\r\n"),
+            Token(.CommentBody, "bar"),
+            Token(.EndOfScope, "*/"),
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }

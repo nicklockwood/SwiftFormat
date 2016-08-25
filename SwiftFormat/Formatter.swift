@@ -423,6 +423,7 @@ public func spaceAroundOperators(formatter: Formatter) {
                 "guard",
                 "if",
                 "in",
+                "let",
                 "return",
                 "switch",
                 "where",

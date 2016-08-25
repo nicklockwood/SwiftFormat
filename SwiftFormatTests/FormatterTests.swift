@@ -366,6 +366,12 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
 
+    func testSpaceAroundCaseLet() {
+        let input = "case let.Foo(bar):"
+        let output = "case let .Foo(bar):"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+    }
+
     func testSpaceAroundEnumArgument() {
         let input = "foo(with:.Bar)"
         let output = "foo(with: .Bar)"

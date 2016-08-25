@@ -234,7 +234,9 @@ private extension String.CharacterView {
 
         if var tail = scanCharacter(isHead) {
             var head = ""
-            while let c = scanCharacter(isTail) {
+            // Tail may only contain dot if head does
+            let headWasDot = (tail == ".")
+            while let c = scanCharacter({ isTail($0) && (headWasDot || $0 != ".") }) {
                 if tail == "/" {
                     if c == "*" {
                         if head == "" {

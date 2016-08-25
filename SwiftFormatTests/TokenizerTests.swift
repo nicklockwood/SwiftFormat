@@ -466,6 +466,21 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }
+    
+    func testOperatorMayContainDotIfStartsWithDot() {
+        let input = ".*.."
+        let output = [Token(.Operator, ".*..")]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+    
+    func testOperatorMayNotContainDotUnlessStartsWithDot() {
+        let input = "*.."
+        let output = [
+            Token(.Operator, "*"),
+            Token(.Operator, "..")
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
 
     // MARK: chevrons (might be operators or generics)
 

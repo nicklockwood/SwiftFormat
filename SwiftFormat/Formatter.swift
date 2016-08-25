@@ -416,6 +416,15 @@ public func spaceAroundOperators(formatter: Formatter) {
             return false
         }
     }
+    
+    func isUnwrapOperatorSequence(token: Token) -> Bool {
+        for c in token.string.characters {
+            if c != "?" && c != "!" {
+                return false
+            }
+        }
+        return true
+    }
 
     func spaceAfter(identifier: String) -> Bool {
         switch identifier {
@@ -481,8 +490,6 @@ public func spaceAroundOperators(formatter: Formatter) {
                         formatter.insertToken(Token(.Whitespace, " "), atIndex: i + 1)
                     }
                 }
-            } else if ["?.", "!."].contains(token.string) {
-                // Do nothing, as whitespace is not permitted by compiler
             } else if token.string == "." {
                 if formatter.tokenAtIndex(i + 1)?.type == .Whitespace {
                     formatter.removeTokenAtIndex(i + 1)
@@ -494,7 +501,8 @@ public func spaceAroundOperators(formatter: Formatter) {
                         if previousNonWhitespaceToken.type != .Linebreak &&
                             (previousNonWhitespaceToken.type != .Operator ||
                             (previousNonWhitespaceToken.string == "?" && scopeStack.last?.string != "?") ||
-                            (previousNonWhitespaceToken.string == "!" && scopeStack.last?.string != "!")) &&
+                            (previousNonWhitespaceToken.string != "?" &&
+                                isUnwrapOperatorSequence(previousNonWhitespaceToken))) &&
                             (previousNonWhitespaceToken.type != .Identifier ||
                             !spaceAfter(previousNonWhitespaceToken.string)) {
                             if previousTokenWasWhitespace {

@@ -322,6 +322,11 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
+Version 0.5.1
+
+- Fixed critical bug where double unwrap (e.g. `foo??.bar()`) was not handled correctly
+- Fixed bug where `case let .SomeEnum` was not handled correctly
+
 Version 0.5
 
 - swiftformat command-line tool now supports reading from stdin/writing to stdout

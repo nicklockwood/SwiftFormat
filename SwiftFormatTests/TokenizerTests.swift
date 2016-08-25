@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  TokenizerTests.swift
 //
-//  Version 0.5
+//  Version 0.5.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -466,18 +466,18 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }
-    
+
     func testOperatorMayContainDotIfStartsWithDot() {
         let input = ".*.."
         let output = [Token(.Operator, ".*..")]
         XCTAssertEqualArrays(tokenize(input), output)
     }
-    
+
     func testOperatorMayNotContainDotUnlessStartsWithDot() {
         let input = "*.."
         let output = [
             Token(.Operator, "*"),
-            Token(.Operator, "..")
+            Token(.Operator, ".."),
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }

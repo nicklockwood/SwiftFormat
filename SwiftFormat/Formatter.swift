@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  Formatter.swift
 //
-//  Version 0.5
+//  Version 0.5.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -416,7 +416,7 @@ public func spaceAroundOperators(formatter: Formatter) {
             return false
         }
     }
-    
+
     func isUnwrapOperatorSequence(token: Token) -> Bool {
         for c in token.string.characters {
             if c != "?" && c != "!" {
@@ -502,7 +502,7 @@ public func spaceAroundOperators(formatter: Formatter) {
                             (previousNonWhitespaceToken.type != .Operator ||
                             (previousNonWhitespaceToken.string == "?" && scopeStack.last?.string != "?") ||
                             (previousNonWhitespaceToken.string != "?" &&
-                                isUnwrapOperatorSequence(previousNonWhitespaceToken))) &&
+                            isUnwrapOperatorSequence(previousNonWhitespaceToken))) &&
                             (previousNonWhitespaceToken.type != .Identifier ||
                             !spaceAfter(previousNonWhitespaceToken.string)) {
                             if previousTokenWasWhitespace {

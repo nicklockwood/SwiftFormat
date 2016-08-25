@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  Tokenizer.swift
 //
-//  Version 0.5
+//  Version 0.5.1
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Charcoal Design

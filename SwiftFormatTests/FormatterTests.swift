@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  FormatterTests.swift
 //
-//  Version 0.5
+//  Version 0.5.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -383,7 +383,7 @@ class FormatterTests: XCTestCase {
         let output = "foo?.bar"
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
-    
+
     func testNoSpaceAroundMultipleOptionalChaining() {
         let input = "foo??!?!.bar"
         let output = "foo??!?!.bar"
@@ -401,7 +401,7 @@ class FormatterTests: XCTestCase {
         let output = "foo?.bar"
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
-    
+
     func testNoSpaceBetweenMultipleOptionalChaining() {
         let input = "foo??! .bar"
         let output = "foo??!.bar"
@@ -419,7 +419,7 @@ class FormatterTests: XCTestCase {
         let output = "foo?\n    .bar"
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
-    
+
     func testSplitLineMultipleOptionalChaining() {
         let input = "foo??!\n    .bar"
         let output = "foo??!\n    .bar"

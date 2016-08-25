@@ -54,6 +54,12 @@ To use it safely, do the following:
 
 This *should* ensure that you avoid catastrophic data loss, but in the unlikely event that it wipes your hard drive, **please note that I accept no responsibility**.
 
+If you prefer, you can also use unix pipes to include swiftformat as part of a command chain. For example, this is an alternative way to format a file:
+
+    cat /path/to/file.swift | swiftformat -o /path/to/file.swift
+    
+Omitting the `-o /path/to/file.swift` will print the formatted file to `stdout`.
+
 
 That seems like an cumbersome process - can I automate it?
 ----------------------------------------------------------
@@ -315,6 +321,10 @@ With a syntax tree in place, it should become possible to add much more sophisti
      
 Release notes
 ----------------
+
+Version 0.5b
+
+- swiftformat command-line tool now supports reading from stdin/writing to stdout
 
 Version 0.4
 

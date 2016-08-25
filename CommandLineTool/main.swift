@@ -33,7 +33,7 @@
 
 import Foundation
 
-let version = "0.4"
+let version = "0.5b"
 
 func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOptions options: FormattingOptions) -> Int {
     let manager = NSFileManager.defaultManager()
@@ -140,6 +140,27 @@ func preprocessArguments(args: [String], _ names: [String]) -> [String: String]?
     return namedArgs
 }
 
+func showHelp() {
+    print("swiftformat, version \(version)")
+    print("copyright (c) 2016 Nick Lockwood")
+    print("")
+    print("usage: swiftformat [<file>] [-o path] [-i spaces]")
+    print("")
+    print("  <file>            input file or directory path")
+    print("  -o, --output      output path (defaults to input path)")
+    print("  -i, --indent      number of spaces to indent, or \"tab\" to use tabs")
+    print("  -s, --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
+    print("  -h, --help        this help page")
+    print("  -v, --version     version information")
+    print("")
+}
+
+func expandPath(path: String) -> NSURL {
+    let path = NSString(string: path).stringByExpandingTildeInPath
+    let directoryURL = NSURL(fileURLWithPath: NSFileManager.defaultManager().currentDirectoryPath)
+    return NSURL(fileURLWithPath: path, relativeToURL: directoryURL)
+}
+
 func processArguments(args: [String]) {
     guard let args = preprocessArguments(args, [
         "output",
@@ -150,6 +171,12 @@ func processArguments(args: [String]) {
     ]) else {
         return
     }
+    
+    // Show help if requested specifically or if no arguments are passed
+    if args["help"] != nil {
+        showHelp()
+        return
+    }
 
     // Version
     if args["version"] != nil {
@@ -158,36 +185,8 @@ func processArguments(args: [String]) {
     }
 
     // Get input / output paths
-    var inputPath = args["1"]
-    var outputPath = args["output"] ?? inputPath
-
-    // Show help if requested specifically or if no arguments are passed
-    if args["help"] != nil || inputPath == nil {
-        print("swiftformat, version \(version)")
-        print("copyright (c) 2016 Nick Lockwood")
-        print("")
-        print("usage: swiftformat <file> [-o path] [-i spaces]")
-        print("")
-        print("  <file>            input file or directory path")
-        print("  -o, --output      output path (defaults to input path)")
-        print("  -i, --indent      number of spaces to indent, or \"tab\" to use tabs")
-        print("  -s, --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
-        print("  -h, --help        this help page")
-        print("  -v, --version     version information")
-        print("")
-        return
-    }
-
-    print("running swiftformat...")
-
-    // Expand input / output paths
-    inputPath = NSString(string: inputPath!).stringByExpandingTildeInPath
-    outputPath = NSString(string: outputPath!).stringByExpandingTildeInPath
-
-    // Convert paths to file URLs relative to current directory
-    let directoryURL = NSURL(fileURLWithPath: NSFileManager.defaultManager().currentDirectoryPath)
-    let inputURL = NSURL(fileURLWithPath: inputPath!, relativeToURL: directoryURL)
-    let outputURL = NSURL(fileURLWithPath: outputPath!, relativeToURL: directoryURL)
+    let inputURL = args["1"].map { expandPath($0) }
+    let outputURL = (args["output"] ??  args["1"]).map { expandPath($0) }
 
     // Get options
     var options = FormattingOptions()
@@ -211,9 +210,35 @@ func processArguments(args: [String]) {
             return
         }
     }
+    
+    // If no input file, try stdin
+    if inputURL == nil {
+        var input: String?
+        while let line = readLine(stripNewline: false) {
+            input = (input ?? "") + line
+        }
+        if let input = input {
+            let output = format(input, rules: defaultRules, options: options)
+            if let outputURL = outputURL {
+                if (try? output.writeToURL(outputURL, atomically: true, encoding: NSUTF8StringEncoding)) != nil {
+                    print("swiftformat completed successfully")
+                } else {
+                    print("error: failed to write file: \(outputURL.path!)")
+                }
+            } else {
+                // Write to stdout
+                print(output)
+            }
+        } else {
+            showHelp()
+        }
+        return
+    }
+    
+    print("running swiftformat...")
 
     // Format the code
-    let filesWritten = processInput(inputURL, andWriteToOutput: outputURL, withOptions: options)
+    let filesWritten = processInput(inputURL!, andWriteToOutput: outputURL!, withOptions: options)
     print("swiftformat completed. \(filesWritten) file(s) updated.")
 }
 

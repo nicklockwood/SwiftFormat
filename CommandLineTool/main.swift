@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  main.swift
 //
-//  Version 0.4
+//  Version 0.5
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -33,7 +33,7 @@
 
 import Foundation
 
-let version = "0.5b"
+let version = "0.5"
 
 func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOptions options: FormattingOptions) -> Int {
     let manager = NSFileManager.defaultManager()
@@ -233,21 +233,32 @@ func processArguments(args: [String]) {
     // If no input file, try stdin
     if inputURL == nil {
         var input: String?
-        while let line = readLine(stripNewline: false) {
-            input = (input ?? "") + line
-        }
-        if let input = input {
-            let output = format(input, rules: defaultRules, options: options)
-            if let outputURL = outputURL {
-                if (try? output.writeToURL(outputURL, atomically: true, encoding: NSUTF8StringEncoding)) != nil {
-                    print("swiftformat completed successfully")
-                } else {
-                    print("error: failed to write file: \(outputURL.path!)")
-                }
-            } else {
-                // Write to stdout
-                print(output)
+        var finished = false
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)) {
+            while let line = readLine(stripNewline: false) {
+                input = (input ?? "") + line
             }
+            if let input = input {
+                let output = format(input, rules: defaultRules, options: options)
+                if let outputURL = outputURL {
+                    if (try? output.writeToURL(outputURL, atomically: true, encoding: NSUTF8StringEncoding)) != nil {
+                        print("swiftformat completed successfully")
+                    } else {
+                        print("error: failed to write file: \(outputURL.path!)")
+                    }
+                } else {
+                    // Write to stdout
+                    print(output)
+                }
+            }
+            finished = true
+        }
+        // Wait for input
+        let start = NSDate()
+        while start.timeIntervalSinceNow > -0.01 {}
+        // If no input received by now, assume none is coming
+        if input != nil {
+            while !finished {}
         } else {
             showHelp()
         }

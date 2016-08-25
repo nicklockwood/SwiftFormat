@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  Formatter.swift
 //
-//  Version 0.4
+//  Version 0.5
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -552,7 +552,7 @@ public func noConsecutiveSpaces(formatter: Formatter) {
         }
         return nil
     }
-    
+
     formatter.forEachToken(ofType: .Whitespace) { i, token in
         if let previousToken = formatter.tokenAtIndex(i - 1) where previousToken.type != .Linebreak {
             let scope = currentScopeAtIndex(i)

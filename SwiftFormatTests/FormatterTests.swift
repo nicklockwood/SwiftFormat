@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  FormatterTests.swift
 //
-//  Version 0.4
+//  Version 0.5
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -469,7 +469,7 @@ class FormatterTests: XCTestCase {
         let output = "/*    comment  */"
         XCTAssertEqual(format(input, rules: [noConsecutiveSpaces]), output)
     }
-    
+
     func testNoConsecutiveSpacesDoesntAffectNestedMultilineComments() {
         let input = "/*  foo  /*  bar  */  baz  */"
         let output = "/*  foo  /*  bar  */  baz  */"
@@ -495,13 +495,13 @@ class FormatterTests: XCTestCase {
         let output = "foo"
         XCTAssertEqual(format(input, rules: [noTrailingWhitespace]), output)
     }
-    
+
     func testNoTrailingWhitespaceInMultilineComments() {
         let input = "/*foo  \nbar  */"
         let output = "/*foo\nbar  */"
         XCTAssertEqual(format(input, rules: [noTrailingWhitespace]), output)
     }
-    
+
     func testNoTrailingWhitespaceInSingleLineComments() {
         let input = "//foo  \n//bar  "
         let output = "//foo\n//bar"

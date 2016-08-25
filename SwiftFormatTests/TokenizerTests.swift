@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  TokenizerTests.swift
 //
-//  Version 0.4
+//  Version 0.5
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -41,7 +41,7 @@ func XCTAssertEqualArrays<T: Equatable>(first: [T], _ second: [T]) {
 class TokenizerTests: XCTestCase {
 
     // MARK: Whitespace
-    
+
     func testSpaces() {
         let input = "    "
         let output = [
@@ -49,7 +49,7 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }
-    
+
     func testSpacesAndTabs() {
         let input = "  \t  \t"
         let output = [
@@ -57,7 +57,7 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }
-    
+
     // MARK: Strings
 
     func testEmptyString() {
@@ -217,7 +217,7 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }
-    
+
     func testNestedCommentsWithWhitespace() {
         let input = "/* foo /* bar */ baz */"
         let output = [

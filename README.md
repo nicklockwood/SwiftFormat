@@ -70,7 +70,7 @@ Do that as follows:
 
 1. Add the `swiftformat` binary to your project directory (this is better than referencing your local copy because it ensures that everyone who checks out the project will be using the same version).
 
-2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `${SRCROOT}/path/to/swiftformat -f /path/to/your/swift/code/`
+2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `${SRCROOT}/path/to/swiftformat /path/to/your/swift/code/`
 
 **Note:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
 
@@ -272,9 +272,9 @@ SwiftFormat currently reformats multiline comment blocks without regard for the 
 
     /* some documentation
     
-        func codeExample() {
-            print("Hello World")
-        }
+          func codeExample() {
+              print("Hello World")
+          }
  
      */
      
@@ -292,9 +292,9 @@ To work around that, either use blocks of single-line comments...
 
     // some documentation
     //
-    // func codeExample() {
-    //     print("Hello World")
-    // }
+    //    func codeExample() {
+    //        print("Hello World")
+    //    }
     //
     //
     
@@ -322,9 +322,12 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
-Version 0.5b
+Version 0.5
 
 - swiftformat command-line tool now supports reading from stdin/writing to stdout
+- Added new `linebreaks` rule for normalizing linebreak characters (defaults to LF)
+- More robust handling of linebreaks and whitespace within comments
+- Trailing whitespace within comments is now stripped, as it was for other lines
 
 Version 0.4
 

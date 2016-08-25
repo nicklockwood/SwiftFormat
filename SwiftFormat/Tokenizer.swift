@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  Tokenizer.swift
 //
-//  Version 0.4
+//  Version 0.5
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -117,7 +117,7 @@ private extension Character {
 }
 
 private extension String.CharacterView {
-    
+
     mutating func scanCharacters(matching: (Character) -> Bool) -> String? {
         var index = endIndex
         for (i, c) in enumerate() {
@@ -133,7 +133,7 @@ private extension String.CharacterView {
         }
         return nil
     }
-    
+
     mutating func scanCharacter(matching: (Character) -> Bool) -> String? {
         if let c = first where matching(c) {
             self = suffixFrom(startIndex.advancedBy(1))
@@ -141,7 +141,7 @@ private extension String.CharacterView {
         }
         return nil
     }
-    
+
     mutating func scanCharacter(character: Character) -> Bool {
         return scanCharacter({ $0 == character }) != nil
     }
@@ -156,11 +156,11 @@ private extension String.CharacterView {
     mutating func parseToken(type: TokenType, oneOf matching: (Character) -> Bool) -> Token? {
         return scanCharacter(matching).map { Token(type, $0) }
     }
-    
+
     mutating func parseToken(type: TokenType, oneOrMore matching: (Character) -> Bool) -> Token? {
         return scanCharacters(matching).map { Token(type, $0) }
     }
-    
+
     mutating func parseToken(type: TokenType, oneOf characters: String.CharacterView) -> Token? {
         return parseToken(type, oneOf: { characters.contains($0) })
     }
@@ -171,19 +171,19 @@ private extension String.CharacterView {
     mutating func parseWhitespace() -> Token? {
         return parseToken(.Whitespace, oneOrMore: { $0.isWhitespace })
     }
-    
+
     mutating func parseLineBreak() -> Token? {
         return parseToken(.Linebreak, oneOf: { $0.isLinebreak })
     }
-    
+
     mutating func parsePunctuation() -> Token? {
         return parseToken(.Operator, oneOf: ":;,".characters)
     }
-    
+
     mutating func parseStartOfScope() -> Token? {
         return parseToken(.StartOfScope, oneOf: "([{\"".characters)
     }
-    
+
     mutating func parseEndOfScope() -> Token? {
         return parseToken(.EndOfScope, oneOf: "}])".characters)
     }
@@ -451,7 +451,7 @@ func tokenize(source: String) -> [Token] {
             string += c
         }
     }
-    
+
     var comment = ""
     var whitespace = ""
     func flushCommentBodyTokens() {
@@ -509,7 +509,7 @@ func tokenize(source: String) -> [Token] {
         // We shouldn't actually get here, unless code is malformed
         flushCommentBodyTokens()
     }
-    
+
     func processSingleLineCommentBody() {
         while let c = characters.scanCharacter({ !$0.isLinebreak }) {
             if c.characters.first?.isWhitespace == true {

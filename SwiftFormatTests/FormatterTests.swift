@@ -402,15 +402,15 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
 
-    func testNoSpaceBetweenMultipleOptionalChaining() {
-        let input = "foo??! .bar"
-        let output = "foo??!.bar"
-        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
-    }
-
     func testNoSpaceBetweenForcedChaining() {
         let input = "foo! .bar"
         let output = "foo!.bar"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+    }
+
+    func testNoSpaceBetweenMultipleOptionalChaining() {
+        let input = "foo??! .bar"
+        let output = "foo??!.bar"
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
 
@@ -423,6 +423,12 @@ class FormatterTests: XCTestCase {
     func testSplitLineMultipleOptionalChaining() {
         let input = "foo??!\n    .bar"
         let output = "foo??!\n    .bar"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+    }
+
+    func testSpaceBetweenNullCoalescingAndDot() {
+        let input = "foo ?? .bar()"
+        let output = "foo ?? .bar()"
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
 

@@ -496,12 +496,13 @@ public func spaceAroundOperators(formatter: Formatter) {
                 }
                 if let previousToken = formatter.tokenAtIndex(i - 1) {
                     let previousTokenWasWhitespace = (previousToken.type == .Whitespace)
-                    if let previousNonWhitespaceToken =
-                        previousTokenWasWhitespace ? formatter.tokenAtIndex(i - 2) : previousToken {
+                    let previousNonWhitespaceTokenIndex = i - (previousTokenWasWhitespace ? 2 : 1)
+                    if let previousNonWhitespaceToken = formatter.tokenAtIndex(previousNonWhitespaceTokenIndex) {
                         if previousNonWhitespaceToken.type != .Linebreak &&
                             (previousNonWhitespaceToken.type != .Operator ||
                             (previousNonWhitespaceToken.string == "?" && scopeStack.last?.string != "?") ||
                             (previousNonWhitespaceToken.string != "?" &&
+                            formatter.tokenAtIndex(previousNonWhitespaceTokenIndex - 1)?.type != .Whitespace &&
                             isUnwrapOperatorSequence(previousNonWhitespaceToken))) &&
                             (previousNonWhitespaceToken.type != .Identifier ||
                             !spaceAfter(previousNonWhitespaceToken.string)) {

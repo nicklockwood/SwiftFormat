@@ -149,6 +149,7 @@ func showHelp() {
     print("  <file>            input file or directory path")
     print("  -o, --output      output path (defaults to input path)")
     print("  -i, --indent      number of spaces to indent, or \"tab\" to use tabs")
+    print("  -l, --linebreaks  linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
     print("  -s, --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
     print("  -h, --help        this help page")
     print("  -v, --version     version information")
@@ -165,13 +166,14 @@ func processArguments(args: [String]) {
     guard let args = preprocessArguments(args, [
         "output",
         "indent",
+        "linebreaks",
         "semicolons",
         "help",
         "version",
     ]) else {
         return
     }
-    
+
     // Show help if requested specifically or if no arguments are passed
     if args["help"] != nil {
         showHelp()
@@ -186,31 +188,48 @@ func processArguments(args: [String]) {
 
     // Get input / output paths
     let inputURL = args["1"].map { expandPath($0) }
-    let outputURL = (args["output"] ??  args["1"]).map { expandPath($0) }
+    let outputURL = (args["output"] ?? args["1"]).map { expandPath($0) }
 
     // Get options
     var options = FormattingOptions()
     if let indent = args["indent"] {
-        if indent == "tabs" || indent == "tab" {
+        switch indent.lowercaseString {
+        case "tab", "tabs":
             options.indent = "\t"
-        } else if let spaces = Int(indent) {
-            options.indent = String(count: spaces, repeatedValue: (" " as Character))
-        } else {
+        default:
+            if let spaces = Int(indent) {
+                options.indent = String(count: spaces, repeatedValue: (" " as Character))
+                break
+            }
             print("error: unsupported indent value: \(indent).")
             return
         }
     }
     if let semicolons = args["semicolons"] {
-        if semicolons == "inline" {
+        switch semicolons.lowercaseString {
+        case "inline":
             options.allowInlineSemicolons = true
-        } else if semicolons == "never" {
+        case "never":
             options.allowInlineSemicolons = false
-        } else {
+        default:
             print("error: unsupported semicolons value: \(semicolons).")
             return
         }
     }
-    
+    if let linebreaks = args["linebreaks"] {
+        switch linebreaks.lowercaseString {
+        case "cr":
+            options.linebreak = "\r"
+        case "lf":
+            options.linebreak = "\n"
+        case "crlf":
+            options.linebreak = "\r\n"
+        default:
+            print("error: unsupported linebreak value: \(linebreaks).")
+            return
+        }
+    }
+
     // If no input file, try stdin
     if inputURL == nil {
         var input: String?
@@ -234,7 +253,7 @@ func processArguments(args: [String]) {
         }
         return
     }
-    
+
     print("running swiftformat...")
 
     // Format the code

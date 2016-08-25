@@ -37,12 +37,15 @@ import Foundation
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormattingOptions {
     public var indent: String
+    public var linebreak: String
     public var allowInlineSemicolons: Bool
 
     public init(indent: String = "    ",
+        linebreak: String = "\n",
         allowInlineSemicolons: Bool = true) {
 
         self.indent = indent
+        self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons
     }
 }
@@ -532,10 +535,30 @@ public func spaceAroundOperators(formatter: Formatter) {
 /// the start of a line or inside a comment or string, as these have no semantic
 /// meaning and lead to noise in commits.
 public func noConsecutiveSpaces(formatter: Formatter) {
+    func currentScopeAtIndex(index: Int) -> Token? {
+        var i = index
+        var scopeStack: [Token] = []
+        while let token = formatter.tokenAtIndex(i) {
+            if token.type == .StartOfScope {
+                if let scope = scopeStack.last where scope.closesScopeForToken(token) {
+                    scopeStack.popLast()
+                } else {
+                    return token
+                }
+            } else if token.type == .EndOfScope {
+                scopeStack.append(token)
+            }
+            i -= 1
+        }
+        return nil
+    }
+    
     formatter.forEachToken(ofType: .Whitespace) { i, token in
-        if let previous = formatter.tokenAtIndex(i - 1) where
-            previous.type != .Linebreak && previous.string != "//" {
-            formatter.replaceTokenAtIndex(i, with: Token(.Whitespace, " "))
+        if let previousToken = formatter.tokenAtIndex(i - 1) where previousToken.type != .Linebreak {
+            let scope = currentScopeAtIndex(i)
+            if scope?.string != "/*" && scope?.string != "//" {
+                formatter.replaceTokenAtIndex(i, with: Token(.Whitespace, " "))
+            }
         }
     }
 }
@@ -585,7 +608,7 @@ public func linebreakAtEndOfFile(formatter: Formatter) {
         token = formatter.tokenAtIndex(formatter.tokens.count - 2)
     }
     if token?.type != .Linebreak {
-        formatter.insertToken(Token(.Linebreak, "\n"), atIndex: formatter.tokens.count)
+        formatter.insertToken(Token(.Linebreak, formatter.options.linebreak), atIndex: formatter.tokens.count)
     }
 }
 
@@ -1106,7 +1129,7 @@ public func semicolons(formatter: Formatter) {
                 if let indent = indentAtIndex(i) {
                     formatter.insertToken(indent, atIndex: i + 1)
                 }
-                formatter.replaceTokenAtIndex(i, with: Token(.Linebreak, "\n"))
+                formatter.replaceTokenAtIndex(i, with: Token(.Linebreak, formatter.options.linebreak))
             }
         } else {
             // Safe to remove
@@ -1115,7 +1138,15 @@ public func semicolons(formatter: Formatter) {
     }
 }
 
+/// Standardise linebreak characters as whatever is specified in the options (\n by default)
+public func linebreaks(formatter: Formatter) {
+    formatter.forEachToken(ofType: .Linebreak) { i, token in
+        formatter.replaceTokenAtIndex(i, with: Token(.Linebreak, formatter.options.linebreak))
+    }
+}
+
 public let defaultRules: [FormatRule] = [
+    linebreaks,
     semicolons,
     knrBraces,
     elseOnSameLine,

@@ -464,16 +464,21 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [noConsecutiveSpaces]), output)
     }
 
-    func testNoConsecutiveSpacesAtStartOfMultilineComment() {
-        // NOTE: this is kind of an unintended side-effect, but I think it's OK
-        let input = "/*    comment */"
-        let output = "/* comment */"
+    func testNoConsecutiveSpacesDoesntAffectMultilineComments() {
+        let input = "/*    comment  */"
+        let output = "/*    comment  */"
+        XCTAssertEqual(format(input, rules: [noConsecutiveSpaces]), output)
+    }
+    
+    func testNoConsecutiveSpacesDoesntAffectNestedMultilineComments() {
+        let input = "/*  foo  /*  bar  */  baz  */"
+        let output = "/*  foo  /*  bar  */  baz  */"
         XCTAssertEqual(format(input, rules: [noConsecutiveSpaces]), output)
     }
 
     func testNoConsecutiveSpacesDoesntAffectSingleLineComments() {
-        let input = "//    comment"
-        let output = "//    comment"
+        let input = "//    comment  "
+        let output = "//    comment  "
         XCTAssertEqual(format(input, rules: [noConsecutiveSpaces]), output)
     }
 
@@ -488,6 +493,18 @@ class FormatterTests: XCTestCase {
     func testNoTrailingWhitespaceAtEndOfFile() {
         let input = "foo  "
         let output = "foo"
+        XCTAssertEqual(format(input, rules: [noTrailingWhitespace]), output)
+    }
+    
+    func testNoTrailingWhitespaceInMultilineComments() {
+        let input = "/*foo  \nbar  */"
+        let output = "/*foo\nbar  */"
+        XCTAssertEqual(format(input, rules: [noTrailingWhitespace]), output)
+    }
+    
+    func testNoTrailingWhitespaceInSingleLineComments() {
+        let input = "//foo  \n//bar  "
+        let output = "//foo\n//bar"
         XCTAssertEqual(format(input, rules: [noTrailingWhitespace]), output)
     }
 

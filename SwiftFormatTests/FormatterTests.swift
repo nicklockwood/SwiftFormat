@@ -359,6 +359,12 @@ class FormatterTests: XCTestCase {
         let output = "case .Foo, .Bar:"
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
+    
+    func testSwitchWithEnumCases() {
+        let input = "switch x {\ncase.Foo:\nbreak\ndefault:\n    break\n}"
+        let output = "switch x {\ncase .Foo:\nbreak\ndefault:\n    break\n}"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+    }
 
     func testSpaceAroundEnumReturn() {
         let input = "return.Foo"
@@ -617,12 +623,24 @@ class FormatterTests: XCTestCase {
         let output = "{\n\n\n}"
         XCTAssertEqual(format(input, rules: [indent]), output)
     }
+    
+    func testnestedBraces() {
+        let input = "({\n//foo\n}, {\n//bar\n})"
+        let output = "({\n    //foo\n}, {\n    //bar\n})"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
 
     // MARK: indent switch/case
 
     func testSwitchCaseIndenting() {
         let input = "switch x {\ncase foo:\nbreak\ncase bar:\nbreakdefault:\nbreak\n}"
         let output = "switch x {\ncase foo:\n    break\ncase bar:\n    breakdefault:\n    break\n}"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+
+    func testSwitchWrappedCaseIndenting() {
+        let input = "switch x {\ncase foo,\nbar,\n    baz:\n    break\ndefault:\n    break\n}"
+        let output = "switch x {\ncase foo,\n    bar,\n    baz:\n    break\ndefault:\n    break\n}"
         XCTAssertEqual(format(input, rules: [indent]), output)
     }
 
@@ -697,6 +715,12 @@ class FormatterTests: XCTestCase {
     func testNoDoubleIndentWhenScopesSeparatedByWrap() {
         let input = "(foo\nas Bar {\nbaz\n})"
         let output = "(foo\n    as Bar {\n    baz\n})"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+
+    func testNoPermanentReductionInScopeAfterWrap() {
+        let input = "{foo\nas Bar\nlet baz = 5\n}"
+        let output = "{foo\n    as Bar\n    let baz = 5\n}"
         XCTAssertEqual(format(input, rules: [indent]), output)
     }
 

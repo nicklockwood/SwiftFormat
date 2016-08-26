@@ -74,26 +74,34 @@ public struct Token: Equatable {
     }
 
     public func closesScopeForToken(token: Token) -> Bool {
-        guard type != .StringBody && type != .CommentBody else {
+        guard token.type == .StartOfScope else {
             return false
         }
+        if type == .EndOfScope {
+            switch token.string {
+            case "(":
+                return string == ")"
+            case "[":
+                return string == "]"
+            case "{":
+                return string == "}" || string == "case" || string == "default"
+            case "/*":
+                return string == "*/"
+            case "#if":
+                return string == "#endif"
+            case ":":
+                return string == "case" || string == "default" || string == "}"
+            default:
+                break
+            }
+        }
         switch token.string {
-        case "(":
-            return string == ")"
-        case "[":
-            return string == "]"
-        case "{":
-            return string == "}"
         case "<":
             return string.hasPrefix(">")
         case "\"":
             return string == "\""
-        case "/*":
-            return string == "*/"
         case "//":
             return type == .Linebreak
-        case "#if":
-            return string == "#endif"
         default:
             return false
         }
@@ -419,6 +427,8 @@ func tokenize(source: String) -> [Token] {
     var characters = source.characters
     var lastNonWhitespaceIndex: Int?
     var closedGenericScopeIndexes: [Int] = []
+    var nestedSwitches = 0
+    var inCaseStatement = false
 
     func processStringBody() {
         var string = ""
@@ -534,6 +544,25 @@ func tokenize(source: String) -> [Token] {
     func processToken() {
         let token = tokens.last!
         if token.type != .Whitespace {
+            // Track switch/case statements
+            if token.type == .Identifier {
+                if token.string == "switch" {
+                    nestedSwitches += 1
+                } else if nestedSwitches > 0 && (token.string == "case" || token.string == "default") {
+                    let lastToken = tokens[lastNonWhitespaceIndex!]
+                    if lastToken.string != "if" {
+                        tokens[tokens.count - 1] = Token(.EndOfScope, token.string)
+                        inCaseStatement = true
+                        processToken()
+                        return
+                    }
+                }
+            } else if inCaseStatement && token.type == .Operator && token.string == ":" {
+                tokens[tokens.count - 1] = Token(.StartOfScope, ":")
+                inCaseStatement = false
+                processToken()
+                return
+            }
             // Fix up misidentified generic that is actually a pair of operators
             if let lastNonWhitespaceIndex = lastNonWhitespaceIndex {
                 let lastToken = tokens[lastNonWhitespaceIndex]
@@ -588,7 +617,9 @@ func tokenize(source: String) -> [Token] {
             let scope = tokens[scopeIndex]
             if token.closesScopeForToken(scope) {
                 scopeIndexStack.popLast()
-                if token.string.hasPrefix(">") {
+                if token.string == "}" && scope.string == ":" {
+                    nestedSwitches -= 1
+                } else if token.string.hasPrefix(">") {
                     closedGenericScopeIndexes.append(scopeIndex)
                     tokens[tokens.count - 1] = Token(.EndOfScope, ">")
                     if token.string != ">" {
@@ -598,7 +629,6 @@ func tokenize(source: String) -> [Token] {
                         processToken()
                         return
                     }
-
                 } else if scopeIndexStack.last != nil && tokens[scopeIndexStack.last!].string == "\"" {
                     processStringBody()
                 }

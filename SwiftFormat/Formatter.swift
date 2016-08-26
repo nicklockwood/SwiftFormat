@@ -67,6 +67,8 @@ public class Formatter {
         self.options = options
     }
 
+    // MARK: access and mutation
+
     /// Returns the token at the specified index, or nil if index is invalid
     public func tokenAtIndex(index: Int) -> Token? {
         guard index >= 0 && index < tokens.count else { return nil }
@@ -132,6 +134,8 @@ public class Formatter {
         }
     }
 
+    // MARK: enumeration
+
     /// Loops through each token in the array. It is safe to mutate the token
     /// array inside the body block, but note that the index and token arguments
     /// may not reflect the current token any more after a mutation
@@ -146,33 +150,32 @@ public class Formatter {
         indexStack.popLast()
     }
 
+    /// As above, but only loops through tokens that match the specified filter block
+    public func forEachToken(matching: (Token) -> Bool, _ body: (Int, Token) -> Void) {
+        forEachToken { index, token in
+            if matching(token) {
+                body(index, token)
+            }
+        }
+    }
+
     /// As above, but only loops through tokens with the specified type
     public func forEachToken(ofType type: TokenType, _ body: (Int, Token) -> Void) {
-        forEachToken(matching: { $0.type == type }, body)
+        forEachToken({ $0.type == type }, body)
     }
 
     /// As above, but only loops through tokens with the specified type and string
     public func forEachToken(string: String, ofType type: TokenType, _ body: (Int, Token) -> Void) {
-        forEachToken(matching: {
-            return $0.type == type && $0.string == string
-        }, body)
+        forEachToken({ return $0.type == type && $0.string == string }, body)
     }
 
     /// As above, but only loops through tokens with the specified string.
     /// Tokens of type `StringBody` and `CommentBody` are ignored, as these
     /// can't be usefully identified by their string value
     public func forEachToken(string: String, _ body: (Int, Token) -> Void) {
-        forEachToken(matching: {
+        forEachToken({
             return $0.string == string && $0.type != .StringBody && $0.type != .CommentBody
         }, body)
-    }
-
-    private func forEachToken(matching condition: (Token) -> Bool, _ body: (Int, Token) -> Void) {
-        forEachToken { index, token in
-            if condition(token) {
-                body(index, token)
-            }
-        }
     }
 }
 
@@ -504,8 +507,7 @@ public func spaceAroundOperators(formatter: Formatter) {
                             (previousNonWhitespaceToken.string != "?" &&
                             formatter.tokenAtIndex(previousNonWhitespaceTokenIndex - 1)?.type != .Whitespace &&
                             isUnwrapOperatorSequence(previousNonWhitespaceToken))) &&
-                            (previousNonWhitespaceToken.type != .Identifier ||
-                            !spaceAfter(previousNonWhitespaceToken.string)) {
+                            !spaceAfter(previousNonWhitespaceToken.string) {
                             if previousTokenWasWhitespace {
                                 formatter.removeTokenAtIndex(i - 1)
                             }
@@ -565,9 +567,13 @@ public func noConsecutiveSpaces(formatter: Formatter) {
 
     formatter.forEachToken(ofType: .Whitespace) { i, token in
         if let previousToken = formatter.tokenAtIndex(i - 1) where previousToken.type != .Linebreak {
-            let scope = currentScopeAtIndex(i)
-            if scope?.string != "/*" && scope?.string != "//" {
-                formatter.replaceTokenAtIndex(i, with: Token(.Whitespace, " "))
+            if token.string == "" {
+                formatter.removeTokenAtIndex(i)
+            } else if token.string != " " {
+                let scope = currentScopeAtIndex(i)
+                if scope?.string != "/*" && scope?.string != "//" {
+                    formatter.replaceTokenAtIndex(i, with: Token(.Whitespace, " "))
+                }
             }
         }
     }
@@ -647,16 +653,14 @@ public func indent(formatter: Formatter) {
         }
         return nil
     }
-
-    func setIndent(indent: String, atIndex index: Int) {
+    
+    func setIndent(indent: String, atIndex index: Int) -> Bool {
         if formatter.tokenAtIndex(index)?.type == .Whitespace {
-            if indent != "" {
-                formatter.replaceTokenAtIndex(index, with: Token(.Whitespace, indent))
-            } else {
-                formatter.removeTokenAtIndex(index)
-            }
-        } else if indent != "" {
+            formatter.replaceTokenAtIndex(index, with: Token(.Whitespace, indent))
+            return false
+        } else {
             formatter.insertToken(Token(.Whitespace, indent), atIndex: index)
+            return true
         }
     }
 
@@ -678,7 +682,7 @@ public func indent(formatter: Formatter) {
     func tokenIsEndOfStatement(i: Int) -> Bool {
         if let token = formatter.tokenAtIndex(i) {
             switch token.type {
-            case .Identifier:
+            case .Identifier, .EndOfScope:
                 // TODO: handle context-specific keywords
                 // in, associativity, convenience, dynamic, didSet, final, get, infix, indirect,
                 // lazy, left, mutating, none, nonmutating, optional, override, postfix, precedence,
@@ -786,7 +790,9 @@ public func indent(formatter: Formatter) {
         return true
     }
 
+    setIndent("", atIndex: 0)
     formatter.forEachToken { i, token in
+        var i = i
         if token.type == .StartOfScope {
             // Handle start of scope
             scopeIndexStack.append(i)
@@ -798,84 +804,53 @@ public func indent(formatter: Formatter) {
                 } else {
                     indent += formatter.options.indent
                 }
+            } else {
+                indentStack.popLast()
+                indentStack.append(indentStack.last ?? "")
             }
             indentStack.append(indent)
             scopeStartLineIndexes.append(lineIndex)
-        } else {
+        } else if token.type != .Whitespace {
             if let scopeIndex = scopeIndexStack.last, scope = formatter.tokenAtIndex(scopeIndex) {
                 // Handle end of scope
                 if token.closesScopeForToken(scope) {
                     scopeStartLineIndexes.popLast()
                     scopeIndexStack.popLast()
                     indentStack.popLast()
-                    if lineIndex > scopeStartLineIndexes.last ?? -1 {
+                    if lineIndex > scopeStartLineIndexes.last ?? -1 { // What is this?
                         let start = startOfLine(atIndex: i)
                         if let nextToken = nextNonWhitespaceToken(fromIndex: start) where
                             nextToken.type == .EndOfScope && nextToken.string != "*/" {
                             // Only reduce indent if line begins with a closing scope token
                             let indent = indentStack.last ?? ""
-                            setIndent(indent, atIndex: start)
+                            if setIndent(indent, atIndex: start) {
+                                i += 1
+                            }
                         }
                     }
                 } else if token.type == .Identifier {
                     // Handle #elseif/#else
                     if token.string == "#else" || token.string == "#elseif" {
                         let indent = indentStack[indentStack.count - 2]
-                        setIndent(indent, atIndex: startOfLine(atIndex: i))
-                    }
-                    // Handle switch/case
-                    else if token.string == "case" || token.string == "default" {
-                        if formatter.tokenAtIndex(lastNonWhitespaceIndex)?.string == "if" {
-                            // it was an if case statement
-                        } else if scope.string == "{" {
-                            // walk backwards to see if this is an switch or enum
-                            var isSwitch = true
-                            var subscopeStack: [Token] = []
-                            var j = scopeIndex - 1
-                            loop: while let token = formatter.tokenAtIndex(j) {
-                                switch token.type {
-                                case .Identifier:
-                                    if subscopeStack.count == 0 {
-                                        if token.string == "switch" {
-                                            break loop
-                                        }
-                                        if token.string == "enum" {
-                                            isSwitch = false
-                                            break loop
-                                        }
-                                    }
-                                case .EndOfScope:
-                                    subscopeStack.append(token)
-                                case .StartOfScope:
-                                    if subscopeStack.count == 0 {
-                                        break loop
-                                    }
-                                    subscopeStack.popLast()
-                                default:
-                                    break
-                                }
-                                j -= 1
-                            }
-                            if isSwitch {
-                                let indent = indentStack[indentStack.count - 2]
-                                setIndent(indent, atIndex: startOfLine(atIndex: i))
-                            }
+                        if setIndent(indent, atIndex: startOfLine(atIndex: i)) {
+                            i += 1
                         }
                     }
                 }
             }
             // Indent each new line
             if token.type == .Linebreak {
+                var indent = indentStack.last ?? ""
                 linewrapped = !tokenIsEndOfStatement(lastNonWhitespaceOrLinebreakIndex)
                 if linewrapped && lineIndex == scopeStartLineIndexes.last {
-                    indentStack.popLast()
-                    indentStack.append(indentStack.last ?? "")
+                    indent = indentStack.count > 1 ? indentStack[indentStack.count - 2] : ""
+                    scopeStartLineIndexes[scopeStartLineIndexes.count - 1] += 1
                 }
                 lineIndex += 1
                 setIndent("", atIndex: i + 1)
                 // Only indent if line isn't blank
-                if let nextToken = formatter.tokenAtIndex(i + 1) where nextToken.type != .Linebreak {
-                    let indent = (indentStack.last ?? "") + (linewrapped ? formatter.options.indent : "")
+                if let nextToken = formatter.tokenAtIndex(i + 2) where nextToken.type != .Linebreak {
+                    indent += (linewrapped ? formatter.options.indent : "")
                     setIndent(indent, atIndex: i + 1)
                 }
             }
@@ -885,12 +860,15 @@ public func indent(formatter: Formatter) {
             if !linewrapped && formatter.tokenAtIndex(lastNonWhitespaceIndex)?.type == .Linebreak &&
                 !tokenIsStartOfStatement(i) {
                 linewrapped = true
-                if linewrapped && lineIndex - 1 == scopeStartLineIndexes.last {
-                    indentStack.popLast()
-                    indentStack.append(indentStack.last ?? "")
+                var indent = indentStack.last ?? ""
+                if lineIndex - 1 == scopeStartLineIndexes.last {
+                    indent = indentStack.count > 1 ? indentStack[indentStack.count - 2] : ""
+                    scopeStartLineIndexes[scopeStartLineIndexes.count - 1] += 1
                 }
-                let indent = (indentStack.last ?? "") + (linewrapped ? formatter.options.indent : "")
-                setIndent(indent, atIndex: startOfLine(atIndex: i))
+                indent += (linewrapped ? formatter.options.indent : "")
+                if setIndent(indent, atIndex: startOfLine(atIndex: i)) {
+                    i += 1
+                }
             }
             lastNonWhitespaceIndex = i
             if token.type != .Linebreak {

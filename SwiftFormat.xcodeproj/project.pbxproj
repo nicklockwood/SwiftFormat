@@ -250,7 +250,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		017AEBB11D6F256300764325 /* Format Code */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 8;
+			buildActionMask = 12;
 			files = (
 			);
 			inputPaths = (
@@ -258,7 +258,7 @@
 			name = "Format Code";
 			outputPaths = (
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "CommandLineTool/swiftformat .";
 		};

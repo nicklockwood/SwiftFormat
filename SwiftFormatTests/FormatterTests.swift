@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  FormatterTests.swift
 //
-//  Version 0.5.1
+//  Version 0.6
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -360,6 +360,12 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
 
+    func testSwitchWithEnumCases() {
+        let input = "switch x {\ncase.Foo:\nbreak\ndefault:\n    break\n}"
+        let output = "switch x {\ncase .Foo:\nbreak\ndefault:\n    break\n}"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+    }
+
     func testSpaceAroundEnumReturn() {
         let input = "return.Foo"
         let output = "return .Foo"
@@ -618,11 +624,41 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [indent]), output)
     }
 
+    func testNestedBraces() {
+        let input = "({\n//foo\n}, {\n//bar\n})"
+        let output = "({\n    //foo\n}, {\n    //bar\n})"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+
+    func testBraceIndentAfterComment() {
+        let input = "if foo { //comment\nbar\n}"
+        let output = "if foo { //comment\n    bar\n}"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+
+    func testBraceIndentAfterClosingScope() {
+        let input = "foo(bar(baz), {\nquux\nbleem\n})"
+        let output = "foo(bar(baz), {\n    quux\n    bleem\n})"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+
+    func testBraceIndentAfterLineWithParens() {
+        let input = "({\nfoo()\nbar\n})"
+        let output = "({\n    foo()\n    bar\n})"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+
     // MARK: indent switch/case
 
     func testSwitchCaseIndenting() {
         let input = "switch x {\ncase foo:\nbreak\ncase bar:\nbreakdefault:\nbreak\n}"
         let output = "switch x {\ncase foo:\n    break\ncase bar:\n    breakdefault:\n    break\n}"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+
+    func testSwitchWrappedCaseIndenting() {
+        let input = "switch x {\ncase foo,\nbar,\n    baz:\n    break\ndefault:\n    break\n}"
+        let output = "switch x {\ncase foo,\n    bar,\n    baz:\n    break\ndefault:\n    break\n}"
         XCTAssertEqual(format(input, rules: [indent]), output)
     }
 
@@ -697,6 +733,12 @@ class FormatterTests: XCTestCase {
     func testNoDoubleIndentWhenScopesSeparatedByWrap() {
         let input = "(foo\nas Bar {\nbaz\n})"
         let output = "(foo\n    as Bar {\n    baz\n})"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+
+    func testNoPermanentReductionInScopeAfterWrap() {
+        let input = "{foo\nas Bar\nlet baz = 5\n}"
+        let output = "{foo\n    as Bar\n    let baz = 5\n}"
         XCTAssertEqual(format(input, rules: [indent]), output)
     }
 

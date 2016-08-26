@@ -192,6 +192,8 @@ Here are all the rules that SwiftFormat currently applies:
     return; 	              -->  return;
     goto(fail)                     goto(fail)
 
+*linebreaks* - normalizes all linebreaks to use the same character, as specified in options (either CR, LF or CRLF).
+
 
 FAQ
 -----
@@ -321,6 +323,11 @@ With a syntax tree in place, it should become possible to add much more sophisti
      
 Release notes
 ----------------
+
+Version 0.6
+
+- Refactored how switch/case is handled, and fixed a bunch of bugs
+- Better indenting logic, now handles multiple closure arguments in a single function call
 
 Version 0.5.1
 

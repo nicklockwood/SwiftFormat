@@ -258,7 +258,7 @@ func processArguments(args: [String]) {
         while start.timeIntervalSinceNow > -0.01 {}
         // If no input received by now, assume none is coming
         if input != nil {
-            while !finished {}
+            while !finished && start.timeIntervalSinceNow > -30 {}
         } else {
             showHelp()
         }

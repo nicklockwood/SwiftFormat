@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  TokenizerTests.swift
 //
-//  Version 0.6
+//  Version 0.5.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -913,104 +913,6 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "="),
             Token(.Whitespace, " "),
             Token(.Number, "5"),
-        ]
-        XCTAssertEqualArrays(tokenize(input), output)
-    }
-
-    // MARK: case statements
-
-    func testSingleLineEnum() {
-        let input = "enum Foo {case Bar, Baz}"
-        let output = [
-            Token(.Identifier, "enum"),
-            Token(.Whitespace, " "),
-            Token(.Identifier, "Foo"),
-            Token(.Whitespace, " "),
-            Token(.StartOfScope, "{"),
-            Token(.Identifier, "case"),
-            Token(.Whitespace, " "),
-            Token(.Identifier, "Bar"),
-            Token(.Operator, ","),
-            Token(.Whitespace, " "),
-            Token(.Identifier, "Baz"),
-            Token(.EndOfScope, "}"),
-        ]
-        XCTAssertEqualArrays(tokenize(input), output)
-    }
-
-    func testSingleLineGenericEnum() {
-        let input = "enum Foo<T> {case Bar, Baz}"
-        let output = [
-            Token(.Identifier, "enum"),
-            Token(.Whitespace, " "),
-            Token(.Identifier, "Foo"),
-            Token(.StartOfScope, "<"),
-            Token(.Identifier, "T"),
-            Token(.EndOfScope, ">"),
-            Token(.Whitespace, " "),
-            Token(.StartOfScope, "{"),
-            Token(.Identifier, "case"),
-            Token(.Whitespace, " "),
-            Token(.Identifier, "Bar"),
-            Token(.Operator, ","),
-            Token(.Whitespace, " "),
-            Token(.Identifier, "Baz"),
-            Token(.EndOfScope, "}"),
-        ]
-        XCTAssertEqualArrays(tokenize(input), output)
-    }
-
-    func testMultilineLineEnum() {
-        let input = "enum Foo {\ncase Bar\ncase Baz\n}"
-        let output = [
-            Token(.Identifier, "enum"),
-            Token(.Whitespace, " "),
-            Token(.Identifier, "Foo"),
-            Token(.Whitespace, " "),
-            Token(.StartOfScope, "{"),
-            Token(.Linebreak, "\n"),
-            Token(.Identifier, "case"),
-            Token(.Whitespace, " "),
-            Token(.Identifier, "Bar"),
-            Token(.Linebreak, "\n"),
-            Token(.Identifier, "case"),
-            Token(.Whitespace, " "),
-            Token(.Identifier, "Baz"),
-            Token(.Linebreak, "\n"),
-            Token(.EndOfScope, "}"),
-        ]
-        XCTAssertEqualArrays(tokenize(input), output)
-    }
-
-    func testSwitchStatement() {
-        let input = "switch x {\ncase 1:\nbreak\ncase 2:\nbreak\ndefault:\nbreak\n}"
-        let output = [
-            Token(.Identifier, "switch"),
-            Token(.Whitespace, " "),
-            Token(.Identifier, "x"),
-            Token(.Whitespace, " "),
-            Token(.StartOfScope, "{"),
-            Token(.Linebreak, "\n"),
-            Token(.EndOfScope, "case"),
-            Token(.Whitespace, " "),
-            Token(.Number, "1"),
-            Token(.StartOfScope, ":"),
-            Token(.Linebreak, "\n"),
-            Token(.Identifier, "break"),
-            Token(.Linebreak, "\n"),
-            Token(.EndOfScope, "case"),
-            Token(.Whitespace, " "),
-            Token(.Number, "2"),
-            Token(.StartOfScope, ":"),
-            Token(.Linebreak, "\n"),
-            Token(.Identifier, "break"),
-            Token(.Linebreak, "\n"),
-            Token(.EndOfScope, "default"),
-            Token(.StartOfScope, ":"),
-            Token(.Linebreak, "\n"),
-            Token(.Identifier, "break"),
-            Token(.Linebreak, "\n"),
-            Token(.EndOfScope, "}"),
         ]
         XCTAssertEqualArrays(tokenize(input), output)
     }

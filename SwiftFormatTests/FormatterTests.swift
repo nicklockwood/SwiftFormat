@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  FormatterTests.swift
 //
-//  Version 0.5.1
+//  Version 0.6
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -359,7 +359,7 @@ class FormatterTests: XCTestCase {
         let output = "case .Foo, .Bar:"
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
-    
+
     func testSwitchWithEnumCases() {
         let input = "switch x {\ncase.Foo:\nbreak\ndefault:\n    break\n}"
         let output = "switch x {\ncase .Foo:\nbreak\ndefault:\n    break\n}"
@@ -623,10 +623,16 @@ class FormatterTests: XCTestCase {
         let output = "{\n\n\n}"
         XCTAssertEqual(format(input, rules: [indent]), output)
     }
-    
-    func testnestedBraces() {
+
+    func testNestedBraces() {
         let input = "({\n//foo\n}, {\n//bar\n})"
         let output = "({\n    //foo\n}, {\n    //bar\n})"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+
+    func testBraceIndentAfterComment() {
+        let input = "if foo { //comment\nbar\n}"
+        let output = "if foo { //comment\n    bar\n}"
         XCTAssertEqual(format(input, rules: [indent]), output)
     }
 

@@ -2,7 +2,7 @@
 //  SwiftFormat
 //  Formatter.swift
 //
-//  Version 0.5.1
+//  Version 0.6
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -193,22 +193,22 @@ public func spaceAroundParens(formatter: Formatter) {
     func spaceAfter(identifier: String) -> Bool {
         switch identifier {
         case "internal",
-                "case",
-                "for",
-                "guard",
-                "if",
-                "in",
-                "return",
-                "switch",
-                "where",
-                "while",
-                "as",
-                "catch",
-                "is",
-                "rethrows",
-                "throw",
-                "throws",
-                "try":
+            "case",
+            "for",
+            "guard",
+            "if",
+            "in",
+            "return",
+            "switch",
+            "where",
+            "while",
+            "as",
+            "catch",
+            "is",
+            "rethrows",
+            "throw",
+            "throws",
+            "try":
             return true
         default:
             return false
@@ -268,15 +268,15 @@ public func spaceAroundBrackets(formatter: Formatter) {
     func spaceAfter(identifier: String) -> Bool {
         switch identifier {
         case "case",
-                "guard",
-                "if",
-                "in",
-                "return",
-                "switch",
-                "where",
-                "while",
-                "as",
-                "is":
+            "guard",
+            "if",
+            "in",
+            "return",
+            "switch",
+            "where",
+            "while",
+            "as",
+            "is":
             return true
         default:
             return false
@@ -432,16 +432,16 @@ public func spaceAroundOperators(formatter: Formatter) {
     func spaceAfter(identifier: String) -> Bool {
         switch identifier {
         case "case",
-                "guard",
-                "if",
-                "in",
-                "let",
-                "return",
-                "switch",
-                "where",
-                "while",
-                "as",
-                "is":
+            "guard",
+            "if",
+            "in",
+            "let",
+            "return",
+            "switch",
+            "where",
+            "while",
+            "as",
+            "is":
             return true
         default:
             return false
@@ -653,7 +653,7 @@ public func indent(formatter: Formatter) {
         }
         return nil
     }
-    
+
     func setIndent(indent: String, atIndex index: Int) -> Bool {
         if formatter.tokenAtIndex(index)?.type == .Whitespace {
             formatter.replaceTokenAtIndex(index, with: Token(.Whitespace, indent))
@@ -689,43 +689,43 @@ public func indent(formatter: Formatter) {
                 // prefix, Protocol, required, right, set, Type, unowned, weak, willSet
                 switch token.string {
                 case "associatedtype",
-                        "class",
-                        "deinit",
-                        "enum",
-                        "extension",
-                        "fileprivate",
-                        "func",
-                        "import",
-                        "init",
-                        "inout",
-                        "internal",
-                        "let",
-                        "open",
-                        "operator",
-                        "private",
-                        "protocol",
-                        "public",
-                        "static",
-                        "struct",
-                        "subscript",
-                        "typealias",
-                        "var",
-                        "case",
-                        "default",
-                        "defer",
-                        "else",
-                        "for",
-                        "guard",
-                        "if",
-                        "switch",
-                        "where",
-                        "while",
-                        "as",
-                        "catch",
-                        "is",
-                        "super",
-                        "throw",
-                        "try":
+                    "class",
+                    "deinit",
+                    "enum",
+                    "extension",
+                    "fileprivate",
+                    "func",
+                    "import",
+                    "init",
+                    "inout",
+                    "internal",
+                    "let",
+                    "open",
+                    "operator",
+                    "private",
+                    "protocol",
+                    "public",
+                    "static",
+                    "struct",
+                    "subscript",
+                    "typealias",
+                    "var",
+                    "case",
+                    "default",
+                    "defer",
+                    "else",
+                    "for",
+                    "guard",
+                    "if",
+                    "switch",
+                    "where",
+                    "while",
+                    "as",
+                    "catch",
+                    "is",
+                    "super",
+                    "throw",
+                    "try":
                     return false
                 default:
                     return true
@@ -756,13 +756,13 @@ public func indent(formatter: Formatter) {
                 // TODO: handle "in"
                 switch token.string {
                 case "as",
-                        "dynamicType",
-                        "false",
-                        "is",
-                        "nil",
-                        "rethrows",
-                        "throws",
-                        "true":
+                    "dynamicType",
+                    "false",
+                    "is",
+                    "nil",
+                    "rethrows",
+                    "throws",
+                    "true":
                     return false
                 case "else":
                     if let token = formatter.tokenAtIndex(lastNonWhitespaceOrLinebreakIndex) {
@@ -797,16 +797,20 @@ public func indent(formatter: Formatter) {
             // Handle start of scope
             scopeIndexStack.append(i)
             var indent = indentStack.last ?? ""
-            if lineIndex > scopeStartLineIndexes.last ?? -1 {
-                if token.string == "/*" {
-                    // Comments only indent one space
-                    indent += " "
-                } else {
+            switch token.string {
+            case "/*":
+                // Comments only indent one space
+                indent += " "
+            case "//", "\"":
+                // No need to indent
+                break
+            default:
+                if lineIndex > scopeStartLineIndexes.last ?? -1 {
                     indent += formatter.options.indent
+                } else {
+                    indentStack.popLast()
+                    indentStack.append(indentStack.last ?? "")
                 }
-            } else {
-                indentStack.popLast()
-                indentStack.append(indentStack.last ?? "")
             }
             indentStack.append(indent)
             scopeStartLineIndexes.append(lineIndex)

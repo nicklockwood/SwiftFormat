@@ -258,6 +258,12 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
 
+    func testNoSpaceAddedAfterColonInSelector() {
+        let input = "@objc(foo:bar:)"
+        let output = "@objc(foo:bar:)"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+    }
+
     func testSpaceAfterComma() {
         let input = "let foo = [1,2,3]"
         let output = "let foo = [1, 2, 3]"

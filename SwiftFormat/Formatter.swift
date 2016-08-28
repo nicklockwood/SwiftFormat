@@ -454,11 +454,20 @@ public func spaceAroundOperators(formatter: Formatter) {
         switch token.type {
         case .Operator:
             if [":", ",", ";"].contains(token.string) {
-                // Ensure there is a space after the token
                 if let nextToken = formatter.tokenAtIndex(i + 1) {
                     switch nextToken.type {
-                    case .Whitespace, .Linebreak, .EndOfScope: break
+                    case .Whitespace, .Linebreak, .EndOfScope:
+                        break
+                    case .Identifier:
+                        if token.string == ":" {
+                            if formatter.tokenAtIndex(i + 2)?.string == ":" {
+                                // It's a selector
+                                break
+                            }
+                        }
+                        fallthrough
                     default:
+                        // Ensure there is a space after the token
                         formatter.insertToken(Token(.Whitespace, " "), atIndex: i + 1)
                     }
                 }

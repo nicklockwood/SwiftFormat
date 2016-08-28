@@ -85,7 +85,7 @@ class FormatterTests: XCTestCase {
         let output = "private(set) var foo: Int"
         XCTAssertEqual(format(input, rules: [spaceAroundParens]), output)
     }
-    
+
     func testSpaceBetweenLetAndTuple() {
         let input = "if let (foo, bar) = baz"
         let output = "if let (foo, bar) = baz"
@@ -387,6 +387,12 @@ class FormatterTests: XCTestCase {
     func testSpaceAroundEnumArgument() {
         let input = "foo(with:.Bar)"
         let output = "foo(with: .Bar)"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+    }
+
+    func testSpaceBeforeEnumCaseInsideClosure() {
+        let input = "{ .Bar() }"
+        let output = "{ .Bar() }"
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
 

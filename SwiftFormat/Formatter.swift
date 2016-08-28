@@ -503,6 +503,7 @@ public func spaceAroundOperators(formatter: Formatter) {
                     let previousNonWhitespaceTokenIndex = i - (previousTokenWasWhitespace ? 2 : 1)
                     if let previousNonWhitespaceToken = formatter.tokenAtIndex(previousNonWhitespaceTokenIndex) {
                         if previousNonWhitespaceToken.type != .Linebreak &&
+                            previousNonWhitespaceToken.string != "{" &&
                             (previousNonWhitespaceToken.type != .Operator ||
                             (previousNonWhitespaceToken.string == "?" && scopeStack.last?.string != "?") ||
                             (previousNonWhitespaceToken.string != "?" &&

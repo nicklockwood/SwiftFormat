@@ -85,6 +85,12 @@ class FormatterTests: XCTestCase {
         let output = "private(set) var foo: Int"
         XCTAssertEqual(format(input, rules: [spaceAroundParens]), output)
     }
+    
+    func testSpaceBetweenLetAndTuple() {
+        let input = "if let (foo, bar) = baz"
+        let output = "if let (foo, bar) = baz"
+        XCTAssertEqual(format(input, rules: [spaceAroundParens]), output)
+    }
 
     func testSpaceBetweenIfAndCondition() {
         let input = "if(true) {}"

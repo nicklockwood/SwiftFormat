@@ -205,6 +205,7 @@ public func spaceAroundParens(formatter: Formatter) {
             "as",
             "catch",
             "is",
+            "let",
             "rethrows",
             "throw",
             "throws",

@@ -35,7 +35,7 @@ import Foundation
 
 let version = "0.6"
 
-func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOptions options: FormattingOptions) -> Int {
+func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOptions options: FormatOptions) -> Int {
     let manager = NSFileManager.defaultManager()
     var filesWritten = 0
     var isDirectory: ObjCBool = false
@@ -76,68 +76,6 @@ func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOption
         print("error: file not found: \(inputURL.path!)")
     }
     return filesWritten
-}
-
-func preprocessArguments(args: [String], _ names: [String]) -> [String: String]? {
-    var quoted = false
-    var anonymousArgs = 0
-    var namedArgs: [String: String] = [:]
-    var name = ""
-    for arg in args {
-        if arg.hasPrefix("--") {
-            // Long argument names
-            let key = arg.substringFromIndex(arg.startIndex.advancedBy(2))
-            if !names.contains(key) {
-                print("error: unknown argument: \(arg).")
-                return nil
-            }
-            name = key
-            namedArgs[name] = ""
-        } else if arg.hasPrefix("-") {
-            // Short argument names
-            let flag = arg.substringFromIndex(arg.startIndex.advancedBy(1))
-            let matches = names.filter { $0.hasPrefix(flag) }
-            if matches.count > 1 {
-                print("error: ambiguous argument: -\(flag).")
-                return nil
-            } else if matches.count == 0 {
-                print("error: unknown argument: -\(flag).")
-                return nil
-            } else {
-                name = matches[0]
-                namedArgs[name] = ""
-            }
-        } else {
-            if name == "" {
-                // Argument is anonymous
-                name = String(anonymousArgs)
-                anonymousArgs += 1
-            }
-            // Handle quotes and spaces
-            var arg = arg
-            var unterminated = false
-            if quoted {
-                if arg.hasSuffix("\"") {
-                    arg = arg.substringToIndex(arg.endIndex.advancedBy(-1))
-                    unterminated = false
-                    quoted = false
-                }
-            } else if arg.hasPrefix("\"") {
-                quoted = true
-                unterminated = true
-            } else if arg.hasSuffix("\\") {
-                arg = arg.substringToIndex(arg.endIndex.advancedBy(-1)) + " "
-            }
-            if quoted {
-                arg = arg.stringByReplacingOccurrencesOfString("\\\"", withString: "\"")
-            }
-            namedArgs[name] = (namedArgs[name] ?? "") + arg
-            if !unterminated {
-                name = ""
-            }
-        }
-    }
-    return namedArgs
 }
 
 func showHelp() {
@@ -191,7 +129,7 @@ func processArguments(args: [String]) {
     let outputURL = (args["output"] ?? args["1"]).map { expandPath($0) }
 
     // Get options
-    var options = FormattingOptions()
+    var options = FormatOptions()
     if let indent = args["indent"] {
         switch indent.lowercaseString {
         case "tab", "tabs":

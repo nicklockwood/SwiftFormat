@@ -35,7 +35,7 @@ import Foundation
 
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
-public struct FormattingOptions {
+public struct FormatOptions {
     public var indent: String
     public var linebreak: String
     public var allowInlineSemicolons: Bool
@@ -58,11 +58,11 @@ public struct FormattingOptions {
 /// transparently handles changes that affect the current token index.
 public class Formatter {
     private(set) var tokens: [Token]
-    let options: FormattingOptions
+    let options: FormatOptions
 
     private var indexStack: [Int] = []
 
-    init(_ tokens: [Token], options: FormattingOptions) {
+    init(_ tokens: [Token], options: FormatOptions) {
         self.tokens = tokens
         self.options = options
     }

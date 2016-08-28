@@ -33,10 +33,80 @@
 
 import Foundation
 
+func preprocessArguments(args: [String], _ names: [String]) -> [String: String]? {
+    var quoted = false
+    var anonymousArgs = 0
+    var namedArgs: [String: String] = [:]
+    var name = ""
+    for arg in args {
+        if arg.hasPrefix("--") {
+            // Long argument names
+            let key = arg.substringFromIndex(arg.startIndex.advancedBy(2))
+            if !names.contains(key) {
+                print("error: unknown argument: \(arg).")
+                return nil
+            }
+            name = key
+            namedArgs[name] = ""
+        } else if arg.hasPrefix("-") {
+            // Short argument names
+            let flag = arg.substringFromIndex(arg.startIndex.advancedBy(1))
+            let matches = names.filter { $0.hasPrefix(flag) }
+            if matches.count > 1 {
+                print("error: ambiguous argument: -\(flag).")
+                return nil
+            } else if matches.count == 0 {
+                print("error: unknown argument: -\(flag).")
+                return nil
+            } else {
+                name = matches[0]
+                namedArgs[name] = ""
+            }
+        } else {
+            if name == "" {
+                // Argument is anonymous
+                name = String(anonymousArgs)
+                anonymousArgs += 1
+            }
+            // Handle quotes and spaces
+            var arg = arg
+            var unterminated = false
+            if quoted {
+                unterminated = true
+            } else if arg.hasPrefix("\"") {
+                quoted = true
+                unterminated = true
+                arg = arg.substringFromIndex(arg.startIndex.advancedBy(1))
+            } else if arg.hasSuffix("\\") {
+                arg = arg.substringToIndex(arg.endIndex.advancedBy(-1))
+                unterminated = true
+            }
+            if quoted {
+                arg = arg
+                    .stringByReplacingOccurrencesOfString("\\\"", withString: "\"")
+                    .stringByReplacingOccurrencesOfString("\\\\", withString: "\\")
+                if arg.hasSuffix("\"") {
+                    arg = arg.substringToIndex(arg.endIndex.advancedBy(-1))
+                    unterminated = false
+                    quoted = false
+                }
+            }
+            if unterminated {
+                arg = arg + " "
+            }
+            namedArgs[name] = (namedArgs[name] ?? "") + arg
+            if !unterminated {
+                name = ""
+            }
+        }
+    }
+    return namedArgs
+}
+
 /// Format code with specified rules and options
 public func format(source: String,
     rules: [FormatRule] = defaultRules,
-    options: FormattingOptions = FormattingOptions()) -> String {
+    options: FormatOptions = FormatOptions()) -> String {
 
     // Parse
     var tokens = tokenize(source)

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */; };
 		018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018E82741D62E730008CA0F8 /* TokenizerTests.swift */; };
 		01A0EAA81D5DB4CF00A0A8E3 /* SwiftFormat.h in Headers */ = {isa = PBXBuildFile; fileRef = 01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		01A0EAAF1D5DB4D000A0A8E3 /* SwiftFormat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */; };
@@ -31,6 +32,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftFormatTests.swift; sourceTree = "<group>"; };
 		018E82741D62E730008CA0F8 /* TokenizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenizerTests.swift; sourceTree = "<group>"; };
 		01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftFormat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftFormat.h; sourceTree = "<group>"; };
@@ -106,6 +108,7 @@
 		01A0EAB21D5DB4D000A0A8E3 /* SwiftFormatTests */ = {
 			isa = PBXGroup;
 			children = (
+				0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */,
 				018E82741D62E730008CA0F8 /* TokenizerTests.swift */,
 				01A0EAB31D5DB4D000A0A8E3 /* FormatterTests.swift */,
 				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
@@ -309,6 +312,7 @@
 			files = (
 				01A0EAB41D5DB4D000A0A8E3 /* FormatterTests.swift in Sources */,
 				018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */,
+				0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

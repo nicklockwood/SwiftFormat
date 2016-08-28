@@ -1180,7 +1180,7 @@ class FormatterTests: XCTestCase {
     func testIgnoreInlineSemicolon() {
         let input = "print(\"hello\"); print(\"goodbye\")"
         let output = "print(\"hello\"); print(\"goodbye\")"
-        let options = FormattingOptions(allowInlineSemicolons: true)
+        let options = FormatOptions(allowInlineSemicolons: true)
         XCTAssertEqual(format(input, rules: [semicolons], options: options), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
@@ -1188,7 +1188,7 @@ class FormatterTests: XCTestCase {
     func testReplaceInlineSemicolon() {
         let input = "print(\"hello\"); print(\"goodbye\")"
         let output = "print(\"hello\")\nprint(\"goodbye\")"
-        let options = FormattingOptions(allowInlineSemicolons: false)
+        let options = FormatOptions(allowInlineSemicolons: false)
         XCTAssertEqual(format(input, rules: [semicolons], options: options), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
@@ -1196,7 +1196,7 @@ class FormatterTests: XCTestCase {
     func testReplaceSemicolonFollowedByComment() {
         let input = "print(\"hello\"); //comment\nprint(\"goodbye\")"
         let output = "print(\"hello\") //comment\nprint(\"goodbye\")"
-        let options = FormattingOptions(allowInlineSemicolons: true)
+        let options = FormatOptions(allowInlineSemicolons: true)
         XCTAssertEqual(format(input, rules: [semicolons], options: options), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }

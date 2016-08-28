@@ -324,6 +324,13 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
+Version 0.7
+
+- swiftformat command-line tool now correctly handles paths with \ escaped spaces, or paths in quotes
+- Removed extra space added inside @objc selectors
+- Fixed incorrect spacing for tuple bindings
+- Fixed space before enum case inside closure
+
 Version 0.6
 
 - Refactored how switch/case is handled, and fixed a bunch of bugs

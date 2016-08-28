@@ -746,8 +746,9 @@ public func indent(formatter: Formatter) {
                 if token.string == "." {
                     return false
                 }
-                if token.string == "," && !["[", "("].contains(currentScope()?.string ?? "") {
-                    return false
+                if token.string == "," {
+                    // For arrays or argument lists, we already indent
+                    return ["[", "("].contains(currentScope()?.string ?? "")
                 }
                 if let previousToken = formatter.tokenAtIndex(i - 1) where
                     previousToken.isWhitespaceOrCommentOrLinebreak ||
@@ -788,11 +789,13 @@ public func indent(formatter: Formatter) {
                 if token.string == "." {
                     return false
                 }
-                if token.string == "," && !["[", "("].contains(currentScope()?.string ?? "") {
-                    return false
+                if token.string == "," {
+                    // For arrays or argument lists, we already indent
+                    return ["[", "("].contains(currentScope()?.string ?? "")
                 }
                 if let nextToken = formatter.tokenAtIndex(i + 1) where
                     nextToken.isWhitespaceOrCommentOrLinebreak {
+                    // Is an infix operator
                     return false
                 }
             default:

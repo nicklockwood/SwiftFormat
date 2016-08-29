@@ -324,9 +324,13 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
+Version 0.7.1
+
+- Fixed critical bug where failable generic init (e.g. `init?<T>()`) was not handled correctly
+
 Version 0.7
 
-- swiftformat command-line tool now correctly handles paths with \ escaped spaces, or paths in quotes
+- swiftformat command-line tool now correctly handles paths with `\` escaped spaces, or paths in quotes
 - Removed extra space added inside @objc selectors
 - Fixed incorrect spacing for tuple bindings
 - Fixed space before enum case inside closure

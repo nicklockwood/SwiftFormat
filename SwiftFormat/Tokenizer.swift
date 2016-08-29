@@ -563,6 +563,15 @@ func tokenize(source: String) -> [Token] {
                 processToken()
                 return
             }
+            // Fix up generic misidentified as ?< or !< operator
+            if token.type == .Operator && (token.string == "?<" || token.string == "!<") {
+                if tokens[tokens.count - 2].string == "init" {
+                    tokens[tokens.count - 1] = Token(.Operator, String(token.string.characters.first!))
+                    tokens.append(Token(.StartOfScope, "<"))
+                    processToken()
+                    return
+                }
+            }
             // Fix up misidentified generic that is actually a pair of operators
             if let lastNonWhitespaceIndex = lastNonWhitespaceIndex {
                 let lastToken = tokens[lastNonWhitespaceIndex]

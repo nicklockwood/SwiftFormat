@@ -523,9 +523,30 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testNoSpaceAroundConditionalInit() {
-        let input = "init?(coder: NSCoder)"
-        let output = "init?(coder: NSCoder)"
+    func testNoSpaceAroundFailableInit() {
+        let input = "init?()"
+        let output = "init?()"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoSpaceAroundImplictlyUnwrappedFailableInit() {
+        let input = "init!()"
+        let output = "init!()"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoSpaceAroundFailableInitWithGenerics() {
+        let input = "init?<T>()"
+        let output = "init?<T>()"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoSpaceAroundImplictlyUnwrappedFailableInitWithGenerics() {
+        let input = "init!<T>()"
+        let output = "init!<T>()"
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }

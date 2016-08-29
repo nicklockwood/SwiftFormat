@@ -917,6 +917,33 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqualArrays(tokenize(input), output)
     }
 
+    func testGenericInFailableInit() {
+        let input = "init?<T>()"
+        let output = [
+            Token(.Identifier, "init"),
+            Token(.Operator, "?"),
+            Token(.StartOfScope, "<"),
+            Token(.Identifier, "T"),
+            Token(.EndOfScope, ">"),
+            Token(.StartOfScope, "("),
+            Token(.EndOfScope, ")"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+
+    func testInfixQuestionMarkChevronOperator() {
+        let input = "operator ?< {}"
+        let output = [
+            Token(.Identifier, "operator"),
+            Token(.Whitespace, " "),
+            Token(.Operator, "?<"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "{"),
+            Token(.EndOfScope, "}"),
+        ]
+        XCTAssertEqualArrays(tokenize(input), output)
+    }
+
     // MARK: case statements
 
     func testSingleLineEnum() {

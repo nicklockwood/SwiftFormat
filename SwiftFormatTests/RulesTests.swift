@@ -2,7 +2,7 @@
 //  RulesTests.swift
 //  SwiftFormat
 //
-//  Version 0.7.1
+//  Version 0.8
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -583,7 +583,12 @@ class RulesTests: XCTestCase {
         let input = "foo/* hello */-bar"
         let output = "foo/* hello */ - bar"
         XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
-        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceAroundCommentsInInfixExpression() {
+        let input = "a/* */+/* */b"
+        let output = "a/* */ + /* */b"
+        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
     }
 
     func testSpaceAroundCommentInPrefixExpression() {
@@ -593,10 +598,77 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testSpaceAroundCommentsInInfixExpression() {
-        let input = "a/* */+/* */b"
-        let output = "a/* */ + /* */b"
-        XCTAssertEqual(format(input, rules: [spaceAroundOperators]), output)
+    // MARK: spaceAroundComments
+
+    func testSpaceAroundCommentInParens() {
+        let input = "(/* foo */)"
+        let output = "( /* foo */ )"
+        XCTAssertEqual(format(input, rules: [spaceAroundComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoSpaceAroundCommentAtStartAndEndOfFile() {
+        let input = "/* foo */"
+        let output = "/* foo */"
+        XCTAssertEqual(format(input, rules: [spaceAroundComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceAroundSingleLineComment() {
+        let input = "func() {// comment\n}"
+        let output = "func() { // comment\n}"
+        XCTAssertEqual(format(input, rules: [spaceAroundComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    // MARK: spaceInsideComments
+
+    func testSpaceInsideMultilineComment() {
+        let input = "/*foo\n bar*/"
+        let output = "/* foo\n bar */"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceInsideSingleLineMultilineComment() {
+        let input = "/*foo*/"
+        let output = "/* foo */"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoSpaceInsideEmptyMultilineComment() {
+        let input = "/**/"
+        let output = "/**/"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceInsideSingleLineComment() {
+        let input = "//foo"
+        let output = "// foo"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceInsideMultilineHeaderdocComment() {
+        let input = "/**foo\n bar*/"
+        let output = "/** foo\n bar */"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceInsideSingleLineHeaderdocComment() {
+        let input = "///foo"
+        let output = "/// foo"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testPreformattedMultilineComment() {
+        let input = "/*********************\n *****Hello World*****\n *********************/"
+        let output = "/*********************\n *****Hello World*****\n *********************/"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
@@ -654,15 +726,15 @@ class RulesTests: XCTestCase {
     }
 
     func testtrailingWhitespaceInMultilineComments() {
-        let input = "/*foo  \n bar  */"
-        let output = "/*foo\n bar  */"
+        let input = "/* foo  \n bar  */"
+        let output = "/* foo\n bar  */"
         XCTAssertEqual(format(input, rules: [trailingWhitespace]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testtrailingWhitespaceInSingleLineComments() {
-        let input = "//foo  \n//bar  "
-        let output = "//foo\n//bar"
+        let input = "// foo  \n// bar  "
+        let output = "// foo\n// bar"
         XCTAssertEqual(format(input, rules: [trailingWhitespace]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -693,8 +765,8 @@ class RulesTests: XCTestCase {
     // MARK: blankLinesAtEndOfScope
 
     func testBlankLinesRemovedAtEndOfFunction() {
-        let input = "func() {\n    //code\n\n}"
-        let output = "func() {\n    //code\n}"
+        let input = "func() {\n    // code\n\n}"
+        let output = "func() {\n    // code\n}"
         XCTAssertEqual(format(input, rules: [blankLinesAtEndOfScope]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -776,22 +848,22 @@ class RulesTests: XCTestCase {
     }
 
     func testNoIndentBlankLines() {
-        let input = "{\n\n//foo\n}"
-        let output = "{\n\n    //foo\n}"
+        let input = "{\n\n// foo\n}"
+        let output = "{\n\n    // foo\n}"
         XCTAssertEqual(format(input, rules: [indent]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testNestedBraces() {
-        let input = "({\n//foo\n}, {\n//bar\n})"
-        let output = "({\n    //foo\n}, {\n    //bar\n})"
+        let input = "({\n// foo\n}, {\n// bar\n})"
+        let output = "({\n    // foo\n}, {\n    // bar\n})"
         XCTAssertEqual(format(input, rules: [indent]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testBraceIndentAfterComment() {
-        let input = "if foo { //comment\nbar\n}"
-        let output = "if foo { //comment\n    bar\n}"
+        let input = "if foo { // comment\nbar\n}"
+        let output = "if foo { // comment\n    bar\n}"
         XCTAssertEqual(format(input, rules: [indent]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -927,8 +999,8 @@ class RulesTests: XCTestCase {
     }
 
     func testWrappedLineAfterForKeyword() {
-        let input = "for\ni in 0 ..< 5 {}"
-        let output = "for\n    i in 0 ..< 5 {}"
+        let input = "for\ni in range {}"
+        let output = "for\n    i in range {}"
         XCTAssertEqual(format(input, rules: [indent]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -983,15 +1055,15 @@ class RulesTests: XCTestCase {
     }
 
     func testIndentElseAfterComment() {
-        let input = "if x {}\n//comment\nelse {}"
-        let output = "if x {}\n//comment\nelse {}"
+        let input = "if x {}\n// comment\nelse {}"
+        let output = "if x {}\n// comment\nelse {}"
         XCTAssertEqual(format(input, rules: [indent]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testWrappedLinesWithComments() {
-        let input = "let foo = bar ||\n//baz||\nquux"
-        let output = "let foo = bar ||\n    //baz||\n    quux"
+        let input = "let foo = bar ||\n // baz||\nquux"
+        let output = "let foo = bar ||\n    // baz||\n    quux"
         XCTAssertEqual(format(input, rules: [indent]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1013,8 +1085,8 @@ class RulesTests: XCTestCase {
     }
 
     func testNestedCommentIndenting() {
-        let input = "/*foo\n/*\nbar\n*/\n*/"
-        let output = "/*foo\n /*\n  bar\n  */\n */"
+        let input = "/* foo\n/*\nbar\n*/\n*/"
+        let output = "/* foo\n /*\n  bar\n  */\n */"
         XCTAssertEqual(format(input, rules: [indent]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1022,22 +1094,22 @@ class RulesTests: XCTestCase {
     // MARK: indent #if/#else/#elseif/#endif
 
     func testIfEndifIndenting() {
-        let input = "#if x\n//foo\n#endif"
-        let output = "#if x\n    //foo\n#endif"
+        let input = "#if x\n// foo\n#endif"
+        let output = "#if x\n    // foo\n#endif"
         XCTAssertEqual(format(input, rules: [indent]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testIfElseEndifIndenting() {
-        let input = "#if x\n//foo\n#else\n//bar\n#endif"
-        let output = "#if x\n    //foo\n#else\n    //bar\n#endif"
+        let input = "#if x\n// foo\n#else\n// bar\n#endif"
+        let output = "#if x\n    // foo\n#else\n    // bar\n#endif"
         XCTAssertEqual(format(input, rules: [indent]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testIfElseifEndifIndenting() {
-        let input = "#if x\n//foo\n#elseif y\n//bar\n#endif"
-        let output = "#if x\n    //foo\n#elseif y\n    //bar\n#endif"
+        let input = "#if x\n// foo\n#elseif y\n// bar\n#endif"
+        let output = "#if x\n    // foo\n#elseif y\n    // bar\n#endif"
         XCTAssertEqual(format(input, rules: [indent]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1052,8 +1124,8 @@ class RulesTests: XCTestCase {
     }
 
     func testBracesAfterComment() {
-        let input = "func foo() //comment\n{\n    statement\n}"
-        let output = "func foo() { //comment\n    statement\n}"
+        let input = "func foo() // comment\n{\n    statement\n}"
+        let output = "func foo() { // comment\n    statement\n}"
         XCTAssertEqual(format(input, rules: [knrBraces]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1142,8 +1214,8 @@ class RulesTests: XCTestCase {
     // MARK: todos
 
     func testMarkIsUpdated() {
-        let input = "//MARK foo"
-        let output = "//MARK: foo"
+        let input = "// MARK foo"
+        let output = "// MARK: foo"
         XCTAssertEqual(format(input, rules: [todos]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1163,23 +1235,23 @@ class RulesTests: XCTestCase {
     }
 
     func testMarkWithColonSeparatedBySpace() {
-        let input = "//MARK : foo"
-        let output = "//MARK: foo"
+        let input = "// MARK : foo"
+        let output = "// MARK: foo"
         XCTAssertEqual(format(input, rules: [todos]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testMarkWithNoSpaceAfterColon() {
         // NOTE: this was an unintended side-effect, but I like it
-        let input = "//MARK:foo"
-        let output = "//MARK: foo"
+        let input = "// MARK:foo"
+        let output = "// MARK: foo"
         XCTAssertEqual(format(input, rules: [todos]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testCorrectMarkIsIgnored() {
-        let input = "//MARK: foo"
-        let output = "//MARK: foo"
+        let input = "// MARK: foo"
+        let output = "// MARK: foo"
         XCTAssertEqual(format(input, rules: [todos]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1238,8 +1310,8 @@ class RulesTests: XCTestCase {
     }
 
     func testReplaceSemicolonFollowedByComment() {
-        let input = "print(\"hello\"); //comment\nprint(\"goodbye\")"
-        let output = "print(\"hello\") //comment\nprint(\"goodbye\")"
+        let input = "print(\"hello\"); // comment\nprint(\"goodbye\")"
+        let output = "print(\"hello\") // comment\nprint(\"goodbye\")"
         let options = FormatOptions(allowInlineSemicolons: true)
         XCTAssertEqual(format(input, rules: [semicolons], options: options), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
@@ -1264,5 +1336,53 @@ class RulesTests: XCTestCase {
         let output = "{ return }"
         XCTAssertEqual(format(input, rules: [semicolons]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    // MARK: ranges
+
+    func testSpaceAroundRangeOperatorsWithDefaultOptions() {
+        let input = "foo ..< bar"
+        let output = "foo..<bar"
+        XCTAssertEqual(format(input, rules: [ranges]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoSpaceAroundRangeOperatorsWithCustomOptions() {
+        let input = "foo..<bar"
+        let output = "foo ..< bar"
+        let options = FormatOptions(spaceAroundRangeOperators: true)
+        XCTAssertEqual(format(input, rules: [ranges], options: options), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testNoSpaceAddedAroundVariadic() {
+        let input = "foo(bar: Int...)"
+        let output = "foo(bar: Int...)"
+        let options = FormatOptions(spaceAroundRangeOperators: true)
+        XCTAssertEqual(format(input, rules: [ranges], options: options), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testNoSpaceAddedAroundVariadicWithComment() {
+        let input = "foo(bar: Int.../* one or more */)"
+        let output = "foo(bar: Int.../* one or more */)"
+        let options = FormatOptions(spaceAroundRangeOperators: true)
+        XCTAssertEqual(format(input, rules: [ranges], options: options), output)
+    }
+
+    func testNoSpaceAddedAroundVariadicThatIsntLastArg() {
+        let input = "foo(bar: Int..., baz: Int)"
+        let output = "foo(bar: Int..., baz: Int)"
+        let options = FormatOptions(spaceAroundRangeOperators: true)
+        XCTAssertEqual(format(input, rules: [ranges], options: options), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testNoSpaceAddedAroundSplitLineVariadic() {
+        let input = "foo(\n    bar: Int...\n)"
+        let output = "foo(\n    bar: Int...\n)"
+        let options = FormatOptions(spaceAroundRangeOperators: true)
+        XCTAssertEqual(format(input, rules: [ranges], options: options), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 }

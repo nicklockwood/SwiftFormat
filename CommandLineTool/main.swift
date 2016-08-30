@@ -2,7 +2,7 @@
 //  main.swift
 //  SwiftFormat
 //
-//  Version 0.7.1
+//  Version 0.8
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -33,7 +33,7 @@
 
 import Foundation
 
-let version = "0.7.1"
+let version = "0.8"
 
 func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOptions options: FormatOptions) -> Int {
     let manager = NSFileManager.defaultManager()
@@ -89,6 +89,7 @@ func showHelp() {
     print("  -i, --indent      number of spaces to indent, or \"tab\" to use tabs")
     print("  -l, --linebreaks  linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
     print("  -s, --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
+    print("  -r, --ranges      spacing for ranges. either \"spaced\" or \"nospace\" (default)")
     print("  -h, --help        this help page")
     print("  -v, --version     version information")
     print("")
@@ -106,6 +107,7 @@ func processArguments(args: [String]) {
         "indent",
         "linebreaks",
         "semicolons",
+        "ranges",
         "help",
         "version",
     ]) else {
@@ -149,6 +151,8 @@ func processArguments(args: [String]) {
             options.allowInlineSemicolons = true
         case "never":
             options.allowInlineSemicolons = false
+        case "":
+            print("error: --semicolons option expects a value.")
         default:
             print("error: unsupported semicolons value: \(semicolons).")
             return
@@ -162,8 +166,23 @@ func processArguments(args: [String]) {
             options.linebreak = "\n"
         case "crlf":
             options.linebreak = "\r\n"
+        case "":
+            print("error: --linebreaks option expects a value.")
         default:
             print("error: unsupported linebreak value: \(linebreaks).")
+            return
+        }
+    }
+    if let ranges = args["ranges"] {
+        switch ranges.lowercaseString {
+        case "space", "spaced", "spaces":
+            options.spaceAroundRangeOperators = true
+        case "nospace":
+            options.spaceAroundRangeOperators = false
+        case "":
+            print("error: --ranges option expects a value.")
+        default:
+            print("error: unsupported ranges value: \(ranges).")
             return
         }
     }

@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.7.1
+//  Version 0.8
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -39,14 +39,17 @@ public struct FormatOptions {
     public var indent: String
     public var linebreak: String
     public var allowInlineSemicolons: Bool
+    public var spaceAroundRangeOperators: Bool
 
     public init(indent: String = "    ",
         linebreak: String = "\n",
-        allowInlineSemicolons: Bool = true) {
+        allowInlineSemicolons: Bool = true,
+        spaceAroundRangeOperators: Bool = false) {
 
         self.indent = indent
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons
+        self.spaceAroundRangeOperators = spaceAroundRangeOperators
     }
 }
 

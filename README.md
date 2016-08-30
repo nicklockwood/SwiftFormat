@@ -113,7 +113,7 @@ Here are all the rules that SwiftFormat currently applies:
 
 *spaceAroundGenerics* - removes the space around < >. For example:
 
-	Foo <Bar> ()       -->    Foo<Bar>()
+	Foo <Bar> ()    -->    Foo<Bar>()
 
 *spaceInsideGenerics* - removes the space inside < >. For example:
 
@@ -124,6 +124,18 @@ Here are all the rules that SwiftFormat currently applies:
 	foo . bar()   -->    foo.bar()
 	
 	a+b+c         -->    a + b + c
+
+*spaceAroundComments* - adds space around /* ... */ comments and before // comments:
+
+    let a = 5// assignment     -->   let a = 5 // assignment
+    
+    func foo() {/* no-op */}   -->   func foo() { /* no-op */ }
+
+*spaceInsideComments* - adds space inside /* ... */ comments and at the start of // comments:
+
+	let a = 5 //assignment     -->   let a = 5 // assignment
+    
+    func foo() { /*no-op*/ }   -->   func foo() { /* no-op */ }
 
 *consecutiveSpaces* - reduces a sequence of spaces to a single space:
 
@@ -341,6 +353,10 @@ Release notes
 
 Version 0.8
 
+- Added new `ranges` rules that adds/removes space around range operators (e.g. `0 ..< count`) depending on command-line options
+- Added a new `--ranges` command-line option, which can be used to restore the previous spacing for range operators 
+- Added new `spaceAroundComments` rule, which adds a space around /* ... */ comments and before // comments
+- Added new `spaceInsideComments` rule, which adds a space inside /* ... */ comments and at the start of // comments
 - Added new `blankLinesAtEndOfScope` rule, which removes blank lines at the end of braces, brackets and parens
 - Removed double blank line at end of file
 

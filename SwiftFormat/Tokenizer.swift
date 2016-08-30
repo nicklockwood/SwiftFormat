@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.7.1
+//  Version 0.8
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -63,10 +63,14 @@ public struct Token: Equatable {
         case .StartOfScope:
             return string == "//" || string == "/*"
         case .EndOfScope:
-            return string == "//"
+            return string == "*/"
         default:
             return false
         }
+    }
+
+    public var isWhitespaceOrLinebreak: Bool {
+        return type == .Linebreak || type == .Whitespace
     }
 
     public var isWhitespaceOrCommentOrLinebreak: Bool {

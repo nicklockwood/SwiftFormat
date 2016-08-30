@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.7.1
+//  Version 0.8
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -390,11 +390,13 @@ public func spaceAroundOperators(formatter: Formatter) {
                         formatter.insertToken(Token(.Whitespace, " "), atIndex: i)
                     }
                 }
-            } else if let previousToken = formatter.tokenAtIndex(i - 1) where isLvalue(previousToken) {
-                if let nextToken = formatter.tokenAtIndex(i + 1) where isRvalue(nextToken) {
-                    // Insert space before and after the infix token
-                    formatter.insertToken(Token(.Whitespace, " "), atIndex: i + 1)
-                    formatter.insertToken(Token(.Whitespace, " "), atIndex: i)
+            } else if token.string != "..." && token.string != "..<" {
+                if let previousToken = formatter.tokenAtIndex(i - 1) where isLvalue(previousToken) {
+                    if let nextToken = formatter.tokenAtIndex(i + 1) where isRvalue(nextToken) {
+                        // Insert space before and after the infix token
+                        formatter.insertToken(Token(.Whitespace, " "), atIndex: i + 1)
+                        formatter.insertToken(Token(.Whitespace, " "), atIndex: i)
+                    }
                 }
             }
         case .StartOfScope:
@@ -402,6 +404,96 @@ public func spaceAroundOperators(formatter: Formatter) {
         case .EndOfScope:
             scopeStack.popLast()
         default: break
+        }
+    }
+}
+
+/// Add space around comments
+public func spaceAroundComments(formatter: Formatter) {
+    formatter.forEachToken(ofType: .StartOfScope) { i, token in
+        guard let previousToken = formatter.tokenAtIndex(i - 1) where
+            (token.string == "/*" || token.string == "//") else { return }
+        if !previousToken.isWhitespaceOrLinebreak {
+            formatter.insertToken(Token(.Whitespace, " "), atIndex: i)
+        }
+    }
+    formatter.forEachToken("*/") { i, token in
+        guard let nextToken = formatter.tokenAtIndex(i + 1) else { return }
+        if !nextToken.isWhitespaceOrLinebreak {
+            formatter.insertToken(Token(.Whitespace, " "), atIndex: i + 1)
+        }
+    }
+}
+
+/// Add space inside comments, taking care not to mangle headerdoc or
+/// carefully preformatted comments, such as star boxes, etc.
+public func spaceInsideComments(formatter: Formatter) {
+    formatter.forEachToken("/*") { i, token in
+        guard let nextToken = formatter.tokenAtIndex(i + 1) else { return }
+        if !nextToken.isWhitespaceOrLinebreak {
+            let string = nextToken.string
+            if string.hasPrefix("*") {
+                if !string.hasPrefix("**") && !string.hasPrefix("*/") {
+                    let string = "* " + string.substringFromIndex(string.startIndex.advancedBy(1))
+                    formatter.replaceTokenAtIndex(i + 1, with: Token(.CommentBody, string))
+                }
+            } else {
+                formatter.insertToken(Token(.Whitespace, " "), atIndex: i + 1)
+            }
+        }
+    }
+    formatter.forEachToken("//") { i, token in
+        guard let nextToken = formatter.tokenAtIndex(i + 1) else { return }
+        if !nextToken.isWhitespaceOrLinebreak {
+            let string = nextToken.string
+            if string.hasPrefix("/") {
+                let string = "/ " + string.substringFromIndex(string.startIndex.advancedBy(1))
+                formatter.replaceTokenAtIndex(i + 1, with: Token(.CommentBody, string))
+            } else {
+                formatter.insertToken(Token(.Whitespace, " "), atIndex: i + 1)
+            }
+        }
+    }
+    formatter.forEachToken("*/") { i, token in
+        guard let previousToken = formatter.tokenAtIndex(i - 1) else { return }
+        if !previousToken.isWhitespaceOrLinebreak && !previousToken.string.hasSuffix("*") {
+            formatter.insertToken(Token(.Whitespace, " "), atIndex: i)
+        }
+    }
+}
+
+/// Add or removes the space around range operators
+public func ranges(formatter: Formatter) {
+    func nextNonWhitespaceToken(fromIndex index: Int) -> Token? {
+        var index = index + 1
+        while let token = formatter.tokenAtIndex(index) {
+            if !token.isWhitespaceOrCommentOrLinebreak {
+                return token
+            }
+            index += 1
+        }
+        return nil
+    }
+
+    formatter.forEachToken(ofType: .Operator) { i, token in
+        if token.string == "..." || token.string == "..<" {
+            if !formatter.options.spaceAroundRangeOperators {
+                if formatter.tokenAtIndex(i + 1)?.type == .Whitespace {
+                    formatter.removeTokenAtIndex(i + 1)
+                }
+                if formatter.tokenAtIndex(i - 1)?.type == .Whitespace {
+                    formatter.removeTokenAtIndex(i - 1)
+                }
+            } else if let nextToken = nextNonWhitespaceToken(fromIndex: i) {
+                if nextToken.string != ")" && nextToken.string != "," {
+                    if formatter.tokenAtIndex(i + 1)?.isWhitespaceOrLinebreak == false {
+                        formatter.insertToken(Token(.Whitespace, " "), atIndex: i + 1)
+                    }
+                    if formatter.tokenAtIndex(i - 1)?.isWhitespaceOrLinebreak == false {
+                        formatter.insertToken(Token(.Whitespace, " "), atIndex: i)
+                    }
+                }
+            }
         }
     }
 }
@@ -1063,6 +1155,8 @@ public let defaultRules: [FormatRule] = [
     spaceAroundGenerics,
     spaceInsideGenerics,
     spaceAroundOperators,
+    spaceAroundComments,
+    spaceInsideComments,
     consecutiveSpaces,
     trailingWhitespace,
     consecutiveBlankLines,
@@ -1070,4 +1164,5 @@ public let defaultRules: [FormatRule] = [
     linebreakAtEndOfFile,
     trailingCommas,
     todos,
+    ranges,
 ]

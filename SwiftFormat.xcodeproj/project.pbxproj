@@ -116,8 +116,8 @@
 			children = (
 				0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */,
 				018E82741D62E730008CA0F8 /* TokenizerTests.swift */,
-				01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */,
 				01B3987A1D763424009ADE61 /* FormatterTests.swift */,
+				01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */,
 				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
 			);
 			path = SwiftFormatTests;
@@ -271,7 +271,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CommandLineTool/swiftformat .";
+			shellScript = "CommandLineTool/swiftformat . -r spaced";
 		};
 		017AEBB11D6F256300764325 /* Format Code */ = {
 			isa = PBXShellScriptBuildPhase;

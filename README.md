@@ -30,7 +30,7 @@ How do I install it?
 
 4. Add the following line to the file: `alias swiftformat="/usr/local/bin/swiftformat -i 4"` (you can omit the `-i 4`, or replace it with something else - run `swiftformat --help` to see the available options).
 
-5. Save the `.bash_profile` file. You will need to open a new Terminal window for the changes to take effect.
+5. Save the `.bash_profile` file and run the command `source ~/.bash_profile` for the changes to take effect.
 
 
 How do I use it?

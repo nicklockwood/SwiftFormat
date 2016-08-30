@@ -1,6 +1,6 @@
 //
-//  SwiftFormat
 //  SwiftFormat.h
+//  SwiftFormat
 //
 //  Version 0.7.1
 //

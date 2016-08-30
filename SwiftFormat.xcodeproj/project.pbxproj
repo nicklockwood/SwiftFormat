@@ -11,14 +11,17 @@
 		018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018E82741D62E730008CA0F8 /* TokenizerTests.swift */; };
 		01A0EAA81D5DB4CF00A0A8E3 /* SwiftFormat.h in Headers */ = {isa = PBXBuildFile; fileRef = 01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		01A0EAAF1D5DB4D000A0A8E3 /* SwiftFormat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */; };
-		01A0EAB41D5DB4D000A0A8E3 /* FormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAB31D5DB4D000A0A8E3 /* FormatterTests.swift */; };
-		01A0EAC11D5DB4F700A0A8E3 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABE1D5DB4F700A0A8E3 /* Formatter.swift */; };
+		01A0EAB41D5DB4D000A0A8E3 /* RulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */; };
+		01A0EAC11D5DB4F700A0A8E3 /* Rules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */; };
 		01A0EAC21D5DB4F700A0A8E3 /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
 		01A0EAC51D5DB54A00A0A8E3 /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
 		01A0EACD1D5DB5F500A0A8E3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EACC1D5DB5F500A0A8E3 /* main.swift */; };
 		01A0EAD41D5DC08A00A0A8E3 /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
-		01A0EAD51D5DC08A00A0A8E3 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABE1D5DB4F700A0A8E3 /* Formatter.swift */; };
+		01A0EAD51D5DC08A00A0A8E3 /* Rules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */; };
 		01A0EAD61D5DC08A00A0A8E3 /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
+		01B3987B1D763424009ADE61 /* FormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987A1D763424009ADE61 /* FormatterTests.swift */; };
+		01B3987D1D763493009ADE61 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
+		01B3987F1D7634A0009ADE61 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,13 +41,15 @@
 		01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftFormat.h; sourceTree = "<group>"; };
 		01A0EAA91D5DB4CF00A0A8E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		01A0EAAE1D5DB4D000A0A8E3 /* SwiftFormatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftFormatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		01A0EAB31D5DB4D000A0A8E3 /* FormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatterTests.swift; sourceTree = "<group>"; };
+		01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesTests.swift; sourceTree = "<group>"; };
 		01A0EAB51D5DB4D000A0A8E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		01A0EABE1D5DB4F700A0A8E3 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
+		01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Rules.swift; sourceTree = "<group>"; };
 		01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tokenizer.swift; sourceTree = "<group>"; };
 		01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftFormat.swift; sourceTree = "<group>"; };
 		01A0EACA1D5DB5F500A0A8E3 /* swiftformat */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = swiftformat; sourceTree = BUILT_PRODUCTS_DIR; };
 		01A0EACC1D5DB5F500A0A8E3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		01B3987A1D763424009ADE61 /* FormatterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatterTests.swift; sourceTree = "<group>"; };
+		01B3987C1D763493009ADE61 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,8 +103,9 @@
 			children = (
 				01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */,
 				01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */,
-				01A0EABE1D5DB4F700A0A8E3 /* Formatter.swift */,
 				01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */,
+				01B3987C1D763493009ADE61 /* Formatter.swift */,
+				01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */,
 				01A0EAA91D5DB4CF00A0A8E3 /* Info.plist */,
 			);
 			path = SwiftFormat;
@@ -110,7 +116,8 @@
 			children = (
 				0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */,
 				018E82741D62E730008CA0F8 /* TokenizerTests.swift */,
-				01A0EAB31D5DB4D000A0A8E3 /* FormatterTests.swift */,
+				01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */,
+				01B3987A1D763424009ADE61 /* FormatterTests.swift */,
 				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
 			);
 			path = SwiftFormatTests;
@@ -300,8 +307,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				01A0EAC11D5DB4F700A0A8E3 /* Formatter.swift in Sources */,
+				01A0EAC11D5DB4F700A0A8E3 /* Rules.swift in Sources */,
 				01A0EAC51D5DB54A00A0A8E3 /* SwiftFormat.swift in Sources */,
+				01B3987D1D763493009ADE61 /* Formatter.swift in Sources */,
 				01A0EAC21D5DB4F700A0A8E3 /* Tokenizer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -310,8 +318,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				01A0EAB41D5DB4D000A0A8E3 /* FormatterTests.swift in Sources */,
+				01A0EAB41D5DB4D000A0A8E3 /* RulesTests.swift in Sources */,
 				018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */,
+				01B3987B1D763424009ADE61 /* FormatterTests.swift in Sources */,
 				0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -320,8 +329,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				01A0EAD51D5DC08A00A0A8E3 /* Formatter.swift in Sources */,
+				01A0EAD51D5DC08A00A0A8E3 /* Rules.swift in Sources */,
 				01A0EAD61D5DC08A00A0A8E3 /* Tokenizer.swift in Sources */,
+				01B3987F1D7634A0009ADE61 /* Formatter.swift in Sources */,
 				01A0EAD41D5DC08A00A0A8E3 /* SwiftFormat.swift in Sources */,
 				01A0EACD1D5DB5F500A0A8E3 /* main.swift in Sources */,
 			);

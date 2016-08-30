@@ -1,6 +1,6 @@
 //
-//  SwiftFormat
 //  Tokenizer.swift
+//  SwiftFormat
 //
 //  Version 0.7.1
 //

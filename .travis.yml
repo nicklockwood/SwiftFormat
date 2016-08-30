@@ -4,5 +4,3 @@ before_script:
 - brew update
 - brew upgrade xctool || true
 script: xctool test -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx
-after_success:
-- coveralls

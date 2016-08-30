@@ -1,5 +1,6 @@
-[![Build Status](https://travis-ci.org/nicklockwood/SwiftFormat.svg)](https://travis-ci.org/nicklockwood/SwiftFormat)
-
+[![Travis](https://img.shields.io/travis/nicklockwood/SwiftFormat.svg?maxAge=2592000)](https://travis-ci.org/nicklockwood/SwiftFormat)
+[![License](https://img.shields.io/badge/license-zlib-lightgrey.svg?maxAge=2592000)](https://opensource.org/licenses/Zlib)
+[![Twitter](https://img.shields.io/badge/twitter-@nicklockwood-blue.svg?maxAge=2592000)](http://twitter.com/nicklockwood)
 
 What is this?
 ----------------
@@ -28,7 +29,7 @@ How do I install it?
 
 3. Open `~/.bash_profile` in your favorite text editor (this is a hidden file, but you can type `open ~/.bash_profile` in the terminal to open it).
 
-4. Add the following line to the file: `alias swiftformat="/usr/local/bin/swiftformat -i 4"` (you can omit the `-i 4`, or replace it with something else - run `swiftformat --help` to see the available options).
+4. Add the following line to the file: `alias swiftformat="/usr/local/bin/swiftformat --indent 4"` (you can omit the `--indent 4`, or replace it with something else - run `swiftformat --help` to see the available options).
 
 5. Save the `.bash_profile` file and run the command `source ~/.bash_profile` for the changes to take effect.
 
@@ -82,105 +83,119 @@ Here are all the rules that SwiftFormat currently applies:
 
 *spaceAroundParens* - contextually adjusts the space around ( ). For example:
 
-    init (foo) --> init(foo)
+    init (foo)    -->   init(foo)
 
-    switch(x){ --> switch (x) {
+    switch(x){    -->   switch (x) {
     
 *spaceInsideParens* - removes the space inside ( ). For example:
 
-	( a, b ) --> (a, b)
+	( a, b )    -->    (a, b)
 	
 *spaceAroundBrackets* - contextually adjusts the space around [ ]. For example:
 
-	foo as[String] --> foo as [String]
+	foo as[String]   -->   foo as [String]
 	
-	foo = bar [5] --> foo = bar[5]
+	foo = bar [5]    -->   foo = bar[5]
 
 *spaceInsideBrackets* - removes the space inside [ ]. For example:
 
-	[ 1, 2, 3 ] --> [1, 2, 3]
+	[ 1, 2, 3 ]    -->    [1, 2, 3]
 
-*spaceAroundBraces* - contextually removes the space around { }. For example:
+*spaceAroundBraces* - contextually adds space around { }. For example:
 
-	foo.filter{ return true }.map{ $0 } --> foo.filter { return true }.map { $0 }
+	foo.filter{ return true }.map{ $0 }   -->   foo.filter { return true }.map { $0 }
 	
-	foo({}) --> foo({})
+	foo({})   							  -->   foo({})
 
 *spaceInsideBraces* - adds space inside { }. For example:
 
-	foo.filter {return true} --> foo.filter { return true }
+	foo.filter {return true}    -->    foo.filter { return true }
 
 *spaceAroundGenerics* - removes the space around < >. For example:
 
-	Foo <Bar> () --> Foo<Bar>()
+	Foo <Bar> ()       -->    Foo<Bar>()
 
 *spaceInsideGenerics* - removes the space inside < >. For example:
 
-	Foo< Bar, Baz > --> Foo<Bar, Baz>
+	Foo< Bar, Baz >    -->    Foo<Bar, Baz>
 
 *spaceAroundOperators* - contextually adjusts the space around infix operators:
 
-	foo . bar() --> foo.bar()
+	foo . bar()   -->    foo.bar()
 	
-	a+b+c --> a + b + c
+	a+b+c         -->    a + b + c
 
-*noConsecutiveSpaces* - reduces a sequence of spaces to a single space:
+*consecutiveSpaces* - reduces a sequence of spaces to a single space:
 
-    let  foo =  5 --> let foo = 5
+    let  foo =  5    -->    let foo = 5
 
-*noTrailingWhitespace* - removes the whitespace at the end of a line
+*trailingWhitespace* - removes the whitespace at the end of a line
 
-*noConsecutiveBlankLines* - reduces multiple sequential blank lines to a single blank line
+*consecutiveBlankLines* - reduces multiple sequential blank lines to a single blank line
+
+*blankLinesAtEndOfScope* - removes trailing bank lines from inside braces, brackets, parens or chevrons:
+
+    func foo() {         func foo() {
+        //foo      -->       //foo
+                         }
+    }
+    
+    array = [            array = [
+        foo,                 foo,
+        bar,       -->       bar,
+        baz,                 baz,
+                         }
+    ]
 
 *linebreakAtEndOfFile* - ensures that the last line of the file is empty
 
 *indent* - adjusts leading whitespace based on scope and line wrapping:
 
-    if x {           if x {
-     //foo               //foo
-    } else {   -->   } else {
-        //bar            //bar
-       }             }
+    if x {               if x {
+     //foo                   //foo
+    } else {       -->   } else {
+        //bar                //bar
+       }                 }
        
-    foo = [            foo = [
-           foo,            foo,
-          bar,  -->        bar,
-         baz               baz
-         ]             ]
+    let array = [        let array = [
+           foo,              foo,
+          bar,     -->       bar,
+         baz                 baz
+       ]                 ]
 
 *knrBraces* - implements K&R style braces, where the opening brace is on the same line as related code:
 
-    if x              if x {
-    {                     //foo
-        //foo   -->   } 
-    }    	          else {
-    else                  //bar
-    {                 }
+    if x                 if x {
+    {                        //foo
+        //foo            } 
+    }    	       -->   else {
+    else                     //bar
+    {                    }
     	//bar
     }
 
 *elseOnSameLine* - ensures the else following an if statement appears on the same line as the closing }
 
-    if x {            if x {
-        //foo             //foo
-    }           -->   } else {
-    else {                //bar
-        //bar         }
+    if x {               if x {
+        //foo                //foo
+    }              -->   } else {
+    else {                   //bar
+        //bar            }
     }
 
 *trailingCommas* - adds a trailing , to the last line in a multiline array or dictionary literal:
 
-    foo = [         foo = [
-        foo,            foo,
-        bar,  -->       bar,
-        baz             baz,
-    ]               ]
+    let array = [        let array = [
+        foo,                 foo,
+        bar,       -->       bar,
+        baz                  baz,
+    ]                    ]
 
 *todos* - ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon (else they're ignored by Xcode)
 
-    /* TODO fix this properly */  -->  /* TODO: fix this properly */
+    /* TODO fix this properly */    -->   /* TODO: fix this properly */
     
-    // MARK - UIScrollViewDelegate  -->  // MARK: - UIScrollViewDelegate
+    // MARK - UIScrollViewDelegate  -->   // MARK: - UIScrollViewDelegate
 
 *semicolons* - removes semicolons at the end of lines and (optionally) replaces inline semicolons with a linebreak:
 
@@ -223,7 +238,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. How can I modify the formatting rules?*
 
-> A. With the exception of indenting, everything is hard-coded right now. If you look in `Formatter.swift` you will find a list of all the rules that are applied by default. You can easily remove rules you don't want and build a new version of the command line tool.
+> A. With the exception of indenting, everything is hard-coded right now. If you look in `Rules.swift` you will find a list of all the rules that are applied by default. You can easily remove rules you don't want and build a new version of the command line tool.
 
 > With a bit more effort, you can also edit the existing rules or create new ones. If you think your changes might be generally useful, make a pull request.
 
@@ -252,7 +267,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 > A. First it loops through the source file character-by-character and breaks it into tokens, such as `Number`, `Identifier`, `Whitespace`, etc. That's handled by the functions in `Tokenizer.swift`.
 
-> Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening `{` appears on the same line as the preceding non-whitespace token". Each rule is designed to be relatively independent of the others, so they can be enabled or disabled individually (the order matters though). The rules are all defined as floating functions in `Formatter.swift`.
+> Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening `{` appears on the same line as the preceding non-whitespace token". Each rule is designed to be relatively independent of the others, so they can be enabled or disabled individually (the order matters though). The rules are all defined as floating functions in `Rules.swift`.
 
 > Finally, the modified token array is stitched back together to re-generate the source file.
 
@@ -314,7 +329,7 @@ Or begin each line with a `*` (or any other non-whitespace character)
 What's next?
 --------------
 
-There are a bunch of additional rules I'd like to add, such as correctly formatting headerdoc comments.
+There are a bunch of additional rules I'd like to add, such as placement of blank lines in and around functions, and  correctly formatting headerdoc comments.
 
 At some point I should probably add an intermediate parsing stage that identifies high-level constructs such as classes and functions and assembles them into a syntax tree. I did't bother doing this originally because I thought it would be easier to implement formatting at the token level, but in fact this just meant that the logic for distinguishing between syntax constructs had to be split between the tokenizer and the formatting rules, making both of them more complex than they ought to be.
 
@@ -324,6 +339,11 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
+Version 0.8
+
+- Added new `blankLinesAtEndOfScope` rule, which removes blank lines at the end of braces, brackets and parens
+- Removed double blank line at end of file
+
 Version 0.7.1
 
 - Fixed critical bug where failable generic init (e.g. `init?<T>()`) was not handled correctly
@@ -331,7 +351,7 @@ Version 0.7.1
 Version 0.7
 
 - swiftformat command-line tool now correctly handles paths with `\` escaped spaces, or paths in quotes
-- Removed extra space added inside @objc selectors
+- Removed extra space added inside `@objc` selectors
 - Fixed incorrect spacing for tuple bindings
 - Fixed space before enum case inside closure
 

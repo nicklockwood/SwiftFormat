@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.8
+//  Version 0.8.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -432,10 +432,11 @@ public func spaceInsideComments(formatter: Formatter) {
         guard let nextToken = formatter.tokenAtIndex(i + 1) else { return }
         if !nextToken.isWhitespaceOrLinebreak {
             let string = nextToken.string
-            if string.hasPrefix("*") {
+            if string.hasPrefix("*") || string.hasPrefix("!") || string.hasPrefix(":") {
                 if !string.hasPrefix("**") && !string.hasPrefix("* ") &&
                     !string.hasPrefix("*\t") && !string.hasPrefix("*/") {
-                    let string = "* " + string.substringFromIndex(string.startIndex.advancedBy(1))
+                    let string = String(string.characters.first!) + " " +
+                        string.substringFromIndex(string.startIndex.advancedBy(1))
                     formatter.replaceTokenAtIndex(i + 1, with: Token(.CommentBody, string))
                 }
             } else {
@@ -447,9 +448,10 @@ public func spaceInsideComments(formatter: Formatter) {
         guard let nextToken = formatter.tokenAtIndex(i + 1) else { return }
         if !nextToken.isWhitespaceOrLinebreak {
             let string = nextToken.string
-            if string.hasPrefix("/") {
+            if string.hasPrefix("/") || string.hasPrefix("!") || string.hasPrefix(":") {
                 if !string.hasPrefix("/ ") && !string.hasPrefix("/\t") {
-                    let string = "/ " + string.substringFromIndex(string.startIndex.advancedBy(1))
+                    let string = String(string.characters.first!) + " " +
+                        string.substringFromIndex(string.startIndex.advancedBy(1))
                     formatter.replaceTokenAtIndex(i + 1, with: Token(.CommentBody, string))
                 }
             } else {

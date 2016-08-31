@@ -351,6 +351,10 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
+Version 0.8.1
+
+- Fixed formatting of `/*! ... */` and `//!` headerdoc comments, and `/*: ... */` and `//:` Swift Playground comments
+
 Version 0.8
 
 - Added new `ranges` rules that adds or removes the spaces around range operators (e.g. `0 ..< count`, `"a"..."z"`)

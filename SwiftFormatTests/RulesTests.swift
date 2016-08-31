@@ -2,7 +2,7 @@
 //  RulesTests.swift
 //  SwiftFormat
 //
-//  Version 0.8
+//  Version 0.8.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -658,6 +658,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testSpaceInsideMultilineHeaderdocCommentType2() {
+        let input = "/*!foo\n bar*/"
+        let output = "/*! foo\n bar */"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceInsideMultilineSwiftPlaygroundDocComment() {
+        let input = "/*:foo\n bar*/"
+        let output = "/*: foo\n bar */"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testNoExtraSpaceInsideMultilineHeaderdocComment() {
         let input = "/** foo\n bar */"
         let output = "/** foo\n bar */"
@@ -668,6 +682,20 @@ class RulesTests: XCTestCase {
     func testSpaceInsideSingleLineHeaderdocComment() {
         let input = "///foo"
         let output = "/// foo"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceInsideSingleLineHeaderdocCommentType2() {
+        let input = "//!foo"
+        let output = "//! foo"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceInsideSingleLineSwiftPlaygroundDocComment() {
+        let input = "//:foo"
+        let output = "//: foo"
         XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }

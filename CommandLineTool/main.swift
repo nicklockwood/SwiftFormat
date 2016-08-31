@@ -2,7 +2,7 @@
 //  main.swift
 //  SwiftFormat
 //
-//  Version 0.8
+//  Version 0.8.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -33,7 +33,7 @@
 
 import Foundation
 
-let version = "0.8"
+let version = "0.8.1"
 
 func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOptions options: FormatOptions) -> Int {
     let manager = NSFileManager.defaultManager()

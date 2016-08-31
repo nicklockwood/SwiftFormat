@@ -44,7 +44,7 @@ public struct FormatOptions {
     public init(indent: String = "    ",
         linebreak: String = "\n",
         allowInlineSemicolons: Bool = true,
-        spaceAroundRangeOperators: Bool = false) {
+        spaceAroundRangeOperators: Bool = true) {
 
         self.indent = indent
         self.linebreak = linebreak

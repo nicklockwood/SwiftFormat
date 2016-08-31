@@ -408,7 +408,7 @@ public func spaceAroundOperators(formatter: Formatter) {
     }
 }
 
-/// Add space around comments
+/// Add space around comments, except at the start or end of a line
 public func spaceAroundComments(formatter: Formatter) {
     formatter.forEachToken(ofType: .StartOfScope) { i, token in
         guard let previousToken = formatter.tokenAtIndex(i - 1) where
@@ -433,7 +433,8 @@ public func spaceInsideComments(formatter: Formatter) {
         if !nextToken.isWhitespaceOrLinebreak {
             let string = nextToken.string
             if string.hasPrefix("*") {
-                if !string.hasPrefix("**") && !string.hasPrefix("*/") {
+                if !string.hasPrefix("**") && !string.hasPrefix("* ") &&
+                    !string.hasPrefix("*\t") && !string.hasPrefix("*/") {
                     let string = "* " + string.substringFromIndex(string.startIndex.advancedBy(1))
                     formatter.replaceTokenAtIndex(i + 1, with: Token(.CommentBody, string))
                 }
@@ -447,8 +448,10 @@ public func spaceInsideComments(formatter: Formatter) {
         if !nextToken.isWhitespaceOrLinebreak {
             let string = nextToken.string
             if string.hasPrefix("/") {
-                let string = "/ " + string.substringFromIndex(string.startIndex.advancedBy(1))
-                formatter.replaceTokenAtIndex(i + 1, with: Token(.CommentBody, string))
+                if !string.hasPrefix("/ ") && !string.hasPrefix("/\t") {
+                    let string = "/ " + string.substringFromIndex(string.startIndex.advancedBy(1))
+                    formatter.replaceTokenAtIndex(i + 1, with: Token(.CommentBody, string))
+                }
             } else {
                 formatter.insertToken(Token(.Whitespace, " "), atIndex: i + 1)
             }

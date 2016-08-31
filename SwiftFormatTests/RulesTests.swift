@@ -658,8 +658,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testNoExtraSpaceInsideMultilineHeaderdocComment() {
+        let input = "/** foo\n bar */"
+        let output = "/** foo\n bar */"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testSpaceInsideSingleLineHeaderdocComment() {
         let input = "///foo"
+        let output = "/// foo"
+        XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoExtraSpaceInsideSingleLineHeaderdocComment() {
+        let input = "/// foo"
         let output = "/// foo"
         XCTAssertEqual(format(input, rules: [spaceInsideComments]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
@@ -1341,16 +1355,16 @@ class RulesTests: XCTestCase {
     // MARK: ranges
 
     func testSpaceAroundRangeOperatorsWithDefaultOptions() {
-        let input = "foo ..< bar"
-        let output = "foo..<bar"
+        let input = "foo..<bar"
+        let output = "foo ..< bar"
         XCTAssertEqual(format(input, rules: [ranges]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testNoSpaceAroundRangeOperatorsWithCustomOptions() {
-        let input = "foo..<bar"
-        let output = "foo ..< bar"
-        let options = FormatOptions(spaceAroundRangeOperators: true)
+        let input = "foo ..< bar"
+        let output = "foo..<bar"
+        let options = FormatOptions(spaceAroundRangeOperators: false)
         XCTAssertEqual(format(input, rules: [ranges], options: options), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }

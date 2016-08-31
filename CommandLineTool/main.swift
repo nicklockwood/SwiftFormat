@@ -89,7 +89,7 @@ func showHelp() {
     print("  -i, --indent      number of spaces to indent, or \"tab\" to use tabs")
     print("  -l, --linebreaks  linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
     print("  -s, --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
-    print("  -r, --ranges      spacing for ranges. either \"spaced\" or \"nospace\" (default)")
+    print("  -r, --ranges      spacing for ranges. either \"spaced\" (default) or \"nospace\"")
     print("  -h, --help        this help page")
     print("  -v, --version     version information")
     print("")

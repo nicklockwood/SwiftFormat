@@ -353,8 +353,8 @@ Release notes
 
 Version 0.8
 
-- Added new `ranges` rules that adds/removes space around range operators (e.g. `0 ..< count`) depending on command-line options
-- Added a new `--ranges` command-line option, which can be used to restore the previous spacing for range operators 
+- Added new `ranges` rules that adds or removes the spaces around range operators (e.g. `0 ..< count`, `"a"..."z"`)
+- Added a new `--ranges` command-line option, which can be used to configure the spacing around range operators 
 - Added new `spaceAroundComments` rule, which adds a space around /* ... */ comments and before // comments
 - Added new `spaceInsideComments` rule, which adds a space inside /* ... */ comments and at the start of // comments
 - Added new `blankLinesAtEndOfScope` rule, which removes blank lines at the end of braces, brackets and parens

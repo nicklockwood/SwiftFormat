@@ -74,6 +74,19 @@ Do that as follows:
 
 **Note:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
 
+Git hook
+--------
+
+ 1. Edit or create `.git/hooks/pre-commit` in project folder
+ 2. Add the following line (we presume you have already install swiftformat)
+
+        #!/bin/bash
+        git status --porcelain | grep -e '^[AM]\(.*\).swift$' | cut -c 3- | while read line; do
+          swiftformat ${line};
+          git add $line;
+        done
+
+ 3. enable hook `chmod +x .git/hooks/pre-commit`
 
 So what does it actually do?
 ----------------------------
@@ -209,12 +222,6 @@ There haven't been many questions yet, but here's what I'd like to think people 
 *Q. Can I compile it with Swift 3?*
 
 > A. Hahahahahahahahahahahahahahahahahahahaha no. 
-
-
-*Q. Can I run it as a git commit hook instead of a build step?*
-
-> A. Almost certainly. If you figure out how, please create a pull request with the instructions.
-
 
 *Q. I don't like how SwiftFormat formatted my code*
 

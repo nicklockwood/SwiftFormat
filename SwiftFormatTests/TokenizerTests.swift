@@ -2,7 +2,7 @@
 //  TokenizerTests.swift
 //  SwiftFormat
 //
-//  Version 0.8.1
+//  Version 0.8.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -36,6 +36,59 @@ import XCTest
 
 class TokenizerTests: XCTestCase {
 
+    // MARK: Invalid input
+
+    func testInvalidToken() {
+        let input = "let `foo = bar"
+        XCTAssertThrowsError(try tokenize(input))
+        do { _ = try tokenize(input) }
+        catch TokenizerError.UnexpectedToken(atIndex: let index) {
+            XCTAssertEqual(index, input.startIndex.advancedBy(4))
+        } catch {
+            XCTFail()
+        }
+    }
+
+    func testUnclosedBraces() {
+        let input = "func foo() {"
+        XCTAssertThrowsError(try tokenize(input))
+        do { _ = try tokenize(input) }
+        catch TokenizerError.UnexpectedEndOfFile(atIndex: let index) {
+            XCTAssertEqual(index, input.endIndex)
+        } catch {
+            XCTFail()
+        }
+    }
+
+    func testUnclosedComment() {
+        let input = "// comment"
+        do { _ = try tokenize(input) } catch {
+            XCTFail()
+        }
+    }
+
+    func testUnclosedString() {
+        let input = "\"Hello World"
+        XCTAssertThrowsError(try tokenize(input))
+        do { _ = try tokenize(input) }
+        catch TokenizerError.UnexpectedEndOfFile(atIndex: let index) {
+            XCTAssertEqual(index, input.endIndex)
+        } catch {
+            XCTFail()
+        }
+    }
+
+    func testUnbalancedScopes() {
+        let input = "array.map({ return $0 )"
+        XCTAssertThrowsError(try tokenize(input))
+        do { _ = try tokenize(input) }
+        catch TokenizerError.UnexpectedEndOfScope(atIndex: let index) {
+            XCTAssertEqual(index, input.endIndex.advancedBy(-1))
+        } catch {
+            XCTFail()
+        }
+    }
+
     // MARK: Whitespace
 
     func testSpaces() {
@@ -43,7 +96,7 @@ class TokenizerTests: XCTestCase {
         let output = [
             Token(.Whitespace, "    "),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testSpacesAndTabs() {
@@ -51,7 +104,7 @@ class TokenizerTests: XCTestCase {
         let output = [
             Token(.Whitespace, "  \t  \t"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     // MARK: Strings
@@ -62,7 +115,7 @@ class TokenizerTests: XCTestCase {
             Token(.StartOfScope, "\""),
             Token(.EndOfScope, "\""),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testSimpleString() {
@@ -72,7 +125,7 @@ class TokenizerTests: XCTestCase {
             Token(.StringBody, "foo"),
             Token(.EndOfScope, "\""),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testStringWithEscape() {
@@ -82,7 +135,7 @@ class TokenizerTests: XCTestCase {
             Token(.StringBody, "hello\\tworld"),
             Token(.EndOfScope, "\""),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testStringWithEscapedQuotes() {
@@ -92,7 +145,7 @@ class TokenizerTests: XCTestCase {
             Token(.StringBody, "\\\"nice\\\" to meet you"),
             Token(.EndOfScope, "\""),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testStringWithEscapedLogic() {
@@ -105,7 +158,7 @@ class TokenizerTests: XCTestCase {
             Token(.EndOfScope, ")"),
             Token(.EndOfScope, "\""),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testStringWithEscapedBackslash() {
@@ -115,7 +168,7 @@ class TokenizerTests: XCTestCase {
             Token(.StringBody, "\\\\"),
             Token(.EndOfScope, "\""),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     // MARK: Single-line comments
@@ -126,7 +179,7 @@ class TokenizerTests: XCTestCase {
             Token(.StartOfScope, "//"),
             Token(.CommentBody, "foo"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testSingleLineCommentWithSpace() {
@@ -137,7 +190,7 @@ class TokenizerTests: XCTestCase {
             Token(.CommentBody, "foo"),
             Token(.Whitespace, " "),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testSingleLineCommentWithLinebreak() {
@@ -148,7 +201,7 @@ class TokenizerTests: XCTestCase {
             Token(.Linebreak, "\n"),
             Token(.Identifier, "bar"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     // MARK: Multiline comments
@@ -160,7 +213,7 @@ class TokenizerTests: XCTestCase {
             Token(.CommentBody, "foo"),
             Token(.EndOfScope, "*/"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testSingleLineMultilineCommentWithSpace() {
@@ -172,7 +225,7 @@ class TokenizerTests: XCTestCase {
             Token(.Whitespace, " "),
             Token(.EndOfScope, "*/"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testMultilineComment() {
@@ -184,7 +237,7 @@ class TokenizerTests: XCTestCase {
             Token(.CommentBody, "bar"),
             Token(.EndOfScope, "*/"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testMultilineCommentWithWhitespace() {
@@ -197,7 +250,7 @@ class TokenizerTests: XCTestCase {
             Token(.CommentBody, "bar"),
             Token(.EndOfScope, "*/"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testNestedComments() {
@@ -211,7 +264,7 @@ class TokenizerTests: XCTestCase {
             Token(.CommentBody, "baz"),
             Token(.EndOfScope, "*/"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testNestedCommentsWithWhitespace() {
@@ -231,7 +284,7 @@ class TokenizerTests: XCTestCase {
             Token(.Whitespace, " "),
             Token(.EndOfScope, "*/"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     // MARK: Numbers
@@ -239,19 +292,19 @@ class TokenizerTests: XCTestCase {
     func testZero() {
         let input = "0"
         let output = [Token(.Number, "0")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testSmallInteger() {
         let input = "5"
         let output = [Token(.Number, "5")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testLargeInteger() {
         let input = "12345678901234567890"
         let output = [Token(.Number, "12345678901234567890")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testNegativeInteger() {
@@ -260,19 +313,19 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "-"),
             Token(.Number, "7"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testSmallFloat() {
         let input = "0.2"
         let output = [Token(.Number, "0.2")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testLargeFloat() {
         let input = "1234.567890"
         let output = [Token(.Number, "1234.567890")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testNegativeFloat() {
@@ -281,31 +334,31 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "-"),
             Token(.Number, "0.34"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testExponential() {
         let input = "1234e5"
         let output = [Token(.Number, "1234e5")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testPositiveExponential() {
         let input = "0.123e+4"
         let output = [Token(.Number, "0.123e+4")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testNegativeExponential() {
         let input = "0.123e-4"
         let output = [Token(.Number, "0.123e-4")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testCapitalExponential() {
         let input = "0.123E-4"
         let output = [Token(.Number, "0.123E-4")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     // MARK: Identifiers
@@ -313,74 +366,74 @@ class TokenizerTests: XCTestCase {
     func testFoo() {
         let input = "foo"
         let output = [Token(.Identifier, "foo")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testDollar0() {
         let input = "$0"
         let output = [Token(.Identifier, "$0")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testDollar() {
         // Note: support for this is deprecated in Swift 3
         let input = "$"
         let output = [Token(.Identifier, "$")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testFooDollar() {
         let input = "foo$"
         let output = [Token(.Identifier, "foo$")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func test_() {
         let input = "_"
         let output = [Token(.Identifier, "_")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func test_foo() {
         let input = "_foo"
         let output = [Token(.Identifier, "_foo")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testFoo_bar() {
         let input = "foo_bar"
         let output = [Token(.Identifier, "foo_bar")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testAtFoo() {
         let input = "@foo"
         let output = [Token(.Identifier, "@foo")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testHashFoo() {
         let input = "#foo"
         let output = [Token(.Identifier, "#foo")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testUnicode() {
         let input = "µsec"
         let output = [Token(.Identifier, "µsec")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testEmoji() {
         let input = "💩"
         let output = [Token(.Identifier, "💩")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testBacktickEscapedClass() {
         let input = "`class`"
         let output = [Token(.Identifier, "`class`")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     // MARK: Operators
@@ -388,7 +441,7 @@ class TokenizerTests: XCTestCase {
     func testBasicOperator() {
         let input = "+="
         let output = [Token(.Operator, "+=")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testDivide() {
@@ -400,13 +453,13 @@ class TokenizerTests: XCTestCase {
             Token(.Whitespace, " "),
             Token(.Identifier, "b"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testCustomOperator() {
         let input = "~="
         let output = [Token(.Operator, "~=")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testSequentialOperators() {
@@ -419,19 +472,19 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "-"),
             Token(.Identifier, "b"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testDotPrefixedOperator() {
         let input = "..."
         let output = [Token(.Operator, "...")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testUnicodeOperator() {
         let input = "≥"
         let output = [Token(.Operator, "≥")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testOperatorFollowedByComment() {
@@ -446,7 +499,7 @@ class TokenizerTests: XCTestCase {
             Token(.Whitespace, " "),
             Token(.EndOfScope, "*/"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testOperatorPrecededByComment() {
@@ -460,13 +513,13 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "-"),
             Token(.Identifier, "b"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testOperatorMayContainDotIfStartsWithDot() {
         let input = ".*.."
         let output = [Token(.Operator, ".*..")]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testOperatorMayNotContainDotUnlessStartsWithDot() {
@@ -475,7 +528,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "*"),
             Token(.Operator, ".."),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     // MARK: chevrons (might be operators or generics)
@@ -493,7 +546,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, ">"),
             Token(.Identifier, "c"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testBitshift() {
@@ -503,7 +556,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, ">>"),
             Token(.Identifier, "b"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testTripleShift() {
@@ -513,7 +566,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, ">>>"),
             Token(.Identifier, "b"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testTripleShiftEquals() {
@@ -523,7 +576,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, ">>="),
             Token(.Identifier, "b"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testBitshiftThatLooksLikeAGeneric() {
@@ -543,7 +596,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, ">>"),
             Token(.Identifier, "e"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testBasicGeneric() {
@@ -557,7 +610,7 @@ class TokenizerTests: XCTestCase {
             Token(.Identifier, "Baz"),
             Token(.EndOfScope, ">"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testNestedGenerics() {
@@ -571,7 +624,7 @@ class TokenizerTests: XCTestCase {
             Token(.EndOfScope, ">"),
             Token(.EndOfScope, ">"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testFunctionThatLooksLikeGenericType() {
@@ -584,7 +637,7 @@ class TokenizerTests: XCTestCase {
             Token(.Identifier, "r"),
             Token(.EndOfScope, ")"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericClassDeclaration() {
@@ -602,7 +655,7 @@ class TokenizerTests: XCTestCase {
             Token(.StartOfScope, "{"),
             Token(.EndOfScope, "}"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericSubclassDeclaration() {
@@ -620,7 +673,7 @@ class TokenizerTests: XCTestCase {
             Token(.Whitespace, " "),
             Token(.Identifier, "Bar"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericFunctionDeclaration() {
@@ -638,7 +691,7 @@ class TokenizerTests: XCTestCase {
             Token(.Identifier, "T"),
             Token(.EndOfScope, ")"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericClassInit() {
@@ -657,7 +710,7 @@ class TokenizerTests: XCTestCase {
             Token(.StartOfScope, "("),
             Token(.EndOfScope, ")"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericFollowedByDot() {
@@ -672,7 +725,7 @@ class TokenizerTests: XCTestCase {
             Token(.StartOfScope, "("),
             Token(.EndOfScope, ")"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testConstantThatLooksLikeGenericType() {
@@ -684,7 +737,7 @@ class TokenizerTests: XCTestCase {
             Token(.Identifier, "Pi"),
             Token(.EndOfScope, ")"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testTupleOfBoolsThatLooksLikeGeneric() {
@@ -700,7 +753,7 @@ class TokenizerTests: XCTestCase {
             Token(.Identifier, "V"),
             Token(.EndOfScope, ")"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericClassInitThatLooksLikeTuple() {
@@ -718,7 +771,7 @@ class TokenizerTests: XCTestCase {
             Token(.EndOfScope, ")"),
             Token(.EndOfScope, ")"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testCustomChevronOperatorThatLooksLikeGeneric() {
@@ -732,7 +785,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, ">>>"),
             Token(.Number, "5"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericAsFunctionType() {
@@ -747,7 +800,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "->"),
             Token(.Identifier, "Void"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericContainingArrayType() {
@@ -762,7 +815,7 @@ class TokenizerTests: XCTestCase {
             Token(.Identifier, "Baz"),
             Token(.EndOfScope, ">"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericContainingTupleType() {
@@ -777,7 +830,7 @@ class TokenizerTests: XCTestCase {
             Token(.EndOfScope, ")"),
             Token(.EndOfScope, ">"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericContainingArrayAndTupleType() {
@@ -794,7 +847,7 @@ class TokenizerTests: XCTestCase {
             Token(.EndOfScope, ")"),
             Token(.EndOfScope, ">"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericFollowedByIn() {
@@ -809,7 +862,7 @@ class TokenizerTests: XCTestCase {
             Token(.Whitespace, " "),
             Token(.Identifier, "in"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testOptionalGenericType() {
@@ -823,7 +876,7 @@ class TokenizerTests: XCTestCase {
             Token(.Identifier, "U"),
             Token(.EndOfScope, ">"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testTrailingOptionalGenericType() {
@@ -835,7 +888,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "?"),
             Token(.EndOfScope, ">"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testNestedOptionalGenericType() {
@@ -850,7 +903,7 @@ class TokenizerTests: XCTestCase {
             Token(.EndOfScope, ">"),
             Token(.EndOfScope, ">"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testCustomOperatorStartingWithOpenChevron() {
@@ -860,7 +913,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "<--"),
             Token(.Identifier, "bar"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testCustomOperatorEndingWithCloseChevron() {
@@ -870,7 +923,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "-->"),
             Token(.Identifier, "bar"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGreaterThanLessThanOperator() {
@@ -880,7 +933,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "><"),
             Token(.Identifier, "bar"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testLessThanGreaterThanOperator() {
@@ -890,7 +943,7 @@ class TokenizerTests: XCTestCase {
             Token(.Operator, "<>"),
             Token(.Identifier, "bar"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericFollowedByAssign() {
@@ -910,7 +963,7 @@ class TokenizerTests: XCTestCase {
             Token(.Whitespace, " "),
             Token(.Number, "5"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testGenericInFailableInit() {
@@ -924,7 +977,7 @@ class TokenizerTests: XCTestCase {
             Token(.StartOfScope, "("),
             Token(.EndOfScope, ")"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testInfixQuestionMarkChevronOperator() {
@@ -937,7 +990,7 @@ class TokenizerTests: XCTestCase {
             Token(.StartOfScope, "{"),
             Token(.EndOfScope, "}"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     // MARK: case statements
@@ -958,7 +1011,7 @@ class TokenizerTests: XCTestCase {
             Token(.Identifier, "Baz"),
             Token(.EndOfScope, "}"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testSingleLineGenericEnum() {
@@ -980,7 +1033,7 @@ class TokenizerTests: XCTestCase {
             Token(.Identifier, "Baz"),
             Token(.EndOfScope, "}"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testMultilineLineEnum() {
@@ -1002,7 +1055,7 @@ class TokenizerTests: XCTestCase {
             Token(.Linebreak, "\n"),
             Token(.EndOfScope, "}"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testSwitchStatement() {
@@ -1035,7 +1088,7 @@ class TokenizerTests: XCTestCase {
             Token(.Linebreak, "\n"),
             Token(.EndOfScope, "}"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     // MARK: linebreaks
@@ -1047,7 +1100,7 @@ class TokenizerTests: XCTestCase {
             Token(.Linebreak, "\n"),
             Token(.Identifier, "bar"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testCR() {
@@ -1057,7 +1110,7 @@ class TokenizerTests: XCTestCase {
             Token(.Linebreak, "\r"),
             Token(.Identifier, "bar"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testCRLF() {
@@ -1067,7 +1120,7 @@ class TokenizerTests: XCTestCase {
             Token(.Linebreak, "\r\n"),
             Token(.Identifier, "bar"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testCRLFAfterComment() {
@@ -1079,7 +1132,7 @@ class TokenizerTests: XCTestCase {
             Token(.StartOfScope, "//"),
             Token(.CommentBody, "bar"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 
     func testCRLFInMultilineComment() {
@@ -1091,6 +1144,6 @@ class TokenizerTests: XCTestCase {
             Token(.CommentBody, "bar"),
             Token(.EndOfScope, "*/"),
         ]
-        XCTAssertEqual(tokenize(input), output)
+        XCTAssertEqual(try! tokenize(input), output)
     }
 }

@@ -2,7 +2,7 @@
 //  SwiftFormatTests.swift
 //  SwiftFormat
 //
-//  Version 0.8.1
+//  Version 0.8.2
 //
 //  Created by Nick Lockwood on 28/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -97,5 +97,18 @@ class SwiftFormatTests: XCTestCase {
         let input = ["", "\"\\\"foobar\\\"\""]
         let output = ["0": "", "1": "\"foobar\""]
         XCTAssertEqual(preprocessArguments(input, [])!, output)
+    }
+
+    // MARK: performance
+
+    func testPerformance() {
+        let inputPath = ((#file as NSString).stringByDeletingLastPathComponent
+            as NSString).stringByDeletingLastPathComponent
+        let outputPath = NSTemporaryDirectory()
+        self.measureBlock {
+            processInput(NSURL(fileURLWithPath: inputPath),
+                andWriteToOutput: NSURL(fileURLWithPath: outputPath),
+                withOptions: FormatOptions())
+        }
     }
 }

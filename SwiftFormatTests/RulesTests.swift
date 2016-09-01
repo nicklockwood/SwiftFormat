@@ -2,7 +2,7 @@
 //  RulesTests.swift
 //  SwiftFormat
 //
-//  Version 0.8.1
+//  Version 0.8.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -716,35 +716,42 @@ class RulesTests: XCTestCase {
 
     // MARK: consecutiveSpaces
 
-    func testconsecutiveSpaces() {
+    func testConsecutiveSpaces() {
         let input = "let foo  = bar"
         let output = "let foo = bar"
         XCTAssertEqual(format(input, rules: [consecutiveSpaces]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testconsecutiveSpacesDoesntStripIndent() {
+    func testConsecutiveSpacesAfterComment() {
+        let input = "// comment\nfoo  bar"
+        let output = "// comment\nfoo bar"
+        XCTAssertEqual(format(input, rules: [consecutiveSpaces]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testConsecutiveSpacesDoesntStripIndent() {
         let input = "{\n    let foo  = bar\n}"
         let output = "{\n    let foo = bar\n}"
         XCTAssertEqual(format(input, rules: [consecutiveSpaces]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testconsecutiveSpacesDoesntAffectMultilineComments() {
+    func testConsecutiveSpacesDoesntAffectMultilineComments() {
         let input = "/*    comment  */"
         let output = "/*    comment  */"
         XCTAssertEqual(format(input, rules: [consecutiveSpaces]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testconsecutiveSpacesDoesntAffectNestedMultilineComments() {
+    func testConsecutiveSpacesDoesntAffectNestedMultilineComments() {
         let input = "/*  foo  /*  bar  */  baz  */"
         let output = "/*  foo  /*  bar  */  baz  */"
         XCTAssertEqual(format(input, rules: [consecutiveSpaces]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testconsecutiveSpacesDoesntAffectSingleLineComments() {
+    func testConsecutiveSpacesDoesntAffectSingleLineComments() {
         let input = "//    foo  bar"
         let output = "//    foo  bar"
         XCTAssertEqual(format(input, rules: [consecutiveSpaces]), output)
@@ -753,28 +760,28 @@ class RulesTests: XCTestCase {
 
     // MARK: trailingWhitespace
 
-    func testtrailingWhitespace() {
+    func testTrailingWhitespace() {
         let input = "foo  \nbar"
         let output = "foo\nbar"
         XCTAssertEqual(format(input, rules: [trailingWhitespace]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testtrailingWhitespaceAtEndOfFile() {
+    func testTrailingWhitespaceAtEndOfFile() {
         let input = "foo  "
         let output = "foo"
         XCTAssertEqual(format(input, rules: [trailingWhitespace]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testtrailingWhitespaceInMultilineComments() {
+    func testTrailingWhitespaceInMultilineComments() {
         let input = "/* foo  \n bar  */"
         let output = "/* foo\n bar  */"
         XCTAssertEqual(format(input, rules: [trailingWhitespace]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testtrailingWhitespaceInSingleLineComments() {
+    func testTrailingWhitespaceInSingleLineComments() {
         let input = "// foo  \n// bar  "
         let output = "// foo\n// bar"
         XCTAssertEqual(format(input, rules: [trailingWhitespace]), output)
@@ -783,21 +790,21 @@ class RulesTests: XCTestCase {
 
     // MARK: consecutiveBlankLines
 
-    func testconsecutiveBlankLines() {
+    func testConsecutiveBlankLines() {
         let input = "foo\n\n  \nbar"
         let output = "foo\n\nbar"
         XCTAssertEqual(format(input, rules: [consecutiveBlankLines]), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testconsecutiveBlankLinesAtEndOfFile() {
+    func testConsecutiveBlankLinesAtEndOfFile() {
         let input = "foo\n\n"
         let output = "foo\n"
         XCTAssertEqual(format(input, rules: [consecutiveBlankLines]), output)
         XCTAssertEqual(format(input, rules: defaultRules), output)
     }
 
-    func testconsecutiveBlankLinesAtStartOfFile() {
+    func testConsecutiveBlankLinesAtStartOfFile() {
         let input = "\n\n\nfoo"
         let output = "\n\nfoo"
         XCTAssertEqual(format(input, rules: [consecutiveBlankLines]), output)
@@ -1362,8 +1369,17 @@ class RulesTests: XCTestCase {
     func testSemicolonsNotReplacedInForLoop() {
         let input = "for (i = 0; i < 5; i++)"
         let output = "for (i = 0; i < 5; i++)"
-        XCTAssertEqual(format(input, rules: [semicolons]), output)
-        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+        let options = FormatOptions(allowInlineSemicolons: false)
+        XCTAssertEqual(format(input, rules: [semicolons], options: options), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testSemicolonsNotReplacedInForLoopContainingComment() {
+        let input = "for (i = 0 // comment\n    ; i < 5; i++)"
+        let output = "for (i = 0 // comment\n    ; i < 5; i++)"
+        let options = FormatOptions(allowInlineSemicolons: false)
+        XCTAssertEqual(format(input, rules: [semicolons], options: options), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
     func testSemicolonNotReplacedAfterReturn() {

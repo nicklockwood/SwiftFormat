@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.8.1
+//  Version 0.8.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design

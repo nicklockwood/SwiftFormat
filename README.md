@@ -65,9 +65,16 @@ Omitting the `-o /path/to/file.swift` will print the formatted file to `stdout`.
 That seems like an cumbersome process - can I automate it?
 ----------------------------------------------------------
 
-Yes. Once you are confident that SwiftFormat isn't going to wreck your code, you might want to add a build phase to your Xcode project, so it will run each time you press Cmd-R or Cmd-B.
+Yes. Once you are confident that SwiftFormat isn't going to wreck your code, there are a couple of approaches you can take to run it automatically:
 
-Do that as follows:
+1. As a build phase in your Xcode project, so that it runs every time you press Cmd-R or Cmd-B, or
+
+2. As a Git pre-commit hook, so that it runs on any files you've changed before you check them in
+
+Xcode build phase
+-------------------
+
+To set up SwiftFormat as an Xcode build phase, do the following:
 
 1. Add the `swiftformat` binary to your project directory (this is better than referencing your local copy because it ensures that everyone who checks out the project will be using the same version).
 
@@ -75,11 +82,13 @@ Do that as follows:
 
 **Note:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
 
-Git hook
---------
 
- 1. Edit or create `.git/hooks/pre-commit` in project folder
- 2. Add the following line (we presume you have already install swiftformat)
+Git pre-commit hook
+---------------------
+
+1. Edit or create a `.git/hooks/pre-commit` file in your project folder. The .git folder is hidden but should already exist if you are using Git with your project, so open in with the terminal, or the Finder's `Go > Go to Folder...` menu.
+
+2. Add the following line in the pre-commit file (this assumes you have already installed the swiftformat command-line tool as instructed in the "How do I install it?" section above - unlike the Xcode build phase approach, this uses your locally installed version of swiftformat)
 
         #!/bin/bash
         git status --porcelain | grep -e '^[AM]\(.*\).swift$' | cut -c 3- | while read line; do
@@ -87,10 +96,15 @@ Git hook
           git add $line;
         done
 
- 3. enable hook `chmod +x .git/hooks/pre-commit`
+3. enable the hook by typing `chmod +x .git/hooks/pre-commit` in the terminal
+ 
+The pre-commit hook will now run whenever you run `git commit`. Running `git commit --no-verify` will skip the pre-commit hook.
 
-So what does it actually do?
-----------------------------
+**Note:** If you are using Git via a GUI client such as [Tower](https://www.git-tower.com), [additional steps](https://www.git-tower.com/help/mac/faq-and-tips/faq#faq-11) may be needed.
+
+
+So what does SwiftFormat actually do?
+--------------------------------------
 
 Here are all the rules that SwiftFormat currently applies:
 
@@ -357,6 +371,12 @@ With a syntax tree in place, it should become possible to add much more sophisti
      
 Release notes
 ----------------
+
+Version 0.8.2
+
+- Fixed bug where consecutive spaces would not be removed in lines that appeared after a `//` comment
+- SwiftFormat will no longer try to format code containing unbalanced braces
+- Added pre-commit hook instructions
 
 Version 0.8.1
 

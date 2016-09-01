@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.8.1
+//  Version 0.8.2
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -35,6 +35,12 @@ import Foundation
 
 // https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/LexicalStructure.html
 
+enum TokenizerError: ErrorType {
+    case UnexpectedToken(atIndex: String.Index)
+    case UnexpectedEndOfScope(atIndex: String.Index)
+    case UnexpectedEndOfFile(atIndex: String.Index)
+}
+
 public enum TokenType {
     case Number
     case Linebreak
@@ -45,6 +51,7 @@ public enum TokenType {
     case Identifier
     case Whitespace
     case CommentBody
+    case Unknown
 }
 
 public struct Token: Equatable {
@@ -419,13 +426,13 @@ private extension String.CharacterView {
             return token
         }
         if count > 0 {
-            assertionFailure("Unrecognized token: " + String(self))
+            return Token(.Unknown, "")
         }
         return nil
     }
 }
 
-func tokenize(source: String) -> [Token] {
+func tokenize(source: String) throws -> [Token] {
     var scopeIndexStack: [Int] = []
     var tokens: [Token] = []
     var characters = source.characters
@@ -545,7 +552,7 @@ func tokenize(source: String) -> [Token] {
         flushCommentBodyTokens()
     }
 
-    func processToken() {
+    func processToken() throws {
         let token = tokens.last!
         if token.type != .Whitespace {
             // Track switch/case statements
@@ -557,14 +564,14 @@ func tokenize(source: String) -> [Token] {
                     if lastToken.string != "if" {
                         tokens[tokens.count - 1] = Token(.EndOfScope, token.string)
                         inCaseStatement = true
-                        processToken()
+                        try processToken()
                         return
                     }
                 }
             } else if inCaseStatement && token.type == .Operator && token.string == ":" {
                 tokens[tokens.count - 1] = Token(.StartOfScope, ":")
                 inCaseStatement = false
-                processToken()
+                try processToken()
                 return
             }
             // Fix up generic misidentified as ?< or !< operator
@@ -572,7 +579,7 @@ func tokenize(source: String) -> [Token] {
                 if tokens[tokens.count - 2].string == "init" {
                     tokens[tokens.count - 1] = Token(.Operator, String(token.string.characters.first!))
                     tokens.append(Token(.StartOfScope, "<"))
-                    processToken()
+                    try processToken()
                     return
                 }
             }
@@ -619,7 +626,7 @@ func tokenize(source: String) -> [Token] {
                             previousIndex -= 1
                             previousToken = tokens[previousIndex]
                         }
-                        processToken()
+                        try processToken()
                         return
                     }
                 }
@@ -639,7 +646,7 @@ func tokenize(source: String) -> [Token] {
                         // Need to split the token
                         let suffix = String(token.string.characters.dropFirst())
                         tokens.append(Token(.Operator, suffix))
-                        processToken()
+                        try processToken()
                         return
                     }
                 } else if scopeIndexStack.last != nil && tokens[scopeIndexStack.last!].string == "\"" {
@@ -657,14 +664,14 @@ func tokenize(source: String) -> [Token] {
                     tokens[tokens.count - 1] = Token(.Operator, String(token.string.characters.first!))
                     let suffix = String(token.string.characters.dropFirst())
                     tokens.append(Token(.Operator, suffix))
-                    processToken()
+                    try processToken()
                     return
                 case .StartOfScope:
                     if !["<", "[", "(", ".", ",", ":", "==", "?", "!"].contains(token.string) {
                         // Not a generic scope
                         tokens[scopeIndex] = Token(.Operator, "<")
                         scopeIndexStack.popLast()
-                        processToken()
+                        try processToken()
                         return
                     }
                 case .EndOfScope:
@@ -672,7 +679,7 @@ func tokenize(source: String) -> [Token] {
                     // then the opening < must have been an operator after all
                     tokens[scopeIndex] = Token(.Operator, "<")
                     scopeIndexStack.popLast()
-                    processToken()
+                    try processToken()
                     return
                 default:
                     break
@@ -689,18 +696,38 @@ func tokenize(source: String) -> [Token] {
                 processSingleLineCommentBody()
             }
         }
+        if token.type == .EndOfScope {
+            // Previous scope wasn't closed correctly
+            let tokenLength = token.string.characters.count
+            let remaining = characters.startIndex.distanceTo(characters.endIndex)
+            let index = source.characters.endIndex.advancedBy(-(tokenLength + remaining))
+            throw TokenizerError.UnexpectedEndOfScope(atIndex: index)
+        }
     }
 
     while let token = characters.parseToken() {
+        if token.type == .Unknown {
+            let remaining = characters.startIndex.distanceTo(characters.endIndex)
+            let index = source.characters.endIndex.advancedBy(-remaining)
+            throw TokenizerError.UnexpectedToken(atIndex: index)
+        }
         tokens.append(token)
-        processToken()
+        try processToken()
     }
 
-    if let scopeIndex = scopeIndexStack.last where tokens[scopeIndex].string == "<" {
-        // If we encountered an end-of-file while a generic scope was
-        // still open, the opening < must have been an operator
-        tokens[scopeIndex] = Token(.Operator, "<")
-        scopeIndexStack.popLast()
+    if let scopeIndex = scopeIndexStack.last {
+        switch tokens[scopeIndex].string {
+        case "<":
+            // If we encountered an end-of-file while a generic scope was
+            // still open, the opening < must have been an operator
+            tokens[scopeIndex] = Token(.Operator, "<")
+            scopeIndexStack.popLast()
+        case "//":
+            break
+        default:
+            // File ended with scope still open
+            throw TokenizerError.UnexpectedEndOfFile(atIndex: source.characters.endIndex)
+        }
     }
 
     return tokens

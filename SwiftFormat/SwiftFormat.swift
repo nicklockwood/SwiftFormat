@@ -2,7 +2,7 @@
 //  SwiftFormat.swift
 //  SwiftFormat
 //
-//  Version 0.8.1
+//  Version 0.8.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -32,6 +32,49 @@
 //
 
 import Foundation
+
+func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOptions options: FormatOptions) -> Int {
+    let manager = NSFileManager.defaultManager()
+    var filesWritten = 0
+    var isDirectory: ObjCBool = false
+    if manager.fileExistsAtPath(inputURL.path!, isDirectory: &isDirectory) {
+        if isDirectory {
+            if let files = try? manager.contentsOfDirectoryAtURL(inputURL, includingPropertiesForKeys: nil, options: NSDirectoryEnumerationOptions.SkipsHiddenFiles) {
+                for url in files {
+                    if var path = url.path {
+                        let inputDirectory = inputURL.path ?? ""
+                        let range = inputDirectory.startIndex ..< inputDirectory.endIndex
+                        path.replaceRange(range, with: outputURL.path ?? "")
+                        let outputDirectory = path.componentsSeparatedByString("/").dropLast().joinWithSeparator("/")
+                        if (try? manager.createDirectoryAtPath(outputDirectory, withIntermediateDirectories: true, attributes: nil)) != nil {
+                            filesWritten += processInput(url, andWriteToOutput: NSURL(fileURLWithPath: path), withOptions: options)
+                        } else {
+                            print("error: failed to create directory at: \(outputDirectory)")
+                        }
+                    }
+                }
+            } else {
+                print("error: failed to read contents of directory at: \(inputURL.path!)")
+            }
+        } else if inputURL.pathExtension == "swift" {
+            if let input = try? String(contentsOfURL: inputURL) {
+                let output = format(input, options: options)
+                if output != input {
+                    if (try? output.writeToURL(outputURL, atomically: true, encoding: NSUTF8StringEncoding)) != nil {
+                        filesWritten += 1
+                    } else {
+                        print("error: failed to write file: \(outputURL.path!)")
+                    }
+                }
+            } else {
+                print("error: failed to read file: \(inputURL.path!)")
+            }
+        }
+    } else {
+        print("error: file not found: \(inputURL.path!)")
+    }
+    return filesWritten
+}
 
 func preprocessArguments(args: [String], _ names: [String]) -> [String: String]? {
     var quoted = false
@@ -109,7 +152,7 @@ public func format(source: String,
     options: FormatOptions = FormatOptions()) -> String {
 
     // Parse
-    var tokens = tokenize(source)
+    guard var tokens = try? tokenize(source) else { return source }
 
     // Format
     let formatter = Formatter(tokens, options: options)

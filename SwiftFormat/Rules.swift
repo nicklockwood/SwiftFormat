@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.8.1
+//  Version 0.8.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -509,16 +509,21 @@ public func ranges(formatter: Formatter) {
 public func consecutiveSpaces(formatter: Formatter) {
     func currentScopeAtIndex(index: Int) -> Token? {
         var i = index
+        var linebreakEncountered = false
         var scopeStack: [Token] = []
         while let token = formatter.tokenAtIndex(i) {
             if token.type == .StartOfScope {
                 if let scope = scopeStack.last where scope.closesScopeForToken(token) {
                     scopeStack.popLast()
+                } else if token.string == "//" && linebreakEncountered {
+                    linebreakEncountered = false
                 } else {
                     return token
                 }
             } else if token.type == .EndOfScope {
                 scopeStack.append(token)
+            } else if token.type == .Linebreak {
+                linebreakEncountered = true
             }
             i -= 1
         }
@@ -1078,16 +1083,21 @@ public func semicolons(formatter: Formatter) {
 
     func currentScopeAtIndex(index: Int) -> Token? {
         var i = index
+        var linebreakEncountered = false
         var scopeStack: [Token] = []
         while let token = formatter.tokenAtIndex(i) {
             if token.type == .StartOfScope {
                 if let scope = scopeStack.last where scope.closesScopeForToken(token) {
                     scopeStack.popLast()
+                } else if token.string == "//" && linebreakEncountered {
+                    linebreakEncountered = false
                 } else {
                     return token
                 }
             } else if token.type == .EndOfScope {
                 scopeStack.append(token)
+            } else if token.type == .Linebreak {
+                linebreakEncountered = true
             }
             i -= 1
         }

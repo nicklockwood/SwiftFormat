@@ -1117,6 +1117,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testNoIndentAfterAssignOperatorToVariable() {
+        let input = "let greaterThan = >\nlet lessThan = <"
+        let output = "let greaterThan = >\nlet lessThan = <"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: indent comments
 
     func testCommentIndenting() {

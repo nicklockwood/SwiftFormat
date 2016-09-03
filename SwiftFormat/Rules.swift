@@ -642,13 +642,42 @@ public func indent(formatter: Formatter) {
         return index
     }
 
-    func nextNonWhitespaceToken(fromIndex index: Int) -> Token? {
+    func firstNonWhitespaceOrLinebreak(fromIndex index: Int) -> Token? {
         var index = index
         while let token = formatter.tokenAtIndex(index) {
             if token.type != .Whitespace && token.type != .Linebreak {
                 return token
             }
             index += 1
+        }
+        return nil
+    }
+
+    func lastNonWhitespaceOrCommentOrLinebreak(fromIndex index: Int) -> Token? {
+        var i = index
+        var scopeStack: [Token] = []
+        while let token = formatter.tokenAtIndex(i) {
+            if let scope = scopeStack.last {
+                if token.type == .StartOfScope && scope.closesScopeForToken(token) {
+                    scopeStack.popLast()
+                } else {
+                    return token
+                }
+            } else {
+                switch token.type {
+                case .Whitespace, .Linebreak:
+                    break
+                case .EndOfScope:
+                    if token.string == "*/" {
+                        scopeStack.append(token)
+                    } else {
+                        return token
+                    }
+                default:
+                    return token
+                }
+            }
+            i -= 1
         }
         return nil
     }
@@ -739,10 +768,17 @@ public func indent(formatter: Formatter) {
                     // For arrays or argument lists, we already indent
                     return ["[", "("].contains(currentScope()?.string ?? "")
                 }
-                if let previousToken = formatter.tokenAtIndex(i - 1) where
-                    previousToken.isWhitespaceOrCommentOrLinebreak ||
-                    previousToken.string == "as" || previousToken.string == "try" {
-                    return false
+                if let previousToken = formatter.tokenAtIndex(i - 1) {
+                    if previousToken.string == "as" || previousToken.string == "try" {
+                        return false
+                    }
+                    if previousToken.isWhitespaceOrCommentOrLinebreak {
+                        if lastNonWhitespaceOrCommentOrLinebreak(fromIndex: i - 1)?.string == "=" {
+                            return true
+                        } else {
+                            return false
+                        }
+                    }
                 }
             default:
                 return true
@@ -836,7 +872,7 @@ public func indent(formatter: Formatter) {
                         }
                         // Check if line on which scope ends should be unindented
                         let start = startOfLine(atIndex: i)
-                        if let nextToken = nextNonWhitespaceToken(fromIndex: start) where
+                        if let nextToken = firstNonWhitespaceOrLinebreak(fromIndex: start) where
                             nextToken.type == .EndOfScope && nextToken.string != "*/" {
                             // Only reduce indent if line begins with a closing scope token
                             let indent = indentStack.last ?? ""

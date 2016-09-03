@@ -993,6 +993,34 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(try! tokenize(input), output)
     }
 
+    func testSortAscending() {
+        let input = "sort(by: <)"
+        let output = [
+            Token(.Identifier, "sort"),
+            Token(.StartOfScope, "("),
+            Token(.Identifier, "by"),
+            Token(.Operator, ":"),
+            Token(.Whitespace, " "),
+            Token(.Operator, "<"),
+            Token(.EndOfScope, ")"),
+        ]
+        XCTAssertEqual(try! tokenize(input), output)
+    }
+
+    func testSortDescending() {
+        let input = "sort(by: >)"
+        let output = [
+            Token(.Identifier, "sort"),
+            Token(.StartOfScope, "("),
+            Token(.Identifier, "by"),
+            Token(.Operator, ":"),
+            Token(.Whitespace, " "),
+            Token(.Operator, ">"),
+            Token(.EndOfScope, ")"),
+        ]
+        XCTAssertEqual(try! tokenize(input), output)
+    }
+
     // MARK: case statements
 
     func testSingleLineEnum() {

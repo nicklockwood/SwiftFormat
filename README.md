@@ -7,7 +7,7 @@ What is this?
 
 SwiftFormat is a code library and command line tool for reformatting swift code.
 
-It applies a set of rules to the whitespace around the code, while leaving the meaning intact.
+It applies a set of rules to the whitespace around the code, leaving the meaning intact.
 
 
 Why would I want to do that?
@@ -57,12 +57,12 @@ This *should* ensure that you avoid catastrophic data loss, but in the unlikely 
 
 If you prefer, you can also use unix pipes to include swiftformat as part of a command chain. For example, this is an alternative way to format a file:
 
-    cat /path/to/file.swift | swiftformat -o /path/to/file.swift
+    cat /path/to/file.swift | swiftformat --output /path/to/file.swift
     
-Omitting the `-o /path/to/file.swift` will print the formatted file to `stdout`.
+Omitting the `--output /path/to/file.swift` will print the formatted file to `stdout`.
 
 
-That seems like an cumbersome process - can I automate it?
+That seems like a cumbersome process - can I automate it?
 ----------------------------------------------------------
 
 Yes. Once you are confident that SwiftFormat isn't going to wreck your code, there are a couple of approaches you can take to run it automatically:
@@ -78,7 +78,7 @@ To set up SwiftFormat as an Xcode build phase, do the following:
 
 1. Add the `swiftformat` binary to your project directory (this is better than referencing your local copy because it ensures that everyone who checks out the project will be using the same version).
 
-2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `${SRCROOT}/path/to/swiftformat /path/to/your/swift/code/`
+2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `path/to/swiftformat path/to/your/swift/code/` (both paths should be relative to the root of your project).
 
 **Note:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
 
@@ -271,7 +271,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. How can I modify the formatting rules?*
 
-> A. With the exception of indenting, everything is hard-coded right now. If you look in `Rules.swift` you will find a list of all the rules that are applied by default. You can easily remove rules you don't want and build a new version of the command line tool.
+> A. Most of the rules are hard-coded right now, with a handful of options exposed in the `FormatOptions` struct. If you look in `Rules.swift` you will find a list of all the rules that are applied by default. You can easily remove rules you don't want and build a new version of the command line tool.
 
 > With a bit more effort, you can also edit the existing rules or create new ones. If you think your changes might be generally useful, make a pull request.
 
@@ -300,7 +300,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 > A. First it loops through the source file character-by-character and breaks it into tokens, such as `Number`, `Identifier`, `Whitespace`, etc. That's handled by the functions in `Tokenizer.swift`.
 
-> Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening `{` appears on the same line as the preceding non-whitespace token". Each rule is designed to be relatively independent of the others, so they can be enabled or disabled individually (the order matters though). The rules are all defined as floating functions in `Rules.swift`.
+> Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening brace appears on the same line as the preceding non-whitespace token". Each rule is designed to be relatively independent of the others, so they can be enabled or disabled individually (the order matters though). The rules are all defined as floating functions in `Rules.swift`.
 
 > Finally, the modified token array is stitched back together to re-generate the source file.
 
@@ -362,15 +362,20 @@ Or begin each line with a `*` (or any other non-whitespace character)
 What's next?
 --------------
 
-There are a bunch of additional rules I'd like to add, such as placement of blank lines in and around functions, and  correctly formatting headerdoc comments.
+There are a bunch of additional rules I'd like to add, such as consistent placement of blank lines in and around functions, and correctly formatting headerdoc comments.
 
-At some point I should probably add an intermediate parsing stage that identifies high-level constructs such as classes and functions and assembles them into a syntax tree. I did't bother doing this originally because I thought it would be easier to implement formatting at the token level, but in fact this just meant that the logic for distinguishing between syntax constructs had to be split between the tokenizer and the formatting rules, making both of them more complex than they ought to be.
+At some point I should probably add an intermediate parsing stage that identifies high-level constructs such as classes and functions and assembles them into a syntax tree. I didn't bother doing this originally because I thought it would be easier to implement formatting at the token level, but in fact this just meant that the logic for distinguishing between syntax constructs had to be split between the tokenizer and the formatting rules, making both of them more complex than they ought to be.
 
 With a syntax tree in place, it should become possible to add much more sophisticated rules, such as converting uppercase enums to lowercase for Swift 3, etc.
      
      
 Release notes
 ----------------
+
+Version ?
+
+- Fixed indent bugs when wrapping code before or after a `where` or `else` keyword
+- Fixed indent bugs when using an operator as a value (e.g. let greaterThan = >)
 
 Version 0.8.2
 

@@ -101,14 +101,14 @@ class SwiftFormatTests: XCTestCase {
 
     // MARK: performance
 
-    func testPerformance() {
-        let inputPath = ((#file as NSString).stringByDeletingLastPathComponent
-            as NSString).stringByDeletingLastPathComponent
-        let outputPath = NSTemporaryDirectory()
-        self.measureBlock {
-            processInput(NSURL(fileURLWithPath: inputPath),
-                andWriteToOutput: NSURL(fileURLWithPath: outputPath),
-                withOptions: FormatOptions())
-        }
-    }
+    //    func testPerformance() {
+    //        let inputPath = ((#file as NSString).stringByDeletingLastPathComponent
+    //            as NSString).stringByDeletingLastPathComponent
+    //        let outputPath = NSTemporaryDirectory()
+    //        self.measureBlock {
+    //            processInput(NSURL(fileURLWithPath: inputPath),
+    //                andWriteToOutput: NSURL(fileURLWithPath: outputPath),
+    //                withOptions: FormatOptions())
+    //        }
+    //    }
 }

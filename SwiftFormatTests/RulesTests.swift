@@ -1068,6 +1068,34 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testWrappedLineBeforeWhere() {
+        let input = "let foo = bar\nwhere foo == baz"
+        let output = "let foo = bar\n    where foo == baz"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testWrappedLineAfterWhere() {
+        let input = "let foo = bar where\nfoo == baz"
+        let output = "let foo = bar where\n    foo == baz"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testWrappedLineBeforeElse() {
+        let input = "guard let foo = bar\nelse { return }"
+        let output = "guard let foo = bar\n    else { return }"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testWrappedLineAfterElse() {
+        // Don't indent because this case is handled by braces rule
+        let input = "guard let foo = bar else\n{ return }"
+        let output = "guard let foo = bar else\n{ return }"
+        XCTAssertEqual(format(input, rules: [indent]), output)
+    }
+
     func testWrappedLineAfterComment() {
         let input = "foo = bar && // comment\nbaz"
         let output = "foo = bar && // comment\n    baz"

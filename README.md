@@ -47,7 +47,7 @@ To use it safely, do the following:
 
 2. Make sure that you have committed all your changes to that code safely in git (or whatever source control system you use. If you don't use source control, rethink your life choices).
 
-3. In Terminal, type `swiftformat /path/to/your/code/` (the path can either be absolute, or relative to the current directory. Absolute is safer).
+3. In Terminal, type `swiftformat "/path/to/your/code/"` (the path can either be absolute, or relative to the current directory. The `""` quotes around the path are optional, but if the path contains spaces then you either need to use quotes, or escape each space with `\`).
 
 4. Use your source control system to check the changes, and verify that no undesirable changes have been introduced (if they have, file a bug).
 
@@ -68,8 +68,8 @@ That seems like a cumbersome process - can I automate it?
 Yes. Once you are confident that SwiftFormat isn't going to wreck your code, there are a couple of approaches you can take to run it automatically:
 
 1. As a build phase in your Xcode project, so that it runs every time you press Cmd-R or Cmd-B, or
-
 2. As a Git pre-commit hook, so that it runs on any files you've changed before you check them in
+
 
 Xcode build phase
 -------------------
@@ -78,9 +78,9 @@ To set up SwiftFormat as an Xcode build phase, do the following:
 
 1. Add the `swiftformat` binary to your project directory (this is better than referencing your local copy because it ensures that everyone who checks out the project will be using the same version).
 
-2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `path/to/swiftformat path/to/your/swift/code/` (both paths should be relative to the root of your project).
+2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `"${SRCROOT}/path/to/swiftformat" "${SRCROOT}/path/to/your/swift/code/"` (both paths should be relative to the directory containing your Xcode project).
 
-**Note:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
+**NOTE:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
 
 
 Git pre-commit hook
@@ -100,7 +100,9 @@ Git pre-commit hook
  
 The pre-commit hook will now run whenever you run `git commit`. Running `git commit --no-verify` will skip the pre-commit hook.
 
-**Note:** If you are using Git via a GUI client such as [Tower](https://www.git-tower.com), [additional steps](https://www.git-tower.com/help/mac/faq-and-tips/faq#faq-11) may be needed.
+**NOTE:** If you are using Git via a GUI client such as [Tower](https://www.git-tower.com), [additional steps](https://www.git-tower.com/help/mac/faq-and-tips/faq#faq-11) may be needed.
+
+**NOTE:** Unlike the Xcode build phase approach, git pre-commit hook won't be checked in to source control, and there's no way to guarantee that all users of the project are using the same version of swiftformat. For a collaborative project, you might want to consider a *post*-commit hook instead, which would run on your continuous integration server.
 
 
 So what does SwiftFormat actually do?
@@ -248,6 +250,14 @@ Here are all the rules that SwiftFormat currently applies:
 
 *linebreaks* - normalizes all linebreaks to use the same character, as specified in options (either CR, LF or CRLF).
 
+*specifiers* - normalizes the order for access specifiers, and other property/function/class/etc. specifiers:
+
+    lazy public weak private(set) var foo: UIView?    -->    private(set) public lazy weak var foo: UIView?
+    
+    public override final func foo()                  -->    final override public func foo() 
+    
+    convenience private init()                        -->    private convenience init() 
+    
 
 FAQ
 -----
@@ -374,6 +384,7 @@ Release notes
 
 Version ?
 
+- Added `specifiers` rule, for normalizing the order of access modifiers, etc
 - Fixed indent bugs when wrapping code before or after a `where` or `else` keyword
 - Fixed indent bugs when using an operator as a value (e.g. let greaterThan = >)
 

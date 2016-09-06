@@ -1478,4 +1478,41 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(format(input, rules: [ranges], options: options), output)
         XCTAssertEqual(format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
+
+    // MARK: specifiers
+
+    func testVarSpecifiersCorrected() {
+        let input = "unowned private static var foo"
+        let output = "private unowned static var foo"
+        XCTAssertEqual(format(input, rules: [specifiers]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testPrivateSetSpecifierNotMangled() {
+        let input = "public private(set) weak lazy var foo"
+        let output = "private(set) public lazy weak var foo"
+        XCTAssertEqual(format(input, rules: [specifiers]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testPrivateRequiredStaticFuncSpecifiers() {
+        let input = "required static private func foo()"
+        let output = "private required static func foo()"
+        XCTAssertEqual(format(input, rules: [specifiers]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testPrivateConvenienceInit() {
+        let input = "convenience private init()"
+        let output = "private convenience init()"
+        XCTAssertEqual(format(input, rules: [specifiers]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testWhitespaceInSpecifiersLeftIntact() {
+        let input = "weak private(set) /* read-only */\npublic var"
+        let output = "private(set) /* read-only */\npublic weak var"
+        XCTAssertEqual(format(input, rules: [specifiers]), output)
+        XCTAssertEqual(format(input + "\n", rules: defaultRules), output + "\n")
+    }
 }

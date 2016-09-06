@@ -887,7 +887,7 @@ public func elseOnSameLine(formatter: Formatter) {
                 break
             case .EndOfScope:
                 if token.string == "}" && containsLinebreak {
-                    formatter.replaceTokensInRange(index + 1 ..< i, with: Token(.Whitespace, " "))
+                    formatter.replaceTokensInRange(index + 1 ..< i, with: [Token(.Whitespace, " ")])
                 }
                 return
             default:
@@ -974,9 +974,75 @@ public func linebreaks(formatter: Formatter) {
     }
 }
 
+/// Standardise the order of property specifiers
+public func specifiers(formatter: Formatter) {
+    let order = [
+        "private(set)", "fileprivate(set)", "internal(set)", "public(set)",
+        "private", "fileprivate", "internal", "public", "open",
+        "final", "dynamic", // Can't be both
+        "optional", "required",
+        "convenience",
+        "override",
+        "lazy",
+        "weak", "unowned",
+        "static", "class",
+    ]
+    let validSpecifiers = Set<String>(order)
+    formatter.forEachToken(ofType: .Identifier) { i, token in
+        switch token.string {
+        case "let", "var",
+            "typealias", "associatedtype",
+            "class", "struct", "enum", "protocol", "extension",
+            "func", "init", "subscript":
+            break
+        default:
+            return
+        }
+        var specifiers = [String: [Token]]()
+        var index = i - 1
+        var specifierIndex = i
+        while let token = formatter.tokenAtIndex(index) {
+            if !token.isWhitespaceOrCommentOrLinebreak {
+                var key = token.string
+                if token.type != .Identifier || !validSpecifiers.contains(key) {
+                    if token.string == ")" && formatter
+                        .previousNonWhitespaceOrCommentOrLinebreak(fromIndex: index)?.string == "set" {
+                        // Skip tokens for entire private(set) expression
+                        loop: while let token = formatter.tokenAtIndex(index) {
+                            switch token.string {
+                            case "private", "fileprivate", "internal", "public":
+                                key = token.string + "(set)"
+                                break loop
+                            default:
+                                break
+                            }
+                            index -= 1
+                        }
+                    } else {
+                        // Not a specifier
+                        break
+                    }
+                }
+                specifiers[key] = [Token](formatter.tokens[index ..< specifierIndex])
+                specifierIndex = index
+            }
+            index -= 1
+        }
+        guard specifiers.count > 0 else { return }
+        var sortedSpecifiers = [Token]()
+        for specifier in order {
+            if let tokens = specifiers[specifier] {
+                sortedSpecifiers += tokens
+            }
+        }
+        formatter.replaceTokensInRange(specifierIndex ..< i, with: sortedSpecifiers)
+    }
+}
+
 public let defaultRules: [FormatRule] = [
     linebreaks,
     semicolons,
+    specifiers,
     knrBraces,
     elseOnSameLine,
     indent,

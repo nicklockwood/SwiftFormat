@@ -91,7 +91,7 @@ public class Formatter {
     }
 
     /// Replaces the tokens in the specified range with new tokens
-    public func replaceTokensInRange(range: Range<Int>, with tokens: Token...) {
+    public func replaceTokensInRange(range: Range<Int>, with tokens: [Token]) {
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
             replaceTokenAtIndex(range.startIndex + i, with: tokens[i])
@@ -117,7 +117,7 @@ public class Formatter {
 
     /// Removes the tokens in the specified range
     public func removeTokensInRange(range: Range<Int>) {
-        replaceTokensInRange(range)
+        replaceTokensInRange(range, with: [])
     }
 
     /// Removes the last token

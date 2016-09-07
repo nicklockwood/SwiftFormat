@@ -29,7 +29,7 @@ How do I install it?
 
 3. Open `~/.bash_profile` in your favorite text editor (this is a hidden file, but you can type `open ~/.bash_profile` in the terminal to open it).
 
-4. Add the following line to the file: `alias swiftformat="/usr/local/bin/swiftformat --indent 4"` (you can omit the `--indent 4`, or replace it with something else - run `swiftformat --help` to see the available options).
+4. Add the following line to the file: `alias swiftformat="/usr/local/bin/swiftformat --indent 4"` (you can omit the `--indent 4`, or replace it with something else. Run `swiftformat --help` to see the available options).
 
 5. Save the `.bash_profile` file and run the command `source ~/.bash_profile` for the changes to take effect.
 
@@ -187,6 +187,16 @@ Here are all the rules that SwiftFormat currently applies:
         baz,                 baz,
                          }
     ]
+    
+*blankLinesBetweenScopes* - adds a blank line before each class, struct, enum, extension, protocol or function:
+
+	func foo() {         func foo() {
+        //foo      -->       //foo
+    }                    }
+	func bar() {         
+        //bar      -->   func bar() {
+    }                        //bar
+                         }
 
 *linebreakAtEndOfFile* - ensures that the last line of the file is empty
 
@@ -382,8 +392,9 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
-Version ?
+Version 0.9
 
+- Added `blankLinesBetweenScopes` rule that adds a blank line before each class, struct, enum, extension, protocol or function
 - Added `specifiers` rule, for normalizing the order of access modifiers, etc
 - Fixed indent bugs when wrapping code before or after a `where` or `else` keyword
 - Fixed indent bugs when using an operator as a value (e.g. let greaterThan = >)

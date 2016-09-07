@@ -616,7 +616,9 @@ public func blankLinesBetweenScopes(formatter: Formatter) {
             if let startOfScope = formatter.indexOfPreviousToken(fromIndex: i, matching: {
                 return $0.type == .StartOfScope && $0.string == "{" }) {
                 if formatter.previousToken(fromIndex: startOfScope, matching: {
-                    return $0.type == .Identifier && $0.string == "protocol" }) != nil {
+                    if $0.type == .Identifier && $0.string == "protocol" { return true }
+                    return $0.type == .EndOfScope && $0.string == "}"
+                })?.string == "protocol" {
                     return
                 }
             }

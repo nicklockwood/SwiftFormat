@@ -885,6 +885,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testBlankLineBetweenFunctionsInClassAfterProtocol() {
+        let input = "protocol Foo {}\n\nclass Bar {\n    init() {}\n}"
+        let output = "protocol Foo {}\n\nclass Bar {\n\n    init() {}\n}"
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testNoBlankLineInsideInitFunction() {
         let input = "init() {\n    super.init()\n}"
         let output = "init() {\n    super.init()\n}"

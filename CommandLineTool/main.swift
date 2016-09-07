@@ -2,7 +2,7 @@
 //  main.swift
 //  SwiftFormat
 //
-//  Version 0.8.2
+//  Version 0.9
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -33,7 +33,7 @@
 
 import Foundation
 
-let version = "0.8.2"
+let version = "0.9"
 
 func showHelp() {
     print("swiftformat, version \(version)")
@@ -153,7 +153,11 @@ func processArguments(args: [String]) {
                 input = (input ?? "") + line
             }
             if let input = input {
-                let output = format(input, rules: defaultRules, options: options)
+                guard let output = try? format(input, rules: defaultRules, options: options) else {
+                    print("error: could not parse input")
+                    finished = true
+                    return
+                }
                 if let outputURL = outputURL {
                     if (try? output.writeToURL(outputURL, atomically: true, encoding: NSUTF8StringEncoding)) != nil {
                         print("swiftformat completed successfully")

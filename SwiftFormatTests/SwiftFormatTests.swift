@@ -2,7 +2,7 @@
 //  SwiftFormatTests.swift
 //  SwiftFormat
 //
-//  Version 0.8.2
+//  Version 0.9
 //
 //  Created by Nick Lockwood on 28/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -41,13 +41,13 @@ class SwiftFormatTests: XCTestCase {
     func testFormatReturnsInputWithNoRules() {
         let input = "foo ()  "
         let output = "foo ()  "
-        XCTAssertEqual(format(input, rules: []), output)
+        XCTAssertEqual(try! format(input, rules: []), output)
     }
 
     func testFormatUsesDefaultRulesIfNoneSpecified() {
         let input = "foo ()  "
         let output = "foo()\n"
-        XCTAssertEqual(format(input), output)
+        XCTAssertEqual(try! format(input), output)
     }
 
     // MARK: arg preprocessor

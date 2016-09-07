@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.8.2
+//  Version 0.9
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -208,6 +208,7 @@ private extension String.CharacterView {
     }
 
     mutating func parseOperator() -> Token? {
+
         func isHead(c: Character) -> Bool {
             if "./=­-+!*%<>&|^~?".characters.contains(c) {
                 return true
@@ -283,6 +284,7 @@ private extension String.CharacterView {
     }
 
     mutating func parseIdentifier() -> Token? {
+
         func isHead(c: Character) -> Bool {
             if c.isAlpha || c == "_" || c == "$" {
                 return true
@@ -477,6 +479,7 @@ func tokenize(source: String) throws -> [Token] {
 
     var comment = ""
     var whitespace = ""
+
     func flushCommentBodyTokens() {
         if comment != "" {
             tokens.append(Token(.CommentBody, comment))

@@ -2,7 +2,7 @@
 //  SwiftFormat.swift
 //  SwiftFormat
 //
-//  Version 0.8.2
+//  Version 0.9
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -35,11 +35,11 @@ import Foundation
 
 func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOptions options: FormatOptions) -> Int {
     let manager = NSFileManager.defaultManager()
-    var filesWritten = 0
     var isDirectory: ObjCBool = false
     if manager.fileExistsAtPath(inputURL.path!, isDirectory: &isDirectory) {
         if isDirectory {
             if let files = try? manager.contentsOfDirectoryAtURL(inputURL, includingPropertiesForKeys: nil, options: NSDirectoryEnumerationOptions.SkipsHiddenFiles) {
+                var filesWritten = 0
                 for url in files {
                     if var path = url.path {
                         let inputDirectory = inputURL.path ?? ""
@@ -53,15 +53,19 @@ func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOption
                         }
                     }
                 }
+                return filesWritten
             } else {
                 print("error: failed to read contents of directory at: \(inputURL.path!)")
             }
         } else if inputURL.pathExtension == "swift" {
             if let input = try? String(contentsOfURL: inputURL) {
-                let output = format(input, options: options)
+                guard let output = try? format(input, options: options) else {
+                    print("error: could not parse file: \(inputURL.path!)")
+                    return 0
+                }
                 if output != input {
                     if (try? output.writeToURL(outputURL, atomically: true, encoding: NSUTF8StringEncoding)) != nil {
-                        filesWritten += 1
+                        return 1
                     } else {
                         print("error: failed to write file: \(outputURL.path!)")
                     }
@@ -73,7 +77,7 @@ func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOption
     } else {
         print("error: file not found: \(inputURL.path!)")
     }
-    return filesWritten
+    return 0
 }
 
 func preprocessArguments(args: [String], _ names: [String]) -> [String: String]? {
@@ -149,10 +153,10 @@ func preprocessArguments(args: [String], _ names: [String]) -> [String: String]?
 /// Format code with specified rules and options
 public func format(source: String,
     rules: [FormatRule] = defaultRules,
-    options: FormatOptions = FormatOptions()) -> String {
+    options: FormatOptions = FormatOptions()) throws -> String {
 
     // Parse
-    guard var tokens = try? tokenize(source) else { return source }
+    var tokens = try tokenize(source)
 
     // Format
     let formatter = Formatter(tokens, options: options)

@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.8.2
+//  Version 0.9
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -209,8 +209,8 @@ public class Formatter {
         return nextToken(fromIndex: index) { !$0.isWhitespaceOrComment }
     }
 
-    /// Returns the previous token at the current scope that matches the block
-    func previousToken(fromIndex index: Int, matching: (Token) -> Bool) -> Token? {
+    /// Returns the index of the previous token at the current scope that matches the block
+    func indexOfPreviousToken(fromIndex index: Int, matching: (Token) -> Bool) -> Int? {
         var i = index - 1
         var linebreakEncountered = false
         var scopeStack: [Token] = []
@@ -221,10 +221,12 @@ public class Formatter {
                 } else if token.string == "//" && linebreakEncountered {
                     linebreakEncountered = false
                 } else if matching(token) {
-                    return token
+                    return i
+                } else {
+                    return nil
                 }
             } else if matching(token) {
-                return token
+                return i
             } else if token.type == .Linebreak {
                 linebreakEncountered = true
             } else if token.type == .EndOfScope {
@@ -233,6 +235,11 @@ public class Formatter {
             i -= 1
         }
         return nil
+    }
+
+    /// Returns the previous token at the current scope that matches the block
+    func previousToken(fromIndex index: Int, matching: (Token) -> Bool) -> Token? {
+        return indexOfPreviousToken(fromIndex: index, matching: matching).map { tokens[$0] }
     }
 
     /// Returns the previous token that isn't whitespace, a comment or a linebreak

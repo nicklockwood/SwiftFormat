@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.8.2
+//  Version 0.9
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -42,6 +42,7 @@ public typealias FormatRule = (Formatter) -> Void
 /// * There is space between a closing paren and following opening brace
 /// * There is no space between a closing paren and following opening square bracket
 public func spaceAroundParens(formatter: Formatter) {
+
     func spaceAfter(identifier: String) -> Bool {
         switch identifier {
         case "internal",
@@ -118,6 +119,7 @@ public func spaceInsideParens(formatter: Formatter) {
 /// * There is space between a closing bracket and following identifier
 /// * There is space between a closing bracket and following opening brace
 public func spaceAroundBrackets(formatter: Formatter) {
+
     func spaceAfter(identifier: String) -> Bool {
         switch identifier {
         case "case",
@@ -255,6 +257,7 @@ public func spaceInsideGenerics(formatter: Formatter) {
 ///   single space, unless it appears at the end of a line, and is not
 ///   preceded by a space, unless it appears at the beginning of a line.
 public func spaceAroundOperators(formatter: Formatter) {
+
     func isLvalue(token: Token) -> Bool {
         switch token.type {
         case .Identifier, .Number, .EndOfScope:
@@ -525,26 +528,26 @@ public func trailingWhitespace(formatter: Formatter) {
 
 /// Collapse all consecutive blank lines into a single blank line
 public func consecutiveBlankLines(formatter: Formatter) {
-    var blankLineCount = 0
+    var linebreakCount = 0
     var lastTokenType = TokenType.Whitespace
     formatter.forEachToken { i, token in
         if token.type == .Linebreak {
-            blankLineCount += 1
-            if blankLineCount > 2 {
+            linebreakCount += 1
+            if linebreakCount > 2 {
                 formatter.removeTokenAtIndex(i)
                 if lastTokenType == .Whitespace {
                     formatter.removeTokenAtIndex(i - 1)
                     lastTokenType = .Linebreak
                 }
-                blankLineCount -= 1
+                linebreakCount -= 1
                 return // continue
             }
         } else if token.type != .Whitespace {
-            blankLineCount = 0
+            linebreakCount = 0
         }
         lastTokenType = token.type
     }
-    if blankLineCount > 1 {
+    if linebreakCount > 1 {
         if lastTokenType == .Whitespace {
             formatter.removeLastToken()
         }
@@ -577,6 +580,126 @@ public func blankLinesAtEndOfScope(formatter: Formatter) {
         if let indexOfFirstLineBreak = indexOfFirstLineBreak, indexOfLastLineBreak = indexOfLastLineBreak {
             formatter.removeTokensInRange(indexOfFirstLineBreak ..< indexOfLastLineBreak)
             return
+        }
+    }
+}
+
+/// Adds a blank line immediately before a class, struct, enum, extension, protocol or function.
+/// If the scope is immediately preceded by a comment, the line will be inserted before that instead.
+public func blankLinesBetweenScopes(formatter: Formatter) {
+    formatter.forEachToken(ofType: .Identifier) { i, token in
+        switch token.string {
+        case "struct", "enum", "protocol", "extension":
+            break
+        case "class":
+            // Ignore class var/let/func
+            if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i + 1)
+                where nextToken.type == .Identifier {
+                switch nextToken.string {
+                case "var", "let", "func",
+                    "private", "fileprivate", "public", "internal", "open",
+                    "final", "required", "override", "convenience",
+                    "lazy", "dynamic", "static":
+                    return
+                default:
+                    break
+                }
+            }
+        case "init":
+            // Ignore self.init() / super.init() calls
+            if formatter.previousNonWhitespaceOrCommentOrLinebreak(fromIndex: i)?.string == "." {
+                return
+            }
+            fallthrough
+        case "func", "subscript", "init":
+            // Ignore function prototypes inside protocols
+            if let startOfScope = formatter.indexOfPreviousToken(fromIndex: i, matching: {
+                return $0.type == .StartOfScope && $0.string == "{" }) {
+                if formatter.previousToken(fromIndex: startOfScope, matching: {
+                    return $0.type == .Identifier && $0.string == "protocol" }) != nil {
+                    return
+                }
+            }
+        default:
+            return
+        }
+        // Skip specifiers
+        var index = i - 1
+        var reachedStart = false
+        var linebreakCount = 0
+        var lastLinebreakIndex = 0
+        while !reachedStart {
+            while let token = formatter.tokenAtIndex(index) {
+                if token.type == .Linebreak {
+                    linebreakCount = 1
+                    lastLinebreakIndex = index
+                    index -= 1
+                    break
+                }
+                index -= 1
+            }
+            loop: while let token = formatter.tokenAtIndex(index) {
+                switch token.type {
+                case .Whitespace:
+                    break
+                case .Linebreak:
+                    linebreakCount += 1
+                    lastLinebreakIndex = index
+                case .Identifier:
+                    switch token.string {
+                    case "private", "fileprivate", "internal", "public", "open",
+                        "final", "required", "override", "convenience":
+                        break
+                    default:
+                        if !token.string.hasPrefix("@") {
+                            reachedStart = true
+                            break loop
+                        }
+                    }
+                    linebreakCount = 0
+                case .CommentBody:
+                    linebreakCount = 0
+                case .EndOfScope:
+                    if token.string == ")" {
+                        // Handle @available(...), @objc(...), etc
+                        if let openParenIndex = formatter.indexOfPreviousToken(fromIndex: index, matching: {
+                            return $0.type == .StartOfScope && $0.string == "("
+                        }), nonWSIndex = formatter.indexOfPreviousToken(fromIndex: openParenIndex, matching: {
+                            return !$0.isWhitespaceOrCommentOrLinebreak
+                        }) where formatter.tokenAtIndex(nonWSIndex)?.string.hasPrefix("@") == true {
+                            linebreakCount = 0
+                            index = nonWSIndex
+                            break
+                        }
+                        reachedStart = true
+                        break loop
+                    }
+                    if token.string == "*/" {
+                        linebreakCount = 0
+                        break
+                    }
+                    reachedStart = true
+                    break loop
+                case .StartOfScope:
+                    if token.string == "/*" || token.string == "//" {
+                        linebreakCount = 0
+                        break
+                    }
+                    reachedStart = true
+                    break loop
+                default:
+                    reachedStart = true
+                    break loop
+                }
+                index -= 1
+            }
+            if index < 0 {
+                return // we've reached the start of the file
+            }
+        }
+        if linebreakCount < 2 {
+            // Insert blank line
+            formatter.insertToken(Token(.Linebreak, formatter.options.linebreak), atIndex: lastLinebreakIndex)
         }
     }
 }
@@ -633,30 +756,14 @@ public func indent(formatter: Formatter) {
                 // prefix, Protocol, required, right, set, Type, unowned, weak, willSet
                 switch token.string {
                 case "associatedtype",
-                    "class",
-                    "deinit",
-                    "enum",
-                    "extension",
-                    "fileprivate",
-                    "func",
                     "import",
                     "init",
                     "inout",
-                    "internal",
                     "let",
-                    "open",
-                    "operator",
-                    "private",
-                    "protocol",
-                    "public",
-                    "static",
-                    "struct",
                     "subscript",
-                    "typealias",
                     "var",
                     "case",
                     "default",
-                    "defer",
                     "for",
                     "guard",
                     "if",
@@ -1061,6 +1168,7 @@ public let defaultRules: [FormatRule] = [
     trailingWhitespace,
     consecutiveBlankLines,
     blankLinesAtEndOfScope,
+    blankLinesBetweenScopes,
     linebreakAtEndOfFile,
     trailingCommas,
     todos,

@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.9
+//  Version 0.9.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -1014,18 +1014,14 @@ public func trailingCommas(formatter: Formatter) {
     // This should't matter in practice, as nobody splits subscripts onto multiple
     // lines, but ideally we'd check for this just in case
     formatter.forEachToken("]") { i, token in
-        var index = i - 1
-        var newLine = false
-        while let token = formatter.tokenAtIndex(index) {
-            if token.type == .Linebreak {
-                newLine = true
-            } else if token.type != .Whitespace {
-                if newLine && token.type != .Operator {
-                    formatter.insertToken(Token(.Operator, ","), atIndex: index + 1)
-                }
-                break
+        if let linebreakIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
+            return !$0.isWhitespaceOrComment
+        }) where formatter.tokenAtIndex(linebreakIndex)?.type == .Linebreak {
+            if let previousTokenIndex = formatter.indexOfPreviousToken(fromIndex: linebreakIndex + 1, matching: {
+                return !$0.isWhitespaceOrCommentOrLinebreak
+            }), token = formatter.tokenAtIndex(previousTokenIndex) where token.string != "," {
+                formatter.insertToken(Token(.Operator, ","), atIndex: previousTokenIndex + 1)
             }
-            index -= 1
         }
     }
 }
@@ -1041,6 +1037,7 @@ public func todos(formatter: Formatter) {
                     suffix = suffix.substringFromIndex(suffix.startIndex.advancedBy(1))
                 }
                 formatter.replaceTokenAtIndex(i, with: Token(.CommentBody, tag + ": " + suffix))
+                break
             }
         }
     }

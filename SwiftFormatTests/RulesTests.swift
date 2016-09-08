@@ -2,7 +2,7 @@
 //  RulesTests.swift
 //  SwiftFormat
 //
-//  Version 0.9
+//  Version 0.9.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -1372,6 +1372,20 @@ class RulesTests: XCTestCase {
     func testCommasNotAddedToSubscript() {
         let input = "foo[bar]"
         let output = "foo[bar]"
+        XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testCommasAddedBeforeComment() {
+        let input = "[\n    foo // comment\n]"
+        let output = "[\n    foo, // comment\n]"
+        XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testCommasNotAddedAfterComment() {
+        let input = "[\n    foo, // comment\n]"
+        let output = "[\n    foo, // comment\n]"
         XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

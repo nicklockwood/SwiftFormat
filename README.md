@@ -392,6 +392,10 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
+Version 0.9.1
+
+- Fixed bug where `trailingCommas` rule would place comma after a comment instead of before it
+
 Version 0.9
 
 - Added `blankLinesBetweenScopes` rule that adds a blank line before each class, struct, enum, extension, protocol or function

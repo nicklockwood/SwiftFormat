@@ -2,7 +2,7 @@
 //  SwiftFormat.swift
 //  SwiftFormat
 //
-//  Version 0.9.1
+//  Version 0.9.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -156,7 +156,11 @@ public func format(source: String,
     options: FormatOptions = FormatOptions()) throws -> String {
 
     // Parse
-    var tokens = try tokenize(source)
+    var tokens = tokenize(source)
+    guard tokens.last?.type != .Error else {
+        // TODO: more useful errors
+        throw NSError(domain: "SwiftFormat", code: 0, userInfo: nil)
+    }
 
     // Format
     let formatter = Formatter(tokens, options: options)

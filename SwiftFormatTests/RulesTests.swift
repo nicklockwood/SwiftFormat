@@ -2,7 +2,7 @@
 //  RulesTests.swift
 //  SwiftFormat
 //
-//  Version 0.9.1
+//  Version 0.9.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -1024,6 +1024,13 @@ class RulesTests: XCTestCase {
     func testSwitchWrappedCaseIndenting() {
         let input = "switch x {\ncase foo,\nbar,\n    baz:\n    break\ndefault:\n    break\n}"
         let output = "switch x {\ncase foo,\n    bar,\n    baz:\n    break\ndefault:\n    break\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSwitchCaseIsDictionaryIndenting() {
+        let input = "switch x {\ncase foo is [Key: Value]:\nfallthrough\ndefault:\nbreak\n}"
+        let output = "switch x {\ncase foo is [Key: Value]:\n    fallthrough\ndefault:\n    break\n}"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

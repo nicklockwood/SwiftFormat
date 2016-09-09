@@ -392,6 +392,10 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
+Version 0.9.2
+
+- Fixed bug where `case` expressions containing a colon would not be parsed correctly
+
 Version 0.9.1
 
 - Fixed bug where `trailingCommas` rule would place comma after a comment instead of before it
@@ -472,7 +476,7 @@ Version 0.2
 - Fixed formatting of generic function types
 - Fixed indenting of `if case` statements
 - Fixed indenting of `else` when separated from `if` statement by a comment
-- Changed `private(set)` indenting to match Apple standard
+- Changed `private(set)` spacing to match Apple standard
 - Added swiftformat as a build phase to SwiftFormat, so I'm eating my own dogfood
 
 Version 0.1

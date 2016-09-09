@@ -2,7 +2,7 @@
 //  main.swift
 //  SwiftFormat
 //
-//  Version 0.9.1
+//  Version 0.9.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -33,7 +33,7 @@
 
 import Foundation
 
-let version = "0.9.1"
+let version = "0.9.2"
 
 func showHelp() {
     print("swiftformat, version \(version)")

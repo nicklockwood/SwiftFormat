@@ -2,7 +2,7 @@
 //  RulesTests.swift
 //  SwiftFormat
 //
-//  Version 0.9.2
+//  Version 0.9.3
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -902,6 +902,20 @@ class RulesTests: XCTestCase {
     func testNoBlankLineBeforeClassProperty() {
         let input = "protocol Foo {\n}\nclass var bar: String"
         let output = "protocol Foo {\n}\nclass var bar: String"
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoExtraBlankLineAfterSingleLineComment() {
+        let input = "var foo: Bar? // comment\n\nfunc bar() {}"
+        let output = "var foo: Bar? // comment\n\nfunc bar() {}"
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoExtraBlankLineAfterMultilineComment() {
+        let input = "var foo: Bar? /* comment */\n\nfunc bar() {}"
+        let output = "var foo: Bar? /* comment */\n\nfunc bar() {}"
         XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

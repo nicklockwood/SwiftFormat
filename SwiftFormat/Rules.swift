@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.9.2
+//  Version 0.9.3
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -660,6 +660,9 @@ public func blankLinesBetweenScopes(formatter: Formatter) {
                     }
                     linebreakCount = 0
                 case .CommentBody:
+                    if linebreakCount > 1 {
+                        break loop
+                    }
                     linebreakCount = 0
                 case .EndOfScope:
                     if token.string == ")" {
@@ -677,6 +680,9 @@ public func blankLinesBetweenScopes(formatter: Formatter) {
                         break loop
                     }
                     if token.string == "*/" {
+                        if linebreakCount > 1 {
+                            break loop
+                        }
                         linebreakCount = 0
                         break
                     }
@@ -1164,10 +1170,10 @@ public let defaultRules: [FormatRule] = [
     spaceAroundComments,
     spaceInsideComments,
     consecutiveSpaces,
-    trailingWhitespace,
-    consecutiveBlankLines,
     blankLinesAtEndOfScope,
     blankLinesBetweenScopes,
+    consecutiveBlankLines,
+    trailingWhitespace,
     linebreakAtEndOfFile,
     trailingCommas,
     todos,

@@ -392,6 +392,10 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
+Version 0.9.3
+
+- Fixed bug where functions would be prefixed with an additional blank line if the preceding line had a trailing comment
+
 Version 0.9.2
 
 - Fixed bug where `case` expressions containing a colon would not be parsed correctly

@@ -2,7 +2,7 @@
 //  TokenizerTests.swift
 //  SwiftFormat
 //
-//  Version 0.9.3
+//  Version 0.9.4
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -1166,6 +1166,62 @@ class TokenizerTests: XCTestCase {
             Token(.StartOfScope, ":"),
             Token(.Linebreak, "\n"),
             Token(.Identifier, "break"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "default"),
+            Token(.StartOfScope, ":"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "break"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSwitchCaseContainingCaseIdentifier() {
+        let input = "switch x {\ncase 1:\nfoo.case\ndefault:\nbreak\n}"
+        let output = [
+            Token(.Identifier, "switch"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "x"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "{"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "case"),
+            Token(.Whitespace, " "),
+            Token(.Number, "1"),
+            Token(.StartOfScope, ":"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "foo"),
+            Token(.Operator, "."),
+            Token(.Identifier, "case"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "default"),
+            Token(.StartOfScope, ":"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "break"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSwitchCaseContainingDefaultIdentifier() {
+        let input = "switch x {\ncase 1:\nfoo.default\ndefault:\nbreak\n}"
+        let output = [
+            Token(.Identifier, "switch"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "x"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "{"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "case"),
+            Token(.Whitespace, " "),
+            Token(.Number, "1"),
+            Token(.StartOfScope, ":"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "foo"),
+            Token(.Operator, "."),
+            Token(.Identifier, "default"),
             Token(.Linebreak, "\n"),
             Token(.EndOfScope, "default"),
             Token(.StartOfScope, ":"),

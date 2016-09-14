@@ -211,13 +211,16 @@
 				TargetAttributes = {
 					01A0EAA31D5DB4CF00A0A8E3 = {
 						CreatedOnToolsVersion = 7.3;
+						LastSwiftMigration = 0800;
 					};
 					01A0EAAD1D5DB4D000A0A8E3 = {
 						CreatedOnToolsVersion = 7.3;
+						LastSwiftMigration = 0800;
 					};
 					01A0EAC91D5DB5F500A0A8E3 = {
 						CreatedOnToolsVersion = 7.3;
 						DevelopmentTeam = 8VQKF583ED;
+						LastSwiftMigration = 0800;
 					};
 				};
 			};
@@ -438,6 +441,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 2.3;
 			};
 			name = Debug;
 		};
@@ -457,6 +461,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 2.3;
 			};
 			name = Release;
 		};
@@ -468,6 +473,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormatTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 2.3;
 			};
 			name = Debug;
 		};
@@ -479,6 +485,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormatTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 2.3;
 			};
 			name = Release;
 		};
@@ -491,6 +498,7 @@
 				PRODUCT_MODULE_NAME = "$(PRODUCT_NAME:c99extidentifier)Tool";
 				PRODUCT_NAME = swiftformat;
 				PROVISIONING_PROFILE = "";
+				SWIFT_VERSION = 2.3;
 			};
 			name = Debug;
 		};
@@ -504,6 +512,7 @@
 				PRODUCT_NAME = swiftformat;
 				PROVISIONING_PROFILE = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 2.3;
 			};
 			name = Release;
 		};

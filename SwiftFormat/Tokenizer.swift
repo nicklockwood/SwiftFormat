@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.9.3
+//  Version 0.9.4
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -561,7 +561,7 @@ func tokenize(source: String) -> [Token] {
                     nestedSwitches += 1
                 } else if nestedSwitches > 0 && (token.string == "case" || token.string == "default") {
                     let lastToken = tokens[lastNonWhitespaceIndex!]
-                    if lastToken.string != "if" {
+                    if lastToken.string != "if" && lastToken.string != "." {
                         tokens[tokens.count - 1] = Token(.EndOfScope, token.string)
                         scopeIndexStack.append(tokens.count - 1)
                         processToken()

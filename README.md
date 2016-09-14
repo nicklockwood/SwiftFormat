@@ -277,7 +277,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. Does SwiftFormat support Swift 3?*
 
-> A. Probably. I've only tested it with Swift 2.3 code, but the differences from a formatting perspective should be minimal. 
+> A. Probably. I've fixed some specific issues with Swift 3, but I've only tested it extensively with Swift 2.3 code. 
 
 
 *Q. Can I compile it with Swift 3?*
@@ -391,6 +391,10 @@ With a syntax tree in place, it should become possible to add much more sophisti
      
 Release notes
 ----------------
+
+Version 0.9.4
+
+- Fixed bug where parsing would fail if a `switch/case` statement contained `default` or `case` indentifiers (valid in Swift 3)
 
 Version 0.9.3
 

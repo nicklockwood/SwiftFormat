@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.9.4
+//  Version 0.9.5
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -43,7 +43,7 @@ public typealias FormatRule = (Formatter) -> Void
 /// * There is no space between a closing paren and following opening square bracket
 public func spaceAroundParens(formatter: Formatter) {
 
-    func spaceAfter(identifier: String) -> Bool {
+    func spaceAfter(identifier: String, index: Int) -> Bool {
         switch identifier {
         case "internal",
             "case",
@@ -63,7 +63,7 @@ public func spaceAroundParens(formatter: Formatter) {
             "throw",
             "throws",
             "try":
-            return true
+            return formatter.previousNonWhitespaceToken(fromIndex: index)?.string != "."
         default:
             return false
         }
@@ -73,12 +73,12 @@ public func spaceAroundParens(formatter: Formatter) {
         guard let previousToken = formatter.tokenAtIndex(i - 1) else {
             return
         }
-        if spaceAfter(previousToken.string) {
+        if previousToken.type == .Identifier && spaceAfter(previousToken.string, index: i - 1) {
             formatter.insertToken(Token(.Whitespace, " "), atIndex: i)
         } else if previousToken.type == .Whitespace {
             if let token = formatter.tokenAtIndex(i - 2) {
                 if (token.type == .EndOfScope && ["]", "}", ")", ">"].contains(token.string)) ||
-                    (token.type == .Identifier && !spaceAfter(token.string)) {
+                    (token.type == .Identifier && !spaceAfter(token.string, index: i - 2)) {
                     formatter.removeTokenAtIndex(i - 1)
                 }
             }
@@ -120,7 +120,7 @@ public func spaceInsideParens(formatter: Formatter) {
 /// * There is space between a closing bracket and following opening brace
 public func spaceAroundBrackets(formatter: Formatter) {
 
-    func spaceAfter(identifier: String) -> Bool {
+    func spaceAfter(identifier: String, index: Int) -> Bool {
         switch identifier {
         case "case",
             "guard",
@@ -132,7 +132,7 @@ public func spaceAroundBrackets(formatter: Formatter) {
             "while",
             "as",
             "is":
-            return true
+            return formatter.previousNonWhitespaceToken(fromIndex: index)?.string != "."
         default:
             return false
         }
@@ -142,12 +142,12 @@ public func spaceAroundBrackets(formatter: Formatter) {
         guard let previousToken = formatter.tokenAtIndex(i - 1) else {
             return
         }
-        if spaceAfter(previousToken.string) {
+        if previousToken.type == .Identifier && spaceAfter(previousToken.string, index: i - 1) {
             formatter.insertToken(Token(.Whitespace, " "), atIndex: i)
         } else if previousToken.type == .Whitespace {
             if let token = formatter.tokenAtIndex(i - 2) {
                 if (token.type == .EndOfScope && ["]", "}", ")"].contains(token.string)) ||
-                    (token.type == .Identifier && !spaceAfter(token.string)) {
+                    (token.type == .Identifier && !spaceAfter(token.string, index: i - 2)) {
                     formatter.removeTokenAtIndex(i - 1)
                 }
             }
@@ -285,7 +285,7 @@ public func spaceAroundOperators(formatter: Formatter) {
         return true
     }
 
-    func spaceAfter(identifier: String) -> Bool {
+    func spaceAfter(identifier: String, index: Int) -> Bool {
         switch identifier {
         case "case",
             "guard",
@@ -298,7 +298,7 @@ public func spaceAroundOperators(formatter: Formatter) {
             "while",
             "as",
             "is":
-            return true
+            return formatter.previousNonWhitespaceToken(fromIndex: index)?.string != "."
         default:
             return false
         }
@@ -373,7 +373,7 @@ public func spaceAroundOperators(formatter: Formatter) {
                             (previousNonWhitespaceToken.string != "?" &&
                             formatter.tokenAtIndex(previousNonWhitespaceTokenIndex - 1)?.type != .Whitespace &&
                             isUnwrapOperatorSequence(previousNonWhitespaceToken))) &&
-                            !spaceAfter(previousNonWhitespaceToken.string) {
+                            !spaceAfter(previousNonWhitespaceToken.string, index: previousNonWhitespaceTokenIndex) {
                             if previousTokenWasWhitespace {
                                 formatter.removeTokenAtIndex(i - 1)
                             }
@@ -588,6 +588,9 @@ public func blankLinesAtEndOfScope(formatter: Formatter) {
 /// If the scope is immediately preceded by a comment, the line will be inserted before that instead.
 public func blankLinesBetweenScopes(formatter: Formatter) {
     formatter.forEachToken(ofType: .Identifier) { i, token in
+        if formatter.previousNonWhitespaceToken(fromIndex: i)?.string == "." {
+            return
+        }
         switch token.string {
         case "struct", "enum", "protocol", "extension":
             break
@@ -607,7 +610,7 @@ public func blankLinesBetweenScopes(formatter: Formatter) {
             }
         case "init":
             // Ignore self.init() / super.init() calls
-            if formatter.previousNonWhitespaceOrCommentOrLinebreak(fromIndex: i)?.string == "." {
+            if formatter.previousNonWhitespaceToken(fromIndex: i)?.string == "." {
                 return
             }
             fallthrough
@@ -784,7 +787,7 @@ public func indent(formatter: Formatter) {
                     "super",
                     "throw",
                     "try":
-                    return false
+                    return formatter.previousNonWhitespaceToken(fromIndex: i)?.string == "."
                 default:
                     return true
                 }
@@ -801,11 +804,7 @@ public func indent(formatter: Formatter) {
                         return false
                     }
                     if previousToken.isWhitespaceOrCommentOrLinebreak {
-                        if formatter.previousNonWhitespaceOrCommentOrLinebreak(fromIndex: i)?.string == "=" {
-                            return true
-                        } else {
-                            return false
-                        }
+                        return formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)?.string == "="
                     }
                 }
             default:
@@ -1053,7 +1052,7 @@ public func todos(formatter: Formatter) {
 public func semicolons(formatter: Formatter) {
     formatter.forEachToken(";") { i, token in
         if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i + 1) {
-            let lastToken = formatter.previousNonWhitespaceOrCommentOrLinebreak(fromIndex: i)
+            let lastToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)
             if lastToken == nil || nextToken.string == "}" {
                 // Safe to remove
                 formatter.removeTokenAtIndex(i)
@@ -1101,6 +1100,9 @@ public func specifiers(formatter: Formatter) {
     ]
     let validSpecifiers = Set<String>(order)
     formatter.forEachToken(ofType: .Identifier) { i, token in
+        if formatter.previousNonWhitespaceToken(fromIndex: i)?.string == "." {
+            return
+        }
         switch token.string {
         case "let", "var",
             "typealias", "associatedtype",
@@ -1118,7 +1120,7 @@ public func specifiers(formatter: Formatter) {
                 var key = token.string
                 if token.type != .Identifier || !validSpecifiers.contains(key) {
                     if token.string == ")" && formatter
-                        .previousNonWhitespaceOrCommentOrLinebreak(fromIndex: index)?.string == "set" {
+                        .previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: index)?.string == "set" {
                         // Skip tokens for entire private(set) expression
                         loop: while let token = formatter.tokenAtIndex(index) {
                             switch token.string {

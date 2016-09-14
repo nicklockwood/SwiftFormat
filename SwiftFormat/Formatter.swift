@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.9.4
+//  Version 0.9.5
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -243,8 +243,13 @@ public class Formatter {
     }
 
     /// Returns the previous token that isn't whitespace, a comment or a linebreak
-    func previousNonWhitespaceOrCommentOrLinebreak(fromIndex index: Int) -> Token? {
+    func previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex index: Int) -> Token? {
         return previousToken(fromIndex: index) { !$0.isWhitespaceOrCommentOrLinebreak }
+    }
+
+    /// Returns the previous token that isn't whitespace
+    func previousNonWhitespaceToken(fromIndex index: Int) -> Token? {
+        return previousToken(fromIndex: index) { $0.type != .Whitespace }
     }
 
     /// Returns the starting token for the containing scope at the specified index

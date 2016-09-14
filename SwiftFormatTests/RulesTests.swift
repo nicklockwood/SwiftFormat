@@ -2,7 +2,7 @@
 //  RulesTests.swift
 //  SwiftFormat
 //
-//  Version 0.9.4
+//  Version 0.9.5
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -136,6 +136,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testKeywordAsIdentifierParensSpacing() {
+        let input = "if foo.let (foo, bar)"
+        let output = "if foo.let(foo, bar)"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: spaceInsideParens
 
     func testSpaceInsideParens() {
@@ -161,23 +168,30 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testAsArrayCasting() {
+    func testAsArrayCastingSpacing() {
         let input = "foo as[String]"
         let output = "foo as [String]"
         XCTAssertEqual(try! format(input, rules: [spaceAroundBrackets]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testAsOptionalArrayCasting() {
+    func testAsOptionalArrayCastingSpacing() {
         let input = "foo as? [String]"
         let output = "foo as? [String]"
         XCTAssertEqual(try! format(input, rules: [spaceAroundBrackets]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testIsArrayTesting() {
+    func testIsArrayTestingSpacing() {
         let input = "if foo is[String]"
         let output = "if foo is [String]"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundBrackets]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testKeywordAsIdentifierBracketSpacing() {
+        let input = "if foo.is[String]"
+        let output = "if foo.is[String]"
         XCTAssertEqual(try! format(input, rules: [spaceAroundBrackets]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -435,6 +449,13 @@ class RulesTests: XCTestCase {
     func testSpaceAroundEnumReturn() {
         let input = "return.Foo"
         let output = "return .Foo"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundOperators]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoSpaceAfterReturnAsIdentifier() {
+        let input = "foo.return.Bar"
+        let output = "foo.return.Bar"
         XCTAssertEqual(try! format(input, rules: [spaceAroundOperators]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -920,6 +941,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testNoBlankLineBeforeFuncAsIdentifier() {
+        let input = "var foo: Bar?\nfoo.func() {}"
+        let output = "var foo: Bar?\nfoo.func() {}"
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: linebreakAtEndOfFile
 
     func testLinebreakAtEndOfFile() {
@@ -1250,6 +1278,13 @@ class RulesTests: XCTestCase {
     func testNoIndentAfterAssignOperatorToVariable() {
         let input = "let greaterThan = >\nlet lessThan = <"
         let output = "let greaterThan = >\nlet lessThan = <"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoIndentAfterDefaultAsIdentifier() {
+        let input = "let foo = FileManager.default\n// Comment\nlet bar = 0"
+        let output = "let foo = FileManager.default\n// Comment\nlet bar = 0"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

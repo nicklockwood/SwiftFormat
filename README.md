@@ -392,6 +392,10 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
+Version ?
+
+- Fixed formatting of `guard case` statements
+
 Version 0.9.5
 
 - Fixed a number of cases where the use of keywords as identifiers was not being handled correctly

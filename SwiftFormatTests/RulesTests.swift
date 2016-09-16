@@ -1261,6 +1261,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testIndentGuardCase() {
+        let input = "{\nguard case .Foo = error else {}\n}"
+        let output = "{\n    guard case .Foo = error else {}\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testIndentElseAfterComment() {
         let input = "if x {}\n// comment\nelse {}"
         let output = "if x {}\n// comment\nelse {}"

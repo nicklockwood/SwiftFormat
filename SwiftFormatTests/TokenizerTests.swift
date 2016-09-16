@@ -1233,6 +1233,82 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testSwitchCaseContainingIfCase() {
+        let input = "switch x {\ncase 1:\nif case x = y {}\ndefault:\nbreak\n}"
+        let output = [
+            Token(.Identifier, "switch"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "x"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "{"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "case"),
+            Token(.Whitespace, " "),
+            Token(.Number, "1"),
+            Token(.StartOfScope, ":"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "if"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "case"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "x"),
+            Token(.Whitespace, " "),
+            Token(.Operator, "="),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "y"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "{"),
+            Token(.EndOfScope, "}"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "default"),
+            Token(.StartOfScope, ":"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "break"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSwitchCaseContainingGuardCase() {
+        let input = "switch x {\ncase 1:\nguard case x = y else {}\ndefault:\nbreak\n}"
+        let output = [
+            Token(.Identifier, "switch"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "x"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "{"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "case"),
+            Token(.Whitespace, " "),
+            Token(.Number, "1"),
+            Token(.StartOfScope, ":"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "guard"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "case"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "x"),
+            Token(.Whitespace, " "),
+            Token(.Operator, "="),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "y"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "else"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "{"),
+            Token(.EndOfScope, "}"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "default"),
+            Token(.StartOfScope, ":"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "break"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: linebreaks
 
     func testLF() {

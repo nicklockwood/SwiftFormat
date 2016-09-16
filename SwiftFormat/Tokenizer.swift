@@ -561,7 +561,7 @@ func tokenize(source: String) -> [Token] {
                     nestedSwitches += 1
                 } else if nestedSwitches > 0 && (token.string == "case" || token.string == "default") {
                     let lastToken = tokens[lastNonWhitespaceIndex!]
-                    if lastToken.string != "if" && lastToken.string != "." {
+                    if lastToken.string != "if" && lastToken.string != "guard" && lastToken.string != "." {
                         tokens[tokens.count - 1] = Token(.EndOfScope, token.string)
                         scopeIndexStack.append(tokens.count - 1)
                         processToken()

@@ -1308,7 +1308,7 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqual(tokenize(input), output)
     }
-    
+
     func testSwitchFollowedByEnum() {
         let input = "switch x {\ncase y: break\ndefault: break\n}\nenum Foo {\ncase z\n}"
         let output = [

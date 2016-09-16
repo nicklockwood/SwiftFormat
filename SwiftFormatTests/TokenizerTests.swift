@@ -2,7 +2,7 @@
 //  TokenizerTests.swift
 //  SwiftFormat
 //
-//  Version 0.9.5
+//  Version 0.9.6
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -1303,6 +1303,44 @@ class TokenizerTests: XCTestCase {
             Token(.StartOfScope, ":"),
             Token(.Linebreak, "\n"),
             Token(.Identifier, "break"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+    
+    func testSwitchFollowedByEnum() {
+        let input = "switch x {\ncase y: break\ndefault: break\n}\nenum Foo {\ncase z\n}"
+        let output = [
+            Token(.Identifier, "switch"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "x"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "{"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "case"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "y"),
+            Token(.StartOfScope, ":"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "break"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "default"),
+            Token(.StartOfScope, ":"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "break"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "}"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "enum"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "Foo"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "{"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "case"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "z"),
             Token(.Linebreak, "\n"),
             Token(.EndOfScope, "}"),
         ]

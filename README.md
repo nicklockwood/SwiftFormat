@@ -392,8 +392,9 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
-Version ?
+Version 0.9.6
 
+- Fixed parsing error when switch statement is followed by enum 
 - Fixed formatting of `guard case` statements
 
 Version 0.9.5

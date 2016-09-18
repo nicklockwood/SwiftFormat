@@ -181,7 +181,7 @@ public class Formatter {
 
     /// Returns the next token at the current scope that matches the block
     public func nextToken(fromIndex index: Int, matching: (Token) -> Bool) -> Token? {
-        var index = index
+        var index = index + 1
         var scopeStack: [Token] = []
         while let token = tokenAtIndex(index) {
             if let scope = scopeStack.last where token.closesScopeForToken(scope) {

@@ -176,17 +176,26 @@ Here are all the rules that SwiftFormat currently applies:
 
 *blankLinesAtEndOfScope* - removes trailing bank lines from inside braces, brackets, parens or chevrons:
 
-    func foo() {         func foo() {
-        //foo      -->       //foo
-                         }
+    func foo() {          func foo() {
+        //foo       -->       //foo
+                          }
     }
     
-    array = [            array = [
-        foo,                 foo,
-        bar,       -->       bar,
-        baz,                 baz,
-                         }
+    array = [             array = [
+        foo,                  foo,
+        bar,        -->       bar,
+        baz,                  baz,
+                          }
     ]
+    
+    if x {          	  if x { 		
+        print("x") 		      print("x")
+
+    } else if y {   -->   } else if y {
+        print("y")            print("y")
+                          }
+    }
+
     
 *blankLinesBetweenScopes* - adds a blank line before each class, struct, enum, extension, protocol or function:
 
@@ -392,8 +401,9 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
-Version ?
+Version 0.10
 
+- The `blankLinesAtEndOfScope` rule no longer removes trailing blank line if immediately followed by other code
 - Fixed formatting of `while case` and `for case ... in` statements
 - Fixed bug when using `switch` as an identifier inside a `switch` statement
 - Fixed parsing of numeric literals containing underscores

@@ -481,7 +481,7 @@ public func ranges(formatter: Formatter) {
                 if formatter.tokenAtIndex(i - 1)?.type == .Whitespace {
                     formatter.removeTokenAtIndex(i - 1)
                 }
-            } else if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i + 1) {
+            } else if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
                 if nextToken.string != ")" && nextToken.string != "," {
                     if formatter.tokenAtIndex(i + 1)?.isWhitespaceOrLinebreak == false {
                         formatter.insertToken(Token(.Whitespace, " "), atIndex: i + 1)
@@ -555,10 +555,15 @@ public func consecutiveBlankLines(formatter: Formatter) {
     }
 }
 
-/// Remove blank lines immediately before a closing brace, bracket, paren or chevron
+/// Remove blank lines immediately before a closing brace, bracket, paren or chevron,
+/// unless it's followed by more code on the same line (e.g. } else { )
 public func blankLinesAtEndOfScope(formatter: Formatter) {
     formatter.forEachToken(ofType: .EndOfScope) { i, token in
         guard ["}", ")", "]", ">"].contains(token.string) else { return }
+        if let nw = formatter.nextNonWhitespaceOrCommentToken(fromIndex: i) {
+            // If there is extra code after the closing scope on the same line, ignore it
+            guard nw.type == .Linebreak else { return }
+        }
         // Find previous non-whitespace token
         var index = i - 1
         var indexOfFirstLineBreak: Int?
@@ -596,7 +601,7 @@ public func blankLinesBetweenScopes(formatter: Formatter) {
             break
         case "class":
             // Ignore class var/let/func
-            if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i + 1)
+            if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)
                 where nextToken.type == .Identifier {
                 switch nextToken.string {
                 case "var", "let", "func",
@@ -900,7 +905,7 @@ public func indent(formatter: Formatter) {
                         }
                         // Check if line on which scope ends should be unindented
                         let start = formatter.startOfLine(atIndex: i)
-                        if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: start)
+                        if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: start - 1)
                             where nextToken.type == .EndOfScope && nextToken.string != "*/" {
                             // Only reduce indent if line begins with a closing scope token
                             let indent = indentStack.last ?? ""
@@ -1051,14 +1056,14 @@ public func todos(formatter: Formatter) {
 /// Remove semicolons, except where doing so would change the meaning of the code
 public func semicolons(formatter: Formatter) {
     formatter.forEachToken(";") { i, token in
-        if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i + 1) {
+        if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
             let lastToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)
             if lastToken == nil || nextToken.string == "}" {
                 // Safe to remove
                 formatter.removeTokenAtIndex(i)
             } else if lastToken?.string == "return" || formatter.scopeAtIndex(i)?.string == "(" {
                 // Not safe to remove or replace
-            } else if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i + 1)?.type == .Linebreak {
+            } else if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.type == .Linebreak {
                 // Safe to remove
                 formatter.removeTokenAtIndex(i)
             } else if !formatter.options.allowInlineSemicolons {

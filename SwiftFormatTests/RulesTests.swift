@@ -855,6 +855,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testBlankLineNotRemovedBeforeElse() {
+        let input = "if x {\n\n    // do something\n\n} else if y {\n\n    // do something else\n\n}"
+        let output = "if x {\n\n    // do something\n\n} else if y {\n\n    // do something else\n}"
+        XCTAssertEqual(try! format(input, rules: [blankLinesAtEndOfScope]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: blankLinesBetweenScopes
 
     func testBlankLineBetweenFunctions() {

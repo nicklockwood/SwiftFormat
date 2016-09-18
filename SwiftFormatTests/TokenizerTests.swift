@@ -384,6 +384,48 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testUnderscoresInInteger() {
+        let input = "1_23_4_"
+        let output = [Token(.Number, "1_23_4_")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testUnderscoresInFloat() {
+        let input = "0_.1_2_"
+        let output = [Token(.Number, "0_.1_2_")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testUnderscoresInExponential() {
+        let input = "0.1_2_e-3"
+        let output = [Token(.Number, "0.1_2_e-3")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testBinary() {
+        let input = "0b101010"
+        let output = [Token(.Number, "0b101010")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testOctal() {
+        let input = "0o52"
+        let output = [Token(.Number, "0o52")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testHexadecimal() {
+        let input = "0x2A"
+        let output = [Token(.Number, "0x2A")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testHexadecimalPower() {
+        let input = "0xC3p0"
+        let output = [Token(.Number, "0xC3p0")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Identifiers
 
     func testFoo() {
@@ -1328,6 +1370,46 @@ class TokenizerTests: XCTestCase {
             Token(.EndOfScope, "default"),
             Token(.StartOfScope, ":"),
             Token(.Whitespace, " "),
+            Token(.Identifier, "break"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "}"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "enum"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "Foo"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "{"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "case"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "z"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSwitchCaseContainingSwitchIdentifierFollowedByEnum() {
+        let input = "switch x {\ncase 1:\nfoo.switch\ndefault:\nbreak\n}\nenum Foo {\ncase z\n}"
+        let output = [
+            Token(.Identifier, "switch"),
+            Token(.Whitespace, " "),
+            Token(.Identifier, "x"),
+            Token(.Whitespace, " "),
+            Token(.StartOfScope, "{"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "case"),
+            Token(.Whitespace, " "),
+            Token(.Number, "1"),
+            Token(.StartOfScope, ":"),
+            Token(.Linebreak, "\n"),
+            Token(.Identifier, "foo"),
+            Token(.Operator, "."),
+            Token(.Identifier, "switch"),
+            Token(.Linebreak, "\n"),
+            Token(.EndOfScope, "default"),
+            Token(.StartOfScope, ":"),
+            Token(.Linebreak, "\n"),
             Token(.Identifier, "break"),
             Token(.Linebreak, "\n"),
             Token(.EndOfScope, "}"),

@@ -392,9 +392,16 @@ With a syntax tree in place, it should become possible to add much more sophisti
 Release notes
 ----------------
 
+Version ?
+
+- Fixed formatting of `while case` and `for case ... in` statements
+- Fixed bug when using `switch` as an identifier inside a `switch` statement
+- Fixed parsing of numeric literals containing underscores
+- Fixed parsing of binary, octal and hexadecimal literals
+
 Version 0.9.6
 
-- Fixed parsing error when switch statement is followed by enum 
+- Fixed parsing error when `switch` statement is followed by `enum`
 - Fixed formatting of `guard case` statements
 
 Version 0.9.5

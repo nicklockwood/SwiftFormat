@@ -126,6 +126,7 @@ private extension Character {
 
     var isAlpha: Bool { return isalpha(Int32(unicodeValue)) > 0 }
     var isDigit: Bool { return isdigit(Int32(unicodeValue)) > 0 }
+    var isHexDigit: Bool { return isxdigit(Int32(unicodeValue)) > 0 }
     var isWhitespace: Bool { return self == " " || self == "\t" || unicodeValue == 0x0b }
     var isLinebreak: Bool { return self == "\r" || self == "\n" || self == "\r\n" }
 }
@@ -158,10 +159,6 @@ private extension String.CharacterView {
 
     mutating func scanCharacter(character: Character) -> Bool {
         return scanCharacter({ $0 == character }) != nil
-    }
-
-    mutating func scanInteger() -> String? {
-        return scanCharacters({ $0.isDigit })
     }
 }
 
@@ -383,9 +380,38 @@ private extension String.CharacterView {
     }
 
     mutating func parseNumber() -> Token? {
+
+        func scanInteger() -> String? {
+            return scanCharacters({ $0.isDigit || $0 == "_" })
+        }
+
         var number = ""
+        if scanCharacter("0") {
+            let endOfInt = self
+            if scanCharacter("x") {
+                if let hex = scanCharacters({ $0.isHexDigit || $0 == "_" }) {
+                    number += "0x" + hex
+                    if scanCharacter("p"), let power = scanInteger() {
+                        number += "p" + power
+                    }
+                    return Token(.Number, number)
+                }
+            } else if scanCharacter("b") {
+                if let bin = scanCharacters({ "01_".characters.contains($0) }) {
+                    return Token(.Number, "0b" + bin)
+                }
+            } else if scanCharacter("o") {
+                if let octal = scanCharacters({ "01234567_".characters.contains($0) }) {
+                    return Token(.Number, "0o" + octal)
+                }
+            }
+            self = endOfInt
+            number = "0"
+        }
         if let integer = scanInteger() {
-            number = integer
+            number += integer
+        }
+        if !number.isEmpty {
             let endOfInt = self
             if scanCharacter(".") {
                 if let fraction = scanInteger() {
@@ -555,17 +581,29 @@ func tokenize(source: String) -> [Token] {
     func processToken() {
         let token = tokens.last!
         if token.type != .Whitespace {
+            let possibleKeyword: Bool = {
+                guard token.type == .Identifier else { return false }
+                guard let nw = lastNonWhitespaceIndex else { return true }
+                switch tokens[nw].string {
+                case "if", "guard", "while", "for", ".":
+                    return false
+                default:
+                    return true
+                }
+            }()
             // Track switch/case statements
-            if token.type == .Identifier {
-                if token.string == "switch" {
+            if possibleKeyword {
+                switch token.string {
+                case "switch":
                     nestedSwitches += 1
-                } else if nestedSwitches > 0 && (token.string == "case" || token.string == "default") {
-                    let lastToken = tokens[lastNonWhitespaceIndex!]
-                    if lastToken.string != "if" && lastToken.string != "guard" && lastToken.string != "." {
+                case "default", "case":
+                    if nestedSwitches > 0 {
                         tokens[tokens.count - 1] = Token(.EndOfScope, token.string)
                         processToken()
                         return
                     }
+                default:
+                    break
                 }
             }
             // Fix up generic misidentified as ?< or !< operator

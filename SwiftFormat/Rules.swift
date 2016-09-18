@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.9.6
+//  Version 0.10
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -632,6 +632,27 @@ public func blankLinesBetweenScopes(formatter: Formatter) {
             }
         default:
             return
+        }
+        // Abort if opening and closing brace are on same line
+        guard let openingBraceIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
+            $0.type == .StartOfScope && $0.string == "{"
+        }), closingBraceIndex = formatter.indexOfNextToken(fromIndex: openingBraceIndex, matching: {
+            $0.type == .EndOfScope && $0.string == "}"
+        }), linebreakIndex = formatter.indexOfNextToken(fromIndex: openingBraceIndex, matching: {
+            $0.type == .Linebreak
+        }) where linebreakIndex < closingBraceIndex else {
+            return
+        }
+        // Ensure closing scope is followed by a blank line
+        if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: closingBraceIndex, matching: {
+            !$0.isWhitespaceOrComment
+        }) where formatter.tokenAtIndex(nextTokenIndex)?.type == .Linebreak {
+            // If closing brace is on same line as opening
+            // Add blank line if needed
+            if let followingToken = formatter.nextNonWhitespaceToken(fromIndex: nextTokenIndex) where
+                followingToken.type != .Linebreak && followingToken.type != .EndOfScope {
+                formatter.insertToken(Token(.Linebreak, formatter.options.linebreak), atIndex: nextTokenIndex)
+            }
         }
         // Skip specifiers
         var index = i - 1

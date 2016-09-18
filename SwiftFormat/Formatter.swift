@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.9.6
+//  Version 0.10
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -179,24 +179,29 @@ public class Formatter {
 
     // MARK: utilities
 
-    /// Returns the next token at the current scope that matches the block
-    public func nextToken(fromIndex index: Int, matching: (Token) -> Bool) -> Token? {
-        var index = index + 1
+    /// Returns the index of the next token at the current scope that matches the block
+    func indexOfNextToken(fromIndex index: Int, matching: (Token) -> Bool) -> Int? {
+        var i = index + 1
         var scopeStack: [Token] = []
-        while let token = tokenAtIndex(index) {
+        while let token = tokenAtIndex(i) {
             if let scope = scopeStack.last where token.closesScopeForToken(scope) {
                 scopeStack.popLast()
                 if token.type == .Linebreak {
-                    index -= 1
+                    i -= 1
                 }
             } else if matching(token) {
-                return token
+                return i
             } else if token.type == .StartOfScope {
                 scopeStack.append(token)
             }
-            index += 1
+            i += 1
         }
         return nil
+    }
+
+    /// Returns the next token at the current scope that matches the block
+    public func nextToken(fromIndex index: Int, matching: (Token) -> Bool) -> Token? {
+        return indexOfNextToken(fromIndex: index, matching: matching).map { tokens[$0] }
     }
 
     /// Returns the next token that isn't whitespace, a comment or a linebreak
@@ -207,6 +212,11 @@ public class Formatter {
     /// Returns the next token that isn't whitespace or a comment
     public func nextNonWhitespaceOrCommentToken(fromIndex index: Int) -> Token? {
         return nextToken(fromIndex: index) { !$0.isWhitespaceOrComment }
+    }
+
+    /// Returns the next token that isn't whitespace
+    public func nextNonWhitespaceToken(fromIndex index: Int) -> Token? {
+        return nextToken(fromIndex: index) { $0.type != .Whitespace }
     }
 
     /// Returns the index of the previous token at the current scope that matches the block

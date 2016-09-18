@@ -200,13 +200,16 @@ Here are all the rules that SwiftFormat currently applies:
 *blankLinesBetweenScopes* - adds a blank line before each class, struct, enum, extension, protocol or function:
 
 	func foo() {         func foo() {
-        //foo      -->       //foo
+        //foo                //foo
     }                    }
 	func bar() {         
         //bar      -->   func bar() {
     }                        //bar
-                         }
-
+    var baz: Bool        }
+    var quux: Int
+                         var baz: Bool
+						 var quux: Int
+						 
 *linebreakAtEndOfFile* - ensures that the last line of the file is empty
 
 *indent* - adjusts leading whitespace based on scope and line wrapping:
@@ -391,19 +394,19 @@ Or begin each line with a `*` (or any other non-whitespace character)
 What's next?
 --------------
 
-There are a bunch of additional rules I'd like to add, such as consistent placement of blank lines in and around functions, and correctly formatting headerdoc comments.
+* More configuration options
+* More sophisticated rules for controlling the white space in-and-around functions and classes
+* Better error handling (e.g. surfacing the type and line number for parsing errors)
 
-At some point I should probably add an intermediate parsing stage that identifies high-level constructs such as classes and functions and assembles them into a syntax tree. I didn't bother doing this originally because I thought it would be easier to implement formatting at the token level, but in fact this just meant that the logic for distinguishing between syntax constructs had to be split between the tokenizer and the formatting rules, making both of them more complex than they ought to be.
-
-With a syntax tree in place, it should become possible to add much more sophisticated rules, such as converting uppercase enums to lowercase for Swift 3, etc.
-     
      
 Release notes
 ----------------
 
 Version 0.10
 
-- The `blankLinesAtEndOfScope` rule no longer removes trailing blank line if immediately followed by other code
+- The `blankLinesAtEndOfScope` rule no longer removes trailing blank lines if immediately followed by other code
+- The `blankLinesBetweenScopes` rule now adds a blank line after a scope as well as before it
+- The `blankLinesBetweenScopes` rule no longer affects single-line functions, classes, etc.
 - Fixed formatting of `while case` and `for case ... in` statements
 - Fixed bug when using `switch` as an identifier inside a `switch` statement
 - Fixed parsing of numeric literals containing underscores

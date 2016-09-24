@@ -402,6 +402,11 @@ What's next?
 Release notes
 ----------------
 
+Version ?
+
+- Fixed handling of `prefix` and `postfix` specifiers
+- Converted to Swift 3 syntax
+
 Version 0.10
 
 - The `blankLinesAtEndOfScope` rule no longer removes trailing blank lines if immediately followed by other code

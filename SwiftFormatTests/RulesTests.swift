@@ -871,6 +871,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testBlankLineBetweenPropertyAndFunction() {
+        let input = "var foo: Int\nfunc bar() {\n}"
+        let output = "var foo: Int\n\nfunc bar() {\n}"
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testBlankLineBetweenFunctionsIsBeforeComment() {
         let input = "func foo() {\n}\n// headerdoc\nfunc bar() {\n}"
         let output = "func foo() {\n}\n\n// headerdoc\nfunc bar() {\n}"
@@ -965,6 +972,13 @@ class RulesTests: XCTestCase {
     func testNoBlankLineBetweenFunctionsWithInlineBody() {
         let input = "{\n    func foo() { print(\"foo\") }\n    func bar() { print(\"bar\") }\n}"
         let output = "{\n    func foo() { print(\"foo\") }\n    func bar() { print(\"bar\") }\n}"
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testBlankLineBetweenPropertyAndPrefixFunction() {
+        let input = "var foo: Int\nprefix\nfunc -(rhs: Foo) -> Foo {\n}"
+        let output = "var foo: Int\n\nprefix\nfunc -(rhs: Foo) -> Foo {\n}"
         XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1691,6 +1705,13 @@ class RulesTests: XCTestCase {
     func testWhitespaceInSpecifiersLeftIntact() {
         let input = "weak private(set) /* read-only */\npublic var"
         let output = "private(set) /* read-only */\npublic weak var"
+        XCTAssertEqual(try! format(input, rules: [specifiers]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testPrefixSpecifier() {
+        let input = "prefix public static func -(rhs: Foo) -> Foo"
+        let output = "public static prefix func -(rhs: Foo) -> Foo"
         XCTAssertEqual(try! format(input, rules: [specifiers]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

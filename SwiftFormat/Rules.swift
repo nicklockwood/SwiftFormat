@@ -607,7 +607,8 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
                 case "var", "let", "func",
                     "private", "fileprivate", "public", "internal", "open",
                     "final", "required", "override", "convenience",
-                    "lazy", "dynamic", "static":
+                    "lazy", "dynamic", "static",
+                    "prefix", "postfix":
                     return
                 default:
                     break
@@ -679,7 +680,8 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
                 case .identifier:
                     switch token.string {
                     case "private", "fileprivate", "internal", "public", "open",
-                        "final", "required", "override", "convenience":
+                        "final", "required", "override", "convenience",
+                        "prefix", "postfix":
                         break
                     default:
                         if !token.string.hasPrefix("@") {
@@ -1123,6 +1125,7 @@ public func specifiers(_ formatter: Formatter) {
         "lazy",
         "weak", "unowned",
         "static", "class",
+        "prefix", "postfix",
     ]
     let validSpecifiers = Set<String>(order)
     formatter.forEachToken(ofType: .identifier) { i, token in

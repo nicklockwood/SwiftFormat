@@ -1432,58 +1432,72 @@ class RulesTests: XCTestCase {
 
     // MARK: trailingCommas
 
-    func testCommasAddedToSingleItem() {
+    func testCommaAddedToSingleItem() {
         let input = "[\n    foo\n]"
         let output = "[\n    foo,\n]"
         XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testCommasAddedToLastItem() {
+    func testCommaAddedToLastItem() {
         let input = "[\n    foo,\n    bar\n]"
         let output = "[\n    foo,\n    bar,\n]"
         XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testCommasAddedToDictionary() {
+    func testCommaAddedToDictionary() {
         let input = "[\n    foo: bar\n]"
         let output = "[\n    foo: bar,\n]"
         XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testCommasNotAddedToInlineArray() {
+    func testCommaNotAddedToInlineArray() {
         let input = "[foo, bar]"
         let output = "[foo, bar]"
         XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testCommasNotAddedToInlineDictionary() {
+    func testCommaNotAddedToInlineDictionary() {
         let input = "[foo: bar]"
         let output = "[foo: bar]"
         XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testCommasNotAddedToSubscript() {
+    func testCommaNotAddedToSubscript() {
         let input = "foo[bar]"
         let output = "foo[bar]"
         XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testCommasAddedBeforeComment() {
+    func testCommaAddedBeforeComment() {
         let input = "[\n    foo // comment\n]"
         let output = "[\n    foo, // comment\n]"
         XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testCommasNotAddedAfterComment() {
+    func testCommaNotAddedAfterComment() {
         let input = "[\n    foo, // comment\n]"
         let output = "[\n    foo, // comment\n]"
+        XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testCommaNotAddedInsideEmptyArrayLiteral() {
+        let input = "foo = [\n]"
+        let output = "foo = [\n]"
+        XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testCommaNotAddedInsideEmptyDictionaryLiteral() {
+        let input = "foo = [:\n]"
+        let output = "foo = [:\n]"
         XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

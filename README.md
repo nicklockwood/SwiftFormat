@@ -405,6 +405,7 @@ Release notes
 Version ?
 
 - Fixed handling of `prefix` and `postfix` specifiers
+- Fixed bug where trailing comma was added to empty array or dictionary literal
 - Converted to Swift 3 syntax
 
 Version 0.10

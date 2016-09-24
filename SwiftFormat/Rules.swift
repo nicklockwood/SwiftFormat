@@ -1052,8 +1052,13 @@ public func trailingCommas(_ formatter: Formatter) {
         }), formatter.tokenAtIndex(linebreakIndex)?.type == .linebreak {
             if let previousTokenIndex = formatter.indexOfPreviousToken(fromIndex: linebreakIndex + 1, matching: {
                 return !$0.isWhitespaceOrCommentOrLinebreak
-            }), let token = formatter.tokenAtIndex(previousTokenIndex), token.string != "," {
-                formatter.insertToken(Token(.operator, ","), atIndex: previousTokenIndex + 1)
+            }), let token = formatter.tokenAtIndex(previousTokenIndex) {
+                switch token.string {
+                case ",", "[", ":":
+                    break // do nothing
+                default:
+                    formatter.insertToken(Token(.operator, ","), atIndex: previousTokenIndex + 1)
+                }
             }
         }
     }

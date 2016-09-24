@@ -289,12 +289,13 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. Does SwiftFormat support Swift 3?*
 
-> A. Probably. I've fixed some specific issues with Swift 3, but I've only tested it extensively with Swift 2.3 code. 
+> A. Yes. 
 
 
 *Q. Can I compile it with Swift 3?*
 
-> A. Hahahahahahahahahahahahahahahahahahahaha no. 
+> A. Hahahahahahahahahahahahahahahahahahahaha oh wait, yes you can. 
+
 
 *Q. I don't like how SwiftFormat formatted my code*
 
@@ -402,7 +403,7 @@ What's next?
 Release notes
 ----------------
 
-Version ?
+Version 0.11
 
 - Fixed handling of `prefix` and `postfix` specifiers
 - Fixed bug where trailing comma was added to empty array or dictionary literal

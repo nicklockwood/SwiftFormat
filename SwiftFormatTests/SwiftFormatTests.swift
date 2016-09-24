@@ -2,8 +2,6 @@
 //  SwiftFormatTests.swift
 //  SwiftFormat
 //
-//  Version 0.10
-//
 //  Created by Nick Lockwood on 28/08/2016.
 //  Copyright 2016 Charcoal Design
 //

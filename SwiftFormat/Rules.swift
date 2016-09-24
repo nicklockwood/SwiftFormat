@@ -436,8 +436,8 @@ public func spaceInsideComments(_ formatter: Formatter) {
         if !nextToken.isWhitespaceOrLinebreak {
             let string = nextToken.string
             if string.hasPrefix("*") || string.hasPrefix("!") || string.hasPrefix(":") {
-                if !string.hasPrefix("**") && !string.hasPrefix("* ") &&
-                    !string.hasPrefix("*\t") && !string.hasPrefix("*/") {
+                if string.characters.count > 1 && !string.hasPrefix("**") &&
+                    !string.hasPrefix("* ") && !string.hasPrefix("*\t") && !string.hasPrefix("*/") {
                     let string = String(string.characters.first!) + " " +
                         string.substring(from: string.characters.index(string.startIndex, offsetBy: 1))
                     formatter.replaceTokenAtIndex(i + 1, with: Token(.commentBody, string))
@@ -452,7 +452,7 @@ public func spaceInsideComments(_ formatter: Formatter) {
         if !nextToken.isWhitespaceOrLinebreak {
             let string = nextToken.string
             if string.hasPrefix("/") || string.hasPrefix("!") || string.hasPrefix(":") {
-                if !string.hasPrefix("/ ") && !string.hasPrefix("/\t") {
+                if string.characters.count > 1 && !string.hasPrefix("/ ") && !string.hasPrefix("/\t") {
                     let string = String(string.characters.first!) + " " +
                         string.substring(from: string.characters.index(string.startIndex, offsetBy: 1))
                     formatter.replaceTokenAtIndex(i + 1, with: Token(.commentBody, string))
@@ -517,8 +517,13 @@ public func consecutiveSpaces(_ formatter: Formatter) {
 /// meaning and leads to noise in commits.
 public func trailingWhitespace(_ formatter: Formatter) {
     formatter.forEachToken(ofType: .linebreak) { i, token in
-        if formatter.tokenAtIndex(i - 1)?.type == .whitespace {
-            formatter.removeTokenAtIndex(i - 1)
+        if let previousToken = formatter.tokenAtIndex(i - 1) {
+            if previousToken.type == .whitespace {
+                formatter.removeTokenAtIndex(i - 1)
+            } else if previousToken.type == .commentBody {
+                // should never happen as Tokenizer treats trailing space as new token
+                assert(!(previousToken.string.characters.last?.isWhitespace == true))
+            }
         }
     }
     if formatter.tokens.last?.type == .whitespace {

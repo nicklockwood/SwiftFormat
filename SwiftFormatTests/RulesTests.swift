@@ -735,6 +735,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testNoSpaceAddedToFirstLineOfDocComment() {
+        let input = "/**\n Comment\n */"
+        let output = "/**\n Comment\n */"
+        XCTAssertEqual(try! format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoSpaceAddedToEmptyDocComment() {
+        let input = "///"
+        let output = "///"
+        XCTAssertEqual(try! format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: consecutiveSpaces
 
     func testConsecutiveSpaces() {

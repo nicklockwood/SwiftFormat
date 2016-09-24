@@ -118,7 +118,7 @@ public func ==(lhs: Token, rhs: Token) -> Bool {
     return lhs.type == rhs.type && lhs.string == rhs.string
 }
 
-private extension Character {
+extension Character {
 
     var unicodeValue: UInt32 {
         return String(self).unicodeScalars.first?.value ?? 0

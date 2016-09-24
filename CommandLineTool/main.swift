@@ -52,13 +52,13 @@ func showHelp() {
     print("")
 }
 
-func expandPath(path: String) -> NSURL {
-    let path = NSString(string: path).stringByExpandingTildeInPath
-    let directoryURL = NSURL(fileURLWithPath: NSFileManager.defaultManager().currentDirectoryPath)
-    return NSURL(fileURLWithPath: path, relativeToURL: directoryURL)
+func expandPath(_ path: String) -> URL {
+    let path = NSString(string: path).expandingTildeInPath
+    let directoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+    return URL(fileURLWithPath: path, relativeTo: directoryURL)
 }
 
-func processArguments(args: [String]) {
+func processArguments(_ args: [String]) {
     guard let args = preprocessArguments(args, [
         "output",
         "indent",
@@ -90,12 +90,12 @@ func processArguments(args: [String]) {
     // Get options
     var options = FormatOptions()
     if let indent = args["indent"] {
-        switch indent.lowercaseString {
+        switch indent.lowercased() {
         case "tab", "tabs":
             options.indent = "\t"
         default:
             if let spaces = Int(indent) {
-                options.indent = String(count: spaces, repeatedValue: (" " as Character))
+                options.indent = String(repeating: " ", count: spaces)
                 break
             }
             print("error: unsupported indent value: \(indent).")
@@ -103,7 +103,7 @@ func processArguments(args: [String]) {
         }
     }
     if let semicolons = args["semicolons"] {
-        switch semicolons.lowercaseString {
+        switch semicolons.lowercased() {
         case "inline":
             options.allowInlineSemicolons = true
         case "never":
@@ -116,7 +116,7 @@ func processArguments(args: [String]) {
         }
     }
     if let linebreaks = args["linebreaks"] {
-        switch linebreaks.lowercaseString {
+        switch linebreaks.lowercased() {
         case "cr":
             options.linebreak = "\r"
         case "lf":
@@ -131,7 +131,7 @@ func processArguments(args: [String]) {
         }
     }
     if let ranges = args["ranges"] {
-        switch ranges.lowercaseString {
+        switch ranges.lowercased() {
         case "space", "spaced", "spaces":
             options.spaceAroundRangeOperators = true
         case "nospace":
@@ -148,8 +148,8 @@ func processArguments(args: [String]) {
     if inputURL == nil {
         var input: String?
         var finished = false
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)) {
-            while let line = readLine(stripNewline: false) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            while let line = readLine(strippingNewline: false) {
                 input = (input ?? "") + line
             }
             if let input = input {
@@ -159,10 +159,10 @@ func processArguments(args: [String]) {
                     return
                 }
                 if let outputURL = outputURL {
-                    if (try? output.writeToURL(outputURL, atomically: true, encoding: NSUTF8StringEncoding)) != nil {
+                    if (try? output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)) != nil {
                         print("swiftformat completed successfully")
                     } else {
-                        print("error: failed to write file: \(outputURL.path!)")
+                        print("error: failed to write file: \(outputURL.path)")
                     }
                 } else {
                     // Write to stdout
@@ -190,4 +190,4 @@ func processArguments(args: [String]) {
     print("swiftformat completed. \(filesWritten) file(s) updated.")
 }
 
-processArguments(Process.arguments)
+processArguments(CommandLine.arguments)

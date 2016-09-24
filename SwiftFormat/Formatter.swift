@@ -73,50 +73,50 @@ public class Formatter {
     // MARK: access and mutation
 
     /// Returns the token at the specified index, or nil if index is invalid
-    public func tokenAtIndex(index: Int) -> Token? {
+    public func tokenAtIndex(_ index: Int) -> Token? {
         guard index >= 0 && index < tokens.count else { return nil }
         return tokens[index]
     }
 
     /// Replaces the token at the specified index with one or more new tokens
-    public func replaceTokenAtIndex(index: Int, with tokens: Token...) {
+    public func replaceTokenAtIndex(_ index: Int, with tokens: Token...) {
         if tokens.count == 0 {
             removeTokenAtIndex(index)
         } else {
             self.tokens[index] = tokens[0]
-            for (i, token) in tokens.dropFirst().enumerate() {
+            for (i, token) in tokens.dropFirst().enumerated() {
                 insertToken(token, atIndex: index + i + 1)
             }
         }
     }
 
     /// Replaces the tokens in the specified range with new tokens
-    public func replaceTokensInRange(range: Range<Int>, with tokens: [Token]) {
+    public func replaceTokensInRange(_ range: Range<Int>, with tokens: [Token]) {
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
-            replaceTokenAtIndex(range.startIndex + i, with: tokens[i])
+            replaceTokenAtIndex(range.lowerBound + i, with: tokens[i])
         }
         if range.count > max {
             for _ in max ..< range.count {
-                removeTokenAtIndex(range.startIndex + max)
+                removeTokenAtIndex(range.lowerBound + max)
             }
         } else {
             for i in max ..< tokens.count {
-                insertToken(tokens[i], atIndex: range.startIndex + i)
+                insertToken(tokens[i], atIndex: range.lowerBound + i)
             }
         }
     }
 
     /// Removes the token at the specified indez
-    public func removeTokenAtIndex(index: Int) {
-        tokens.removeAtIndex(index)
-        for (i, j) in indexStack.enumerate() where j >= index {
+    public func removeTokenAtIndex(_ index: Int) {
+        tokens.remove(at: index)
+        for (i, j) in indexStack.enumerated() where j >= index {
             indexStack[i] -= 1
         }
     }
 
     /// Removes the tokens in the specified range
-    public func removeTokensInRange(range: Range<Int>) {
+    public func removeTokensInRange(_ range: Range<Int>) {
         replaceTokensInRange(range, with: [])
     }
 
@@ -126,9 +126,9 @@ public class Formatter {
     }
 
     /// Inserts a tokens at the specified index
-    public func insertToken(token: Token, atIndex index: Int) {
-        tokens.insert(token, atIndex: index)
-        for (i, j) in indexStack.enumerate() where j >= index {
+    public func insertToken(_ token: Token, atIndex index: Int) {
+        tokens.insert(token, at: index)
+        for (i, j) in indexStack.enumerated() where j >= index {
             indexStack[i] += 1
         }
     }
@@ -138,7 +138,7 @@ public class Formatter {
     /// Loops through each token in the array. It is safe to mutate the token
     /// array inside the body block, but note that the index and token arguments
     /// may not reflect the current token any more after a mutation
-    public func forEachToken(body: (Int, Token) -> Void) {
+    public func forEachToken(_ body: (Int, Token) -> Void) {
         let i = indexStack.count
         indexStack.append(0)
         while indexStack[i] < tokens.count {
@@ -146,11 +146,11 @@ public class Formatter {
             body(index, tokens[index]) // May mutate indexStack
             indexStack[i] += 1
         }
-        indexStack.popLast()
+        indexStack.removeLast()
     }
 
     /// As above, but only loops through tokens that match the specified filter block
-    public func forEachToken(matching: (Token) -> Bool, _ body: (Int, Token) -> Void) {
+    public func forEachToken(_ matching: (Token) -> Bool, _ body: (Int, Token) -> Void) {
         forEachToken { index, token in
             if matching(token) {
                 body(index, token)
@@ -164,16 +164,16 @@ public class Formatter {
     }
 
     /// As above, but only loops through tokens with the specified type and string
-    public func forEachToken(string: String, ofType type: TokenType, _ body: (Int, Token) -> Void) {
+    public func forEachToken(_ string: String, ofType type: TokenType, _ body: (Int, Token) -> Void) {
         forEachToken({ return $0.type == type && $0.string == string }, body)
     }
 
     /// As above, but only loops through tokens with the specified string.
     /// Tokens of type `StringBody` and `CommentBody` are ignored, as these
     /// can't be usefully identified by their string value
-    public func forEachToken(string: String, _ body: (Int, Token) -> Void) {
+    public func forEachToken(_ string: String, _ body: (Int, Token) -> Void) {
         forEachToken({
-            return $0.string == string && $0.type != .StringBody && $0.type != .CommentBody
+            return $0.string == string && $0.type != .stringBody && $0.type != .commentBody
         }, body)
     }
 
@@ -184,14 +184,14 @@ public class Formatter {
         var i = index + 1
         var scopeStack: [Token] = []
         while let token = tokenAtIndex(i) {
-            if let scope = scopeStack.last where token.closesScopeForToken(scope) {
-                scopeStack.popLast()
-                if token.type == .Linebreak {
+            if let scope = scopeStack.last, token.closesScopeForToken(scope) {
+                scopeStack.removeLast()
+                if token.type == .linebreak {
                     i -= 1
                 }
             } else if matching(token) {
                 return i
-            } else if token.type == .StartOfScope {
+            } else if token.type == .startOfScope {
                 scopeStack.append(token)
             }
             i += 1
@@ -216,7 +216,7 @@ public class Formatter {
 
     /// Returns the next token that isn't whitespace
     public func nextNonWhitespaceToken(fromIndex index: Int) -> Token? {
-        return nextToken(fromIndex: index) { $0.type != .Whitespace }
+        return nextToken(fromIndex: index) { $0.type != .whitespace }
     }
 
     /// Returns the index of the previous token at the current scope that matches the block
@@ -225,9 +225,9 @@ public class Formatter {
         var linebreakEncountered = false
         var scopeStack: [Token] = []
         while let token = tokenAtIndex(i) {
-            if token.type == .StartOfScope {
-                if let scope = scopeStack.last where scope.closesScopeForToken(token) {
-                    scopeStack.popLast()
+            if token.type == .startOfScope {
+                if let scope = scopeStack.last, scope.closesScopeForToken(token) {
+                    scopeStack.removeLast()
                 } else if token.string == "//" && linebreakEncountered {
                     linebreakEncountered = false
                 } else if matching(token) {
@@ -237,9 +237,9 @@ public class Formatter {
                 }
             } else if matching(token) {
                 return i
-            } else if token.type == .Linebreak {
+            } else if token.type == .linebreak {
                 linebreakEncountered = true
-            } else if token.type == .EndOfScope {
+            } else if token.type == .endOfScope {
                 scopeStack.append(token)
             }
             i -= 1
@@ -259,19 +259,19 @@ public class Formatter {
 
     /// Returns the previous token that isn't whitespace
     func previousNonWhitespaceToken(fromIndex index: Int) -> Token? {
-        return previousToken(fromIndex: index) { $0.type != .Whitespace }
+        return previousToken(fromIndex: index) { $0.type != .whitespace }
     }
 
     /// Returns the starting token for the containing scope at the specified index
-    public func scopeAtIndex(index: Int) -> Token? {
-        return previousToken(fromIndex: index) { $0.type == .StartOfScope }
+    public func scopeAtIndex(_ index: Int) -> Token? {
+        return previousToken(fromIndex: index) { $0.type == .startOfScope }
     }
 
     /// Returns the index of the first token of the line containing the specified index
     public func startOfLine(atIndex index: Int) -> Int {
         var index = index
         while let token = tokenAtIndex(index - 1) {
-            if token.type == .Linebreak {
+            if token.type == .linebreak {
                 break
             }
             index -= 1
@@ -280,8 +280,8 @@ public class Formatter {
     }
 
     /// Returns the whitespace token at the start of the line containing the specified index
-    public func indentTokenForLineAtIndex(index: Int) -> Token? {
-        if let token = tokenAtIndex(startOfLine(atIndex: index)) where token.type == .Whitespace {
+    public func indentTokenForLineAtIndex(_ index: Int) -> Token? {
+        if let token = tokenAtIndex(startOfLine(atIndex: index)), token.type == .whitespace {
             return token
         }
         return nil

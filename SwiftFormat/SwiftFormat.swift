@@ -33,54 +33,51 @@
 
 import Foundation
 
-func processInput(inputURL: NSURL, andWriteToOutput outputURL: NSURL, withOptions options: FormatOptions) -> Int {
-    let manager = NSFileManager.defaultManager()
+func processInput(_ inputURL: URL, andWriteToOutput outputURL: URL, withOptions options: FormatOptions) -> Int {
+    let manager = FileManager.default
     var isDirectory: ObjCBool = false
-    if manager.fileExistsAtPath(inputURL.path!, isDirectory: &isDirectory) {
-        if isDirectory {
-            if let files = try? manager.contentsOfDirectoryAtURL(inputURL, includingPropertiesForKeys: nil, options: NSDirectoryEnumerationOptions.SkipsHiddenFiles) {
+    if manager.fileExists(atPath: inputURL.path, isDirectory: &isDirectory) {
+        if isDirectory.boolValue {
+            if let files = try? manager.contentsOfDirectory(at: inputURL, includingPropertiesForKeys: nil, options: FileManager.DirectoryEnumerationOptions.skipsHiddenFiles) {
                 var filesWritten = 0
                 for url in files {
-                    if var path = url.path {
-                        let inputDirectory = inputURL.path ?? ""
-                        let range = inputDirectory.startIndex ..< inputDirectory.endIndex
-                        path.replaceRange(range, with: outputURL.path ?? "")
-                        let outputDirectory = path.componentsSeparatedByString("/").dropLast().joinWithSeparator("/")
-                        if (try? manager.createDirectoryAtPath(outputDirectory, withIntermediateDirectories: true, attributes: nil)) != nil {
-                            filesWritten += processInput(url, andWriteToOutput: NSURL(fileURLWithPath: path), withOptions: options)
-                        } else {
-                            print("error: failed to create directory at: \(outputDirectory)")
-                        }
+                    let inputDirectory = inputURL.path
+                    let path = outputURL.path + url.path.substring(from: inputDirectory.characters.endIndex)
+                    let outputDirectory = path.components(separatedBy: "/").dropLast().joined(separator: "/")
+                    if (try? manager.createDirectory(atPath: outputDirectory, withIntermediateDirectories: true, attributes: nil)) != nil {
+                        filesWritten += processInput(url, andWriteToOutput: URL(fileURLWithPath: path), withOptions: options)
+                    } else {
+                        print("error: failed to create directory at: \(outputDirectory)")
                     }
                 }
                 return filesWritten
             } else {
-                print("error: failed to read contents of directory at: \(inputURL.path!)")
+                print("error: failed to read contents of directory at: \(inputURL.path)")
             }
         } else if inputURL.pathExtension == "swift" {
-            if let input = try? String(contentsOfURL: inputURL) {
+            if let input = try? String(contentsOf: inputURL) {
                 guard let output = try? format(input, options: options) else {
-                    print("error: could not parse file: \(inputURL.path!)")
+                    print("error: could not parse file: \(inputURL.path)")
                     return 0
                 }
                 if output != input {
-                    if (try? output.writeToURL(outputURL, atomically: true, encoding: NSUTF8StringEncoding)) != nil {
+                    if (try? output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)) != nil {
                         return 1
                     } else {
-                        print("error: failed to write file: \(outputURL.path!)")
+                        print("error: failed to write file: \(outputURL.path)")
                     }
                 }
             } else {
-                print("error: failed to read file: \(inputURL.path!)")
+                print("error: failed to read file: \(inputURL.path)")
             }
         }
     } else {
-        print("error: file not found: \(inputURL.path!)")
+        print("error: file not found: \(inputURL.path)")
     }
     return 0
 }
 
-func preprocessArguments(args: [String], _ names: [String]) -> [String: String]? {
+func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String]? {
     var quoted = false
     var anonymousArgs = 0
     var namedArgs: [String: String] = [:]
@@ -88,7 +85,7 @@ func preprocessArguments(args: [String], _ names: [String]) -> [String: String]?
     for arg in args {
         if arg.hasPrefix("--") {
             // Long argument names
-            let key = arg.substringFromIndex(arg.startIndex.advancedBy(2))
+            let key = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 2))
             if !names.contains(key) {
                 print("error: unknown argument: \(arg).")
                 return nil
@@ -97,7 +94,7 @@ func preprocessArguments(args: [String], _ names: [String]) -> [String: String]?
             namedArgs[name] = ""
         } else if arg.hasPrefix("-") {
             // Short argument names
-            let flag = arg.substringFromIndex(arg.startIndex.advancedBy(1))
+            let flag = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 1))
             let matches = names.filter { $0.hasPrefix(flag) }
             if matches.count > 1 {
                 print("error: ambiguous argument: -\(flag).")
@@ -123,17 +120,17 @@ func preprocessArguments(args: [String], _ names: [String]) -> [String: String]?
             } else if arg.hasPrefix("\"") {
                 quoted = true
                 unterminated = true
-                arg = arg.substringFromIndex(arg.startIndex.advancedBy(1))
+                arg = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 1))
             } else if arg.hasSuffix("\\") {
-                arg = arg.substringToIndex(arg.endIndex.advancedBy(-1))
+                arg = arg.substring(to: arg.characters.index(arg.endIndex, offsetBy: -1))
                 unterminated = true
             }
             if quoted {
                 arg = arg
-                    .stringByReplacingOccurrencesOfString("\\\"", withString: "\"")
-                    .stringByReplacingOccurrencesOfString("\\\\", withString: "\\")
+                    .replacingOccurrences(of: "\\\"", with: "\"")
+                    .replacingOccurrences(of: "\\\\", with: "\\")
                 if arg.hasSuffix("\"") {
-                    arg = arg.substringToIndex(arg.endIndex.advancedBy(-1))
+                    arg = arg.substring(to: arg.characters.index(arg.endIndex, offsetBy: -1))
                     unterminated = false
                     quoted = false
                 }
@@ -151,13 +148,13 @@ func preprocessArguments(args: [String], _ names: [String]) -> [String: String]?
 }
 
 /// Format code with specified rules and options
-public func format(source: String,
+public func format(_ source: String,
     rules: [FormatRule] = defaultRules,
     options: FormatOptions = FormatOptions()) throws -> String {
 
     // Parse
     var tokens = tokenize(source)
-    guard tokens.last?.type != .Error else {
+    guard tokens.last?.type != .error else {
         // TODO: more useful errors
         throw NSError(domain: "SwiftFormat", code: 0, userInfo: nil)
     }
@@ -168,5 +165,5 @@ public func format(source: String,
     tokens = formatter.tokens
 
     // Output
-    return tokens.reduce("", combine: { $0 + $1.string })
+    return tokens.reduce("", { $0 + $1.string })
 }

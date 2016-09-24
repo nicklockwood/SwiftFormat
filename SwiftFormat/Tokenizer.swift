@@ -36,16 +36,16 @@ import Foundation
 // https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/LexicalStructure.html
 
 public enum TokenType {
-    case Number
-    case Linebreak
-    case StartOfScope
-    case EndOfScope
-    case Operator
-    case StringBody
-    case Identifier
-    case Whitespace
-    case CommentBody
-    case Error
+    case number
+    case linebreak
+    case startOfScope
+    case endOfScope
+    case `operator`
+    case stringBody
+    case identifier
+    case whitespace
+    case commentBody
+    case error
 }
 
 public struct Token: Equatable {
@@ -59,11 +59,11 @@ public struct Token: Equatable {
 
     public var isWhitespaceOrComment: Bool {
         switch type {
-        case .Whitespace, .CommentBody:
+        case .whitespace, .commentBody:
             return true
-        case .StartOfScope:
+        case .startOfScope:
             return string == "//" || string == "/*"
-        case .EndOfScope:
+        case .endOfScope:
             return string == "*/"
         default:
             return false
@@ -71,19 +71,19 @@ public struct Token: Equatable {
     }
 
     public var isWhitespaceOrLinebreak: Bool {
-        return type == .Linebreak || type == .Whitespace
+        return type == .linebreak || type == .whitespace
     }
 
     public var isWhitespaceOrCommentOrLinebreak: Bool {
-        return type == .Linebreak || isWhitespaceOrComment
+        return type == .linebreak || isWhitespaceOrComment
     }
 
-    public func closesScopeForToken(token: Token) -> Bool {
-        guard token.type == .StartOfScope else {
-            return token.type == .EndOfScope && string == ":" &&
+    public func closesScopeForToken(_ token: Token) -> Bool {
+        guard token.type == .startOfScope else {
+            return token.type == .endOfScope && string == ":" &&
                 (token.string == "case" || token.string == "default")
         }
-        if type == .EndOfScope {
+        if type == .endOfScope {
             switch token.string {
             case "(":
                 return string == ")"
@@ -107,7 +107,7 @@ public struct Token: Equatable {
         case "\"":
             return string == "\""
         case "//":
-            return type == .Linebreak
+            return type == .linebreak
         default:
             return false
         }
@@ -133,46 +133,46 @@ private extension Character {
 
 private extension String.CharacterView {
 
-    mutating func scanCharacters(matching: (Character) -> Bool) -> String? {
+    mutating func scanCharacters(_ matching: (Character) -> Bool) -> String? {
         var index = endIndex
-        for (i, c) in enumerate() {
+        for (i, c) in enumerated() {
             if !matching(c) {
-                index = startIndex.advancedBy(i)
+                index = self.index(startIndex, offsetBy: i)
                 break
             }
         }
         if index > startIndex {
-            let string = String(prefixUpTo(index))
-            self = suffixFrom(index)
+            let string = String(prefix(upTo: index))
+            self = suffix(from: index)
             return string
         }
         return nil
     }
 
-    mutating func scanCharacter(matching: (Character) -> Bool) -> String? {
-        if let c = first where matching(c) {
-            self = suffixFrom(startIndex.advancedBy(1))
+    mutating func scanCharacter(_ matching: (Character) -> Bool) -> String? {
+        if let c = first, matching(c) {
+            self = dropFirst()
             return String(c)
         }
         return nil
     }
 
-    mutating func scanCharacter(character: Character) -> Bool {
+    mutating func scanCharacter(_ character: Character) -> Bool {
         return scanCharacter({ $0 == character }) != nil
     }
 }
 
 private extension String.CharacterView {
 
-    mutating func parseToken(type: TokenType, oneOf matching: (Character) -> Bool) -> Token? {
+    mutating func parseToken(_ type: TokenType, oneOf matching: (Character) -> Bool) -> Token? {
         return scanCharacter(matching).map { Token(type, $0) }
     }
 
-    mutating func parseToken(type: TokenType, oneOrMore matching: (Character) -> Bool) -> Token? {
+    mutating func parseToken(_ type: TokenType, oneOrMore matching: (Character) -> Bool) -> Token? {
         return scanCharacters(matching).map { Token(type, $0) }
     }
 
-    mutating func parseToken(type: TokenType, oneOf characters: String.CharacterView) -> Token? {
+    mutating func parseToken(_ type: TokenType, oneOf characters: String.CharacterView) -> Token? {
         return parseToken(type, oneOf: { characters.contains($0) })
     }
 }
@@ -180,28 +180,28 @@ private extension String.CharacterView {
 private extension String.CharacterView {
 
     mutating func parseWhitespace() -> Token? {
-        return parseToken(.Whitespace, oneOrMore: { $0.isWhitespace })
+        return parseToken(.whitespace, oneOrMore: { $0.isWhitespace })
     }
 
     mutating func parseLineBreak() -> Token? {
-        return parseToken(.Linebreak, oneOf: { $0.isLinebreak })
+        return parseToken(.linebreak, oneOf: { $0.isLinebreak })
     }
 
     mutating func parsePunctuation() -> Token? {
-        return parseToken(.Operator, oneOf: ":;,".characters)
+        return parseToken(.operator, oneOf: ":;,".characters)
     }
 
     mutating func parseStartOfScope() -> Token? {
-        return parseToken(.StartOfScope, oneOf: "([{\"".characters)
+        return parseToken(.startOfScope, oneOf: "([{\"".characters)
     }
 
     mutating func parseEndOfScope() -> Token? {
-        return parseToken(.EndOfScope, oneOf: "}])".characters)
+        return parseToken(.endOfScope, oneOf: "}])".characters)
     }
 
     mutating func parseOperator() -> Token? {
 
-        func isHead(c: Character) -> Bool {
+        func isHead(_ c: Character) -> Bool {
             if "./=­-+!*%<>&|^~?".characters.contains(c) {
                 return true
             }
@@ -227,7 +227,7 @@ private extension String.CharacterView {
             }
         }
 
-        func isTail(c: Character) -> Bool {
+        func isTail(_ c: Character) -> Bool {
             if isHead(c) {
                 return true
             }
@@ -252,32 +252,32 @@ private extension String.CharacterView {
                 if tail == "/" {
                     if c == "*" {
                         if head == "" {
-                            return Token(.StartOfScope, "/*")
+                            return Token(.startOfScope, "/*")
                         }
                         // Can't return two tokens, so put /* back to be parsed next time
                         self = "/*".characters + self
-                        return Token(.Operator, head)
+                        return Token(.operator, head)
                     } else if c == "/" {
                         if head == "" {
-                            return Token(.StartOfScope, "//")
+                            return Token(.startOfScope, "//")
                         }
                         // Can't return two tokens, so put // back to be parsed next time
                         self = "//".characters + self
-                        return Token(.Operator, head)
+                        return Token(.operator, head)
                     }
                 }
                 head += tail
                 tail = c
             }
             let op = head + tail
-            return Token(op == "<" ? .StartOfScope : .Operator, op)
+            return Token(op == "<" ? .startOfScope : .operator, op)
         }
         return nil
     }
 
     mutating func parseIdentifier() -> Token? {
 
-        func isHead(c: Character) -> Bool {
+        func isHead(_ c: Character) -> Bool {
             if c.isAlpha || c == "_" || c == "$" {
                 return true
             }
@@ -334,7 +334,7 @@ private extension String.CharacterView {
             }
         }
 
-        func isTail(c: Character) -> Bool {
+        func isTail(_ c: Character) -> Bool {
             if isHead(c) || c.isDigit {
                 return true
             }
@@ -363,18 +363,18 @@ private extension String.CharacterView {
         if scanCharacter("`") {
             if let identifier = scanIdentifier() {
                 if scanCharacter("`") {
-                    return Token(.Identifier, "`" + identifier + "`")
+                    return Token(.identifier, "`" + identifier + "`")
                 }
             }
             self = start
         } else if let identifier = scanIdentifier() {
             if identifier == "#if" {
-                return Token(.StartOfScope, identifier)
+                return Token(.startOfScope, identifier)
             }
             if identifier == "#endif" {
-                return Token(.EndOfScope, identifier)
+                return Token(.endOfScope, identifier)
             }
-            return Token(.Identifier, identifier)
+            return Token(.identifier, identifier)
         }
         return nil
     }
@@ -394,15 +394,15 @@ private extension String.CharacterView {
                     if scanCharacter("p"), let power = scanInteger() {
                         number += "p" + power
                     }
-                    return Token(.Number, number)
+                    return Token(.number, number)
                 }
             } else if scanCharacter("b") {
                 if let bin = scanCharacters({ "01_".characters.contains($0) }) {
-                    return Token(.Number, "0b" + bin)
+                    return Token(.number, "0b" + bin)
                 }
             } else if scanCharacter("o") {
                 if let octal = scanCharacters({ "01234567_".characters.contains($0) }) {
-                    return Token(.Number, "0o" + octal)
+                    return Token(.number, "0o" + octal)
                 }
             }
             self = endOfInt
@@ -429,7 +429,7 @@ private extension String.CharacterView {
                     self = endOfFloat
                 }
             }
-            return Token(.Number, number)
+            return Token(.number, number)
         }
         return nil
     }
@@ -449,13 +449,13 @@ private extension String.CharacterView {
             return token
         }
         if count > 0 {
-            return Token(.Error, String(self))
+            return Token(.error, String(self))
         }
         return nil
     }
 }
 
-func tokenize(source: String) -> [Token] {
+func tokenize(_ source: String) -> [Token] {
     var scopeIndexStack: [Int] = []
     var tokens: [Token] = []
     var characters = source.characters
@@ -473,20 +473,20 @@ func tokenize(source: String) -> [Token] {
             case "\"":
                 if !escaped {
                     if string != "" {
-                        tokens.append(Token(.StringBody, string))
+                        tokens.append(Token(.stringBody, string))
                     }
-                    tokens.append(Token(.EndOfScope, "\""))
-                    scopeIndexStack.popLast()
+                    tokens.append(Token(.endOfScope, "\""))
+                    scopeIndexStack.removeLast()
                     return
                 }
                 escaped = false
             case "(":
                 if escaped {
                     if string != "" {
-                        tokens.append(Token(.StringBody, string))
+                        tokens.append(Token(.stringBody, string))
                     }
                     scopeIndexStack.append(tokens.count)
-                    tokens.append(Token(.StartOfScope, "("))
+                    tokens.append(Token(.startOfScope, "("))
                     return
                 }
                 escaped = false
@@ -496,7 +496,7 @@ func tokenize(source: String) -> [Token] {
             string += c
         }
         if string != "" {
-            tokens.append(Token(.StringBody, string))
+            tokens.append(Token(.stringBody, string))
         }
     }
 
@@ -505,11 +505,11 @@ func tokenize(source: String) -> [Token] {
 
     func flushCommentBodyTokens() {
         if comment != "" {
-            tokens.append(Token(.CommentBody, comment))
+            tokens.append(Token(.commentBody, comment))
             comment = ""
         }
         if whitespace != "" {
-            tokens.append(Token(.Whitespace, whitespace))
+            tokens.append(Token(.whitespace, whitespace))
             whitespace = ""
         }
     }
@@ -521,14 +521,14 @@ func tokenize(source: String) -> [Token] {
                 if characters.scanCharacter("*") {
                     flushCommentBodyTokens()
                     scopeIndexStack.append(tokens.count)
-                    tokens.append(Token(.StartOfScope, "/*"))
+                    tokens.append(Token(.startOfScope, "/*"))
                     continue
                 }
             case "*":
                 if characters.scanCharacter("/") {
                     flushCommentBodyTokens()
-                    tokens.append(Token(.EndOfScope, "*/"))
-                    scopeIndexStack.popLast()
+                    tokens.append(Token(.endOfScope, "*/"))
+                    scopeIndexStack.removeLast()
                     if scopeIndexStack.last == nil || tokens[scopeIndexStack.last!].string != "/*" {
                         return
                     }
@@ -537,7 +537,7 @@ func tokenize(source: String) -> [Token] {
             default:
                 if c.characters.first?.isLinebreak == true {
                     flushCommentBodyTokens()
-                    tokens.append(Token(.Linebreak, c))
+                    tokens.append(Token(.linebreak, c))
                     continue
                 }
                 if c.characters.first?.isWhitespace == true {
@@ -547,7 +547,7 @@ func tokenize(source: String) -> [Token] {
             }
             if whitespace != "" {
                 if comment == "" {
-                    tokens.append(Token(.Whitespace, whitespace))
+                    tokens.append(Token(.whitespace, whitespace))
                 } else {
                     comment += whitespace
                 }
@@ -567,7 +567,7 @@ func tokenize(source: String) -> [Token] {
             }
             if whitespace != "" {
                 if comment == "" {
-                    tokens.append(Token(.Whitespace, whitespace))
+                    tokens.append(Token(.whitespace, whitespace))
                 } else {
                     comment += whitespace
                 }
@@ -580,9 +580,9 @@ func tokenize(source: String) -> [Token] {
 
     func processToken() {
         let token = tokens.last!
-        if token.type != .Whitespace {
+        if token.type != .whitespace {
             let possibleKeyword: Bool = {
-                guard token.type == .Identifier else { return false }
+                guard token.type == .identifier else { return false }
                 guard let nw = lastNonWhitespaceIndex else { return true }
                 switch tokens[nw].string {
                 case "if", "guard", "while", "for", ".":
@@ -598,7 +598,7 @@ func tokenize(source: String) -> [Token] {
                     nestedSwitches += 1
                 case "default", "case":
                     if nestedSwitches > 0 {
-                        tokens[tokens.count - 1] = Token(.EndOfScope, token.string)
+                        tokens[tokens.count - 1] = Token(.endOfScope, token.string)
                         processToken()
                         return
                     }
@@ -607,10 +607,10 @@ func tokenize(source: String) -> [Token] {
                 }
             }
             // Fix up generic misidentified as ?< or !< operator
-            if token.type == .Operator && (token.string == "?<" || token.string == "!<") {
+            if token.type == .operator && (token.string == "?<" || token.string == "!<") {
                 if tokens[tokens.count - 2].string == "init" {
-                    tokens[tokens.count - 1] = Token(.Operator, String(token.string.characters.first!))
-                    tokens.append(Token(.StartOfScope, "<"))
+                    tokens[tokens.count - 1] = Token(.operator, String(token.string.characters.first!))
+                    tokens.append(Token(.startOfScope, "<"))
                     processToken()
                     return
                 }
@@ -618,43 +618,43 @@ func tokenize(source: String) -> [Token] {
             // Fix up misidentified generic that is actually a pair of operators
             if let lastNonWhitespaceIndex = lastNonWhitespaceIndex {
                 let lastToken = tokens[lastNonWhitespaceIndex]
-                if lastToken.string == ">" && lastToken.type == .EndOfScope {
+                if lastToken.string == ">" && lastToken.type == .endOfScope {
                     var wasOperator = false
                     switch token.type {
-                    case .Identifier, .Number:
+                    case .identifier, .number:
                         switch token.string {
                         case "in", "is", "as", "where", "else":
                             wasOperator = false
                         default:
                             wasOperator = true
                         }
-                    case .StartOfScope:
+                    case .startOfScope:
                         wasOperator = (token.string == "\"")
-                    case .Operator:
+                    case .operator:
                         wasOperator = !["=", "->", ">", ",", ":", ";", "?", "!", "."].contains(token.string)
                     default:
                         wasOperator = false
                     }
                     if wasOperator {
-                        tokens[closedGenericScopeIndexes.last!] = Token(.Operator, "<")
-                        closedGenericScopeIndexes.popLast()
-                        if token.type == .Operator && lastNonWhitespaceIndex == tokens.count - 2 {
+                        tokens[closedGenericScopeIndexes.last!] = Token(.operator, "<")
+                        closedGenericScopeIndexes.removeLast()
+                        if token.type == .operator && lastNonWhitespaceIndex == tokens.count - 2 {
                             // Need to stitch the operator back together
-                            tokens[lastNonWhitespaceIndex] = Token(.Operator, ">" + token.string)
+                            tokens[lastNonWhitespaceIndex] = Token(.operator, ">" + token.string)
                             tokens.removeLast()
                         } else {
-                            tokens[lastNonWhitespaceIndex] = Token(.Operator, ">")
+                            tokens[lastNonWhitespaceIndex] = Token(.operator, ">")
                         }
                         // TODO: this is horrible - need to take a better approach
                         var previousIndex = lastNonWhitespaceIndex - 1
                         var previousToken = tokens[previousIndex]
                         while previousToken.string == ">" {
-                            if previousToken.type == .EndOfScope {
-                                tokens[closedGenericScopeIndexes.last!] = Token(.Operator, "<")
-                                closedGenericScopeIndexes.popLast()
+                            if previousToken.type == .endOfScope {
+                                tokens[closedGenericScopeIndexes.last!] = Token(.operator, "<")
+                                closedGenericScopeIndexes.removeLast()
                             }
-                            tokens[previousIndex] = Token(.Operator, ">" + tokens[previousIndex + 1].string)
-                            tokens.removeAtIndex(previousIndex + 1)
+                            tokens[previousIndex] = Token(.operator, ">" + tokens[previousIndex + 1].string)
+                            tokens.remove(at: previousIndex + 1)
                             previousIndex -= 1
                             previousToken = tokens[previousIndex]
                         }
@@ -668,9 +668,9 @@ func tokenize(source: String) -> [Token] {
         if let scopeIndex = scopeIndexStack.last {
             let scope = tokens[scopeIndex]
             if token.closesScopeForToken(scope) {
-                scopeIndexStack.popLast()
+                scopeIndexStack.removeLast()
                 if token.string == ":" {
-                    tokens[tokens.count - 1] = Token(.StartOfScope, ":")
+                    tokens[tokens.count - 1] = Token(.startOfScope, ":")
                     processToken()
                     return
                 } else if token.string == "case" || token.string == "default" {
@@ -681,11 +681,11 @@ func tokenize(source: String) -> [Token] {
                     nestedSwitches -= 1
                 } else if token.string.hasPrefix(">") {
                     closedGenericScopeIndexes.append(scopeIndex)
-                    tokens[tokens.count - 1] = Token(.EndOfScope, ">")
+                    tokens[tokens.count - 1] = Token(.endOfScope, ">")
                     if token.string != ">" {
                         // Need to split the token
                         let suffix = String(token.string.characters.dropFirst())
-                        tokens.append(Token(.Operator, suffix))
+                        tokens.append(Token(.operator, suffix))
                         processToken()
                         return
                     }
@@ -696,29 +696,29 @@ func tokenize(source: String) -> [Token] {
             } else if scope.string == "<" {
                 // We think it's a generic at this point, but could be wrong
                 switch token.type {
-                case .Operator:
+                case .operator:
                     if !token.string.hasPrefix("?>") && !token.string.hasPrefix("!>") {
                         fallthrough
                     }
                     // Need to split token
-                    tokens[tokens.count - 1] = Token(.Operator, String(token.string.characters.first!))
+                    tokens[tokens.count - 1] = Token(.operator, String(token.string.characters.first!))
                     let suffix = String(token.string.characters.dropFirst())
-                    tokens.append(Token(.Operator, suffix))
+                    tokens.append(Token(.operator, suffix))
                     processToken()
                     return
-                case .StartOfScope:
+                case .startOfScope:
                     if !["<", "[", "(", ".", ",", ":", "==", "?", "!"].contains(token.string) {
                         // Not a generic scope
-                        tokens[scopeIndex] = Token(.Operator, "<")
-                        scopeIndexStack.popLast()
+                        tokens[scopeIndex] = Token(.operator, "<")
+                        scopeIndexStack.removeLast()
                         processToken()
                         return
                     }
-                case .EndOfScope:
+                case .endOfScope:
                     // If we encountered a scope token that wasn't a < or >
                     // then the opening < must have been an operator after all
-                    tokens[scopeIndex] = Token(.Operator, "<")
-                    scopeIndexStack.popLast()
+                    tokens[scopeIndex] = Token(.operator, "<")
+                    scopeIndexStack.removeLast()
                     processToken()
                     return
                 default:
@@ -726,7 +726,7 @@ func tokenize(source: String) -> [Token] {
                 }
             }
         }
-        if token.type == .StartOfScope {
+        if token.type == .startOfScope {
             scopeIndexStack.append(tokens.count - 1)
             if token.string == "\"" {
                 processStringBody()
@@ -735,16 +735,16 @@ func tokenize(source: String) -> [Token] {
             } else if token.string == "//" {
                 processSingleLineCommentBody()
             }
-        } else if token.type == .EndOfScope && token.string != "case" && token.string != "default" {
+        } else if token.type == .endOfScope && token.string != "case" && token.string != "default" {
             // Previous scope wasn't closed correctly
-            tokens[tokens.count - 1] = Token(.Error, token.string)
+            tokens[tokens.count - 1] = Token(.error, token.string)
             return
         }
     }
 
     while let token = characters.parseToken() {
         tokens.append(token)
-        if token.type == .Error {
+        if token.type == .error {
             return tokens
         }
         processToken()
@@ -755,14 +755,14 @@ func tokenize(source: String) -> [Token] {
         case "<":
             // If we encountered an end-of-file while a generic scope was
             // still open, the opening < must have been an operator
-            tokens[scopeIndex] = Token(.Operator, "<")
-            scopeIndexStack.popLast()
+            tokens[scopeIndex] = Token(.operator, "<")
+            scopeIndexStack.removeLast()
         case "//":
             break
         default:
-            if tokens.last?.type != .Error {
+            if tokens.last?.type != .error {
                 // File ended with scope still open
-                tokens.append(Token(.Error, ""))
+                tokens.append(Token(.error, ""))
             }
         }
     }

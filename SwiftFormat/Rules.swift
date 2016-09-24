@@ -307,7 +307,7 @@ public func spaceAroundOperators(_ formatter: Formatter) {
     var scopeStack: [Token] = []
     formatter.forEachToken { i, token in
         switch token.type {
-        case .operator:
+        case .symbol:
             if [":", ",", ";"].contains(token.string) {
                 if let nextToken = formatter.tokenAtIndex(i + 1) {
                     switch nextToken.type {
@@ -368,7 +368,7 @@ public func spaceAroundOperators(_ formatter: Formatter) {
                     if let previousNonWhitespaceToken = formatter.tokenAtIndex(previousNonWhitespaceTokenIndex) {
                         if previousNonWhitespaceToken.type != .linebreak &&
                             previousNonWhitespaceToken.string != "{" &&
-                            (previousNonWhitespaceToken.type != .operator ||
+                            (previousNonWhitespaceToken.type != .symbol ||
                             (previousNonWhitespaceToken.string == "?" && scopeStack.last?.string != "?") ||
                             (previousNonWhitespaceToken.string != "?" &&
                             formatter.tokenAtIndex(previousNonWhitespaceTokenIndex - 1)?.type != .whitespace &&
@@ -472,7 +472,7 @@ public func spaceInsideComments(_ formatter: Formatter) {
 
 /// Add or removes the space around range operators
 public func ranges(_ formatter: Formatter) {
-    formatter.forEachToken(ofType: .operator) { i, token in
+    formatter.forEachToken(ofType: .symbol) { i, token in
         if token.string == "..." || token.string == "..<" {
             if !formatter.options.spaceAroundRangeOperators {
                 if formatter.tokenAtIndex(i + 1)?.type == .whitespace {
@@ -824,7 +824,7 @@ public func indent(_ formatter: Formatter) {
                 default:
                     return true
                 }
-            case .operator:
+            case .symbol:
                 if token.string == "." {
                     return false
                 }
@@ -871,7 +871,7 @@ public func indent(_ formatter: Formatter) {
                 default:
                     return true
                 }
-            case .operator:
+            case .symbol:
                 if token.string == "." {
                     return false
                 }
@@ -1062,7 +1062,7 @@ public func trailingCommas(_ formatter: Formatter) {
                 case ",", "[", ":":
                     break // do nothing
                 default:
-                    formatter.insertToken(Token(.operator, ","), atIndex: previousTokenIndex + 1)
+                    formatter.insertToken(Token(.symbol, ","), atIndex: previousTokenIndex + 1)
                 }
             }
         }

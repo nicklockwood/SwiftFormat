@@ -98,7 +98,7 @@ class TokenizerTests: XCTestCase {
         let input = "array.map({ return $0 )"
         let output = [
             Token(.identifier, "array"),
-            Token(.operator, "."),
+            Token(.symbol, "."),
             Token(.identifier, "map"),
             Token(.startOfScope, "("),
             Token(.startOfScope, "{"),
@@ -333,7 +333,7 @@ class TokenizerTests: XCTestCase {
     func testNegativeInteger() {
         let input = "-7"
         let output = [
-            Token(.operator, "-"),
+            Token(.symbol, "-"),
             Token(.number, "7"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -354,7 +354,7 @@ class TokenizerTests: XCTestCase {
     func testNegativeFloat() {
         let input = "-0.34"
         let output = [
-            Token(.operator, "-"),
+            Token(.symbol, "-"),
             Token(.number, "0.34"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -384,6 +384,36 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testLeadingZeros() {
+        let input = "0005"
+        let output = [Token(.number, "0005")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testBinary() {
+        let input = "0b101010"
+        let output = [Token(.number, "0b101010")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testOctal() {
+        let input = "0o52"
+        let output = [Token(.number, "0o52")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testHex() {
+        let input = "0x2A"
+        let output = [Token(.number, "0x2A")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testHexadecimalPower() {
+        let input = "0xC3p0"
+        let output = [Token(.number, "0xC3p0")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testUnderscoresInInteger() {
         let input = "1_23_4_"
         let output = [Token(.number, "1_23_4_")]
@@ -402,27 +432,33 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testBinary() {
-        let input = "0b101010"
-        let output = [Token(.number, "0b101010")]
+    func testUnderscoresInBinary() {
+        let input = "0b0000_0000_0001"
+        let output = [Token(.number, "0b0000_0000_0001")]
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testOctal() {
-        let input = "0o52"
-        let output = [Token(.number, "0o52")]
+    func testUnderscoresInOctal() {
+        let input = "0o123_456"
+        let output = [Token(.number, "0o123_456")]
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testHexadecimal() {
-        let input = "0x2A"
-        let output = [Token(.number, "0x2A")]
+    func testUnderscoresInHex() {
+        let input = "0xabc_def"
+        let output = [Token(.number, "0xabc_def")]
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testHexadecimalPower() {
-        let input = "0xC3p0"
-        let output = [Token(.number, "0xC3p0")]
+    func testNoLeadingUnderscoreInInteger() {
+        let input = "_12345"
+        let output = [Token(.identifier, "_12345")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testNoLeadingUnderscoreInHex() {
+        let input = "0x_12345"
+        let output = [Token(.error, "0x_12345")]
         XCTAssertEqual(tokenize(input), output)
     }
 
@@ -505,7 +541,7 @@ class TokenizerTests: XCTestCase {
 
     func testBasicOperator() {
         let input = "+="
-        let output = [Token(.operator, "+=")]
+        let output = [Token(.symbol, "+=")]
         XCTAssertEqual(tokenize(input), output)
     }
 
@@ -514,7 +550,7 @@ class TokenizerTests: XCTestCase {
         let output = [
             Token(.identifier, "a"),
             Token(.whitespace, " "),
-            Token(.operator, "/"),
+            Token(.symbol, "/"),
             Token(.whitespace, " "),
             Token(.identifier, "b"),
         ]
@@ -523,7 +559,7 @@ class TokenizerTests: XCTestCase {
 
     func testCustomOperator() {
         let input = "~="
-        let output = [Token(.operator, "~=")]
+        let output = [Token(.symbol, "~=")]
         XCTAssertEqual(tokenize(input), output)
     }
 
@@ -532,9 +568,9 @@ class TokenizerTests: XCTestCase {
         let output = [
             Token(.identifier, "a"),
             Token(.whitespace, " "),
-            Token(.operator, "*="),
+            Token(.symbol, "*="),
             Token(.whitespace, " "),
-            Token(.operator, "-"),
+            Token(.symbol, "-"),
             Token(.identifier, "b"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -542,13 +578,13 @@ class TokenizerTests: XCTestCase {
 
     func testDotPrefixedOperator() {
         let input = "..."
-        let output = [Token(.operator, "...")]
+        let output = [Token(.symbol, "...")]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testUnicodeOperator() {
         let input = "≥"
-        let output = [Token(.operator, "≥")]
+        let output = [Token(.symbol, "≥")]
         XCTAssertEqual(tokenize(input), output)
     }
 
@@ -557,7 +593,7 @@ class TokenizerTests: XCTestCase {
         let output = [
             Token(.identifier, "a"),
             Token(.whitespace, " "),
-            Token(.operator, "+"),
+            Token(.symbol, "+"),
             Token(.startOfScope, "/*"),
             Token(.whitespace, " "),
             Token(.commentBody, "b"),
@@ -575,7 +611,7 @@ class TokenizerTests: XCTestCase {
             Token(.commentBody, "a"),
             Token(.whitespace, " "),
             Token(.endOfScope, "*/"),
-            Token(.operator, "-"),
+            Token(.symbol, "-"),
             Token(.identifier, "b"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -583,15 +619,15 @@ class TokenizerTests: XCTestCase {
 
     func testOperatorMayContainDotIfStartsWithDot() {
         let input = ".*.."
-        let output = [Token(.operator, ".*..")]
+        let output = [Token(.symbol, ".*..")]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testOperatorMayNotContainDotUnlessStartsWithDot() {
         let input = "*.."
         let output = [
-            Token(.operator, "*"),
-            Token(.operator, ".."),
+            Token(.symbol, "*"),
+            Token(.symbol, ".."),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
@@ -602,13 +638,13 @@ class TokenizerTests: XCTestCase {
         let input = "a<b == a>c"
         let output = [
             Token(.identifier, "a"),
-            Token(.operator, "<"),
+            Token(.symbol, "<"),
             Token(.identifier, "b"),
             Token(.whitespace, " "),
-            Token(.operator, "=="),
+            Token(.symbol, "=="),
             Token(.whitespace, " "),
             Token(.identifier, "a"),
-            Token(.operator, ">"),
+            Token(.symbol, ">"),
             Token(.identifier, "c"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -618,7 +654,7 @@ class TokenizerTests: XCTestCase {
         let input = "a>>b"
         let output = [
             Token(.identifier, "a"),
-            Token(.operator, ">>"),
+            Token(.symbol, ">>"),
             Token(.identifier, "b"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -628,7 +664,7 @@ class TokenizerTests: XCTestCase {
         let input = "a>>>b"
         let output = [
             Token(.identifier, "a"),
-            Token(.operator, ">>>"),
+            Token(.symbol, ">>>"),
             Token(.identifier, "b"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -638,7 +674,7 @@ class TokenizerTests: XCTestCase {
         let input = "a>>=b"
         let output = [
             Token(.identifier, "a"),
-            Token(.operator, ">>="),
+            Token(.symbol, ">>="),
             Token(.identifier, "b"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -648,17 +684,17 @@ class TokenizerTests: XCTestCase {
         let input = "a<b, b<c, d>>e"
         let output = [
             Token(.identifier, "a"),
-            Token(.operator, "<"),
+            Token(.symbol, "<"),
             Token(.identifier, "b"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.whitespace, " "),
             Token(.identifier, "b"),
-            Token(.operator, "<"),
+            Token(.symbol, "<"),
             Token(.identifier, "c"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.whitespace, " "),
             Token(.identifier, "d"),
-            Token(.operator, ">>"),
+            Token(.symbol, ">>"),
             Token(.identifier, "e"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -670,7 +706,7 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "Foo"),
             Token(.startOfScope, "<"),
             Token(.identifier, "Bar"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.whitespace, " "),
             Token(.identifier, "Baz"),
             Token(.endOfScope, ">"),
@@ -696,7 +732,7 @@ class TokenizerTests: XCTestCase {
         let input = "y<CGRectGetMaxY(r)"
         let output = [
             Token(.identifier, "y"),
-            Token(.operator, "<"),
+            Token(.symbol, "<"),
             Token(.identifier, "CGRectGetMaxY"),
             Token(.startOfScope, "("),
             Token(.identifier, "r"),
@@ -713,7 +749,7 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "Foo"),
             Token(.startOfScope, "<"),
             Token(.identifier, "T"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.identifier, "U"),
             Token(.endOfScope, ">"),
             Token(.whitespace, " "),
@@ -731,10 +767,10 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "Foo"),
             Token(.startOfScope, "<"),
             Token(.identifier, "T"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.identifier, "U"),
             Token(.endOfScope, ">"),
-            Token(.operator, ":"),
+            Token(.symbol, ":"),
             Token(.whitespace, " "),
             Token(.identifier, "Bar"),
         ]
@@ -752,7 +788,7 @@ class TokenizerTests: XCTestCase {
             Token(.endOfScope, ">"),
             Token(.startOfScope, "("),
             Token(.identifier, "bar"),
-            Token(.operator, ":"),
+            Token(.symbol, ":"),
             Token(.identifier, "T"),
             Token(.endOfScope, ")"),
         ]
@@ -764,12 +800,12 @@ class TokenizerTests: XCTestCase {
         let output = [
             Token(.identifier, "foo"),
             Token(.whitespace, " "),
-            Token(.operator, "="),
+            Token(.symbol, "="),
             Token(.whitespace, " "),
             Token(.identifier, "Foo"),
             Token(.startOfScope, "<"),
             Token(.identifier, "Int"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.identifier, "String"),
             Token(.endOfScope, ">"),
             Token(.startOfScope, "("),
@@ -785,7 +821,7 @@ class TokenizerTests: XCTestCase {
             Token(.startOfScope, "<"),
             Token(.identifier, "Bar"),
             Token(.endOfScope, ">"),
-            Token(.operator, "."),
+            Token(.symbol, "."),
             Token(.identifier, "baz"),
             Token(.startOfScope, "("),
             Token(.endOfScope, ")"),
@@ -798,7 +834,7 @@ class TokenizerTests: XCTestCase {
         let output = [
             Token(.startOfScope, "("),
             Token(.identifier, "y"),
-            Token(.operator, "<"),
+            Token(.symbol, "<"),
             Token(.identifier, "Pi"),
             Token(.endOfScope, ")"),
         ]
@@ -810,11 +846,11 @@ class TokenizerTests: XCTestCase {
         let output = [
             Token(.startOfScope, "("),
             Token(.identifier, "Foo"),
-            Token(.operator, "<"),
+            Token(.symbol, "<"),
             Token(.identifier, "T"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.identifier, "U"),
-            Token(.operator, ">"),
+            Token(.symbol, ">"),
             Token(.identifier, "V"),
             Token(.endOfScope, ")"),
         ]
@@ -828,7 +864,7 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "Foo"),
             Token(.startOfScope, "<"),
             Token(.identifier, "String"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.identifier, "Int"),
             Token(.endOfScope, ">"),
             Token(.startOfScope, "("),
@@ -843,11 +879,11 @@ class TokenizerTests: XCTestCase {
         let input = "Foo<Bar,Baz>>>5"
         let output = [
             Token(.identifier, "Foo"),
-            Token(.operator, "<"),
+            Token(.symbol, "<"),
             Token(.identifier, "Bar"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.identifier, "Baz"),
-            Token(.operator, ">>>"),
+            Token(.symbol, ">>>"),
             Token(.number, "5"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -859,10 +895,10 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "Foo"),
             Token(.startOfScope, "<"),
             Token(.identifier, "Bar"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.identifier, "Baz"),
             Token(.endOfScope, ">"),
-            Token(.operator, "->"),
+            Token(.symbol, "->"),
             Token(.identifier, "Void"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -876,7 +912,7 @@ class TokenizerTests: XCTestCase {
             Token(.startOfScope, "["),
             Token(.identifier, "Bar"),
             Token(.endOfScope, "]"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.identifier, "Baz"),
             Token(.endOfScope, ">"),
         ]
@@ -890,7 +926,7 @@ class TokenizerTests: XCTestCase {
             Token(.startOfScope, "<"),
             Token(.startOfScope, "("),
             Token(.identifier, "Bar"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.identifier, "Baz"),
             Token(.endOfScope, ")"),
             Token(.endOfScope, ">"),
@@ -906,7 +942,7 @@ class TokenizerTests: XCTestCase {
             Token(.startOfScope, "["),
             Token(.identifier, "Bar"),
             Token(.endOfScope, "]"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.startOfScope, "("),
             Token(.identifier, "Baz"),
             Token(.endOfScope, ")"),
@@ -921,7 +957,7 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "Foo"),
             Token(.startOfScope, "<"),
             Token(.identifier, "Bar"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.identifier, "Baz"),
             Token(.endOfScope, ">"),
             Token(.whitespace, " "),
@@ -936,8 +972,8 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "Foo"),
             Token(.startOfScope, "<"),
             Token(.identifier, "T"),
-            Token(.operator, "?"),
-            Token(.operator, ","),
+            Token(.symbol, "?"),
+            Token(.symbol, ","),
             Token(.identifier, "U"),
             Token(.endOfScope, ">"),
         ]
@@ -950,7 +986,7 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "Foo"),
             Token(.startOfScope, "<"),
             Token(.identifier, "T"),
-            Token(.operator, "?"),
+            Token(.symbol, "?"),
             Token(.endOfScope, ">"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -964,7 +1000,7 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "Bar"),
             Token(.startOfScope, "<"),
             Token(.identifier, "T"),
-            Token(.operator, "?"),
+            Token(.symbol, "?"),
             Token(.endOfScope, ">"),
             Token(.endOfScope, ">"),
         ]
@@ -975,7 +1011,7 @@ class TokenizerTests: XCTestCase {
         let input = "foo<--bar"
         let output = [
             Token(.identifier, "foo"),
-            Token(.operator, "<--"),
+            Token(.symbol, "<--"),
             Token(.identifier, "bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -985,7 +1021,7 @@ class TokenizerTests: XCTestCase {
         let input = "foo-->bar"
         let output = [
             Token(.identifier, "foo"),
-            Token(.operator, "-->"),
+            Token(.symbol, "-->"),
             Token(.identifier, "bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -995,7 +1031,7 @@ class TokenizerTests: XCTestCase {
         let input = "foo><bar"
         let output = [
             Token(.identifier, "foo"),
-            Token(.operator, "><"),
+            Token(.symbol, "><"),
             Token(.identifier, "bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -1005,7 +1041,7 @@ class TokenizerTests: XCTestCase {
         let input = "foo<>bar"
         let output = [
             Token(.identifier, "foo"),
-            Token(.operator, "<>"),
+            Token(.symbol, "<>"),
             Token(.identifier, "bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -1017,14 +1053,14 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "let"),
             Token(.whitespace, " "),
             Token(.identifier, "foo"),
-            Token(.operator, ":"),
+            Token(.symbol, ":"),
             Token(.whitespace, " "),
             Token(.identifier, "Bar"),
             Token(.startOfScope, "<"),
             Token(.identifier, "Baz"),
             Token(.endOfScope, ">"),
             Token(.whitespace, " "),
-            Token(.operator, "="),
+            Token(.symbol, "="),
             Token(.whitespace, " "),
             Token(.number, "5"),
         ]
@@ -1035,7 +1071,7 @@ class TokenizerTests: XCTestCase {
         let input = "init?<T>()"
         let output = [
             Token(.identifier, "init"),
-            Token(.operator, "?"),
+            Token(.symbol, "?"),
             Token(.startOfScope, "<"),
             Token(.identifier, "T"),
             Token(.endOfScope, ">"),
@@ -1050,7 +1086,7 @@ class TokenizerTests: XCTestCase {
         let output = [
             Token(.identifier, "operator"),
             Token(.whitespace, " "),
-            Token(.operator, "?<"),
+            Token(.symbol, "?<"),
             Token(.whitespace, " "),
             Token(.startOfScope, "{"),
             Token(.endOfScope, "}"),
@@ -1064,9 +1100,9 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "sort"),
             Token(.startOfScope, "("),
             Token(.identifier, "by"),
-            Token(.operator, ":"),
+            Token(.symbol, ":"),
             Token(.whitespace, " "),
-            Token(.operator, "<"),
+            Token(.symbol, "<"),
             Token(.endOfScope, ")"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -1078,9 +1114,9 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "sort"),
             Token(.startOfScope, "("),
             Token(.identifier, "by"),
-            Token(.operator, ":"),
+            Token(.symbol, ":"),
             Token(.whitespace, " "),
-            Token(.operator, ">"),
+            Token(.symbol, ">"),
             Token(.endOfScope, ")"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -1099,7 +1135,7 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "case"),
             Token(.whitespace, " "),
             Token(.identifier, "Bar"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.whitespace, " "),
             Token(.identifier, "Baz"),
             Token(.endOfScope, "}"),
@@ -1121,7 +1157,7 @@ class TokenizerTests: XCTestCase {
             Token(.identifier, "case"),
             Token(.whitespace, " "),
             Token(.identifier, "Bar"),
-            Token(.operator, ","),
+            Token(.symbol, ","),
             Token(.whitespace, " "),
             Token(.identifier, "Baz"),
             Token(.endOfScope, "}"),
@@ -1201,7 +1237,7 @@ class TokenizerTests: XCTestCase {
             Token(.whitespace, " "),
             Token(.startOfScope, "["),
             Token(.identifier, "Key"),
-            Token(.operator, ":"),
+            Token(.symbol, ":"),
             Token(.whitespace, " "),
             Token(.identifier, "Value"),
             Token(.endOfScope, "]"),
@@ -1234,7 +1270,7 @@ class TokenizerTests: XCTestCase {
             Token(.startOfScope, ":"),
             Token(.linebreak, "\n"),
             Token(.identifier, "foo"),
-            Token(.operator, "."),
+            Token(.symbol, "."),
             Token(.identifier, "case"),
             Token(.linebreak, "\n"),
             Token(.endOfScope, "default"),
@@ -1262,7 +1298,7 @@ class TokenizerTests: XCTestCase {
             Token(.startOfScope, ":"),
             Token(.linebreak, "\n"),
             Token(.identifier, "foo"),
-            Token(.operator, "."),
+            Token(.symbol, "."),
             Token(.identifier, "default"),
             Token(.linebreak, "\n"),
             Token(.endOfScope, "default"),
@@ -1295,7 +1331,7 @@ class TokenizerTests: XCTestCase {
             Token(.whitespace, " "),
             Token(.identifier, "x"),
             Token(.whitespace, " "),
-            Token(.operator, "="),
+            Token(.symbol, "="),
             Token(.whitespace, " "),
             Token(.identifier, "y"),
             Token(.whitespace, " "),
@@ -1332,7 +1368,7 @@ class TokenizerTests: XCTestCase {
             Token(.whitespace, " "),
             Token(.identifier, "x"),
             Token(.whitespace, " "),
-            Token(.operator, "="),
+            Token(.symbol, "="),
             Token(.whitespace, " "),
             Token(.identifier, "y"),
             Token(.whitespace, " "),
@@ -1404,7 +1440,7 @@ class TokenizerTests: XCTestCase {
             Token(.startOfScope, ":"),
             Token(.linebreak, "\n"),
             Token(.identifier, "foo"),
-            Token(.operator, "."),
+            Token(.symbol, "."),
             Token(.identifier, "switch"),
             Token(.linebreak, "\n"),
             Token(.endOfScope, "default"),

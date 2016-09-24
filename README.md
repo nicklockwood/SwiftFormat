@@ -407,6 +407,7 @@ Version ?
 - Fixed handling of `prefix` and `postfix` specifiers
 - Fixed bug where trailing comma was added to empty array or dictionary literal
 - Fixed bug where trailing whitespace was added at the start of doc comments
+- Improved correctness of numeric literal parsing
 - Converted to Swift 3 syntax
 
 Version 0.10

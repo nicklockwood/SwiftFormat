@@ -1101,6 +1101,34 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testNestedWrappedIfIndents() {
+        let input = "if foo {\nif bar &&\n(baz ||\nquux) {\nfoo()\n}\n}"
+        let output = "if foo {\n    if bar &&\n        (baz ||\n            quux) {\n        foo()\n    }\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testWrappedEnumThatLooksLikeIf() {
+        let input = "foo &&\n bar.if {\nfoo()\n}"
+        let output = "foo &&\n    bar.if {\n        foo()\n    }"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testChainedClosureIndents() {
+        let input = "foo\n.bar {\nbaz()\n}\n.bar {\nbaz()\n}"
+        let output = "foo\n    .bar {\n        baz()\n    }\n    .bar {\n        baz()\n    }"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testChainedFunctionsInsideIf() {
+        let input = "if foo {\nreturn bar()\n.baz()\n}"
+        let output = "if foo {\n    return bar()\n        .baz()\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: indent switch/case
 
     func testSwitchCaseIndenting() {
@@ -1203,9 +1231,16 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testNoDoubleIndentWhenScopesSeparatedByWrap() {
+    func testDoubleIndentWhenScopesSeparatedByWrap() {
         let input = "(foo\nas Bar {\nbaz\n})"
-        let output = "(foo\n    as Bar {\n    baz\n})"
+        let output = "(foo\n    as Bar {\n        baz\n})"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoDoubleIndentWhenScopesSeparatedByWrap() {
+        let input = "(foo\nas Bar {\nbaz\n}\n)"
+        let output = "(foo\n    as Bar {\n        baz\n    }\n)"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1339,6 +1374,13 @@ class RulesTests: XCTestCase {
     func testNoIndentAfterDefaultAsIdentifier() {
         let input = "let foo = FileManager.default\n// Comment\nlet bar = 0"
         let output = "let foo = FileManager.default\n// Comment\nlet bar = 0"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testIndentClosureStartingOnIndentedLine() {
+        let input = "foo\n.bar {\nbaz()\n}"
+        let output = "foo\n    .bar {\n        baz()\n    }"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

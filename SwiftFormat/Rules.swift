@@ -770,8 +770,8 @@ public func indent(_ formatter: Formatter) {
     var lastNonWhitespaceIndex = -1
     var indentStack = [""]
     var indentCounts = [1]
+    var linewrapStack = [false]
     var lineIndex = 0
-    var linewrapped = false
 
     @discardableResult func insertWhitespace(_ whitespace: String, atIndex index: Int) -> Int {
         if formatter.tokenAtIndex(index)?.type == .whitespace {
@@ -891,10 +891,33 @@ public func indent(_ formatter: Formatter) {
         return true
     }
 
+    func tokenIsStartOfClosure(_ i: Int) -> Bool {
+        var i = i - 1
+        while let token = formatter.tokenAtIndex(i) {
+            switch token.type {
+            case .identifier:
+                if ["if", "else", "for", "while", "do", "catch", "switch"].contains(token.string) {
+                    // Check that it's actually a keyword and not a member property or enum value
+                    return formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)?.string == "."
+                }
+            default:
+                break
+            }
+            i = formatter.indexOfPreviousToken(fromIndex: i) { !$0.isWhitespaceOrCommentOrLinebreak } ?? -1
+        }
+        return true
+    }
+
     insertWhitespace("", atIndex: 0)
     formatter.forEachToken { i, token in
         var i = i
         if token.type == .startOfScope {
+            if token.string == ":" || (token.string == "{" && !tokenIsStartOfClosure(i)) {
+                if linewrapStack.last == true {
+                    indentStack.removeLast()
+                    linewrapStack[linewrapStack.count - 1] = false
+                }
+            }
             // Handle start of scope
             scopeIndexStack.append(i)
             var indent = indentStack.last ?? ""
@@ -912,10 +935,15 @@ public func indent(_ formatter: Formatter) {
                 indentCounts[indentCounts.count - 1] += 1
             }
             scopeStartLineIndexes.append(lineIndex)
+            linewrapStack.append(false)
         } else if token.type != .whitespace {
             if let scope = currentScope() {
                 // Handle end of scope
                 if token.closesScopeForToken(scope) {
+                    if linewrapStack.last == true {
+                        indentStack.removeLast()
+                    }
+                    linewrapStack.removeLast()
                     scopeStartLineIndexes.removeLast()
                     scopeIndexStack.removeLast()
                     let indentCount = indentCounts.last! - 1
@@ -950,34 +978,43 @@ public func indent(_ formatter: Formatter) {
             }
             // Indent each new line
             if token.type == .linebreak {
+                // Detect linewrap
+                let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i) { !$0.isWhitespaceOrCommentOrLinebreak }
+                let linewrapped = !tokenIsEndOfStatement(lastNonWhitespaceOrLinebreakIndex) ||
+                    !(nextTokenIndex == nil || tokenIsStartOfStatement(nextTokenIndex!))
+                // Determine current indent
                 var indent = indentStack.last ?? ""
-                linewrapped = !tokenIsEndOfStatement(lastNonWhitespaceOrLinebreakIndex)
                 if linewrapped && lineIndex == scopeStartLineIndexes.last {
                     indent = indentStack.count > 1 ? indentStack[indentStack.count - 2] : ""
-                    scopeStartLineIndexes[scopeStartLineIndexes.count - 1] += 1
                 }
                 lineIndex += 1
+                // Begin wrap scope
+                if linewrapStack.last == true {
+                    if !linewrapped {
+                        indentStack.removeLast()
+                        linewrapStack[linewrapStack.count - 1] = false
+                        indent = indentStack.last!
+                    }
+                } else if linewrapped {
+                    linewrapStack[linewrapStack.count - 1] = true
+                    // Don't indent line starting with dot if previous line was just a closing scope
+                    if formatter.tokenAtIndex(nextTokenIndex ?? -1)?.string != "." ||
+                        !(formatter.tokenAtIndex(lastNonWhitespaceOrLinebreakIndex)?.type == .endOfScope &&
+                            formatter.previousNonWhitespaceToken(fromIndex:
+                                lastNonWhitespaceOrLinebreakIndex)?.type == .linebreak) {
+                        indent += formatter.options.indent
+                    }
+                    indentStack.append(indent)
+                }
+                // Apply indent
                 insertWhitespace("", atIndex: i + 1)
-                // Only indent if line isn't blank
                 if let nextToken = formatter.tokenAtIndex(i + 2), nextToken.type != .linebreak {
-                    indent += (linewrapped ? formatter.options.indent : "")
                     insertWhitespace(indent, atIndex: i + 1)
                 }
             }
         }
         // Track token for line wraps
         if !token.isWhitespaceOrComment {
-            if !linewrapped && formatter.tokenAtIndex(lastNonWhitespaceIndex)?.type == .linebreak &&
-                !tokenIsStartOfStatement(i) {
-                linewrapped = true
-                var indent = indentStack.last ?? ""
-                if lineIndex - 1 == scopeStartLineIndexes.last {
-                    indent = indentStack.count > 1 ? indentStack[indentStack.count - 2] : ""
-                    scopeStartLineIndexes[scopeStartLineIndexes.count - 1] += 1
-                }
-                indent += (linewrapped ? formatter.options.indent : "")
-                i += insertWhitespace(indent, atIndex: formatter.startOfLine(atIndex: i))
-            }
             lastNonWhitespaceIndex = i
             if token.type != .linebreak {
                 lastNonWhitespaceOrLinebreakIndex = i

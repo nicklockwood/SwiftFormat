@@ -83,7 +83,36 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String
     var namedArgs: [String: String] = [:]
     var name = ""
     for arg in args {
-        if arg.hasPrefix("--") {
+        // Handle quotes and spaces
+        var arg = arg
+        var unterminated = false
+        // Check for opening quote
+        if !quoted && arg.hasPrefix("\"") {
+            arg = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 1))
+            quoted = true
+        }
+        if quoted {
+            // Handle escaped \ and "
+            var escaped = false
+            var lastCharEscaped = false
+            var processedArg = ""
+            for c in arg.characters {
+                if !escaped && c == "\\" {
+                    escaped = true
+                } else {
+                    processedArg.append(c)
+                    lastCharEscaped = escaped
+                    escaped = false
+                }
+            }
+            arg = processedArg
+            // Check for closing "
+            if !lastCharEscaped && arg.hasSuffix("\"") {
+                arg = arg.substring(to: arg.characters.index(arg.endIndex, offsetBy: -1))
+                quoted = false
+            }
+            unterminated = quoted
+        } else if arg.hasPrefix("--") {
             // Long argument names
             let key = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 2))
             if !names.contains(key) {
@@ -92,56 +121,38 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String
             }
             name = key
             namedArgs[name] = ""
+            continue
         } else if arg.hasPrefix("-") {
             // Short argument names
             let flag = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 1))
             let matches = names.filter { $0.hasPrefix(flag) }
             if matches.count > 1 {
-                print("error: ambiguous argument: -\(flag).")
+                print("error: ambiguous argument: \(arg).")
                 return nil
             } else if matches.count == 0 {
-                print("error: unknown argument: -\(flag).")
+                print("error: unknown argument: \(arg).")
                 return nil
             } else {
                 name = matches[0]
                 namedArgs[name] = ""
             }
+            continue
+        } else if arg.hasSuffix("\\") {
+            // Check for trailing \
+            arg = arg.substring(to: arg.characters.index(arg.endIndex, offsetBy: -1))
+            unterminated = true
+        }
+        if name == "" {
+            // Argument is anonymous
+            name = String(anonymousArgs)
+            anonymousArgs += 1
+        }
+        arg = (namedArgs[name] ?? "") + arg
+        if unterminated {
+            namedArgs[name] = arg + " "
         } else {
-            if name == "" {
-                // Argument is anonymous
-                name = String(anonymousArgs)
-                anonymousArgs += 1
-            }
-            // Handle quotes and spaces
-            var arg = arg
-            var unterminated = false
-            if quoted {
-                unterminated = true
-            } else if arg.hasPrefix("\"") {
-                quoted = true
-                unterminated = true
-                arg = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 1))
-            } else if arg.hasSuffix("\\") {
-                arg = arg.substring(to: arg.characters.index(arg.endIndex, offsetBy: -1))
-                unterminated = true
-            }
-            if quoted {
-                arg = arg
-                    .replacingOccurrences(of: "\\\"", with: "\"")
-                    .replacingOccurrences(of: "\\\\", with: "\\")
-                if arg.hasSuffix("\"") {
-                    arg = arg.substring(to: arg.characters.index(arg.endIndex, offsetBy: -1))
-                    unterminated = false
-                    quoted = false
-                }
-            }
-            if unterminated {
-                arg = arg + " "
-            }
-            namedArgs[name] = (namedArgs[name] ?? "") + arg
-            if !unterminated {
-                name = ""
-            }
+            namedArgs[name] = arg
+            name = ""
         }
     }
     return namedArgs

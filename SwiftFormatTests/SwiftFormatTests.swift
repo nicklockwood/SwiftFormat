@@ -97,6 +97,24 @@ class SwiftFormatTests: XCTestCase {
         XCTAssertEqual(preprocessArguments(input, [])!, output)
     }
 
+    func testEscapedQuoteInTwoPartPath() {
+        let input = ["", "\"foo\\\"", "bar\""]
+        let output = ["0": "", "1": "foo\" bar"]
+        XCTAssertEqual(preprocessArguments(input, [])!, output)
+    }
+
+    func testEscapedSlashInTwoPartPath() {
+        let input = ["", "\"foo\\\\", "bar\""]
+        let output = ["0": "", "1": "foo\\ bar"]
+        XCTAssertEqual(preprocessArguments(input, [])!, output)
+    }
+
+    func testDashInQuotedPath() {
+        let input = ["", "\"foo", "-bar", "baz\""]
+        let output = ["0": "", "1": "foo -bar baz"]
+        XCTAssertEqual(preprocessArguments(input, ["bar"])!, output)
+    }
+
     // MARK: performance
 
     //    func testPerformance() {

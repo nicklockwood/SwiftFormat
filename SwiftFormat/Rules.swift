@@ -913,7 +913,7 @@ public func indent(_ formatter: Formatter) {
             }
             scopeStartLineIndexes.append(lineIndex)
         } else if token.type != .whitespace {
-            if let scopeIndex = scopeIndexStack.last, let scope = formatter.tokenAtIndex(scopeIndex) {
+            if let scope = currentScope() {
                 // Handle end of scope
                 if token.closesScopeForToken(scope) {
                     scopeStartLineIndexes.removeLast()

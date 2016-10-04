@@ -403,6 +403,11 @@ What's next?
 Release notes
 ----------------
 
+Version 0.11.3
+
+- Fixed spacing between closure capture list and arguments
+- Fixed incorrect indenting of closures after and `if` statement, and other braced clauses
+
 Version 0.11.2
 
 - Fixed incorrect indenting of closures inside `for` loops, and other braced clauses

@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.11.2
+//  Version 0.11.3
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -83,7 +83,7 @@ public func spaceAroundParens(_ formatter: Formatter) {
         }
         return true
     }
-    
+
     formatter.forEachToken("(") { i, token in
         guard let previousToken = formatter.tokenAtIndex(i - 1) else {
             return
@@ -925,7 +925,7 @@ public func indent(_ formatter: Formatter) {
         while let token = formatter.tokenAtIndex(i) {
             switch token.type {
             case .identifier:
-                if ["if", "for", "while", "catch", "switch" /* TODO: get/set/didSet */ ].contains(token.string) {
+                if ["if", "for", "while", "catch", "switch", "guard" /* TODO: get/set/didSet */ ].contains(token.string) {
                     // Check that it's actually a keyword and not a member property or enum value
                     return formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)?.string == "."
                 }

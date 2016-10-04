@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.11
+//  Version 0.11.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -369,10 +369,10 @@ public func spaceAroundOperators(_ formatter: Formatter) {
                         if previousNonWhitespaceToken.type != .linebreak &&
                             previousNonWhitespaceToken.string != "{" &&
                             (previousNonWhitespaceToken.type != .symbol ||
-                            (previousNonWhitespaceToken.string == "?" && scopeStack.last?.string != "?") ||
-                            (previousNonWhitespaceToken.string != "?" &&
-                            formatter.tokenAtIndex(previousNonWhitespaceTokenIndex - 1)?.type != .whitespace &&
-                            isUnwrapOperatorSequence(previousNonWhitespaceToken))) &&
+                                (previousNonWhitespaceToken.string == "?" && scopeStack.last?.string != "?") ||
+                                (previousNonWhitespaceToken.string != "?" &&
+                                    formatter.tokenAtIndex(previousNonWhitespaceTokenIndex - 1)?.type != .whitespace &&
+                                    isUnwrapOperatorSequence(previousNonWhitespaceToken))) &&
                             !spaceAfter(previousNonWhitespaceToken.string, index: previousNonWhitespaceTokenIndex) {
                             if previousTokenWasWhitespace {
                                 formatter.removeTokenAtIndex(i - 1)

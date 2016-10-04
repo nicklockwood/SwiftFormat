@@ -403,6 +403,12 @@ What's next?
 Release notes
 ----------------
 
+Version 0.11.1
+
+- Fixed incorrect wrapping of chained closures
+- Improved the logic for wrapped lines; now behaves more like Apple's implementation
+- Fixed some bugs in command line tool when file paths contain escaped characters
+
 Version 0.11
 
 - Fixed handling of `prefix` and `postfix` specifiers

@@ -185,7 +185,7 @@ Here are all the rules that SwiftFormat currently applies:
         foo,                  foo,
         bar,        -->       bar,
         baz,                  baz,
-                          }
+                          ]
     ]
     
     if x {          	  if x { 		

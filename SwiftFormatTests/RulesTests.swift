@@ -112,6 +112,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
+    
+    func testNoRemoveSpaceBetweenCaptureListAndArguments() {
+        let input = "{ [weak self] (foo) in }"
+        let output = "{ [weak self] (foo) in }"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+    
+    func testAddSpaceBetweenCaptureListAndArguments() {
+        let input = "{ [weak self](foo) in }"
+        let output = "{ [weak self] (foo) in }"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
 
     func testSpaceBetweenClosingParenAndOpenBrace() {
         let input = "func foo(){ foo }"

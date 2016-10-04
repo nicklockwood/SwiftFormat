@@ -69,17 +69,46 @@ public func spaceAroundParens(_ formatter: Formatter) {
         }
     }
 
+    func isCaptureList(atIndex i: Int) -> Bool {
+        assert(formatter.tokens[i].string == "]")
+        guard let previousToken = formatter.previousToken(fromIndex: i + 1, matching: {
+            return !$0.isWhitespaceOrCommentOrLinebreak && ($0.type != .endOfScope || $0.string != "]")
+        }), previousToken.type == .startOfScope, previousToken.string == "{" else {
+            return false
+        }
+        guard let nextToken = formatter.nextToken(fromIndex: i, matching: {
+            return !$0.isWhitespaceOrCommentOrLinebreak && ($0.type != .startOfScope || $0.string != "(")
+        }), nextToken.type == .identifier, nextToken.string == "in" else {
+            return false
+        }
+        return true
+    }
+    
     formatter.forEachToken("(") { i, token in
         guard let previousToken = formatter.tokenAtIndex(i - 1) else {
             return
         }
         if previousToken.type == .identifier && spaceAfter(previousToken.string, index: i - 1) {
             formatter.insertToken(Token(.whitespace, " "), atIndex: i)
+        } else if previousToken.type == .endOfScope && previousToken.string == "]" {
+            if isCaptureList(atIndex: i - 1) {
+                formatter.insertToken(Token(.whitespace, " "), atIndex: i)
+            }
         } else if previousToken.type == .whitespace {
             if let token = formatter.tokenAtIndex(i - 2) {
-                if (token.type == .endOfScope && ["]", "}", ")", ">"].contains(token.string)) ||
-                    (token.type == .identifier && !spaceAfter(token.string, index: i - 2)) {
+                if token.type == .identifier && !spaceAfter(token.string, index: i - 2) {
                     formatter.removeTokenAtIndex(i - 1)
+                } else if token.type == .endOfScope {
+                    switch token.string {
+                    case "}", ")", ">":
+                        formatter.removeTokenAtIndex(i - 1)
+                    case "]":
+                        if !isCaptureList(atIndex: i - 2) {
+                            formatter.removeTokenAtIndex(i - 1)
+                        }
+                    default:
+                        break
+                    }
                 }
             }
         }

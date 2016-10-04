@@ -189,7 +189,7 @@ public class Formatter {
                 if token.type == .linebreak {
                     i -= 1
                 }
-            } else if matching(token) {
+            } else if scopeStack.count == 0 && matching(token) {
                 return i
             } else if token.type == .startOfScope {
                 scopeStack.append(token)

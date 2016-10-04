@@ -896,7 +896,7 @@ public func indent(_ formatter: Formatter) {
         while let token = formatter.tokenAtIndex(i) {
             switch token.type {
             case .identifier:
-                if ["if", "else", "for", "while", "do", "catch", "switch"].contains(token.string) {
+                if ["if", "for", "while", "catch", "switch" /* TODO: get/set/didSet */ ].contains(token.string) {
                     // Check that it's actually a keyword and not a member property or enum value
                     return formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)?.string == "."
                 }
@@ -906,7 +906,7 @@ public func indent(_ formatter: Formatter) {
                 break
             }
             i = formatter.indexOfPreviousToken(fromIndex: i) {
-                return !$0.isWhitespaceOrCommentOrLinebreak && $0.type != .endOfScope
+                return !$0.isWhitespaceOrCommentOrLinebreak && ($0.type != .endOfScope || $0.string == "}")
             } ?? -1
         }
         return true

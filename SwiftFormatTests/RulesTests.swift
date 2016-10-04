@@ -1101,41 +1101,6 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testNestedWrappedIfIndents() {
-        let input = "if foo {\nif bar &&\n(baz ||\nquux) {\nfoo()\n}\n}"
-        let output = "if foo {\n    if bar &&\n        (baz ||\n            quux) {\n        foo()\n    }\n}"
-        XCTAssertEqual(try! format(input, rules: [indent]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
-    }
-
-    func testWrappedEnumThatLooksLikeIf() {
-        let input = "foo &&\n bar.if {\nfoo()\n}"
-        let output = "foo &&\n    bar.if {\n        foo()\n    }"
-        XCTAssertEqual(try! format(input, rules: [indent]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
-    }
-
-    func testChainedClosureIndents() {
-        let input = "foo\n.bar {\nbaz()\n}\n.bar {\nbaz()\n}"
-        let output = "foo\n    .bar {\n        baz()\n    }\n    .bar {\n        baz()\n    }"
-        XCTAssertEqual(try! format(input, rules: [indent]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
-    }
-
-    func testChainedFunctionsInsideIf() {
-        let input = "if foo {\nreturn bar()\n.baz()\n}"
-        let output = "if foo {\n    return bar()\n        .baz()\n}"
-        XCTAssertEqual(try! format(input, rules: [indent]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
-    }
-
-    func testChainedFunctionsInsideForLoop() {
-        let input = "for x in y {\nfoo\n.bar {\nbaz()\n}\n.quux()\n}"
-        let output = "for x in y {\n    foo\n        .bar {\n            baz()\n        }\n        .quux()\n}"
-        XCTAssertEqual(try! format(input, rules: [indent]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
-    }
-
     // MARK: indent switch/case
 
     func testSwitchCaseIndenting() {
@@ -1388,6 +1353,55 @@ class RulesTests: XCTestCase {
     func testIndentClosureStartingOnIndentedLine() {
         let input = "foo\n.bar {\nbaz()\n}"
         let output = "foo\n    .bar {\n        baz()\n    }"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+    
+    func testNestedWrappedIfIndents() {
+        let input = "if foo {\nif bar &&\n(baz ||\nquux) {\nfoo()\n}\n}"
+        let output = "if foo {\n    if bar &&\n        (baz ||\n            quux) {\n        foo()\n    }\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+    
+    func testWrappedEnumThatLooksLikeIf() {
+        let input = "foo &&\n bar.if {\nfoo()\n}"
+        let output = "foo &&\n    bar.if {\n        foo()\n    }"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+    
+    func testChainedClosureIndents() {
+        let input = "foo\n.bar {\nbaz()\n}\n.bar {\nbaz()\n}"
+        let output = "foo\n    .bar {\n        baz()\n    }\n    .bar {\n        baz()\n    }"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+    
+    func testChainedFunctionsInsideIf() {
+        let input = "if foo {\nreturn bar()\n.baz()\n}"
+        let output = "if foo {\n    return bar()\n        .baz()\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+    
+    func testChainedFunctionsInsideForLoop() {
+        let input = "for x in y {\nfoo\n.bar {\nbaz()\n}\n.quux()\n}"
+        let output = "for x in y {\n    foo\n        .bar {\n            baz()\n        }\n        .quux()\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+    
+    func testChainedFunctionsAfterAnIfStatement() {
+        let input = "if foo {}\nbar\n.baz {\n}\n.quux()"
+        let output = "if foo {}\nbar\n    .baz {\n    }\n    .quux()"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+    
+    func testIndentInsideWrappedIfStatementWithClosureCondition() {
+        let input = "if foo({ 1 }) ||\nbar {\nbaz()\n}"
+        let output = "if foo({ 1 }) ||\n    bar {\n    baz()\n}"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

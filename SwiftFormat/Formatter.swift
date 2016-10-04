@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.11.1
+//  Version 0.11.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -235,7 +235,7 @@ public class Formatter {
                 } else {
                     return nil
                 }
-            } else if matching(token) {
+            } else if scopeStack.count == 0 && matching(token) {
                 return i
             } else if token.type == .linebreak {
                 linebreakEncountered = true

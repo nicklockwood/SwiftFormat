@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.11.1
+//  Version 0.11.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -900,10 +900,14 @@ public func indent(_ formatter: Formatter) {
                     // Check that it's actually a keyword and not a member property or enum value
                     return formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)?.string == "."
                 }
+            case .startOfScope:
+                return true
             default:
                 break
             }
-            i = formatter.indexOfPreviousToken(fromIndex: i) { !$0.isWhitespaceOrCommentOrLinebreak } ?? -1
+            i = formatter.indexOfPreviousToken(fromIndex: i) {
+                return !$0.isWhitespaceOrCommentOrLinebreak && $0.type != .endOfScope
+            } ?? -1
         }
         return true
     }

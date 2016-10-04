@@ -1129,6 +1129,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testChainedFunctionsInsideForLoop() {
+        let input = "for x in y {\nfoo\n.bar {\nbaz()\n}\n.quux()\n}"
+        let output = "for x in y {\n    foo\n        .bar {\n            baz()\n        }\n        .quux()\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: indent switch/case
 
     func testSwitchCaseIndenting() {

@@ -403,6 +403,10 @@ What's next?
 Release notes
 ----------------
 
+Version 0.11.2
+
+- Fixed incorrect indenting of closures inside `for` loops, and other braced clauses
+
 Version 0.11.1
 
 - Fixed incorrect wrapping of chained closures

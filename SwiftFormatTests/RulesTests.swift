@@ -318,6 +318,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testSpaceBetweenOptionalAndDefaultValue() {
+        let input = "let foo: String?=nil"
+        let output = "let foo: String? = nil"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundOperators]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceBetweenImplictlyUnwrappedOptionalAndDefaultValue() {
+        let input = "let foo: String!=nil"
+        let output = "let foo: String! = nil"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundOperators]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceBetweenOptionalAndDefaultValueInFunction() {
+        let input = "func foo(bar: String?=nil) {}"
+        let output = "func foo(bar: String? = nil) {}"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundOperators]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testNoSpaceAddedAfterColonInSelector() {
         let input = "@objc(foo:bar:)"
         let output = "@objc(foo:bar:)"

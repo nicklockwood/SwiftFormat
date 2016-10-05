@@ -291,6 +291,8 @@ public func spaceAroundOperators(_ formatter: Formatter) {
         switch token.type {
         case .identifier, .number, .endOfScope:
             return true
+        case .symbol:
+            return ["?", "!"].contains(token.string)
         default:
             return false
         }

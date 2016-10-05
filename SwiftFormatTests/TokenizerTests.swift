@@ -1120,6 +1120,31 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    // MARK: optionals
+
+    func testAssignOptional() {
+        let input = "Int?=nil"
+        let output = [
+            Token(.identifier, "Int"),
+            Token(.symbol, "?"),
+            Token(.symbol, "="),
+            Token(.identifier, "nil"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testQuestionMarkEqualOperator() {
+        let input = "foo ?= bar"
+        let output = [
+            Token(.identifier, "foo"),
+            Token(.whitespace, " "),
+            Token(.symbol, "?="),
+            Token(.whitespace, " "),
+            Token(.identifier, "bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: case statements
 
     func testSingleLineEnum() {

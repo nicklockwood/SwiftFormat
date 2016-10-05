@@ -601,14 +601,15 @@ func tokenize(_ source: String) -> [Token] {
                     break
                 }
             }
-            // Fix up generic misidentified as ?< or !< operator
-            if token.type == .symbol && (token.string == "?<" || token.string == "!<") {
-                if tokens[tokens.count - 2].string == "init" {
-                    tokens[tokens.count - 1] = Token(.symbol, String(token.string.characters.first!))
-                    tokens.append(Token(.startOfScope, "<"))
-                    processToken()
-                    return
-                }
+            // Fix up optional indicator misidentified as operator
+            if token.type == .symbol && token.string.characters.count > 1 &&
+                (token.string.hasPrefix("?") || token.string.hasPrefix("!")) &&
+                tokens.count > 1 && tokens[tokens.count - 2].type != .whitespace {
+                tokens[tokens.count - 1] = Token(.symbol, String(token.string.characters.first!))
+                let string = String(token.string.characters.dropFirst())
+                tokens.append(Token(string == "<" ? .startOfScope : .symbol, string))
+                processToken()
+                return
             }
             // Fix up misidentified generic that is actually a pair of operators
             if let lastNonWhitespaceIndex = lastNonWhitespaceIndex {

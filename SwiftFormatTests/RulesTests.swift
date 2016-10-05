@@ -1420,6 +1420,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testNoIndentAfterOperatorDeclaration() {
+        let input = "infix operator ?=\nfunc ?=(lhs: Int, rhs: Int) -> Bool {}"
+        let output = "infix operator ?=\nfunc ?=(lhs: Int, rhs: Int) -> Bool {}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: indent comments
 
     func testCommentIndenting() {

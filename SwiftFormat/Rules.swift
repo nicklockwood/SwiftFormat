@@ -861,6 +861,11 @@ public func indent(_ formatter: Formatter) {
                     // For arrays or argument lists, we already indent
                     return ["[", "("].contains(currentScope()?.string ?? "")
                 }
+                if formatter.previousToken(fromIndex: i, matching: {
+                    $0.type == .identifier && $0.string == "operator"
+                }) != nil {
+                    return true
+                }
                 if let previousToken = formatter.tokenAtIndex(i - 1) {
                     if previousToken.string == "as" || previousToken.string == "try" {
                         return false

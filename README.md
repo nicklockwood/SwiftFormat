@@ -403,6 +403,11 @@ What's next?
 Release notes
 ----------------
 
+Version 0.11.4
+
+- Fixed critical bug where optionals with a default value were not handled correctly
+- Fixed rare bug where code would be incorrectly indented after a custom operator declaration
+
 Version 0.11.3
 
 - Fixed spacing between closure capture list and arguments

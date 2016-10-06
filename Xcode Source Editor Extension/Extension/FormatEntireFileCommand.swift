@@ -1,5 +1,5 @@
 //
-//  SourceEditorCommand.swift
+//  FormatEntireFileCommand.swift
 //  Swift Formatter
 //
 //  Created by Tony Arnold on 5/10/16.
@@ -32,42 +32,41 @@
 import Foundation
 import XcodeKit
 
-class SourceEditorCommand: NSObject, XCSourceEditorCommand {
+class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
 
     func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping(Error?) -> Void) -> Void {
         guard invocation.buffer.contentUTI == "public.swift-source" else {
-            // Ignore non-Swift source code
-            completionHandler(nil)
-            return
+            return completionHandler(FormatCommandError.notSwiftLanguage)
         }
 
-        var options = FormatOptions()
-        options.indent = String(repeating: " ", count: invocation.buffer.indentationWidth)
+        // Grab the selected source to format
+        let sourceToFormat = invocation.buffer.completeBuffer
 
-        // Remove all selections, to avoid a crash. This is not ideal.
+        // Remove all selections to avoid a crash when changing the contents of the buffer.
         invocation.buffer.selections.removeAllObjects()
 
-        let buffer = invocation.buffer.completeBuffer
-
         do {
-            let output = try format(buffer, rules: defaultRules, options: options)
-
-            // Update the entire buffer with the formatted result
+            let indent = String(repeating: " ", count: invocation.buffer.indentationWidth)
+            let options = FormatOptions(indent: indent)
+            let output = try format(sourceToFormat, rules: defaultRules, options: options)
             invocation.buffer.completeBuffer = output
         } catch let error {
-            completionHandler(error)
-            return
+            return completionHandler(error)
         }
 
-        // For the time being, set the selection back to the first character of the buffer
-        if (invocation.buffer.selections.count == 0) {
-            let defaultSelection = XCSourceTextRange(
-                start: XCSourceTextPosition(line: 0, column: 0),
-                end: XCSourceTextPosition(line: 0, column: 0)
-            )
-            invocation.buffer.selections.add(defaultSelection)
+        // For the time being, set the selection back to the last character of the buffer
+        guard let lastLine = invocation.buffer.lines.lastObject as? String else {
+            return completionHandler(FormatCommandError.invalidSelection)
         }
 
-        completionHandler(nil)
+        let position = XCSourceTextPosition(line: invocation.buffer.lines.count - 1, column: lastLine.characters.count)
+        let updatedSelectionRange = XCSourceTextRange(
+            start: position,
+            end: position
+        )
+
+        invocation.buffer.selections.add(updatedSelectionRange)
+
+        return completionHandler(nil)
     }
 }

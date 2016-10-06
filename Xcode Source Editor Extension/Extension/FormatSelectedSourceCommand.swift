@@ -40,7 +40,7 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         }
 
         guard let selection = invocation.buffer.selections.firstObject as? XCSourceTextRange else {
-            return completionHandler(FormatCommandError.invalidSelection)
+            return completionHandler(FormatCommandError.noSelection)
         }
 
         // Ensure that we're not greedy about end selections — this can cause empty lines to be removed

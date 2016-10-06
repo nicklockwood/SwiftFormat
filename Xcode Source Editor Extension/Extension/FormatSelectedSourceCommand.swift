@@ -55,7 +55,7 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
 
         do {
             let indent = String(repeating: " ", count: invocation.buffer.indentationWidth)
-            let options = FormatOptions(indent: indent)
+            let options = FormatOptions(indent: indent, fragment: true)
             let output = try format(sourceToFormat, rules: defaultRules, options: options)
 
             for line in selectionRange.reversed() {

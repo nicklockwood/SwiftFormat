@@ -165,7 +165,7 @@ public func format(_ source: String,
 
     // Parse
     var tokens = tokenize(source)
-    guard tokens.last?.type != .error else {
+    guard options.fragment || tokens.last?.type != .error else {
         // TODO: more useful errors
         throw NSError(domain: "SwiftFormat", code: 0, userInfo: nil)
     }

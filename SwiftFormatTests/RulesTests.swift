@@ -1494,6 +1494,32 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    // MARK: indent fragments
+
+    func testIndentFragment() {
+        let input = "   func foo() {\nbar()\n}"
+        let output = "   func foo() {\n       bar()\n   }"
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try! format(input, rules: [indent], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testUnterminatedFragment() {
+        let input = "class Foo {\n\nfunc foo() {\nbar()\n}"
+        let output = "class Foo {\n\n    func foo() {\n        bar()\n    }"
+        let options = FormatOptions(fragment: true)
+        // XCTAssertEqual(try! format(input, rules: [indent], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: [indent, linebreakAtEndOfFile], options: options), output + "\n")
+    }
+
+    func testOverTerminatedFragment() {
+        let input = "   func foo() {\nbar()\n}\n\n}"
+        let output = "   func foo() {\n       bar()\n   }\n\n}"
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try! format(input, rules: [indent], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
     // MARK: knrBraces
 
     func testAllmanBracesAreConverted() {

@@ -687,7 +687,7 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
             // If closing brace is on same line as opening
             // Add blank line if needed
             if let followingToken = formatter.nextNonWhitespaceToken(fromIndex: nextTokenIndex),
-                followingToken.type != .linebreak && followingToken.type != .endOfScope {
+                ![.linebreak, .endOfScope, .error].contains(followingToken.type) {
                 formatter.insertToken(Token(.linebreak, formatter.options.linebreak), atIndex: nextTokenIndex)
             }
         }
@@ -782,11 +782,9 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
 /// Always end file with a linebreak, to avoid incompatibility with certain unix tools:
 /// http://stackoverflow.com/questions/2287967/why-is-it-recommended-to-have-empty-line-in-the-end-of-file
 public func linebreakAtEndOfFile(_ formatter: Formatter) {
-    var token = formatter.tokens.last
-    if token?.type == .whitespace {
-        token = formatter.tokenAtIndex(formatter.tokens.count - 2)
-    }
-    if token?.type != .linebreak {
+    if let lastToken = formatter.previousToken(fromIndex: formatter.tokens.count, matching: {
+        return $0.type != .whitespace && $0.type != .error
+    }), lastToken.type != .linebreak {
         formatter.insertToken(Token(.linebreak, formatter.options.linebreak), atIndex: formatter.tokens.count)
     }
 }
@@ -948,7 +946,11 @@ public func indent(_ formatter: Formatter) {
         return true
     }
 
-    insertWhitespace("", atIndex: 0)
+    if formatter.options.fragment && formatter.tokens.first?.type == .whitespace {
+        indentStack.append(formatter.tokens[0].string)
+    } else {
+        insertWhitespace("", atIndex: 0)
+    }
     formatter.forEachToken { i, token in
         var i = i
         if token.type == .startOfScope {
@@ -1015,6 +1017,12 @@ public func indent(_ formatter: Formatter) {
                         i += insertWhitespace(indent, atIndex: formatter.startOfLine(atIndex: i))
                     }
                 }
+            } else if token.type == .error && ["}", "]", ")", ">"].contains(token.string) {
+                // Handled over-terminated fragment
+                indentStack.removeLast()
+                let start = formatter.startOfLine(atIndex: i)
+                i += insertWhitespace("", atIndex: start)
+                return
             }
             // Indent each new line
             if token.type == .linebreak {
@@ -1048,7 +1056,8 @@ public func indent(_ formatter: Formatter) {
                 }
                 // Apply indent
                 insertWhitespace("", atIndex: i + 1)
-                if let nextToken = formatter.tokenAtIndex(i + 2), nextToken.type != .linebreak {
+                if let nextToken = formatter.tokenAtIndex(i + 2),
+                    nextToken.type != .linebreak && nextToken.type != .error {
                     insertWhitespace(indent, atIndex: i + 1)
                 }
             }

@@ -946,8 +946,10 @@ public func indent(_ formatter: Formatter) {
         return true
     }
 
-    if formatter.options.fragment && formatter.tokens.first?.type == .whitespace {
-        indentStack.append(formatter.tokens[0].string)
+    if formatter.options.fragment,
+        let firstIndex = formatter.indexOfNextToken(fromIndex: -1, matching: { !$0.isWhitespaceOrLinebreak }),
+        let indentToken = formatter.tokenAtIndex(firstIndex - 1), indentToken.type == .whitespace {
+        indentStack.append(indentToken.string)
     } else {
         insertWhitespace("", atIndex: 0)
     }

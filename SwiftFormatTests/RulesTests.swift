@@ -1504,11 +1504,19 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
+    func testIndentFragmentAfterBlankLines() {
+        let input = "\n\n   func foo() {\nbar()\n}"
+        let output = "\n\n   func foo() {\n       bar()\n   }"
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try! format(input, rules: [indent], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
     func testUnterminatedFragment() {
-        let input = "class Foo {\n\nfunc foo() {\nbar()\n}"
+        let input = "class Foo {\n  \nfunc foo() {\nbar()\n}"
         let output = "class Foo {\n\n    func foo() {\n        bar()\n    }"
         let options = FormatOptions(fragment: true)
-        // XCTAssertEqual(try! format(input, rules: [indent], options: options), output)
+        XCTAssertEqual(try! format(input, rules: [indent], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: [indent, linebreakAtEndOfFile], options: options), output + "\n")
     }
 

@@ -1301,14 +1301,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testWrappedLineBeforeElse() {
+    func testWrappedLineBeforeGuardElse() {
         let input = "guard let foo = bar\nelse { return }"
-        let output = "guard let foo = bar\n    else { return }"
+        let output = "guard let foo = bar\nelse { return }"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testWrappedLineAfterElse() {
+    func testWrappedLineAfterGuardElse() {
         // Don't indent because this case is handled by braces rule
         let input = "guard let foo = bar else\n{ return }"
         let output = "guard let foo = bar else\n{ return }"
@@ -1561,15 +1561,22 @@ class RulesTests: XCTestCase {
     // MARK: elseOnSameLine
 
     func testElseOnSameLine() {
+        let input = "if true {\n    1\n}\nelse { 2 }"
+        let output = "if true {\n    1\n} else { 2 }"
+        XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testElseOnSameLineOnlyAppliedToDanglingBrace() {
         let input = "if true { 1 }\nelse { 2 }"
-        let output = "if true { 1 } else { 2 }"
+        let output = "if true { 1 }\nelse { 2 }"
         XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testGuardNotAffectedByElseOnSameLine() {
-        let input = "guard true\n    else { return }"
-        let output = "guard true\n    else { return }"
+        let input = "guard true\nelse { return }"
+        let output = "guard true\nelse { return }"
         XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

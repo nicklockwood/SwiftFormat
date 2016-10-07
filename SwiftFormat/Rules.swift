@@ -859,7 +859,7 @@ public func indent(_ formatter: Formatter) {
                 }
                 if token.string == "," {
                     // For arrays or argument lists, we already indent
-                    return ["[", "("].contains(currentScope()?.string ?? "")
+                    return ["[", "(", "case"].contains(currentScope()?.string ?? "")
                 }
                 if formatter.previousToken(fromIndex: i, matching: {
                     $0.type == .identifier && $0.string == "operator"
@@ -906,7 +906,7 @@ public func indent(_ formatter: Formatter) {
                 }
                 if token.string == "," {
                     // For arrays or argument lists, we already indent
-                    return ["[", "("].contains(currentScope()?.string ?? "")
+                    return ["[", "(", "case"].contains(currentScope()?.string ?? "")
                 }
                 if let nextToken = formatter.tokenAtIndex(i + 1),
                     nextToken.isWhitespaceOrCommentOrLinebreak {
@@ -951,7 +951,13 @@ public func indent(_ formatter: Formatter) {
     formatter.forEachToken { i, token in
         var i = i
         if token.type == .startOfScope {
-            if token.string == ":" || (token.string == "{" && !tokenIsStartOfClosure(i)) {
+            if token.string == ":" && currentScope()?.string == "case" {
+                indentStack.removeLast()
+                indentCounts.removeLast()
+                linewrapStack.removeLast()
+                scopeStartLineIndexes.removeLast()
+                scopeIndexStack.removeLast()
+            } else if token.string == "{" && !tokenIsStartOfClosure(i) {
                 if linewrapStack.last == true {
                     indentStack.removeLast()
                     linewrapStack[linewrapStack.count - 1] = false
@@ -1006,6 +1012,14 @@ public func indent(_ formatter: Formatter) {
                             let indent = indentStack.last ?? ""
                             i += insertWhitespace(indent, atIndex: start)
                         }
+                    }
+                    if token.string == "case" {
+                        scopeIndexStack.append(i)
+                        let indent = (indentStack.last ?? "") + "     "
+                        indentStack.append(indent)
+                        indentCounts.append(1)
+                        scopeStartLineIndexes.append(lineIndex)
+                        linewrapStack.append(false)
                     }
                 } else if token.type == .identifier {
                     // Handle #elseif/#else

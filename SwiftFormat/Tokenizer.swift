@@ -80,7 +80,7 @@ public struct Token: Equatable {
 
     public func closesScopeForToken(_ token: Token) -> Bool {
         guard token.type == .startOfScope else {
-            return token.type == .endOfScope && string == ":" &&
+            return string == ":" && token.type == .endOfScope &&
                 (token.string == "case" || token.string == "default")
         }
         if type == .endOfScope {

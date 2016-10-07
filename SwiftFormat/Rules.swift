@@ -897,11 +897,6 @@ public func indent(_ formatter: Formatter) {
                     "true",
                     "where":
                     return false
-                case "else":
-                    if let token = formatter.tokenAtIndex(lastNonWhitespaceOrLinebreakIndex) {
-                        return token.string == "}"
-                    }
-                    return false
                 default:
                     return true
                 }
@@ -1121,7 +1116,8 @@ public func elseOnSameLine(_ formatter: Formatter) {
             case .whitespace:
                 break
             case .endOfScope:
-                if token.string == "}" && containsLinebreak {
+                if token.string == "}" && containsLinebreak &&
+                    formatter.previousNonWhitespaceToken(fromIndex: index)?.type == .linebreak {
                     formatter.replaceTokensInRange(index + 1 ..< i, with: [Token(.whitespace, " ")])
                 }
                 return

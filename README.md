@@ -403,6 +403,12 @@ What's next?
 Release notes
 ----------------
 
+Version ?
+
+- The `else` keyword in a `guard` statement is no longer indented
+- The `elseOnSameLine` rule is no longer applied if previous `} is not on its own line
+- Reduced compilation time by ~500ms
+
 Version 0.11.4
 
 - Fixed critical bug where optionals with a default value were not handled correctly

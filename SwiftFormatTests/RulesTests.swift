@@ -1147,7 +1147,7 @@ class RulesTests: XCTestCase {
 
     func testSwitchWrappedCaseIndenting() {
         let input = "switch x {\ncase foo,\nbar,\n    baz:\n    break\ndefault:\n    break\n}"
-        let output = "switch x {\ncase foo,\n    bar,\n    baz:\n    break\ndefault:\n    break\n}"
+        let output = "switch x {\ncase foo,\n     bar,\n     baz:\n    break\ndefault:\n    break\n}"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

@@ -405,6 +405,7 @@ Release notes
 
 Version ?
 
+- Linewrapped `case` elements are now vertically aligned
 - The `else` keyword in a `guard` statement is no longer indented
 - The `elseOnSameLine` rule is no longer applied if previous `} is not on its own line
 - Reduced compilation time by ~500ms

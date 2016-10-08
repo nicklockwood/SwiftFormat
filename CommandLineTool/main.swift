@@ -47,6 +47,7 @@ func showHelp() {
     print("  -l, --linebreaks  linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
     print("  -s, --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
     print("  -r, --ranges      spacing for ranges. either \"spaced\" (default) or \"nospace\"")
+    print("  -f, --fragment    treat code as only part of file. \"true\" or \"false\" (default)")
     print("  -h, --help        this help page")
     print("  -v, --version     version information")
     print("")
@@ -65,6 +66,7 @@ func processArguments(_ args: [String]) {
         "linebreaks",
         "semicolons",
         "ranges",
+        "fragment",
         "help",
         "version",
     ]) else {
@@ -93,6 +95,8 @@ func processArguments(_ args: [String]) {
         switch indent.lowercased() {
         case "tab", "tabs":
             options.indent = "\t"
+        case "":
+            print("error: --indent option expects a value.")
         default:
             if let spaces = Int(indent) {
                 options.indent = String(repeating: " ", count: spaces)
@@ -110,6 +114,7 @@ func processArguments(_ args: [String]) {
             options.allowInlineSemicolons = false
         case "":
             print("error: --semicolons option expects a value.")
+            return
         default:
             print("error: unsupported semicolons value: \(semicolons).")
             return
@@ -125,6 +130,7 @@ func processArguments(_ args: [String]) {
             options.linebreak = "\r\n"
         case "":
             print("error: --linebreaks option expects a value.")
+            return
         default:
             print("error: unsupported linebreak value: \(linebreaks).")
             return
@@ -138,8 +144,23 @@ func processArguments(_ args: [String]) {
             options.spaceAroundRangeOperators = false
         case "":
             print("error: --ranges option expects a value.")
+            return
         default:
             print("error: unsupported ranges value: \(ranges).")
+            return
+        }
+    }
+    if let fragment = args["fragment"] {
+        switch fragment.lowercased() {
+        case "true":
+            options.fragment = true
+        case "false":
+            options.fragment = false
+        case "":
+            print("error: --fragment option expects a value.")
+            return
+        default:
+            print("error: unsupported fragment value: \(fragment).")
             return
         }
     }

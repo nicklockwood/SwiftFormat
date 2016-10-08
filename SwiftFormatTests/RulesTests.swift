@@ -1152,6 +1152,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testSwitchWrappedEnumCaseIndenting() {
+        let input = "switch x {\ncase .foo,\n.bar,\n    .baz:\n    break\ndefault:\n    break\n}"
+        let output = "switch x {\ncase .foo,\n     .bar,\n     .baz:\n    break\ndefault:\n    break\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSwitchWrappedEnumCaseIndentingVariant2() {
+        let input = "switch x {\ncase\n.foo,\n.bar,\n    .baz:\n    break\ndefault:\n    break\n}"
+        let output = "switch x {\ncase\n    .foo,\n    .bar,\n    .baz:\n    break\ndefault:\n    break\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testSwitchCaseIsDictionaryIndenting() {
         let input = "switch x {\ncase foo is [Key: Value]:\nfallthrough\ndefault:\nbreak\n}"
         let output = "switch x {\ncase foo is [Key: Value]:\n    fallthrough\ndefault:\n    break\n}"
@@ -1349,7 +1363,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
-    
+
     func testIndentIfCaseCommaCase() {
         let input = "{\nif case .Foo(let msg) = a,\ncase .Bar(let msg) = b {}\n}"
         let output = "{\n    if case .Foo(let msg) = a,\n        case .Bar(let msg) = b {}\n}"
@@ -1454,7 +1468,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
-
+    
+    func testIndentEnumDictionaryKeysAndValues() {
+        let input = "[\n.foo:\n.bar,\n.baz:\n.quux,]"
+        let output = "[\n    .foo:\n    .bar,\n    .baz:\n    .quux,]"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+    
     // MARK: indent comments
 
     func testCommentIndenting() {

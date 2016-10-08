@@ -902,10 +902,16 @@ public func indent(_ formatter: Formatter) {
                 }
             case .symbol:
                 if token.string == "." {
-                    return false
+                    if let previousToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
+                        // Is this an enum value?
+                        return (previousToken.string == ":" || previousToken.string == ",") &&
+                            // For arrays, dictionaries, cases, or argument lists, we already indent
+                            ["[", "(", "case"].contains(currentScope()?.string ?? "")
+                    }
+                    return true
                 }
                 if token.string == "," {
-                    // For arrays or argument lists, we already indent
+                    // For arrays, dictionaries, cases, or argument lists, we already indent
                     return ["[", "(", "case"].contains(currentScope()?.string ?? "")
                 }
                 if let nextToken = formatter.tokenAtIndex(i + 1),
@@ -1015,7 +1021,13 @@ public func indent(_ formatter: Formatter) {
                     }
                     if token.string == "case" {
                         scopeIndexStack.append(i)
-                        let indent = (indentStack.last ?? "") + "     "
+                        var indent = (indentStack.last ?? "")
+                        if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.type == .linebreak {
+                            indent += formatter.options.indent
+                        } else {
+                            // align indent with previous case value
+                            indent += "     "
+                        }
                         indentStack.append(indent)
                         indentCounts.append(1)
                         scopeStartLineIndexes.append(lineIndex)
@@ -1057,8 +1069,9 @@ public func indent(_ formatter: Formatter) {
                 } else if linewrapped {
                     linewrapStack[linewrapStack.count - 1] = true
                     // Don't indent line starting with dot if previous line was just a closing scope
+                    let lastToken = formatter.tokenAtIndex(lastNonWhitespaceOrLinebreakIndex)
                     if formatter.tokenAtIndex(nextTokenIndex ?? -1)?.string != "." ||
-                        !(formatter.tokenAtIndex(lastNonWhitespaceOrLinebreakIndex)?.type == .endOfScope &&
+                        !(lastToken?.type == .endOfScope && lastToken?.string != "case" &&
                             formatter.previousNonWhitespaceToken(fromIndex:
                                 lastNonWhitespaceOrLinebreakIndex)?.type == .linebreak) {
                         indent += formatter.options.indent

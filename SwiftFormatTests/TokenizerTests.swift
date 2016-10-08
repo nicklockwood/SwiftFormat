@@ -1371,6 +1371,52 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testSwitchCaseContainingIfCaseCommaCase() {
+        let input = "switch x {\ncase 1:\nif case w = x, case y = z {}\ndefault:\nbreak\n}"
+        let output = [
+            Token(.identifier, "switch"),
+            Token(.whitespace, " "),
+            Token(.identifier, "x"),
+            Token(.whitespace, " "),
+            Token(.startOfScope, "{"),
+            Token(.linebreak, "\n"),
+            Token(.endOfScope, "case"),
+            Token(.whitespace, " "),
+            Token(.number, "1"),
+            Token(.startOfScope, ":"),
+            Token(.linebreak, "\n"),
+            Token(.identifier, "if"),
+            Token(.whitespace, " "),
+            Token(.identifier, "case"),
+            Token(.whitespace, " "),
+            Token(.identifier, "w"),
+            Token(.whitespace, " "),
+            Token(.symbol, "="),
+            Token(.whitespace, " "),
+            Token(.identifier, "x"),
+            Token(.symbol, ","),
+            Token(.whitespace, " "),
+            Token(.identifier, "case"),
+            Token(.whitespace, " "),
+            Token(.identifier, "y"),
+            Token(.whitespace, " "),
+            Token(.symbol, "="),
+            Token(.whitespace, " "),
+            Token(.identifier, "z"),
+            Token(.whitespace, " "),
+            Token(.startOfScope, "{"),
+            Token(.endOfScope, "}"),
+            Token(.linebreak, "\n"),
+            Token(.endOfScope, "default"),
+            Token(.startOfScope, ":"),
+            Token(.linebreak, "\n"),
+            Token(.identifier, "break"),
+            Token(.linebreak, "\n"),
+            Token(.endOfScope, "}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testSwitchCaseContainingGuardCase() {
         let input = "switch x {\ncase 1:\nguard case x = y else {}\ndefault:\nbreak\n}"
         let output = [

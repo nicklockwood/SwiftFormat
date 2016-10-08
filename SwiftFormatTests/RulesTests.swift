@@ -1468,14 +1468,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
-    
+
     func testIndentEnumDictionaryKeysAndValues() {
         let input = "[\n.foo:\n.bar,\n.baz:\n.quux,]"
         let output = "[\n    .foo:\n    .bar,\n    .baz:\n    .quux,]"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
-    
+
     // MARK: indent comments
 
     func testCommentIndenting() {

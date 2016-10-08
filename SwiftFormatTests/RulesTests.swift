@@ -1344,8 +1344,15 @@ class RulesTests: XCTestCase {
     }
 
     func testIndentIfCase() {
-        let input = "{\nif case .Foo = error {}\n}"
-        let output = "{\n    if case .Foo = error {}\n}"
+        let input = "{\nif case .Foo(let msg) = error {}\n}"
+        let output = "{\n    if case .Foo(let msg) = error {}\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+    
+    func testIndentIfCaseCommaCase() {
+        let input = "{\nif case .Foo(let msg) = a,\ncase .Bar(let msg) = b {}\n}"
+        let output = "{\n    if case .Foo(let msg) = a,\n        case .Bar(let msg) = b {}\n}"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

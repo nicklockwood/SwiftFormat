@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.11.4
+//  Version 0.12
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -46,23 +46,23 @@ public func spaceAroundParens(_ formatter: Formatter) {
     func spaceAfter(_ identifier: String, index: Int) -> Bool {
         switch identifier {
         case "internal",
-            "case",
-            "for",
-            "guard",
-            "if",
-            "in",
-            "return",
-            "switch",
-            "where",
-            "while",
-            "as",
-            "catch",
-            "is",
-            "let",
-            "rethrows",
-            "throw",
-            "throws",
-            "try":
+             "case",
+             "for",
+             "guard",
+             "if",
+             "in",
+             "return",
+             "switch",
+             "where",
+             "while",
+             "as",
+             "catch",
+             "is",
+             "let",
+             "rethrows",
+             "throw",
+             "throws",
+             "try":
             return formatter.previousNonWhitespaceToken(fromIndex: index)?.string != "."
         default:
             return false
@@ -152,15 +152,15 @@ public func spaceAroundBrackets(_ formatter: Formatter) {
     func spaceAfter(_ identifier: String, index: Int) -> Bool {
         switch identifier {
         case "case",
-            "guard",
-            "if",
-            "in",
-            "return",
-            "switch",
-            "where",
-            "while",
-            "as",
-            "is":
+             "guard",
+             "if",
+             "in",
+             "return",
+             "switch",
+             "where",
+             "while",
+             "as",
+             "is":
             return formatter.previousNonWhitespaceToken(fromIndex: index)?.string != "."
         default:
             return false
@@ -319,16 +319,16 @@ public func spaceAroundOperators(_ formatter: Formatter) {
     func spaceAfter(_ identifier: String, index: Int) -> Bool {
         switch identifier {
         case "case",
-            "guard",
-            "if",
-            "in",
-            "let",
-            "return",
-            "switch",
-            "where",
-            "while",
-            "as",
-            "is":
+             "guard",
+             "if",
+             "in",
+             "let",
+             "return",
+             "switch",
+             "where",
+             "while",
+             "as",
+             "is":
             return formatter.previousNonWhitespaceToken(fromIndex: index)?.string != "."
         default:
             return false
@@ -641,10 +641,10 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
                 nextToken.type == .identifier {
                 switch nextToken.string {
                 case "var", "let", "func",
-                    "private", "fileprivate", "public", "internal", "open",
-                    "final", "required", "override", "convenience",
-                    "lazy", "dynamic", "static",
-                    "prefix", "postfix":
+                     "private", "fileprivate", "public", "internal", "open",
+                     "final", "required", "override", "convenience",
+                     "lazy", "dynamic", "static",
+                     "prefix", "postfix":
                     return
                 default:
                     break
@@ -716,8 +716,8 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
                 case .identifier:
                     switch token.string {
                     case "private", "fileprivate", "internal", "public", "open",
-                        "final", "required", "override", "convenience",
-                        "prefix", "postfix":
+                         "final", "required", "override", "convenience",
+                         "prefix", "postfix":
                         break
                     default:
                         if !token.string.hasPrefix("@") {
@@ -829,26 +829,26 @@ public func indent(_ formatter: Formatter) {
                 // prefix, Protocol, required, right, set, Type, unowned, weak, willSet
                 switch token.string {
                 case "associatedtype",
-                    "import",
-                    "init",
-                    "inout",
-                    "let",
-                    "subscript",
-                    "var",
-                    "case",
-                    "default",
-                    "for",
-                    "guard",
-                    "if",
-                    "switch",
-                    "where",
-                    "while",
-                    "as",
-                    "catch",
-                    "is",
-                    "super",
-                    "throw",
-                    "try":
+                     "import",
+                     "init",
+                     "inout",
+                     "let",
+                     "subscript",
+                     "var",
+                     "case",
+                     "default",
+                     "for",
+                     "guard",
+                     "if",
+                     "switch",
+                     "where",
+                     "while",
+                     "as",
+                     "catch",
+                     "is",
+                     "super",
+                     "throw",
+                     "try":
                     return formatter.previousNonWhitespaceToken(fromIndex: i)?.string == "."
                 default:
                     return true
@@ -888,14 +888,14 @@ public func indent(_ formatter: Formatter) {
                 // TODO: handle "in"
                 switch token.string {
                 case "as",
-                    "dynamicType",
-                    "false",
-                    "is",
-                    "nil",
-                    "rethrows",
-                    "throws",
-                    "true",
-                    "where":
+                     "dynamicType",
+                     "false",
+                     "is",
+                     "nil",
+                     "rethrows",
+                     "throws",
+                     "true",
+                     "where":
                     return false
                 default:
                     return true
@@ -1255,9 +1255,9 @@ public func specifiers(_ formatter: Formatter) {
         }
         switch token.string {
         case "let", "var",
-            "typealias", "associatedtype",
-            "class", "struct", "enum", "protocol", "extension",
-            "func", "init", "subscript":
+             "typealias", "associatedtype",
+             "class", "struct", "enum", "protocol", "extension",
+             "func", "init", "subscript":
             break
         default:
             return

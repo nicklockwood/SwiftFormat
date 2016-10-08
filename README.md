@@ -403,11 +403,13 @@ What's next?
 Release notes
 ----------------
 
-Version ?
+Version 0.12
 
 - Linewrapped `case` elements are now vertically aligned
 - The `else` keyword in a `guard` statement is no longer indented
 - The `elseOnSameLine` rule is no longer applied if previous `} is not on its own line
+- Fixed handling of `case` after comma in an `if` statement
+- Added support for formatting partial file fragments
 - Reduced compilation time by ~500ms
 
 Version 0.11.4

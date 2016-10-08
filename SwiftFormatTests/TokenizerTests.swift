@@ -1243,6 +1243,37 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testSwitchStatementWithEnumCases() {
+        let input = "switch x {\ncase .foo,\n.bar:\nbreak\ndefault:\nbreak\n}"
+        let output = [
+            Token(.identifier, "switch"),
+            Token(.whitespace, " "),
+            Token(.identifier, "x"),
+            Token(.whitespace, " "),
+            Token(.startOfScope, "{"),
+            Token(.linebreak, "\n"),
+            Token(.endOfScope, "case"),
+            Token(.whitespace, " "),
+            Token(.symbol, "."),
+            Token(.identifier, "foo"),
+            Token(.symbol, ","),
+            Token(.linebreak, "\n"),
+            Token(.symbol, "."),
+            Token(.identifier, "bar"),
+            Token(.startOfScope, ":"),
+            Token(.linebreak, "\n"),
+            Token(.identifier, "break"),
+            Token(.linebreak, "\n"),
+            Token(.endOfScope, "default"),
+            Token(.startOfScope, ":"),
+            Token(.linebreak, "\n"),
+            Token(.identifier, "break"),
+            Token(.linebreak, "\n"),
+            Token(.endOfScope, "}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testSwitchCaseIsDictionaryStatement() {
         let input = "switch x {\ncase foo is [Key: Value]:\nbreak\ndefault:\nbreak\n}"
         let output = [

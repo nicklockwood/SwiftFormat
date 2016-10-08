@@ -342,7 +342,7 @@ private extension String.CharacterView {
         }
 
         func scanIdentifier() -> String? {
-            return scanCharacters(head: { isHead($0) || $0 == "@" || $0 == "#" }, tail: isTail)
+            return scanCharacters(head: { isHead($0) || "@#".characters.contains($0) }, tail: isTail)
         }
 
         let start = self
@@ -390,7 +390,7 @@ private extension String.CharacterView {
                 return Token(.error, number + String(self))
             } else if scanCharacter("b") {
                 number += "b"
-                if let bin = scanNumber({ $0 == "0" || $0 == "1" }) {
+                if let bin = scanNumber({ "01".characters.contains($0) }) {
                     return Token(.number, number + bin)
                 }
                 return Token(.error, number + String(self))
@@ -416,8 +416,8 @@ private extension String.CharacterView {
                 }
             }
             let endOfFloat = self
-            if let e = scanCharacter({ $0 == "e" || $0 == "E" }) {
-                let sign = scanCharacter({ $0 == "-" || $0 == "+" }) ?? ""
+            if let e = scanCharacter({ "eE".characters.contains($0) }) {
+                let sign = scanCharacter({ "-+".characters.contains($0) }) ?? ""
                 if let exponent = scanInteger() {
                     number += e + sign + exponent
                 } else {

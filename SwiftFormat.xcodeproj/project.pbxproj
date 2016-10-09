@@ -33,7 +33,7 @@
 		90C4B6E01DA4B059009EB000 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90C4B6DF1DA4B059009EB000 /* Cocoa.framework */; };
 		90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C4B6E41DA4B059009EB000 /* SourceEditorExtension.swift */; };
 		90C4B6E71DA4B059009EB000 /* FormatSelectedSourceCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C4B6E61DA4B059009EB000 /* FormatSelectedSourceCommand.swift */; };
-		90C4B6EB1DA4B059009EB000 /* Swift Formatter.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 90C4B6DD1DA4B059009EB000 /* Swift Formatter.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		90C4B6EB1DA4B059009EB000 /* SwiftFormat.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		90F16AF81DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F16AF71DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift */; };
 		90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */; };
 /* End PBXBuildFile section */
@@ -62,7 +62,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				90C4B6EB1DA4B059009EB000 /* Swift Formatter.appex in Embed App Extensions */,
+				90C4B6EB1DA4B059009EB000 /* SwiftFormat.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -91,7 +91,7 @@
 		90C4B6D01DA4B04A009EB000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		90C4B6D31DA4B04A009EB000 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		90C4B6D51DA4B04A009EB000 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		90C4B6DD1DA4B059009EB000 /* Swift Formatter.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Swift Formatter.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SwiftFormat.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		90C4B6DF1DA4B059009EB000 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		90C4B6E31DA4B059009EB000 /* SwiftFormatter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftFormatter.entitlements; sourceTree = "<group>"; };
 		90C4B6E41DA4B059009EB000 /* SourceEditorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceEditorExtension.swift; sourceTree = "<group>"; };
@@ -162,7 +162,7 @@
 				01A0EAAE1D5DB4D000A0A8E3 /* SwiftFormatTests.xctest */,
 				01A0EACA1D5DB5F500A0A8E3 /* swiftformat */,
 				90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */,
-				90C4B6DD1DA4B059009EB000 /* Swift Formatter.appex */,
+				90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -370,9 +370,9 @@
 			productReference = 90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */;
 			productType = "com.apple.product-type.application";
 		};
-		90C4B6DC1DA4B059009EB000 /* Swift Formatter */ = {
+		90C4B6DC1DA4B059009EB000 /* Xcode Source Editor Extension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Swift Formatter" */;
+			buildConfigurationList = 90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Xcode Source Editor Extension" */;
 			buildPhases = (
 				90C4B6D91DA4B059009EB000 /* Sources */,
 				90C4B6DA1DA4B059009EB000 /* Frameworks */,
@@ -382,9 +382,9 @@
 			);
 			dependencies = (
 			);
-			name = "Swift Formatter";
+			name = "Xcode Source Editor Extension";
 			productName = "Swift Formatter";
-			productReference = 90C4B6DD1DA4B059009EB000 /* Swift Formatter.appex */;
+			productReference = 90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */;
 			productType = "com.apple.product-type.xcode-extension";
 		};
 /* End PBXNativeTarget section */
@@ -412,10 +412,12 @@
 					};
 					90C4B6C91DA4B04A009EB000 = {
 						CreatedOnToolsVersion = 8.1;
+						DevelopmentTeam = HJKFVK94J4;
 						ProvisioningStyle = Automatic;
 					};
 					90C4B6DC1DA4B059009EB000 = {
 						CreatedOnToolsVersion = 8.1;
+						DevelopmentTeam = HJKFVK94J4;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -437,7 +439,7 @@
 				01A0EAAD1D5DB4D000A0A8E3 /* SwiftFormatTests */,
 				01A0EAC91D5DB5F500A0A8E3 /* CommandLineTool */,
 				90C4B6C91DA4B04A009EB000 /* SwiftFormat for Xcode */,
-				90C4B6DC1DA4B059009EB000 /* Swift Formatter */,
+				90C4B6DC1DA4B059009EB000 /* Xcode Source Editor Extension */,
 			);
 		};
 /* End PBXProject section */
@@ -574,7 +576,7 @@
 		};
 		90C4B6EA1DA4B059009EB000 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 90C4B6DC1DA4B059009EB000 /* Swift Formatter */;
+			target = 90C4B6DC1DA4B059009EB000 /* Xcode Source Editor Extension */;
 			targetProxy = 90C4B6E91DA4B059009EB000 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -786,11 +788,11 @@
 				CODE_SIGN_ENTITLEMENTS = "Xcode Source Editor Extension/Application/SwiftFormatter.entitlements";
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = HJKFVK94J4;
 				INFOPLIST_FILE = "Xcode Source Editor Extension/Application/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "SwiftFormat for Xcode";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 3.0.1;
 			};
@@ -806,11 +808,11 @@
 				CODE_SIGN_ENTITLEMENTS = "Xcode Source Editor Extension/Application/SwiftFormatter.entitlements";
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = HJKFVK94J4;
 				INFOPLIST_FILE = "Xcode Source Editor Extension/Application/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "SwiftFormat for Xcode";
 				SWIFT_VERSION = 3.0.1;
 			};
 			name = Release;
@@ -824,11 +826,11 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = HJKFVK94J4;
 				INFOPLIST_FILE = "Xcode Source Editor Extension/Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.Swift-Formatter";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
+				PRODUCT_NAME = SwiftFormat;
 				STRIP_STYLE = all;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 3.0.1;
@@ -844,11 +846,11 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = HJKFVK94J4;
 				INFOPLIST_FILE = "Xcode Source Editor Extension/Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.Swift-Formatter";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
+				PRODUCT_NAME = SwiftFormat;
 				STRIP_STYLE = all;
 				SWIFT_VERSION = 3.0.1;
 			};
@@ -902,7 +904,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Swift Formatter" */ = {
+		90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Xcode Source Editor Extension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				90C4B6ED1DA4B059009EB000 /* Debug */,

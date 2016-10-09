@@ -1,7 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="11134" systemVersion="15F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="11535.1" systemVersion="16A323" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11134"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11535.1"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+        <capability name="system font weights other than Regular or Bold" minToolsVersion="7.0"/>
     </dependencies>
     <scenes>
         <!--Application-->
@@ -653,7 +656,7 @@
                         <outlet property="delegate" destination="Voe-Tx-rLC" id="PrD-fu-P6m"/>
                     </connections>
                 </application>
-                <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModuleProvider="target"/>
+                <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="SwiftFormat_for_Xcode" customModuleProvider="target"/>
                 <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="75" y="0.0"/>
@@ -662,9 +665,8 @@
         <scene sceneID="R2V-B0-nI4">
             <objects>
                 <windowController id="B8D-0N-5wS" sceneMemberID="viewController">
-                    <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="IQv-IB-iLA">
-                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+                    <window key="window" title="SwiftFormat" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" animationBehavior="default" id="IQv-IB-iLA">
+                        <windowStyleMask key="styleMask" titled="YES" miniaturizable="YES"/>
                         <rect key="contentRect" x="196" y="240" width="480" height="270"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
                     </window>
@@ -676,18 +678,153 @@
             </objects>
             <point key="canvasLocation" x="75" y="250"/>
         </scene>
-        <!--View Controller-->
+        <!--SwiftFormat-->
         <scene sceneID="hIz-AP-VOD">
             <objects>
-                <viewController id="XfG-lQ-9wD" customClass="ViewController" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="SwiftFormat" storyboardIdentifier="ViewController" showSeguePresentationStyle="single" id="XfG-lQ-9wD" customClass="ViewController" customModule="SwiftFormat_for_Xcode" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" wantsLayer="YES" id="m2S-Jp-Qdl">
-                        <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                        <rect key="frame" x="0.0" y="0.0" width="385" height="494"/>
                         <autoresizingMask key="autoresizingMask"/>
+                        <subviews>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aNJ-6N-CED">
+                                <rect key="frame" x="18" y="457" width="349" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="What is SwiftFormat for Xcode?" id="DWG-95-tUK">
+                                    <font key="font" metaFont="systemBold"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="Zkf-d0-hNG">
+                                <rect key="frame" x="18" y="381" width="349" height="68"/>
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="xVj-5Y-11n">
+                                    <font key="font" metaFont="system"/>
+                                    <string key="title">SwiftFormat for Xcode is an extension for Apple's IDE, Xcode that reformats swift code. It applies a set of rules to the whitespace around the code, leaving the meaning intact.</string>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="qnt-Gk-VpH">
+                                <rect key="frame" x="18" y="348" width="349" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="How do I install it?" id="NmP-Dn-biY">
+                                    <font key="font" metaFont="systemBold"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="VVr-7o-9zD">
+                                <rect key="frame" x="18" y="255" width="349" height="85"/>
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="9no-dM-Qlu">
+                                    <font key="font" metaFont="system"/>
+                                    <string key="title">1. Open System Preferences
+2. Click on "Extensions"
+3. Select "Xcode Source Editor"
+4. Ensure the checkbox next to "SwiftFormat" is checked
+5. Relaunch Xcode</string>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="BT8-iH-xPF">
+                                <rect key="frame" x="18" y="222" width="349" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Using SwiftFormat in Xcode" id="oXO-Zs-OzH">
+                                    <font key="font" metaFont="systemBold"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="8zw-Wj-eDm">
+                                <rect key="frame" x="18" y="163" width="349" height="51"/>
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Open any Swift source code in Xcode — under the &quot;Editor&quot; menu, you will find &quot;SwiftFormat&quot; which has two options:" allowsEditingTextAttributes="YES" id="hXB-Qi-ovD">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="GQk-6A-jIk">
+                                <rect key="frame" x="246" y="13" width="125" height="32"/>
+                                <buttonCell key="cell" type="push" title="Got it, thanks!" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Fk9-TQ-XqU">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="terminate:" target="rPt-NT-nkU" id="F5D-ZO-Sjd"/>
+                                </connections>
+                            </button>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="OUH-Zg-5E6">
+                                <rect key="frame" x="18" y="138" width="113" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Entire File" id="Hrg-QH-mw6">
+                                    <font key="font" metaFont="systemMedium" size="13"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="0fv-q4-LYw">
+                                <rect key="frame" x="18" y="88" width="154" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Selected Source" id="TzM-um-Cxx">
+                                    <font key="font" metaFont="systemMedium" size="13"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="f7w-oN-I0u">
+                                <rect key="frame" x="18" y="63" width="349" height="17"/>
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Re-formats just the swift code you have selected" id="TvB-5m-5S4">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="3tw-Xe-luV">
+                                <rect key="frame" x="18" y="113" width="349" height="17"/>
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Re-formats the swift file you’re currently editing" id="kCm-Pj-5CN">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="GQk-6A-jIk" firstAttribute="top" secondItem="f7w-oN-I0u" secondAttribute="bottom" constant="22" id="20q-VB-ONO"/>
+                            <constraint firstItem="3tw-Xe-luV" firstAttribute="top" secondItem="OUH-Zg-5E6" secondAttribute="bottom" constant="8" symbolic="YES" id="4q1-8r-z4I"/>
+                            <constraint firstItem="qnt-Gk-VpH" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="8zH-8M-B3o"/>
+                            <constraint firstItem="0fv-q4-LYw" firstAttribute="leading" secondItem="OUH-Zg-5E6" secondAttribute="leading" id="95j-tH-qIF"/>
+                            <constraint firstItem="BT8-iH-xPF" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="9Zc-9a-gjc"/>
+                            <constraint firstItem="Zkf-d0-hNG" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="DFs-BK-idd"/>
+                            <constraint firstAttribute="trailing" secondItem="Zkf-d0-hNG" secondAttribute="trailing" constant="20" symbolic="YES" id="OVl-wP-9Cu"/>
+                            <constraint firstItem="Zkf-d0-hNG" firstAttribute="top" secondItem="aNJ-6N-CED" secondAttribute="bottom" constant="8" symbolic="YES" id="Ovr-gf-o9G"/>
+                            <constraint firstItem="f7w-oN-I0u" firstAttribute="top" secondItem="0fv-q4-LYw" secondAttribute="bottom" constant="8" symbolic="YES" id="QHZ-cv-wXr"/>
+                            <constraint firstAttribute="trailing" secondItem="f7w-oN-I0u" secondAttribute="trailing" constant="20" symbolic="YES" id="SIM-AT-wfl"/>
+                            <constraint firstItem="8zw-Wj-eDm" firstAttribute="top" secondItem="BT8-iH-xPF" secondAttribute="bottom" constant="8" symbolic="YES" id="USZ-YJ-6yu"/>
+                            <constraint firstAttribute="trailing" secondItem="GQk-6A-jIk" secondAttribute="trailing" constant="20" symbolic="YES" id="UV3-rs-moX"/>
+                            <constraint firstItem="aNJ-6N-CED" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="Ugf-5c-ZCV"/>
+                            <constraint firstItem="VVr-7o-9zD" firstAttribute="top" secondItem="qnt-Gk-VpH" secondAttribute="bottom" constant="8" symbolic="YES" id="Vri-n8-tf7"/>
+                            <constraint firstItem="f7w-oN-I0u" firstAttribute="leading" secondItem="0fv-q4-LYw" secondAttribute="leading" id="XO9-q5-xqw"/>
+                            <constraint firstAttribute="trailing" secondItem="VVr-7o-9zD" secondAttribute="trailing" constant="20" symbolic="YES" id="Zm1-cZ-3is"/>
+                            <constraint firstItem="VVr-7o-9zD" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="a73-Fq-yGR"/>
+                            <constraint firstItem="BT8-iH-xPF" firstAttribute="top" secondItem="VVr-7o-9zD" secondAttribute="bottom" constant="16" id="aRt-mU-3zD"/>
+                            <constraint firstItem="OUH-Zg-5E6" firstAttribute="leading" secondItem="8zw-Wj-eDm" secondAttribute="leading" id="bFY-ee-qCG"/>
+                            <constraint firstAttribute="trailing" secondItem="qnt-Gk-VpH" secondAttribute="trailing" constant="20" symbolic="YES" id="bxl-PW-1W3"/>
+                            <constraint firstAttribute="trailing" secondItem="3tw-Xe-luV" secondAttribute="trailing" constant="20" symbolic="YES" id="cpR-hc-fUU"/>
+                            <constraint firstAttribute="trailing" secondItem="BT8-iH-xPF" secondAttribute="trailing" constant="20" symbolic="YES" id="eTa-a5-FhC"/>
+                            <constraint firstAttribute="trailing" secondItem="8zw-Wj-eDm" secondAttribute="trailing" constant="20" symbolic="YES" id="fZ3-5j-r2r"/>
+                            <constraint firstAttribute="trailing" secondItem="aNJ-6N-CED" secondAttribute="trailing" constant="20" symbolic="YES" id="hI6-IH-RFc"/>
+                            <constraint firstItem="3tw-Xe-luV" firstAttribute="top" secondItem="OUH-Zg-5E6" secondAttribute="bottom" constant="8" symbolic="YES" id="kH7-9c-TpL"/>
+                            <constraint firstItem="8zw-Wj-eDm" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="l3G-Oo-SwJ"/>
+                            <constraint firstAttribute="bottom" secondItem="GQk-6A-jIk" secondAttribute="bottom" constant="20" symbolic="YES" id="nxu-8v-azg"/>
+                            <constraint firstItem="3tw-Xe-luV" firstAttribute="leading" secondItem="OUH-Zg-5E6" secondAttribute="leading" id="s0U-Ud-Izp"/>
+                            <constraint firstItem="qnt-Gk-VpH" firstAttribute="top" secondItem="Zkf-d0-hNG" secondAttribute="bottom" constant="16" id="tiH-6g-ALA"/>
+                            <constraint firstItem="OUH-Zg-5E6" firstAttribute="top" secondItem="8zw-Wj-eDm" secondAttribute="bottom" constant="8" symbolic="YES" id="uWd-JY-Hhx"/>
+                            <constraint firstItem="0fv-q4-LYw" firstAttribute="top" secondItem="3tw-Xe-luV" secondAttribute="bottom" constant="8" symbolic="YES" id="wBk-Ab-bdR"/>
+                            <constraint firstItem="aNJ-6N-CED" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" symbolic="YES" id="xiA-eD-jTg"/>
+                        </constraints>
                     </view>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="75" y="655"/>
+            <point key="canvasLocation" x="75.5" y="878"/>
         </scene>
     </scenes>
 </document>

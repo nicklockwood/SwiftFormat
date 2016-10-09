@@ -754,16 +754,16 @@ DQ
                                 </connections>
                             </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="OUH-Zg-5E6">
-                                <rect key="frame" x="18" y="138" width="113" height="17"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Entire File" id="Hrg-QH-mw6">
+                                <rect key="frame" x="18" y="134" width="154" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Selected Source" id="Hrg-QH-mw6">
                                     <font key="font" metaFont="systemMedium" size="13"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="0fv-q4-LYw">
-                                <rect key="frame" x="18" y="88" width="154" height="17"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Selected Source" id="TzM-um-Cxx">
+                                <rect key="frame" x="18" y="84" width="113" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Entire File" id="TzM-um-Cxx">
                                     <font key="font" metaFont="systemMedium" size="13"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -771,7 +771,7 @@ DQ
                             </textField>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="f7w-oN-I0u">
                                 <rect key="frame" x="18" y="63" width="349" height="17"/>
-                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Re-formats just the swift code you have selected" id="TvB-5m-5S4">
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Re-formats the entire swift file you’re currently editing." id="TvB-5m-5S4">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -779,7 +779,7 @@ DQ
                             </textField>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="3tw-Xe-luV">
                                 <rect key="frame" x="18" y="113" width="349" height="17"/>
-                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Re-formats the swift file you’re currently editing" id="kCm-Pj-5CN">
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Re-formats just the swift code you have selected." id="kCm-Pj-5CN">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -788,14 +788,13 @@ DQ
                         </subviews>
                         <constraints>
                             <constraint firstItem="GQk-6A-jIk" firstAttribute="top" secondItem="f7w-oN-I0u" secondAttribute="bottom" constant="22" id="20q-VB-ONO"/>
-                            <constraint firstItem="3tw-Xe-luV" firstAttribute="top" secondItem="OUH-Zg-5E6" secondAttribute="bottom" constant="8" symbolic="YES" id="4q1-8r-z4I"/>
                             <constraint firstItem="qnt-Gk-VpH" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="8zH-8M-B3o"/>
                             <constraint firstItem="0fv-q4-LYw" firstAttribute="leading" secondItem="OUH-Zg-5E6" secondAttribute="leading" id="95j-tH-qIF"/>
                             <constraint firstItem="BT8-iH-xPF" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="9Zc-9a-gjc"/>
                             <constraint firstItem="Zkf-d0-hNG" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="DFs-BK-idd"/>
                             <constraint firstAttribute="trailing" secondItem="Zkf-d0-hNG" secondAttribute="trailing" constant="20" symbolic="YES" id="OVl-wP-9Cu"/>
                             <constraint firstItem="Zkf-d0-hNG" firstAttribute="top" secondItem="aNJ-6N-CED" secondAttribute="bottom" constant="8" symbolic="YES" id="Ovr-gf-o9G"/>
-                            <constraint firstItem="f7w-oN-I0u" firstAttribute="top" secondItem="0fv-q4-LYw" secondAttribute="bottom" constant="8" symbolic="YES" id="QHZ-cv-wXr"/>
+                            <constraint firstItem="f7w-oN-I0u" firstAttribute="top" secondItem="0fv-q4-LYw" secondAttribute="bottom" constant="4" id="QHZ-cv-wXr"/>
                             <constraint firstAttribute="trailing" secondItem="f7w-oN-I0u" secondAttribute="trailing" constant="20" symbolic="YES" id="SIM-AT-wfl"/>
                             <constraint firstItem="8zw-Wj-eDm" firstAttribute="top" secondItem="BT8-iH-xPF" secondAttribute="bottom" constant="8" symbolic="YES" id="USZ-YJ-6yu"/>
                             <constraint firstAttribute="trailing" secondItem="GQk-6A-jIk" secondAttribute="trailing" constant="20" symbolic="YES" id="UV3-rs-moX"/>
@@ -811,13 +810,13 @@ DQ
                             <constraint firstAttribute="trailing" secondItem="BT8-iH-xPF" secondAttribute="trailing" constant="20" symbolic="YES" id="eTa-a5-FhC"/>
                             <constraint firstAttribute="trailing" secondItem="8zw-Wj-eDm" secondAttribute="trailing" constant="20" symbolic="YES" id="fZ3-5j-r2r"/>
                             <constraint firstAttribute="trailing" secondItem="aNJ-6N-CED" secondAttribute="trailing" constant="20" symbolic="YES" id="hI6-IH-RFc"/>
-                            <constraint firstItem="3tw-Xe-luV" firstAttribute="top" secondItem="OUH-Zg-5E6" secondAttribute="bottom" constant="8" symbolic="YES" id="kH7-9c-TpL"/>
+                            <constraint firstItem="3tw-Xe-luV" firstAttribute="top" secondItem="OUH-Zg-5E6" secondAttribute="bottom" constant="4" id="kH7-9c-TpL"/>
                             <constraint firstItem="8zw-Wj-eDm" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="l3G-Oo-SwJ"/>
                             <constraint firstAttribute="bottom" secondItem="GQk-6A-jIk" secondAttribute="bottom" constant="20" symbolic="YES" id="nxu-8v-azg"/>
                             <constraint firstItem="3tw-Xe-luV" firstAttribute="leading" secondItem="OUH-Zg-5E6" secondAttribute="leading" id="s0U-Ud-Izp"/>
                             <constraint firstItem="qnt-Gk-VpH" firstAttribute="top" secondItem="Zkf-d0-hNG" secondAttribute="bottom" constant="16" id="tiH-6g-ALA"/>
-                            <constraint firstItem="OUH-Zg-5E6" firstAttribute="top" secondItem="8zw-Wj-eDm" secondAttribute="bottom" constant="8" symbolic="YES" id="uWd-JY-Hhx"/>
-                            <constraint firstItem="0fv-q4-LYw" firstAttribute="top" secondItem="3tw-Xe-luV" secondAttribute="bottom" constant="8" symbolic="YES" id="wBk-Ab-bdR"/>
+                            <constraint firstItem="OUH-Zg-5E6" firstAttribute="top" secondItem="8zw-Wj-eDm" secondAttribute="bottom" constant="12" id="uWd-JY-Hhx"/>
+                            <constraint firstItem="0fv-q4-LYw" firstAttribute="top" secondItem="3tw-Xe-luV" secondAttribute="bottom" constant="12" id="wBk-Ab-bdR"/>
                             <constraint firstItem="aNJ-6N-CED" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" symbolic="YES" id="xiA-eD-jTg"/>
                         </constraints>
                     </view>

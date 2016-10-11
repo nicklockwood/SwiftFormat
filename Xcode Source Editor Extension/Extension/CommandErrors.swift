@@ -33,4 +33,6 @@ enum FormatCommandError: Error {
     case notSwiftLanguage
     case noSelection
     case invalidSelection
+    case invalidLineContent
+    case cannotRestoreSelection
 }

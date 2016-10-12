@@ -585,7 +585,7 @@ public func consecutiveBlankLines(_ formatter: Formatter) {
         }
         lastTokenType = token.type
     }
-    if linebreakCount > 1 {
+    if linebreakCount > 1 && !formatter.options.fragment {
         if lastTokenType == .whitespace {
             formatter.removeLastToken()
         }

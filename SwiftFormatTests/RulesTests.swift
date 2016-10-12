@@ -879,6 +879,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testFragmentWithTrailingLinebreaks() {
+        let input = "func foo() {\n}\n\n\n"
+        let output = "func foo() {\n}\n\n"
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try! format(input, rules: [consecutiveBlankLines], options: options), output)
+        XCTAssertEqual(try! format(input, rules: defaultRules, options: options), output)
+    }
+
     // MARK: blankLinesAtEndOfScope
 
     func testBlankLinesRemovedAtEndOfFunction() {

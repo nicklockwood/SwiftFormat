@@ -62,6 +62,8 @@ public func spaceAroundParens(_ formatter: Formatter) {
              "rethrows",
              "throw",
              "throws",
+             "@escaping",
+             "@autoclosure",
              "try":
             return formatter.previousNonWhitespaceToken(fromIndex: index)?.string != "."
         default:

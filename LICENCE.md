@@ -1,6 +1,6 @@
 SwiftFormat
 
-Version 0.12, October 8th, 2016
+Version 0.12.1, October 14th, 2016
 
 Copyright (c) 2016 Nick Lockwood
 

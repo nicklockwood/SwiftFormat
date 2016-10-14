@@ -403,6 +403,11 @@ What's next?
 Release notes
 ----------------
 
+Version 0.12.1
+
+- Fixed stripping of space after `@escaping`, `@autoclosure` and `inout`
+- Fixed stripping of trailing linebreaks when using --fragment option
+
 Version 0.12
 
 - Linewrapped `case` elements are now vertically aligned

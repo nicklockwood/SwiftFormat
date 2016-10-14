@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.12
+//  Version 0.12.1
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -367,7 +367,7 @@ private extension String.CharacterView {
 
     mutating func parseNumber() -> Token? {
 
-        func scanNumber(_ head: @escaping(Character) -> Bool) -> String? {
+        func scanNumber(_ head: @escaping (Character) -> Bool) -> String? {
             return scanCharacters(head: head, tail: { head($0) || $0 == "_" })
         }
 

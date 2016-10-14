@@ -45,12 +45,15 @@ public func spaceAroundParens(_ formatter: Formatter) {
 
     func spaceAfter(_ identifier: String, index: Int) -> Bool {
         switch identifier {
-        case "internal",
+        case "@escaping",
+             "@autoclosure",
+             "internal",
              "case",
              "for",
              "guard",
              "if",
              "in",
+             "inout",
              "return",
              "switch",
              "where",
@@ -62,8 +65,6 @@ public func spaceAroundParens(_ formatter: Formatter) {
              "rethrows",
              "throw",
              "throws",
-             "@escaping",
-             "@autoclosure",
              "try":
             return formatter.previousNonWhitespaceToken(fromIndex: index)?.string != "."
         default:

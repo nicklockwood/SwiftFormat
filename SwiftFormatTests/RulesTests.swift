@@ -155,6 +155,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testSpaceAfterInoutParam() {
+        let input = "func foo(bar: inout(Int, String)) {}"
+        let output = "func foo(bar: inout (Int, String)) {}"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceAfterEscapingAttribute() {
+        let input = "func foo(bar: @escaping() -> Void)"
+        let output = "func foo(bar: @escaping () -> Void)"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceAfterAutoclosureAttribute() {
+        let input = "func foo(bar: @autoclosure () -> Void)"
+        let output = "func foo(bar: @autoclosure () -> Void)"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: spaceInsideParens
 
     func testSpaceInsideParens() {

@@ -78,41 +78,11 @@ func processInput(_ inputURL: URL, andWriteToOutput outputURL: URL, withOptions 
 }
 
 func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String]? {
-    var quoted = false
     var anonymousArgs = 0
     var namedArgs: [String: String] = [:]
     var name = ""
     for arg in args {
-        // Handle quotes and spaces
-        var arg = arg
-        var unterminated = false
-        // Check for opening quote
-        if !quoted && arg.hasPrefix("\"") {
-            arg = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 1))
-            quoted = true
-        }
-        if quoted {
-            // Handle escaped \ and "
-            var escaped = false
-            var lastCharEscaped = false
-            var processedArg = ""
-            for c in arg.characters {
-                if !escaped && c == "\\" {
-                    escaped = true
-                } else {
-                    processedArg.append(c)
-                    lastCharEscaped = escaped
-                    escaped = false
-                }
-            }
-            arg = processedArg
-            // Check for closing "
-            if !lastCharEscaped && arg.hasSuffix("\"") {
-                arg = arg.substring(to: arg.characters.index(arg.endIndex, offsetBy: -1))
-                quoted = false
-            }
-            unterminated = quoted
-        } else if arg.hasPrefix("--") {
+        if arg.hasPrefix("--") {
             // Long argument names
             let key = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 2))
             if !names.contains(key) {
@@ -120,7 +90,6 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String
                 return nil
             }
             name = key
-            namedArgs[name] = ""
             continue
         } else if arg.hasPrefix("-") {
             // Short argument names
@@ -134,26 +103,16 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String
                 return nil
             } else {
                 name = matches[0]
-                namedArgs[name] = ""
             }
             continue
-        } else if arg.hasSuffix("\\") {
-            // Check for trailing \
-            arg = arg.substring(to: arg.characters.index(arg.endIndex, offsetBy: -1))
-            unterminated = true
         }
         if name == "" {
             // Argument is anonymous
             name = String(anonymousArgs)
             anonymousArgs += 1
         }
-        arg = (namedArgs[name] ?? "") + arg
-        if unterminated {
-            namedArgs[name] = arg + " "
-        } else {
-            namedArgs[name] = arg
-            name = ""
-        }
+        namedArgs[name] = arg
+        name = ""
     }
     return namedArgs
 }

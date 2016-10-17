@@ -23,6 +23,19 @@ Having a tool to automatically enforce a common style eliminates those issues, a
 How do I install it?
 ---------------------
 
+That depends. There are four ways you can use SwiftFormat:
+
+1. As a command-line tool that you run manually, or as part of some other toolchain
+2. As a Source Editor Extension that you can invoke via the Editor > SwiftFormat menu within Xcode
+3. As a build phase in your Xcode project, so that it runs every time you press Cmd-R or Cmd-B, or
+4. As a Git pre-commit hook, so that it runs on any files you've changed before you check them in
+
+
+Command-line tool
+-------------------
+
+**Installation:**
+
 1. The latest binary version of the `swiftformat` command-line tool is included in the `CommandLineTool` folder. You can either use that, or build it yourself from source. To build it yourself, open `SwiftFormat.xcodeproj` and build the `SwiftFormat (Application)` scheme.
 
 2. Drag the `swiftformat` binary into `/usr/local/bin/` (this is a hidden folder, but you can use the Finder's `Go > Go to Folder...` menu to open it).
@@ -33,9 +46,7 @@ How do I install it?
 
 5. Save the `.bash_profile` file and run the command `source ~/.bash_profile` for the changes to take effect.
 
-
-How do I use it?
-----------------
+**Usage:**
 
 If you followed the installation instructions above, you can now just type `swiftformat .` (that's a space and then a period after the command) in the terminal to format any swift files in the current directory.
 
@@ -62,13 +73,20 @@ If you prefer, you can also use unix pipes to include swiftformat as part of a c
 Omitting the `--output /path/to/file.swift` will print the formatted file to `stdout`.
 
 
-That seems like a cumbersome process - can I automate it?
-----------------------------------------------------------
+Xcode Source Editor Extension
+-----------------------------
 
-Yes. Once you are confident that SwiftFormat isn't going to wreck your code, there are a couple of approaches you can take to run it automatically:
+**Installation:**
 
-1. As a build phase in your Xcode project, so that it runs every time you press Cmd-R or Cmd-B, or
-2. As a Git pre-commit hook, so that it runs on any files you've changed before you check them in
+You'll find the latest version of the `SwiftFormat for Xcode` application inside the `EditorExtension` folder included in the SwiftFormat repository. Drag it into your `Applications` folder, then double-click to launch it, and follow the on-screen instructions.
+
+**NOTE:** The Extension requires Xcode 8 and macOS 10.12 Sierra. It *may* work on macOS 10.11 El Capitan if you open Terminal, execute the following command, then restart your Mac.
+
+    > sudo /usr/libexec/xpccachectl
+    
+**Usage:**
+
+In Xcode, you'll find a SwiftFormat option under the Editor menu. You can use this to format either the current selection or the whole file. 
 
 
 Xcode build phase
@@ -76,7 +94,7 @@ Xcode build phase
 
 To set up SwiftFormat as an Xcode build phase, do the following:
 
-1. Add the `swiftformat` binary to your project directory (this is better than referencing your local copy because it ensures that everyone who checks out the project will be using the same version).
+1. Add the `swiftformat` binary to your project directory (this is better than referencing a locally installed copy because it means that project will still compile on machines that don't have the `swiftformat` command-line tool installed).
 
 2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `"${SRCROOT}/path/to/swiftformat" "${SRCROOT}/path/to/your/swift/code/"` (both paths should be relative to the directory containing your Xcode project).
 
@@ -86,9 +104,11 @@ To set up SwiftFormat as an Xcode build phase, do the following:
 Git pre-commit hook
 ---------------------
 
-1. Edit or create a `.git/hooks/pre-commit` file in your project folder. The .git folder is hidden but should already exist if you are using Git with your project, so open in with the terminal, or the Finder's `Go > Go to Folder...` menu.
+1. Follow the instructions for installing the swiftformat command-line tool.
 
-2. Add the following line in the pre-commit file (this assumes you have already installed the swiftformat command-line tool as instructed in the "How do I install it?" section above - unlike the Xcode build phase approach, this uses your locally installed version of swiftformat)
+2. Edit or create a `.git/hooks/pre-commit` file in your project folder. The .git folder is hidden but should already exist if you are using Git with your project, so open in with the terminal, or the Finder's `Go > Go to Folder...` menu.
+
+3. Add the following line in the pre-commit file (unlike the Xcode build phase approach, this uses your locally installed version of swiftformat, not a separate copy in your project repository)
 
         #!/bin/bash
         git status --porcelain | grep -e '^[AM]\(.*\).swift$' | cut -c 3- | while read line; do
@@ -96,13 +116,13 @@ Git pre-commit hook
           git add $line;
         done
 
-3. enable the hook by typing `chmod +x .git/hooks/pre-commit` in the terminal
+4. enable the hook by typing `chmod +x .git/hooks/pre-commit` in the terminal
  
 The pre-commit hook will now run whenever you run `git commit`. Running `git commit --no-verify` will skip the pre-commit hook.
 
 **NOTE:** If you are using Git via a GUI client such as [Tower](https://www.git-tower.com), [additional steps](https://www.git-tower.com/help/mac/faq-and-tips/faq#faq-11) may be needed.
 
-**NOTE:** Unlike the Xcode build phase approach, git pre-commit hook won't be checked in to source control, and there's no way to guarantee that all users of the project are using the same version of swiftformat. For a collaborative project, you might want to consider a *post*-commit hook instead, which would run on your continuous integration server.
+**NOTE (2):** Unlike the Xcode build phase approach, git pre-commit hook won't be checked in to source control, and there's no way to guarantee that all users of the project are using the same version of swiftformat. For a collaborative project, you might want to consider a *post*-commit hook instead, which would run on your continuous integration server.
 
 
 So what does SwiftFormat actually do?
@@ -287,14 +307,9 @@ FAQ
 There haven't been many questions yet, but here's what I'd like to think people are wondering:
 
 
-*Q. Does SwiftFormat support Swift 3?*
+*Q. What versions of Swift are supported?*
 
-> A. Yes. 
-
-
-*Q. Can I compile it with Swift 3?*
-
-> A. Hahahahahahahahahahahahahahahahahahahaha oh wait, yes you can. 
+> A. The framework requires Swift 3, but it can format programs written in Swift 2.x or 3.x. 
 
 
 *Q. I don't like how SwiftFormat formatted my code*
@@ -304,7 +319,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. How can I modify the formatting rules?*
 
-> A. Most of the rules are hard-coded right now, with a handful of options exposed in the `FormatOptions` struct. If you look in `Rules.swift` you will find a list of all the rules that are applied by default. You can easily remove rules you don't want and build a new version of the command line tool.
+> A. Most of the rules are hard-coded right now, with a handful of options exposed in the `FormatOptions` struct. If you look in `Rules.swift` you will find a list of all the rules that are applied by default. You can disable any rules you don't want and build a new version of the command line tool.
 
 > With a bit more effort, you can also edit the existing rules or create new ones. If you think your changes might be generally useful, make a pull request.
 
@@ -331,7 +346,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. How does it work?*
 
-> A. First it loops through the source file character-by-character and breaks it into tokens, such as `Number`, `Identifier`, `Whitespace`, etc. That's handled by the functions in `Tokenizer.swift`.
+> A. First it loops through the source file character-by-character and breaks it into tokens, such as `number`, `identifier`, `whitespace`, etc. That's handled by the functions in `Tokenizer.swift`.
 
 > Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening brace appears on the same line as the preceding non-whitespace token". Each rule is designed to be relatively independent of the others, so they can be enabled or disabled individually (the order matters though). The rules are all defined as floating functions in `Rules.swift`.
 
@@ -345,7 +360,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. Can I use the `SwiftFormat.framework` inside another app?*
 
-> A. I only created the framework to facilitate testing, so to be honest I've no idea if it will work in an app, but you're welcome to try. If you need to make adjustments to the public/private flags or namespaces to get it working, put up a pull request.
+> A. I only created the framework to facilitate testing, so to be honest I've no idea if it will work in an app, but you're welcome to try. If you need to make adjustments to the public/private flags or namespaces to get it working, open an issue on Github (or evene better, a pull request).
 
 
 Known issues
@@ -390,175 +405,13 @@ Or begin each line with a `*` (or any other non-whitespace character)
      *    }
      *  
      */
-     
 
-What's next?
---------------
 
-* More configuration options
-* More sophisticated rules for controlling the white space in-and-around functions and classes
-* Better error handling (e.g. surfacing the type and line number for parsing errors)
+Credits
+------------
 
-     
-Release notes
-----------------
+* @tonyarnold - Xcode Source Editor Extension
+* @bourvill - Git pre-commit hook script
+* @nicklockwood - Everything else
 
-Version 0.12.1
-
-- Fixed stripping of space after `@escaping`, `@autoclosure` and `inout`
-- Fixed stripping of trailing linebreaks when using --fragment option
-
-Version 0.12
-
-- Linewrapped `case` elements are now vertically aligned
-- The `else` keyword in a `guard` statement is no longer indented
-- The `elseOnSameLine` rule is no longer applied if previous `} is not on its own line
-- Fixed handling of `case` after comma in an `if` statement
-- Added support for formatting partial file fragments
-- Reduced compilation time by ~500ms
-
-Version 0.11.4
-
-- Fixed critical bug where optionals with a default value were not handled correctly
-- Fixed rare bug where code would be incorrectly indented after a custom operator declaration
-
-Version 0.11.3
-
-- Fixed spacing between closure capture list and arguments
-- Fixed incorrect indenting of closures after and `if` statement, and other braced clauses
-
-Version 0.11.2
-
-- Fixed incorrect indenting of closures inside `for` loops, and other braced clauses
-
-Version 0.11.1
-
-- Fixed incorrect wrapping of chained closures
-- Improved the logic for wrapped lines; now behaves more like Apple's implementation
-- Fixed some bugs in command line tool when file paths contain escaped characters
-
-Version 0.11
-
-- Fixed handling of `prefix` and `postfix` specifiers
-- Fixed bug where trailing comma was added to empty array or dictionary literal
-- Fixed bug where trailing whitespace was added at the start of doc comments
-- Improved correctness of numeric literal parsing
-- Converted to Swift 3 syntax
-
-Version 0.10
-
-- The `blankLinesAtEndOfScope` rule no longer removes trailing blank lines if immediately followed by other code
-- The `blankLinesBetweenScopes` rule now adds a blank line after a scope as well as before it
-- The `blankLinesBetweenScopes` rule no longer affects single-line functions, classes, etc.
-- Fixed formatting of `while case` and `for case ... in` statements
-- Fixed bug when using `switch` as an identifier inside a `switch` statement
-- Fixed parsing of numeric literals containing underscores
-- Fixed parsing of binary, octal and hexadecimal literals
-
-Version 0.9.6
-
-- Fixed parsing error when `switch` statement is followed by `enum`
-- Fixed formatting of `guard case` statements
-
-Version 0.9.5
-
-- Fixed a number of cases where the use of keywords as identifiers was not being handled correctly
-
-Version 0.9.4
-
-- Fixed bug where parsing would fail if a `switch/case` statement contained `default` or `case` indentifiers (valid in Swift 3)
-
-Version 0.9.3
-
-- Fixed bug where functions would be prefixed with an additional blank line if the preceding line had a trailing comment
-
-Version 0.9.2
-
-- Fixed bug where `case` expressions containing a colon would not be parsed correctly
-
-Version 0.9.1
-
-- Fixed bug where `trailingCommas` rule would place comma after a comment instead of before it
-
-Version 0.9
-
-- Added `blankLinesBetweenScopes` rule that adds a blank line before each class, struct, enum, extension, protocol or function
-- Added `specifiers` rule, for normalizing the order of access modifiers, etc
-- Fixed indent bugs when wrapping code before or after a `where` or `else` keyword
-- Fixed indent bugs when using an operator as a value (e.g. let greaterThan = >)
-
-Version 0.8.2
-
-- Fixed bug where consecutive spaces would not be removed in lines that appeared after a `//` comment
-- SwiftFormat will no longer try to format code containing unbalanced braces
-- Added pre-commit hook instructions
-
-Version 0.8.1
-
-- Fixed formatting of `/*! ... */` and `//!` headerdoc comments, and `/*: ... */` and `//:` Swift Playground comments
-
-Version 0.8
-
-- Added new `ranges` rules that adds or removes the spaces around range operators (e.g. `0 ..< count`, `"a"..."z"`)
-- Added a new `--ranges` command-line option, which can be used to configure the spacing around range operators 
-- Added new `spaceAroundComments` rule, which adds a space around /* ... */ comments and before // comments
-- Added new `spaceInsideComments` rule, which adds a space inside /* ... */ comments and at the start of // comments
-- Added new `blankLinesAtEndOfScope` rule, which removes blank lines at the end of braces, brackets and parens
-- Removed double blank line at end of file
-
-Version 0.7.1
-
-- Fixed critical bug where failable generic init (e.g. `init?<T>()`) was not handled correctly
-
-Version 0.7
-
-- swiftformat command-line tool now correctly handles paths with `\` escaped spaces, or paths in quotes
-- Removed extra space added inside `@objc` selectors
-- Fixed incorrect spacing for tuple bindings
-- Fixed space before enum case inside closure
-
-Version 0.6
-
-- Refactored how switch/case is handled, and fixed a bunch of bugs
-- Better indenting logic, now handles multiple closure arguments in a single function call
-
-Version 0.5.1
-
-- Fixed critical bug where double unwrap (e.g. `foo??.bar()`) was not handled correctly
-- Fixed bug where `case let .SomeEnum` was not handled correctly
-
-Version 0.5
-
-- swiftformat command-line tool now supports reading from stdin/writing to stdout
-- Added new `linebreaks` rule for normalizing linebreak characters (defaults to LF)
-- More robust handling of linebreaks and whitespace within comments
-- Trailing whitespace within comments is now stripped, as it was for other lines
-
-Version 0.4
-
-- Added new `semicolons` rule, which removes semicolons wherever it's safe to do so
-- Added `--semicolons` command-line argument for enabling inline semicolon stripping
-- The `todos` rule now corrects `MARK :` to `MARK:` instead of `MARK: :`
-- Paths containing ~ are now handled correctly by the command line tool
-- Fixed some bugs in generics and custom operator parsing, and added more tests
-- Removed trailing whitespace on blank lines caused by the `indent` rule
-
-Version 0.3
-
-- Fixed several cases where generics were misidentified as operators
-- Fixed a bug where a comment on a line before a brace broke K&R indenting
-- Fixed a bug where a comment on a previous line caused incorrect indenting for wrapped lines
-- Added new `todos` rule, for ensuring `TODO:`, `MARK:`, and `FIXME:` comments are formatted correctly
-- Whitespace at the start of comments is now handled differently, but it shouldn't affect output
-
-Version 0.2
-
-- Fixed formatting of generic function types
-- Fixed indenting of `if case` statements
-- Fixed indenting of `else` when separated from `if` statement by a comment
-- Changed `private(set)` spacing to match Apple standard
-- Added swiftformat as a build phase to SwiftFormat, so I'm eating my own dogfood
-
-Version 0.1
-
-- First release
+([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

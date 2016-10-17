@@ -147,9 +147,9 @@
 			isa = PBXGroup;
 			children = (
 				01A0EACB1D5DB5F500A0A8E3 /* CommandLineTool */,
+				90C4B6F01DA4B0BF009EB000 /* EditorExtension */,
 				01A0EAA61D5DB4CF00A0A8E3 /* SwiftFormat */,
 				01A0EAB21D5DB4D000A0A8E3 /* SwiftFormatTests */,
-				90C4B6F01DA4B0BF009EB000 /* Xcode Source Editor Extension */,
 				90C4B6DE1DA4B059009EB000 /* Frameworks */,
 				01A0EAA51D5DB4CF00A0A8E3 /* Products */,
 			);
@@ -256,13 +256,13 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		90C4B6F01DA4B0BF009EB000 /* Xcode Source Editor Extension */ = {
+		90C4B6F01DA4B0BF009EB000 /* EditorExtension */ = {
 			isa = PBXGroup;
 			children = (
 				90C4B6CB1DA4B04A009EB000 /* Application */,
 				90C4B6E11DA4B059009EB000 /* Extension */,
 			);
-			path = "Xcode Source Editor Extension";
+			path = EditorExtension;
 			sourceTree = "<group>";
 		};
 		90CB44D91DA4B56800F86C22 /* Supporting Files */ = {
@@ -359,6 +359,7 @@
 				90C4B6C71DA4B04A009EB000 /* Frameworks */,
 				90C4B6C81DA4B04A009EB000 /* Resources */,
 				90C4B6EF1DA4B059009EB000 /* Embed App Extensions */,
+				01AC942B1DB5464F0008BDFF /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -370,9 +371,9 @@
 			productReference = 90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */;
 			productType = "com.apple.product-type.application";
 		};
-		90C4B6DC1DA4B059009EB000 /* Xcode Source Editor Extension */ = {
+		90C4B6DC1DA4B059009EB000 /* Editor Extension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Xcode Source Editor Extension" */;
+			buildConfigurationList = 90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Editor Extension" */;
 			buildPhases = (
 				90C4B6D91DA4B059009EB000 /* Sources */,
 				90C4B6DA1DA4B059009EB000 /* Frameworks */,
@@ -382,7 +383,7 @@
 			);
 			dependencies = (
 			);
-			name = "Xcode Source Editor Extension";
+			name = "Editor Extension";
 			productName = "Swift Formatter";
 			productReference = 90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */;
 			productType = "com.apple.product-type.xcode-extension";
@@ -412,12 +413,12 @@
 					};
 					90C4B6C91DA4B04A009EB000 = {
 						CreatedOnToolsVersion = 8.1;
-						DevelopmentTeam = HJKFVK94J4;
+						DevelopmentTeam = 8VQKF583ED;
 						ProvisioningStyle = Automatic;
 					};
 					90C4B6DC1DA4B059009EB000 = {
 						CreatedOnToolsVersion = 8.1;
-						DevelopmentTeam = HJKFVK94J4;
+						DevelopmentTeam = 8VQKF583ED;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -439,7 +440,7 @@
 				01A0EAAD1D5DB4D000A0A8E3 /* SwiftFormatTests */,
 				01A0EAC91D5DB5F500A0A8E3 /* CommandLineTool */,
 				90C4B6C91DA4B04A009EB000 /* SwiftFormat for Xcode */,
-				90C4B6DC1DA4B059009EB000 /* Xcode Source Editor Extension */,
+				90C4B6DC1DA4B059009EB000 /* Editor Extension */,
 			);
 		};
 /* End PBXProject section */
@@ -504,6 +505,19 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "cp ${BUILT_PRODUCTS_DIR}/swiftformat CommandLineTool/";
+		};
+		01AC942B1DB5464F0008BDFF /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cp -r \"${BUILT_PRODUCTS_DIR}/SwiftFormat for Xcode.app\" EditorExtension/";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -576,7 +590,7 @@
 		};
 		90C4B6EA1DA4B059009EB000 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 90C4B6DC1DA4B059009EB000 /* Xcode Source Editor Extension */;
+			target = 90C4B6DC1DA4B059009EB000 /* Editor Extension */;
 			targetProxy = 90C4B6E91DA4B059009EB000 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -638,6 +652,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -680,6 +695,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 3.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
@@ -702,7 +718,6 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -723,7 +738,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -735,7 +749,6 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormatTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -747,7 +760,6 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormatTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -760,7 +772,6 @@
 				PRODUCT_MODULE_NAME = "$(PRODUCT_NAME:c99extidentifier)Tool";
 				PRODUCT_NAME = swiftformat;
 				PROVISIONING_PROFILE = "";
-				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -774,7 +785,6 @@
 				PRODUCT_NAME = swiftformat;
 				PROVISIONING_PROFILE = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -785,16 +795,15 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_ENTITLEMENTS = "Xcode Source Editor Extension/Application/SwiftFormatter.entitlements";
+				CODE_SIGN_ENTITLEMENTS = EditorExtension/Application/SwiftFormatter.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = HJKFVK94J4;
-				INFOPLIST_FILE = "Xcode Source Editor Extension/Application/Info.plist";
+				DEVELOPMENT_TEAM = 8VQKF583ED;
+				INFOPLIST_FILE = EditorExtension/Application/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
 				PRODUCT_NAME = "SwiftFormat for Xcode";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_VERSION = 3.0.1;
 			};
 			name = Debug;
 		};
@@ -805,15 +814,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_ENTITLEMENTS = "Xcode Source Editor Extension/Application/SwiftFormatter.entitlements";
+				CODE_SIGN_ENTITLEMENTS = EditorExtension/Application/SwiftFormatter.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = HJKFVK94J4;
-				INFOPLIST_FILE = "Xcode Source Editor Extension/Application/Info.plist";
+				DEVELOPMENT_TEAM = 8VQKF583ED;
+				INFOPLIST_FILE = EditorExtension/Application/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
 				PRODUCT_NAME = "SwiftFormat for Xcode";
-				SWIFT_VERSION = 3.0.1;
 			};
 			name = Release;
 		};
@@ -822,18 +830,17 @@
 			buildSettings = {
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_ENTITLEMENTS = "Xcode Source Editor Extension/Extension/SwiftFormatter.entitlements";
+				CODE_SIGN_ENTITLEMENTS = EditorExtension/Extension/SwiftFormatter.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = HJKFVK94J4;
-				INFOPLIST_FILE = "Xcode Source Editor Extension/Extension/Info.plist";
+				DEVELOPMENT_TEAM = 8VQKF583ED;
+				INFOPLIST_FILE = EditorExtension/Extension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
 				PRODUCT_NAME = SwiftFormat;
 				STRIP_STYLE = all;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_VERSION = 3.0.1;
 			};
 			name = Debug;
 		};
@@ -842,17 +849,16 @@
 			buildSettings = {
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				CODE_SIGN_ENTITLEMENTS = "Xcode Source Editor Extension/Extension/SwiftFormatter.entitlements";
+				CODE_SIGN_ENTITLEMENTS = EditorExtension/Extension/SwiftFormatter.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = HJKFVK94J4;
-				INFOPLIST_FILE = "Xcode Source Editor Extension/Extension/Info.plist";
+				DEVELOPMENT_TEAM = 8VQKF583ED;
+				INFOPLIST_FILE = EditorExtension/Extension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
 				PRODUCT_NAME = SwiftFormat;
 				STRIP_STYLE = all;
-				SWIFT_VERSION = 3.0.1;
 			};
 			name = Release;
 		};
@@ -904,7 +910,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Xcode Source Editor Extension" */ = {
+		90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Editor Extension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				90C4B6ED1DA4B059009EB000 /* Debug */,

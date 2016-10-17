@@ -2,7 +2,7 @@
 //  SwiftFormat.h
 //  SwiftFormat
 //
-//  Version 0.12.1
+//  Version 0.13
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Charcoal Design
@@ -31,7 +31,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
 
 //! Project version number for SwiftFormat.
 FOUNDATION_EXPORT double SwiftFormatVersionNumber;

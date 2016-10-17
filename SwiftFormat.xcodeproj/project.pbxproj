@@ -22,6 +22,20 @@
 		01B3987B1D763424009ADE61 /* FormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987A1D763424009ADE61 /* FormatterTests.swift */; };
 		01B3987D1D763493009ADE61 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
 		01B3987F1D7634A0009ADE61 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
+		9028F7831DA4B435009FE5B4 /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
+		9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
+		9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
+		9028F7861DA4B435009FE5B4 /* Rules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */; };
+		90C4B6CD1DA4B04A009EB000 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */; };
+		90C4B6CF1DA4B04A009EB000 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C4B6CE1DA4B04A009EB000 /* ViewController.swift */; };
+		90C4B6D11DA4B04A009EB000 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 90C4B6D01DA4B04A009EB000 /* Assets.xcassets */; };
+		90C4B6D41DA4B04A009EB000 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90C4B6D21DA4B04A009EB000 /* Main.storyboard */; };
+		90C4B6E01DA4B059009EB000 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90C4B6DF1DA4B059009EB000 /* Cocoa.framework */; };
+		90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C4B6E41DA4B059009EB000 /* SourceEditorExtension.swift */; };
+		90C4B6E71DA4B059009EB000 /* FormatSelectedSourceCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C4B6E61DA4B059009EB000 /* FormatSelectedSourceCommand.swift */; };
+		90C4B6EB1DA4B059009EB000 /* SwiftFormat.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		90F16AF81DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F16AF71DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift */; };
+		90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,7 +46,28 @@
 			remoteGlobalIDString = 01A0EAA31D5DB4CF00A0A8E3;
 			remoteInfo = SwiftFormat;
 		};
+		90C4B6E91DA4B059009EB000 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 01A0EA9B1D5DB4CF00A0A8E3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 90C4B6DC1DA4B059009EB000;
+			remoteInfo = "Swift Formatter";
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		90C4B6EF1DA4B059009EB000 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				90C4B6EB1DA4B059009EB000 /* SwiftFormat.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftFormatTests.swift; sourceTree = "<group>"; };
@@ -50,6 +85,21 @@
 		01A0EACC1D5DB5F500A0A8E3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		01B3987A1D763424009ADE61 /* FormatterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatterTests.swift; sourceTree = "<group>"; };
 		01B3987C1D763493009ADE61 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
+		90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftFormat for Xcode.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		90C4B6CE1DA4B04A009EB000 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		90C4B6D01DA4B04A009EB000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		90C4B6D31DA4B04A009EB000 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		90C4B6D51DA4B04A009EB000 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SwiftFormat.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		90C4B6DF1DA4B059009EB000 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		90C4B6E31DA4B059009EB000 /* SwiftFormatter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftFormatter.entitlements; sourceTree = "<group>"; };
+		90C4B6E41DA4B059009EB000 /* SourceEditorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceEditorExtension.swift; sourceTree = "<group>"; };
+		90C4B6E61DA4B059009EB000 /* FormatSelectedSourceCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatSelectedSourceCommand.swift; sourceTree = "<group>"; };
+		90C4B6E81DA4B059009EB000 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		90CB44D81DA4B56500F86C22 /* SwiftFormatter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftFormatter.entitlements; sourceTree = "<group>"; };
+		90F16AF71DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatEntireFileCommand.swift; sourceTree = "<group>"; };
+		90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandErrors.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +125,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		90C4B6C71DA4B04A009EB000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		90C4B6DA1DA4B059009EB000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90C4B6E01DA4B059009EB000 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -84,6 +149,8 @@
 				01A0EACB1D5DB5F500A0A8E3 /* CommandLineTool */,
 				01A0EAA61D5DB4CF00A0A8E3 /* SwiftFormat */,
 				01A0EAB21D5DB4D000A0A8E3 /* SwiftFormatTests */,
+				90C4B6F01DA4B0BF009EB000 /* Xcode Source Editor Extension */,
+				90C4B6DE1DA4B059009EB000 /* Frameworks */,
 				01A0EAA51D5DB4CF00A0A8E3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -94,6 +161,8 @@
 				01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */,
 				01A0EAAE1D5DB4D000A0A8E3 /* SwiftFormatTests.xctest */,
 				01A0EACA1D5DB5F500A0A8E3 /* swiftformat */,
+				90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */,
+				90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -129,6 +198,89 @@
 				01A0EACC1D5DB5F500A0A8E3 /* main.swift */,
 			);
 			path = CommandLineTool;
+			sourceTree = "<group>";
+		};
+		9016DEFD1DA5042E008A4E36 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				90C4B6D01DA4B04A009EB000 /* Assets.xcassets */,
+				90C4B6D21DA4B04A009EB000 /* Main.storyboard */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		9016DEFE1DA50433008A4E36 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */,
+				90C4B6CE1DA4B04A009EB000 /* ViewController.swift */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		90C4B6CB1DA4B04A009EB000 /* Application */ = {
+			isa = PBXGroup;
+			children = (
+				9016DEFE1DA50433008A4E36 /* Source */,
+				9016DEFD1DA5042E008A4E36 /* Resources */,
+				90CB44D91DA4B56800F86C22 /* Supporting Files */,
+			);
+			path = Application;
+			sourceTree = "<group>";
+		};
+		90C4B6DE1DA4B059009EB000 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				90C4B6DF1DA4B059009EB000 /* Cocoa.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		90C4B6E11DA4B059009EB000 /* Extension */ = {
+			isa = PBXGroup;
+			children = (
+				90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */,
+				90F16AF91DA5ECBA00EB4EA1 /* Commands */,
+				90C4B6E41DA4B059009EB000 /* SourceEditorExtension.swift */,
+				90C4B6E21DA4B059009EB000 /* Supporting Files */,
+			);
+			path = Extension;
+			sourceTree = "<group>";
+		};
+		90C4B6E21DA4B059009EB000 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				90C4B6E81DA4B059009EB000 /* Info.plist */,
+				90C4B6E31DA4B059009EB000 /* SwiftFormatter.entitlements */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		90C4B6F01DA4B0BF009EB000 /* Xcode Source Editor Extension */ = {
+			isa = PBXGroup;
+			children = (
+				90C4B6CB1DA4B04A009EB000 /* Application */,
+				90C4B6E11DA4B059009EB000 /* Extension */,
+			);
+			path = "Xcode Source Editor Extension";
+			sourceTree = "<group>";
+		};
+		90CB44D91DA4B56800F86C22 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				90C4B6D51DA4B04A009EB000 /* Info.plist */,
+				90CB44D81DA4B56500F86C22 /* SwiftFormatter.entitlements */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		90F16AF91DA5ECBA00EB4EA1 /* Commands */ = {
+			isa = PBXGroup;
+			children = (
+				90F16AF71DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift */,
+				90C4B6E61DA4B059009EB000 /* FormatSelectedSourceCommand.swift */,
+			);
+			name = Commands;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -199,13 +351,49 @@
 			productReference = 01A0EACA1D5DB5F500A0A8E3 /* swiftformat */;
 			productType = "com.apple.product-type.tool";
 		};
+		90C4B6C91DA4B04A009EB000 /* SwiftFormat for Xcode */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 90C4B6D81DA4B04A009EB000 /* Build configuration list for PBXNativeTarget "SwiftFormat for Xcode" */;
+			buildPhases = (
+				90C4B6C61DA4B04A009EB000 /* Sources */,
+				90C4B6C71DA4B04A009EB000 /* Frameworks */,
+				90C4B6C81DA4B04A009EB000 /* Resources */,
+				90C4B6EF1DA4B059009EB000 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				90C4B6EA1DA4B059009EB000 /* PBXTargetDependency */,
+			);
+			name = "SwiftFormat for Xcode";
+			productName = "SwiftFormat for Xcode";
+			productReference = 90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */;
+			productType = "com.apple.product-type.application";
+		};
+		90C4B6DC1DA4B059009EB000 /* Xcode Source Editor Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Xcode Source Editor Extension" */;
+			buildPhases = (
+				90C4B6D91DA4B059009EB000 /* Sources */,
+				90C4B6DA1DA4B059009EB000 /* Frameworks */,
+				90C4B6DB1DA4B059009EB000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Xcode Source Editor Extension";
+			productName = "Swift Formatter";
+			productReference = 90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */;
+			productType = "com.apple.product-type.xcode-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		01A0EA9B1D5DB4CF00A0A8E3 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0730;
+				LastSwiftUpdateCheck = 0810;
 				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = "Nick Lockwood";
 				TargetAttributes = {
@@ -222,6 +410,16 @@
 						DevelopmentTeam = 8VQKF583ED;
 						LastSwiftMigration = 0800;
 					};
+					90C4B6C91DA4B04A009EB000 = {
+						CreatedOnToolsVersion = 8.1;
+						DevelopmentTeam = HJKFVK94J4;
+						ProvisioningStyle = Automatic;
+					};
+					90C4B6DC1DA4B059009EB000 = {
+						CreatedOnToolsVersion = 8.1;
+						DevelopmentTeam = HJKFVK94J4;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 01A0EA9E1D5DB4CF00A0A8E3 /* Build configuration list for PBXProject "SwiftFormat" */;
@@ -230,6 +428,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 01A0EA9A1D5DB4CF00A0A8E3;
 			productRefGroup = 01A0EAA51D5DB4CF00A0A8E3 /* Products */;
@@ -239,6 +438,8 @@
 				01A0EAA31D5DB4CF00A0A8E3 /* SwiftFormat */,
 				01A0EAAD1D5DB4D000A0A8E3 /* SwiftFormatTests */,
 				01A0EAC91D5DB5F500A0A8E3 /* CommandLineTool */,
+				90C4B6C91DA4B04A009EB000 /* SwiftFormat for Xcode */,
+				90C4B6DC1DA4B059009EB000 /* Xcode Source Editor Extension */,
 			);
 		};
 /* End PBXProject section */
@@ -252,6 +453,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		01A0EAAC1D5DB4D000A0A8E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		90C4B6C81DA4B04A009EB000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90C4B6D11DA4B04A009EB000 /* Assets.xcassets in Resources */,
+				90C4B6D41DA4B04A009EB000 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		90C4B6DB1DA4B059009EB000 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -325,6 +542,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		90C4B6C61DA4B04A009EB000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90C4B6CF1DA4B04A009EB000 /* ViewController.swift in Sources */,
+				90C4B6CD1DA4B04A009EB000 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		90C4B6D91DA4B059009EB000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */,
+				9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */,
+				90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */,
+				9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */,
+				9028F7831DA4B435009FE5B4 /* SwiftFormat.swift in Sources */,
+				90C4B6E71DA4B059009EB000 /* FormatSelectedSourceCommand.swift in Sources */,
+				90F16AF81DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift in Sources */,
+				9028F7861DA4B435009FE5B4 /* Rules.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -333,7 +574,23 @@
 			target = 01A0EAA31D5DB4CF00A0A8E3 /* SwiftFormat */;
 			targetProxy = 01A0EAB01D5DB4D000A0A8E3 /* PBXContainerItemProxy */;
 		};
+		90C4B6EA1DA4B059009EB000 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 90C4B6DC1DA4B059009EB000 /* Xcode Source Editor Extension */;
+			targetProxy = 90C4B6E91DA4B059009EB000 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		90C4B6D21DA4B04A009EB000 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				90C4B6D31DA4B04A009EB000 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		01A0EAB61D5DB4D000A0A8E3 /* Debug */ = {
@@ -382,7 +639,6 @@
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
 			};
 			name = Debug;
 		};
@@ -425,7 +681,6 @@
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
 			};
 			name = Release;
 		};
@@ -523,6 +778,84 @@
 			};
 			name = Release;
 		};
+		90C4B6D61DA4B04A009EB000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Xcode Source Editor Extension/Application/SwiftFormatter.entitlements";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = HJKFVK94J4;
+				INFOPLIST_FILE = "Xcode Source Editor Extension/Application/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
+				PRODUCT_NAME = "SwiftFormat for Xcode";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 3.0.1;
+			};
+			name = Debug;
+		};
+		90C4B6D71DA4B04A009EB000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Xcode Source Editor Extension/Application/SwiftFormatter.entitlements";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = HJKFVK94J4;
+				INFOPLIST_FILE = "Xcode Source Editor Extension/Application/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
+				PRODUCT_NAME = "SwiftFormat for Xcode";
+				SWIFT_VERSION = 3.0.1;
+			};
+			name = Release;
+		};
+		90C4B6ED1DA4B059009EB000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Xcode Source Editor Extension/Extension/SwiftFormatter.entitlements";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = HJKFVK94J4;
+				INFOPLIST_FILE = "Xcode Source Editor Extension/Extension/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
+				PRODUCT_NAME = SwiftFormat;
+				STRIP_STYLE = all;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 3.0.1;
+			};
+			name = Debug;
+		};
+		90C4B6EE1DA4B059009EB000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Xcode Source Editor Extension/Extension/SwiftFormatter.entitlements";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = HJKFVK94J4;
+				INFOPLIST_FILE = "Xcode Source Editor Extension/Extension/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
+				PRODUCT_NAME = SwiftFormat;
+				STRIP_STYLE = all;
+				SWIFT_VERSION = 3.0.1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -558,6 +891,24 @@
 			buildConfigurations = (
 				01A0EACF1D5DB5F500A0A8E3 /* Debug */,
 				01A0EAD01D5DB5F500A0A8E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		90C4B6D81DA4B04A009EB000 /* Build configuration list for PBXNativeTarget "SwiftFormat for Xcode" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				90C4B6D61DA4B04A009EB000 /* Debug */,
+				90C4B6D71DA4B04A009EB000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Xcode Source Editor Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				90C4B6ED1DA4B059009EB000 /* Debug */,
+				90C4B6EE1DA4B059009EB000 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

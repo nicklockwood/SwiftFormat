@@ -1551,6 +1551,57 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    // MARK: indent expression after return
+
+    func testIndentIdentifierAfterReturn() {
+        let input = "if foo {\n    return\n        bar\n}"
+        let output = "if foo {\n    return\n        bar\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testIndentEnumValueAfterReturn() {
+        let input = "if foo {\n    return\n        .bar\n}"
+        let output = "if foo {\n    return\n        .bar\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testIndentMultilineExpressionAfterReturn() {
+        let input = "if foo {\n    return\n        bar +\n        baz\n}"
+        let output = "if foo {\n    return\n        bar +\n        baz\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testDontIndentClosingBraceAfterReturn() {
+        let input = "if foo {\n    return\n}"
+        let output = "if foo {\n    return\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testDontIndentCaseAfterReturn() {
+        let input = "switch foo {\ncase bar:\n    return\ncase baz:\n    return\n}"
+        let output = "switch foo {\ncase bar:\n    return\ncase baz:\n    return\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testDontIndentIfAfterReturn() {
+        let input = "if foo {\n    return\n    if bar {}\n}"
+        let output = "if foo {\n    return\n    if bar {}\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testDontIndentFuncAfterReturn() {
+        let input = "if foo {\n    return\n    func bar() {}\n}"
+        let output = "if foo {\n    return\n    func bar() {}\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: indent fragments
 
     func testIndentFragment() {

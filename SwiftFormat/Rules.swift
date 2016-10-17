@@ -838,6 +838,7 @@ public func indent(_ formatter: Formatter) {
                      "let",
                      "subscript",
                      "var",
+                     "func",
                      "case",
                      "default",
                      "for",
@@ -846,6 +847,7 @@ public func indent(_ formatter: Formatter) {
                      "switch",
                      "where",
                      "while",
+                     "do",
                      "as",
                      "catch",
                      "is",
@@ -853,6 +855,35 @@ public func indent(_ formatter: Formatter) {
                      "throw",
                      "try":
                     return formatter.previousNonWhitespaceToken(fromIndex: i)?.string == "."
+                case "return":
+                    if formatter.previousNonWhitespaceToken(fromIndex: i)?.string == "." {
+                        return true
+                    }
+                    guard let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) else {
+                        return true
+                    }
+                    if nextToken.type != .identifier && nextToken.type != .endOfScope {
+                        return true
+                    }
+                    switch nextToken.string {
+                    case "let",
+                         "var",
+                         "func",
+                         "case",
+                         "default",
+                         "for",
+                         "guard",
+                         "if",
+                         "switch",
+                         "while",
+                         "do",
+                         "super",
+                         "throw",
+                         "return":
+                        return true
+                    default:
+                        return false
+                    }
                 default:
                     return true
                 }
@@ -892,12 +923,9 @@ public func indent(_ formatter: Formatter) {
                 switch token.string {
                 case "as",
                      "dynamicType",
-                     "false",
                      "is",
-                     "nil",
                      "rethrows",
                      "throws",
-                     "true",
                      "where":
                     return false
                 default:

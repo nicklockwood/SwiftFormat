@@ -216,7 +216,6 @@ Here are all the rules that SwiftFormat currently applies:
                           }
     }
 
-    
 *blankLinesBetweenScopes* - adds a blank line before each class, struct, enum, extension, protocol or function:
 
 	func foo() {         func foo() {
@@ -266,13 +265,23 @@ Here are all the rules that SwiftFormat currently applies:
         //bar            }
     }
 
-*trailingCommas* - adds a trailing , to the last line in a multiline array or dictionary literal:
+*trailingCommas* - adds a trailing comma to the last line in a multiline array or dictionary literal:
 
     let array = [        let array = [
         foo,                 foo,
         bar,       -->       bar,
         baz                  baz,
     ]                    ]
+    
+*void* - standardizes the use of `Void` vs an empty tuple `()` to represent empty argument lists and return values:
+
+	let foo: () -> ()         -->    let foo: () -> Void
+	
+	let bar: Void -> Void     -->    let bar: () -> Void
+	
+	let baz: (Void) -> Void   -->    let baz: () -> Void
+	
+	func quux() -> (Void)     -->    func quux() -> Void
 
 *todos* - ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon (else they're ignored by Xcode)
 
@@ -299,7 +308,7 @@ Here are all the rules that SwiftFormat currently applies:
     public override final func foo()                  -->    final override public func foo() 
     
     convenience private init()                        -->    private convenience init() 
-    
+
 
 FAQ
 -----

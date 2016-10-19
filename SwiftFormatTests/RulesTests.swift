@@ -1995,4 +1995,88 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input, rules: [specifiers]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
+
+    // MARK: void
+
+    func testEmptyParensReturnValueConvertedToVoid() {
+        let input = "() -> ()"
+        let output = "() -> Void"
+        XCTAssertEqual(try! format(input, rules: [void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpacedParensReturnValueConvertedToVoid() {
+        let input = "() -> ( \n)"
+        let output = "() -> Void"
+        XCTAssertEqual(try! format(input, rules: [void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testParensContainingCommentNotConvertedToVoid() {
+        let input = "() -> ( /* Hello World */ )"
+        let output = "() -> ( /* Hello World */ )"
+        XCTAssertEqual(try! format(input, rules: [void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testParensRemovedAroundVoid() {
+        let input = "() -> (Void)"
+        let output = "() -> Void"
+        XCTAssertEqual(try! format(input, rules: [void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testVoidArgumentConvertedToEmptyParens() {
+        let input = "Void -> Void"
+        let output = "() -> Void"
+        XCTAssertEqual(try! format(input, rules: [void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testVoidArgumentInParensConvertedToEmptyParens() {
+        let input = "(Void) -> Void"
+        let output = "() -> Void"
+        XCTAssertEqual(try! format(input, rules: [void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testFunctionThatReturnsAFunction() {
+        let input = "(Void) -> Void -> ()"
+        let output = "() -> () -> Void"
+        XCTAssertEqual(try! format(input, rules: [void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testChainOfFunctionsIsNotChanged() {
+        let input = "() -> () -> () -> Void"
+        let output = "() -> () -> () -> Void"
+        XCTAssertEqual(try! format(input, rules: [void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    // MARK: useVoid = false
+
+    func testUseVoidOptionFalse() {
+        let input = "(Void) -> Void"
+        let output = "() -> ()"
+        let options = FormatOptions(useVoid: false)
+        XCTAssertEqual(try! format(input, rules: [void], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testNamespacedVoidNotConverted() {
+        let input = "() -> Swift.Void"
+        let output = "() -> Swift.Void"
+        let options = FormatOptions(useVoid: false)
+        XCTAssertEqual(try! format(input, rules: [void], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testTypealiasVoidNotConverted() {
+        let input = "public typealias Void = ()"
+        let output = "public typealias Void = ()"
+        let options = FormatOptions(useVoid: false)
+        XCTAssertEqual(try! format(input, rules: [void], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
 }

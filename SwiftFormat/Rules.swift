@@ -1334,10 +1334,55 @@ public func specifiers(_ formatter: Formatter) {
     }
 }
 
+/// Normalize the use of void in closure arguments and return values
+public func void(_ formatter: Formatter) {
+    formatter.forEachToken("Void", ofType: .identifier) { i, token in
+        if let prevIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: { !$0.isWhitespaceOrLinebreak }),
+            let prevToken = formatter.tokenAtIndex(prevIndex), prevToken.string == "(",
+            let nextIndex = formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespaceOrLinebreak }),
+            let nextToken = formatter.tokenAtIndex(nextIndex), nextToken.string == ")" {
+            if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: nextIndex),
+                nextToken.type == .symbol, nextToken.string == "->" {
+                // Remove Void
+                formatter.removeTokensInRange(prevIndex + 1 ..< nextIndex)
+            } else if formatter.options.useVoid {
+                // Strip parens
+                formatter.removeTokensInRange(i + 1 ..< nextIndex + 1)
+                formatter.removeTokensInRange(prevIndex ..< i)
+            } else {
+                // Remove Void
+                formatter.removeTokensInRange(prevIndex + 1 ..< nextIndex)
+            }
+        } else if !formatter.options.useVoid ||
+            formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)?.string == "->" {
+            if let prevToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i),
+                prevToken.string == "." || prevToken.string == "typealias" {
+                return
+            }
+            // Convert to parens
+            formatter.replaceTokenAtIndex(i, with: Token(.endOfScope, ")"))
+            formatter.insertToken(Token(.startOfScope, "("), atIndex: i)
+        }
+    }
+    if formatter.options.useVoid {
+        formatter.forEachToken("(", ofType: .startOfScope) { i, token in
+            if let prevIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: { !$0.isWhitespaceOrCommentOrLinebreak }),
+                let prevToken = formatter.tokenAtIndex(prevIndex), prevToken.string == "->",
+                let nextIndex = formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespaceOrLinebreak }),
+                let nextToken = formatter.tokenAtIndex(nextIndex), nextToken.string == ")",
+                formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: nextIndex)?.string != "->" {
+                // Replace with Void
+                formatter.replaceTokensInRange(i ..< nextIndex + 1, with: [Token(.identifier, "Void")])
+            }
+        }
+    }
+}
+
 public let defaultRules: [FormatRule] = [
     linebreaks,
     semicolons,
     specifiers,
+    void,
     knrBraces,
     elseOnSameLine,
     indent,

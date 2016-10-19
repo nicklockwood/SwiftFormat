@@ -40,18 +40,21 @@ public struct FormatOptions {
     public var linebreak: String
     public var allowInlineSemicolons: Bool
     public var spaceAroundRangeOperators: Bool
+    public var useVoid: Bool
     public var fragment: Bool
 
     public init(indent: String = "    ",
         linebreak: String = "\n",
         allowInlineSemicolons: Bool = true,
         spaceAroundRangeOperators: Bool = true,
+        useVoid: Bool = true,
         fragment: Bool = false) {
 
         self.indent = indent
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons
         self.spaceAroundRangeOperators = spaceAroundRangeOperators
+        self.useVoid = useVoid
         self.fragment = fragment
     }
 }

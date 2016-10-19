@@ -39,17 +39,18 @@ func showHelp() {
     print("swiftformat, version \(version)")
     print("copyright (c) 2016 Nick Lockwood")
     print("")
-    print("usage: swiftformat [<file>] [-o path] [-i spaces]")
+    print("usage: swiftformat [<file>] [--output path] [--indent spaces] [...]")
     print("")
-    print("  <file>            input file or directory path")
-    print("  -o, --output      output path (defaults to input path)")
-    print("  -i, --indent      number of spaces to indent, or \"tab\" to use tabs")
-    print("  -l, --linebreaks  linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
-    print("  -s, --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
-    print("  -r, --ranges      spacing for ranges. either \"spaced\" (default) or \"nospace\"")
-    print("  -f, --fragment    treat code as only part of file. \"true\" or \"false\" (default)")
-    print("  -h, --help        this help page")
-    print("  -v, --version     version information")
+    print("  <file>        input file or directory path")
+    print("  --output      output path (defaults to input path)")
+    print("  --indent      number of spaces to indent, or \"tab\" to use tabs")
+    print("  --linebreaks  linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
+    print("  --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
+    print("  --ranges      spacing for ranges. either \"spaced\" (default) or \"nospace\"")
+    print("  --empty       how empty values are represented. \"void\" (default) or \"tuple\"")
+    print("  --fragment    treat code as only part of file. \"true\" or \"false\" (default)")
+    print("  --help        this help page")
+    print("  --version     version information")
     print("")
 }
 
@@ -66,6 +67,7 @@ func processArguments(_ args: [String]) {
         "linebreaks",
         "semicolons",
         "ranges",
+        "empty",
         "fragment",
         "help",
         "version",
@@ -89,80 +91,91 @@ func processArguments(_ args: [String]) {
     let inputURL = args["1"].map { expandPath($0) }
     let outputURL = (args["output"] ?? args["1"]).map { expandPath($0) }
 
+    func processOption(_ key: String, handler: (String) throws -> Void) throws {
+        guard let value = args[key] else {
+            return
+        }
+        guard !value.isEmpty else {
+            print("error: --\(key) option expects a value.")
+            throw NSError()
+        }
+        do {
+            try handler(value.lowercased())
+        } catch {
+            print("error: unsupported --\(key) value: \(value).")
+            throw error
+        }
+    }
+
     // Get options
     var options = FormatOptions()
-    if let indent = args["indent"] {
-        switch indent.lowercased() {
-        case "tab", "tabs":
-            options.indent = "\t"
-        case "":
-            print("error: --indent option expects a value.")
-        default:
-            if let spaces = Int(indent) {
-                options.indent = String(repeating: " ", count: spaces)
-                break
+    do {
+        try processOption("indent") {
+            switch $0 {
+            case "tab", "tabs":
+                options.indent = "\t"
+            default:
+                if let spaces = Int($0) {
+                    options.indent = String(repeating: " ", count: spaces)
+                    break
+                }
+                throw NSError()
             }
-            print("error: unsupported indent value: \(indent).")
-            return
         }
-    }
-    if let semicolons = args["semicolons"] {
-        switch semicolons.lowercased() {
-        case "inline":
-            options.allowInlineSemicolons = true
-        case "never":
-            options.allowInlineSemicolons = false
-        case "":
-            print("error: --semicolons option expects a value.")
-            return
-        default:
-            print("error: unsupported semicolons value: \(semicolons).")
-            return
+        try processOption("semicolons") {
+            switch $0 {
+            case "inline":
+                options.allowInlineSemicolons = true
+            case "never":
+                options.allowInlineSemicolons = false
+            default:
+                throw NSError()
+            }
         }
-    }
-    if let linebreaks = args["linebreaks"] {
-        switch linebreaks.lowercased() {
-        case "cr":
-            options.linebreak = "\r"
-        case "lf":
-            options.linebreak = "\n"
-        case "crlf":
-            options.linebreak = "\r\n"
-        case "":
-            print("error: --linebreaks option expects a value.")
-            return
-        default:
-            print("error: unsupported linebreak value: \(linebreaks).")
-            return
+        try processOption("linebreaks") {
+            switch $0 {
+            case "cr":
+                options.linebreak = "\r"
+            case "lf":
+                options.linebreak = "\n"
+            case "crlf":
+                options.linebreak = "\r\n"
+            default:
+                throw NSError()
+            }
         }
-    }
-    if let ranges = args["ranges"] {
-        switch ranges.lowercased() {
-        case "space", "spaced", "spaces":
-            options.spaceAroundRangeOperators = true
-        case "nospace":
-            options.spaceAroundRangeOperators = false
-        case "":
-            print("error: --ranges option expects a value.")
-            return
-        default:
-            print("error: unsupported ranges value: \(ranges).")
-            return
+        try processOption("ranges") {
+            switch $0 {
+            case "space", "spaced", "spaces":
+                options.spaceAroundRangeOperators = true
+            case "nospace":
+                options.spaceAroundRangeOperators = false
+            default:
+                throw NSError()
+            }
         }
-    }
-    if let fragment = args["fragment"] {
-        switch fragment.lowercased() {
-        case "true":
-            options.fragment = true
-        case "false":
-            options.fragment = false
-        case "":
-            print("error: --fragment option expects a value.")
-            return
-        default:
-            print("error: unsupported fragment value: \(fragment).")
-            return
+        try processOption("empty") {
+            switch $0 {
+            case "void":
+                options.useVoid = true
+            case "tuple":
+                options.useVoid = false
+            default:
+                throw NSError()
+            }
         }
+        try processOption("fragment") {
+            switch $0 {
+            case "true":
+                options.fragment = true
+            case "false":
+                options.fragment = false
+            default:
+                throw NSError()
+            }
+        }
+    } catch {
+        return
     }
 
     // If no input file, try stdin

@@ -46,6 +46,7 @@ func showHelp() {
     print("  --indent      number of spaces to indent, or \"tab\" to use tabs")
     print("  --linebreaks  linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
     print("  --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
+    print("  --commas      commas in collection literals. \"always\" (default) or \"inline\"")
     print("  --ranges      spacing for ranges. either \"spaced\" (default) or \"nospace\"")
     print("  --empty       how empty values are represented. \"void\" (default) or \"tuple\"")
     print("  --fragment    treat code as only part of file. \"true\" or \"false\" (default)")
@@ -128,6 +129,16 @@ func processArguments(_ args: [String]) {
                 options.allowInlineSemicolons = true
             case "never":
                 options.allowInlineSemicolons = false
+            default:
+                throw NSError()
+            }
+        }
+        try processOption("commas") {
+            switch $0 {
+            case "always":
+                options.trailingCommas = true
+            case "inline":
+                options.trailingCommas = false
             default:
                 throw NSError()
             }

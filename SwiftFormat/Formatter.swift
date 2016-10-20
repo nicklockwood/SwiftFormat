@@ -41,6 +41,7 @@ public struct FormatOptions {
     public var allowInlineSemicolons: Bool
     public var spaceAroundRangeOperators: Bool
     public var useVoid: Bool
+    public var trailingCommas: Bool
     public var fragment: Bool
 
     public init(indent: String = "    ",
@@ -48,6 +49,7 @@ public struct FormatOptions {
         allowInlineSemicolons: Bool = true,
         spaceAroundRangeOperators: Bool = true,
         useVoid: Bool = true,
+        trailingCommas: Bool = true,
         fragment: Bool = false) {
 
         self.indent = indent
@@ -55,6 +57,7 @@ public struct FormatOptions {
         self.allowInlineSemicolons = allowInlineSemicolons
         self.spaceAroundRangeOperators = spaceAroundRangeOperators
         self.useVoid = useVoid
+        self.trailingCommas = trailingCommas
         self.fragment = fragment
     }
 }

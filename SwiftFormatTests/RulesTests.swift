@@ -1768,6 +1768,24 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    // MARK: trailingCommas = false
+
+    func testCommaNotAddedToLastItem() {
+        let input = "[\n    foo,\n    bar\n]"
+        let output = "[\n    foo,\n    bar\n]"
+        let options = FormatOptions(trailingCommas: false)
+        XCTAssertEqual(try! format(input, rules: [trailingCommas], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testCommaRemovedFromLastItem() {
+        let input = "[\n    foo,\n    bar,\n]"
+        let output = "[\n    foo,\n    bar\n]"
+        let options = FormatOptions(trailingCommas: false)
+        XCTAssertEqual(try! format(input, rules: [trailingCommas], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
     // MARK: todos
 
     func testMarkIsUpdated() {

@@ -1073,9 +1073,19 @@ public func indent(_ formatter: Formatter) {
                 }
             } else if token.type == .error && ["}", "]", ")", ">"].contains(token.string) {
                 // Handled over-terminated fragment
-                indentStack.removeLast()
-                let start = formatter.startOfLine(atIndex: i)
-                i += insertWhitespace("", atIndex: start)
+                assert(indentStack.count <= 2)
+                var indent = indentStack.last!
+                if indentStack.count == 2 {
+                    indentStack.removeLast()
+                } else {
+                    let indentCount = indent.characters.count - formatter.options.indent.characters.count
+                    if indentCount <= 0 {
+                        indent = ""
+                    } else {
+                        indent = indent.substring(to: indent.index(indent.endIndex, offsetBy: indentCount))
+                    }
+                }
+                indentStack[0] = indent
                 return
             }
             // Indent each new line

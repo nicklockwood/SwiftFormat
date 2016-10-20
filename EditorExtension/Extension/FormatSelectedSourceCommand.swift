@@ -34,7 +34,9 @@ import XcodeKit
 
 class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
 
-    func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) -> Void {
+    func perform(with invocation: XCSourceEditorCommandInvocation,
+        completionHandler: @escaping (Error?) -> Void) -> Void {
+
         guard invocation.buffer.contentUTI == "public.swift-source" else {
             return completionHandler(FormatCommandError.notSwiftLanguage)
         }
@@ -50,39 +52,37 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         // Remove all selections to avoid a crash when changing the contents of the buffer.
         invocation.buffer.selections.removeAllObjects()
 
+        let indent = indentationString(for: invocation.buffer)
+        let options = FormatOptions(indent: indent, fragment: true)
+
         do {
-            let indent = self.indentationString(for: invocation.buffer)
-            let options = FormatOptions(indent: indent, fragment: true)
             let formattedSource = try format(sourceToFormat, rules: defaultRules, options: options)
-
-            for line in selectionRange.reversed() {
-                invocation.buffer.lines.removeObject(at: line)
-            }
-
+            invocation.buffer.lines.removeObjects(in: NSMakeRange(selection.start.line, selectionRange.count))
             invocation.buffer.lines.insert(formattedSource, at: selection.start.line)
-
-            let updatedSelectionRange = self.rangeForDifferences(in: selection, between: sourceToFormat, and: formattedSource)
+    
+            let updatedSelectionRange = rangeForDifferences(
+                in: selection, between: sourceToFormat, and: formattedSource)
 
             invocation.buffer.selections.add(updatedSelectionRange)
         } catch let error {
-
             return completionHandler(error)
         }
-
         return completionHandler(nil)
     }
 
-    /// Given a source text range, an original source string and a modified target string this method will calculate the differences, and return a usable XCSourceTextRange based upon the original.
+    /// Given a source text range, an original source string and a modified target string this
+    /// method will calculate the differences, and return a usable XCSourceTextRange based upon the original.
     ///
     /// - Parameters:
     ///   - textRange: Existing source text range
     ///   - sourceText: Original text
     ///   - targetText: Modified text
     /// - Returns: Source text range that should be usable with the passed modified text
-    private func rangeForDifferences(in textRange: XCSourceTextRange, between sourceText: String, and targetText: String) -> XCSourceTextRange {
-        let lineCountOfTarget = targetText.components(separatedBy: CharacterSet.newlines).count
+    private func rangeForDifferences(in textRange: XCSourceTextRange,
+        between sourceText: String, and targetText: String) -> XCSourceTextRange {
 
         // Ensure that we're not greedy about end selections — this can cause empty lines to be removed
+        let lineCountOfTarget = targetText.components(separatedBy: CharacterSet.newlines).count
         let finalLine = (textRange.end.column > 0) ? textRange.end.line : textRange.end.line - 1
         let range = textRange.start.line ... finalLine
         let difference = range.count - lineCountOfTarget
@@ -97,9 +97,21 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
     /// - Parameter buffer: Source text buffer
     /// - Returns: Indentation represented as a string
     private func indentationString(for buffer: XCSourceTextBuffer) -> String {
-        let indentCharacter = buffer.usesTabsForIndentation ? "\t" : " "
-        let indentCount = buffer.usesTabsForIndentation ? buffer.indentationWidth / buffer.tabWidth : buffer.indentationWidth
 
-        return String(repeating: indentCharacter, count: indentCount)
+        // NOTE: we cannot exactly replicate Xcode's indent logic in SwiftFormat because
+        // SwiftFormat doesn't support the concept of mixed tabs/spaces that Xcode does.
+        //
+        // But that's OK because mixing tabs and spaces is really stupid.
+        //
+        // So in the event that the user has chosen to use tabs, but their chosen indentation
+        // width is not a multiple of the tab width, we'll just use spaces instead.
+
+        if buffer.usesTabsForIndentation {
+            let tabCount = buffer.indentationWidth / buffer.tabWidth
+            if tabCount * buffer.tabWidth == buffer.indentationWidth {
+                return String(repeating: "\t", count: tabCount)
+            }
+        }
+        return String(repeating: " ", count: buffer.indentationWidth)
     }
 }

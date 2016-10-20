@@ -1636,6 +1636,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
+    func testDontCorruptPartialFragment() {
+        let input = "    } foo {\n        bar\n    }\n}"
+        let output = "    } foo {\n        bar\n    }\n}"
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try! format(input, rules: [indent], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
     // MARK: knrBraces
 
     func testAllmanBracesAreConverted() {

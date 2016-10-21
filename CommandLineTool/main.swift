@@ -2,7 +2,7 @@
 //  main.swift
 //  SwiftFormat
 //
-//  Version 0.13
+//  Version 0.14
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -33,7 +33,7 @@
 
 import Foundation
 
-let version = "0.13"
+let version = "0.14"
 
 func showHelp() {
     print("swiftformat, version \(version)")

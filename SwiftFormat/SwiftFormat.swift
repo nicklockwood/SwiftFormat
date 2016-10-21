@@ -2,7 +2,7 @@
 //  SwiftFormat.swift
 //  SwiftFormat
 //
-//  Version 0.13
+//  Version 0.14
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -119,8 +119,8 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String
 
 /// Format a pre-parsed token array
 func format(_ tokens: [Token],
-    rules: [FormatRule] = defaultRules,
-    options: FormatOptions = FormatOptions()) throws -> String {
+            rules: [FormatRule] = defaultRules,
+            options: FormatOptions = FormatOptions()) throws -> String {
 
     // Parse
     guard options.fragment || tokens.last?.type != .error else {
@@ -138,8 +138,8 @@ func format(_ tokens: [Token],
 
 /// Format code with specified rules and options
 public func format(_ source: String,
-    rules: [FormatRule] = defaultRules,
-    options: FormatOptions = FormatOptions()) throws -> String {
+                   rules: [FormatRule] = defaultRules,
+                   options: FormatOptions = FormatOptions()) throws -> String {
 
     return try format(tokenize(source), rules: rules, options: options)
 }

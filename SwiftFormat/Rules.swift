@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.13
+//  Version 0.14
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -888,24 +888,25 @@ public func indent(_ formatter: Formatter) {
                     return true
                 }
             case .symbol:
-                if token.string == "." {
+                switch token.string {
+                case ".", ":":
                     return false
-                }
-                if token.string == "," {
+                case ",":
                     // For arrays or argument lists, we already indent
                     return ["[", "(", "case"].contains(currentScope()?.string ?? "")
-                }
-                if formatter.previousToken(fromIndex: i, matching: {
-                    $0.type == .identifier && $0.string == "operator"
-                }) != nil {
-                    return true
-                }
-                if let previousToken = formatter.tokenAtIndex(i - 1) {
-                    if previousToken.string == "as" || previousToken.string == "try" {
-                        return false
+                default:
+                    if formatter.previousToken(fromIndex: i, matching: {
+                        $0.type == .identifier && $0.string == "operator"
+                    }) != nil {
+                        return true
                     }
-                    if previousToken.isWhitespaceOrCommentOrLinebreak {
-                        return formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)?.string == "="
+                    if let previousToken = formatter.tokenAtIndex(i - 1) {
+                        if previousToken.string == "as" || previousToken.string == "try" {
+                            return false
+                        }
+                        if previousToken.isWhitespaceOrCommentOrLinebreak {
+                            return formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)?.string == "="
+                        }
                     }
                 }
             default:
@@ -936,8 +937,7 @@ public func indent(_ formatter: Formatter) {
                     if let previousToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
                         // Is this an enum value?
                         let scope = currentScope()?.string ?? ""
-                        return (scope == "[" && ["[", ",", ":"].contains(previousToken.string)) ||
-                            (["(", "case"].contains(scope) && [scope, ","].contains(previousToken.string))
+                        return ["(", "[", "case"].contains(scope) && [scope, ",", ":"].contains(previousToken.string)
                     }
                     return true
                 }
@@ -981,7 +981,7 @@ public func indent(_ formatter: Formatter) {
     if formatter.options.fragment,
         let firstIndex = formatter.indexOfNextToken(fromIndex: -1, matching: { !$0.isWhitespaceOrLinebreak }),
         let indentToken = formatter.tokenAtIndex(firstIndex - 1), indentToken.type == .whitespace {
-        indentStack.append(indentToken.string)
+        indentStack[0] = indentToken.string
     } else {
         insertWhitespace("", atIndex: 0)
     }
@@ -1087,19 +1087,16 @@ public func indent(_ formatter: Formatter) {
                 }
             } else if token.type == .error && ["}", "]", ")", ">"].contains(token.string) {
                 // Handled over-terminated fragment
-                assert(indentStack.count <= 2)
-                var indent = indentStack.last!
-                if indentStack.count == 2 {
-                    indentStack.removeLast()
-                } else {
-                    let indentCount = indent.characters.count - formatter.options.indent.characters.count
-                    if indentCount <= 0 {
-                        indent = ""
-                    } else {
-                        indent = indent.substring(to: indent.index(indent.endIndex, offsetBy: indentCount))
+                if let prevToken = formatter.tokenAtIndex(i - 1) {
+                    if prevToken.type == .whitespace {
+                        let prevButOneToken = formatter.tokenAtIndex(i - 2)
+                        if prevButOneToken == nil || prevButOneToken!.type == .linebreak {
+                            indentStack[0] = prevToken.string
+                        }
+                    } else if prevToken.type == .linebreak {
+                        indentStack[0] = ""
                     }
                 }
-                indentStack[0] = indent
                 return
             }
             // Indent each new line
@@ -1134,10 +1131,16 @@ public func indent(_ formatter: Formatter) {
                     indentStack.append(indent)
                 }
                 // Apply indent
-                insertWhitespace("", atIndex: i + 1)
-                if let nextToken = formatter.tokenAtIndex(i + 2),
-                    nextToken.type != .linebreak && nextToken.type != .error {
-                    insertWhitespace(indent, atIndex: i + 1)
+                if formatter.tokenAtIndex(i + 1)?.type != .whitespace {
+                    insertWhitespace("", atIndex: i + 1)
+                }
+                if let nextToken = formatter.tokenAtIndex(i + 2) {
+                    if nextToken.type == .linebreak {
+                        // TODO: Add option to not strip indent from blank lines
+                        insertWhitespace("", atIndex: i + 1)
+                    } else if nextToken.type != .error {
+                        insertWhitespace(indent, atIndex: i + 1)
+                    }
                 }
             }
         }

@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.13) (2016-10-21)
+
+- Xcode Source Editor Extension now automatically infers formatting options from the file
+- Wrapped function arguments and array/dictionary literal value indenting now works more like Xcode
+- Added `void` rule for normalizing how Void return values are represented
+- Added `empty` command line option for configuring the void rule
+- Added `commas` command line option for disabling trailing commas
+- Improved formatting of fragments containing unbalanced braces
+
 ## [0.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.13) (2016-10-17)
 
 - Added Xcode Source Editor Extension (thanks @tonyarnold!)

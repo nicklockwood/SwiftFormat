@@ -18,12 +18,12 @@ public struct FormatOptions {
     public var fragment: Bool
 
     public init(indent: String = "    ",
-        linebreak: String = "\n",
-        allowInlineSemicolons: Bool = true,
-        spaceAroundRangeOperators: Bool = true,
-        useVoid: Bool = true,
-        trailingCommas: Bool = true,
-        fragment: Bool = false) {
+                linebreak: String = "\n",
+                allowInlineSemicolons: Bool = true,
+                spaceAroundRangeOperators: Bool = true,
+                useVoid: Bool = true,
+                trailingCommas: Bool = true,
+                fragment: Bool = false) {
 
         self.indent = indent
         self.linebreak = linebreak

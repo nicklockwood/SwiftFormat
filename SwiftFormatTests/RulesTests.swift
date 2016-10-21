@@ -1182,8 +1182,8 @@ class RulesTests: XCTestCase {
     // MARK: indent switch/case
 
     func testSwitchCaseIndenting() {
-        let input = "switch x {\ncase foo:\nbreak\ncase bar:\nbreakdefault:\nbreak\n}"
-        let output = "switch x {\ncase foo:\n    break\ncase bar:\n    breakdefault:\n    break\n}"
+        let input = "switch x {\ncase foo:\nbreak\ncase bar:\nbreak\ndefault:\nbreak\n}"
+        let output = "switch x {\ncase foo:\n    break\ncase bar:\n    break\ndefault:\n    break\n}"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1277,6 +1277,13 @@ class RulesTests: XCTestCase {
     func testWrappedLineBeforeCommaInsideInlineArray() {
         let input = "[foo\n, bar]"
         let output = "[foo\n , bar]"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testWrappedLineAfterColonInFunction() {
+        let input = "func foo(bar:\nbaz)"
+        let output = "func foo(bar:\n    baz)"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1514,7 +1521,7 @@ class RulesTests: XCTestCase {
 
     func testIndentEnumDictionaryKeysAndValues() {
         let input = "[\n.foo:\n.bar,\n.baz:\n.quux,]"
-        let output = "[\n    .foo:\n    .bar,\n    .baz:\n    .quux,]"
+        let output = "[\n    .foo:\n        .bar,\n    .baz:\n        .quux,]"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1653,6 +1660,14 @@ class RulesTests: XCTestCase {
     func testDontCorruptPartialFragment() {
         let input = "    } foo {\n        bar\n    }\n}"
         let output = "    } foo {\n        bar\n    }\n}"
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try! format(input, rules: [indent], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testDontCorruptPartialFragment2() {
+        let input = "        return completionHandler(nil)\n    }\n}"
+        let output = "        return completionHandler(nil)\n    }\n}"
         let options = FormatOptions(fragment: true)
         XCTAssertEqual(try! format(input, rules: [indent], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")

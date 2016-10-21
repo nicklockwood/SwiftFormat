@@ -2,6 +2,8 @@
 //  FormatEntireFileCommand.swift
 //  Swift Formatter
 //
+//  Version 0.14
+//
 //  Created by Tony Arnold on 5/10/16.
 //  Copyright 2016 Nick Lockwood
 //
@@ -48,10 +50,10 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
 
         // Infer format options
         var options = inferOptions(tokens)
-        options.indent = invocation.buffer.indentationString()
+        options.indent = indentationString(for: invocation.buffer)
 
         do {
-            let output = try format(sourceToFormat, rules: defaultRules, options: options)
+            let output = try format(tokens, options: options)
             invocation.buffer.completeBuffer = output
         } catch let error {
             return completionHandler(error)

@@ -2,6 +2,8 @@
 //  FormatSelectedSourceCommand.swift
 //  Swift Formatter
 //
+//  Version 0.14
+//
 //  Created by Tony Arnold on 5/10/16.
 //  Copyright 2016 Nick Lockwood
 //
@@ -35,7 +37,7 @@ import XcodeKit
 class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
 
     func perform(with invocation: XCSourceEditorCommandInvocation,
-        completionHandler: @escaping (Error?) -> Void) -> Void {
+                 completionHandler: @escaping (Error?) -> Void) -> Void {
 
         guard invocation.buffer.contentUTI == "public.swift-source" else {
             return completionHandler(FormatCommandError.notSwiftLanguage)
@@ -47,7 +49,7 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
 
         // Inspect the whole file to infer the format options
         var options = inferOptions(tokenize(invocation.buffer.completeBuffer))
-        options.indent = invocation.buffer.indentationString()
+        options.indent = indentationString(for: invocation.buffer)
         options.fragment = true
 
         // Grab the selected source to format using entire lines of text
@@ -81,7 +83,7 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
     ///   - targetText: Modified text
     /// - Returns: Source text range that should be usable with the passed modified text
     private func rangeForDifferences(in textRange: XCSourceTextRange,
-        between sourceText: String, and targetText: String) -> XCSourceTextRange {
+                                     between sourceText: String, and targetText: String) -> XCSourceTextRange {
 
         // Ensure that we're not greedy about end selections — this can cause empty lines to be removed
         let lineCountOfTarget = targetText.components(separatedBy: CharacterSet.newlines).count

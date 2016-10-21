@@ -5,7 +5,7 @@
 //  Version 0.13
 //
 //  Created by Nick Lockwood on 11/08/2016.
-//  Copyright 2016 Charcoal Design
+//  Copyright 2016 Nick Lockwood
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:

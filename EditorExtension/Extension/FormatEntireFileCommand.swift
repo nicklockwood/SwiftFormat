@@ -3,7 +3,7 @@
 //  Swift Formatter
 //
 //  Created by Tony Arnold on 5/10/16.
-//  Copyright 2016 Charcoal Design
+//  Copyright 2016 Nick Lockwood
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:

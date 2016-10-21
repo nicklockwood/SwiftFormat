@@ -5,7 +5,7 @@
 //  Version 0.13
 //
 //  Created by Nick Lockwood on 12/08/2016.
-//  Copyright 2016 Charcoal Design
+//  Copyright 2016 Nick Lockwood
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -61,6 +61,102 @@ func expandPath(_ path: String) -> URL {
     return URL(fileURLWithPath: path, relativeTo: directoryURL)
 }
 
+func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
+    
+    func processOption(_ key: String, handler: (String) throws -> Void) throws {
+        guard let value = args[key] else {
+            return
+        }
+        guard !value.isEmpty else {
+            print("error: --\(key) option expects a value.")
+            throw NSError()
+        }
+        do {
+            try handler(value.lowercased())
+        } catch {
+            print("error: unsupported --\(key) value: \(value).")
+            throw error
+        }
+    }
+    
+    var options = FormatOptions()
+    try processOption("indent") {
+        switch $0 {
+        case "tab", "tabs":
+            options.indent = "\t"
+        default:
+            if let spaces = Int($0) {
+                options.indent = String(repeating: " ", count: spaces)
+                break
+            }
+            throw NSError()
+        }
+    }
+    try processOption("semicolons") {
+        switch $0 {
+        case "inline":
+            options.allowInlineSemicolons = true
+        case "never":
+            options.allowInlineSemicolons = false
+        default:
+            throw NSError()
+        }
+    }
+    try processOption("commas") {
+        switch $0 {
+        case "always":
+            options.trailingCommas = true
+        case "inline":
+            options.trailingCommas = false
+        default:
+            throw NSError()
+        }
+    }
+    try processOption("linebreaks") {
+        switch $0 {
+        case "cr":
+            options.linebreak = "\r"
+        case "lf":
+            options.linebreak = "\n"
+        case "crlf":
+            options.linebreak = "\r\n"
+        default:
+            throw NSError()
+        }
+    }
+    try processOption("ranges") {
+        switch $0 {
+        case "space", "spaced", "spaces":
+            options.spaceAroundRangeOperators = true
+        case "nospace":
+            options.spaceAroundRangeOperators = false
+        default:
+            throw NSError()
+        }
+    }
+    try processOption("empty") {
+        switch $0 {
+        case "void":
+            options.useVoid = true
+        case "tuple":
+            options.useVoid = false
+        default:
+            throw NSError()
+        }
+    }
+    try processOption("fragment") {
+        switch $0 {
+        case "true":
+            options.fragment = true
+        case "false":
+            options.fragment = false
+        default:
+            throw NSError()
+        }
+    }
+    return options
+}
+
 func processArguments(_ args: [String]) {
     guard let args = preprocessArguments(args, [
         "output",
@@ -92,100 +188,8 @@ func processArguments(_ args: [String]) {
     let inputURL = args["1"].map { expandPath($0) }
     let outputURL = (args["output"] ?? args["1"]).map { expandPath($0) }
 
-    func processOption(_ key: String, handler: (String) throws -> Void) throws {
-        guard let value = args[key] else {
-            return
-        }
-        guard !value.isEmpty else {
-            print("error: --\(key) option expects a value.")
-            throw NSError()
-        }
-        do {
-            try handler(value.lowercased())
-        } catch {
-            print("error: unsupported --\(key) value: \(value).")
-            throw error
-        }
-    }
-
     // Get options
-    var options = FormatOptions()
-    do {
-        try processOption("indent") {
-            switch $0 {
-            case "tab", "tabs":
-                options.indent = "\t"
-            default:
-                if let spaces = Int($0) {
-                    options.indent = String(repeating: " ", count: spaces)
-                    break
-                }
-                throw NSError()
-            }
-        }
-        try processOption("semicolons") {
-            switch $0 {
-            case "inline":
-                options.allowInlineSemicolons = true
-            case "never":
-                options.allowInlineSemicolons = false
-            default:
-                throw NSError()
-            }
-        }
-        try processOption("commas") {
-            switch $0 {
-            case "always":
-                options.trailingCommas = true
-            case "inline":
-                options.trailingCommas = false
-            default:
-                throw NSError()
-            }
-        }
-        try processOption("linebreaks") {
-            switch $0 {
-            case "cr":
-                options.linebreak = "\r"
-            case "lf":
-                options.linebreak = "\n"
-            case "crlf":
-                options.linebreak = "\r\n"
-            default:
-                throw NSError()
-            }
-        }
-        try processOption("ranges") {
-            switch $0 {
-            case "space", "spaced", "spaces":
-                options.spaceAroundRangeOperators = true
-            case "nospace":
-                options.spaceAroundRangeOperators = false
-            default:
-                throw NSError()
-            }
-        }
-        try processOption("empty") {
-            switch $0 {
-            case "void":
-                options.useVoid = true
-            case "tuple":
-                options.useVoid = false
-            default:
-                throw NSError()
-            }
-        }
-        try processOption("fragment") {
-            switch $0 {
-            case "true":
-                options.fragment = true
-            case "false":
-                options.fragment = false
-            default:
-                throw NSError()
-            }
-        }
-    } catch {
+    guard let options = try? optionsForArguments(args) else {
         return
     }
 

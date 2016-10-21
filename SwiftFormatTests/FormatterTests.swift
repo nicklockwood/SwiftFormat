@@ -3,7 +3,7 @@
 //  SwiftFormat
 //
 //  Created by Nick Lockwood on 30/08/2016.
-//  Copyright 2016 Charcoal Design
+//  Copyright 2016 Nick Lockwood
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:

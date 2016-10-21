@@ -502,7 +502,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/CommandLineTool/swiftformat\" \"${SRCROOT}\" -r spaced";
+			shellScript = "\"${SRCROOT}/CommandLineTool/swiftformat\" \"${SRCROOT}\"";
 		};
 		017AEBB31D6F27D500764325 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;

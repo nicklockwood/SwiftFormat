@@ -1091,6 +1091,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testIndentNestedArrayLiteral() {
+        let input = "foo(bar: [\n.baz,\n])"
+        let output = "foo(bar: [\n    .baz,\n])"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testClosingScopeAfterContent() {
         let input = "foo(\nbar)"
         let output = "foo(\n    bar)"
@@ -1108,6 +1115,13 @@ class RulesTests: XCTestCase {
     func testWrappedFunctionArguments() {
         let input = "foo(\nbar,\nbaz\n)"
         let output = "foo(\n    bar,\n    baz\n)"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testFunctionArgumentsWrappedAfterFirst() {
+        let input = "func foo(bar: Int,\nbaz: Int)"
+        let output = "func foo(bar: Int,\n         baz: Int)"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1255,14 +1269,14 @@ class RulesTests: XCTestCase {
 
     func testWrappedLineAfterCommaInsideInlineArray() {
         let input = "[foo,\nbar]"
-        let output = "[foo,\n    bar]"
+        let output = "[foo,\n bar]"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testWrappedLineBeforeCommaInsideInlineArray() {
         let input = "[foo\n, bar]"
-        let output = "[foo\n    , bar]"
+        let output = "[foo\n , bar]"
         XCTAssertEqual(try! format(input, rules: [indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

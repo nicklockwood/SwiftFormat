@@ -935,9 +935,9 @@ public func indent(_ formatter: Formatter) {
                 if token.string == "." {
                     if let previousToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
                         // Is this an enum value?
-                        return (previousToken.string == ":" || previousToken.string == ",") &&
-                            // For arrays, dictionaries, cases, or argument lists, we already indent
-                            ["[", "(", "case"].contains(currentScope()?.string ?? "")
+                        let scope = currentScope()?.string ?? ""
+                        return (scope == "[" && ["[", ",", ":"].contains(previousToken.string)) ||
+                            (["(", "case"].contains(scope) && [scope, ","].contains(previousToken.string))
                     }
                     return true
                 }
@@ -1002,20 +1002,38 @@ public func indent(_ formatter: Formatter) {
             }
             // Handle start of scope
             scopeIndexStack.append(i)
-            var indent = indentStack.last ?? ""
+            let indentCount: Int
             if lineIndex > scopeStartLineIndexes.last ?? -1 {
-                switch token.string {
-                case "/*":
-                    // Comments only indent one space
-                    indent += " "
-                default:
-                    indent += formatter.options.indent
-                }
-                indentStack.append(indent)
-                indentCounts.append(1)
+                indentCount = 1
             } else {
-                indentCounts[indentCounts.count - 1] += 1
+                indentCount = indentCounts.last! + 1
             }
+            indentCounts.append(indentCount)
+            var indent = indentStack[indentStack.count - indentCount]
+            switch token.string {
+            case "/*":
+                // Comments only indent one space
+                indent += " "
+            case "[", "(":
+                if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.type != .linebreak {
+                    let nextIndex: Int! = formatter.indexOfNextToken(fromIndex: i) { $0.type != .whitespace }
+                    let start = formatter.startOfLine(atIndex: i)
+                    // align indent with previous value
+                    indent = ""
+                    for token in formatter.tokens[start ..< nextIndex] {
+                        if token.type == .whitespace {
+                            indent += token.string
+                        } else {
+                            indent += String(repeating: " ", count: token.string.characters.count)
+                        }
+                    }
+                    break
+                }
+                fallthrough
+            default:
+                indent += formatter.options.indent
+            }
+            indentStack.append(indent)
             scopeStartLineIndexes.append(lineIndex)
             linewrapStack.append(false)
         } else if token.type != .whitespace {
@@ -1028,13 +1046,9 @@ public func indent(_ formatter: Formatter) {
                     linewrapStack.removeLast()
                     scopeStartLineIndexes.removeLast()
                     scopeIndexStack.removeLast()
+                    indentStack.removeLast()
                     let indentCount = indentCounts.last! - 1
-                    if indentCount == 0 {
-                        indentStack.removeLast()
-                        indentCounts.removeLast()
-                    } else {
-                        indentCounts[indentCounts.count - 1] = indentCount
-                    }
+                    indentCounts.removeLast()
                     if lineIndex > scopeStartLineIndexes.last ?? -1 {
                         // If indentCount > 0, drop back to previous indent level
                         if indentCount > 0 {

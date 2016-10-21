@@ -112,10 +112,10 @@ public struct Token: Equatable {
             return false
         }
     }
-}
 
-public func ==(lhs: Token, rhs: Token) -> Bool {
-    return lhs.type == rhs.type && lhs.string == rhs.string
+    public static func ==(lhs: Token, rhs: Token) -> Bool {
+        return lhs.type == rhs.type && lhs.string == rhs.string
+    }
 }
 
 extension Character {
@@ -450,7 +450,7 @@ private extension String.CharacterView {
     }
 }
 
-func tokenize(_ source: String) -> [Token] {
+public func tokenize(_ source: String) -> [Token] {
     var scopeIndexStack: [Int] = []
     var tokens: [Token] = []
     var characters = source.characters

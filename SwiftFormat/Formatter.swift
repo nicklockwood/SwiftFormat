@@ -33,35 +33,6 @@
 
 import Foundation
 
-/// Configuration options for formatting. These aren't actually used by the
-/// Formatter class itself, but it makes them available to the format rules.
-public struct FormatOptions {
-    public var indent: String
-    public var linebreak: String
-    public var allowInlineSemicolons: Bool
-    public var spaceAroundRangeOperators: Bool
-    public var useVoid: Bool
-    public var trailingCommas: Bool
-    public var fragment: Bool
-
-    public init(indent: String = "    ",
-        linebreak: String = "\n",
-        allowInlineSemicolons: Bool = true,
-        spaceAroundRangeOperators: Bool = true,
-        useVoid: Bool = true,
-        trailingCommas: Bool = true,
-        fragment: Bool = false) {
-
-        self.indent = indent
-        self.linebreak = linebreak
-        self.allowInlineSemicolons = allowInlineSemicolons
-        self.spaceAroundRangeOperators = spaceAroundRangeOperators
-        self.useVoid = useVoid
-        self.trailingCommas = trailingCommas
-        self.fragment = fragment
-    }
-}
-
 /// This is a utility class used for manipulating a tokenized source file.
 /// It doesn't actually contain any logic for formatting, but provides
 /// utility methods for enumerating and adding/removing/replacing tokens.
@@ -74,7 +45,7 @@ public class Formatter {
 
     private var indexStack: [Int] = []
 
-    init(_ tokens: [Token], options: FormatOptions) {
+    init(_ tokens: [Token], options: FormatOptions = FormatOptions()) {
         self.tokens = tokens
         self.options = options
     }

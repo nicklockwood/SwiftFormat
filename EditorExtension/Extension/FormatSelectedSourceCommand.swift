@@ -45,6 +45,11 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
             return completionHandler(FormatCommandError.noSelection)
         }
 
+        // Inspect the whole file to infer the format options
+        var options = inferOptions(tokenize(invocation.buffer.completeBuffer))
+        options.indent = invocation.buffer.indentationString()
+        options.fragment = true
+
         // Grab the selected source to format using entire lines of text
         let selectionRange = selection.start.line ... min(selection.end.line, invocation.buffer.lines.count - 1)
         let sourceToFormat = selectionRange.flatMap { invocation.buffer.lines[$0] as? String }.joined()
@@ -52,14 +57,11 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         // Remove all selections to avoid a crash when changing the contents of the buffer.
         invocation.buffer.selections.removeAllObjects()
 
-        let indent = indentationString(for: invocation.buffer)
-        let options = FormatOptions(indent: indent, fragment: true)
-
         do {
-            let formattedSource = try format(sourceToFormat, rules: defaultRules, options: options)
+            let formattedSource = try format(sourceToFormat, options: options)
             invocation.buffer.lines.removeObjects(in: NSMakeRange(selection.start.line, selectionRange.count))
             invocation.buffer.lines.insert(formattedSource, at: selection.start.line)
-    
+
             let updatedSelectionRange = rangeForDifferences(
                 in: selection, between: sourceToFormat, and: formattedSource)
 
@@ -90,28 +92,5 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         let end = XCSourceTextPosition(line: finalLine - difference, column: 0)
 
         return XCSourceTextRange(start: start, end: end)
-    }
-
-    /// Calculates the indentation string representation for a given source text buffer.
-    ///
-    /// - Parameter buffer: Source text buffer
-    /// - Returns: Indentation represented as a string
-    private func indentationString(for buffer: XCSourceTextBuffer) -> String {
-
-        // NOTE: we cannot exactly replicate Xcode's indent logic in SwiftFormat because
-        // SwiftFormat doesn't support the concept of mixed tabs/spaces that Xcode does.
-        //
-        // But that's OK because mixing tabs and spaces is really stupid.
-        //
-        // So in the event that the user has chosen to use tabs, but their chosen indentation
-        // width is not a multiple of the tab width, we'll just use spaces instead.
-
-        if buffer.usesTabsForIndentation {
-            let tabCount = buffer.indentationWidth / buffer.tabWidth
-            if tabCount * buffer.tabWidth == buffer.indentationWidth {
-                return String(repeating: "\t", count: tabCount)
-            }
-        }
-        return String(repeating: " ", count: buffer.indentationWidth)
     }
 }

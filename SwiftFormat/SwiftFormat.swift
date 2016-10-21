@@ -117,13 +117,12 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String
     return namedArgs
 }
 
-/// Format code with specified rules and options
-public func format(_ source: String,
+/// Format a pre-parsed token array
+func format(_ tokens: [Token],
     rules: [FormatRule] = defaultRules,
     options: FormatOptions = FormatOptions()) throws -> String {
 
     // Parse
-    var tokens = tokenize(source)
     guard options.fragment || tokens.last?.type != .error else {
         // TODO: more useful errors
         throw NSError(domain: "SwiftFormat", code: 0, userInfo: nil)
@@ -132,8 +131,15 @@ public func format(_ source: String,
     // Format
     let formatter = Formatter(tokens, options: options)
     rules.forEach { $0(formatter) }
-    tokens = formatter.tokens
 
     // Output
-    return tokens.reduce("", { $0 + $1.string })
+    return formatter.tokens.reduce("", { $0 + $1.string })
+}
+
+/// Format code with specified rules and options
+public func format(_ source: String,
+    rules: [FormatRule] = defaultRules,
+    options: FormatOptions = FormatOptions()) throws -> String {
+
+    return try format(tokenize(source), rules: rules, options: options)
 }

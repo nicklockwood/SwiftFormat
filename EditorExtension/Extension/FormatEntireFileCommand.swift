@@ -41,13 +41,16 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
 
         // Grab the selected source to format
         let sourceToFormat = invocation.buffer.completeBuffer
+        let tokens = tokenize(sourceToFormat)
 
         // Remove all selections to avoid a crash when changing the contents of the buffer.
         invocation.buffer.selections.removeAllObjects()
 
+        // Infer format options
+        var options = inferOptions(tokens)
+        options.indent = invocation.buffer.indentationString()
+
         do {
-            let indent = String(repeating: " ", count: invocation.buffer.indentationWidth)
-            let options = FormatOptions(indent: indent)
             let output = try format(sourceToFormat, rules: defaultRules, options: options)
             invocation.buffer.completeBuffer = output
         } catch let error {

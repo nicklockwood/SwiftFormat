@@ -62,7 +62,7 @@ func expandPath(_ path: String) -> URL {
 }
 
 func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
-    
+
     func processOption(_ key: String, handler: (String) throws -> Void) throws {
         guard let value = args[key] else {
             return
@@ -78,7 +78,7 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
             throw error
         }
     }
-    
+
     var options = FormatOptions()
     try processOption("indent") {
         switch $0 {

@@ -59,4 +59,11 @@ class OptionsTests: XCTestCase {
         let options = inferOptions(tokenize(input))
         XCTAssertEqual(options.trailingCommas, output)
     }
+
+    func testInferIndentComments() {
+        let input = "  /**\n  hello\n    - world\n  */"
+        let output = false
+        let options = inferOptions(tokenize(input))
+        XCTAssertEqual(options.indentComments, output)
+    }
 }

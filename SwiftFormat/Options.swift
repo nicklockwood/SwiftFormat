@@ -15,6 +15,7 @@ public struct FormatOptions {
     public var spaceAroundRangeOperators: Bool
     public var useVoid: Bool
     public var trailingCommas: Bool
+    public var indentComments: Bool
     public var fragment: Bool
 
     public init(indent: String = "    ",
@@ -23,6 +24,7 @@ public struct FormatOptions {
                 spaceAroundRangeOperators: Bool = true,
                 useVoid: Bool = true,
                 trailingCommas: Bool = true,
+                indentComments: Bool = true,
                 fragment: Bool = false) {
 
         self.indent = indent
@@ -31,6 +33,7 @@ public struct FormatOptions {
         self.spaceAroundRangeOperators = spaceAroundRangeOperators
         self.useVoid = useVoid
         self.trailingCommas = trailingCommas
+        self.indentComments = indentComments
         self.fragment = fragment
     }
 }
@@ -127,6 +130,59 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
             }
         }
         return trailing >= noTrailing
+    }()
+
+    options.indentComments = {
+        var shouldIndent = true
+        var nestedComments = 0
+        var prevIndent: Int?
+        var lastToken = Token(.whitespace, "")
+        for token in formatter.tokens {
+            switch token.type {
+            case .startOfScope:
+                if token.string == "/*" {
+                    nestedComments += 1
+                }
+                prevIndent = nil
+            case .endOfScope:
+                if token.string == "*/" {
+                    if nestedComments > 0 {
+                        if lastToken.type == .linebreak {
+                            if prevIndent != nil && prevIndent! >= 2 {
+                                shouldIndent = false
+                                break
+                            }
+                            prevIndent = 0
+                        }
+                        nestedComments -= 1
+                    } else {
+                        break // might be fragment, or syntax error
+                    }
+                }
+                prevIndent = nil
+            case .whitespace:
+                if nestedComments > 0 && lastToken.type == .linebreak {
+                    let indent = token.string.characters.count
+                    if prevIndent != nil && abs(prevIndent! - indent) >= 2 {
+                        shouldIndent = false
+                        break
+                    }
+                    prevIndent = indent
+                }
+            case .commentBody:
+                if nestedComments > 0 && lastToken.type == .linebreak {
+                    if prevIndent != nil && prevIndent! >= 2 {
+                        shouldIndent = false
+                        break
+                    }
+                    prevIndent = 0
+                }
+            default:
+                break
+            }
+            lastToken = token
+        }
+        return shouldIndent
     }()
 
     return options

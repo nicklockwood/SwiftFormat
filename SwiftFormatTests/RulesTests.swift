@@ -1549,6 +1549,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testCommentIndentingDisabled() {
+        let input = "  /**\n  hello\n    - world\n  */"
+        let output = "  /**\n  hello\n    - world\n  */"
+        let options = FormatOptions(indentComments: false, fragment: true)
+        XCTAssertEqual(try! format(input, rules: [indent], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
     // MARK: indent #if/#else/#elseif/#endif
 
     func testIfEndifIndenting() {

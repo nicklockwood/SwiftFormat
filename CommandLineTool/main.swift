@@ -35,6 +35,20 @@ import Foundation
 
 let version = "0.14"
 
+let arguments = [
+    "output",
+    "indent",
+    "linebreaks",
+    "semicolons",
+    "commas",
+    "comments",
+    "ranges",
+    "empty",
+    "fragment",
+    "help",
+    "version",
+]
+
 func showHelp() {
     print("swiftformat, version \(version)")
     print("copyright (c) 2016 Nick Lockwood")
@@ -47,6 +61,7 @@ func showHelp() {
     print("  --linebreaks  linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
     print("  --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
     print("  --commas      commas in collection literals. \"always\" (default) or \"inline\"")
+    print("  --comments    indenting of comment bodies. \"indent\" (default) or \"ignore\"")
     print("  --ranges      spacing for ranges. either \"spaced\" (default) or \"nospace\"")
     print("  --empty       how empty values are represented. \"void\" (default) or \"tuple\"")
     print("  --fragment    treat code as only part of file. \"true\" or \"false\" (default)")
@@ -64,6 +79,7 @@ func expandPath(_ path: String) -> URL {
 func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
 
     func processOption(_ key: String, handler: (String) throws -> Void) throws {
+        precondition(arguments.contains(key))
         guard let value = args[key] else {
             return
         }
@@ -108,6 +124,16 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
             options.trailingCommas = true
         case "inline":
             options.trailingCommas = false
+        default:
+            throw NSError()
+        }
+    }
+    try processOption("comments") {
+        switch $0 {
+        case "indent":
+            options.indentComments = true
+        case "ignore":
+            options.indentComments = false
         default:
             throw NSError()
         }
@@ -158,17 +184,12 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
 }
 
 func processArguments(_ args: [String]) {
-    guard let args = preprocessArguments(args, [
-        "output",
-        "indent",
-        "linebreaks",
-        "semicolons",
-        "ranges",
-        "empty",
-        "fragment",
-        "help",
-        "version",
-    ]) else {
+    guard let args = preprocessArguments(args, arguments) else {
+        return
+    }
+
+    // Get options
+    guard let options = try? optionsForArguments(args) else {
         return
     }
 
@@ -187,11 +208,6 @@ func processArguments(_ args: [String]) {
     // Get input / output paths
     let inputURL = args["1"].map { expandPath($0) }
     let outputURL = (args["output"] ?? args["1"]).map { expandPath($0) }
-
-    // Get options
-    guard let options = try? optionsForArguments(args) else {
-        return
-    }
 
     // If no input file, try stdin
     if inputURL == nil {

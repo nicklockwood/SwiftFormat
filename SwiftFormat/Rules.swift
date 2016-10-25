@@ -1135,10 +1135,25 @@ public func indent(_ formatter: Formatter) {
                     insertWhitespace("", atIndex: i + 1)
                 }
                 if let nextToken = formatter.tokenAtIndex(i + 2) {
-                    if nextToken.type == .linebreak {
+                    switch nextToken.type {
+                    case .linebreak:
                         // TODO: Add option to not strip indent from blank lines
                         insertWhitespace("", atIndex: i + 1)
-                    } else if nextToken.type != .error {
+                    case .commentBody:
+                        if formatter.options.indentComments {
+                            insertWhitespace(indent, atIndex: i + 1)
+                        }
+                    case .startOfScope:
+                        if formatter.options.indentComments || nextToken.string != "/*" {
+                            insertWhitespace(indent, atIndex: i + 1)
+                        }
+                    case .endOfScope:
+                        if formatter.options.indentComments || nextToken.string != "*/" {
+                            insertWhitespace(indent, atIndex: i + 1)
+                        }
+                    case .error:
+                        break
+                    default:
                         insertWhitespace(indent, atIndex: i + 1)
                     }
                 }

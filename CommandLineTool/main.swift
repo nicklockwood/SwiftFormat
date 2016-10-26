@@ -44,6 +44,7 @@ let arguments = [
     "comments",
     "ranges",
     "empty",
+    "trimwhitespace",
     "experimental",
     "fragment",
     "help",
@@ -56,19 +57,20 @@ func showHelp() {
     print("")
     print("usage: swiftformat [<file>] [--output path] [--indent spaces] [...]")
     print("")
-    print("<file>          input file or directory path")
-    print("--output        output path (defaults to input path)")
-    print("--indent        number of spaces to indent, or \"tab\" to use tabs")
-    print("--linebreaks    linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
-    print("--semicolons    allow semicolons. values are \"never\" or \"inline\" (default)")
-    print("--commas        commas in collection literals. \"always\" (default) or \"inline\"")
-    print("--comments      indenting of comment bodies. \"indent\" (default) or \"ignore\"")
-    print("--ranges        spacing for ranges. either \"spaced\" (default) or \"nospace\"")
-    print("--empty         how empty values are represented. \"void\" (default) or \"tuple\"")
-    print("--experimental  enable experimental rules. \"enabled\" or \"disabled\" (default)")
-    print("--fragment      treat code as only part of file. \"true\" or \"false\" (default)")
-    print("--help          this help page")
-    print("--version       version information")
+    print(" <file>            input file or directory path")
+    print(" --output          output path (defaults to input path)")
+    print(" --indent          number of spaces to indent, or \"tab\" to use tabs")
+    print(" --linebreaks      linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
+    print(" --semicolons      allow semicolons. \"never\" or \"inline\" (default)")
+    print(" --commas          commas in collection literals. \"always\" (default) or \"inline\"")
+    print(" --comments        indenting of comment bodies. \"indent\" (default) or \"ignore\"")
+    print(" --ranges          spacing for ranges. \"spaced\" (default) or \"nospace\"")
+    print(" --empty           how empty values are represented. \"void\" (default) or \"tuple\"")
+    print(" --trimwhitespace  trim trailing space. \"always\" (default) or \"nonblank-lines\"")
+    print(" --experimental    experimental rules. \"enabled\" or \"disabled\" (default)")
+    print(" --fragment        input is part of a larger file. \"true\" or \"false\" (default)")
+    print(" --help            this help page")
+    print(" --version         version information")
     print("")
 }
 
@@ -172,6 +174,17 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
             throw NSError()
         }
     }
+    try processOption("trimwhitespace") {
+        switch $0 {
+        case "always":
+            options.truncateBlankLines = true
+        case "nonblank-lines", "nonblank", "non-blank-lines", "non-blank",
+             "nonempty-lines", "nonempty", "non-empty-lines", "non-empty":
+            options.truncateBlankLines = false
+        default:
+            throw NSError()
+        }
+    }
     try processOption("experimental") {
         switch $0 {
         case "enabled", "true":
@@ -263,8 +276,10 @@ func processArguments(_ args: [String]) {
     print("running swiftformat...")
 
     // Format the code
+    let start = CFAbsoluteTimeGetCurrent()
     let filesWritten = processInput(inputURL!, andWriteToOutput: outputURL!, withOptions: options)
-    print("swiftformat completed. \(filesWritten) file(s) updated.")
+    let time = CFAbsoluteTimeGetCurrent() - start
+    print("swiftformat completed. \(filesWritten) file\(filesWritten == 1 ? "" : "s") updated in \(String(format: "%.2f", time))s.")
 }
 
 processArguments(CommandLine.arguments)

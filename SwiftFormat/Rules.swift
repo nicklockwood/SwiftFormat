@@ -1044,8 +1044,7 @@ public func indent(_ formatter: Formatter) {
                 if let nextToken = formatter.tokenAtIndex(i + 2) {
                     switch nextToken.type {
                     case .linebreak:
-                        // TODO: Add option to not strip indent from blank lines
-                        insertWhitespace("", atIndex: i + 1)
+                        insertWhitespace(formatter.options.truncateBlankLines ? "" : indent, atIndex: i + 1)
                     case .commentBody:
                         if formatter.options.indentComments {
                             insertWhitespace(indent, atIndex: i + 1)

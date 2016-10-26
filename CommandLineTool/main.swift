@@ -67,6 +67,8 @@ func showHelp() {
     print(" --ranges          spacing for ranges. \"spaced\" (default) or \"nospace\"")
     print(" --empty           how empty values are represented. \"void\" (default) or \"tuple\"")
     print(" --trimwhitespace  trim trailing space. \"always\" (default) or \"nonblank-lines\"")
+    print(" --insertlines     insert blank line after {. \"enabled\" (default) or \"disabled\"")
+    print(" --removelines     remove blank line before }. \"enabled\" (default) or \"disabled\"")
     print(" --experimental    experimental rules. \"enabled\" or \"disabled\" (default)")
     print(" --fragment        input is part of a larger file. \"true\" or \"false\" (default)")
     print(" --help            this help page")
@@ -181,6 +183,26 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
         case "nonblank-lines", "nonblank", "non-blank-lines", "non-blank",
              "nonempty-lines", "nonempty", "non-empty-lines", "non-empty":
             options.truncateBlankLines = false
+        default:
+            throw NSError()
+        }
+    }
+    try processOption("insertlines") {
+        switch $0 {
+        case "enabled", "true":
+            options.insertBlankLines = true
+        case "disabled", "false":
+            options.insertBlankLines = false
+        default:
+            throw NSError()
+        }
+    }
+    try processOption("removelines") {
+        switch $0 {
+        case "enabled", "true":
+            options.removeBlankLines = true
+        case "disabled", "false":
+            options.removeBlankLines = false
         default:
             throw NSError()
         }

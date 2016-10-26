@@ -597,6 +597,7 @@ public func consecutiveBlankLines(_ formatter: Formatter) {
 /// Remove blank lines immediately before a closing brace, bracket, paren or chevron,
 /// unless it's followed by more code on the same line (e.g. } else { )
 public func blankLinesAtEndOfScope(_ formatter: Formatter) {
+    guard formatter.options.removeBlankLines else { return }
     formatter.forEachToken(ofType: .endOfScope) { i, token in
         guard ["}", ")", "]", ">"].contains(token.string) else { return }
         if let nw = formatter.nextNonWhitespaceOrCommentToken(fromIndex: i) {
@@ -630,6 +631,7 @@ public func blankLinesAtEndOfScope(_ formatter: Formatter) {
 
 /// Adds a blank line immediately after a closing brace, unless followed by another closing brace
 public func blankLinesBetweenScopes(_ formatter: Formatter) {
+    guard formatter.options.insertBlankLines else { return }
     var spaceableScopeStack = [true]
     var isSpaceableScopeType = false
     formatter.forEachToken { i, token in

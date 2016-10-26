@@ -55,18 +55,18 @@ func showHelp() {
     print("")
     print("usage: swiftformat [<file>] [--output path] [--indent spaces] [...]")
     print("")
-    print("  <file>        input file or directory path")
-    print("  --output      output path (defaults to input path)")
-    print("  --indent      number of spaces to indent, or \"tab\" to use tabs")
-    print("  --linebreaks  linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
-    print("  --semicolons  allow semicolons. values are \"never\" or \"inline\" (default)")
-    print("  --commas      commas in collection literals. \"always\" (default) or \"inline\"")
-    print("  --comments    indenting of comment bodies. \"indent\" (default) or \"ignore\"")
-    print("  --ranges      spacing for ranges. either \"spaced\" (default) or \"nospace\"")
-    print("  --empty       how empty values are represented. \"void\" (default) or \"tuple\"")
-    print("  --fragment    treat code as only part of file. \"true\" or \"false\" (default)")
-    print("  --help        this help page")
-    print("  --version     version information")
+    print("<file>          input file or directory path")
+    print("--output        output path (defaults to input path)")
+    print("--indent        number of spaces to indent, or \"tab\" to use tabs")
+    print("--linebreaks    linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
+    print("--semicolons    allow semicolons. values are \"never\" or \"inline\" (default)")
+    print("--commas        commas in collection literals. \"always\" (default) or \"inline\"")
+    print("--comments      indenting of comment bodies. \"indent\" (default) or \"ignore\"")
+    print("--ranges        spacing for ranges. either \"spaced\" (default) or \"nospace\"")
+    print("--empty         how empty values are represented. \"void\" (default) or \"tuple\"")
+    print("--fragment      treat code as only part of file. \"true\" or \"false\" (default)")
+    print("--help          this help page")
+    print("--version       version information")
     print("")
 }
 
@@ -98,7 +98,7 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
     var options = FormatOptions()
     try processOption("indent") {
         switch $0 {
-        case "tab", "tabs":
+        case "tab", "tabs", "tabbed":
             options.indent = "\t"
         default:
             if let spaces = Int($0) {
@@ -112,7 +112,7 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
         switch $0 {
         case "inline":
             options.allowInlineSemicolons = true
-        case "never":
+        case "never", "false":
             options.allowInlineSemicolons = false
         default:
             throw NSError()
@@ -120,9 +120,9 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
     }
     try processOption("commas") {
         switch $0 {
-        case "always":
+        case "always", "true":
             options.trailingCommas = true
-        case "inline":
+        case "inline", "false":
             options.trailingCommas = false
         default:
             throw NSError()
@@ -130,7 +130,7 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
     }
     try processOption("comments") {
         switch $0 {
-        case "indent":
+        case "indent", "indented":
             options.indentComments = true
         case "ignore":
             options.indentComments = false
@@ -164,7 +164,7 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
         switch $0 {
         case "void":
             options.useVoid = true
-        case "tuple":
+        case "tuple", "tuples":
             options.useVoid = false
         default:
             throw NSError()
@@ -172,9 +172,9 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
     }
     try processOption("fragment") {
         switch $0 {
-        case "true":
+        case "true", "enabled":
             options.fragment = true
-        case "false":
+        case "false", "disabled":
             options.fragment = false
         default:
             throw NSError()

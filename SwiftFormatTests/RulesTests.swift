@@ -947,9 +947,9 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testBlankLineBetweenPropertyAndFunction() {
+    func testNpBlankLineBetweenPropertyAndFunction() {
         let input = "var foo: Int\nfunc bar() {\n}"
-        let output = "var foo: Int\n\nfunc bar() {\n}"
+        let output = "var foo: Int\nfunc bar() {\n}"
         XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -957,13 +957,6 @@ class RulesTests: XCTestCase {
     func testBlankLineBetweenFunctionsIsBeforeComment() {
         let input = "func foo() {\n}\n// headerdoc\nfunc bar() {\n}"
         let output = "func foo() {\n}\n\n// headerdoc\nfunc bar() {\n}"
-        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
-    }
-
-    func testBlankLineBetweenFunctionsIsAfterComment() {
-        let input = "class Foo { // comment\n    func bar() {\n    }\n    func baz() {\n    }\n}"
-        let output = "class Foo { // comment\n\n    func bar() {\n    }\n\n    func baz() {\n    }\n}"
         XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -996,23 +989,9 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testBlankLineBetweenFunctionsInClassAfterProtocol() {
-        let input = "protocol Foo {}\n\nclass Bar {\n    init() {\n    }\n}"
-        let output = "protocol Foo {}\n\nclass Bar {\n\n    init() {\n    }\n}"
-        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
-    }
-
     func testNoBlankLineInsideInitFunction() {
         let input = "init() {\n    super.init()\n}"
         let output = "init() {\n    super.init()\n}"
-        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
-    }
-
-    func testNoBlankLineBeforeClassProperty() {
-        let input = "var foo: Int {\n}\nclass var bar: String"
-        let output = "var foo: Int {\n}\nclass var bar: String"
         XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -1046,15 +1025,43 @@ class RulesTests: XCTestCase {
     }
 
     func testNoBlankLineBetweenFunctionsWithInlineBody() {
-        let input = "{\n    func foo() { print(\"foo\") }\n    func bar() { print(\"bar\") }\n}"
-        let output = "{\n    func foo() { print(\"foo\") }\n    func bar() { print(\"bar\") }\n}"
+        let input = "class Foo {\n    func foo() { print(\"foo\") }\n    func bar() { print(\"bar\") }\n}"
+        let output = "class Foo {\n    func foo() { print(\"foo\") }\n    func bar() { print(\"bar\") }\n}"
         XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testBlankLineBetweenPropertyAndPrefixFunction() {
-        let input = "var foo: Int\nprefix\nfunc -(rhs: Foo) -> Foo {\n}"
-        let output = "var foo: Int\n\nprefix\nfunc -(rhs: Foo) -> Foo {\n}"
+    func testNoBlankLineBetweenIfStatements() {
+        let input = "func foo() {\n    if x {\n    }\n    if y {\n    }\n}"
+        let output = "func foo() {\n    if x {\n    }\n    if y {\n    }\n}"
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoBlanksInsideClassFunc() {
+        let input = "class func foo {\n    if x {\n    }\n    if y {\n    }\n}"
+        let output = "class func foo {\n    if x {\n    }\n    if y {\n    }\n}"
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoBlanksInsideClassVar() {
+        let input = "class var foo: Int {\n    if x {\n    }\n    if y {\n    }\n}"
+        let output = "class var foo: Int {\n    if x {\n    }\n    if y {\n    }\n}"
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testBlankLineBetweenCalledClosures() {
+        let input = "class Foo {\n    var foo = {\n    }()\n    func bar {\n    }\n}"
+        let output = "class Foo {\n    var foo = {\n    }()\n\n    func bar {\n    }\n}"
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoBlankAfterCalledClosureAtEndOfScope() {
+        let input = "class Foo {\n    var foo = {\n    }()\n}"
+        let output = "class Foo {\n    var foo = {\n    }()\n}"
         XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

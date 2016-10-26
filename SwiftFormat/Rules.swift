@@ -628,156 +628,63 @@ public func blankLinesAtEndOfScope(_ formatter: Formatter) {
     }
 }
 
-/// Adds a blank line immediately before a class, struct, enum, extension, protocol or function.
-/// If the scope is immediately preceded by a comment, the line will be inserted before that instead.
+/// Adds a blank line immediately after a closing brace, unless followed by another closing brace
 public func blankLinesBetweenScopes(_ formatter: Formatter) {
-    formatter.forEachToken(ofType: .identifier) { i, token in
-        if formatter.previousNonWhitespaceToken(fromIndex: i)?.string == "." {
-            return
-        }
-        switch token.string {
-        case "struct", "enum", "protocol", "extension":
-            break
-        case "class":
-            // Ignore class var/let/func
-            if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i),
-                nextToken.type == .identifier {
-                switch nextToken.string {
-                case "var", "let", "func",
-                     "private", "fileprivate", "public", "internal", "open",
-                     "final", "required", "override", "convenience",
-                     "lazy", "dynamic", "static",
-                     "prefix", "postfix":
-                    return
-                default:
-                    break
+    var spaceableScopeStack = [true]
+    var isSpaceableScopeType = false
+    formatter.forEachToken { i, token in
+        switch token.type {
+        case .identifier:
+            if formatter.previousNonWhitespaceToken(fromIndex: i)?.string != "." {
+                if ["class", "struct", "extension", "enum"].contains(token.string) {
+                    isSpaceableScopeType = true
+                } else if ["func", "var"].contains(token.string) {
+                    isSpaceableScopeType = false
                 }
             }
-        case "init":
-            // Ignore self.init() / super.init() calls
-            if formatter.previousNonWhitespaceToken(fromIndex: i)?.string == "." {
-                return
+        case .startOfScope:
+            if token.string == "{" {
+                spaceableScopeStack.append(isSpaceableScopeType)
+                isSpaceableScopeType = false
             }
-            fallthrough
-        case "func", "subscript", "init":
-            // Ignore function prototypes inside protocols
-            if let startOfScope = formatter.indexOfPreviousToken(fromIndex: i, matching: {
-                return $0.type == .startOfScope && $0.string == "{" }) {
-                if formatter.previousToken(fromIndex: startOfScope, matching: {
-                    if $0.type == .identifier && $0.string == "protocol" { return true }
-                    return $0.type == .endOfScope && $0.string == "}"
-                })?.string == "protocol" {
-                    return
+        case .endOfScope:
+            if token.string == "}" {
+                if spaceableScopeStack.count > 1 && spaceableScopeStack[spaceableScopeStack.count - 2] {
+                    guard let openingBraceIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
+                        $0.type == .startOfScope && $0.string == "{" }),
+                        let previousLinebreakIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
+                            $0.type == .linebreak }), previousLinebreakIndex > openingBraceIndex else {
+                        // Inline braces
+                        break
+                    }
+                    var i = i
+                    if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.type != .whitespace }),
+                        formatter.tokenAtIndex(nextTokenIndex)?.string == "(",
+                        let closingParenIndex = formatter.indexOfNextToken(fromIndex: nextTokenIndex, matching: {
+                            return $0.type == .endOfScope && $0.string == ")"
+                        }) {
+                        i = closingParenIndex
+                    }
+                    if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
+                        !$0.isWhitespaceOrLinebreak }), let nextToken = formatter.tokenAtIndex(nextTokenIndex),
+                        nextToken.type != .endOfScope && nextToken.type != .error && nextToken.string != "." {
+                        if let firstLinebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.type == .linebreak }),
+                            firstLinebreakIndex < nextTokenIndex {
+                            if let secondLinebreakIndex = formatter.indexOfNextToken(
+                                fromIndex: firstLinebreakIndex, matching: { $0.type == .linebreak }),
+                                secondLinebreakIndex < nextTokenIndex {
+                                // Already has a blank line after
+                            } else {
+                                // Insert linebreak
+                                formatter.insertToken(Token(.linebreak, formatter.options.linebreak), atIndex: firstLinebreakIndex)
+                            }
+                        }
+                    }
                 }
+                spaceableScopeStack.removeLast()
             }
         default:
-            return
-        }
-        // Abort if opening and closing brace are on same line
-        guard let openingBraceIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
-            $0.type == .startOfScope && $0.string == "{"
-        }), let closingBraceIndex = formatter.indexOfNextToken(fromIndex: openingBraceIndex, matching: {
-            $0.type == .endOfScope && $0.string == "}"
-        }), let linebreakIndex = formatter.indexOfNextToken(fromIndex: openingBraceIndex, matching: {
-            $0.type == .linebreak
-        }), linebreakIndex < closingBraceIndex else {
-            return
-        }
-        // Ensure closing scope is followed by a blank line
-        if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: closingBraceIndex, matching: {
-            !$0.isWhitespaceOrComment
-        }), formatter.tokenAtIndex(nextTokenIndex)?.type == .linebreak {
-            // If closing brace is on same line as opening
-            // Add blank line if needed
-            if let followingToken = formatter.nextNonWhitespaceToken(fromIndex: nextTokenIndex),
-                ![.linebreak, .endOfScope, .error].contains(followingToken.type) {
-                formatter.insertToken(Token(.linebreak, formatter.options.linebreak), atIndex: nextTokenIndex)
-            }
-        }
-        // Skip specifiers
-        var index = i - 1
-        var reachedStart = false
-        var linebreakCount = 0
-        var lastLinebreakIndex = 0
-        while !reachedStart {
-            while let token = formatter.tokenAtIndex(index) {
-                if token.type == .linebreak {
-                    linebreakCount = 1
-                    lastLinebreakIndex = index
-                    index -= 1
-                    break
-                }
-                index -= 1
-            }
-            loop: while let token = formatter.tokenAtIndex(index) {
-                switch token.type {
-                case .whitespace:
-                    break
-                case .linebreak:
-                    linebreakCount += 1
-                    lastLinebreakIndex = index
-                case .identifier:
-                    switch token.string {
-                    case "private", "fileprivate", "internal", "public", "open",
-                         "final", "required", "override", "convenience",
-                         "prefix", "postfix":
-                        break
-                    default:
-                        if !token.string.hasPrefix("@") {
-                            reachedStart = true
-                            break loop
-                        }
-                    }
-                    linebreakCount = 0
-                case .commentBody:
-                    if linebreakCount > 1 {
-                        break loop
-                    }
-                    linebreakCount = 0
-                case .endOfScope:
-                    if token.string == ")" {
-                        // Handle @available(...), @objc(...), etc
-                        if let openParenIndex = formatter.indexOfPreviousToken(fromIndex: index, matching: {
-                            return $0.type == .startOfScope && $0.string == "("
-                        }), let nonWSIndex = formatter.indexOfPreviousToken(fromIndex: openParenIndex, matching: {
-                            return !$0.isWhitespaceOrCommentOrLinebreak
-                        }), formatter.tokenAtIndex(nonWSIndex)?.string.hasPrefix("@") == true {
-                            linebreakCount = 0
-                            index = nonWSIndex
-                            break
-                        }
-                        reachedStart = true
-                        break loop
-                    }
-                    if token.string == "*/" {
-                        if linebreakCount > 1 {
-                            break loop
-                        }
-                        linebreakCount = 0
-                        break
-                    }
-                    reachedStart = true
-                    break loop
-                case .startOfScope:
-                    if token.string == "/*" || token.string == "//" {
-                        linebreakCount = 0
-                        break
-                    }
-                    reachedStart = true
-                    break loop
-                default:
-                    reachedStart = true
-                    break loop
-                }
-                index -= 1
-            }
-            if index < 0 {
-                return // we've reached the start of the file
-            }
-        }
-        if linebreakCount < 2 {
-            // Insert blank line
-            formatter.insertToken(Token(.linebreak, formatter.options.linebreak), atIndex: lastLinebreakIndex)
+            break
         }
     }
 }

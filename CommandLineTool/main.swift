@@ -44,6 +44,7 @@ let arguments = [
     "comments",
     "ranges",
     "empty",
+    "experimental",
     "fragment",
     "help",
     "version",
@@ -64,6 +65,7 @@ func showHelp() {
     print("--comments      indenting of comment bodies. \"indent\" (default) or \"ignore\"")
     print("--ranges        spacing for ranges. either \"spaced\" (default) or \"nospace\"")
     print("--empty         how empty values are represented. \"void\" (default) or \"tuple\"")
+    print("--experimental  enable experimental rules. \"enabled\" or \"disabled\" (default)")
     print("--fragment      treat code as only part of file. \"true\" or \"false\" (default)")
     print("--help          this help page")
     print("--version       version information")
@@ -166,6 +168,16 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
             options.useVoid = true
         case "tuple", "tuples":
             options.useVoid = false
+        default:
+            throw NSError()
+        }
+    }
+    try processOption("experimental") {
+        switch $0 {
+        case "enabled", "true":
+            options.experimentalRules = true
+        case "disabled", "false":
+            options.experimentalRules = false
         default:
             throw NSError()
         }

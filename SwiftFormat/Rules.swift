@@ -669,7 +669,7 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
                     }
                     if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
                         !$0.isWhitespaceOrLinebreak }), let nextToken = formatter.tokenAtIndex(nextTokenIndex),
-                        nextToken.type != .endOfScope && nextToken.type != .error && nextToken.string != "." {
+                        ![.endOfScope, .error].contains(nextToken.type) && ![".", ",", ":", "else", "catch"].contains(nextToken.string) {
                         if let firstLinebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.type == .linebreak }),
                             firstLinebreakIndex < nextTokenIndex {
                             if let secondLinebreakIndex = formatter.indexOfNextToken(
@@ -756,9 +756,7 @@ public func indent(_ formatter: Formatter) {
                      "switch",
                      "where",
                      "while",
-                     "do",
                      "as",
-                     "catch",
                      "is",
                      "super",
                      "throw",
@@ -871,7 +869,7 @@ public func indent(_ formatter: Formatter) {
         while let token = formatter.tokenAtIndex(i) {
             switch token.type {
             case .identifier:
-                if ["if", "for", "while", "catch", "switch", "guard" /* TODO: get/set/didSet */ ].contains(token.string) {
+                if ["if", "else", "for", "while", "do", "catch", "switch", "guard" /* TODO: get/set/didSet */ ].contains(token.string) {
                     // Check that it's actually a keyword and not a member property or enum value
                     return formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)?.string == "."
                 }
@@ -1077,62 +1075,88 @@ public func indent(_ formatter: Formatter) {
     }
 }
 
-/// Implement K&R-style braces, where opening brace appears on the same line as
-/// the related function or keyword, and the closing brace is on its own line,
-/// except for inline closures where opening and closing brace are on same line.
-public func knrBraces(_ formatter: Formatter) {
+// Implement brace-wrapping rules
+public func braces(_ formatter: Formatter) {
     formatter.forEachToken("{") { i, token in
-        var index = i - 1
-        var linebreakIndex: Int?
-        while let token = formatter.tokenAtIndex(index) {
-            switch token.type {
-            case .linebreak:
-                linebreakIndex = index
-            case .whitespace, .commentBody:
-                break
-            case .startOfScope:
-                if token.string != "/*" && token.string != "//" {
-                    fallthrough
+        if formatter.options.allmanBraces {
+            // Check this isn't an inline block
+            guard let nextLinebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
+                return $0.type == .linebreak
+            }), let closingBraceIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
+                return $0.type == .endOfScope && $0.string == "}"
+            }), nextLinebreakIndex < closingBraceIndex else { return }
+            // Implement Allman-style braces, where opening brace appears on the next line
+            if let previousTokenIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
+                $0.type != .whitespace }), let previousToken = formatter.tokenAtIndex(previousTokenIndex) {
+                switch previousToken.type {
+                case .identifier, .endOfScope:
+                    formatter.insertToken(Token(.linebreak, formatter.options.linebreak), atIndex: i)
+                    if let indentToken = formatter.indentTokenForLineAtIndex(i) {
+                        formatter.insertToken(indentToken, atIndex: i + 1)
+                    }
+                    if formatter.tokens[i - 1].type == .whitespace {
+                        formatter.removeTokenAtIndex(i - 1)
+                    }
+                default:
+                    break
                 }
-            case .endOfScope:
-                if token.string != "*/" {
-                    fallthrough
-                }
-            default:
-                if let linebreakIndex = linebreakIndex {
-                    formatter.removeTokensInRange(Range(linebreakIndex ... i))
-                    formatter.insertToken(Token(.whitespace, " "), atIndex: index + 1)
-                    formatter.insertToken(Token(.startOfScope, "{"), atIndex: index + 2)
-                }
-                return
             }
-            index -= 1
+        } else {
+            // Implement K&R-style braces, where opening brace appears on the same line
+            var index = i - 1
+            var linebreakIndex: Int?
+            while let token = formatter.tokenAtIndex(index) {
+                switch token.type {
+                case .linebreak:
+                    linebreakIndex = index
+                case .whitespace, .commentBody:
+                    break
+                case .startOfScope:
+                    if token.string != "/*" && token.string != "//" {
+                        fallthrough
+                    }
+                case .endOfScope:
+                    if token.string != "*/" {
+                        fallthrough
+                    }
+                default:
+                    if let linebreakIndex = linebreakIndex {
+                        formatter.removeTokensInRange(Range(linebreakIndex ... i))
+                        formatter.insertToken(Token(.whitespace, " "), atIndex: index + 1)
+                        formatter.insertToken(Token(.startOfScope, "{"), atIndex: index + 2)
+                    }
+                    return
+                }
+                index -= 1
+            }
         }
     }
 }
 
 /// Ensure that an `else` statement following `if { ... }` appears on the same line
 /// as the closing brace. This has no effect on the `else` part of a `guard` statement
-public func elseOnSameLine(_ formatter: Formatter) {
-    formatter.forEachToken("else") { i, token in
-        var index = i - 1
-        var containsLinebreak = false
-        while let token = formatter.tokenAtIndex(index) {
-            switch token.type {
-            case .linebreak:
-                containsLinebreak = true
-            case .whitespace:
-                break
-            case .endOfScope:
-                if token.string == "}" && containsLinebreak &&
-                    formatter.previousNonWhitespaceToken(fromIndex: index)?.type == .linebreak {
-                    formatter.replaceTokensInRange(index + 1 ..< i, with: [Token(.whitespace, " ")])
+public func elseOrCatchOnSameLine(_ formatter: Formatter) {
+    formatter.forEachToken(ofType: .identifier) { i, token in
+        if token.string == "else" || token.string == "catch" {
+            if let prevTokenIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
+                !$0.isWhitespaceOrLinebreak }), let prevToken = formatter.tokenAtIndex(prevTokenIndex),
+                prevToken.type == .endOfScope, prevToken.string == "}" {
+                // Only applies to dangling braces
+                if formatter.previousNonWhitespaceToken(fromIndex: prevTokenIndex)?.type == .linebreak {
+                    if let prevLinebreakIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
+                        $0.type == .linebreak }), prevTokenIndex < prevLinebreakIndex {
+                        if !formatter.options.allmanBraces {
+                            formatter.replaceTokensInRange(prevTokenIndex + 1 ..< i, with: [Token(.whitespace, " ")])
+                        }
+                    } else if formatter.options.allmanBraces {
+                        formatter.replaceTokensInRange(prevTokenIndex + 1 ..< i,
+                                                       with: [Token(.linebreak, formatter.options.linebreak)])
+                        if let indentToken = formatter.indentTokenForLineAtIndex(i) {
+                            formatter.insertToken(indentToken, atIndex: prevTokenIndex + 2)
+                        }
+                    }
                 }
-                return
-            default:
-                return
             }
-            index -= 1
         }
     }
 }
@@ -1339,8 +1363,8 @@ public let defaultRules: [FormatRule] = [
     semicolons,
     specifiers,
     void,
-    knrBraces,
-    elseOnSameLine,
+    braces,
+    elseOrCatchOnSameLine,
     indent,
     spaceAroundParens,
     spaceInsideParens,

@@ -19,6 +19,7 @@ public struct FormatOptions {
     public var truncateBlankLines: Bool
     public var insertBlankLines: Bool
     public var removeBlankLines: Bool
+    public var allmanBraces: Bool
     public var experimentalRules: Bool
     public var fragment: Bool
 
@@ -32,6 +33,7 @@ public struct FormatOptions {
                 truncateBlankLines: Bool = true,
                 insertBlankLines: Bool = true,
                 removeBlankLines: Bool = true,
+                allmanBraces: Bool = false,
                 experimentalRules: Bool = false,
                 fragment: Bool = false) {
 
@@ -43,9 +45,10 @@ public struct FormatOptions {
         self.trailingCommas = trailingCommas
         self.indentComments = indentComments
         self.truncateBlankLines = truncateBlankLines
-        self.experimentalRules = experimentalRules
         self.insertBlankLines = insertBlankLines
         self.removeBlankLines = removeBlankLines
+        self.allmanBraces = allmanBraces
+        self.experimentalRules = experimentalRules
         self.fragment = fragment
     }
 }

@@ -1688,64 +1688,114 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
-    // MARK: knrBraces
+    // MARK: knr braces
 
     func testAllmanBracesAreConverted() {
         let input = "func foo()\n{\n    statement\n}"
         let output = "func foo() {\n    statement\n}"
-        XCTAssertEqual(try! format(input, rules: [knrBraces]), output)
+        XCTAssertEqual(try! format(input, rules: [braces]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testBracesAfterComment() {
+    func testKnRBracesAfterComment() {
         let input = "func foo() // comment\n{\n    statement\n}"
         let output = "func foo() { // comment\n    statement\n}"
-        XCTAssertEqual(try! format(input, rules: [knrBraces]), output)
+        XCTAssertEqual(try! format(input, rules: [braces]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testBracesAfterMultilineComment() {
+    func testKnRBracesAfterMultilineComment() {
         let input = "func foo() /* comment/ncomment */\n{\n    statement\n}"
         let output = "func foo() { /* comment/ncomment */\n    statement\n}"
-        XCTAssertEqual(try! format(input, rules: [knrBraces]), output)
+        XCTAssertEqual(try! format(input, rules: [braces]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testExtraSpaceNotAddedBeforeBrace() {
+    func testKnRExtraSpaceNotAddedBeforeBrace() {
         let input = "foo({ bar })"
         let output = "foo({ bar })"
-        XCTAssertEqual(try! format(input, rules: [knrBraces]), output)
+        XCTAssertEqual(try! format(input, rules: [braces]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    // MARK: elseOnSameLine
+    // MARK: allman braces
 
-    func testElseOnSameLine() {
+    func testKnRBracesAreConverted() {
+        let input = "func foo() {\n    statement\n}"
+        let output = "func foo()\n{\n    statement\n}"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try! format(input, rules: [braces], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testAllmanBraceInsideParensNotConverted() {
+        let input = "foo({\n    bar\n})"
+        let output = "foo({\n    bar\n})"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try! format(input, rules: [braces], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testAllmanBraceDoClauseIndent() {
+        let input = "do {\n    foo\n}"
+        let output = "do\n{\n    foo\n}"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try! format(input, rules: [braces], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testAllmanBraceCatchClauseIndent() {
+        let input = "do {\n    try foo\n}\ncatch {\n}"
+        let output = "do\n{\n    try foo\n}\ncatch\n{\n}"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try! format(input, rules: [braces], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    // MARK: elseOrCatchOnSameLine
+
+    func testelseOrCatchOnSameLine() {
         let input = "if true {\n    1\n}\nelse { 2 }"
         let output = "if true {\n    1\n} else { 2 }"
-        XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
+        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testElseOnSameLineOnlyAppliedToDanglingBrace() {
+    func testelseOrCatchOnSameLineOnlyAppliedToDanglingBrace() {
         let input = "if true { 1 }\nelse { 2 }"
         let output = "if true { 1 }\nelse { 2 }"
-        XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
+        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testGuardNotAffectedByElseOnSameLine() {
+    func testGuardNotAffectedByelseOrCatchOnSameLine() {
         let input = "guard true\nelse { return }"
         let output = "guard true\nelse { return }"
-        XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
+        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testElseOnSameLineDoesntEatPreviousStatement() {
+    func testelseOrCatchOnSameLineDoesntEatPreviousStatement() {
         let input = "if true {}\nguard true else { return }"
         let output = "if true {}\nguard true else { return }"
-        XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
+        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testElseNotOnSameLineForAllman() {
+        let input = "if true\n{\n    1\n} else { 2 }"
+        let output = "if true\n{\n    1\n}\nelse { 2 }"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testGuardNotAffectedByelseOrCatchOnSameLineForAllman() {
+        let input = "guard true else { return }"
+        let output = "guard true else { return }"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
     // MARK: trailingCommas

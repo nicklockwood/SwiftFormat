@@ -66,4 +66,18 @@ class OptionsTests: XCTestCase {
         let options = inferOptions(tokenize(input))
         XCTAssertEqual(options.indentComments, output)
     }
+
+    func testInferNoTruncateBlanklines() {
+        let input = "class Foo {\n    \nfunc bar() {\n        \n        //baz\n\n}\n    \n}"
+        let output = false
+        let options = inferOptions(tokenize(input))
+        XCTAssertEqual(options.truncateBlankLines, output)
+    }
+
+    func testInferAllmanComments() {
+        let input = "func foo()\n{\n}\n\nfunc bar() {\n}\n\nfunc baz()\n{\n}"
+        let output = true
+        let options = inferOptions(tokenize(input))
+        XCTAssertEqual(options.allmanBraces, output)
+    }
 }

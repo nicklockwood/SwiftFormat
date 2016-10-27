@@ -1,6 +1,17 @@
 # Change Log
 
-## [0.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.13) (2016-10-21)
+## [0.15](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.15) (2016-10-27)
+
+- Added `allman` command line option to enable Allman style indenting instead of K&R style
+- Added `insertlines` command line option to disable automatic removal of blank lines
+- Added `insertlines` command line option to disable automatic blank line insertion
+- Added `trimwhitespace` command line option for disabling truncation of blank lines
+- Added `comments` command line option for disabling indenting of comments
+- Added `experimental` command line option for opting-in to bleeding-edge features
+- Fixed broken `commas` command line option from version 0.14
+- Made `blankLinesBetweenScopes` rule less aggressive
+
+## [0.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.14) (2016-10-21)
 
 - Xcode Source Editor Extension now automatically infers formatting options from the file
 - Wrapped function arguments and array/dictionary literal value indenting now works more like Xcode

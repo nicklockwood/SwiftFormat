@@ -245,7 +245,7 @@ Here are all the rules that SwiftFormat currently applies:
          baz                 baz
        ]                 ]
 
-*knrBraces* - implements K&R style braces, where the opening brace is on the same line as related code:
+*braces* - implements K&R (default) or Allman-style indentation, depending on format options:
 
     if x                 if x {
     {                        //foo
@@ -256,12 +256,19 @@ Here are all the rules that SwiftFormat currently applies:
     	//bar
     }
 
-*elseOnSameLine* - ensures the else following an if statement appears on the same line as the closing }
+*elseOrCatchOnSameLine* - controls whether an `else` or `catch` statement following a } appears on the same line:
 
     if x {               if x {
         //foo                //foo
     }              -->   } else {
     else {                   //bar
+        //bar            }
+    }
+
+    do {                 do {
+        try foo              try foo
+    }              -->   } catch {
+    catch {                  //bar
         //bar            }
     }
 
@@ -395,7 +402,9 @@ Will become
      
      */
      
-To work around that, either use blocks of single-line comments...
+To work around that, you can disable automatic indenting of comments using the `comments` command line flag.
+
+Alternatively, if you prefer to leave the comment indenting feature enabled, you can rewrite your multiline comment as a block of single-line comments...
 
     // some documentation
     //

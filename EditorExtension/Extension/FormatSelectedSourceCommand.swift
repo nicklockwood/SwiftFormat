@@ -2,7 +2,7 @@
 //  FormatSelectedSourceCommand.swift
 //  Swift Formatter
 //
-//  Version 0.14
+//  Version 0.15
 //
 //  Created by Tony Arnold on 5/10/16.
 //  Copyright 2016 Nick Lockwood

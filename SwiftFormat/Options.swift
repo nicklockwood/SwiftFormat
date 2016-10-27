@@ -85,6 +85,9 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
         return linebreak
     }()
 
+    // No way to infer this
+    options.allowInlineSemicolons = true
+
     options.spaceAroundRangeOperators = {
         var spaced = 0, unspaced = 0
         formatter.forEachToken(ofType: .symbol) { i, token in
@@ -198,6 +201,68 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
             lastToken = token
         }
         return shouldIndent
+    }()
+
+    options.truncateBlankLines = {
+        var truncated = 0, untruncated = 0
+        var scopeStack = [Token]()
+        formatter.forEachToken { i, token in
+            switch token.type {
+            case .startOfScope:
+                scopeStack.append(token)
+            case .linebreak:
+                if let nextToken = formatter.tokenAtIndex(i + 1) {
+                    switch nextToken.type {
+                    case .whitespace:
+                        if let nextToken = formatter.tokenAtIndex(i + 2) {
+                            if nextToken.type == .linebreak {
+                                untruncated += 1
+                            }
+                        } else {
+                            untruncated += 1
+                        }
+                    case .linebreak:
+                        truncated += 1
+                    default:
+                        break
+                    }
+                }
+            default:
+                if let scope = scopeStack.last, token.closesScopeForToken(scope) {
+                    scopeStack.removeLast()
+                }
+            }
+        }
+        return truncated >= untruncated
+    }()
+
+    // We can't infer these yet, so default them to false
+    options.insertBlankLines = false
+    options.removeBlankLines = false
+
+    options.allmanBraces = {
+        var allman = 0, knr = 0
+        formatter.forEachToken("{") { i, token in
+            // Check this isn't an inline block
+            guard let nextLinebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
+                return $0.type == .linebreak
+            }), let closingBraceIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
+                return $0.type == .endOfScope && $0.string == "}"
+            }), nextLinebreakIndex < closingBraceIndex else { return }
+            // Check if brace is wrapped
+            if let previousTokenIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
+                $0.type != .whitespace }), let previousToken = formatter.tokenAtIndex(previousTokenIndex) {
+                switch previousToken.type {
+                case .identifier, .endOfScope:
+                    knr += 1
+                case .linebreak:
+                    allman += 1
+                default:
+                    break
+                }
+            }
+        }
+        return allman > knr
     }()
 
     return options

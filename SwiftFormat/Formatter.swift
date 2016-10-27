@@ -138,23 +138,9 @@ public class Formatter {
         }
     }
 
-    /// As above, but only loops through tokens with the specified type
-    public func forEachToken(ofType type: TokenType, _ body: (Int, Token) -> Void) {
-        forEachToken({ $0.type == type }, body)
-    }
-
     /// As above, but only loops through tokens with the specified type and string
-    public func forEachToken(_ string: String, ofType type: TokenType, _ body: (Int, Token) -> Void) {
-        forEachToken({ return $0.type == type && $0.string == string }, body)
-    }
-
-    /// As above, but only loops through tokens with the specified string.
-    /// Tokens of type `StringBody` and `CommentBody` are ignored, as these
-    /// can't be usefully identified by their string value
-    public func forEachToken(_ string: String, _ body: (Int, Token) -> Void) {
-        forEachToken({
-            return $0.string == string && $0.type != .stringBody && $0.type != .commentBody
-        }, body)
+    public func forEachToken(_ token: Token, _ body: (Int, Token) -> Void) {
+        forEachToken({ $0 == token }, body)
     }
 
     // MARK: utilities
@@ -166,12 +152,12 @@ public class Formatter {
         while let token = tokenAtIndex(i) {
             if let scope = scopeStack.last, token.closesScopeForToken(scope) {
                 scopeStack.removeLast()
-                if token.type == .linebreak {
+                if case .linebreak = token {
                     i -= 1
                 }
             } else if scopeStack.count == 0 && matching(token) {
                 return i
-            } else if token.type == .startOfScope {
+            } else if case .startOfScope = token {
                 scopeStack.append(token)
             }
             i += 1
@@ -196,7 +182,7 @@ public class Formatter {
 
     /// Returns the next token that isn't whitespace
     public func nextNonWhitespaceToken(fromIndex index: Int) -> Token? {
-        return nextToken(fromIndex: index) { $0.type != .whitespace }
+        return nextToken(fromIndex: index) { !$0.isWhitespace }
     }
 
     /// Returns the index of the previous token at the current scope that matches the block
@@ -205,7 +191,7 @@ public class Formatter {
         var linebreakEncountered = false
         var scopeStack: [Token] = []
         while let token = tokenAtIndex(i) {
-            if token.type == .startOfScope {
+            if case .startOfScope = token {
                 if let scope = scopeStack.last, scope.closesScopeForToken(token) {
                     scopeStack.removeLast()
                 } else if token.string == "//" && linebreakEncountered {
@@ -217,9 +203,9 @@ public class Formatter {
                 }
             } else if scopeStack.count == 0 && matching(token) {
                 return i
-            } else if token.type == .linebreak {
+            } else if case .linebreak = token {
                 linebreakEncountered = true
-            } else if token.type == .endOfScope {
+            } else if case .endOfScope = token {
                 scopeStack.append(token)
             }
             i -= 1
@@ -239,19 +225,24 @@ public class Formatter {
 
     /// Returns the previous token that isn't whitespace
     func previousNonWhitespaceToken(fromIndex index: Int) -> Token? {
-        return previousToken(fromIndex: index) { $0.type != .whitespace }
+        return previousToken(fromIndex: index) { !$0.isWhitespace }
     }
 
     /// Returns the starting token for the containing scope at the specified index
     public func scopeAtIndex(_ index: Int) -> Token? {
-        return previousToken(fromIndex: index) { $0.type == .startOfScope }
+        return previousToken(fromIndex: index) {
+            if case .startOfScope = $0 {
+                return true
+            }
+            return false
+        }
     }
 
     /// Returns the index of the first token of the line containing the specified index
     public func startOfLine(atIndex index: Int) -> Int {
         var index = index
         while let token = tokenAtIndex(index - 1) {
-            if token.type == .linebreak {
+            if case .linebreak = token {
                 break
             }
             index -= 1
@@ -261,7 +252,7 @@ public class Formatter {
 
     /// Returns the whitespace token at the start of the line containing the specified index
     public func indentTokenForLineAtIndex(_ index: Int) -> Token? {
-        if let token = tokenAtIndex(startOfLine(atIndex: index)), token.type == .whitespace {
+        if let token = tokenAtIndex(startOfLine(atIndex: index)), token.isWhitespace {
             return token
         }
         return nil

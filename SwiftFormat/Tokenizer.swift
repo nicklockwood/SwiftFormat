@@ -35,86 +35,174 @@ import Foundation
 
 // https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/LexicalStructure.html
 
-public enum TokenType {
-    case number
-    case linebreak
-    case startOfScope
-    case endOfScope
-    case symbol
-    case stringBody
-    case identifier
-    case whitespace
-    case commentBody
-    case error
-}
+public enum Token: Equatable {
+    case number(String)
+    case linebreak(String)
+    case startOfScope(String)
+    case endOfScope(String)
+    case symbol(String)
+    case stringBody(String)
+    case identifier(String)
+    case whitespace(String)
+    case commentBody(String)
+    case error(String)
 
-public struct Token: Equatable {
-    public let type: TokenType
-    public let string: String
-
-    public init(_ type: TokenType, _ string: String) {
-        self.type = type
-        self.string = string
+    public var string: String {
+        switch self {
+        case .number(let string),
+             .linebreak(let string),
+             .startOfScope(let string),
+             .endOfScope(let string),
+             .symbol(let string),
+             .stringBody(let string),
+             .identifier(let string),
+             .whitespace(let string),
+             .commentBody(let string),
+             .error(let string):
+            return string
+        }
     }
 
-    public var isWhitespaceOrComment: Bool {
-        switch type {
-        case .whitespace, .commentBody:
+    public var isError: Bool {
+        if case .error = self {
             return true
-        case .startOfScope:
-            return string == "//" || string == "/*"
-        case .endOfScope:
-            return string == "*/"
+        }
+        return false
+    }
+
+    public var isEndOfScope: Bool {
+        if case .endOfScope = self {
+            return true
+        }
+        return false
+    }
+
+    public var isIdentifier: Bool {
+        if case .identifier = self {
+            return true
+        }
+        return false
+    }
+
+    public var isWhitespace: Bool {
+        if case .whitespace = self {
+            return true
+        }
+        return false
+    }
+
+    public var isLinebreak: Bool {
+        if case .linebreak = self {
+            return true
+        }
+        return false
+    }
+
+    public var isWhitespaceOrLinebreak: Bool {
+        switch self {
+        case .linebreak, .whitespace:
+            return true
         default:
             return false
         }
     }
 
-    public var isWhitespaceOrLinebreak: Bool {
-        return type == .linebreak || type == .whitespace
+    public var isWhitespaceOrComment: Bool {
+        switch self {
+        case .whitespace,
+             .commentBody,
+             .startOfScope("//"),
+             .startOfScope("/*"),
+             .endOfScope("*/"):
+            return true
+        default:
+            return false
+        }
     }
 
     public var isWhitespaceOrCommentOrLinebreak: Bool {
-        return type == .linebreak || isWhitespaceOrComment
+        switch self {
+        case .linebreak,
+             .whitespace,
+             .commentBody,
+             .startOfScope("//"),
+             .startOfScope("/*"),
+             .endOfScope("*/"):
+            return true
+        default:
+            return false
+        }
     }
 
     public func closesScopeForToken(_ token: Token) -> Bool {
-        guard token.type == .startOfScope else {
-            return string == ":" && token.type == .endOfScope &&
-                (token.string == "case" || token.string == "default")
-        }
-        if type == .endOfScope {
-            switch token.string {
-            case "(":
-                return string == ")"
-            case "[":
-                return string == "]"
-            case "{":
-                return string == "}" || string == "case" || string == "default"
-            case "/*":
-                return string == "*/"
-            case "#if":
-                return string == "#endif"
-            case ":":
-                return string == "case" || string == "default" || string == "}"
-            default:
-                break
-            }
-        }
-        switch token.string {
-        case "<":
+        switch token {
+        case .startOfScope("("):
+            return self == .endOfScope(")")
+        case .startOfScope("["):
+            return self == .endOfScope("]")
+        case .startOfScope("{"), .startOfScope(":"):
+            return [.endOfScope("}"), .endOfScope("case"), .endOfScope("default")].contains(self)
+        case .startOfScope("/*"):
+            return self == .endOfScope("*/")
+        case .startOfScope("#if"):
+            return self == .endOfScope("#endif")
+        case .startOfScope("\""):
+            return self == .endOfScope("\"")
+        case .startOfScope("<"):
             return string.hasPrefix(">")
-        case "\"":
-            return string == "\""
-        case "//":
-            return type == .linebreak
+        case .startOfScope("//"):
+            return isLinebreak
+        case .endOfScope("case"), .endOfScope("default"):
+            return self == .symbol(":")
         default:
             return false
         }
     }
 
     public static func ==(lhs: Token, rhs: Token) -> Bool {
-        return lhs.type == rhs.type && lhs.string == rhs.string
+        switch lhs {
+        case .number(let string):
+            if case .number(string) = rhs {
+                return true
+            }
+        case .linebreak(let string):
+            if case .linebreak(string) = rhs {
+                return true
+            }
+        case .startOfScope(let string):
+            if case .startOfScope(string) = rhs {
+                return true
+            }
+        case .endOfScope(let string):
+            if case .endOfScope(string) = rhs {
+                return true
+            }
+        case .symbol(let string):
+            if case .symbol(string) = rhs {
+                return true
+            }
+        case .identifier(let string):
+            if case .identifier(string) = rhs {
+                return true
+            }
+        case .stringBody(let string):
+            if case .stringBody(string) = rhs {
+                return true
+            }
+        case .commentBody(let string):
+            if case .commentBody(string) = rhs {
+                return true
+            }
+        case .whitespace(let string):
+            if case .whitespace(string) = rhs {
+                return true
+            }
+        case .error(let string):
+            if case .error(string) = rhs {
+                return true
+            }
+        }
+        return false
     }
 }
 
@@ -174,23 +262,23 @@ private extension String.CharacterView {
 private extension String.CharacterView {
 
     mutating func parseWhitespace() -> Token? {
-        return scanCharacters({ $0.isWhitespace }).map { Token(.whitespace, $0) }
+        return scanCharacters({ $0.isWhitespace }).map { .whitespace($0) }
     }
 
     mutating func parseLineBreak() -> Token? {
-        return scanCharacter({ $0.isLinebreak }).map { Token(.linebreak, $0) }
+        return scanCharacter({ $0.isLinebreak }).map { .linebreak($0) }
     }
 
     mutating func parsePunctuation() -> Token? {
-        return scanCharacter({ ":;,".characters.contains($0) }).map { Token(.symbol, $0) }
+        return scanCharacter({ ":;,".characters.contains($0) }).map { .symbol($0) }
     }
 
     mutating func parseStartOfScope() -> Token? {
-        return scanCharacter({ "([{\"".characters.contains($0) }).map { Token(.startOfScope, $0) }
+        return scanCharacter({ "([{\"".characters.contains($0) }).map { .startOfScope($0) }
     }
 
     mutating func parseEndOfScope() -> Token? {
-        return scanCharacter({ "}])".characters.contains($0) }).map { Token(.endOfScope, $0) }
+        return scanCharacter({ "}])".characters.contains($0) }).map { .endOfScope($0) }
     }
 
     mutating func parseOperator() -> Token? {
@@ -246,25 +334,25 @@ private extension String.CharacterView {
                 if tail == "/" {
                     if c == "*" {
                         if head == "" {
-                            return Token(.startOfScope, "/*")
+                            return .startOfScope("/*")
                         }
                         // Can't return two tokens, so put /* back to be parsed next time
                         self = "/*".characters + self
-                        return Token(.symbol, head)
+                        return .symbol(head)
                     } else if c == "/" {
                         if head == "" {
-                            return Token(.startOfScope, "//")
+                            return .startOfScope("//")
                         }
                         // Can't return two tokens, so put // back to be parsed next time
                         self = "//".characters + self
-                        return Token(.symbol, head)
+                        return .symbol(head)
                     }
                 }
                 head += tail
                 tail = c
             }
             let op = head + tail
-            return Token(op == "<" ? .startOfScope : .symbol, op)
+            return op == "<" ? .startOfScope(op) : .symbol(op)
         }
         return nil
     }
@@ -349,18 +437,18 @@ private extension String.CharacterView {
         if scanCharacter("`") {
             if let identifier = scanIdentifier() {
                 if scanCharacter("`") {
-                    return Token(.identifier, "`" + identifier + "`")
+                    return .identifier("`" + identifier + "`")
                 }
             }
             self = start
         } else if let identifier = scanIdentifier() {
             if identifier == "#if" {
-                return Token(.startOfScope, identifier)
+                return .startOfScope(identifier)
             }
             if identifier == "#endif" {
-                return Token(.endOfScope, identifier)
+                return .endOfScope(identifier)
             }
-            return Token(.identifier, identifier)
+            return .identifier(identifier)
         }
         return nil
     }
@@ -385,21 +473,21 @@ private extension String.CharacterView {
                     if scanCharacter("p"), let power = scanInteger() {
                         number += "p" + power
                     }
-                    return Token(.number, number)
+                    return .number(number)
                 }
-                return Token(.error, number + String(self))
+                return .error(number + String(self))
             } else if scanCharacter("b") {
                 number += "b"
                 if let bin = scanNumber({ "01".characters.contains($0) }) {
-                    return Token(.number, number + bin)
+                    return .number(number + bin)
                 }
-                return Token(.error, number + String(self))
+                return .error(number + String(self))
             } else if scanCharacter("o") {
                 number += "o"
                 if let octal = scanNumber({ ("0" ... "7").contains($0) }) {
-                    return Token(.number, number + octal)
+                    return .number(number + octal)
                 }
-                return Token(.error, number + String(self))
+                return .error(number + String(self))
             } else if let tail = scanCharacters({ $0.isDigit || $0 == "_" }) {
                 number += tail
             }
@@ -424,7 +512,7 @@ private extension String.CharacterView {
                     self = endOfFloat
                 }
             }
-            return Token(.number, number)
+            return .number(number)
         }
         return nil
     }
@@ -444,7 +532,7 @@ private extension String.CharacterView {
             return token
         }
         if count > 0 {
-            return Token(.error, String(self))
+            return .error(String(self))
         }
         return nil
     }
@@ -468,9 +556,9 @@ public func tokenize(_ source: String) -> [Token] {
             case "\"":
                 if !escaped {
                     if string != "" {
-                        tokens.append(Token(.stringBody, string))
+                        tokens.append(.stringBody(string))
                     }
-                    tokens.append(Token(.endOfScope, "\""))
+                    tokens.append(.endOfScope("\""))
                     scopeIndexStack.removeLast()
                     return
                 }
@@ -478,10 +566,10 @@ public func tokenize(_ source: String) -> [Token] {
             case "(":
                 if escaped {
                     if string != "" {
-                        tokens.append(Token(.stringBody, string))
+                        tokens.append(.stringBody(string))
                     }
                     scopeIndexStack.append(tokens.count)
-                    tokens.append(Token(.startOfScope, "("))
+                    tokens.append(.startOfScope("("))
                     return
                 }
                 escaped = false
@@ -491,7 +579,7 @@ public func tokenize(_ source: String) -> [Token] {
             string += c
         }
         if string != "" {
-            tokens.append(Token(.stringBody, string))
+            tokens.append(.stringBody(string))
         }
     }
 
@@ -500,11 +588,11 @@ public func tokenize(_ source: String) -> [Token] {
 
     func flushCommentBodyTokens() {
         if comment != "" {
-            tokens.append(Token(.commentBody, comment))
+            tokens.append(.commentBody(comment))
             comment = ""
         }
         if whitespace != "" {
-            tokens.append(Token(.whitespace, whitespace))
+            tokens.append(.whitespace(whitespace))
             whitespace = ""
         }
     }
@@ -516,15 +604,15 @@ public func tokenize(_ source: String) -> [Token] {
                 if characters.scanCharacter("*") {
                     flushCommentBodyTokens()
                     scopeIndexStack.append(tokens.count)
-                    tokens.append(Token(.startOfScope, "/*"))
+                    tokens.append(.startOfScope("/*"))
                     continue
                 }
             case "*":
                 if characters.scanCharacter("/") {
                     flushCommentBodyTokens()
-                    tokens.append(Token(.endOfScope, "*/"))
+                    tokens.append(.endOfScope("*/"))
                     scopeIndexStack.removeLast()
-                    if scopeIndexStack.last == nil || tokens[scopeIndexStack.last!].string != "/*" {
+                    if scopeIndexStack.last == nil || tokens[scopeIndexStack.last!] != .startOfScope("/*") {
                         return
                     }
                     continue
@@ -532,7 +620,7 @@ public func tokenize(_ source: String) -> [Token] {
             default:
                 if c.characters.first?.isLinebreak == true {
                     flushCommentBodyTokens()
-                    tokens.append(Token(.linebreak, c))
+                    tokens.append(.linebreak(c))
                     continue
                 }
                 if c.characters.first?.isWhitespace == true {
@@ -542,7 +630,7 @@ public func tokenize(_ source: String) -> [Token] {
             }
             if whitespace != "" {
                 if comment == "" {
-                    tokens.append(Token(.whitespace, whitespace))
+                    tokens.append(.whitespace(whitespace))
                 } else {
                     comment += whitespace
                 }
@@ -562,7 +650,7 @@ public func tokenize(_ source: String) -> [Token] {
             }
             if whitespace != "" {
                 if comment == "" {
-                    tokens.append(Token(.whitespace, whitespace))
+                    tokens.append(.whitespace(whitespace))
                 } else {
                     comment += whitespace
                 }
@@ -575,86 +663,93 @@ public func tokenize(_ source: String) -> [Token] {
 
     func processToken() {
         let token = tokens.last!
-        if token.type != .whitespace {
-            // Track switch/case statements
-            if token.type == .identifier {
-                let previousToken: Token? =
-                    (lastNonWhitespaceIndex != nil) ? tokens[lastNonWhitespaceIndex!] : nil
-                switch previousToken?.string ?? "" {
-                case "if", "guard", "while", "for", ".", ",":
+        if !token.isWhitespace {
+            switch token {
+            case .identifier(let string):
+                // Track switch/case statements
+                let previousToken = lastNonWhitespaceIndex.map({ tokens[$0] })
+                if previousToken == .symbol(".") {
                     break
-                default:
-                    switch token.string {
-                    case "switch":
-                        nestedSwitches += 1
-                    case "default", "case":
-                        if nestedSwitches > 0 {
-                            tokens[tokens.count - 1] = Token(.endOfScope, token.string)
-                            processToken()
-                            return
-                        }
-                    default:
-                        break
-                    }
                 }
-            }
-            // Fix up optional indicator misidentified as operator
-            if token.type == .symbol && token.string.characters.count > 1 &&
-                (token.string.hasPrefix("?") || token.string.hasPrefix("!")) &&
-                tokens.count > 1 && tokens[tokens.count - 2].type != .whitespace {
-                tokens[tokens.count - 1] = Token(.symbol, String(token.string.characters.first!))
-                let string = String(token.string.characters.dropFirst())
-                tokens.append(Token(string == "<" ? .startOfScope : .symbol, string))
-                processToken()
-                return
+                switch string {
+                case "switch":
+                    nestedSwitches += 1
+                case "default":
+                    if nestedSwitches > 0 {
+                        tokens[tokens.count - 1] = .endOfScope(string)
+                        processToken()
+                        return
+                    }
+                case "case":
+                    if let previousToken = previousToken {
+                        if case .identifier(let string) = previousToken,
+                            ["if", "guard", "while", "for"].contains(string) {
+                            break
+                        } else if previousToken == .symbol(",") {
+                            break
+                        }
+                    }
+                    if nestedSwitches > 0 {
+                        tokens[tokens.count - 1] = .endOfScope(string)
+                        processToken()
+                        return
+                    }
+                default:
+                    break
+                }
+            case .symbol(let string):
+                // Fix up optional indicator misidentified as operator
+                if string.characters.count > 1 &&
+                    (string.hasPrefix("?") || string.hasPrefix("!")) &&
+                    tokens.count > 1 && !tokens[tokens.count - 2].isWhitespace {
+                    tokens[tokens.count - 1] = .symbol(String(string.characters.first!))
+                    let string = String(string.characters.dropFirst())
+                    tokens.append(string == "<" ? .startOfScope(string) : .symbol(string))
+                    processToken()
+                    return
+                }
+            default:
+                break
             }
             // Fix up misidentified generic that is actually a pair of operators
             if let lastNonWhitespaceIndex = lastNonWhitespaceIndex {
                 let lastToken = tokens[lastNonWhitespaceIndex]
-                if lastToken.string == ">" && lastToken.type == .endOfScope {
-                    var wasOperator = false
-                    switch token.type {
-                    case .identifier, .number:
-                        switch token.string {
-                        case "in", "is", "as", "where", "else":
-                            wasOperator = false
-                        default:
-                            wasOperator = true
-                        }
-                    case .startOfScope:
-                        wasOperator = (token.string == "\"")
-                    case .symbol:
-                        switch token.string {
-                        case "=", "->", ">", ",", ":", ";", "?", "!", ".":
-                            wasOperator = false
-                        default:
-                            wasOperator = true
-                        }
+                if case .endOfScope(">") = lastToken {
+                    let wasOperator: Bool
+                    switch token {
+                    case .identifier(let string):
+                        wasOperator = !["in", "is", "as", "where", "else"].contains(string)
+                    case .symbol(let string):
+                        wasOperator = !["=", "->", ">", ",", ":", ";", "?", "!", "."].contains(string)
+                    case .number, .startOfScope("\""):
+                        wasOperator = true
                     default:
                         wasOperator = false
                     }
                     if wasOperator {
-                        tokens[closedGenericScopeIndexes.last!] = Token(.symbol, "<")
+                        tokens[closedGenericScopeIndexes.last!] = .symbol("<")
                         closedGenericScopeIndexes.removeLast()
-                        if token.type == .symbol && lastNonWhitespaceIndex == tokens.count - 2 {
+                        if case .symbol(let string) = token, lastNonWhitespaceIndex == tokens.count - 2 {
                             // Need to stitch the operator back together
-                            tokens[lastNonWhitespaceIndex] = Token(.symbol, ">" + token.string)
+                            tokens[lastNonWhitespaceIndex] = .symbol(">" + string)
                             tokens.removeLast()
                         } else {
-                            tokens[lastNonWhitespaceIndex] = Token(.symbol, ">")
+                            tokens[lastNonWhitespaceIndex] = .symbol(">")
                         }
                         // TODO: this is horrible - need to take a better approach
                         var previousIndex = lastNonWhitespaceIndex - 1
                         var previousToken = tokens[previousIndex]
-                        while previousToken.string == ">" {
-                            if previousToken.type == .endOfScope {
-                                tokens[closedGenericScopeIndexes.last!] = Token(.symbol, "<")
-                                closedGenericScopeIndexes.removeLast()
+                        while previousToken == .endOfScope(">") {
+                            tokens[closedGenericScopeIndexes.last!] = .symbol("<")
+                            closedGenericScopeIndexes.removeLast()
+                            if case .symbol(let string) = tokens[previousIndex + 1] {
+                                tokens[previousIndex] = .symbol(">" + string)
+                                tokens.remove(at: previousIndex + 1)
+                                previousIndex -= 1
+                                previousToken = tokens[previousIndex]
+                            } else {
+                                assertionFailure()
                             }
-                            tokens[previousIndex] = Token(.symbol, ">" + tokens[previousIndex + 1].string)
-                            tokens.remove(at: previousIndex + 1)
-                            previousIndex -= 1
-                            previousToken = tokens[previousIndex]
                         }
                         processToken()
                         return
@@ -667,50 +762,51 @@ public func tokenize(_ source: String) -> [Token] {
             let scope = tokens[scopeIndex]
             if token.closesScopeForToken(scope) {
                 scopeIndexStack.removeLast()
-                if token.string == ":" {
-                    tokens[tokens.count - 1] = Token(.startOfScope, ":")
+                switch token {
+                case .symbol(":"):
+                    tokens[tokens.count - 1] = .startOfScope(":")
                     processToken()
-                    return
-                } else if token.string == "case" || token.string == "default" {
+                case .endOfScope("case"), .endOfScope("default"):
                     scopeIndexStack.append(tokens.count - 1)
                     processToken()
-                    return
-                } else if token.string == "}" && scope.string == ":" {
-                    nestedSwitches -= 1
-                } else if token.string.hasPrefix(">") {
-                    closedGenericScopeIndexes.append(scopeIndex)
-                    tokens[tokens.count - 1] = Token(.endOfScope, ">")
-                    if token.string != ">" {
-                        // Need to split the token
-                        let suffix = String(token.string.characters.dropFirst())
-                        tokens.append(Token(.symbol, suffix))
-                        processToken()
-                        return
+                case .endOfScope("}"):
+                    if scope == .startOfScope(":") {
+                        nestedSwitches -= 1
                     }
-                } else if scopeIndexStack.last != nil && tokens[scopeIndexStack.last!].string == "\"" {
-                    processStringBody()
+                case .endOfScope(")"):
+                    if scopeIndexStack.last.map({ tokens[$0] }) == .startOfScope("\"") {
+                        processStringBody()
+                    }
+                case .symbol(let string) where string.hasPrefix(">"):
+                    closedGenericScopeIndexes.append(scopeIndex)
+                    tokens[tokens.count - 1] = .endOfScope(">")
+                    if string.characters.count > 1 {
+                        // Need to split the token
+                        let suffix = String(string.characters.dropFirst())
+                        tokens.append(.symbol(suffix))
+                        processToken()
+                    }
+                default:
+                    break
                 }
                 return
-            } else if scope.string == "<" {
+            } else if scope == .startOfScope("<") {
                 // We think it's a generic at this point, but could be wrong
-                switch token.type {
-                case .symbol:
-                    if !token.string.hasPrefix("?>") && !token.string.hasPrefix("!>") {
-                        fallthrough
-                    }
-                    // Need to split token
-                    tokens[tokens.count - 1] = Token(.symbol, String(token.string.characters.first!))
-                    let suffix = String(token.string.characters.dropFirst())
-                    tokens.append(Token(.symbol, suffix))
-                    processToken()
-                    return
-                case .startOfScope:
-                    switch token.string {
-                    case "<", "[", "(", ".", ",", ":", "==", "?", "!":
+                switch token {
+                case .symbol(let string):
+                    switch string {
+                    case ".", ",", ":", "==", "?", "!":
                         break
+                    case _ where string.hasPrefix("?>") || string.hasPrefix("!>"):
+                        // Need to split token
+                        tokens[tokens.count - 1] = .symbol(String(string.characters.first!))
+                        let suffix = String(string.characters.dropFirst())
+                        tokens.append(.symbol(suffix))
+                        processToken()
+                        return
                     default:
                         // Not a generic scope
-                        tokens[scopeIndex] = Token(.symbol, "<")
+                        tokens[scopeIndex] = .symbol("<")
                         scopeIndexStack.removeLast()
                         processToken()
                         return
@@ -718,7 +814,7 @@ public func tokenize(_ source: String) -> [Token] {
                 case .endOfScope:
                     // If we encountered a scope token that wasn't a < or >
                     // then the opening < must have been an operator after all
-                    tokens[scopeIndex] = Token(.symbol, "<")
+                    tokens[scopeIndex] = .symbol("<")
                     scopeIndexStack.removeLast()
                     processToken()
                     return
@@ -727,43 +823,51 @@ public func tokenize(_ source: String) -> [Token] {
                 }
             }
         }
-        if token.type == .startOfScope {
+        switch token {
+        case .startOfScope(let string):
             scopeIndexStack.append(tokens.count - 1)
-            if token.string == "\"" {
+            switch string {
+            case "\"":
                 processStringBody()
-            } else if token.string == "/*" {
+            case "/*":
                 processCommentBody()
-            } else if token.string == "//" {
+            case "//":
                 processSingleLineCommentBody()
+            default:
+                break
             }
-        } else if token.type == .endOfScope && token.string != "case" && token.string != "default" {
+        case .endOfScope("case"), .endOfScope("default"):
+            break
+        case .endOfScope(let string):
             // Previous scope wasn't closed correctly
-            tokens[tokens.count - 1] = Token(.error, token.string)
+            tokens[tokens.count - 1] = .error(string)
             return
+        default:
+            break
         }
     }
 
     while let token = characters.parseToken() {
         tokens.append(token)
-        if token.type == .error {
+        if case .error = token {
             return tokens
         }
         processToken()
     }
 
     if let scopeIndex = scopeIndexStack.last {
-        switch tokens[scopeIndex].string {
-        case "<":
+        switch tokens[scopeIndex] {
+        case .startOfScope("<"):
             // If we encountered an end-of-file while a generic scope was
             // still open, the opening < must have been an operator
-            tokens[scopeIndex] = Token(.symbol, "<")
+            tokens[scopeIndex] = .symbol("<")
             scopeIndexStack.removeLast()
-        case "//":
+        case .startOfScope("//"):
             break
         default:
-            if tokens.last?.type != .error {
+            if tokens.last?.isError == false {
                 // File ended with scope still open
-                tokens.append(Token(.error, ""))
+                tokens.append(.error(""))
             }
         }
     }

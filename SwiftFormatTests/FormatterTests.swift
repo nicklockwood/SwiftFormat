@@ -35,10 +35,10 @@ import XCTest
 class FormatterTests: XCTestCase {
 
     func testRemoveCurrentTokenWhileEnumerating() {
-        let input = [
-            Token(.identifier, "foo"),
-            Token(.identifier, "bar"),
-            Token(.identifier, "baz"),
+        let input: [Token] = [
+            .identifier("foo"),
+            .identifier("bar"),
+            .identifier("baz"),
         ]
         var output: [Token] = []
         let formatter = Formatter(input, options: FormatOptions())
@@ -52,10 +52,10 @@ class FormatterTests: XCTestCase {
     }
 
     func testRemovePreviousTokenWhileEnumerating() {
-        let input = [
-            Token(.identifier, "foo"),
-            Token(.identifier, "bar"),
-            Token(.identifier, "baz"),
+        let input: [Token] = [
+            .identifier("foo"),
+            .identifier("bar"),
+            .identifier("baz"),
         ]
         var output: [Token] = []
         let formatter = Formatter(input, options: FormatOptions())
@@ -69,10 +69,10 @@ class FormatterTests: XCTestCase {
     }
 
     func testRemoveNextTokenWhileEnumerating() {
-        let input = [
-            Token(.identifier, "foo"),
-            Token(.identifier, "bar"),
-            Token(.identifier, "baz"),
+        let input: [Token] = [
+            .identifier("foo"),
+            .identifier("bar"),
+            .identifier("baz"),
         ]
         var output: [Token] = []
         let formatter = Formatter(input, options: FormatOptions())

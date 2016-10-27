@@ -187,8 +187,15 @@ class RulesTests: XCTestCase {
 
     // MARK: spaceAroundBrackets
 
-    func testSubscriptSpacing() {
+    func testSubscriptNoAddSpacing() {
         let input = "foo[bar] = baz"
+        let output = "foo[bar] = baz"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundBrackets]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSubscriptRemoveSpacing() {
+        let input = "foo [bar] = baz"
         let output = "foo[bar] = baz"
         XCTAssertEqual(try! format(input, rules: [spaceAroundBrackets]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")

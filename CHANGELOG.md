@@ -3,7 +3,7 @@
 ## [0.15](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.15) (2016-10-27)
 
 - Added `allman` command line option to enable Allman style indenting instead of K&R style
-- Added `insertlines` command line option to disable automatic removal of blank lines
+- Added `removelines` command line option to disable automatic removal of blank lines
 - Added `insertlines` command line option to disable automatic blank line insertion
 - Added `trimwhitespace` command line option for disabling truncation of blank lines
 - Added `comments` command line option for disabling indenting of comments

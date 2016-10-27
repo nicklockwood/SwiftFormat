@@ -122,7 +122,7 @@ func format(_ tokens: [Token],
             options: FormatOptions = FormatOptions()) throws -> String {
 
     // Parse
-    guard options.fragment || tokens.last?.type != .error else {
+    guard options.fragment || tokens.last?.isError == false else {
         // TODO: more useful errors
         throw NSError(domain: "SwiftFormat", code: 0, userInfo: nil)
     }

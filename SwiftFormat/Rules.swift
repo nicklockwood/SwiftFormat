@@ -47,7 +47,6 @@ public func spaceAroundParens(_ formatter: Formatter) {
         switch identifier {
         case "@escaping",
              "@autoclosure",
-             "internal",
              "case",
              "for",
              "guard",
@@ -62,9 +61,7 @@ public func spaceAroundParens(_ formatter: Formatter) {
              "catch",
              "is",
              "let",
-             "rethrows",
              "throw",
-             "throws",
              "try":
             return formatter.previousNonWhitespaceToken(fromIndex: index) != .symbol(".")
         default:
@@ -507,7 +504,7 @@ public func spaceInsideComments(_ formatter: Formatter) {
     }
 }
 
-/// Add or removes the space around range operators
+/// Adds or removes the space around range operators
 public func ranges(_ formatter: Formatter) {
     formatter.forEachToken { i, token in
         if token == .symbol("...") || token == .symbol("..<") {
@@ -664,18 +661,31 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
                         $0 == .endOfScope(")") }) {
                     i = closingParenIndex
                 }
-                if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespaceOrLinebreak }),
-                    let nextToken = formatter.tokenAtIndex(nextTokenIndex), !nextToken.isError, !nextToken.isEndOfScope,
-                    ![".", ",", ":", "else", "catch"].contains(nextToken.string) {
-                    if let firstLinebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
-                        firstLinebreakIndex < nextTokenIndex {
-                        if let secondLinebreakIndex = formatter.indexOfNextToken(
-                            fromIndex: firstLinebreakIndex, matching: { $0.isLinebreak }),
-                            secondLinebreakIndex < nextTokenIndex {
-                            // Already has a blank line after
-                        } else {
-                            // Insert linebreak
-                            formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: firstLinebreakIndex)
+                if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
+                    !$0.isWhitespaceOrLinebreak }), let nextToken = formatter.tokenAtIndex(nextTokenIndex) {
+                    switch nextToken {
+                    case .error, .endOfScope, .symbol("."), .symbol(","), .symbol(":"),
+                         .identifier("else"), .identifier("catch"):
+                        break
+                    case .identifier("while"):
+                        if let previousBraceIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
+                            $0 == .startOfScope("{") }),
+                            formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: previousBraceIndex)
+                            != .identifier("repeat") {
+                            fallthrough
+                        }
+                        break
+                    default:
+                        if let firstLinebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
+                            firstLinebreakIndex < nextTokenIndex {
+                            if let secondLinebreakIndex = formatter.indexOfNextToken(
+                                fromIndex: firstLinebreakIndex, matching: { $0.isLinebreak }),
+                                secondLinebreakIndex < nextTokenIndex {
+                                // Already has a blank line after
+                            } else {
+                                // Insert linebreak
+                                formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: firstLinebreakIndex)
+                            }
                         }
                     }
                 }
@@ -1126,26 +1136,42 @@ public func braces(_ formatter: Formatter) {
 /// Ensure that an `else` statement following `if { ... }` appears on the same line
 /// as the closing brace. This has no effect on the `else` part of a `guard` statement
 public func elseOrCatchOnSameLine(_ formatter: Formatter) {
+    var closingBraceIndex: Int?
     formatter.forEachToken { i, token in
-        if token == .identifier("else") || token == .identifier("catch") {
-            if let prevTokenIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
-                !$0.isWhitespaceOrLinebreak }), formatter.tokens[prevTokenIndex] == .endOfScope("}") {
+        switch token {
+        case .endOfScope("}"):
+            closingBraceIndex = i
+        case .identifier("while"):
+            if let closingBraceIndex = closingBraceIndex,
+                let previousBraceIndex = formatter.indexOfPreviousToken(fromIndex: closingBraceIndex, matching: {
+                    $0 == .startOfScope("{") }), formatter.previousNonWhitespaceOrCommentOrLinebreakToken(
+                    fromIndex: previousBraceIndex) == .identifier("repeat") {
+                fallthrough
+            }
+            break
+        case .identifier("else"), .identifier("catch"):
+            if let closingBraceIndex = closingBraceIndex {
                 // Only applies to dangling braces
-                if formatter.previousNonWhitespaceToken(fromIndex: prevTokenIndex)?.isLinebreak == true {
+                if formatter.previousNonWhitespaceToken(fromIndex: closingBraceIndex)?.isLinebreak == true {
                     if let prevLinebreakIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
-                        $0.isLinebreak }), prevTokenIndex < prevLinebreakIndex {
+                        $0.isLinebreak }), closingBraceIndex < prevLinebreakIndex {
                         if !formatter.options.allmanBraces {
-                            formatter.replaceTokensInRange(prevTokenIndex + 1 ..< i, with: [.whitespace(" ")])
+                            formatter.replaceTokensInRange(closingBraceIndex + 1 ..< i, with: [.whitespace(" ")])
                         }
                     } else if formatter.options.allmanBraces {
-                        formatter.replaceTokensInRange(prevTokenIndex + 1 ..< i, with:
+                        formatter.replaceTokensInRange(closingBraceIndex + 1 ..< i, with:
                             [.linebreak(formatter.options.linebreak)])
                         if let indentToken = formatter.indentTokenForLineAtIndex(i) {
-                            formatter.insertToken(indentToken, atIndex: prevTokenIndex + 2)
+                            formatter.insertToken(indentToken, atIndex: closingBraceIndex + 2)
                         }
                     }
                 }
             }
+        default:
+            if !token.isWhitespaceOrCommentOrLinebreak {
+                closingBraceIndex = nil
+            }
+            break
         }
     }
 }

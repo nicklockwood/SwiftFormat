@@ -85,7 +85,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testSpaceBetweenPrivateAndSet() {
+    func testNoSpaceBetweenPrivateAndSet() {
         let input = "private (set) var foo: Int"
         let output = "private(set) var foo: Int"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
@@ -1066,11 +1066,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testNoBlankAfterCalledClosureAtEndOfScope() {
+    func testNoBlankLineAfterCalledClosureAtEndOfScope() {
         let input = "class Foo {\n    var foo = {\n    }()\n}"
         let output = "class Foo {\n    var foo = {\n    }()\n}"
         XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoBlankLineBeforeWhileInRepeatWhile() {
+        let input = "repeat\n{\n}\nwhile true\n{\n}()"
+        let output = "repeat\n{\n}\nwhile true\n{\n}()"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testBlankLineBeforeWhileIfNotRepeatWhile() {
+        let input = "func foo(x)\n{\n}\nwhile true\n{\n}"
+        let output = "func foo(x)\n{\n}\n\nwhile true\n{\n}"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try! format(input, rules: [blankLinesBetweenScopes], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
     // MARK: linebreakAtEndOfFile
@@ -1759,6 +1775,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
+    func testAllmanBraceRepeatWhileIndent() {
+        let input = "repeat {\n    foo\n}\nwhile x"
+        let output = "repeat\n{\n    foo\n}\nwhile x"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try! format(input, rules: [braces], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
     // MARK: elseOrCatchOnSameLine
 
     func testelseOrCatchOnSameLine() {
@@ -1803,6 +1827,21 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(allmanBraces: true)
         XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testRepeatWhileNotOnSameLineForAllman() {
+        let input = "repeat\n{\n    foo\n} while x"
+        let output = "repeat\n{\n    foo\n}\nwhile x"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testWhileNotAffectedByelseOrCatchOnSameLineIfNotRepeatWhile() {
+        let input = "func foo(x) {\n}\n\nwhile true {\n}"
+        let output = "func foo(x) {\n}\n\nwhile true {\n}"
+        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     // MARK: trailingCommas

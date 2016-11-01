@@ -52,13 +52,15 @@ class SwiftFormatTests: XCTestCase {
 
     func testPreprocessArguments() {
         let input = ["", "foo", "-o", "bar", "-i", "4", "-l", "cr", "-s", "inline"]
-        let output = ["0": "", "1": "foo", "output": "bar", "indent": "4", "linebreaks": "cr", "semicolons": "inline"]
-        XCTAssertEqual(preprocessArguments(input, [
+        let output = (files: ["", "foo"], options: ["output": "bar", "indent": "4", "linebreaks": "cr", "semicolons": "inline"])
+        let preprocessedArgs = preprocessArguments(input, [
             "output",
             "indent",
             "linebreaks",
             "semicolons",
-        ])!, output)
+        ])!
+        XCTAssertEqual(output.files, preprocessedArgs.files)
+        XCTAssertEqual(output.options, preprocessedArgs.options)
     }
 
     // MARK: performance

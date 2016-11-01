@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */; };
+		015AF2C01DC6A538008F0A8C /* SwiftFormat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */; };
+		015AF2CA1DC6A58C008F0A8C /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015AF2C91DC6A58C008F0A8C /* PerformanceTests.swift */; };
 		018541CF1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018541CE1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift */; };
 		018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018E82741D62E730008CA0F8 /* TokenizerTests.swift */; };
 		01A0EAA81D5DB4CF00A0A8E3 /* SwiftFormat.h in Headers */ = {isa = PBXBuildFile; fileRef = 01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -44,6 +46,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		015AF2B81DC6A538008F0A8C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 01A0EA9B1D5DB4CF00A0A8E3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 01A0EAA31D5DB4CF00A0A8E3;
+			remoteInfo = SwiftFormat;
+		};
 		01A0EAB01D5DB4D000A0A8E3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 01A0EA9B1D5DB4CF00A0A8E3 /* Project object */;
@@ -76,6 +85,9 @@
 
 /* Begin PBXFileReference section */
 		0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftFormatTests.swift; sourceTree = "<group>"; };
+		015AF2C51DC6A538008F0A8C /* SwiftFormatPerfTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftFormatPerfTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		015AF2C61DC6A538008F0A8C /* SwiftFormatTests copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "SwiftFormatTests copy-Info.plist"; path = "/Users/nick/Dropbox/Open Source (GIT)/SwiftFormat/SwiftFormatTests copy-Info.plist"; sourceTree = "<absolute>"; };
+		015AF2C91DC6A58C008F0A8C /* PerformanceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 		018541CE1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "XCSourceTextBuffer+SwiftFormat.swift"; sourceTree = "<group>"; };
 		018E82741D62E730008CA0F8 /* TokenizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenizerTests.swift; sourceTree = "<group>"; };
 		01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftFormat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -111,6 +123,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		015AF2BF1DC6A538008F0A8C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				015AF2C01DC6A538008F0A8C /* SwiftFormat.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		01A0EAA01D5DB4CF00A0A8E3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -160,6 +180,7 @@
 				01A0EAB21D5DB4D000A0A8E3 /* SwiftFormatTests */,
 				90C4B6DE1DA4B059009EB000 /* Frameworks */,
 				01A0EAA51D5DB4CF00A0A8E3 /* Products */,
+				015AF2C61DC6A538008F0A8C /* SwiftFormatTests copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -171,6 +192,7 @@
 				01A0EACA1D5DB5F500A0A8E3 /* swiftformat */,
 				90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */,
 				90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */,
+				015AF2C51DC6A538008F0A8C /* SwiftFormatPerfTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -197,6 +219,7 @@
 				01B3987A1D763424009ADE61 /* FormatterTests.swift */,
 				01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */,
 				01F3DF8F1DBA003E00454944 /* OptionsTests.swift */,
+				015AF2C91DC6A58C008F0A8C /* PerformanceTests.swift */,
 				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
 			);
 			path = SwiftFormatTests;
@@ -308,6 +331,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		015AF2B61DC6A538008F0A8C /* SwiftFormatPerfTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 015AF2C21DC6A538008F0A8C /* Build configuration list for PBXNativeTarget "SwiftFormatPerfTests" */;
+			buildPhases = (
+				015AF2B91DC6A538008F0A8C /* Sources */,
+				015AF2BF1DC6A538008F0A8C /* Frameworks */,
+				015AF2C11DC6A538008F0A8C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				015AF2B71DC6A538008F0A8C /* PBXTargetDependency */,
+			);
+			name = SwiftFormatPerfTests;
+			productName = SwiftFormatTests;
+			productReference = 015AF2C51DC6A538008F0A8C /* SwiftFormatPerfTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		01A0EAA31D5DB4CF00A0A8E3 /* SwiftFormat */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 01A0EAB81D5DB4D000A0A8E3 /* Build configuration list for PBXNativeTarget "SwiftFormat" */;
@@ -449,6 +490,7 @@
 			targets = (
 				01A0EAA31D5DB4CF00A0A8E3 /* SwiftFormat */,
 				01A0EAAD1D5DB4D000A0A8E3 /* SwiftFormatTests */,
+				015AF2B61DC6A538008F0A8C /* SwiftFormatPerfTests */,
 				01A0EAC91D5DB5F500A0A8E3 /* CommandLineTool */,
 				90C4B6C91DA4B04A009EB000 /* SwiftFormat for Xcode */,
 				90C4B6DC1DA4B059009EB000 /* Editor Extension */,
@@ -457,6 +499,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		015AF2C11DC6A538008F0A8C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		01A0EAA21D5DB4CF00A0A8E3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -533,6 +582,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		015AF2B91DC6A538008F0A8C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				015AF2CA1DC6A58C008F0A8C /* PerformanceTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		01A0EA9F1D5DB4CF00A0A8E3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -599,6 +656,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		015AF2B71DC6A538008F0A8C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 01A0EAA31D5DB4CF00A0A8E3 /* SwiftFormat */;
+			targetProxy = 015AF2B81DC6A538008F0A8C /* PBXContainerItemProxy */;
+		};
 		01A0EAB11D5DB4D000A0A8E3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 01A0EAA31D5DB4CF00A0A8E3 /* SwiftFormat */;
@@ -623,6 +685,31 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		015AF2C31DC6A538008F0A8C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_TESTABILITY = YES;
+				INFOPLIST_FILE = "SwiftFormatTests copy-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormatTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+			};
+			name = Debug;
+		};
+		015AF2C41DC6A538008F0A8C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_TESTABILITY = YES;
+				INFOPLIST_FILE = "SwiftFormatTests copy-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormatTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		01A0EAB61D5DB4D000A0A8E3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -881,6 +968,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		015AF2C21DC6A538008F0A8C /* Build configuration list for PBXNativeTarget "SwiftFormatPerfTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				015AF2C31DC6A538008F0A8C /* Debug */,
+				015AF2C41DC6A538008F0A8C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		01A0EA9E1D5DB4CF00A0A8E3 /* Build configuration list for PBXProject "SwiftFormat" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

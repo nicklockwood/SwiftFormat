@@ -33,48 +33,68 @@
 
 import Foundation
 
-func processInput(_ inputURL: URL, andWriteToOutput outputURL: URL, withOptions options: FormatOptions) -> Int {
+/// Enumerate all swift files at the specified location and (optionally) calculate an output file URL for each
+public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = nil, block: (URL, URL) -> Void) {
     let manager = FileManager.default
     var isDirectory: ObjCBool = false
     if manager.fileExists(atPath: inputURL.path, isDirectory: &isDirectory) {
         if isDirectory.boolValue {
-            if let files = try? manager.contentsOfDirectory(at: inputURL, includingPropertiesForKeys: nil, options: FileManager.DirectoryEnumerationOptions.skipsHiddenFiles) {
-                var filesWritten = 0
+            if let files = try? manager.contentsOfDirectory(
+                at: inputURL, includingPropertiesForKeys: nil,
+                options: FileManager.DirectoryEnumerationOptions.skipsHiddenFiles) {
                 for url in files {
                     let inputDirectory = inputURL.path
-                    let path = outputURL.path + url.path.substring(from: inputDirectory.characters.endIndex)
-                    let outputDirectory = path.components(separatedBy: "/").dropLast().joined(separator: "/")
-                    if (try? manager.createDirectory(atPath: outputDirectory, withIntermediateDirectories: true, attributes: nil)) != nil {
-                        filesWritten += processInput(url, andWriteToOutput: URL(fileURLWithPath: path), withOptions: options)
+                    if let outputURL = outputURL {
+                        let path = outputURL.path + url.path.substring(from: inputDirectory.characters.endIndex)
+                        let outputDirectory = path.components(separatedBy: "/").dropLast().joined(separator: "/")
+                        do {
+                            try manager.createDirectory(atPath: outputDirectory,
+                                                        withIntermediateDirectories: true,
+                                                        attributes: nil)
+                            enumerateSwiftFiles(withInputURL: inputURL,
+                                                outputURL: URL(fileURLWithPath: path),
+                                                block: block)
+                        } catch {
+                            // TODO: what happens if directory already exists?
+                            print("error: failed to create directory at: \(outputDirectory), \(error)")
+                        }
                     } else {
-                        print("error: failed to create directory at: \(outputDirectory)")
+                        enumerateSwiftFiles(withInputURL: url, block: block)
                     }
                 }
-                return filesWritten
             } else {
                 print("error: failed to read contents of directory at: \(inputURL.path)")
             }
         } else if inputURL.pathExtension == "swift" {
-            if let input = try? String(contentsOf: inputURL) {
-                guard let output = try? format(input, options: options) else {
-                    print("error: could not parse file: \(inputURL.path)")
-                    return 0
-                }
-                if output != input {
-                    if (try? output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)) != nil {
-                        return 1
-                    } else {
-                        print("error: failed to write file: \(outputURL.path)")
-                    }
-                }
-            } else {
-                print("error: failed to read file: \(inputURL.path)")
-            }
+            block(inputURL, outputURL ?? inputURL)
         }
     } else {
         print("error: file not found: \(inputURL.path)")
     }
-    return 0
+}
+
+/// Parse an input file or directory and write it to the specified output path
+/// Returns the number of files that were written
+public func processInput(_ inputURL: URL, andWriteToOutput outputURL: URL, withOptions options: FormatOptions) -> Int {
+    var filesWritten = 0
+    enumerateSwiftFiles(withInputURL: inputURL, outputURL: outputURL) { inputURL, outputURL in
+        if let input = try? String(contentsOf: inputURL) {
+            guard let output = try? format(input, options: options) else {
+                print("error: could not parse file: \(inputURL.path)")
+                return
+            }
+            if output != input {
+                if (try? output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)) != nil {
+                    filesWritten += 1
+                } else {
+                    print("error: failed to write file: \(outputURL.path)")
+                }
+            }
+        } else {
+            print("error: failed to read file: \(inputURL.path)")
+        }
+    }
+    return filesWritten
 }
 
 func preprocessArguments(_ args: [String], _ names: [String]) -> (files: [String], options: [String: String])? {
@@ -117,9 +137,9 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> (files: [String
 }
 
 /// Format a pre-parsed token array
-func format(_ tokens: [Token],
-            rules: [FormatRule] = defaultRules,
-            options: FormatOptions = FormatOptions()) throws -> String {
+public func format(_ tokens: [Token],
+                   rules: [FormatRule] = defaultRules,
+                   options: FormatOptions = FormatOptions()) throws -> String {
 
     // Parse
     guard options.fragment || tokens.last?.isError == false else {
@@ -132,7 +152,9 @@ func format(_ tokens: [Token],
     rules.forEach { $0(formatter) }
 
     // Output
-    return formatter.tokens.reduce("", { $0 + $1.string })
+    var output = ""
+    for token in formatter.tokens { output += token.string }
+    return output
 }
 
 /// Format code with specified rules and options

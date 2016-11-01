@@ -697,8 +697,8 @@ class RulesTests: XCTestCase {
     }
 
     func testSpaceAroundSingleLineComment() {
-        let input = "func() {// comment\n}"
-        let output = "func() { // comment\n}"
+        let input = "func foo() {// comment\n}"
+        let output = "func foo() { // comment\n}"
         XCTAssertEqual(try! format(input, rules: [spaceAroundComments]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -918,8 +918,8 @@ class RulesTests: XCTestCase {
     // MARK: blankLinesAtEndOfScope
 
     func testBlankLinesRemovedAtEndOfFunction() {
-        let input = "func() {\n    // code\n\n}"
-        let output = "func() {\n    // code\n}"
+        let input = "func foo() {\n    // code\n\n}"
+        let output = "func foo() {\n    // code\n}"
         XCTAssertEqual(try! format(input, rules: [blankLinesAtEndOfScope]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

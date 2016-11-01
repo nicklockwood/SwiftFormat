@@ -110,7 +110,7 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
         var voids = 0, tuples = 0
         formatter.forEachToken(.identifier("Void")) { i, token in
             if let prevToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i),
-                prevToken.string == "." || prevToken.string == "typealias" {
+                prevToken == .symbol(".") || prevToken == .keyword("typealias") {
                 return
             }
             voids += 1

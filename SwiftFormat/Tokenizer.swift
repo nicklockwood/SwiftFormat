@@ -35,6 +35,21 @@ import Foundation
 
 // https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/LexicalStructure.html
 
+// Used to speed up matching
+// Note: super, self, nil, etc. have been omitted deliberately, as they behave like
+// identifiers. So too have context-specific keywords such as the following:
+// associativity, convenience, dynamic, didSet, final, get, infix, indirect,
+// lazy, left, mutating, none, nonmutating, optional, override, postfix, precedence,
+// prefix, Protocol, required, right, set, Type, unowned, weak, willSet
+private let swiftKeywords = [
+    "let", "return", "func", "var", "if", "public", "as", "else", "in", "import",
+    "import", "class", "class", "try", "guard", "case", "for", "init", "extension",
+    "private", "static", "fileprivate", "internal", "switch", "do", "catch", "enum",
+    "struct", "throws", "open", "throw", "typealias", "throw", "where", "break",
+    "deinit", "subscript", "subscript", "lazy", "is", "while", "associatedtype",
+    "inout", "continue", "operator", "repeat", "inout", "rethrows", "default",
+]
+
 public enum Token: Equatable {
     case number(String)
     case linebreak(String)
@@ -42,6 +57,7 @@ public enum Token: Equatable {
     case endOfScope(String)
     case symbol(String)
     case stringBody(String)
+    case keyword(String)
     case identifier(String)
     case whitespace(String)
     case commentBody(String)
@@ -55,6 +71,7 @@ public enum Token: Equatable {
              .endOfScope(let string),
              .symbol(let string),
              .stringBody(let string),
+             .keyword(let string),
              .identifier(let string),
              .whitespace(let string),
              .commentBody(let string),
@@ -77,11 +94,13 @@ public enum Token: Equatable {
         return false
     }
 
-    public var isIdentifier: Bool {
-        if case .identifier = self {
+    public var isIdentifierOrKeyword: Bool {
+        switch self {
+        case .identifier, .keyword:
             return true
+        default:
+            return false
         }
-        return false
     }
 
     public var isWhitespace: Bool {
@@ -181,6 +200,10 @@ public enum Token: Equatable {
             if case .symbol(string) = rhs {
                 return true
             }
+        case .keyword(let string):
+            if case .keyword(string) = rhs {
+                return true
+            }
         case .identifier(let string):
             if case .identifier(string) = rhs {
                 return true
@@ -221,12 +244,12 @@ extension Character {
 private extension String.CharacterView {
 
     mutating func scanCharacters(_ matching: (Character) -> Bool) -> String? {
-        var index = endIndex
-        for (i, c) in enumerated() {
-            if !matching(c) {
-                index = self.index(startIndex, offsetBy: i)
+        var index = startIndex
+        while index < endIndex {
+            if !matching(self[index]) {
                 break
             }
+            index = self.index(after: index)
         }
         if index > startIndex {
             let string = String(prefix(upTo: index))
@@ -237,25 +260,35 @@ private extension String.CharacterView {
     }
 
     mutating func scanCharacters(head: (Character) -> Bool, tail: (Character) -> Bool) -> String? {
-        if let head = scanCharacter(head) {
-            if let tail = scanCharacters(tail) {
-                return head + tail
+        if let c = first, head(c) {
+            var index = self.index(after: startIndex)
+            while index < endIndex {
+                if !tail(self[index]) {
+                    break
+                }
+                index = self.index(after: index)
             }
-            return head
+            let string = String(prefix(upTo: index))
+            self = suffix(from: index)
+            return string
         }
         return nil
     }
 
-    mutating func scanCharacter(_ matching: (Character) -> Bool = { _ in true }) -> String? {
+    mutating func scanCharacter(_ matching: (Character) -> Bool = { _ in true }) -> Character? {
         if let c = first, matching(c) {
             self = dropFirst()
-            return String(c)
+            return c
         }
         return nil
     }
 
     mutating func scanCharacter(_ character: Character) -> Bool {
-        return scanCharacter({ $0 == character }) != nil
+        if first == character {
+            self = dropFirst()
+            return true
+        }
+        return false
     }
 }
 
@@ -266,19 +299,19 @@ private extension String.CharacterView {
     }
 
     mutating func parseLineBreak() -> Token? {
-        return scanCharacter({ $0.isLinebreak }).map { .linebreak($0) }
+        return scanCharacter({ $0.isLinebreak }).map { .linebreak(String($0)) }
     }
 
     mutating func parsePunctuation() -> Token? {
-        return scanCharacter({ ":;,".characters.contains($0) }).map { .symbol($0) }
+        return scanCharacter({ ":;,".characters.contains($0) }).map { .symbol(String($0)) }
     }
 
     mutating func parseStartOfScope() -> Token? {
-        return scanCharacter({ "([{\"".characters.contains($0) }).map { .startOfScope($0) }
+        return scanCharacter({ "([{\"".characters.contains($0) }).map { .startOfScope(String($0)) }
     }
 
     mutating func parseEndOfScope() -> Token? {
-        return scanCharacter({ "}])".characters.contains($0) }).map { .endOfScope($0) }
+        return scanCharacter({ "}])".characters.contains($0) }).map { .endOfScope(String($0)) }
     }
 
     mutating func parseOperator() -> Token? {
@@ -326,7 +359,11 @@ private extension String.CharacterView {
             }
         }
 
+        var start = self
         if var tail = scanCharacter(isHead) {
+            if tail != "/" {
+                start = self
+            }
             var head = ""
             // Tail may only contain dot if head does
             let headWasDot = (tail == ".")
@@ -337,22 +374,24 @@ private extension String.CharacterView {
                             return .startOfScope("/*")
                         }
                         // Can't return two tokens, so put /* back to be parsed next time
-                        self = "/*".characters + self
+                        self = start
                         return .symbol(head)
                     } else if c == "/" {
                         if head == "" {
                             return .startOfScope("//")
                         }
                         // Can't return two tokens, so put // back to be parsed next time
-                        self = "//".characters + self
+                        self = start
                         return .symbol(head)
                     }
                 }
-                head += tail
+                if c != "/" {
+                    start = self
+                }
+                head.append(tail)
                 tail = c
             }
-            let op = head + tail
-            return op == "<" ? .startOfScope(op) : .symbol(op)
+            return (tail == "<" && head.isEmpty) ? .startOfScope("<") : .symbol(head + String(tail))
         }
         return nil
     }
@@ -430,23 +469,34 @@ private extension String.CharacterView {
         }
 
         func scanIdentifier() -> String? {
-            return scanCharacters(head: { isHead($0) || "@#".characters.contains($0) }, tail: isTail)
+            return scanCharacters(head: isHead, tail: isTail)
         }
 
         let start = self
         if scanCharacter("`") {
+            if let identifier = scanIdentifier(), scanCharacter("`") {
+                return .identifier("`" + identifier + "`")
+            }
+            self = start
+        } else if scanCharacter("#") {
             if let identifier = scanIdentifier() {
-                if scanCharacter("`") {
-                    return .identifier("`" + identifier + "`")
+                if identifier == "if" {
+                    return .startOfScope("#if")
                 }
+                if identifier == "endif" {
+                    return .endOfScope("#endif")
+                }
+                return .keyword("#" + identifier)
+            }
+            self = start
+        } else if scanCharacter("@") {
+            if let identifier = scanIdentifier() {
+                return .keyword("@" + identifier)
             }
             self = start
         } else if let identifier = scanIdentifier() {
-            if identifier == "#if" {
-                return .startOfScope(identifier)
-            }
-            if identifier == "#endif" {
-                return .endOfScope(identifier)
+            if swiftKeywords.contains(identifier) {
+                return .keyword(identifier)
             }
             return .identifier(identifier)
         }
@@ -463,58 +513,55 @@ private extension String.CharacterView {
             return scanNumber({ $0.isDigit })
         }
 
-        var number = ""
-        if scanCharacter("0") {
-            number = "0"
+        guard let integer = scanInteger() else {
+            return nil
+        }
+
+        if integer == "0" {
             if scanCharacter("x") {
-                number += "x"
                 if let hex = scanNumber({ $0.isHexDigit }) {
-                    number += hex
-                    if scanCharacter("p"), let power = scanInteger() {
-                        number += "p" + power
+                    if scanCharacter("p") {
+                        if let power = scanInteger() {
+                            return .number("0x" + hex + "p" + power)
+                        }
+                        return .error("0x" + hex + "p" + String(self))
                     }
-                    return .number(number)
+                    return .number("0x" + hex)
                 }
-                return .error(number + String(self))
+                return .error("0x" + String(self))
             } else if scanCharacter("b") {
-                number += "b"
                 if let bin = scanNumber({ "01".characters.contains($0) }) {
-                    return .number(number + bin)
+                    return .number("0b" + bin)
                 }
-                return .error(number + String(self))
+                return .error("0b" + String(self))
             } else if scanCharacter("o") {
-                number += "o"
                 if let octal = scanNumber({ ("0" ... "7").contains($0) }) {
-                    return .number(number + octal)
+                    return .number("0o" + octal)
                 }
-                return .error(number + String(self))
-            } else if let tail = scanCharacters({ $0.isDigit || $0 == "_" }) {
-                number += tail
+                return .error("0o" + String(self))
             }
-        } else if let integer = scanInteger() {
-            number += integer
         }
-        if !number.isEmpty {
-            let endOfInt = self
-            if scanCharacter(".") {
-                if let fraction = scanInteger() {
-                    number += "." + fraction
-                } else {
-                    self = endOfInt
-                }
-            }
-            let endOfFloat = self
-            if let e = scanCharacter({ "eE".characters.contains($0) }) {
-                let sign = scanCharacter({ "-+".characters.contains($0) }) ?? ""
-                if let exponent = scanInteger() {
-                    number += e + sign + exponent
-                } else {
-                    self = endOfFloat
-                }
-            }
-            return .number(number)
+
+        var number: String
+        let endOfInt = self
+        if scanCharacter("."), let fraction = scanInteger() {
+            number = integer + "." + fraction
+        } else {
+            self = endOfInt
+            number = integer
         }
-        return nil
+
+        let endOfFloat = self
+        if let e = scanCharacter({ "eE".characters.contains($0) }) {
+            let sign = scanCharacter({ "-+".characters.contains($0) }).map { String($0) } ?? ""
+            if let exponent = scanInteger() {
+                number += String(e) + sign + exponent
+            } else {
+                self = endOfFloat
+            }
+        }
+
+        return .number(number)
     }
 
     mutating func parseToken() -> Token? {
@@ -531,7 +578,7 @@ private extension String.CharacterView {
             parseEndOfScope() {
             return token
         }
-        if count > 0 {
+        if !isEmpty {
             return .error(String(self))
         }
         return nil
@@ -576,7 +623,7 @@ public func tokenize(_ source: String) -> [Token] {
             default:
                 escaped = false
             }
-            string += c
+            string.append(c)
         }
         if string != "" {
             tokens.append(.stringBody(string))
@@ -618,13 +665,12 @@ public func tokenize(_ source: String) -> [Token] {
                     continue
                 }
             default:
-                if c.characters.first?.isLinebreak == true {
+                if c.isLinebreak {
                     flushCommentBodyTokens()
-                    tokens.append(.linebreak(c))
+                    tokens.append(.linebreak(String(c)))
                     continue
-                }
-                if c.characters.first?.isWhitespace == true {
-                    whitespace += c
+                } else if c.isWhitespace {
+                    whitespace.append(c)
                     continue
                 }
             }
@@ -636,7 +682,7 @@ public func tokenize(_ source: String) -> [Token] {
                 }
                 whitespace = ""
             }
-            comment += c
+            comment.append(c)
         }
         // We shouldn't actually get here, unless code is malformed
         flushCommentBodyTokens()
@@ -644,8 +690,8 @@ public func tokenize(_ source: String) -> [Token] {
 
     func processSingleLineCommentBody() {
         while let c = characters.scanCharacter({ !$0.isLinebreak }) {
-            if c.characters.first?.isWhitespace == true {
-                whitespace += c
+            if c.isWhitespace {
+                whitespace.append(c)
                 continue
             }
             if whitespace != "" {
@@ -656,7 +702,7 @@ public func tokenize(_ source: String) -> [Token] {
                 }
                 whitespace = ""
             }
-            comment += c
+            comment.append(c)
         }
         flushCommentBodyTokens()
     }
@@ -665,37 +711,40 @@ public func tokenize(_ source: String) -> [Token] {
         let token = tokens.last!
         if !token.isWhitespace {
             switch token {
-            case .identifier(let string):
+            case .keyword(let string):
                 // Track switch/case statements
-                let previousToken = lastNonWhitespaceIndex.map({ tokens[$0] })
+                let previousToken = lastNonWhitespaceIndex.map { tokens[$0] }
                 if previousToken == .symbol(".") {
-                    break
+                    tokens[tokens.count - 1] = .identifier(string)
+                    processToken()
+                    return
                 }
-                switch string {
-                case "switch":
+                if string == "switch" {
                     nestedSwitches += 1
-                case "default":
-                    if nestedSwitches > 0 {
+                } else if nestedSwitches > 0 {
+                    switch string {
+                    case "default":
                         tokens[tokens.count - 1] = .endOfScope(string)
                         processToken()
                         return
-                    }
-                case "case":
-                    if let previousToken = previousToken {
-                        if case .identifier(let string) = previousToken,
-                            ["if", "guard", "while", "for"].contains(string) {
-                            break
-                        } else if previousToken == .symbol(",") {
-                            break
+                    case "case":
+                        if let previousToken = previousToken {
+                            switch previousToken {
+                            case .keyword("if"),
+                                 .keyword("guard"),
+                                 .keyword("while"),
+                                 .keyword("for"),
+                                 .symbol(","):
+                                break
+                            default:
+                                tokens[tokens.count - 1] = .endOfScope(string)
+                                processToken()
+                                return
+                            }
                         }
+                    default:
+                        break
                     }
-                    if nestedSwitches > 0 {
-                        tokens[tokens.count - 1] = .endOfScope(string)
-                        processToken()
-                        return
-                    }
-                default:
-                    break
                 }
             case .symbol(let string):
                 // Fix up optional indicator misidentified as operator
@@ -717,8 +766,14 @@ public func tokenize(_ source: String) -> [Token] {
                 if case .endOfScope(">") = lastToken {
                     let wasOperator: Bool
                     switch token {
-                    case .identifier(let string):
-                        wasOperator = !["in", "is", "as", "where", "else"].contains(string)
+                    case .keyword("in"),
+                         .keyword("is"),
+                         .keyword("as"),
+                         .keyword("where"),
+                         .keyword("else"):
+                        wasOperator = false
+                    case .identifier, .keyword:
+                        wasOperator = true
                     case .symbol(let string):
                         wasOperator = !["=", "->", ">", ",", ":", ";", "?", "!", "."].contains(string)
                     case .number, .startOfScope("\""):

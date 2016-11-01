@@ -39,7 +39,7 @@ class TokenizerTests: XCTestCase {
     func testInvalidToken() {
         let input = "let `foo = bar"
         let output: [Token] = [
-            .identifier("let"),
+            .keyword("let"),
             .whitespace(" "),
             .error("`foo = bar"),
         ]
@@ -49,7 +49,7 @@ class TokenizerTests: XCTestCase {
     func testUnclosedBraces() {
         let input = "func foo() {"
         let output: [Token] = [
-            .identifier("func"),
+            .keyword("func"),
             .whitespace(" "),
             .identifier("foo"),
             .startOfScope("("),
@@ -101,7 +101,7 @@ class TokenizerTests: XCTestCase {
             .startOfScope("("),
             .startOfScope("{"),
             .whitespace(" "),
-            .identifier("return"),
+            .keyword("return"),
             .whitespace(" "),
             .identifier("$0"),
             .whitespace(" "),
@@ -507,13 +507,13 @@ class TokenizerTests: XCTestCase {
 
     func testAtFoo() {
         let input = "@foo"
-        let output: [Token] = [.identifier("@foo")]
+        let output: [Token] = [.keyword("@foo")]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testHashFoo() {
         let input = "#foo"
-        let output: [Token] = [.identifier("#foo")]
+        let output: [Token] = [.keyword("#foo")]
         XCTAssertEqual(tokenize(input), output)
     }
 
@@ -742,7 +742,7 @@ class TokenizerTests: XCTestCase {
     func testGenericClassDeclaration() {
         let input = "class Foo<T,U> {}"
         let output: [Token] = [
-            .identifier("class"),
+            .keyword("class"),
             .whitespace(" "),
             .identifier("Foo"),
             .startOfScope("<"),
@@ -760,7 +760,7 @@ class TokenizerTests: XCTestCase {
     func testGenericSubclassDeclaration() {
         let input = "class Foo<T,U>: Bar"
         let output: [Token] = [
-            .identifier("class"),
+            .keyword("class"),
             .whitespace(" "),
             .identifier("Foo"),
             .startOfScope("<"),
@@ -778,7 +778,7 @@ class TokenizerTests: XCTestCase {
     func testGenericFunctionDeclaration() {
         let input = "func foo<T>(bar:T)"
         let output: [Token] = [
-            .identifier("func"),
+            .keyword("func"),
             .whitespace(" "),
             .identifier("foo"),
             .startOfScope("<"),
@@ -959,7 +959,7 @@ class TokenizerTests: XCTestCase {
             .identifier("Baz"),
             .endOfScope(">"),
             .whitespace(" "),
-            .identifier("in"),
+            .keyword("in"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
@@ -1048,7 +1048,7 @@ class TokenizerTests: XCTestCase {
     func testGenericFollowedByAssign() {
         let input = "let foo: Bar<Baz> = 5"
         let output: [Token] = [
-            .identifier("let"),
+            .keyword("let"),
             .whitespace(" "),
             .identifier("foo"),
             .symbol(":"),
@@ -1068,7 +1068,7 @@ class TokenizerTests: XCTestCase {
     func testGenericInFailableInit() {
         let input = "init?<T>()"
         let output: [Token] = [
-            .identifier("init"),
+            .keyword("init"),
             .symbol("?"),
             .startOfScope("<"),
             .identifier("T"),
@@ -1082,7 +1082,7 @@ class TokenizerTests: XCTestCase {
     func testInfixQuestionMarkChevronOperator() {
         let input = "operator ?< {}"
         let output: [Token] = [
-            .identifier("operator"),
+            .keyword("operator"),
             .whitespace(" "),
             .symbol("?<"),
             .whitespace(" "),
@@ -1150,12 +1150,12 @@ class TokenizerTests: XCTestCase {
     func testSingleLineEnum() {
         let input = "enum Foo {case Bar, Baz}"
         let output: [Token] = [
-            .identifier("enum"),
+            .keyword("enum"),
             .whitespace(" "),
             .identifier("Foo"),
             .whitespace(" "),
             .startOfScope("{"),
-            .identifier("case"),
+            .keyword("case"),
             .whitespace(" "),
             .identifier("Bar"),
             .symbol(","),
@@ -1169,7 +1169,7 @@ class TokenizerTests: XCTestCase {
     func testSingleLineGenericEnum() {
         let input = "enum Foo<T> {case Bar, Baz}"
         let output: [Token] = [
-            .identifier("enum"),
+            .keyword("enum"),
             .whitespace(" "),
             .identifier("Foo"),
             .startOfScope("<"),
@@ -1177,7 +1177,7 @@ class TokenizerTests: XCTestCase {
             .endOfScope(">"),
             .whitespace(" "),
             .startOfScope("{"),
-            .identifier("case"),
+            .keyword("case"),
             .whitespace(" "),
             .identifier("Bar"),
             .symbol(","),
@@ -1191,17 +1191,17 @@ class TokenizerTests: XCTestCase {
     func testMultilineLineEnum() {
         let input = "enum Foo {\ncase Bar\ncase Baz\n}"
         let output: [Token] = [
-            .identifier("enum"),
+            .keyword("enum"),
             .whitespace(" "),
             .identifier("Foo"),
             .whitespace(" "),
             .startOfScope("{"),
             .linebreak("\n"),
-            .identifier("case"),
+            .keyword("case"),
             .whitespace(" "),
             .identifier("Bar"),
             .linebreak("\n"),
-            .identifier("case"),
+            .keyword("case"),
             .whitespace(" "),
             .identifier("Baz"),
             .linebreak("\n"),
@@ -1213,7 +1213,7 @@ class TokenizerTests: XCTestCase {
     func testSwitchStatement() {
         let input = "switch x {\ncase 1:\nbreak\ncase 2:\nbreak\ndefault:\nbreak\n}"
         let output: [Token] = [
-            .identifier("switch"),
+            .keyword("switch"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1224,19 +1224,19 @@ class TokenizerTests: XCTestCase {
             .number("1"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("case"),
             .whitespace(" "),
             .number("2"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("default"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("}"),
         ]
@@ -1246,7 +1246,7 @@ class TokenizerTests: XCTestCase {
     func testSwitchStatementWithEnumCases() {
         let input = "switch x {\ncase .foo,\n.bar:\nbreak\ndefault:\nbreak\n}"
         let output: [Token] = [
-            .identifier("switch"),
+            .keyword("switch"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1262,12 +1262,12 @@ class TokenizerTests: XCTestCase {
             .identifier("bar"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("default"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("}"),
         ]
@@ -1277,7 +1277,7 @@ class TokenizerTests: XCTestCase {
     func testSwitchCaseIsDictionaryStatement() {
         let input = "switch x {\ncase foo is [Key: Value]:\nbreak\ndefault:\nbreak\n}"
         let output: [Token] = [
-            .identifier("switch"),
+            .keyword("switch"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1287,7 +1287,7 @@ class TokenizerTests: XCTestCase {
             .whitespace(" "),
             .identifier("foo"),
             .whitespace(" "),
-            .identifier("is"),
+            .keyword("is"),
             .whitespace(" "),
             .startOfScope("["),
             .identifier("Key"),
@@ -1297,12 +1297,12 @@ class TokenizerTests: XCTestCase {
             .endOfScope("]"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("default"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("}"),
         ]
@@ -1312,7 +1312,7 @@ class TokenizerTests: XCTestCase {
     func testSwitchCaseContainingCaseIdentifier() {
         let input = "switch x {\ncase 1:\nfoo.case\ndefault:\nbreak\n}"
         let output: [Token] = [
-            .identifier("switch"),
+            .keyword("switch"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1330,7 +1330,7 @@ class TokenizerTests: XCTestCase {
             .endOfScope("default"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("}"),
         ]
@@ -1340,7 +1340,7 @@ class TokenizerTests: XCTestCase {
     func testSwitchCaseContainingDefaultIdentifier() {
         let input = "switch x {\ncase 1:\nfoo.default\ndefault:\nbreak\n}"
         let output: [Token] = [
-            .identifier("switch"),
+            .keyword("switch"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1358,7 +1358,7 @@ class TokenizerTests: XCTestCase {
             .endOfScope("default"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("}"),
         ]
@@ -1368,7 +1368,7 @@ class TokenizerTests: XCTestCase {
     func testSwitchCaseContainingIfCase() {
         let input = "switch x {\ncase 1:\nif case x = y {}\ndefault:\nbreak\n}"
         let output: [Token] = [
-            .identifier("switch"),
+            .keyword("switch"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1379,9 +1379,9 @@ class TokenizerTests: XCTestCase {
             .number("1"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("if"),
+            .keyword("if"),
             .whitespace(" "),
-            .identifier("case"),
+            .keyword("case"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1395,7 +1395,7 @@ class TokenizerTests: XCTestCase {
             .endOfScope("default"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("}"),
         ]
@@ -1405,7 +1405,7 @@ class TokenizerTests: XCTestCase {
     func testSwitchCaseContainingIfCaseCommaCase() {
         let input = "switch x {\ncase 1:\nif case w = x, case y = z {}\ndefault:\nbreak\n}"
         let output: [Token] = [
-            .identifier("switch"),
+            .keyword("switch"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1416,9 +1416,9 @@ class TokenizerTests: XCTestCase {
             .number("1"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("if"),
+            .keyword("if"),
             .whitespace(" "),
-            .identifier("case"),
+            .keyword("case"),
             .whitespace(" "),
             .identifier("w"),
             .whitespace(" "),
@@ -1427,7 +1427,7 @@ class TokenizerTests: XCTestCase {
             .identifier("x"),
             .symbol(","),
             .whitespace(" "),
-            .identifier("case"),
+            .keyword("case"),
             .whitespace(" "),
             .identifier("y"),
             .whitespace(" "),
@@ -1441,7 +1441,7 @@ class TokenizerTests: XCTestCase {
             .endOfScope("default"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("}"),
         ]
@@ -1451,7 +1451,7 @@ class TokenizerTests: XCTestCase {
     func testSwitchCaseContainingGuardCase() {
         let input = "switch x {\ncase 1:\nguard case x = y else {}\ndefault:\nbreak\n}"
         let output: [Token] = [
-            .identifier("switch"),
+            .keyword("switch"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1462,9 +1462,9 @@ class TokenizerTests: XCTestCase {
             .number("1"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("guard"),
+            .keyword("guard"),
             .whitespace(" "),
-            .identifier("case"),
+            .keyword("case"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1472,7 +1472,7 @@ class TokenizerTests: XCTestCase {
             .whitespace(" "),
             .identifier("y"),
             .whitespace(" "),
-            .identifier("else"),
+            .keyword("else"),
             .whitespace(" "),
             .startOfScope("{"),
             .endOfScope("}"),
@@ -1480,7 +1480,7 @@ class TokenizerTests: XCTestCase {
             .endOfScope("default"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("}"),
         ]
@@ -1490,7 +1490,7 @@ class TokenizerTests: XCTestCase {
     func testSwitchFollowedByEnum() {
         let input = "switch x {\ncase y: break\ndefault: break\n}\nenum Foo {\ncase z\n}"
         let output: [Token] = [
-            .identifier("switch"),
+            .keyword("switch"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1501,22 +1501,22 @@ class TokenizerTests: XCTestCase {
             .identifier("y"),
             .startOfScope(":"),
             .whitespace(" "),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("default"),
             .startOfScope(":"),
             .whitespace(" "),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("}"),
             .linebreak("\n"),
-            .identifier("enum"),
+            .keyword("enum"),
             .whitespace(" "),
             .identifier("Foo"),
             .whitespace(" "),
             .startOfScope("{"),
             .linebreak("\n"),
-            .identifier("case"),
+            .keyword("case"),
             .whitespace(" "),
             .identifier("z"),
             .linebreak("\n"),
@@ -1528,7 +1528,7 @@ class TokenizerTests: XCTestCase {
     func testSwitchCaseContainingSwitchIdentifierFollowedByEnum() {
         let input = "switch x {\ncase 1:\nfoo.switch\ndefault:\nbreak\n}\nenum Foo {\ncase z\n}"
         let output: [Token] = [
-            .identifier("switch"),
+            .keyword("switch"),
             .whitespace(" "),
             .identifier("x"),
             .whitespace(" "),
@@ -1546,17 +1546,17 @@ class TokenizerTests: XCTestCase {
             .endOfScope("default"),
             .startOfScope(":"),
             .linebreak("\n"),
-            .identifier("break"),
+            .keyword("break"),
             .linebreak("\n"),
             .endOfScope("}"),
             .linebreak("\n"),
-            .identifier("enum"),
+            .keyword("enum"),
             .whitespace(" "),
             .identifier("Foo"),
             .whitespace(" "),
             .startOfScope("{"),
             .linebreak("\n"),
-            .identifier("case"),
+            .keyword("case"),
             .whitespace(" "),
             .identifier("z"),
             .linebreak("\n"),

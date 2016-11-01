@@ -43,29 +43,14 @@ public typealias FormatRule = (Formatter) -> Void
 /// * There is no space between a closing paren and following opening square bracket
 public func spaceAroundParens(_ formatter: Formatter) {
 
-    func spaceAfter(_ identifier: String, index: Int) -> Bool {
-        switch identifier {
-        case "@escaping",
-             "@autoclosure",
-             "case",
-             "for",
-             "guard",
-             "if",
-             "in",
-             "inout",
-             "return",
-             "switch",
-             "where",
-             "while",
-             "as",
-             "catch",
-             "is",
-             "let",
-             "throw",
-             "try":
-            return formatter.previousNonWhitespaceToken(fromIndex: index) != .symbol(".")
-        default:
+    func spaceAfter(_ keyword: String, index: Int) -> Bool {
+        switch keyword {
+        case "private", "fileprivate", "internal",
+             "init", "subscript",
+             "@objc", "@available", "@convention":
             return false
+        default:
+            return true
         }
     }
 
@@ -75,7 +60,7 @@ public func spaceAroundParens(_ formatter: Formatter) {
             !$0.isWhitespaceOrCommentOrLinebreak && $0 != .endOfScope("]") }) == .startOfScope("{")
         else { return false }
         guard formatter.nextToken(fromIndex: i, matching: {
-            !$0.isWhitespaceOrCommentOrLinebreak && $0 != .startOfScope("(") }) == .identifier("in")
+            !$0.isWhitespaceOrCommentOrLinebreak && $0 != .startOfScope("(") }) == .keyword("in")
         else { return false }
         return true
     }
@@ -85,14 +70,16 @@ public func spaceAroundParens(_ formatter: Formatter) {
             return
         }
         switch previousToken {
-        case .identifier(let string) where spaceAfter(string, index: i - 1):
+        case .keyword(let string) where spaceAfter(string, index: i - 1):
             fallthrough
         case .endOfScope("]") where isCaptureList(atIndex: i - 1):
             formatter.insertToken(.whitespace(" "), atIndex: i)
         case .whitespace:
             if let token = formatter.tokenAtIndex(i - 2) {
                 switch token {
-                case .identifier(let string) where !spaceAfter(string, index: i - 2):
+                case .keyword(let string) where !spaceAfter(string, index: i - 2):
+                    fallthrough
+                case .identifier:
                     fallthrough
                 case .endOfScope("}"), .endOfScope(")"), .endOfScope(">"),
                      .endOfScope("]") where !isCaptureList(atIndex: i - 2):
@@ -110,7 +97,7 @@ public func spaceAroundParens(_ formatter: Formatter) {
             return
         }
         switch nextToken {
-        case .identifier, .startOfScope("{"):
+        case .identifier, .keyword, .startOfScope("{"):
             formatter.insertToken(.whitespace(" "), atIndex: i + 1)
         case .whitespace where formatter.tokenAtIndex(i + 2) == .startOfScope("["):
             formatter.removeTokenAtIndex(i + 1)
@@ -144,19 +131,10 @@ public func spaceInsideParens(_ formatter: Formatter) {
 /// * There is space between a closing bracket and following opening brace
 public func spaceAroundBrackets(_ formatter: Formatter) {
 
-    func spaceAfter(_ identifier: String, index: Int) -> Bool {
-        switch identifier {
-        case "case",
-             "guard",
-             "if",
-             "in",
-             "return",
-             "switch",
-             "where",
-             "while",
-             "as",
-             "is":
-            return formatter.previousNonWhitespaceToken(fromIndex: index) != .symbol(".")
+    func spaceAfter(_ token: Token, index: Int) -> Bool {
+        switch token {
+        case .keyword:
+            return true
         default:
             return false
         }
@@ -166,13 +144,15 @@ public func spaceAroundBrackets(_ formatter: Formatter) {
         guard let previousToken = formatter.tokenAtIndex(i - 1) else {
             return
         }
-        if case .identifier(let string) = previousToken, spaceAfter(string, index: i - 1) {
+        if spaceAfter(previousToken, index: i - 1) {
             formatter.insertToken(.whitespace(" "), atIndex: i)
         } else if previousToken.isWhitespace {
             if let token = formatter.tokenAtIndex(i - 2) {
                 switch token {
-                case .identifier(let string) where !spaceAfter(string, index: i - 2):
-                    fallthrough
+                case .identifier, .keyword:
+                    if !spaceAfter(token, index: i - 2) {
+                        fallthrough
+                    }
                 case .endOfScope("]"), .endOfScope("}"), .endOfScope(")"):
                     formatter.removeTokenAtIndex(i - 1)
                 default:
@@ -185,10 +165,13 @@ public func spaceAroundBrackets(_ formatter: Formatter) {
         guard let nextToken = formatter.tokenAtIndex(i + 1) else {
             return
         }
-        if nextToken.isIdentifier || nextToken == .startOfScope("{") {
+        switch nextToken {
+        case .identifier, .keyword, .startOfScope("{"):
             formatter.insertToken(.whitespace(" "), atIndex: i + 1)
-        } else if nextToken.isWhitespace && formatter.tokenAtIndex(i + 2) == .startOfScope("[") {
+        case .whitespace where formatter.tokenAtIndex(i + 2) == .startOfScope("["):
             formatter.removeTokenAtIndex(i + 1)
+        default:
+            break
         }
     }
 }
@@ -224,8 +207,13 @@ public func spaceAroundBraces(_ formatter: Formatter) {
         }
     }
     formatter.forEachToken(.endOfScope("}")) { i, token in
-        if formatter.tokenAtIndex(i + 1)?.isIdentifier == true {
-            formatter.insertToken(.whitespace(" "), atIndex: i + 1)
+        if let nextToken = formatter.tokenAtIndex(i + 1) {
+            switch nextToken {
+            case .identifier, .keyword:
+                formatter.insertToken(.whitespace(" "), atIndex: i + 1)
+            default:
+                break
+            }
         }
     }
 }
@@ -255,7 +243,7 @@ public func spaceInsideBraces(_ formatter: Formatter) {
 public func spaceAroundGenerics(_ formatter: Formatter) {
     formatter.forEachToken(.startOfScope("<")) { i, token in
         if formatter.tokenAtIndex(i - 1)?.isWhitespace == true &&
-            formatter.tokenAtIndex(i - 2)?.isIdentifier == true {
+            formatter.tokenAtIndex(i - 2)?.isIdentifierOrKeyword == true {
             formatter.removeTokenAtIndex(i - 1)
         }
     }
@@ -313,20 +301,10 @@ public func spaceAroundOperators(_ formatter: Formatter) {
         return true
     }
 
-    func spaceAfter(_ identifier: String, index: Int) -> Bool {
-        switch identifier {
-        case "case",
-             "guard",
-             "if",
-             "in",
-             "let",
-             "return",
-             "switch",
-             "where",
-             "while",
-             "as",
-             "is":
-            return formatter.previousNonWhitespaceToken(fromIndex: index) != .symbol(".")
+    func spaceAfter(_ token: Token, index: Int) -> Bool {
+        switch token {
+        case .keyword, .endOfScope("case"):
+            return true
         default:
             return false
         }
@@ -384,14 +362,14 @@ public func spaceAroundOperators(_ formatter: Formatter) {
                         // ? is a ternary operator, treat it as the start of a scope
                         scopeStack.append(token)
                     }
-                } else if [.identifier("as"), .identifier("try")].contains(previousToken) {
+                } else if [.keyword("as"), .keyword("try")].contains(previousToken) {
                     formatter.insertToken(.whitespace(" "), atIndex: i + 1)
                 }
             }
         case .symbol("!"):
             if let previousToken = formatter.tokenAtIndex(i - 1), let nextToken = formatter.tokenAtIndex(i + 1) {
                 if !nextToken.isWhitespaceOrLinebreak &&
-                    [.identifier("as"), .identifier("try")].contains(previousToken) {
+                    [.keyword("as"), .keyword("try")].contains(previousToken) {
                     formatter.insertToken(.whitespace(" "), atIndex: i + 1)
                 }
             }
@@ -414,7 +392,7 @@ public func spaceAroundOperators(_ formatter: Formatter) {
                             (previousNonWhitespaceToken != .symbol("?") &&
                                 formatter.tokenAtIndex(previousNonWhitespaceTokenIndex - 1)?.isWhitespace == false &&
                                 isUnwrapOperatorSequence(previousNonWhitespaceToken))) &&
-                        !spaceAfter(previousNonWhitespaceToken.string, index: previousNonWhitespaceTokenIndex) {
+                        !spaceAfter(previousNonWhitespaceToken, index: previousNonWhitespaceTokenIndex) {
                         if previousToken.isWhitespace {
                             formatter.removeTokenAtIndex(i - 1)
                         }
@@ -635,14 +613,13 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
     var isSpaceableScopeType = false
     formatter.forEachToken { i, token in
         switch token {
-        case .identifier("class"), .identifier("struct"), .identifier("extension"), .identifier("enum"):
-            if formatter.previousNonWhitespaceToken(fromIndex: i) != .symbol(".") {
-                isSpaceableScopeType = true
-            }
-        case .identifier("func"), .identifier("var"):
-            if formatter.previousNonWhitespaceToken(fromIndex: i) != .symbol(".") {
-                isSpaceableScopeType = false
-            }
+        case .keyword("class"),
+             .keyword("struct"),
+             .keyword("extension"),
+             .keyword("enum"):
+            isSpaceableScopeType = true
+        case .keyword("func"), .keyword("var"):
+            isSpaceableScopeType = false
         case .startOfScope("{"):
             spaceableScopeStack.append(isSpaceableScopeType)
             isSpaceableScopeType = false
@@ -664,14 +641,15 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
                 if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
                     !$0.isWhitespaceOrLinebreak }), let nextToken = formatter.tokenAtIndex(nextTokenIndex) {
                     switch nextToken {
-                    case .error, .endOfScope, .symbol("."), .symbol(","), .symbol(":"),
-                         .identifier("else"), .identifier("catch"):
+                    case .error, .endOfScope,
+                         .symbol("."), .symbol(","), .symbol(":"),
+                         .keyword("else"), .keyword("catch"):
                         break
-                    case .identifier("while"):
+                    case .keyword("while"):
                         if let previousBraceIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
                             $0 == .startOfScope("{") }),
                             formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: previousBraceIndex)
-                            != .identifier("repeat") {
+                            != .keyword("repeat") {
                             fallthrough
                         }
                         break
@@ -738,62 +716,26 @@ public func indent(_ formatter: Formatter) {
     func tokenIsEndOfStatement(_ i: Int) -> Bool {
         if let token = formatter.tokenAtIndex(i) {
             switch token {
-            case .identifier(let string), .endOfScope(let string):
+            case .endOfScope("case"),
+                 .endOfScope("default"):
+                return false
+            case .keyword(let string):
                 // TODO: handle in
                 // TODO: handle context-specific keywords
                 // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
                 // lazy, left, mutating, none, nonmutating, optional, override, postfix, precedence,
                 // prefix, Protocol, required, right, set, Type, unowned, weak, willSet
                 switch string {
-                case "associatedtype",
-                     "import",
-                     "init",
-                     "inout",
-                     "let",
-                     "subscript",
-                     "var",
-                     "func",
-                     "case",
-                     "default",
-                     "for",
-                     "guard",
-                     "if",
-                     "switch",
-                     "where",
-                     "while",
-                     "as",
-                     "is",
-                     "super",
-                     "throw",
-                     "try":
-                    return formatter.previousNonWhitespaceToken(fromIndex: i) == .symbol(".")
+                case "let", "func", "var", "if", "as", "import", "try", "guard", "case",
+                     "for", "init", "switch", "throw", "where", "subscript", "is",
+                     "while", "associatedtype", "inout":
+                    return false
                 case "return":
-                    if formatter.previousNonWhitespaceToken(fromIndex: i) == .symbol(".") {
-                        return true
-                    }
-                    guard let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) else {
-                        return true
-                    }
+                    guard let nextToken =
+                        formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)
+                    else { return true }
                     switch nextToken {
-                    case .identifier(let string):
-                        switch string {
-                        case "let",
-                             "var",
-                             "func",
-                             "for",
-                             "guard",
-                             "if",
-                             "switch",
-                             "while",
-                             "do",
-                             "super",
-                             "throw",
-                             "return":
-                            return true
-                        default:
-                            return false
-                        }
-                    case .endOfScope("case"), .endOfScope("default"):
+                    case .keyword, .endOfScope("case"), .endOfScope("default"):
                         return true
                     default:
                         return false
@@ -807,15 +749,17 @@ public func indent(_ formatter: Formatter) {
                 // For arrays or argument lists, we already indent
                 return ["[", "(", "case"].contains(currentScope()?.string ?? "")
             case .symbol:
-                if formatter.previousToken(fromIndex: i, matching: { $0 == .identifier("operator") }) != nil {
+                if formatter.previousToken(fromIndex: i, matching: { $0 == .keyword("operator") }) != nil {
                     return true
                 }
                 if let previousToken = formatter.tokenAtIndex(i - 1) {
-                    if [.identifier("as"), .identifier("try")].contains(previousToken) {
+                    switch previousToken {
+                    case .keyword("as"), .keyword("try"):
                         return false
-                    }
-                    if previousToken.isWhitespaceOrCommentOrLinebreak {
-                        return formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) == .symbol("=")
+                    default:
+                        if previousToken.isWhitespaceOrCommentOrLinebreak {
+                            return formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) == .symbol("=")
+                        }
                     }
                 }
             default:
@@ -828,35 +772,28 @@ public func indent(_ formatter: Formatter) {
     func tokenIsStartOfStatement(_ i: Int) -> Bool {
         if let token = formatter.tokenAtIndex(i) {
             switch token {
-            case .identifier(let string):
-                // TODO: handle "in"
-                switch string {
-                case "as",
-                     "dynamicType",
-                     "is",
-                     "rethrows",
-                     "throws",
-                     "where":
-                    return false
-                default:
-                    return true
-                }
+            case .keyword(let string) where [ // TODO: handle "in"
+                "as", "is", "where", "dynamicType", "rethrows", "throws"].contains(string):
+                return false
             case .symbol("."):
+                // Is this an enum value?
                 if let previousToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
-                    // Is this an enum value?
-                    let scope = currentScope()?.string ?? ""
-                    return ["(", "[", "case"].contains(scope) && [scope, ",", ":"].contains(previousToken.string)
+                    if let scope = currentScope()?.string, ["(", "[", "case"].contains(scope),
+                        [scope, ",", ":"].contains(previousToken.string) {
+                        return true
+                    }
+                    return false
                 }
                 return true
             case .symbol(","):
-                // For arrays, dictionaries, cases, or argument lists, we already indent
-                return ["[", "(", "case"].contains(currentScope()?.string ?? "")
-            case .symbol:
-                if let nextToken = formatter.tokenAtIndex(i + 1),
-                    nextToken.isWhitespaceOrCommentOrLinebreak {
-                    // Is an infix operator
-                    return false
+                if let scope = currentScope()?.string, ["[", "(", "case"].contains(scope) {
+                    // For arrays, dictionaries, cases, or argument lists, we already indent
+                    return true
                 }
+                return false
+            case .symbol where formatter.tokenAtIndex(i + 1)?.isWhitespaceOrCommentOrLinebreak == true:
+                // Is an infix operator
+                return false
             default:
                 return true
             }
@@ -868,12 +805,10 @@ public func indent(_ formatter: Formatter) {
         var i = i - 1
         while let token = formatter.tokenAtIndex(i) {
             switch token {
-            case .identifier(let string):
-                if ["if", "else", "for", "while", "do", "catch", "switch", "guard" /* TODO: get/set/didSet */ ]
-                    .contains(string) {
-                    // Check that it's actually a keyword and not a member property or enum value
-                    return formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) == .symbol(".")
-                }
+            case .keyword("if"), .keyword("for"), .keyword("while"),
+                 .keyword("switch"), .keyword("guard"), .keyword("else"),
+                 .keyword("do"), .keyword("catch"):
+                return false
             case .startOfScope:
                 return true
             default:
@@ -996,7 +931,7 @@ public func indent(_ formatter: Formatter) {
                         scopeStartLineIndexes.append(lineIndex)
                         linewrapStack.append(false)
                     }
-                } else if token == .identifier("#else") || token == .identifier("#elseif") {
+                } else if token == .keyword("#else") || token == .keyword("#elseif") {
                     let indent = indentStack[indentStack.count - 2]
                     i += insertWhitespace(indent, atIndex: formatter.startOfLine(atIndex: i))
                 }
@@ -1095,7 +1030,7 @@ public func braces(_ formatter: Formatter) {
             if let previousTokenIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: { !$0.isWhitespace }),
                 let previousToken = formatter.tokenAtIndex(previousTokenIndex) {
                 switch previousToken {
-                case .identifier, .endOfScope:
+                case .identifier, .keyword, .endOfScope:
                     formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: i)
                     if let indentToken = formatter.indentTokenForLineAtIndex(i) {
                         formatter.insertToken(indentToken, atIndex: i + 1)
@@ -1141,15 +1076,15 @@ public func elseOrCatchOnSameLine(_ formatter: Formatter) {
         switch token {
         case .endOfScope("}"):
             closingBraceIndex = i
-        case .identifier("while"):
+        case .keyword("while"):
             if let closingBraceIndex = closingBraceIndex,
                 let previousBraceIndex = formatter.indexOfPreviousToken(fromIndex: closingBraceIndex, matching: {
                     $0 == .startOfScope("{") }), formatter.previousNonWhitespaceOrCommentOrLinebreakToken(
-                    fromIndex: previousBraceIndex) == .identifier("repeat") {
+                    fromIndex: previousBraceIndex) == .keyword("repeat") {
                 fallthrough
             }
             break
-        case .identifier("else"), .identifier("catch"):
+        case .keyword("else"), .keyword("catch"):
             if let closingBraceIndex = closingBraceIndex {
                 // Only applies to dangling braces
                 if formatter.previousNonWhitespaceToken(fromIndex: closingBraceIndex)?.isLinebreak == true {
@@ -1231,7 +1166,7 @@ public func semicolons(_ formatter: Formatter) {
             if lastToken == nil || nextToken == .endOfScope("}") {
                 // Safe to remove
                 formatter.removeTokenAtIndex(i)
-            } else if lastToken == .identifier("return") || formatter.scopeAtIndex(i) == .startOfScope("(") {
+            } else if lastToken == .keyword("return") || formatter.scopeAtIndex(i) == .startOfScope("(") {
                 // Not safe to remove or replace
             } else if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.isLinebreak == true {
                 // Safe to remove
@@ -1272,19 +1207,17 @@ public func specifiers(_ formatter: Formatter) {
         "lazy",
         "weak", "unowned",
         "static", "class",
+        "mutating", "nonmutating",
         "prefix", "postfix",
     ]
     let validSpecifiers = Set(order)
     formatter.forEachToken { i, token in
-        guard case .identifier(let string) = token,
-            formatter.previousNonWhitespaceToken(fromIndex: i) != .symbol(".") else {
+        guard case .keyword(let string) = token else {
             return
         }
         switch string {
-        case "let", "var",
-             "typealias", "associatedtype",
-             "class", "struct", "enum", "protocol", "extension",
-             "func", "init", "subscript":
+        case "let", "func", "var", "class", "extension", "init", "enum",
+             "struct", "typealias", "subscript", "associatedtype", "protocol":
             break
         default:
             return
@@ -1294,15 +1227,18 @@ public func specifiers(_ formatter: Formatter) {
         var specifierIndex = i
         loop: while let token = formatter.tokenAtIndex(index) {
             switch token {
-            case .identifier(let string) where validSpecifiers.contains(string):
+            case .keyword(let string), .identifier(let string):
+                if !validSpecifiers.contains(string) {
+                    break loop
+                }
                 specifiers[string] = [Token](formatter.tokens[index ..< specifierIndex])
                 specifierIndex = index
             case .endOfScope(")"):
                 if formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: index) == .identifier("set") {
                     // Skip tokens for entire private(set) expression
                     while let token = formatter.tokenAtIndex(index) {
-                        if case .identifier(let string) = token,
-                            ["private", "fileprivate", "internal", "public"].contains(string) {
+                        if case .keyword(let string) = token,
+                            ["private", "fileprivate", "public", "internal"].contains(string) {
                             specifiers[string + "(set)"] = [Token](formatter.tokens[index ..< specifierIndex])
                             specifierIndex = index
                             break
@@ -1355,7 +1291,7 @@ public func void(_ formatter: Formatter) {
         } else if !formatter.options.useVoid ||
             formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) == .symbol("->") {
             if let prevToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i),
-                prevToken == .symbol(".") || prevToken == .identifier("typealias") {
+                prevToken == .symbol(".") || prevToken == .keyword("typealias") {
                 return
             }
             // Convert to parens

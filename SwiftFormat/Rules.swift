@@ -1016,6 +1016,11 @@ public func indent(_ formatter: Formatter) {
             }
         }
     }
+
+    // Remove zero-width spaces
+    formatter.forEachToken(.whitespace("")) { i, token in
+        formatter.removeTokenAtIndex(i)
+    }
 }
 
 // Implement brace-wrapping rules

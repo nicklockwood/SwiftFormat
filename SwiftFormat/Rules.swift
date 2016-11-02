@@ -461,6 +461,7 @@ public func spaceAroundComments(_ formatter: Formatter) {
 /// Add space inside comments, taking care not to mangle headerdoc or
 /// carefully preformatted comments, such as star boxes, etc.
 public func spaceInsideComments(_ formatter: Formatter) {
+    guard formatter.options.indentComments else { return }
     formatter.forEachToken(.startOfScope("/*")) { i, token in
         guard let nextToken = formatter.tokenAtIndex(i + 1),
             case .commentBody(let string) = nextToken else { return }
@@ -484,7 +485,7 @@ public func spaceInsideComments(_ formatter: Formatter) {
                     string.substring(from: string.characters.index(string.startIndex, offsetBy: 1))
                 formatter.replaceTokenAtIndex(i + 1, with: .commentBody(string))
             }
-        } else {
+        } else if !string.hasPrefix("===") { // Special-case check for swift stdlib codebase
             formatter.insertToken(.whitespace(" "), atIndex: i + 1)
         }
     }

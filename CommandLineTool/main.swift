@@ -58,10 +58,10 @@ func showHelp() {
     print("swiftformat, version \(version)")
     print("copyright (c) 2016 Nick Lockwood")
     print("")
-    print("usage: swiftformat [<file>] [--output path] [--indent spaces] [...]")
+    print("usage: swiftformat [<file> ...] [--output path] [--indent spaces] [...]")
     print("")
-    print(" <file>            input file or directory path")
-    print(" --output          output path (defaults to input path)")
+    print(" <file> ...        input file(s) or directory path(s)")
+    print(" --output          single output path for all formatted files (default is to overwrite input files)")
     print(" --indent          number of spaces to indent, or \"tab\" to use tabs")
     print(" --allman          use allman indentation style \"true\" or \"false\" (default)")
     print(" --linebreaks      linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
@@ -250,28 +250,30 @@ func processArguments(_ args: [String]) {
     }
 
     // Get options
-    guard let options = try? optionsForArguments(args) else {
+    guard let options = try? optionsForArguments(args.options) else {
         return
     }
 
     // Show help if requested specifically or if no arguments are passed
-    if args["help"] != nil {
+    if args.options["help"] != nil {
         showHelp()
         return
     }
 
     // Version
-    if args["version"] != nil {
+    if args.options["version"] != nil {
         print("swiftformat, version \(version)")
         return
     }
 
-    // Get input / output paths
-    let inputURL = args["1"].map { expandPath($0) }
-    let outputURL = (args["output"] ?? args["1"]).map { expandPath($0) }
+    let outputURL = args.options["output"] != nil ? expandPath(args.options["output"]!) : nil
+    let files: [(input: URL, output: URL)] = args.files.map { file in
+        let expandedFile = expandPath(file)
+        return (expandedFile, outputURL ?? expandedFile)
+    }
 
     // If no input file, try stdin
-    if inputURL == nil {
+    if files.count == 0 {
         var input: String?
         var finished = false
         DispatchQueue.global(qos: .userInitiated).async {
@@ -313,9 +315,10 @@ func processArguments(_ args: [String]) {
 
     // Format the code
     let start = CFAbsoluteTimeGetCurrent()
-    let filesWritten = processInput(inputURL!, andWriteToOutput: outputURL!, withOptions: options)
+    let filesWritten = files.reduce(0) { return $0 + processInput($1.input, andWriteToOutput: $1.output, withOptions: options) }
     let time = CFAbsoluteTimeGetCurrent() - start
     print("swiftformat completed. \(filesWritten) file\(filesWritten == 1 ? "" : "s") updated in \(String(format: "%.2f", time))s.")
 }
 
-processArguments(CommandLine.arguments)
+// Pass in arguments minus program itself
+processArguments(Array(CommandLine.arguments.suffix(from: 1)))

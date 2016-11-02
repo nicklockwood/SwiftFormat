@@ -77,9 +77,9 @@ func processInput(_ inputURL: URL, andWriteToOutput outputURL: URL, withOptions 
     return 0
 }
 
-func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String]? {
-    var anonymousArgs = 0
+func preprocessArguments(_ args: [String], _ names: [String]) -> (files: [String], options: [String: String])? {
     var namedArgs: [String: String] = [:]
+    var unnamedArgs: [String] = []
     var name = ""
     for arg in args {
         if arg.hasPrefix("--") {
@@ -107,14 +107,13 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String
             continue
         }
         if name == "" {
-            // Argument is anonymous
-            name = String(anonymousArgs)
-            anonymousArgs += 1
+            unnamedArgs.append(arg)
+        } else {
+            namedArgs[name] = arg
         }
-        namedArgs[name] = arg
         name = ""
     }
-    return namedArgs
+    return (unnamedArgs, namedArgs)
 }
 
 /// Format a pre-parsed token array

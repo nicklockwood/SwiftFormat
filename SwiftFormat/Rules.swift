@@ -1296,14 +1296,20 @@ public func redundantParens(_ formatter: Formatter) {
         if let prevToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
             switch prevToken {
             case .keyword("if"), .keyword("while"), .keyword("switch"):
-                break
+                if let closingIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope(")") }),
+                    formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex) == .startOfScope("{") {
+                    if prevToken == .keyword("switch"),
+                        let commaIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .symbol(",") }),
+                        commaIndex < closingIndex {
+                        // Might be a tuple, so we won't remove the parens
+                        // TODO: improve the logic here so we don't misidentify function calls as tuples
+                        break
+                    }
+                    formatter.removeTokenAtIndex(closingIndex)
+                    formatter.removeTokenAtIndex(i)
+                }
             default:
-                return
-            }
-            if let closingIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope(")") }),
-                formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex) == .startOfScope("{") {
-                formatter.removeTokenAtIndex(closingIndex)
-                formatter.removeTokenAtIndex(i)
+                break
             }
         }
     }

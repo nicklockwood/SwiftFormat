@@ -2296,4 +2296,11 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
+
+    func testSwitchTupleNotUnwrapped() {
+        let input = "switch (x, y) {}"
+        let output = "switch (x, y) {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
 }

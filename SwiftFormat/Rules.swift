@@ -45,13 +45,14 @@ public func spaceAroundParens(_ formatter: Formatter) {
 
     func spaceAfter(_ keyword: String, index: Int) -> Bool {
         switch keyword {
+        case "@autoclosure", "@escaping", "@noescape":
+            return true
         case "private", "fileprivate", "internal",
              "init", "subscript",
-             "#selector", "#keyPath",
-             "@objc", "@available", "@convention":
+             "#selector", "#keyPath":
             return false
         default:
-            return true
+            return !keyword.hasPrefix("@")
         }
     }
 
@@ -66,6 +67,16 @@ public func spaceAroundParens(_ formatter: Formatter) {
         return true
     }
 
+    func isConventionAttribute(atIndex i: Int) -> Bool {
+        assert(formatter.tokens[i] == .endOfScope(")"))
+        guard let openParenIndex = formatter.indexOfPreviousToken(
+            fromIndex: i, matching: { $0 == .startOfScope("(") }) else { return false }
+        guard let prevToken = formatter.previousToken(fromIndex: openParenIndex, matching: {
+            !$0.isWhitespaceOrCommentOrLinebreak }), case .keyword(let string) = prevToken,
+            string.hasPrefix("@") else { return false }
+        return true
+    }
+
     formatter.forEachToken(.startOfScope("(")) { i, token in
         guard let previousToken = formatter.tokenAtIndex(i - 1) else {
             return
@@ -73,7 +84,8 @@ public func spaceAroundParens(_ formatter: Formatter) {
         switch previousToken {
         case .keyword(let string) where spaceAfter(string, index: i - 1):
             fallthrough
-        case .endOfScope("]") where isCaptureList(atIndex: i - 1):
+        case .endOfScope("]") where isCaptureList(atIndex: i - 1),
+             .endOfScope(")") where isConventionAttribute(atIndex: i - 1):
             formatter.insertToken(.whitespace(" "), atIndex: i)
         case .whitespace:
             if let token = formatter.tokenAtIndex(i - 2) {
@@ -83,7 +95,8 @@ public func spaceAroundParens(_ formatter: Formatter) {
                 case .identifier:
                     fallthrough
                 case .endOfScope("}"), .endOfScope(")"), .endOfScope(">"),
-                     .endOfScope("]") where !isCaptureList(atIndex: i - 2):
+                     .endOfScope("]") where !isCaptureList(atIndex: i - 2),
+                     .endOfScope(")") where !isConventionAttribute(atIndex: i - 2):
                     formatter.removeTokenAtIndex(i - 1)
                 default:
                     break

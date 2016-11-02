@@ -50,6 +50,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testSpaceBetweenConventionAndBlock() {
+        let input = "@convention(block)() -> Void"
+        let output = "@convention(block) () -> Void"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSpaceBetweenConventionAndEscaping() {
+        let input = "@convention(block) @escaping () -> Void"
+        let output = "@convention(block) @escaping () -> Void"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testSpaceBetweenParenAndAs() {
         let input = "(foo) as? String"
         let output = "(foo) as? String"

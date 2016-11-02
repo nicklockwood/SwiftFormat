@@ -2,7 +2,7 @@
 //  main.swift
 //  SwiftFormat
 //
-//  Version 0.15
+//  Version 0.16
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -33,7 +33,7 @@
 
 import Foundation
 
-let version = "0.15"
+let version = "0.16"
 
 let arguments = [
     "output",
@@ -61,7 +61,7 @@ func showHelp() {
     print("usage: swiftformat [<file> ...] [--output path] [--indent spaces] [...]")
     print("")
     print(" <file> ...        input file(s) or directory path(s)")
-    print(" --output          single output path for all formatted files (default is to overwrite input files)")
+    print(" --output          output path for formatted file(s) (defaults to input path)")
     print(" --indent          number of spaces to indent, or \"tab\" to use tabs")
     print(" --allman          use allman indentation style \"true\" or \"false\" (default)")
     print(" --linebreaks      linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
@@ -250,30 +250,37 @@ func processArguments(_ args: [String]) {
     }
 
     // Get options
-    guard let options = try? optionsForArguments(args.options) else {
+    guard let options = try? optionsForArguments(args) else {
         return
     }
 
     // Show help if requested specifically or if no arguments are passed
-    if args.options["help"] != nil {
+    if args["help"] != nil {
         showHelp()
         return
     }
 
     // Version
-    if args.options["version"] != nil {
+    if args["version"] != nil {
         print("swiftformat, version \(version)")
         return
     }
 
-    let outputURL = args.options["output"] != nil ? expandPath(args.options["output"]!) : nil
-    let files: [(input: URL, output: URL)] = args.files.map { file in
-        let expandedFile = expandPath(file)
-        return (expandedFile, outputURL ?? expandedFile)
+    // Get input path(s)
+    var inputURLs = [URL]()
+    while let inputPath = args[String(inputURLs.count + 1)] {
+        inputURLs.append(expandPath(inputPath))
+    }
+
+    // Get output path
+    let outputURL = args["output"].map { expandPath($0) }
+    if outputURL != nil && inputURLs.count > 1 {
+        print("error: --output argument is only valid for a single input file")
+        return
     }
 
     // If no input file, try stdin
-    if files.count == 0 {
+    if inputURLs.count == 0 {
         var input: String?
         var finished = false
         DispatchQueue.global(qos: .userInitiated).async {
@@ -315,10 +322,10 @@ func processArguments(_ args: [String]) {
 
     // Format the code
     let start = CFAbsoluteTimeGetCurrent()
-    let (filesWritten, filesChecked) = processInput(inputURL!, andWriteToOutput: outputURL!, withOptions: options)
+    let (filesWritten, filesChecked) = processInput(inputURLs, andWriteToOutput: outputURL, withOptions: options)
     let time = round((CFAbsoluteTimeGetCurrent() - start) * 100) / 100 // round to nearest 10ms
     print("swiftformat completed. \(filesWritten)/\(filesChecked) file\(filesChecked == 1 ? "" : "s") updated in \(String(format: "%g", time))s")
 }
 
 // Pass in arguments minus program itself
-processArguments(Array(CommandLine.arguments.suffix(from: 1)))
+processArguments(CommandLine.arguments)

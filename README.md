@@ -256,7 +256,7 @@ Here are all the rules that SwiftFormat currently applies:
     	//bar
     }
 
-*elseOrCatchOnSameLine* - controls whether an `else` or `catch` statement following a } appears on the same line:
+*elseOrCatchOnSameLine* - controls whether an `else`, `catch` or `while` after a `}` appears on the same line:
 
     if x {               if x {
         //foo                //foo
@@ -269,6 +269,13 @@ Here are all the rules that SwiftFormat currently applies:
         try foo              try foo
     }              -->   } catch {
     catch {                  //bar
+        //bar            }
+    }
+    
+    repeat {             repeat {
+        //foo                //foo
+    }              -->   } while x {
+    while x {                //bar
         //bar            }
     }
 
@@ -315,6 +322,12 @@ Here are all the rules that SwiftFormat currently applies:
     public override final func foo()                  -->    final override public func foo() 
     
     convenience private init()                        -->    private convenience init() 
+
+*redundantParens* - removes unnecessary parens from around `if`, `while` or `switch` conditions:
+
+	if (foo == true) {}         -->    if foo == true {}
+	
+	while (i < bar.count) {}    -->    while i < bar.count {}
 
 
 FAQ

@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.16](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.16) (2016-11-02)
+
+- Added `redundantParens` rule to remove parens around `if`, `while` and `switch` conditions
+- Added ability to specify multiple file paths for processing in a single command
+- Fixed a bug with the formatting of `repeat ... while` loops
+- Added performance tests
+- API refactoring
+
 ## [0.15](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.15) (2016-10-27)
 
 - Added `allman` command line option to enable Allman style indenting instead of K&R style

@@ -2,7 +2,7 @@
 //  SwiftFormat.h
 //  SwiftFormat
 //
-//  Version 0.15
+//  Version 0.16
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood

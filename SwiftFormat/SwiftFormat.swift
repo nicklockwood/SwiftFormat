@@ -2,7 +2,7 @@
 //  SwiftFormat.swift
 //  SwiftFormat
 //
-//  Version 0.15
+//  Version 0.16
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -71,32 +71,34 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = ni
 
 /// Parse an input file or directory and write it to the specified output path
 /// Returns the number of files that were written
-public func processInput(_ inputURL: URL, andWriteToOutput outputURL: URL, withOptions options: FormatOptions) -> (Int, Int) {
+public func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = nil, withOptions options: FormatOptions) -> (Int, Int) {
     var filesChecked = 0, filesWritten = 0
-    enumerateSwiftFiles(withInputURL: inputURL, outputURL: outputURL) { inputURL, outputURL in
-        filesChecked += 1
-        if let input = try? String(contentsOf: inputURL) {
-            guard let output = try? format(input, options: options) else {
-                print("error: could not parse file: \(inputURL.path)")
-                return
-            }
-            if output != input {
-                if (try? output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)) != nil {
-                    filesWritten += 1
-                } else {
-                    print("error: failed to write file: \(outputURL.path)")
+    for inputURL in inputURLs {
+        enumerateSwiftFiles(withInputURL: inputURL, outputURL: outputURL) { inputURL, outputURL in
+            filesChecked += 1
+            if let input = try? String(contentsOf: inputURL) {
+                guard let output = try? format(input, options: options) else {
+                    print("error: could not parse file: \(inputURL.path)")
+                    return
                 }
+                if output != input {
+                    if (try? output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)) != nil {
+                        filesWritten += 1
+                    } else {
+                        print("error: failed to write file: \(outputURL.path)")
+                    }
+                }
+            } else {
+                print("error: failed to read file: \(inputURL.path)")
             }
-        } else {
-            print("error: failed to read file: \(inputURL.path)")
         }
     }
     return (filesWritten, filesChecked)
 }
 
-func preprocessArguments(_ args: [String], _ names: [String]) -> (files: [String], options: [String: String])? {
+func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String]? {
+    var anonymousArgs = 0
     var namedArgs: [String: String] = [:]
-    var unnamedArgs: [String] = []
     var name = ""
     for arg in args {
         if arg.hasPrefix("--") {
@@ -124,13 +126,14 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> (files: [String
             continue
         }
         if name == "" {
-            unnamedArgs.append(arg)
-        } else {
-            namedArgs[name] = arg
+            // Argument is anonymous
+            name = String(anonymousArgs)
+            anonymousArgs += 1
         }
+        namedArgs[name] = arg
         name = ""
     }
-    return (unnamedArgs, namedArgs)
+    return namedArgs
 }
 
 /// Format a pre-parsed token array

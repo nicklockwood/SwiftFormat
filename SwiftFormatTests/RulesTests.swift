@@ -100,8 +100,8 @@ class RulesTests: XCTestCase {
     }
 
     func testSpaceBetweenIfAndCondition() {
-        let input = "if(true) {}"
-        let output = "if (true) {}"
+        let input = "if(a || b) == true {}"
+        let output = "if (a || b) == true {}"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -2244,5 +2244,28 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(useVoid: false)
         XCTAssertEqual(try! format(input, rules: [void], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    // MARK: redundantParens
+
+    func testRedundantParensRemoved() {
+        let input = "if (x + y) {}"
+        let output = "if x + y {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testRequiredParensNotRemoved() {
+        let input = "if (x + y) * z {}"
+        let output = "if (x + y) * z {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testOuterParensRemoved() {
+        let input = "while ((x + y) * z) {}"
+        let output = "while (x + y) * z {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 }

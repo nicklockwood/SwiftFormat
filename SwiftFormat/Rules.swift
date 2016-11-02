@@ -1275,6 +1275,25 @@ public func specifiers(_ formatter: Formatter) {
     }
 }
 
+/// Remove redundant parens around the arguments for loops, if statements, etc
+public func redundantParens(_ formatter: Formatter) {
+    formatter.forEachToken(.startOfScope("(")) { i, token in
+        if let prevToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
+            switch prevToken {
+            case .keyword("if"), .keyword("while"):
+                break
+            default:
+                return
+            }
+            if let closingIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope(")") }),
+                formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex) == .startOfScope("{") {
+                formatter.removeTokenAtIndex(closingIndex)
+                formatter.removeTokenAtIndex(i)
+            }
+        }
+    }
+}
+
 /// Normalize the use of void in closure arguments and return values
 public func void(_ formatter: Formatter) {
     formatter.forEachToken(.identifier("Void")) { i, token in
@@ -1322,6 +1341,7 @@ public let defaultRules: [FormatRule] = [
     linebreaks,
     semicolons,
     specifiers,
+    redundantParens,
     void,
     braces,
     elseOrCatchOnSameLine,

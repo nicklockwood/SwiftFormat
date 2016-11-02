@@ -34,6 +34,50 @@ import XCTest
 
 class SwiftFormatTests: XCTestCase {
 
+    // MARK: enumerateSwiftFiles
+
+    func testInputFileMatchesOutputFileForNilOutput() {
+        var files = [URL]()
+        let inputURL = URL(fileURLWithPath: #file)
+        enumerateSwiftFiles(withInputURL: inputURL) { inputURL, outputURL in
+            XCTAssertEqual(inputURL, outputURL)
+            XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
+            files.append(inputURL)
+        }
+        XCTAssertEqual(files.count, 1)
+    }
+
+    func testInputFileMatchesOutputFileForSameOutput() {
+        var files = [URL]()
+        let inputURL = URL(fileURLWithPath: #file)
+        enumerateSwiftFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
+            XCTAssertEqual(inputURL, outputURL)
+            XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
+            files.append(inputURL)
+        }
+        XCTAssertEqual(files.count, 1)
+    }
+
+    func testInputFilesMatchOutputFilesForNilOutput() {
+        var files = [URL]()
+        let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
+        enumerateSwiftFiles(withInputURL: inputURL) { inputURL, outputURL in
+            XCTAssertEqual(inputURL, outputURL)
+            files.append(inputURL)
+        }
+        XCTAssertEqual(files.count, 19)
+    }
+
+    func testInputFilesMatchOutputFilesForSameOutput() {
+        var files = [URL]()
+        let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
+        enumerateSwiftFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
+            XCTAssertEqual(inputURL, outputURL)
+            files.append(inputURL)
+        }
+        XCTAssertEqual(files.count, 19)
+    }
+
     // MARK: format function
 
     func testFormatReturnsInputWithNoRules() {

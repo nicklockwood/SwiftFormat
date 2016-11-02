@@ -315,9 +315,9 @@ func processArguments(_ args: [String]) {
 
     // Format the code
     let start = CFAbsoluteTimeGetCurrent()
-    let filesWritten = files.reduce(0) { return $0 + processInput($1.input, andWriteToOutput: $1.output, withOptions: options) }
-    let time = CFAbsoluteTimeGetCurrent() - start
-    print("swiftformat completed. \(filesWritten) file\(filesWritten == 1 ? "" : "s") updated in \(String(format: "%.2f", time))s.")
+    let (filesWritten, filesChecked) = processInput(inputURL!, andWriteToOutput: outputURL!, withOptions: options)
+    let time = round((CFAbsoluteTimeGetCurrent() - start) * 100) / 100 // round to nearest 10ms
+    print("swiftformat completed. \(filesWritten)/\(filesChecked) file\(filesChecked == 1 ? "" : "s") updated in \(String(format: "%g", time))s")
 }
 
 // Pass in arguments minus program itself

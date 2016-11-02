@@ -47,6 +47,7 @@ public func spaceAroundParens(_ formatter: Formatter) {
         switch keyword {
         case "private", "fileprivate", "internal",
              "init", "subscript",
+             "#selector", "#keyPath",
              "@objc", "@available", "@convention":
             return false
         default:
@@ -723,8 +724,8 @@ public func indent(_ formatter: Formatter) {
                 // TODO: handle in
                 // TODO: handle context-specific keywords
                 // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
-                // lazy, left, mutating, none, nonmutating, optional, override, postfix, precedence,
-                // prefix, Protocol, required, right, set, Type, unowned, weak, willSet
+                // lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
+                // precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
                 switch string {
                 case "let", "func", "var", "if", "as", "import", "try", "guard", "case",
                      "for", "init", "switch", "throw", "where", "subscript", "is",
@@ -1280,7 +1281,7 @@ public func redundantParens(_ formatter: Formatter) {
     formatter.forEachToken(.startOfScope("(")) { i, token in
         if let prevToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
             switch prevToken {
-            case .keyword("if"), .keyword("while"):
+            case .keyword("if"), .keyword("while"), .keyword("switch"):
                 break
             default:
                 return

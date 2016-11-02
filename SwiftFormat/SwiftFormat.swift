@@ -39,31 +39,27 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = ni
     var isDirectory: ObjCBool = false
     if manager.fileExists(atPath: inputURL.path, isDirectory: &isDirectory) {
         if isDirectory.boolValue {
-            if let files = try? manager.contentsOfDirectory(
+            guard let files = try? manager.contentsOfDirectory(
                 at: inputURL, includingPropertiesForKeys: nil,
-                options: FileManager.DirectoryEnumerationOptions.skipsHiddenFiles) {
-                for url in files {
-                    let inputDirectory = inputURL.path
-                    if let outputURL = outputURL {
-                        let path = outputURL.path + url.path.substring(from: inputDirectory.characters.endIndex)
-                        let outputDirectory = path.components(separatedBy: "/").dropLast().joined(separator: "/")
-                        do {
-                            try manager.createDirectory(atPath: outputDirectory,
-                                                        withIntermediateDirectories: true,
-                                                        attributes: nil)
-                            enumerateSwiftFiles(withInputURL: inputURL,
-                                                outputURL: URL(fileURLWithPath: path),
-                                                block: block)
-                        } catch {
-                            // TODO: what happens if directory already exists?
-                            print("error: failed to create directory at: \(outputDirectory), \(error)")
-                        }
-                    } else {
-                        enumerateSwiftFiles(withInputURL: url, block: block)
+                options: FileManager.DirectoryEnumerationOptions.skipsHiddenFiles) else {
+                print("error: failed to read contents of directory at: \(inputURL.path)")
+                return
+            }
+            if let outputURL = outputURL {
+                do {
+                    try manager.createDirectory(atPath: outputURL.path, withIntermediateDirectories: true, attributes: nil)
+                    for url in files {
+                        let outputPath = outputURL.path + url.path.substring(from: inputURL.path.characters.endIndex)
+                        enumerateSwiftFiles(withInputURL: url, outputURL: URL(fileURLWithPath: outputPath), block: block)
                     }
+                } catch {
+                    print("error: failed to create directory at: \(outputURL.path), \(error)")
+                    return
                 }
             } else {
-                print("error: failed to read contents of directory at: \(inputURL.path)")
+                for url in files {
+                    enumerateSwiftFiles(withInputURL: url, block: block)
+                }
             }
         } else if inputURL.pathExtension == "swift" {
             block(inputURL, outputURL ?? inputURL)
@@ -75,9 +71,10 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = ni
 
 /// Parse an input file or directory and write it to the specified output path
 /// Returns the number of files that were written
-public func processInput(_ inputURL: URL, andWriteToOutput outputURL: URL, withOptions options: FormatOptions) -> Int {
-    var filesWritten = 0
+public func processInput(_ inputURL: URL, andWriteToOutput outputURL: URL, withOptions options: FormatOptions) -> (Int, Int) {
+    var filesChecked = 0, filesWritten = 0
     enumerateSwiftFiles(withInputURL: inputURL, outputURL: outputURL) { inputURL, outputURL in
+        filesChecked += 1
         if let input = try? String(contentsOf: inputURL) {
             guard let output = try? format(input, options: options) else {
                 print("error: could not parse file: \(inputURL.path)")
@@ -94,7 +91,7 @@ public func processInput(_ inputURL: URL, andWriteToOutput outputURL: URL, withO
             print("error: failed to read file: \(inputURL.path)")
         }
     }
-    return filesWritten
+    return (filesWritten, filesChecked)
 }
 
 func preprocessArguments(_ args: [String], _ names: [String]) -> (files: [String], options: [String: String])? {

@@ -39,15 +39,15 @@ import Foundation
 // Note: super, self, nil, etc. have been omitted deliberately, as they behave like
 // identifiers. So too have context-specific keywords such as the following:
 // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
-// lazy, left, mutating, none, nonmutating, optional, override, postfix, precedence,
-// prefix, Protocol, required, right, set, Type, unowned, weak, willSet
+// lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
+// precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
 private let swiftKeywords = [
     "let", "return", "func", "var", "if", "public", "as", "else", "in", "import",
-    "import", "class", "class", "try", "guard", "case", "for", "init", "extension",
-    "private", "static", "fileprivate", "internal", "switch", "do", "catch", "enum",
-    "struct", "throws", "open", "throw", "typealias", "throw", "where", "break",
-    "deinit", "subscript", "subscript", "lazy", "is", "while", "associatedtype",
-    "inout", "continue", "operator", "repeat", "inout", "rethrows", "default",
+    "class", "try", "guard", "case", "for", "init", "extension", "private", "static",
+    "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
+    "throw", "typealias", "where", "break", "deinit", "subscript", "lazy", "is",
+    "while", "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
+    "default",
 ]
 
 public enum Token: Equatable {

@@ -85,6 +85,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testNoSpaceBetweenHashSelectorAndBrace() {
+        let input = "#selector(self.foo)"
+        let output = "#selector(self.foo)"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoSpaceBetweenHashKeyPathAndBrace() {
+        let input = "#keyPath (self.foo)"
+        let output = "#keyPath(self.foo)"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testNoSpaceBetweenPrivateAndSet() {
         let input = "private (set) var foo: Int"
         let output = "private(set) var foo: Int"

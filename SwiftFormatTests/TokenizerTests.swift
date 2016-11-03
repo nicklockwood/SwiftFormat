@@ -630,6 +630,18 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testNullCoalescingOperator() {
+        let input = "foo ?? bar"
+        let output: [Token] = [
+            .identifier("foo"),
+            .whitespace(" "),
+            .symbol("??"),
+            .whitespace(" "),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: chevrons (might be operators or generics)
 
     func testLessThanGreaterThan() {
@@ -1001,6 +1013,55 @@ class TokenizerTests: XCTestCase {
             .symbol("?"),
             .endOfScope(">"),
             .endOfScope(">"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testDeeplyNestedGenericType() {
+        let input = "Foo<Bar<Baz<Quux>>>"
+        let output: [Token] = [
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .identifier("Bar"),
+            .startOfScope("<"),
+            .identifier("Baz"),
+            .startOfScope("<"),
+            .identifier("Quux"),
+            .endOfScope(">"),
+            .endOfScope(">"),
+            .endOfScope(">"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testGenericOperatorFunction() {
+        let input = "func ==<T>()"
+        let output: [Token] = [
+            .keyword("func"),
+            .whitespace(" "),
+            .symbol("=="),
+            .startOfScope("<"),
+            .identifier("T"),
+            .endOfScope(">"),
+            .startOfScope("("),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testGenericCustomOperatorFunction() {
+        let input = "func ∘<T,U>()"
+        let output: [Token] = [
+            .keyword("func"),
+            .whitespace(" "),
+            .symbol("∘"),
+            .startOfScope("<"),
+            .identifier("T"),
+            .symbol(","),
+            .identifier("U"),
+            .endOfScope(">"),
+            .startOfScope("("),
+            .endOfScope(")"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

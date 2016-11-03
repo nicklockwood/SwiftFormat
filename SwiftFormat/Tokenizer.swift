@@ -943,7 +943,7 @@ public func tokenize(_ source: String) -> [Token] {
         processToken()
     }
 
-    if let scopeIndex = scopeIndexStack.last {
+    loop: while let scopeIndex = scopeIndexStack.last {
         switch tokens[scopeIndex] {
         case .startOfScope("<"):
             // If we encountered an end-of-file while a generic scope was
@@ -951,12 +951,13 @@ public func tokenize(_ source: String) -> [Token] {
             convertOpeningChevronToSymbol(at: scopeIndex)
             scopeIndexStack.removeLast()
         case .startOfScope("//"):
-            break
+            break loop
         default:
             if tokens.last?.isError == false {
                 // File ended with scope still open
                 tokens.append(.error(""))
             }
+            break loop
         }
     }
 

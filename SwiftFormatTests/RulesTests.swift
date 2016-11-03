@@ -1584,6 +1584,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testNoIndentAfterChevronOperatorDeclaration() {
+        let input = "infix operator =<<\nfunc =<<<T>(lhs: T, rhs: T) -> T {}"
+        let output = "infix operator =<<\nfunc =<<<T>(lhs: T, rhs: T) -> T {}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testIndentEnumDictionaryKeysAndValues() {
         let input = "[\n.foo:\n.bar,\n.baz:\n.quux,]"
         let output = "[\n    .foo:\n        .bar,\n    .baz:\n        .quux,]"

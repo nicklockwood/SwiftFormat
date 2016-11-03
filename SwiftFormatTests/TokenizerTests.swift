@@ -1153,6 +1153,33 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testInfixEqualsDoubleChevronOperator() {
+        let input = "infix operator =<<"
+        let output: [Token] = [
+            .identifier("infix"),
+            .whitespace(" "),
+            .keyword("operator"),
+            .whitespace(" "),
+            .symbol("=<<"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInfixEqualsDoubleChevronGenericFunction() {
+        let input = "func =<<<T>()"
+        let output: [Token] = [
+            .keyword("func"),
+            .whitespace(" "),
+            .symbol("=<<"),
+            .startOfScope("<"),
+            .identifier("T"),
+            .endOfScope(">"),
+            .startOfScope("("),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testSortAscending() {
         let input = "sort(by: <)"
         let output: [Token] = [

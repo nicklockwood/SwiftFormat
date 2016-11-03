@@ -857,6 +857,9 @@ public func indent(_ formatter: Formatter) {
             switch string {
             case ":":
                 if currentScope() == .endOfScope("case") {
+                    if linewrapStack.last == true {
+                        indentStack.removeLast()
+                    }
                     indentStack.removeLast()
                     indentCounts.removeLast()
                     linewrapStack.removeLast()

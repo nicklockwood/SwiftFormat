@@ -1689,6 +1689,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testDontIndentCaseAfterWhere() {
+        let input = "switch foo {\ncase bar\nwhere baz:\nreturn\ndefault:\nreturn\n}"
+        let output = "switch foo {\ncase bar\n    where baz:\n    return\ndefault:\n    return\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testDontIndentIfAfterReturn() {
         let input = "if foo {\n    return\n    if bar {}\n}"
         let output = "if foo {\n    return\n    if bar {}\n}"

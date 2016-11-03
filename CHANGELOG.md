@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.16.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.16.1) (2016-11-03)
+
+- Fixed critical bug where `redundantParens` would remove parens from tuple in `switch` condition
+- Fixed incorrect spacing around attributes that have arguments, e.g. `@convention(block)`
+- `--comments ignore` command line option now disables leading space insertion in single-line comments
+
 ## [0.16](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.16) (2016-11-02)
 
 - Added `redundantParens` rule to remove parens around `if`, `while` and `switch` conditions

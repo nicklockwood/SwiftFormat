@@ -45,7 +45,14 @@ public func spaceAroundParens(_ formatter: Formatter) {
 
     func spaceAfter(_ keyword: String, index: Int) -> Bool {
         switch keyword {
-        case "@autoclosure", "@escaping", "@noescape":
+        case "@autoclosure":
+            if let nextIndex = formatter.indexOfNextToken(fromIndex: index, matching: { !$0.isWhitespaceOrLinebreak }),
+                formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: nextIndex) == .identifier("escaping") {
+                assert(formatter.tokens[nextIndex] == .startOfScope("("))
+                return false
+            }
+            return true
+        case "@escaping", "@noescape":
             return true
         case "private", "fileprivate", "internal",
              "init", "subscript",

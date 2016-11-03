@@ -57,6 +57,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testSpaceBetweenAutoclosureEscapingAndBlock() { // swift 2.3 only
+        let input = "@autoclosure(escaping)() -> Void"
+        let output = "@autoclosure(escaping) () -> Void"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testSpaceBetweenConventionAndEscaping() {
         let input = "@convention(block) @escaping () -> Void"
         let output = "@convention(block) @escaping () -> Void"

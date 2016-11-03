@@ -1329,7 +1329,8 @@ public func void(_ formatter: Formatter) {
             formatter.tokenAtIndex(prevIndex) == .startOfScope("("),
             let nextIndex = formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespaceOrLinebreak }),
             formatter.tokenAtIndex(nextIndex) == .endOfScope(")") {
-            if formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: nextIndex) == .symbol("->") {
+            if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: nextIndex),
+                [.symbol("->"), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
                 // Remove Void
                 formatter.removeTokensInRange(prevIndex + 1 ..< nextIndex)
             } else if formatter.options.useVoid {

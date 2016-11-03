@@ -2255,6 +2255,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testVoidThrowsIsNotMangled() {
+        let input = "(Void) throws -> Void"
+        let output = "() throws -> Void"
+        XCTAssertEqual(try! format(input, rules: [void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: useVoid = false
 
     func testUseVoidOptionFalse() {

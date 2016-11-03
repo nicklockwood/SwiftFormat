@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.16.1
+//  Version 0.16.2
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -730,12 +730,6 @@ public func tokenize(_ source: String) -> [Token] {
         flushCommentBodyTokens()
     }
 
-    func convertOpeningChevronToSymbol(atScopeStackIndex index: Int) {
-        let scopeIndex = scopeIndexStack[index]
-        scopeIndexStack.remove(at: index)
-        convertOpeningChevronToSymbol(at: scopeIndex)
-    }
-
     func convertOpeningChevronToSymbol(at index: Int) {
         assert(tokens[index] == .startOfScope("<"))
         tokens[index] = .symbol("<")
@@ -899,12 +893,14 @@ public func tokenize(_ source: String) -> [Token] {
                         break
                     default:
                         // Not a generic scope
-                        convertOpeningChevronToSymbol(atScopeStackIndex: scopeIndexStack.count - 1)
+                        convertOpeningChevronToSymbol(at: scopeIndex)
+                        scopeIndexStack.removeLast()
                     }
                 case .endOfScope:
                     // If we encountered a closing scope token that wasn't >
                     // then the opening < must have been an operator after all
-                    convertOpeningChevronToSymbol(atScopeStackIndex: scopeIndexStack.count - 1)
+                    convertOpeningChevronToSymbol(at: scopeIndex)
+                    scopeIndexStack.removeLast()
                     processToken()
                     return
                 default:
@@ -952,7 +948,8 @@ public func tokenize(_ source: String) -> [Token] {
         case .startOfScope("<"):
             // If we encountered an end-of-file while a generic scope was
             // still open, the opening < must have been an operator
-            convertOpeningChevronToSymbol(atScopeStackIndex: scopeIndexStack.count - 1)
+            convertOpeningChevronToSymbol(at: scopeIndex)
+            scopeIndexStack.removeLast()
         case .startOfScope("//"):
             break
         default:

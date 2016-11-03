@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.16.1
+//  Version 0.16.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -1174,10 +1174,17 @@ public func todos(_ formatter: Formatter) {
             for tag in ["TODO", "MARK", "FIXME"] {
                 if string.hasPrefix(tag) {
                     var suffix = string.substring(from: tag.endIndex)
-                    while suffix.characters.first == " " || suffix.characters.first == ":" {
-                        suffix = suffix.substring(from: suffix.characters.index(suffix.startIndex, offsetBy: 1))
+                    if let first = suffix.characters.first {
+                        // If not followed by a space or :, don't mess with it as it may be a custom format
+                        if " :".characters.contains(first) {
+                            while let first = suffix.characters.first, " :".characters.contains(first) {
+                                suffix = suffix.substring(from: suffix.index(after: suffix.startIndex))
+                            }
+                            formatter.replaceTokenAtIndex(i, with: .commentBody(tag + ": " + suffix))
+                        }
+                    } else {
+                        formatter.replaceTokenAtIndex(i, with: .commentBody(tag + ":"))
                     }
-                    formatter.replaceTokenAtIndex(i, with: .commentBody(tag + ": " + suffix))
                     break
                 }
             }

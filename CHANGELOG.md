@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.16.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.16.2) (2016-11-03)
+
+- Fixed bug with spacing of deeply nested generic arguments, or generic operator functions
+- Fixed spacing of `@autoclosure(escaping)` syntax (only used in Swift 2.2)
+- Fixed bug where `(Void) throws -> Void` was handled incorrectly
+
 ## [0.16.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.16.1) (2016-11-03)
 
 - Fixed critical bug where `redundantParens` would remove parens from tuple in `switch` condition

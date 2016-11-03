@@ -1,6 +1,6 @@
 {
   "name": "SwiftFormat",
-  "version": "0.16.1",
+  "version": "0.16.2",
   "license": {
     "type": "zlib",
     "file": "LICENCE.md"
@@ -10,7 +10,7 @@
   "authors": "Nick Lockwood",
   "source": {
     "git": "https://github.com/nicklockwood/SwiftFormat.git",
-    "tag": "0.16.1"
+    "tag": "0.16.2"
   },
   "source_files": "SwiftFormat",
   "requires_arc": true,

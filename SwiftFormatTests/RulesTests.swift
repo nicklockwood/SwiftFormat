@@ -1832,33 +1832,33 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
-    // MARK: elseOrCatchOnSameLine
+    // MARK: elseOnSameLine
 
-    func testelseOrCatchOnSameLine() {
+    func testelseOnSameLine() {
         let input = "if true {\n    1\n}\nelse { 2 }"
         let output = "if true {\n    1\n} else { 2 }"
-        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine]), output)
+        XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testelseOrCatchOnSameLineOnlyAppliedToDanglingBrace() {
+    func testelseOnSameLineOnlyAppliedToDanglingBrace() {
         let input = "if true { 1 }\nelse { 2 }"
         let output = "if true { 1 }\nelse { 2 }"
-        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine]), output)
+        XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testGuardNotAffectedByelseOrCatchOnSameLine() {
+    func testGuardNotAffectedByelseOnSameLine() {
         let input = "guard true\nelse { return }"
         let output = "guard true\nelse { return }"
-        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine]), output)
+        XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testelseOrCatchOnSameLineDoesntEatPreviousStatement() {
+    func testelseOnSameLineDoesntEatPreviousStatement() {
         let input = "if true {}\nguard true else { return }"
         let output = "if true {}\nguard true else { return }"
-        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine]), output)
+        XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
@@ -1866,15 +1866,15 @@ class RulesTests: XCTestCase {
         let input = "if true\n{\n    1\n} else { 2 }"
         let output = "if true\n{\n    1\n}\nelse { 2 }"
         let options = FormatOptions(allmanBraces: true)
-        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine], options: options), output)
+        XCTAssertEqual(try! format(input, rules: [elseOnSameLine], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
-    func testGuardNotAffectedByelseOrCatchOnSameLineForAllman() {
+    func testGuardNotAffectedByelseOnSameLineForAllman() {
         let input = "guard true else { return }"
         let output = "guard true else { return }"
         let options = FormatOptions(allmanBraces: true)
-        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine], options: options), output)
+        XCTAssertEqual(try! format(input, rules: [elseOnSameLine], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
@@ -1882,14 +1882,14 @@ class RulesTests: XCTestCase {
         let input = "repeat\n{\n    foo\n} while x"
         let output = "repeat\n{\n    foo\n}\nwhile x"
         let options = FormatOptions(allmanBraces: true)
-        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine], options: options), output)
+        XCTAssertEqual(try! format(input, rules: [elseOnSameLine], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
-    func testWhileNotAffectedByelseOrCatchOnSameLineIfNotRepeatWhile() {
+    func testWhileNotAffectedByelseOnSameLineIfNotRepeatWhile() {
         let input = "func foo(x) {\n}\n\nwhile true {\n}"
         let output = "func foo(x) {\n}\n\nwhile true {\n}"
-        XCTAssertEqual(try! format(input, rules: [elseOrCatchOnSameLine]), output)
+        XCTAssertEqual(try! format(input, rules: [elseOnSameLine]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 

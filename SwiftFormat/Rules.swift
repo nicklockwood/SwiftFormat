@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.16.2
+//  Version 0.16.3
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -1099,8 +1099,9 @@ public func braces(_ formatter: Formatter) {
 }
 
 /// Ensure that an `else` statement following `if { ... }` appears on the same line
-/// as the closing brace. This has no effect on the `else` part of a `guard` statement
-public func elseOrCatchOnSameLine(_ formatter: Formatter) {
+/// as the closing brace. This has no effect on the `else` part of a `guard` statement.
+/// Also applies to `catch` after `try` and `while` after `repeat`.
+public func elseOnSameLine(_ formatter: Formatter) {
     var closingBraceIndex: Int?
     formatter.forEachToken { i, token in
         switch token {
@@ -1383,7 +1384,7 @@ public let defaultRules: [FormatRule] = [
     redundantParens,
     void,
     braces,
-    elseOrCatchOnSameLine,
+    elseOnSameLine,
     indent,
     spaceAroundParens,
     spaceInsideParens,

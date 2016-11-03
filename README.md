@@ -256,7 +256,7 @@ Here are all the rules that SwiftFormat currently applies:
     	//bar
     }
 
-*elseOrCatchOnSameLine* - controls whether an `else`, `catch` or `while` after a `}` appears on the same line:
+*elseOnSameLine* - controls whether an `else`, `catch` or `while` after a `}` appears on the same line:
 
     if x {               if x {
         //foo                //foo

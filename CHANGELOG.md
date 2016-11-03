@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.16.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.16.3) (2016-11-03)
+
+- Fixed bug with operators containing chevrons
+- Fixed wrong indent after where statement in switch case
+
 ## [0.16.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.16.2) (2016-11-03)
 
 - Fixed bug with spacing of deeply nested generic arguments, or generic operator functions

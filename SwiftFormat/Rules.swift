@@ -470,11 +470,10 @@ public func spaceAroundComments(_ formatter: Formatter) {
 public func spaceInsideComments(_ formatter: Formatter) {
     guard formatter.options.indentComments else { return }
     formatter.forEachToken(.startOfScope("/*")) { i, token in
-        guard let nextToken = formatter.tokenAtIndex(i + 1),
-            case .commentBody(let string) = nextToken else { return }
-        if string.hasPrefix("*") || string.hasPrefix("!") || string.hasPrefix(":") {
-            if string.characters.count > 1 && !string.hasPrefix("**") &&
-                !string.hasPrefix("* ") && !string.hasPrefix("*\t") && !string.hasPrefix("*/") {
+        guard let nextToken = formatter.tokenAtIndex(i + 1), case .commentBody(let string) = nextToken else { return }
+        if case let characters = string.characters, let first = characters.first, "*!:".characters.contains(first) {
+            if characters.count > 1, case let next = characters[characters.index(after: characters.startIndex)],
+                !" /t".characters.contains(next), !string.hasPrefix("**"), !string.hasPrefix("*/") {
                 let string = String(string.characters.first!) + " " +
                     string.substring(from: string.characters.index(string.startIndex, offsetBy: 1))
                 formatter.replaceTokenAtIndex(i + 1, with: .commentBody(string))

@@ -817,6 +817,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testNoExtraSpaceInsideMultilineHeaderdocCommentType2() {
+        let input = "/*! foo\n bar */"
+        let output = "/*! foo\n bar */"
+        XCTAssertEqual(try! format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoExtraSpaceInsideMultilineSwiftPlaygroundDocComment() {
+        let input = "/*: foo\n bar */"
+        let output = "/*: foo\n bar */"
+        XCTAssertEqual(try! format(input, rules: [spaceInsideComments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testSpaceInsideSingleLineHeaderdocComment() {
         let input = "///foo"
         let output = "/// foo"

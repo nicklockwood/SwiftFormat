@@ -301,6 +301,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testSpaceInsideWrappedArray() {
+        let input = "[ foo,\n bar ]"
+        let output = "[foo,\n bar]"
+        XCTAssertEqual(try! format(input, rules: [spaceInsideBrackets]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: spaceAroundBraces
 
     func testSpaceAroundTrailingClosure() {

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		010BC9A21DCFDF1E003F4F11 /* TokenizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018E82741D62E730008CA0F8 /* TokenizerTests.swift */; };
 		0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */; };
 		015AF2C01DC6A538008F0A8C /* SwiftFormat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */; };
 		015AF2CA1DC6A58C008F0A8C /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015AF2C91DC6A58C008F0A8C /* PerformanceTests.swift */; };
@@ -585,6 +586,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				015AF2CA1DC6A58C008F0A8C /* PerformanceTests.swift in Sources */,
+				010BC9A21DCFDF1E003F4F11 /* TokenizerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

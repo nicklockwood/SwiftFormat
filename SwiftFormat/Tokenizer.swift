@@ -248,21 +248,15 @@ public enum Token: Equatable {
     }
 }
 
-extension Character {
-
-    var unicodeValue: UInt32 {
-        return String(self).unicodeScalars.first?.value ?? 0
-    }
-
-    var isDigit: Bool { return isdigit(Int32(unicodeValue)) > 0 }
-    var isHexDigit: Bool { return isxdigit(Int32(unicodeValue)) > 0 }
-    var isWhitespace: Bool { return self == " " || self == "\t" || unicodeValue == 0x0b }
-    var isLinebreak: Bool { return self == "\r" || self == "\n" || self == "\r\n" }
+extension UnicodeScalar {
+    var isDigit: Bool { return isdigit(Int32(value)) > 0 }
+    var isHexDigit: Bool { return isxdigit(Int32(value)) > 0 }
+    var isWhitespace: Bool { return self == " " || self == "\t" || value == 0x0b }
 }
 
-private extension String.CharacterView {
+private extension String.UnicodeScalarView {
 
-    mutating func scanCharacters(_ matching: (Character) -> Bool) -> String? {
+    mutating func scanCharacters(_ matching: (UnicodeScalar) -> Bool) -> String? {
         var index = startIndex
         while index < endIndex {
             if !matching(self[index]) {
@@ -278,7 +272,7 @@ private extension String.CharacterView {
         return nil
     }
 
-    mutating func scanCharacters(head: (Character) -> Bool, tail: (Character) -> Bool) -> String? {
+    mutating func scanCharacters(head: (UnicodeScalar) -> Bool, tail: (UnicodeScalar) -> Bool) -> String? {
         if let c = first, head(c) {
             var index = self.index(after: startIndex)
             while index < endIndex {
@@ -294,7 +288,7 @@ private extension String.CharacterView {
         return nil
     }
 
-    mutating func scanCharacter(_ matching: (Character) -> Bool = { _ in true }) -> Character? {
+    mutating func scanCharacter(_ matching: (UnicodeScalar) -> Bool = { _ in true }) -> UnicodeScalar? {
         if let c = first, matching(c) {
             self = dropFirst()
             return c
@@ -302,7 +296,7 @@ private extension String.CharacterView {
         return nil
     }
 
-    mutating func scanCharacter(_ character: Character) -> Bool {
+    mutating func scanCharacter(_ character: UnicodeScalar) -> Bool {
         if first == character {
             self = dropFirst()
             return true
@@ -311,35 +305,41 @@ private extension String.CharacterView {
     }
 }
 
-private extension String.CharacterView {
+private extension String.UnicodeScalarView {
 
     mutating func parseWhitespace() -> Token? {
         return scanCharacters({ $0.isWhitespace }).map { .whitespace($0) }
     }
 
     mutating func parseLineBreak() -> Token? {
-        return scanCharacter({ $0.isLinebreak }).map { .linebreak(String($0)) }
+        if scanCharacter("\r") {
+            if scanCharacter("\n") {
+                return .linebreak("\r\n")
+            }
+            return .linebreak("\r")
+        }
+        return scanCharacter("\n") ? .linebreak("\n") : nil
     }
 
     mutating func parsePunctuation() -> Token? {
-        return scanCharacter({ ":;,".characters.contains($0) }).map { .symbol(String($0)) }
+        return scanCharacter({ ":;,".unicodeScalars.contains($0) }).map { .symbol(String($0)) }
     }
 
     mutating func parseStartOfScope() -> Token? {
-        return scanCharacter({ "<([{\"".characters.contains($0) }).map { .startOfScope(String($0)) }
+        return scanCharacter({ "<([{\"".unicodeScalars.contains($0) }).map { .startOfScope(String($0)) }
     }
 
     mutating func parseEndOfScope() -> Token? {
-        return scanCharacter({ "}])>".characters.contains($0) }).map { .endOfScope(String($0)) }
+        return scanCharacter({ "}])>".unicodeScalars.contains($0) }).map { .endOfScope(String($0)) }
     }
 
     mutating func parseOperator() -> Token? {
 
-        func isHead(_ c: Character) -> Bool {
-            if "./=­-+!*%&|^~?".characters.contains(c) {
+        func isHead(_ c: UnicodeScalar) -> Bool {
+            if "./=­-+!*%&|^~?".unicodeScalars.contains(c) {
                 return true
             }
-            switch c.unicodeValue {
+            switch c.value {
             case 0x00A1 ... 0x00A7,
                  0x00A9, 0x00AB, 0x00AC, 0x00AE,
                  0x00B0 ... 0x00B1,
@@ -361,11 +361,11 @@ private extension String.CharacterView {
             }
         }
 
-        func isTail(_ c: Character) -> Bool {
+        func isTail(_ c: UnicodeScalar) -> Bool {
             if isHead(c) {
                 return true
             }
-            switch c.unicodeValue {
+            switch c.value {
             case 0x0300 ... 0x036F,
                  0x1DC0 ... 0x1DFF,
                  0x20D0 ... 0x20FF,
@@ -412,7 +412,7 @@ private extension String.CharacterView {
                 if c != "/" {
                     start = self
                 }
-                head.append(tail)
+                head.append(Character(tail))
                 tail = c
             }
             return .symbol(head + String(tail))
@@ -422,8 +422,8 @@ private extension String.CharacterView {
 
     mutating func parseIdentifier() -> Token? {
 
-        func isHead(_ c: Character) -> Bool {
-            switch c.unicodeValue {
+        func isHead(_ c: UnicodeScalar) -> Bool {
+            switch c.value {
             case 0x41 ... 0x5A, // A-Z
                  0x61 ... 0x7A, // a-z
                  0x5F, 0x24, // _ and $
@@ -479,8 +479,8 @@ private extension String.CharacterView {
             }
         }
 
-        func isTail(_ c: Character) -> Bool {
-            switch c.unicodeValue {
+        func isTail(_ c: UnicodeScalar) -> Bool {
+            switch c.value {
             case 0x30 ... 0x39, // 0-9
                  0x0300 ... 0x036F,
                  0x1DC0 ... 0x1DFF,
@@ -529,7 +529,7 @@ private extension String.CharacterView {
 
     mutating func parseNumber() -> Token? {
 
-        func scanNumber(_ head: @escaping (Character) -> Bool) -> String? {
+        func scanNumber(_ head: @escaping (UnicodeScalar) -> Bool) -> String? {
             return scanCharacters(head: head, tail: { head($0) || $0 == "_" })
         }
 
@@ -554,7 +554,7 @@ private extension String.CharacterView {
                 }
                 return .error("0x" + String(self))
             } else if scanCharacter("b") {
-                if let bin = scanNumber({ "01".characters.contains($0) }) {
+                if let bin = scanNumber({ "01".unicodeScalars.contains($0) }) {
                     return .number("0b" + bin)
                 }
                 return .error("0b" + String(self))
@@ -576,8 +576,8 @@ private extension String.CharacterView {
         }
 
         let endOfFloat = self
-        if let e = scanCharacter({ "eE".characters.contains($0) }) {
-            let sign = scanCharacter({ "-+".characters.contains($0) }).map { String($0) } ?? ""
+        if let e = scanCharacter({ "eE".unicodeScalars.contains($0) }) {
+            let sign = scanCharacter({ "-+".unicodeScalars.contains($0) }).map { String($0) } ?? ""
             if let exponent = scanInteger() {
                 number += String(e) + sign + exponent
             } else {
@@ -612,7 +612,7 @@ private extension String.CharacterView {
 public func tokenize(_ source: String) -> [Token] {
     var scopeIndexStack: [Int] = []
     var tokens: [Token] = []
-    var characters = source.characters
+    var characters = source.unicodeScalars
     var closedGenericScopeIndexes: [Int] = []
     var nestedSwitches = 0
 
@@ -646,7 +646,7 @@ public func tokenize(_ source: String) -> [Token] {
             default:
                 escaped = false
             }
-            string.append(c)
+            string.append(Character(c))
         }
         if string != "" {
             tokens.append(.stringBody(string))
@@ -687,13 +687,21 @@ public func tokenize(_ source: String) -> [Token] {
                     }
                     continue
                 }
+            case "\n":
+                flushCommentBodyTokens()
+                tokens.append(.linebreak("\n"))
+                continue
+            case "\r":
+                flushCommentBodyTokens()
+                if characters.scanCharacter("\n") {
+                    tokens.append(.linebreak("\r\n"))
+                } else {
+                    tokens.append(.linebreak("\r"))
+                }
+                continue
             default:
-                if c.isLinebreak {
-                    flushCommentBodyTokens()
-                    tokens.append(.linebreak(String(c)))
-                    continue
-                } else if c.isWhitespace {
-                    whitespace.append(c)
+                if c.isWhitespace {
+                    whitespace.append(Character(c))
                     continue
                 }
             }
@@ -705,16 +713,16 @@ public func tokenize(_ source: String) -> [Token] {
                 }
                 whitespace = ""
             }
-            comment.append(c)
+            comment.append(Character(c))
         }
         // We shouldn't actually get here, unless code is malformed
         flushCommentBodyTokens()
     }
 
     func processSingleLineCommentBody() {
-        while let c = characters.scanCharacter({ !$0.isLinebreak }) {
+        while let c = characters.scanCharacter({ !"\r\n".unicodeScalars.contains($0) }) {
             if c.isWhitespace {
-                whitespace.append(c)
+                whitespace.append(Character(c))
                 continue
             }
             if whitespace != "" {
@@ -725,7 +733,7 @@ public func tokenize(_ source: String) -> [Token] {
                 }
                 whitespace = ""
             }
-            comment.append(c)
+            comment.append(Character(c))
         }
         flushCommentBodyTokens()
     }

@@ -30,7 +30,7 @@
 //
 
 import XCTest
-@testable import SwiftFormat
+import SwiftFormat
 
 class TokenizerTests: XCTestCase {
 

@@ -74,7 +74,7 @@ public func spaceAroundParens(_ formatter: Formatter) {
         return true
     }
 
-    func isConventionAttribute(atIndex i: Int) -> Bool {
+    func isAttribute(atIndex i: Int) -> Bool {
         assert(formatter.tokens[i] == .endOfScope(")"))
         guard let openParenIndex = formatter.indexOfPreviousToken(
             fromIndex: i, matching: { $0 == .startOfScope("(") }) else { return false }
@@ -92,7 +92,7 @@ public func spaceAroundParens(_ formatter: Formatter) {
         case .keyword(let string) where spaceAfter(string, index: i - 1):
             fallthrough
         case .endOfScope("]") where isCaptureList(atIndex: i - 1),
-             .endOfScope(")") where isConventionAttribute(atIndex: i - 1):
+             .endOfScope(")") where isAttribute(atIndex: i - 1):
             formatter.insertToken(.whitespace(" "), atIndex: i)
         case .whitespace:
             if let token = formatter.tokenAtIndex(i - 2) {
@@ -101,9 +101,9 @@ public func spaceAroundParens(_ formatter: Formatter) {
                     fallthrough
                 case .identifier:
                     fallthrough
-                case .endOfScope("}"), .endOfScope(")"), .endOfScope(">"),
+                case .endOfScope("}"), .endOfScope(">"),
                      .endOfScope("]") where !isCaptureList(atIndex: i - 2),
-                     .endOfScope(")") where !isConventionAttribute(atIndex: i - 2):
+                     .endOfScope(")") where !isAttribute(atIndex: i - 2):
                     formatter.removeTokenAtIndex(i - 1)
                 default:
                     break

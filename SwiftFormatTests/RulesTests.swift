@@ -43,30 +43,51 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testSpaceBetweenParenAndClass() {
+    func testAddSpaceBetweenParenAndClass() {
         let input = "@objc(XYZFoo)class foo"
         let output = "@objc(XYZFoo) class foo"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testSpaceBetweenConventionAndBlock() {
+    func testNoRemoveSpaceBetweenParenAndClass() {
+        let input = "@objc(XYZFoo) class foo"
+        let output = "@objc(XYZFoo) class foo"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testAddSpaceBetweenConventionAndBlock() {
         let input = "@convention(block)() -> Void"
         let output = "@convention(block) () -> Void"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testSpaceBetweenAutoclosureEscapingAndBlock() { // swift 2.3 only
-        let input = "@autoclosure(escaping)() -> Void"
-        let output = "@autoclosure(escaping) () -> Void"
+    func testNoRemoveSpaceBetweenConventionAndBlock() {
+        let input = "@convention(block) () -> Void"
+        let output = "@convention(block) () -> Void"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testSpaceBetweenConventionAndEscaping() {
+    func testAddSpaceBetweenConventionAndEscaping() {
+        let input = "@convention(block)@escaping () -> Void"
+        let output = "@convention(block) @escaping () -> Void"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoRemoveSpaceBetweenConventionAndEscaping() {
         let input = "@convention(block) @escaping () -> Void"
         let output = "@convention(block) @escaping () -> Void"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testAddSpaceBetweenAutoclosureEscapingAndBlock() { // swift 2.3 only
+        let input = "@autoclosure(escaping)() -> Void"
+        let output = "@autoclosure(escaping) () -> Void"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

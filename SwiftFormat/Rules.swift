@@ -1050,11 +1050,11 @@ public func indent(_ formatter: Formatter) {
 // Implement brace-wrapping rules
 public func braces(_ formatter: Formatter) {
     formatter.forEachToken(.startOfScope("{")) { i, token in
+        // Check this isn't an inline block
+        guard let nextLinebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
+            let closingBraceIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope("}") }),
+            nextLinebreakIndex < closingBraceIndex else { return }
         if formatter.options.allmanBraces {
-            // Check this isn't an inline block
-            guard let nextLinebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
-                let closingBraceIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope("}") }),
-                nextLinebreakIndex < closingBraceIndex else { return }
             // Implement Allman-style braces, where opening brace appears on the next line
             if let previousTokenIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: { !$0.isWhitespace }),
                 let previousToken = formatter.tokenAtIndex(previousTokenIndex) {
@@ -1086,6 +1086,9 @@ public func braces(_ formatter: Formatter) {
                 default:
                     if let linebreakIndex = linebreakIndex {
                         formatter.removeTokensInRange(Range(linebreakIndex ... i))
+                        if formatter.tokenAtIndex(linebreakIndex - 1)?.isWhitespace == true {
+                            formatter.removeTokenAtIndex(linebreakIndex - 1)
+                        }
                         formatter.insertToken(.whitespace(" "), atIndex: index + 1)
                         formatter.insertToken(.startOfScope("{"), atIndex: index + 2)
                     }

@@ -1832,6 +1832,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testKnRLinebreakNotRemovedBeforeInlineBlockNot() {
+        let input = "func foo() -> Bool\n{ return false }"
+        let output = "func foo() -> Bool\n{ return false }"
+        XCTAssertEqual(try! format(input, rules: [braces]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: allman braces
 
     func testKnRBracesAreConverted() {

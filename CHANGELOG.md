@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.16.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.16.4) (2016-11-07)
+
+- SwiftFormat is now ~3X faster!
+- Fixed bug with spacing after an @convention() attribute
+- Fixed bug where the space at the start of a comment could increase after each format
+- Fixed bug where wrong indent was applied to wrapped array literal values
+- Fixed bug where K&R indenting would remove the linebreak before an inline block
+
 ## [0.16.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.16.3) (2016-11-03)
 
 - Fixed bug with operators containing chevrons

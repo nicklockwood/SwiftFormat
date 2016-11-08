@@ -141,6 +141,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testNoSpaceBetweenHashAvailableAndBrace() {
+        let input = "#available (iOS 9.0, *)"
+        let output = "#available(iOS 9.0, *)"
+        XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testNoSpaceBetweenPrivateAndSet() {
         let input = "private (set) var foo: Int"
         let output = "private(set) var foo: Int"

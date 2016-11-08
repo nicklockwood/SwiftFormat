@@ -55,11 +55,13 @@ public func spaceAroundParens(_ formatter: Formatter) {
         case "@escaping", "@noescape":
             return true
         case "private", "fileprivate", "internal",
-             "init", "subscript",
-             "#selector", "#keyPath":
+             "init", "subscript":
             return false
         default:
-            return !keyword.hasPrefix("@")
+            if let first = keyword.characters.first {
+                return !"@#".characters.contains(first)
+            }
+            return true
         }
     }
 

@@ -701,6 +701,7 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
 /// Always end file with a linebreak, to avoid incompatibility with certain unix tools:
 /// http://stackoverflow.com/questions/2287967/why-is-it-recommended-to-have-empty-line-in-the-end-of-file
 public func linebreakAtEndOfFile(_ formatter: Formatter) {
+    guard !formatter.options.fragment else { return }
     if let lastToken = formatter.previousToken(fromIndex: formatter.tokens.count, matching: {
         !$0.isWhitespace && !$0.isError }), !lastToken.isLinebreak {
         formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: formatter.tokens.count)

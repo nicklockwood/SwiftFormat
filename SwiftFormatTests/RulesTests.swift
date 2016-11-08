@@ -1182,6 +1182,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input, rules: defaultRules), output)
     }
 
+    func testNoLinebreakAtEndOfFragment() {
+        let input = "foo\nbar"
+        let output = "foo\nbar"
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try! format(input, rules: [linebreakAtEndOfFile], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
     // MARK: indent parens
 
     func testSimpleScope() {

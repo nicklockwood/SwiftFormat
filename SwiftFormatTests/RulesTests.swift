@@ -1626,6 +1626,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testIndentInsideWrappedClassDefinition() {
+        let input = "class Foo\n: Bar {\nbaz()\n}"
+        let output = "class Foo\n    : Bar {\n    baz()\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testIndentInsideWrappedProtocolDefinition() {
+        let input = "protocol Foo\n: Bar, Baz {\nbaz()\n}"
+        let output = "protocol Foo\n    : Bar, Baz {\n    baz()\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testIndentInsideWrappedVarStatement() {
+        let input = "var Foo:\nBar {\nreturn 5\n}"
+        let output = "var Foo:\n    Bar {\n    return 5\n}"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testNoIndentAfterOperatorDeclaration() {
         let input = "infix operator ?=\nfunc ?=(lhs: Int, rhs: Int) -> Bool {}"
         let output = "infix operator ?=\nfunc ?=(lhs: Int, rhs: Int) -> Bool {}"

@@ -47,7 +47,7 @@ private let swiftKeywords = [
     "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
     "throw", "typealias", "where", "break", "deinit", "subscript", "lazy", "is",
     "while", "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
-    "default",
+    "default", "protocol",
 ]
 
 public enum Token: Equatable {

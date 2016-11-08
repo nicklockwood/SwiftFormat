@@ -770,7 +770,7 @@ public func indent(_ formatter: Formatter) {
                 return false
             case .symbol(","):
                 // For arrays or argument lists, we already indent
-                return ["[", "(", "case"].contains(currentScope()?.string ?? "")
+                return ["<", "[", "(", "case"].contains(currentScope()?.string ?? "")
             case .symbol:
                 if formatter.previousToken(fromIndex: i, matching: { $0 == .keyword("operator") }) != nil {
                     return true
@@ -801,7 +801,7 @@ public func indent(_ formatter: Formatter) {
             case .symbol("."):
                 // Is this an enum value?
                 if let previousToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
-                    if let scope = currentScope()?.string, ["(", "[", "case"].contains(scope),
+                    if let scope = currentScope()?.string, ["<", "(", "[", "case"].contains(scope),
                         [scope, ",", ":"].contains(previousToken.string) {
                         return true
                     }
@@ -809,7 +809,7 @@ public func indent(_ formatter: Formatter) {
                 }
                 return true
             case .symbol(","):
-                if let scope = currentScope()?.string, ["[", "(", "case"].contains(scope) {
+                if let scope = currentScope()?.string, ["<", "[", "(", "case"].contains(scope) {
                     // For arrays, dictionaries, cases, or argument lists, we already indent
                     return true
                 }
@@ -828,10 +828,17 @@ public func indent(_ formatter: Formatter) {
         var i = i - 1
         while let token = formatter.tokenAtIndex(i) {
             switch token {
-            case .keyword("if"), .keyword("for"), .keyword("while"),
-                 .keyword("switch"), .keyword("guard"), .keyword("else"),
-                 .keyword("do"), .keyword("catch"):
-                return false
+            case .keyword(let string):
+                switch string {
+                case "class", "struct", "enum", "protocol", "extension",
+                     "let", "var", "func", "init", "subscript",
+                     "if", "switch", "guard", "else",
+                     "for", "while", "repeat",
+                     "do", "catch":
+                    return false
+                default:
+                    break
+                }
             case .startOfScope:
                 return true
             default:

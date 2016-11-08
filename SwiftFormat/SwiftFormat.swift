@@ -2,7 +2,7 @@
 //  SwiftFormat.swift
 //  SwiftFormat
 //
-//  Version 0.16.4
+//  Version 0.17
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -34,7 +34,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-public let version = "0.16.4"
+public let version = "0.17"
 
 /// Enumerate all swift files at the specified location and (optionally) calculate an output file URL for each
 public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = nil, block: (URL, URL) -> Void) {

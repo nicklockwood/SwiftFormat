@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.17](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.17) (2016-11-08)
+
+- Added cache, allowing SwiftFormat to skip formatting for files that haven't changed
+- Added `stripHeaders` rule to remove Xcode's copyright header comments (off by default)
+- Disabled `linebreakAtEndOfFile` rule when formatted text is a fragment
+- Fixed bug where generics were wrongly formatted if followed by a greater-than sign in the same file
+- Fixed space incorrectly added after `#available`, `#colorLiteral`, etc
+- Fixed several bugs with indenting of blocks containing wrapped lines
+
 ## [0.16.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.16.4) (2016-11-07)
 
 - SwiftFormat is now ~3X faster!

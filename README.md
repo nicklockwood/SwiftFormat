@@ -328,6 +328,8 @@ Here are all the rules that SwiftFormat currently applies:
 	if (foo == true) {}         -->    if foo == true {}
 	
 	while (i < bar.count) {}    -->    while i < bar.count {}
+	
+*stripHeaders* - removes the comment header blocks that Xcode adds to the top of each file (off by default).
 
 
 FAQ
@@ -392,50 +394,70 @@ There haven't been many questions yet, but here's what I'd like to think people 
 > A. I only created the framework to facilitate testing, so to be honest I've no idea if it will work in an app, but you're welcome to try. If you need to make adjustments to the public/private flags or namespaces to get it working, open an issue on Github (or evene better, a pull request).
 
 
+Cache
+------
+
+SwiftFormat uses a cache file to avoid reformatting files that haven't changed. For a large project, this can significantly reduce processing time.
+
+By default, the cache is stored in `~/Library/Caches/com.charcoaldesign.swiftformat`. To clear the cache, you can delete the cache file or use the command line option `--cache clear`.
+
+If you prefer, you can specify an alternative location for the cache file by passing a path as the `--cache` option value. For example, you might want to store the cache file inside your project directory, to improve first-run SwiftFormat performance for all users of the codebase.
+
+The cache file is fairly small, as it only stores the path and size for each file, not the contents. It's unlikely to grow beyond a few hundred KB.
+
+
 Known issues
 ---------------
 
-SwiftFormat currently reformats multiline comment blocks without regard for the original indenting. That means
+* The formatted file cache is based on file length, so it's possible (though unlikely) that an edited file will have the exact same character count as the previously formatted version, causing SwiftFormat to incorrectly identify it as not having changed, and fail to format it.
 
-    /* some documentation
-    
-          func codeExample() {
-              print("Hello World")
-          }
- 
-     */
-     
-Will become
+	To fix this, you can type an extra space in the file (which SwiftFormat will then remove again when it applies the formatting).
+	
+	Alternatively, use the command line option `--cache clear` to force SwiftFormat to ignore the cache for all files.
 
-	/* some documentation
-    
-     func codeExample() {
-     print("Hello World")
-     }
-     
-     */
-     
-To work around that, you can disable automatic indenting of comments using the `comments` command line flag.
+* If a file begins with a comment, the `stripHeaders` rule will remove it if is followed by a blank line. To avoid this, make sure that the first comment is directly followed by a line of code.
 
-Alternatively, if you prefer to leave the comment indenting feature enabled, you can rewrite your multiline comment as a block of single-line comments...
+* SwiftFormat currently reformats multiline comment blocks without regard for the original indenting. That means
 
-    // some documentation
-    //
-    //    func codeExample() {
-    //        print("Hello World")
-    //    }
-    //
-    //
-    
-Or begin each line with a `*` (or any other non-whitespace character)
-
-    /* some documentation
-     *
-     *    func codeExample() {
-     *        print("Hello World")
-     *    }
-     *  
-     */
+		/* some documentation
+		
+			  func codeExample() {
+				  print("Hello World")
+			  }
+	 
+		 */
+		 
+	Will become
+	
+		/* some documentation
+		
+		 func codeExample() {
+		 print("Hello World")
+		 }
+		 
+		 */
+		 
+	To work around that, you can disable automatic indenting of comments using the `comments` command line flag.
+	
+	Alternatively, if you prefer to leave the comment indenting feature enabled, you can rewrite your multiline comment as a block of single-line comments...
+	
+		// some documentation
+		//
+		//    func codeExample() {
+		//        print("Hello World")
+		//    }
+		//
+		//
+		
+	Or begin each line with a `*` (or any other non-whitespace character)
+	
+		/* some documentation
+		 *
+		 *    func codeExample() {
+		 *        print("Hello World")
+		 *    }
+		 *  
+		 */
 
 
 Credits

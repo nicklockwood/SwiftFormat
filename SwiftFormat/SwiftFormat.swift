@@ -33,6 +33,9 @@
 
 import Foundation
 
+/// The current SwiftFormat version
+public let version = "0.16.4"
+
 /// Enumerate all swift files at the specified location and (optionally) calculate an output file URL for each
 public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = nil, block: (URL, URL) -> Void) {
     let manager = FileManager.default
@@ -40,14 +43,13 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = ni
     if manager.fileExists(atPath: inputURL.path, isDirectory: &isDirectory) {
         if isDirectory.boolValue {
             guard let files = try? manager.contentsOfDirectory(
-                at: inputURL, includingPropertiesForKeys: nil,
-                options: FileManager.DirectoryEnumerationOptions.skipsHiddenFiles) else {
+                at: inputURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) else {
                 print("error: failed to read contents of directory at: \(inputURL.path)")
                 return
             }
             if let outputURL = outputURL {
                 do {
-                    try manager.createDirectory(atPath: outputURL.path, withIntermediateDirectories: true, attributes: nil)
+                    try manager.createDirectory(at: outputURL, withIntermediateDirectories: true, attributes: nil)
                     for url in files {
                         let outputPath = outputURL.path + url.path.substring(from: inputURL.path.characters.endIndex)
                         enumerateSwiftFiles(withInputURL: url, outputURL: URL(fileURLWithPath: outputPath), block: block)
@@ -71,12 +73,25 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = ni
 
 /// Parse an input file or directory and write it to the specified output path
 /// Returns the number of files that were written
-public func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = nil, withOptions options: FormatOptions) -> (Int, Int) {
+public func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = nil,
+                         withOptions options: FormatOptions, cacheURL: URL? = nil) -> (Int, Int) {
+    // Load cache
+    let cachePrefix = version + String(describing: options)
+    var cache: [String: String]?
+    if let cacheURL = cacheURL {
+        cache = NSDictionary(contentsOf: cacheURL) as? [String: String] ?? [:]
+    }
+    // Format files
     var filesChecked = 0, filesWritten = 0
     for inputURL in inputURLs {
         enumerateSwiftFiles(withInputURL: inputURL, outputURL: outputURL) { inputURL, outputURL in
             filesChecked += 1
+            let cacheKey = inputURL.absoluteURL.path
             if let input = try? String(contentsOf: inputURL) {
+                if cache?[cacheKey] == cachePrefix + String(input.characters.count) {
+                    // No changes needed
+                    return
+                }
                 guard let output = try? format(input, options: options) else {
                     print("error: could not parse file: \(inputURL.path)")
                     return
@@ -86,10 +101,23 @@ public func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = 
                         filesWritten += 1
                     } else {
                         print("error: failed to write file: \(outputURL.path)")
+                        return
                     }
                 }
+                cache?[cacheKey] = cachePrefix + String(output.characters.count)
             } else {
                 print("error: failed to read file: \(inputURL.path)")
+            }
+        }
+    }
+    // Save cache
+    if let cache = cache, let cacheURL = cacheURL {
+        if !(cache as NSDictionary).write(to: cacheURL, atomically: true) {
+            let cacheDirectory = cacheURL.deletingLastPathComponent().absoluteURL
+            if FileManager.default.fileExists(atPath: cacheDirectory.path) {
+                print("error: failed to write cache file at: \(cacheURL.path)")
+            } else {
+                print("error: specified cache file directory does not exist: \(cacheDirectory.path)")
             }
         }
     }

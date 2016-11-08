@@ -33,8 +33,6 @@
 
 import Foundation
 
-let version = "0.16.4"
-
 let arguments = [
     "output",
     "indent",
@@ -50,6 +48,7 @@ let arguments = [
     "removelines",
     "experimental",
     "fragment",
+    "cache",
     "help",
     "version",
 ]
@@ -75,6 +74,7 @@ func showHelp() {
     print(" --removelines     remove blank line before }. \"enabled\" (default) or \"disabled\"")
     print(" --experimental    experimental rules. \"enabled\" or \"disabled\" (default)")
     print(" --fragment        input is part of a larger file. \"true\" or \"false\" (default)")
+    print(" --cache           path to a custom cache file, or \"clear\" to clear default cache")
     print(" --help            this help page")
     print(" --version         version information")
     print("")
@@ -279,6 +279,47 @@ func processArguments(_ args: [String]) {
         return
     }
 
+    // Get cache path
+    var cacheURL: URL?
+    let defaultCacheFileName = "swiftformat.cache"
+    let manager = FileManager.default
+    if let cache = args["cache"] {
+        switch cache {
+        case "":
+            print("error: --cache option expects a value.")
+            return
+        case "clear":
+            if let cacheURL = cacheURL, manager.fileExists(atPath: cacheURL.path) {
+                do {
+                    try manager.removeItem(at: cacheURL)
+                } catch {
+                    print("error: failed to delete cache file at: \(cacheURL.path)")
+                }
+            }
+        default:
+            cacheURL = expandPath(cache)
+            guard cacheURL != nil else {
+                print("error: unsupported --cache value: \(cache).")
+                return
+            }
+            var isDirectory: ObjCBool = false
+            if manager.fileExists(atPath: cacheURL!.path, isDirectory: &isDirectory) && isDirectory.boolValue {
+                cacheURL = cacheURL!.appendingPathComponent(defaultCacheFileName)
+            }
+        }
+    } else if let cachePath =
+        NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first {
+        let cacheDirectory = URL(fileURLWithPath: cachePath).appendingPathComponent("com.charcoaldesign.swiftformat")
+        do {
+            try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)
+            cacheURL = cacheDirectory.appendingPathComponent(defaultCacheFileName)
+        } catch {
+            print("error: failed to create cache directory at: \(cacheDirectory.path), \(error)")
+        }
+    } else {
+        print("error: failed to find cache directory at ~/Library/Caches")
+    }
+
     // If no input file, try stdin
     if inputURLs.count == 0 {
         var input: String?
@@ -322,7 +363,8 @@ func processArguments(_ args: [String]) {
 
     // Format the code
     let start = CFAbsoluteTimeGetCurrent()
-    let (filesWritten, filesChecked) = processInput(inputURLs, andWriteToOutput: outputURL, withOptions: options)
+    let (filesWritten, filesChecked) =
+        processInput(inputURLs, andWriteToOutput: outputURL, withOptions: options, cacheURL: cacheURL)
     let time = round((CFAbsoluteTimeGetCurrent() - start) * 100) / 100 // round to nearest 10ms
     print("swiftformat completed. \(filesWritten)/\(filesChecked) file\(filesChecked == 1 ? "" : "s") updated in \(String(format: "%g", time))s")
 }

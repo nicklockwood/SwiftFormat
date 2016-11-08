@@ -31,9 +31,11 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
-public struct FormatOptions {
+public struct FormatOptions: CustomStringConvertible {
     public var indent: String
     public var linebreak: String
     public var allowInlineSemicolons: Bool
@@ -75,6 +77,13 @@ public struct FormatOptions {
         self.allmanBraces = allmanBraces
         self.experimentalRules = experimentalRules
         self.fragment = fragment
+    }
+
+    public var description: String {
+        let allowedCharacters = CharacterSet.whitespacesAndNewlines.inverted
+        return Mirror(reflecting: self).children.map({
+            return "\($0.value);".addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? ""
+        }).joined()
     }
 }
 

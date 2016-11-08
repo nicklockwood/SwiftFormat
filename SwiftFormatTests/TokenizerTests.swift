@@ -1034,6 +1034,23 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testGenericFollowedByGreaterThan() {
+        let input = "Foo<T>\na=b>c"
+        let output: [Token] = [
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .identifier("T"),
+            .endOfScope(">"),
+            .linebreak("\n"),
+            .identifier("a"),
+            .symbol("="),
+            .identifier("b"),
+            .symbol(">"),
+            .identifier("c"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testGenericOperatorFunction() {
         let input = "func ==<T>()"
         let output: [Token] = [

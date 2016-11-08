@@ -744,15 +744,15 @@ public func tokenize(_ source: String) -> [Token] {
         stitchSymbols(at: index)
     }
 
-    func convertClosingChevronToSymbol(at index: Int) {
+    func convertClosingChevronToSymbol(at index: Int, andOpeningChevron: Bool) {
         assert(tokens[index] == .endOfScope(">"))
         tokens[index] = .symbol(">")
         stitchSymbols(at: index)
         if let previousIndex = lastNonWhitespaceIndex(from: index),
             tokens[previousIndex] == .endOfScope(">") {
-            convertClosingChevronToSymbol(at: previousIndex)
+            convertClosingChevronToSymbol(at: previousIndex, andOpeningChevron: true)
         }
-        if let scopeIndex = closedGenericScopeIndexes.last {
+        if andOpeningChevron, let scopeIndex = closedGenericScopeIndexes.last {
             closedGenericScopeIndexes.removeLast()
             convertOpeningChevronToSymbol(at: scopeIndex)
         }
@@ -856,7 +856,7 @@ public func tokenize(_ source: String) -> [Token] {
                             fallthrough
                         }
                     case .identifier, .number, .startOfScope("\""):
-                        convertClosingChevronToSymbol(at: previousIndex)
+                        convertClosingChevronToSymbol(at: previousIndex, andOpeningChevron: true)
                         processToken()
                         return
                     default:
@@ -932,7 +932,7 @@ public func tokenize(_ source: String) -> [Token] {
             }
         case .endOfScope(">"):
             // Misidentified > as closing generic scope
-            convertClosingChevronToSymbol(at: tokens.count - 1)
+            convertClosingChevronToSymbol(at: tokens.count - 1, andOpeningChevron: false)
             return
         case .endOfScope(let string):
             // Previous scope wasn't closed correctly

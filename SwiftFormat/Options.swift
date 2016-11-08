@@ -47,6 +47,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var insertBlankLines: Bool
     public var removeBlankLines: Bool
     public var allmanBraces: Bool
+    public var stripHeader: Bool
     public var experimentalRules: Bool
     public var fragment: Bool
 
@@ -61,6 +62,7 @@ public struct FormatOptions: CustomStringConvertible {
                 insertBlankLines: Bool = true,
                 removeBlankLines: Bool = true,
                 allmanBraces: Bool = false,
+                stripHeader: Bool = false,
                 experimentalRules: Bool = false,
                 fragment: Bool = false) {
 
@@ -75,6 +77,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.insertBlankLines = insertBlankLines
         self.removeBlankLines = removeBlankLines
         self.allmanBraces = allmanBraces
+        self.stripHeader = stripHeader
         self.experimentalRules = experimentalRules
         self.fragment = fragment
     }

@@ -1381,6 +1381,36 @@ public func void(_ formatter: Formatter) {
     }
 }
 
+/// Strip header comments from the file
+public func stripHeader(_ formatter: Formatter) {
+    guard formatter.options.stripHeader && !formatter.options.fragment else { return }
+    if let startIndex = formatter.indexOfNextToken(fromIndex: -1, matching: { !$0.isWhitespaceOrLinebreak }) {
+        switch formatter.tokens[startIndex] {
+        case .startOfScope("//"):
+            var lastIndex = startIndex
+            while let index = formatter.indexOfNextToken(fromIndex: lastIndex, matching: { $0.isLinebreak }) {
+                if let nextToken = formatter.tokenAtIndex(index + 1), nextToken != .startOfScope("//") {
+                    switch nextToken {
+                    case .linebreak:
+                        formatter.removeTokensInRange(0 ..< index + 2)
+                    case .whitespace where formatter.tokenAtIndex(index + 2)?.isLinebreak == true:
+                        formatter.removeTokensInRange(0 ..< index + 3)
+                    default:
+                        break
+                    }
+                    return
+                }
+                lastIndex = index
+            }
+        case .startOfScope("/*"):
+            // TODO: handle multiline comment headers
+            break
+        default:
+            return
+        }
+    }
+}
+
 public let defaultRules: [FormatRule] = [
     linebreaks,
     semicolons,
@@ -1410,4 +1440,5 @@ public let defaultRules: [FormatRule] = [
     consecutiveBlankLines,
     trailingWhitespace,
     linebreakAtEndOfFile,
+    stripHeader,
 ]

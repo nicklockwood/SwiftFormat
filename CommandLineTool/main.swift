@@ -46,6 +46,7 @@ let arguments = [
     "trimwhitespace",
     "insertlines",
     "removelines",
+    "header",
     "experimental",
     "fragment",
     "cache",
@@ -72,6 +73,7 @@ func showHelp() {
     print(" --trimwhitespace  trim trailing space. \"always\" (default) or \"nonblank-lines\"")
     print(" --insertlines     insert blank line after {. \"enabled\" (default) or \"disabled\"")
     print(" --removelines     remove blank line before }. \"enabled\" (default) or \"disabled\"")
+    print(" --header          header comments. \"strip\" to remove them, or \"ignore\" (default)")
     print(" --experimental    experimental rules. \"enabled\" or \"disabled\" (default)")
     print(" --fragment        input is part of a larger file. \"true\" or \"false\" (default)")
     print(" --cache           path to a custom cache file, or \"clear\" to clear default cache")
@@ -217,6 +219,16 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
             options.removeBlankLines = true
         case "disabled", "false":
             options.removeBlankLines = false
+        default:
+            throw NSError()
+        }
+    }
+    try processOption("header") {
+        switch $0 {
+        case "strip":
+            options.stripHeader = true
+        case "ignore":
+            options.stripHeader = false
         default:
             throw NSError()
         }

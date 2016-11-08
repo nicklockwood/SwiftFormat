@@ -109,6 +109,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String
                 return nil
             }
             name = key
+            namedArgs[name] = ""
             continue
         } else if arg.hasPrefix("-") {
             // Short argument names
@@ -122,6 +123,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String
                 return nil
             } else {
                 name = matches[0]
+                namedArgs[name] = ""
             }
             continue
         }

@@ -104,4 +104,13 @@ class SwiftFormatTests: XCTestCase {
             "semicolons",
         ])!, output)
     }
+
+    func testEmptyArgsAreRecognized() {
+        let input = ["", "--help", "--version"]
+        let output = ["0": "", "help": "", "version": ""]
+        XCTAssertEqual(preprocessArguments(input, [
+            "help",
+            "version",
+        ])!, output)
+    }
 }

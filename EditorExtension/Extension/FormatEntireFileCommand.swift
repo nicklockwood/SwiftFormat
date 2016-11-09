@@ -2,7 +2,7 @@
 //  FormatEntireFileCommand.swift
 //  Swift Formatter
 //
-//  Version 0.17
+//  Version 0.17.1
 //
 //  Created by Tony Arnold on 5/10/16.
 //  Copyright 2016 Nick Lockwood

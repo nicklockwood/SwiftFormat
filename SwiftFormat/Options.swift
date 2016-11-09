@@ -2,7 +2,7 @@
 //  Rules.swift
 //  SwiftFormat
 //
-//  Version 0.17
+//  Version 0.17.1
 //
 //  Created by Nick Lockwood on 21/10/2016.
 //  Copyright 2016 Nick Lockwood

@@ -2,7 +2,7 @@
 //  main.swift
 //  SwiftFormat
 //
-//  Version 0.17
+//  Version 0.17.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -73,7 +73,7 @@ func showHelp() {
     print(" --trimwhitespace  trim trailing space. \"always\" (default) or \"nonblank-lines\"")
     print(" --insertlines     insert blank line after {. \"enabled\" (default) or \"disabled\"")
     print(" --removelines     remove blank line before }. \"enabled\" (default) or \"disabled\"")
-    print(" --header          header comments. \"strip\" to remove them, or \"ignore\" (default)")
+    print(" --header          header comments. \"strip\" to remove, or \"ignore\" (default)")
     print(" --experimental    experimental rules. \"enabled\" or \"disabled\" (default)")
     print(" --fragment        input is part of a larger file. \"true\" or \"false\" (default)")
     print(" --cache           path to cache file, or \"clear\" or \"ignore\" the default cache")

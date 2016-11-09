@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.17.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.17.1) (2016-11-09)
+
+- Xcode Source Editor Extension now works with Playground files
+- Fixed operator being incorrectly formatted when file ends with a single-line comment
+- Fixed bug where the space at the start of a single line comment could increase after each format
+- Fixed bug where `--cache clear` just ignored cache without actually clearing it
+- Added `--cache ignore` option, which replicates previous `--cache clear` behavior
+
 ## [0.17](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.17) (2016-11-08)
 
 - Added cache, allowing SwiftFormat to skip formatting for files that haven't changed
@@ -13,7 +21,7 @@
 
 - SwiftFormat is now ~3X faster!
 - Fixed bug with spacing after an @convention() attribute
-- Fixed bug where the space at the start of a comment could increase after each format
+- Fixed bug where the space at the start of a multi-line comment could increase after each format
 - Fixed bug where wrong indent was applied to wrapped array literal values
 - Fixed bug where K&R indenting would remove the linebreak before an inline block
 

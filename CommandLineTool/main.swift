@@ -76,7 +76,7 @@ func showHelp() {
     print(" --header          header comments. \"strip\" to remove them, or \"ignore\" (default)")
     print(" --experimental    experimental rules. \"enabled\" or \"disabled\" (default)")
     print(" --fragment        input is part of a larger file. \"true\" or \"false\" (default)")
-    print(" --cache           path to a custom cache file, or \"clear\" to clear default cache")
+    print(" --cache           path to cache file, or \"clear\" or \"ignore\" the default cache")
     print(" --help            this help page")
     print(" --version         version information")
     print("")
@@ -295,12 +295,29 @@ func processArguments(_ args: [String]) {
     var cacheURL: URL?
     let defaultCacheFileName = "swiftformat.cache"
     let manager = FileManager.default
+    func setDefaultCacheURL() {
+        if let cachePath =
+            NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first {
+            let cacheDirectory = URL(fileURLWithPath: cachePath).appendingPathComponent("com.charcoaldesign.swiftformat")
+            do {
+                try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)
+                cacheURL = cacheDirectory.appendingPathComponent(defaultCacheFileName)
+            } catch {
+                print("error: failed to create cache directory at: \(cacheDirectory.path), \(error)")
+            }
+        } else {
+            print("error: failed to find cache directory at ~/Library/Caches")
+        }
+    }
     if let cache = args["cache"] {
         switch cache {
         case "":
             print("error: --cache option expects a value.")
             return
+        case "ignore":
+            break
         case "clear":
+            setDefaultCacheURL()
             if let cacheURL = cacheURL, manager.fileExists(atPath: cacheURL.path) {
                 do {
                     try manager.removeItem(at: cacheURL)
@@ -319,17 +336,8 @@ func processArguments(_ args: [String]) {
                 cacheURL = cacheURL!.appendingPathComponent(defaultCacheFileName)
             }
         }
-    } else if let cachePath =
-        NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first {
-        let cacheDirectory = URL(fileURLWithPath: cachePath).appendingPathComponent("com.charcoaldesign.swiftformat")
-        do {
-            try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)
-            cacheURL = cacheDirectory.appendingPathComponent(defaultCacheFileName)
-        } catch {
-            print("error: failed to create cache directory at: \(cacheDirectory.path), \(error)")
-        }
     } else {
-        print("error: failed to find cache directory at ~/Library/Caches")
+        setDefaultCacheURL()
     }
 
     // If no input file, try stdin

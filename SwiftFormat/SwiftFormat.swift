@@ -77,6 +77,7 @@ public func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = 
                          withOptions options: FormatOptions, cacheURL: URL? = nil) -> (Int, Int) {
     // Load cache
     let cachePrefix = version + String(describing: options)
+    let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
     var cache: [String: String]?
     if let cacheURL = cacheURL {
         cache = NSDictionary(contentsOf: cacheURL) as? [String: String] ?? [:]
@@ -86,7 +87,14 @@ public func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = 
     for inputURL in inputURLs {
         enumerateSwiftFiles(withInputURL: inputURL, outputURL: outputURL) { inputURL, outputURL in
             filesChecked += 1
-            let cacheKey = inputURL.absoluteURL.path
+            let cacheKey: String = {
+                var path = inputURL.absoluteURL.path
+                if let cacheDirectory = cacheDirectory {
+                    let commonPrefix = path.commonPrefix(with: cacheDirectory.path)
+                    path = path.substring(from: commonPrefix.endIndex)
+                }
+                return path
+            }()
             if let input = try? String(contentsOf: inputURL) {
                 if cache?[cacheKey] == cachePrefix + String(input.characters.count) {
                     // No changes needed
@@ -111,9 +119,8 @@ public func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = 
         }
     }
     // Save cache
-    if let cache = cache, let cacheURL = cacheURL {
+    if let cache = cache, let cacheURL = cacheURL, let cacheDirectory = cacheDirectory {
         if !(cache as NSDictionary).write(to: cacheURL, atomically: true) {
-            let cacheDirectory = cacheURL.deletingLastPathComponent().absoluteURL
             if FileManager.default.fileExists(atPath: cacheDirectory.path) {
                 print("error: failed to write cache file at: \(cacheURL.path)")
             } else {

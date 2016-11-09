@@ -399,11 +399,11 @@ Cache
 
 SwiftFormat uses a cache file to avoid reformatting files that haven't changed. For a large project, this can significantly reduce processing time.
 
-By default, the cache is stored in `~/Library/Caches/com.charcoaldesign.swiftformat`. To clear the cache, you can delete the cache file or use the command line option `--cache clear`.
+By default, the cache is stored in `~/Library/Caches/com.charcoaldesign.swiftformat`. Use the command line option `--cache ignore` to ignore the cached version and re-apply formatting to all files. Alternatively, you can use `--cache clear` to delete the cache (or you can just manually delete the cache file).
 
-If you prefer, you can specify an alternative location for the cache file by passing a path as the `--cache` option value. For example, you might want to store the cache file inside your project directory, to improve first-run SwiftFormat performance for all users of the codebase.
+The cache is shared between all projects. The file is fairly small, as it only stores the path and size for each file, not the contents. If you do start experiencing slowdown due to the cache growing too large, you might want to consider using a separate cache file for each project.
 
-The cache file is fairly small, as it only stores the path and size for each file, not the contents. It's unlikely to grow beyond a few hundred KB.
+You can specify a custom cache file location by passing a path as the `--cache` option value. For example, you might want to store the cache file inside your project directory. It is fine to check in the cache file if you want to share it between different users of your project, as the paths stored in the cache are relative to the location of the formatted files.
 
 
 Known issues
@@ -413,7 +413,7 @@ Known issues
 
 	To fix this, you can type an extra space in the file (which SwiftFormat will then remove again when it applies the formatting).
 	
-	Alternatively, use the command line option `--cache clear` to force SwiftFormat to ignore the cache for all files.
+	Alternatively, use the command line option `--cache ignore` to force SwiftFormat to ignore the cache for this run.
 
 * If a file begins with a comment, the `stripHeaders` rule will remove it if is followed by a blank line. To avoid this, make sure that the first comment is directly followed by a line of code.
 

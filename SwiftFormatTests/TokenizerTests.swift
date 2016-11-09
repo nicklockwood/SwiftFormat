@@ -1197,6 +1197,19 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testHalfOpenRangeFollowedByComment() {
+        let input = "1..<5\n//comment"
+        let output: [Token] = [
+            .number("1"),
+            .symbol("..<"),
+            .number("5"),
+            .linebreak("\n"),
+            .startOfScope("//"),
+            .commentBody("comment"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testSortAscending() {
         let input = "sort(by: <)"
         let output: [Token] = [

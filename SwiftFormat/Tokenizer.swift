@@ -959,7 +959,7 @@ public func tokenize(_ source: String) -> [Token] {
             convertOpeningChevronToSymbol(at: scopeIndex)
             scopeIndexStack.removeLast()
         case .startOfScope("//"):
-            break loop
+            scopeIndexStack.removeLast()
         default:
             if tokens.last?.isError == false {
                 // File ended with scope still open

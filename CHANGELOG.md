@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.18](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.18) (2016-11-??)
+
+- `redundantParens` now removed unneeded parens from expressions and closure arguments
+
 ## [0.17.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.17.2) (2016-11-11)
 
 - Fixed critical bug with `redundantParens` rule removing required parens around a closure

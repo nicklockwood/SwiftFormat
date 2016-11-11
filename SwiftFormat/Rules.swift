@@ -1328,28 +1328,69 @@ public func specifiers(_ formatter: Formatter) {
     }
 }
 
-/// Remove redundant parens around the arguments for loops, if statements, etc
+/// Remove redundant parens around the arguments for loops, if statements, closures, etc.
 public func redundantParens(_ formatter: Formatter) {
     formatter.forEachToken(.startOfScope("(")) { i, token in
-        if let prevToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
-            switch prevToken {
-            case .keyword("if"), .keyword("while"), .keyword("switch"):
-                if let closingIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope(")") }),
-                    formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex) == .startOfScope("{"),
-                    formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex)
-                    != .endOfScope("}") {
-                    if prevToken == .keyword("switch"),
-                        let commaIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .symbol(",") }),
-                        commaIndex < closingIndex {
-                        // Might be a tuple, so we won't remove the parens
-                        // TODO: improve the logic here so we don't misidentify function calls as tuples
-                        break
-                    }
+        let previousIndex = formatter.indexOfPreviousToken(fromIndex: i) {
+            !$0.isWhitespaceOrCommentOrLinebreak } ?? -1
+        switch formatter.tokenAtIndex(previousIndex) ?? .whitespace("") {
+        case .endOfScope("]"):
+            if let startIndex = formatter.indexOfPreviousToken(fromIndex: previousIndex, matching: {
+                $0 == .startOfScope("[") }), formatter.previousNonWhitespaceOrCommentOrLinebreakToken(
+                fromIndex: startIndex) == .startOfScope("{") {
+                fallthrough
+            }
+        case .startOfScope("{"):
+            if let closingIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope(")") }),
+                formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex) == .keyword("in"),
+                formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespaceOrCommentOrLinebreak })
+                    != closingIndex {
+                if let labelIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .symbol(":") }),
+                    labelIndex < closingIndex {
+                    break
+                }
+                formatter.removeTokenAtIndex(closingIndex)
+                formatter.removeTokenAtIndex(i)
+            }
+        case .identifier, .stringBody, .endOfScope, .symbol("?"), .symbol("!"):
+            break
+        case .keyword(let string):
+            if ["if", "while", "switch", "for", "in", "where", "guard"].contains(string),
+                let closingIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope(")") }),
+                formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex)
+                != .endOfScope("}"),
+                let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex) {
+                if nextToken != .startOfScope("{") && nextToken != .symbol(",") &&
+                    !(string == "for" && nextToken == .keyword("in")) &&
+                    !(string == "guard" && nextToken == .keyword("else")) {
+                    fallthrough
+                }
+                if let commaIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .symbol(",") }),
+                    commaIndex < closingIndex {
+                    // Might be a tuple, so we won't remove the parens
+                    // TODO: improve the logic here so we don't misidentify function calls as tuples
+                    break
+                }
+                formatter.removeTokenAtIndex(closingIndex)
+                formatter.removeTokenAtIndex(i)
+                return
+            }
+        default:
+            if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespace }),
+                let closingIndex = formatter.indexOfNextToken(fromIndex: nextTokenIndex, matching: {
+                    !$0.isWhitespace }), formatter.tokenAtIndex(closingIndex) == .endOfScope(")") {
+                if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex),
+                    [.symbol("->"), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
+                    return
+                }
+                switch formatter.tokens[nextTokenIndex] {
+                case .identifier, .number:
                     formatter.removeTokenAtIndex(closingIndex)
                     formatter.removeTokenAtIndex(i)
+                    return
+                default:
+                    break
                 }
-            default:
-                break
             }
         }
     }

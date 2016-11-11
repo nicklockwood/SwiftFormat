@@ -93,15 +93,15 @@ class RulesTests: XCTestCase {
     }
 
     func testSpaceBetweenParenAndAs() {
-        let input = "(foo) as? String"
-        let output = "(foo) as? String"
+        let input = "(foo.bar) as? String"
+        let output = "(foo.bar) as? String"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testNoSpaceAfterParenAtEndOfFile() {
-        let input = "(foo)"
-        let output = "(foo)"
+        let input = "(foo.bar)"
+        let output = "(foo.bar)"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -128,15 +128,15 @@ class RulesTests: XCTestCase {
     }
 
     func testNoSpaceBetweenHashSelectorAndBrace() {
-        let input = "#selector(self.foo)"
-        let output = "#selector(self.foo)"
+        let input = "#selector(foo)"
+        let output = "#selector(foo)"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testNoSpaceBetweenHashKeyPathAndBrace() {
-        let input = "#keyPath (self.foo)"
-        let output = "#keyPath(self.foo)"
+        let input = "#keyPath (self.foo.bar)"
+        let output = "#keyPath(self.foo.bar)"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -180,14 +180,12 @@ class RulesTests: XCTestCase {
         let input = "{ [weak self] (foo) in }"
         let output = "{ [weak self] (foo) in }"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testAddSpaceBetweenCaptureListAndArguments() {
         let input = "{ [weak self](foo) in }"
         let output = "{ [weak self] (foo) in }"
         XCTAssertEqual(try! format(input, rules: [spaceAroundParens]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testSpaceBetweenClosingParenAndOpenBrace() {
@@ -2375,6 +2373,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testEmptyClosureArgsNotMangled() {
+        let input = "{ () in }"
+        let output = "{ () in }"
+        XCTAssertEqual(try! format(input, rules: [void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: useVoid = false
 
     func testUseVoidOptionFalse() {
@@ -2404,22 +2409,43 @@ class RulesTests: XCTestCase {
     // MARK: redundantParens
 
     func testRedundantParensRemoved() {
-        let input = "if (x + y) {}"
-        let output = "if x + y {}"
+        let input = "if (x || y) {}"
+        let output = "if x || y {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testRedundantParensRemoved2() {
+        let input = "if (x) || y {}"
+        let output = "if x || y {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testRedundantParensRemoved3() {
+        let input = "if x + (5) == 6 {}"
+        let output = "if x + 5 == 6 {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testRedundantParensRemoved4() {
+        let input = "if (x || y), let foo = bar {}"
+        let output = "if x || y, let foo = bar {}"
         XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testRequiredParensNotRemoved() {
-        let input = "if (x + y) * z {}"
-        let output = "if (x + y) * z {}"
+        let input = "if (x || y) * z {}"
+        let output = "if (x || y) * z {}"
         XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
     func testOuterParensRemoved() {
-        let input = "while ((x + y) * z) {}"
-        let output = "while (x + y) * z {}"
+        let input = "while ((x || y) && z) {}"
+        let output = "while (x || y) && z {}"
         XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
@@ -2434,6 +2460,104 @@ class RulesTests: XCTestCase {
     func testIfClosureNotUnwrapped() {
         let input = "if (foo.contains { bar }) {}"
         let output = "if (foo.contains { bar }) {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testGuardParensRemoved() {
+        let input = "guard (x == y) else { return }"
+        let output = "guard x == y else { return }"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testForValueParensRemoved() {
+        let input = "for (x) in (y) {}"
+        let output = "for x in y {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testParensInStringNotRemoved() {
+        let input = "\"hello \\(world)\""
+        let output = "\"hello \\(world)\""
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testClosureTypeNotUnwrapped() {
+        let input = "foo = (Bar) -> Baz"
+        let output = "foo = (Bar) -> Baz"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testOptionalFunctionCallNotUnwrapped() {
+        let input = "foo?(bar)"
+        let output = "foo?(bar)"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testForceUnwrapFunctionCallNotUnwrapped() {
+        let input = "foo!(bar)"
+        let output = "foo!(bar)"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testCurriedFunctionCallNotUnwrapped() {
+        let input = "foo(bar)(baz)"
+        let output = "foo(bar)(baz)"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSubscriptFunctionCallNotUnwrapped() {
+        let input = "foo[\"bar\"](baz)"
+        let output = "foo[\"bar\"](baz)"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSingleClosureArgumentUnwrapped() {
+        let input = "{ (_) in }"
+        let output = "{ _ in }"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testTypedClosureArgumentNotUnwrapped() {
+        let input = "{ (foo: Int) in }"
+        let output = "{ (foo: Int) in }"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testSingleClosureArgumentAfterCaptureListUnwrapped() {
+        let input = "{ [weak self] (foo) in }"
+        let output = "{ [weak self] foo in }"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testMultipleClosureArgumentUnwrapped() {
+        let input = "{ (foo, bar) in }"
+        let output = "{ foo, bar in }"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testTypedMultipleClosureArgumentNotUnwrapped() {
+        let input = "{ (foo: Int, bar: String) in }"
+        let output = "{ (foo: Int, bar: String) in }"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testEmptyClosureArgsNotUnwrapped() {
+        let input = "{ () in }"
+        let output = "{ () in }"
         XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }

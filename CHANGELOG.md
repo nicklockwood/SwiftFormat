@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.17.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.17.2) (2016-11-11)
+
+- Fixed critical bug with `redundantParens` rule removing required parens around a closure
+- Fixed bug with indenting of wrapped closures after a var declaration
+
 ## [0.17.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.17.1) (2016-11-09)
 
 - Xcode Source Editor Extension now works with Playground files

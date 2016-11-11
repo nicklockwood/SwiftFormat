@@ -1613,6 +1613,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testChainedClosureIndentsAfterVarDeclaration() {
+        let input = "var foo: Int\nfoo\n.bar {\nbaz()\n}\n.bar {\nbaz()\n}"
+        let output = "var foo: Int\nfoo\n    .bar {\n        baz()\n    }\n    .bar {\n        baz()\n    }"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     func testChainedFunctionsInsideIf() {
         let input = "if foo {\nreturn bar()\n.baz()\n}"
         let output = "if foo {\n    return bar()\n        .baz()\n}"

@@ -827,12 +827,16 @@ public func indent(_ formatter: Formatter) {
 
     func tokenIsStartOfClosure(_ i: Int) -> Bool {
         var i = i - 1
+        var nextTokenIndex = i
         while let token = formatter.tokenAtIndex(i) {
+            let previousTokenIndex = formatter.indexOfPreviousToken(fromIndex: i) {
+                return !$0.isWhitespaceOrComment && (!$0.isEndOfScope || $0 == .endOfScope("}"))
+            } ?? -1
             switch token {
             case .keyword(let string):
                 switch string {
                 case "class", "struct", "enum", "protocol", "extension",
-                     "let", "var", "func", "init", "subscript",
+                     "var", "func", "init", "subscript",
                      "if", "switch", "guard", "else",
                      "for", "while", "repeat",
                      "do", "catch":
@@ -842,12 +846,16 @@ public func indent(_ formatter: Formatter) {
                 }
             case .startOfScope:
                 return true
+            case .linebreak:
+                if tokenIsEndOfStatement(previousTokenIndex) && tokenIsStartOfStatement(nextTokenIndex) {
+                    return true
+                }
+                break
             default:
                 break
             }
-            i = formatter.indexOfPreviousToken(fromIndex: i) {
-                return !$0.isWhitespaceOrCommentOrLinebreak && (!$0.isEndOfScope || $0 == .endOfScope("}"))
-            } ?? -1
+            nextTokenIndex = i
+            i = previousTokenIndex
         }
         return true
     }

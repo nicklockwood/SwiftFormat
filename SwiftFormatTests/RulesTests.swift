@@ -2424,6 +2424,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testIfClosureNotUnwrapped() {
+        let input = "if (foo.contains { bar }) {}"
+        let output = "if (foo.contains { bar }) {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: stripHeader
 
     func testStripHeader() {

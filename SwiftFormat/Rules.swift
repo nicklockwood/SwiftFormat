@@ -1327,7 +1327,9 @@ public func redundantParens(_ formatter: Formatter) {
             switch prevToken {
             case .keyword("if"), .keyword("while"), .keyword("switch"):
                 if let closingIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope(")") }),
-                    formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex) == .startOfScope("{") {
+                    formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex) == .startOfScope("{"),
+                    formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex)
+                    != .endOfScope("}") {
                     if prevToken == .keyword("switch"),
                         let commaIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .symbol(",") }),
                         commaIndex < closingIndex {

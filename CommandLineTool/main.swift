@@ -47,6 +47,7 @@ let arguments = [
     "insertlines",
     "removelines",
     "header",
+    "ifdef",
     "experimental",
     "fragment",
     "cache",
@@ -74,6 +75,7 @@ func showHelp() {
     print(" --insertlines     insert blank line after {. \"enabled\" (default) or \"disabled\"")
     print(" --removelines     remove blank line before }. \"enabled\" (default) or \"disabled\"")
     print(" --header          header comments. \"strip\" to remove, or \"ignore\" (default)")
+    print(" --ifdef           #if indenting. \"indent\" (default), \"noindent\" or \"outdent\"")
     print(" --experimental    experimental rules. \"enabled\" or \"disabled\" (default)")
     print(" --fragment        input is part of a larger file. \"true\" or \"false\" (default)")
     print(" --cache           path to cache file, or \"clear\" or \"ignore\" the default cache")
@@ -230,6 +232,13 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
         case "ignore":
             options.stripHeader = false
         default:
+            throw NSError()
+        }
+    }
+    try processOption("ifdef") {
+        if let mode = IndentMode(rawValue: $0) {
+            options.ifdefIndentMode = mode
+        } else {
             throw NSError()
         }
     }

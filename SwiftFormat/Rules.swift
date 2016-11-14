@@ -907,6 +907,15 @@ public func indent(_ formatter: Formatter) {
             case "/*":
                 // Comments only indent one space
                 indent += " "
+            case "#if":
+                switch formatter.options.ifdefIndentMode {
+                case .indent:
+                    indent += formatter.options.indent
+                case .noindent:
+                    break
+                case .outdent:
+                    i += insertWhitespace("", atIndex: formatter.startOfLine(atIndex: i))
+                }
             case "[", "(":
                 if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.isLinebreak == false {
                     let nextIndex: Int! = formatter.indexOfNextToken(fromIndex: i) { !$0.isWhitespace }
@@ -959,7 +968,8 @@ public func indent(_ formatter: Formatter) {
                             i += insertWhitespace(indent, atIndex: start)
                         }
                     }
-                    if token == .endOfScope("case") {
+                    switch token {
+                    case .endOfScope("case"):
                         scopeIndexStack.append(i)
                         var indent = (indentStack.last ?? "")
                         if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.isLinebreak == true {
@@ -972,10 +982,26 @@ public func indent(_ formatter: Formatter) {
                         indentCounts.append(1)
                         scopeStartLineIndexes.append(lineIndex)
                         linewrapStack.append(false)
+                    case .endOfScope("#endif"):
+                        switch formatter.options.ifdefIndentMode {
+                        case .indent, .noindent:
+                            break
+                        case .outdent:
+                            i += insertWhitespace("", atIndex: formatter.startOfLine(atIndex: i))
+                        }
+                    default:
+                        break
                     }
-                } else if token == .keyword("#else") || token == .keyword("#elseif") {
-                    let indent = indentStack[indentStack.count - 2]
-                    i += insertWhitespace(indent, atIndex: formatter.startOfLine(atIndex: i))
+                } else if [.keyword("#else"), .keyword("#elseif")].contains(token) {
+                    switch formatter.options.ifdefIndentMode {
+                    case .indent:
+                        let indent = indentStack[indentStack.count - 2]
+                        i += insertWhitespace(indent, atIndex: formatter.startOfLine(atIndex: i))
+                    case .outdent:
+                        i += insertWhitespace("", atIndex: formatter.startOfLine(atIndex: i))
+                    case .noindent:
+                        break
+                    }
                 }
             } else if [.error("}"), .error("]"), .error(")"), .error(">")].contains(token) {
                 // Handled over-terminated fragment
@@ -1344,7 +1370,7 @@ public func redundantParens(_ formatter: Formatter) {
             if let closingIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope(")") }),
                 formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex) == .keyword("in"),
                 formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespaceOrCommentOrLinebreak })
-                    != closingIndex {
+                != closingIndex {
                 if let labelIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .symbol(":") }),
                     labelIndex < closingIndex {
                     break

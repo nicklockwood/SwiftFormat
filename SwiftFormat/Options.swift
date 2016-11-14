@@ -33,6 +33,13 @@
 
 import Foundation
 
+/// The indenting mode to use for #if/#endif statements
+public enum IndentMode: String {
+    case indent
+    case noindent
+    case outdent
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -48,6 +55,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var removeBlankLines: Bool
     public var allmanBraces: Bool
     public var stripHeader: Bool
+    public var ifdefIndentMode: IndentMode
     public var experimentalRules: Bool
     public var fragment: Bool
 
@@ -63,6 +71,7 @@ public struct FormatOptions: CustomStringConvertible {
                 removeBlankLines: Bool = true,
                 allmanBraces: Bool = false,
                 stripHeader: Bool = false,
+                ifdefIndentMode: IndentMode = .indent,
                 experimentalRules: Bool = false,
                 fragment: Bool = false) {
 
@@ -78,6 +87,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.removeBlankLines = removeBlankLines
         self.allmanBraces = allmanBraces
         self.stripHeader = stripHeader
+        self.ifdefIndentMode = ifdefIndentMode
         self.experimentalRules = experimentalRules
         self.fragment = fragment
     }

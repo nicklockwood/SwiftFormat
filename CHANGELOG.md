@@ -2,6 +2,7 @@
 
 ## [0.18](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.18) (2016-11-??)
 
+- Added `--ifdef` command line option for controlling how `#if`...`#endif` clauses are indented
 - `redundantParens` now removed unneeded parens from expressions and closure arguments
 
 ## [0.17.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.17.2) (2016-11-11)

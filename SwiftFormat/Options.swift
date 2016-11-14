@@ -310,5 +310,69 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
         return allman > knr
     }()
 
+    options.ifdefIndentMode = {
+        var indented = 0, noindented = 0, outdented = 0
+        formatter.forEachToken(.startOfScope("#if")) { i, token in
+            if let indent = formatter.tokenAtIndex(i - 1), case .whitespace(let string) = indent,
+                !string.isEmpty {
+                // Indented, check next line
+                if let nextLineIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
+                    let nextIndex = formatter.indexOfNextToken(fromIndex: nextLineIndex, matching: {
+                        !$0.isWhitespaceOrLinebreak }) {
+                    switch formatter.tokens[nextIndex - 1] {
+                    case .whitespace(let innerString):
+                        if innerString.isEmpty {
+                            // Error?
+                            return
+                        } else if innerString == string {
+                            noindented += 1
+                        } else {
+                            // Assume more indented, as less would be a mistake
+                            indented += 1
+                        }
+                    case .linebreak:
+                        // Could be noindent or outdent
+                        noindented += 1
+                        outdented += 1
+                    default:
+                        break
+                    }
+                }
+                // Error?
+                return
+            }
+            // Not indented, check next line
+            if let nextLineIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
+                let nextIndex = formatter.indexOfNextToken(fromIndex: nextLineIndex, matching: {
+                    !$0.isWhitespaceOrLinebreak }) {
+                switch formatter.tokens[nextIndex - 1] {
+                case .whitespace(let string):
+                    if string.isEmpty {
+                        fallthrough
+                    } else if string == formatter.options.indent {
+                        // Could be indent or outdent
+                        indented += 1
+                        outdented += 1
+                    } else {
+                        // Assume more indented, as less would be a mistake
+                        outdented += 1
+                    }
+                case .linebreak:
+                    // Could be noindent or outdent
+                    noindented += 1
+                    outdented += 1
+                default:
+                    break
+                }
+            }
+            // Error?
+        }
+        if noindented > indented {
+            return outdented > noindented ? .outdent : .noindent
+        } else {
+            return outdented > indented ? .outdent : .indent
+        }
+    }()
+
     return options
 }

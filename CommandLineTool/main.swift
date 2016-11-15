@@ -33,28 +33,6 @@
 
 import Foundation
 
-let arguments = [
-    "output",
-    "indent",
-    "allman",
-    "linebreaks",
-    "semicolons",
-    "commas",
-    "comments",
-    "ranges",
-    "empty",
-    "trimwhitespace",
-    "insertlines",
-    "removelines",
-    "header",
-    "ifdef",
-    "experimental",
-    "fragment",
-    "cache",
-    "help",
-    "version",
-]
-
 func showHelp() {
     print("swiftformat, version \(version)")
     print("copyright (c) 2016 Nick Lockwood")
@@ -63,6 +41,7 @@ func showHelp() {
     print("")
     print(" <file> ...        input file(s) or directory path(s)")
     print(" --output          output path for formatted file(s) (defaults to input path)")
+    print(" --inferoptions    path to file or directory from which to infer formatting options")
     print(" --indent          number of spaces to indent, or \"tab\" to use tabs")
     print(" --allman          use allman indentation style \"true\" or \"false\" (default)")
     print(" --linebreaks      linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
@@ -93,7 +72,7 @@ func expandPath(_ path: String) -> URL {
 func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
 
     func processOption(_ key: String, handler: (String) throws -> Void) throws {
-        precondition(arguments.contains(key))
+        precondition(commandLineArguments.contains(key))
         guard let value = args[key] else {
             return
         }
@@ -265,8 +244,15 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
     return options
 }
 
+func timeEvent(block: () -> Void) -> String {
+    let start = CFAbsoluteTimeGetCurrent()
+    block()
+    let time = round((CFAbsoluteTimeGetCurrent() - start) * 100) / 100 // round to nearest 10ms
+    return String(format: "%gs", time)
+}
+
 func processArguments(_ args: [String]) {
-    guard let args = preprocessArguments(args, arguments) else {
+    guard let args = preprocessArguments(args, commandLineArguments) else {
         return
     }
 
@@ -284,6 +270,28 @@ func processArguments(_ args: [String]) {
     // Version
     if args["version"] != nil {
         print("swiftformat, version \(version)")
+        return
+    }
+
+    // Infer options
+    if args["inferoptions"] != nil {
+        if let inferURL = args["inferoptions"].map({ expandPath($0) }) {
+            print("inferring swiftformat options from source file(s)...")
+            var files = 0
+            var arguments = ""
+            let time = timeEvent {
+                let (count, options) = inferOptions(from: inferURL)
+                arguments = commandLineArguments(for: options).map({
+                    "--\($0) \($1)" }).joined(separator: " ")
+                files = count
+            }
+            print("options inferred from \(files) file\(files == 1 ? "" : "s") in \(time)")
+            print("")
+            print(arguments)
+            print("")
+        } else {
+            print("error: --inferoptions argument was not a valid path")
+        }
         return
     }
 
@@ -391,11 +399,13 @@ func processArguments(_ args: [String]) {
     print("running swiftformat...")
 
     // Format the code
-    let start = CFAbsoluteTimeGetCurrent()
-    let (filesWritten, filesChecked) =
-        processInput(inputURLs, andWriteToOutput: outputURL, withOptions: options, cacheURL: cacheURL)
-    let time = round((CFAbsoluteTimeGetCurrent() - start) * 100) / 100 // round to nearest 10ms
-    print("swiftformat completed. \(filesWritten)/\(filesChecked) file\(filesChecked == 1 ? "" : "s") updated in \(String(format: "%g", time))s")
+    var filesWritten = 0, filesChecked = 0
+    let time = timeEvent {
+        (filesWritten, filesChecked) =
+            processInput(inputURLs, andWriteToOutput: outputURL, withOptions: options, cacheURL: cacheURL)
+    }
+    print("swiftformat completed. \(filesWritten)/\(filesChecked) " +
+        "file\(filesChecked == 1 ? "" : "s") updated in \(time)")
 }
 
 // Pass in arguments minus program itself

@@ -113,4 +113,19 @@ class SwiftFormatTests: XCTestCase {
             "version",
         ])!, output)
     }
+
+    // MARK: options to arguments
+
+    func testCommandLineArgumentsHaveValidNames() {
+        let arguments = commandLineArguments(for: FormatOptions())
+        for key in arguments.keys {
+            XCTAssertTrue(commandLineArguments.contains(key), "\(key) is not a valid argument name")
+        }
+    }
+
+    func testCommandLineArgumentsAreCorrect() {
+        let options = FormatOptions()
+        let output = ["indent": "4", "linebreaks": "lf", "semicolons": "inline", "ranges": "spaced", "empty": "void", "commas": "always", "comments": "indent", "trimwhitespace": "always", "insertlines": "enabled", "removelines": "enabled", "allman": "false", "header": "ignore", "ifdef": "indent"]
+        XCTAssertEqual(commandLineArguments(for: options), output)
+    }
 }

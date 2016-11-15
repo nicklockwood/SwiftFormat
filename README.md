@@ -48,9 +48,13 @@ Command-line tool
 
 **Usage:**
 
-If you followed the installation instructions above, you can now just type `swiftformat .` (that's a space and then a period after the command) in the terminal to format any swift files in the current directory.
+If you followed the installation instructions above, you can now just type
 
-**WARNING:** `swiftformat .` will overwrite any swift files it finds in the current directory, and any subfolders therein. If you run it from your home directory, it will probably reformat every swift file on your hard drive.
+    swiftformat .
+    
+(that's a space and then a period after the command) in the terminal to format any Swift files in the current directory.
+
+**WARNING:** `swiftformat .` will overwrite any Swift files it finds in the current directory, and any subfolders therein. If you run it from your home directory, it will probably reformat every Swift file on your hard drive.
 
 To use it safely, do the following:
 
@@ -58,13 +62,19 @@ To use it safely, do the following:
 
 2. Make sure that you have committed all your changes to that code safely in git (or whatever source control system you use. If you don't use source control, rethink your life choices).
 
-3. In Terminal, type `swiftformat "/path/to/your/code/"` (the path can either be absolute, or relative to the current directory. The `""` quotes around the path are optional, but if the path contains spaces then you either need to use quotes, or escape each space with `\`).
+3. (Optional) In Terminal, type `swiftformat --inferoptions "/path/to/your/code/"`. This will suggest a set of formatting options to use that match your existing project style (but you are free to ignore these and use the defaults, or your own settings if you prefer).
 
-4. Use your source control system to check the changes, and verify that no undesirable changes have been introduced (if they have, file a bug).
+	The path can point to either a single Swift file, or a directory of files. It can be either be absolute, or relative to the current directory. The `""` quotes around the path are optional, but if the path contains spaces then you either need to use quotes, or escape each space with `\`. 
 
-5. (Optional) commit the changes.
+4. In Terminal, type `swiftformat "/path/to/your/code/"`. The same rules apply as above with respect to path formatting, but you can enter multiple paths if you wish, separated by spaces.
 
-This *should* ensure that you avoid catastrophic data loss, but in the unlikely event that it wipes your hard drive, **please note that I accept no responsibility**.
+	If you used `--inferoptions` to generate a suggested set of options in step 3, you should copy and paste them into the command, either before or after the path(s) to your source files.
+
+5. Press enter to begin formatting. Once the formatting is complete, use your source control system to check the changes, and verify that no undesirable changes have been introduced. If they have, revert the changes, tweak the options and try again.
+
+6. (Optional) commit the changes.
+
+Following these instructions *should* ensure that you avoid catastrophic data loss, but in the unlikely event that it wipes your hard drive, **please note that I accept no responsibility**.
 
 If you prefer, you can also use unix pipes to include swiftformat as part of a command chain. For example, this is an alternative way to format a file:
 
@@ -358,9 +368,9 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. How can I modify the formatting rules?*
 
-> A. Most of the rules are hard-coded right now, with a handful of options exposed in the `FormatOptions` struct. If you look in `Rules.swift` you will find a list of all the rules that are applied by default. You can disable any rules you don't want and build a new version of the command line tool.
+> A. Many configuration options are exposed in the command line interface. You can either set these manually, or use the `--inferoptions` argument to automatically generate the configuration from your existing project.
 
-> With a bit more effort, you can also edit the existing rules or create new ones. If you think your changes might be generally useful, make a pull request.
+> If the options you want aren't exposed, the rules are implemented as functions in the file `Rules.swift`, so you can modify these and build a new version of the command line tool. If you think your changes might be generally useful, make a pull request.
 
 
 *Q. Why did you write yet another Swift formatting tool?*

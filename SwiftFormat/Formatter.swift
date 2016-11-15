@@ -165,24 +165,72 @@ public class Formatter {
         return nil
     }
 
+    /// Returns the index of the next token of the specified type
+    func indexOfNextToken(_ token: Token, fromIndex index: Int) -> Int? {
+        return indexOfNextToken(fromIndex: index) { $0 == token }
+    }
+
+    /// Returns the index of the next linebreak token
+    func indexOfNextLinebreakToken(fromIndex index: Int) -> Int? {
+        return indexOfNextToken(fromIndex: index) { $0.isLinebreak }
+    }
+
+    /// Returns the index of the next token that isn't whitespace, a comment or a linebreak
+    func indexOfNextNonWhitespaceOrCommentOrLinebreakToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return indexOfNextToken(fromIndex: index) { !$0.isWhitespaceOrCommentOrLinebreak }.flatMap {
+            matches(tokens[$0]) ? $0 : nil }
+    }
+
+    /// Returns the index of the next token that isn't whitespace or a comment
+    func indexOfNextNonWhitespaceOrCommentToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return indexOfNextToken(fromIndex: index) { !$0.isWhitespaceOrComment }.flatMap {
+            matches(tokens[$0]) ? $0 : nil }
+    }
+
+    /// Returns the index of the next token that isn't whitespace or a linebreak
+    func indexOfNextNonWhitespaceOrLinebreakToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return indexOfNextToken(fromIndex: index) { !$0.isWhitespaceOrLinebreak }.flatMap {
+            matches(tokens[$0]) ? $0 : nil }
+    }
+
+    /// Returns the index of the next token that isn't whitespace
+    func indexOfNextNonWhitespaceToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return indexOfNextToken(fromIndex: index) { !$0.isWhitespace }.flatMap {
+            matches(tokens[$0]) ? $0 : nil }
+    }
+
     /// Returns the next token at the current scope that matches the block
-    public func nextToken(fromIndex index: Int, matching: (Token) -> Bool) -> Token? {
+    public func nextToken(fromIndex index: Int, matching: (Token) -> Bool = { _ in true }) -> Token? {
         return indexOfNextToken(fromIndex: index, matching: matching).map { tokens[$0] }
     }
 
     /// Returns the next token that isn't whitespace, a comment or a linebreak
-    public func nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex index: Int) -> Token? {
-        return nextToken(fromIndex: index) { !$0.isWhitespaceOrCommentOrLinebreak }
+    public func nextNonWhitespaceOrCommentOrLinebreakToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return nextToken(fromIndex: index) { !$0.isWhitespaceOrCommentOrLinebreak }.flatMap {
+            matches($0) ? $0 : nil }
     }
 
     /// Returns the next token that isn't whitespace or a comment
-    public func nextNonWhitespaceOrCommentToken(fromIndex index: Int) -> Token? {
-        return nextToken(fromIndex: index) { !$0.isWhitespaceOrComment }
+    public func nextNonWhitespaceOrCommentToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return nextToken(fromIndex: index) { !$0.isWhitespaceOrComment }.flatMap { matches($0) ? $0 : nil }
+    }
+
+    /// Returns the next token that isn't whitespace or a linebreak
+    public func nextNonWhitespaceOrLinebreakToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return nextToken(fromIndex: index) { !$0.isWhitespaceOrLinebreak }.flatMap { matches($0) ? $0 : nil }
     }
 
     /// Returns the next token that isn't whitespace
-    public func nextNonWhitespaceToken(fromIndex index: Int) -> Token? {
-        return nextToken(fromIndex: index) { !$0.isWhitespace }
+    public func nextNonWhitespaceToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return nextToken(fromIndex: index) { !$0.isWhitespace }.flatMap { matches($0) ? $0 : nil }
     }
 
     /// Returns the index of the previous token at the current scope that matches the block
@@ -213,19 +261,72 @@ public class Formatter {
         return nil
     }
 
+    /// Returns the index of the previous token of the specified type
+    func indexOfPreviousToken(_ token: Token, fromIndex index: Int) -> Int? {
+        return indexOfPreviousToken(fromIndex: index) { $0 == token }
+    }
+
+    /// Returns the index of the previous linebreak token
+    func indexOfPreviousLinebreakToken(fromIndex index: Int) -> Int? {
+        return indexOfPreviousToken(fromIndex: index) { $0.isLinebreak }
+    }
+
+    /// Returns the index of the previous token that isn't whitespace, a comment or a linebreak
+    func indexOfPreviousNonWhitespaceOrCommentOrLinebreakToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return indexOfPreviousToken(fromIndex: index) { !$0.isWhitespaceOrCommentOrLinebreak }.flatMap {
+            matches(tokens[$0]) ? $0 : nil }
+    }
+
+    /// Returns the index of the previous token that isn't whitespace or a comment
+    func indexOfPreviousNonWhitespaceOrCommentToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return indexOfPreviousToken(fromIndex: index) { !$0.isWhitespaceOrComment }.flatMap {
+            matches(tokens[$0]) ? $0 : nil }
+    }
+
+    /// Returns the index of the previous token that isn't whitespace or a linebreak
+    func indexOfPreviousNonWhitespaceOrLinebreakToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return indexOfPreviousToken(fromIndex: index) { !$0.isWhitespaceOrLinebreak }.flatMap {
+            matches(tokens[$0]) ? $0 : nil }
+    }
+
+    /// Returns the index of the previous token that isn't whitespace
+    func indexOfPreviousNonWhitespaceToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return indexOfPreviousToken(fromIndex: index) { !$0.isWhitespace }.flatMap {
+            matches(tokens[$0]) ? $0 : nil }
+    }
+
     /// Returns the previous token at the current scope that matches the block
     func previousToken(fromIndex index: Int, matching: (Token) -> Bool) -> Token? {
         return indexOfPreviousToken(fromIndex: index, matching: matching).map { tokens[$0] }
     }
 
     /// Returns the previous token that isn't whitespace, a comment or a linebreak
-    func previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex index: Int) -> Token? {
-        return previousToken(fromIndex: index) { !$0.isWhitespaceOrCommentOrLinebreak }
+    func previousNonWhitespaceOrCommentOrLinebreakToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return previousToken(fromIndex: index) { !$0.isWhitespaceOrCommentOrLinebreak }.flatMap {
+            matches($0) ? $0 : nil }
+    }
+
+    /// Returns the previous token that isn't whitespace or a comment
+    func previousNonWhitespaceOrCommentToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return previousToken(fromIndex: index) { !$0.isWhitespaceOrComment }.flatMap { matches($0) ? $0 : nil }
+    }
+
+    /// Returns the previous token that isn't whitespace or a linebreak
+    func previousNonWhitespaceOrLinebreakToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return previousToken(fromIndex: index) { !$0.isWhitespaceOrLinebreak }.flatMap { matches($0) ? $0 : nil }
     }
 
     /// Returns the previous token that isn't whitespace
-    func previousNonWhitespaceToken(fromIndex index: Int) -> Token? {
-        return previousToken(fromIndex: index) { !$0.isWhitespace }
+    func previousNonWhitespaceToken(
+        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return previousToken(fromIndex: index) { !$0.isWhitespace }.flatMap { matches($0) ? $0 : nil }
     }
 
     /// Returns the starting token for the containing scope at the specified index

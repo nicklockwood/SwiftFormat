@@ -46,7 +46,7 @@ public func spaceAroundParens(_ formatter: Formatter) {
     func spaceAfter(_ keyword: String, index: Int) -> Bool {
         switch keyword {
         case "@autoclosure":
-            if let nextIndex = formatter.indexOfNextToken(fromIndex: index, matching: { !$0.isWhitespaceOrLinebreak }),
+            if let nextIndex = formatter.indexOfNextNonWhitespaceOrLinebreakToken(fromIndex: index),
                 formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: nextIndex) == .identifier("escaping") {
                 assert(formatter.tokens[nextIndex] == .startOfScope("("))
                 return false
@@ -68,21 +68,18 @@ public func spaceAroundParens(_ formatter: Formatter) {
     func isCaptureList(atIndex i: Int) -> Bool {
         assert(formatter.tokens[i] == .endOfScope("]"))
         guard formatter.previousToken(fromIndex: i + 1, matching: {
-            !$0.isWhitespaceOrCommentOrLinebreak && $0 != .endOfScope("]") }) == .startOfScope("{")
-        else { return false }
-        guard formatter.nextToken(fromIndex: i, matching: {
-            !$0.isWhitespaceOrCommentOrLinebreak && $0 != .startOfScope("(") }) == .keyword("in")
+            !$0.isWhitespaceOrCommentOrLinebreak && $0 != .endOfScope("]") }) == .startOfScope("{"),
+            formatter.nextToken(fromIndex: i, matching: {
+                !$0.isWhitespaceOrCommentOrLinebreak && $0 != .startOfScope("(") }) == .keyword("in")
         else { return false }
         return true
     }
 
     func isAttribute(atIndex i: Int) -> Bool {
         assert(formatter.tokens[i] == .endOfScope(")"))
-        guard let openParenIndex = formatter.indexOfPreviousToken(
-            fromIndex: i, matching: { $0 == .startOfScope("(") }) else { return false }
-        guard let prevToken = formatter.previousToken(fromIndex: openParenIndex, matching: {
-            !$0.isWhitespaceOrCommentOrLinebreak }), case .keyword(let string) = prevToken,
-            string.hasPrefix("@") else { return false }
+        guard let openParenIndex = formatter.indexOfPreviousToken(.startOfScope("("), fromIndex: i),
+            let prevToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: openParenIndex),
+            case .keyword(let string) = prevToken, string.hasPrefix("@") else { return false }
         return true
     }
 
@@ -400,50 +397,43 @@ public func spaceAroundOperators(_ formatter: Formatter) {
             if formatter.tokenAtIndex(i + 1)?.isWhitespace == true {
                 formatter.removeTokenAtIndex(i + 1)
             }
-            if let previousToken = formatter.tokenAtIndex(i - 1) {
-                let previousNonWhitespaceTokenIndex = i - (previousToken.isWhitespace ? 2 : 1)
-                if let previousNonWhitespaceToken = formatter.tokenAtIndex(previousNonWhitespaceTokenIndex) {
-                    let previousNonWhitespaceTokenIsSymbol: Bool = {
-                        if case .symbol = previousNonWhitespaceToken {
-                            return true
-                        }
-                        return false
-                    }()
-                    if !previousNonWhitespaceToken.isLinebreak && previousNonWhitespaceToken != .startOfScope("{") &&
-                        (!previousNonWhitespaceTokenIsSymbol ||
-                            (previousNonWhitespaceToken == .symbol("?") && scopeStack.last != .symbol("?")) ||
-                            (previousNonWhitespaceToken != .symbol("?") &&
-                                formatter.tokenAtIndex(previousNonWhitespaceTokenIndex - 1)?.isWhitespace == false &&
-                                isUnwrapOperatorSequence(previousNonWhitespaceToken))) &&
-                        !spaceAfter(previousNonWhitespaceToken, index: previousNonWhitespaceTokenIndex) {
-                        if previousToken.isWhitespace {
-                            formatter.removeTokenAtIndex(i - 1)
-                        }
-                    } else if !previousToken.isWhitespace {
-                        formatter.insertToken(.whitespace(" "), atIndex: i)
+            if let previousNonWhitespaceTokenIndex = formatter.indexOfPreviousNonWhitespaceToken(fromIndex: i) {
+                let previousNonWhitespaceToken = formatter.tokens[previousNonWhitespaceTokenIndex]
+                let previousNonWhitespaceTokenIsSymbol: Bool = {
+                    if case .symbol = previousNonWhitespaceToken {
+                        return true
                     }
+                    return false
+                }()
+                if !previousNonWhitespaceToken.isLinebreak && previousNonWhitespaceToken != .startOfScope("{") &&
+                    (!previousNonWhitespaceTokenIsSymbol ||
+                        (previousNonWhitespaceToken == .symbol("?") && scopeStack.last != .symbol("?")) ||
+                        (previousNonWhitespaceToken != .symbol("?") &&
+                            formatter.tokenAtIndex(previousNonWhitespaceTokenIndex - 1)?.isWhitespace == false &&
+                            isUnwrapOperatorSequence(previousNonWhitespaceToken))) &&
+                    !spaceAfter(previousNonWhitespaceToken, index: previousNonWhitespaceTokenIndex) {
+                    if previousNonWhitespaceTokenIndex < i - 1 {
+                        formatter.removeTokenAtIndex(i - 1)
+                    }
+                } else if previousNonWhitespaceTokenIndex == i - 1 {
+                    formatter.insertToken(.whitespace(" "), atIndex: i)
                 }
             }
         case .symbol("->"):
-            if let nextToken = formatter.tokenAtIndex(i + 1) {
-                if !nextToken.isWhitespaceOrLinebreak {
-                    formatter.insertToken(.whitespace(" "), atIndex: i + 1)
-                }
+            if (formatter.tokenAtIndex(i + 1).map { !$0.isWhitespaceOrLinebreak }) ?? false {
+                formatter.insertToken(.whitespace(" "), atIndex: i + 1)
             }
-            if let previousToken = formatter.tokenAtIndex(i - 1) {
-                if !previousToken.isWhitespaceOrLinebreak {
-                    formatter.insertToken(.whitespace(" "), atIndex: i)
-                }
+            if (formatter.tokenAtIndex(i - 1).map { !$0.isWhitespaceOrLinebreak }) ?? false {
+                formatter.insertToken(.whitespace(" "), atIndex: i)
             }
         case .symbol("..."), .symbol("..<"):
             break
         case .symbol:
-            if let previousToken = formatter.tokenAtIndex(i - 1), isLvalue(previousToken) {
-                if let nextToken = formatter.tokenAtIndex(i + 1), isRvalue(nextToken) {
-                    // Insert space before and after the infix token
-                    formatter.insertToken(.whitespace(" "), atIndex: i + 1)
-                    formatter.insertToken(.whitespace(" "), atIndex: i)
-                }
+            if formatter.tokenAtIndex(i - 1).map(isLvalue) ?? false,
+                formatter.tokenAtIndex(i + 1).map(isRvalue) ?? false {
+                // Insert space before and after the infix token
+                formatter.insertToken(.whitespace(" "), atIndex: i + 1)
+                formatter.insertToken(.whitespace(" "), atIndex: i)
             }
         case .startOfScope:
             scopeStack.append(token)
@@ -457,12 +447,17 @@ public func spaceAroundOperators(_ formatter: Formatter) {
 /// Add space around comments, except at the start or end of a line
 public func spaceAroundComments(_ formatter: Formatter) {
     formatter.forEachToken { i, token in
-        if token == .startOfScope("/*") || token == .startOfScope("//"), let prevToken = formatter.tokenAtIndex(i - 1),
-            !prevToken.isWhitespaceOrLinebreak {
-            formatter.insertToken(.whitespace(" "), atIndex: i)
-        } else if token == .endOfScope("*/"), let nextToken = formatter.tokenAtIndex(i + 1),
-            !nextToken.isWhitespaceOrLinebreak {
-            formatter.insertToken(.whitespace(" "), atIndex: i + 1)
+        switch token {
+        case .startOfScope("/*"), .startOfScope("//"):
+            if let prevToken = formatter.tokenAtIndex(i - 1), !prevToken.isWhitespaceOrLinebreak {
+                formatter.insertToken(.whitespace(" "), atIndex: i)
+            }
+        case .endOfScope("*/"):
+            if let nextToken = formatter.tokenAtIndex(i + 1), !nextToken.isWhitespaceOrLinebreak {
+                formatter.insertToken(.whitespace(" "), atIndex: i + 1)
+            }
+        default:
+            break
         }
     }
 }
@@ -507,23 +502,21 @@ public func spaceInsideComments(_ formatter: Formatter) {
 
 /// Adds or removes the space around range operators
 public func ranges(_ formatter: Formatter) {
-    formatter.forEachToken { i, token in
-        if token == .symbol("...") || token == .symbol("..<") {
-            if !formatter.options.spaceAroundRangeOperators {
-                if formatter.tokenAtIndex(i + 1)?.isWhitespace == true {
-                    formatter.removeTokenAtIndex(i + 1)
+    formatter.forEachToken({ [.symbol("..."), .symbol("..<")].contains($0) }) { i, token in
+        if !formatter.options.spaceAroundRangeOperators {
+            if formatter.tokenAtIndex(i + 1)?.isWhitespace == true {
+                formatter.removeTokenAtIndex(i + 1)
+            }
+            if formatter.tokenAtIndex(i - 1)?.isWhitespace == true {
+                formatter.removeTokenAtIndex(i - 1)
+            }
+        } else if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
+            if nextToken != .endOfScope(")") && nextToken != .symbol(",") {
+                if formatter.tokenAtIndex(i + 1)?.isWhitespaceOrLinebreak == false {
+                    formatter.insertToken(.whitespace(" "), atIndex: i + 1)
                 }
-                if formatter.tokenAtIndex(i - 1)?.isWhitespace == true {
-                    formatter.removeTokenAtIndex(i - 1)
-                }
-            } else if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
-                if nextToken != .endOfScope(")") && nextToken != .symbol(",") {
-                    if formatter.tokenAtIndex(i + 1)?.isWhitespaceOrLinebreak == false {
-                        formatter.insertToken(.whitespace(" "), atIndex: i + 1)
-                    }
-                    if formatter.tokenAtIndex(i - 1)?.isWhitespaceOrLinebreak == false {
-                        formatter.insertToken(.whitespace(" "), atIndex: i)
-                    }
+                if formatter.tokenAtIndex(i - 1)?.isWhitespaceOrLinebreak == false {
+                    formatter.insertToken(.whitespace(" "), atIndex: i)
                 }
             }
         }
@@ -598,12 +591,10 @@ public func consecutiveBlankLines(_ formatter: Formatter) {
 public func blankLinesAtEndOfScope(_ formatter: Formatter) {
     guard formatter.options.removeBlankLines else { return }
     formatter.forEachToken { i, token in
-        guard [.endOfScope("}"), .endOfScope(")"), .endOfScope("]"), .endOfScope(">")].contains(token)
-        else { return }
-        if let nextToken = formatter.nextNonWhitespaceOrCommentToken(fromIndex: i) {
+        guard [.endOfScope("}"), .endOfScope(")"), .endOfScope("]"), .endOfScope(">")].contains(token),
             // If there is extra code after the closing scope on the same line, ignore it
-            guard nextToken.isLinebreak else { return }
-        }
+            (formatter.nextNonWhitespaceOrCommentToken(fromIndex: i).map { $0.isLinebreak }) ?? true
+        else { return }
         // Find previous non-whitespace token
         var index = i - 1
         var indexOfFirstLineBreak: Int?
@@ -648,40 +639,36 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
             isSpaceableScopeType = false
         case .endOfScope("}"):
             if spaceableScopeStack.count > 1 && spaceableScopeStack[spaceableScopeStack.count - 2] {
-                guard let openingBraceIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: { $0 == .startOfScope("{") }),
-                    let previousLinebreakIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: { $0.isLinebreak }),
+                guard let openingBraceIndex = formatter.indexOfPreviousToken(.startOfScope("{"), fromIndex: i),
+                    let previousLinebreakIndex = formatter.indexOfPreviousLinebreakToken(fromIndex: i),
                     previousLinebreakIndex > openingBraceIndex else {
                     // Inline braces
                     break
                 }
                 var i = i
-                if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespace }),
-                    formatter.tokenAtIndex(nextTokenIndex) == .startOfScope("("),
-                    let closingParenIndex = formatter.indexOfNextToken(fromIndex: nextTokenIndex, matching: {
-                        $0 == .endOfScope(")") }) {
+                if let nextTokenIndex = formatter.indexOfNextNonWhitespaceToken(fromIndex: i, if: {
+                    $0 == .startOfScope("(") }), let closingParenIndex = formatter.indexOfNextToken(
+                    .endOfScope(")"), fromIndex: nextTokenIndex) {
                     i = closingParenIndex
                 }
-                if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
-                    !$0.isWhitespaceOrLinebreak }), let nextToken = formatter.tokenAtIndex(nextTokenIndex) {
-                    switch nextToken {
+                if let nextTokenIndex = formatter.indexOfNextNonWhitespaceOrLinebreakToken(fromIndex: i) {
+                    switch formatter.tokens[nextTokenIndex] {
                     case .error, .endOfScope,
                          .symbol("."), .symbol(","), .symbol(":"),
                          .keyword("else"), .keyword("catch"):
                         break
                     case .keyword("while"):
-                        if let previousBraceIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
-                            $0 == .startOfScope("{") }),
+                        if let previousBraceIndex = formatter.indexOfPreviousToken(.startOfScope("{"), fromIndex: i),
                             formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: previousBraceIndex)
                             != .keyword("repeat") {
                             fallthrough
                         }
                         break
                     default:
-                        if let firstLinebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
+                        if let firstLinebreakIndex = formatter.indexOfNextLinebreakToken(fromIndex: i),
                             firstLinebreakIndex < nextTokenIndex {
-                            if let secondLinebreakIndex = formatter.indexOfNextToken(
-                                fromIndex: firstLinebreakIndex, matching: { $0.isLinebreak }),
-                                secondLinebreakIndex < nextTokenIndex {
+                            if let secondLinebreakIndex = formatter.indexOfNextLinebreakToken(
+                                fromIndex: firstLinebreakIndex), secondLinebreakIndex < nextTokenIndex {
                                 // Already has a blank line after
                             } else {
                                 // Insert linebreak
@@ -702,8 +689,8 @@ public func blankLinesBetweenScopes(_ formatter: Formatter) {
 /// http://stackoverflow.com/questions/2287967/why-is-it-recommended-to-have-empty-line-in-the-end-of-file
 public func linebreakAtEndOfFile(_ formatter: Formatter) {
     guard !formatter.options.fragment else { return }
-    if let lastToken = formatter.previousToken(fromIndex: formatter.tokens.count, matching: {
-        !$0.isWhitespace && !$0.isError }), !lastToken.isLinebreak {
+    if (formatter.previousNonWhitespaceToken(fromIndex: formatter.tokens.count).map {
+        !$0.isLinebreak && !$0.isError }) ?? false {
         formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: formatter.tokens.count)
     }
 }
@@ -861,7 +848,7 @@ public func indent(_ formatter: Formatter) {
     }
 
     if formatter.options.fragment,
-        let firstIndex = formatter.indexOfNextToken(fromIndex: -1, matching: { !$0.isWhitespaceOrLinebreak }),
+        let firstIndex = formatter.indexOfNextNonWhitespaceOrLinebreakToken(fromIndex: -1),
         let indentToken = formatter.tokenAtIndex(firstIndex - 1), case .whitespace(let string) = indentToken {
         indentStack[0] = string
     } else {
@@ -917,8 +904,8 @@ public func indent(_ formatter: Formatter) {
                     i += insertWhitespace("", atIndex: formatter.startOfLine(atIndex: i))
                 }
             case "[", "(":
-                if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.isLinebreak == false {
-                    let nextIndex: Int! = formatter.indexOfNextToken(fromIndex: i) { !$0.isWhitespace }
+                if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.isLinebreak == false,
+                    let nextIndex = formatter.indexOfNextNonWhitespaceToken(fromIndex: i) {
                     let start = formatter.startOfLine(atIndex: i)
                     // align indent with previous value
                     indent = ""
@@ -1020,7 +1007,7 @@ public func indent(_ formatter: Formatter) {
             // Indent each new line
             if token.isLinebreak {
                 // Detect linewrap
-                let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i) { !$0.isWhitespaceOrCommentOrLinebreak }
+                let nextTokenIndex = formatter.indexOfNextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)
                 let linewrapped = !tokenIsEndOfStatement(lastNonWhitespaceOrLinebreakIndex) ||
                     !(nextTokenIndex == nil || tokenIsStartOfStatement(nextTokenIndex!))
                 // Determine current indent
@@ -1095,12 +1082,12 @@ public func indent(_ formatter: Formatter) {
 public func braces(_ formatter: Formatter) {
     formatter.forEachToken(.startOfScope("{")) { i, token in
         // Check this isn't an inline block
-        guard let nextLinebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
-            let closingBraceIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope("}") }),
+        guard let nextLinebreakIndex = formatter.indexOfNextLinebreakToken(fromIndex: i),
+            let closingBraceIndex = formatter.indexOfNextToken(.endOfScope("}"), fromIndex: i),
             nextLinebreakIndex < closingBraceIndex else { return }
         if formatter.options.allmanBraces {
             // Implement Allman-style braces, where opening brace appears on the next line
-            if let previousTokenIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: { !$0.isWhitespace }),
+            if let previousTokenIndex = formatter.indexOfPreviousNonWhitespaceToken(fromIndex: i),
                 let previousToken = formatter.tokenAtIndex(previousTokenIndex) {
                 switch previousToken {
                 case .identifier, .keyword, .endOfScope:
@@ -1155,8 +1142,9 @@ public func elseOnSameLine(_ formatter: Formatter) {
             closingBraceIndex = i
         case .keyword("while"):
             if let closingBraceIndex = closingBraceIndex,
-                let previousBraceIndex = formatter.indexOfPreviousToken(fromIndex: closingBraceIndex, matching: {
-                    $0 == .startOfScope("{") }), formatter.previousNonWhitespaceOrCommentOrLinebreakToken(
+                let previousBraceIndex = formatter.indexOfPreviousToken(
+                    .startOfScope("{"), fromIndex: closingBraceIndex),
+                formatter.previousNonWhitespaceOrCommentOrLinebreakToken(
                     fromIndex: previousBraceIndex) == .keyword("repeat") {
                 fallthrough
             }
@@ -1165,8 +1153,8 @@ public func elseOnSameLine(_ formatter: Formatter) {
             if let closingBraceIndex = closingBraceIndex {
                 // Only applies to dangling braces
                 if formatter.previousNonWhitespaceToken(fromIndex: closingBraceIndex)?.isLinebreak == true {
-                    if let prevLinebreakIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
-                        $0.isLinebreak }), closingBraceIndex < prevLinebreakIndex {
+                    if let prevLinebreakIndex = formatter.indexOfPreviousLinebreakToken(fromIndex: i),
+                        closingBraceIndex < prevLinebreakIndex {
                         if !formatter.options.allmanBraces {
                             formatter.replaceTokensInRange(closingBraceIndex + 1 ..< i, with: [.whitespace(" ")])
                         }
@@ -1195,12 +1183,11 @@ public func trailingCommas(_ formatter: Formatter) {
     // This should't matter in practice, as nobody splits subscripts onto multiple
     // lines, but ideally we'd check for this just in case
     formatter.forEachToken(.endOfScope("]")) { i, token in
-        if let linebreakIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
-            return !$0.isWhitespaceOrComment }), formatter.tokens[linebreakIndex].isLinebreak {
-            if let previousTokenIndex = formatter.indexOfPreviousToken(fromIndex: linebreakIndex + 1, matching: {
-                return !$0.isWhitespaceOrCommentOrLinebreak
-            }), let token = formatter.tokenAtIndex(previousTokenIndex) {
-                switch token {
+        if let linebreakIndex = formatter.indexOfPreviousNonWhitespaceOrCommentToken(
+            fromIndex: i, if: { $0.isLinebreak }) {
+            if let previousTokenIndex = formatter.indexOfPreviousNonWhitespaceOrCommentOrLinebreakToken(
+                fromIndex: linebreakIndex + 1) {
+                switch formatter.tokens[previousTokenIndex] {
                 case .startOfScope("["), .symbol(":"):
                     break // do nothing
                 case .symbol(","):
@@ -1246,11 +1233,11 @@ public func todos(_ formatter: Formatter) {
 public func semicolons(_ formatter: Formatter) {
     formatter.forEachToken(.symbol(";")) { i, token in
         if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) {
-            let lastToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)
-            if lastToken == nil || nextToken == .endOfScope("}") {
+            let previousToken = formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i)
+            if previousToken == nil || nextToken == .endOfScope("}") {
                 // Safe to remove
                 formatter.removeTokenAtIndex(i)
-            } else if lastToken == .keyword("return") || formatter.scopeAtIndex(i) == .startOfScope("(") {
+            } else if previousToken == .keyword("return") || formatter.scopeAtIndex(i) == .startOfScope("(") {
                 // Not safe to remove or replace
             } else if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.isLinebreak == true {
                 // Safe to remove
@@ -1357,21 +1344,18 @@ public func specifiers(_ formatter: Formatter) {
 /// Remove redundant parens around the arguments for loops, if statements, closures, etc.
 public func redundantParens(_ formatter: Formatter) {
     formatter.forEachToken(.startOfScope("(")) { i, token in
-        let previousIndex = formatter.indexOfPreviousToken(fromIndex: i) {
-            !$0.isWhitespaceOrCommentOrLinebreak } ?? -1
+        let previousIndex = formatter.indexOfPreviousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) ?? -1
         switch formatter.tokenAtIndex(previousIndex) ?? .whitespace("") {
         case .endOfScope("]"):
-            if let startIndex = formatter.indexOfPreviousToken(fromIndex: previousIndex, matching: {
-                $0 == .startOfScope("[") }), formatter.previousNonWhitespaceOrCommentOrLinebreakToken(
-                fromIndex: startIndex) == .startOfScope("{") {
+            if let startIndex = formatter.indexOfPreviousToken(.startOfScope("["), fromIndex: previousIndex),
+                formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: startIndex) == .startOfScope("{") {
                 fallthrough
             }
         case .startOfScope("{"):
-            if let closingIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope(")") }),
+            if let closingIndex = formatter.indexOfNextToken(.endOfScope(")"), fromIndex: i),
                 formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex) == .keyword("in"),
-                formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespaceOrCommentOrLinebreak })
-                != closingIndex {
-                if let labelIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .symbol(":") }),
+                formatter.indexOfNextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) != closingIndex {
+                if let labelIndex = formatter.indexOfNextToken(.symbol(":"), fromIndex: i),
                     labelIndex < closingIndex {
                     break
                 }
@@ -1382,7 +1366,7 @@ public func redundantParens(_ formatter: Formatter) {
             break
         case .keyword(let string):
             if ["if", "while", "switch", "for", "in", "where", "guard"].contains(string),
-                let closingIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .endOfScope(")") }),
+                let closingIndex = formatter.indexOfNextToken(.endOfScope(")"), fromIndex: i),
                 formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex)
                 != .endOfScope("}"),
                 let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex) {
@@ -1391,7 +1375,7 @@ public func redundantParens(_ formatter: Formatter) {
                     !(string == "guard" && nextToken == .keyword("else")) {
                     fallthrough
                 }
-                if let commaIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0 == .symbol(",") }),
+                if let commaIndex = formatter.indexOfNextToken(.symbol(","), fromIndex: i),
                     commaIndex < closingIndex {
                     // Might be a tuple, so we won't remove the parens
                     // TODO: improve the logic here so we don't misidentify function calls as tuples
@@ -1402,9 +1386,9 @@ public func redundantParens(_ formatter: Formatter) {
                 return
             }
         default:
-            if let nextTokenIndex = formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespace }),
-                let closingIndex = formatter.indexOfNextToken(fromIndex: nextTokenIndex, matching: {
-                    !$0.isWhitespace }), formatter.tokenAtIndex(closingIndex) == .endOfScope(")") {
+            if let nextTokenIndex = formatter.indexOfNextNonWhitespaceToken(fromIndex: i),
+                let closingIndex = formatter.indexOfNextNonWhitespaceToken(fromIndex: nextTokenIndex, if: {
+                    $0 == .endOfScope(")") }) {
                 if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closingIndex),
                     [.symbol("->"), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
                     return
@@ -1425,14 +1409,12 @@ public func redundantParens(_ formatter: Formatter) {
 /// Remove redundant `get {}` clause inside read-only computed property
 public func redundantGet(_ formatter: Formatter) {
     formatter.forEachToken(.identifier("get")) { i, token in
-        if let previousIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
-            !$0.isWhitespaceOrCommentOrLinebreak }), formatter.tokens[previousIndex] == .startOfScope("{"),
-            let openIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
-                !$0.isWhitespaceOrCommentOrLinebreak }), formatter.tokens[openIndex] == .startOfScope("{"),
-            let closeIndex = formatter.indexOfNextToken(fromIndex: openIndex, matching: {
-                $0 == .endOfScope("}") }), let nextIndex = formatter.indexOfNextToken(
-                fromIndex: closeIndex, matching: { !$0.isWhitespaceOrCommentOrLinebreak }),
-            formatter.tokens[nextIndex] == .endOfScope("}") {
+        if let previousIndex = formatter.indexOfPreviousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i, if: {
+            $0 == .startOfScope("{") }), let openIndex = formatter.indexOfNextNonWhitespaceOrCommentOrLinebreakToken(
+            fromIndex: i, if: { $0 == .startOfScope("{") }), let closeIndex = formatter.indexOfNextToken(
+            .endOfScope("}"), fromIndex: openIndex),
+            let nextIndex = formatter.indexOfNextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: closeIndex, if: {
+                $0 == .endOfScope("}") }) {
             formatter.removeTokensInRange(closeIndex ..< nextIndex)
             formatter.removeTokensInRange(previousIndex + 1 ..< openIndex + 1)
             // TODO: fix-up indenting of lines in between removed braces
@@ -1443,10 +1425,9 @@ public func redundantGet(_ formatter: Formatter) {
 /// Normalize the use of void in closure arguments and return values
 public func void(_ formatter: Formatter) {
     formatter.forEachToken(.identifier("Void")) { i, token in
-        if let prevIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: { !$0.isWhitespaceOrLinebreak }),
-            formatter.tokenAtIndex(prevIndex) == .startOfScope("("),
-            let nextIndex = formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespaceOrLinebreak }),
-            formatter.tokenAtIndex(nextIndex) == .endOfScope(")") {
+        if let prevIndex = formatter.indexOfPreviousNonWhitespaceOrLinebreakToken(fromIndex: i, if: {
+            $0 == .startOfScope("(") }), let nextIndex = formatter.indexOfNextNonWhitespaceOrLinebreakToken(
+            fromIndex: i, if: { $0 == .endOfScope(")") }) {
             if let nextToken = formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: nextIndex),
                 [.symbol("->"), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
                 // Remove Void
@@ -1472,11 +1453,10 @@ public func void(_ formatter: Formatter) {
     }
     if formatter.options.useVoid {
         formatter.forEachToken(.startOfScope("(")) { i, token in
-            if let prevIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: { !$0.isWhitespaceOrCommentOrLinebreak }),
-                let prevToken = formatter.tokenAtIndex(prevIndex), prevToken == .symbol("->"),
-                let nextIndex = formatter.indexOfNextToken(fromIndex: i, matching: { !$0.isWhitespaceOrLinebreak }),
-                let nextToken = formatter.tokenAtIndex(nextIndex), nextToken == .endOfScope(")"),
-                formatter.nextNonWhitespaceOrCommentOrLinebreakToken(fromIndex: nextIndex) != .symbol("->") {
+            if formatter.previousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) == .symbol("->"),
+                let nextIndex = formatter.indexOfNextNonWhitespaceOrLinebreakToken(fromIndex: i, if: {
+                    $0 == .endOfScope(")") }), formatter.nextNonWhitespaceOrCommentOrLinebreakToken(
+                    fromIndex: nextIndex) != .symbol("->") {
                 // Replace with Void
                 formatter.replaceTokensInRange(i ..< nextIndex + 1, with: [.identifier("Void")])
             }
@@ -1487,11 +1467,11 @@ public func void(_ formatter: Formatter) {
 /// Strip header comments from the file
 public func stripHeader(_ formatter: Formatter) {
     guard formatter.options.stripHeader && !formatter.options.fragment else { return }
-    if let startIndex = formatter.indexOfNextToken(fromIndex: -1, matching: { !$0.isWhitespaceOrLinebreak }) {
+    if let startIndex = formatter.indexOfNextNonWhitespaceOrLinebreakToken(fromIndex: -1) {
         switch formatter.tokens[startIndex] {
         case .startOfScope("//"):
             var lastIndex = startIndex
-            while let index = formatter.indexOfNextToken(fromIndex: lastIndex, matching: { $0.isLinebreak }) {
+            while let index = formatter.indexOfNextLinebreakToken(fromIndex: lastIndex) {
                 if let nextToken = formatter.tokenAtIndex(index + 1), nextToken != .startOfScope("//") {
                     switch nextToken {
                     case .linebreak:

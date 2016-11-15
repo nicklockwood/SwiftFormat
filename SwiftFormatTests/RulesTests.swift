@@ -2654,6 +2654,29 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    // MARK: redundantGet
+
+    func testRemoveSingleLineIsolatedGet() {
+        let input = "var foo: Int { get { return 5 } }"
+        let output = "var foo: Int { return 5 }"
+        XCTAssertEqual(try! format(input, rules: [redundantGet]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testRemoveMultilineIsolatedGet() {
+        let input = "var foo: Int {\n    get {\n        return 5\n    }\n}"
+        let output = "var foo: Int {\n    return 5\n}"
+        XCTAssertEqual(try! format(input, rules: [redundantGet, indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoRemoveMultilineGetSet() {
+        let input = "var foo: Int {\n    get { return 5 }\n    set { foo = newValue }\n}"
+        let output = "var foo: Int {\n    get { return 5 }\n    set { foo = newValue }\n}"
+        XCTAssertEqual(try! format(input, rules: [redundantGet]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: stripHeader
 
     func testStripHeader() {

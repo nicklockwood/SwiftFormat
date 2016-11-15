@@ -1422,6 +1422,24 @@ public func redundantParens(_ formatter: Formatter) {
     }
 }
 
+/// Remove redundant `get {}` clause inside read-only computed property
+public func redundantGet(_ formatter: Formatter) {
+    formatter.forEachToken(.identifier("get")) { i, token in
+        if let previousIndex = formatter.indexOfPreviousToken(fromIndex: i, matching: {
+            !$0.isWhitespaceOrCommentOrLinebreak }), formatter.tokens[previousIndex] == .startOfScope("{"),
+            let openIndex = formatter.indexOfNextToken(fromIndex: i, matching: {
+                !$0.isWhitespaceOrCommentOrLinebreak }), formatter.tokens[openIndex] == .startOfScope("{"),
+            let closeIndex = formatter.indexOfNextToken(fromIndex: openIndex, matching: {
+                $0 == .endOfScope("}") }), let nextIndex = formatter.indexOfNextToken(
+                fromIndex: closeIndex, matching: { !$0.isWhitespaceOrCommentOrLinebreak }),
+            formatter.tokens[nextIndex] == .endOfScope("}") {
+            formatter.removeTokensInRange(closeIndex ..< nextIndex)
+            formatter.removeTokensInRange(previousIndex + 1 ..< openIndex + 1)
+            // TODO: fix-up indenting of lines in between removed braces
+        }
+    }
+}
+
 /// Normalize the use of void in closure arguments and return values
 public func void(_ formatter: Formatter) {
     formatter.forEachToken(.identifier("Void")) { i, token in
@@ -1501,6 +1519,7 @@ public let defaultRules: [FormatRule] = [
     semicolons,
     specifiers,
     redundantParens,
+    redundantGet,
     void,
     braces,
     ranges,

@@ -329,6 +329,14 @@ Here are all the rules that SwiftFormat currently applies:
 	
 	while (i < bar.count) {}    -->    while i < bar.count {}
 	
+*redundantGet* - removes unnecessary `get { }`clause from inside read-only computed properties:
+
+	var foo: Int {               var foo: Int {
+	    get {                        return 5
+	        return 5     -->     }
+	    }
+	}
+	
 *stripHeaders* - removes the comment header blocks that Xcode adds to the top of each file (off by default).
 
 

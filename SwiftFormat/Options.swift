@@ -105,6 +105,36 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
     let formatter = Formatter(tokens)
     var options = FormatOptions()
 
+    options.indent = {
+        var indents = [(indent: String, count: Int)]()
+        func increment(_ indent: String) {
+            for (i, element) in indents.enumerated() {
+                if element.indent == indent {
+                    indents[i] = (indent, element.count + 1)
+                    return
+                }
+            }
+            indents.append((indent, 0))
+        }
+        formatter.forEachToken({ $0.isLinebreak }) { i, token in
+            let start = formatter.startOfLine(atIndex: i)
+            if case .whitespace(let string) = formatter.tokens[start] {
+                if string.hasPrefix("\t") {
+                    increment("\t")
+                } else {
+                    let length = string.characters.count
+                    for i in [8, 4, 3, 2, 1] {
+                        if length % i == 0 {
+                            increment(String(repeating: " ", count: i))
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        return indents.sorted(by: { $0.count > $1.count }).first.map({ $0.indent }) ?? options.indent
+    }()
+
     options.linebreak = {
         var cr: Int = 0, lf: Int = 0, crlf: Int = 0
         formatter.forEachToken { i, token in

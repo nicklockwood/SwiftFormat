@@ -11,6 +11,12 @@ import XCTest
 
 class OptionsTests: XCTestCase {
 
+    func testInferIndentLevel() {
+        let input = "\t\nclass Foo {\n   func bar() {\n      //baz\n}\n}"
+        let options = inferOptions(tokenize(input))
+        XCTAssertEqual(options.indent, "   ")
+    }
+
     func testInferLinebreaks() {
         let input = "foo\nbar\r\nbaz\rquux\r\n"
         let output = "\r\n"

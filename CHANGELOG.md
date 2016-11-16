@@ -4,6 +4,7 @@
 
 - Added `--inferoptions` command line argument for auto-configuring format options from existing source
 - Added `--ifdef` command line argument for controlling how `#if`...`#endif` clauses are indented
+- Added `--hexliterals` command line argument for specifying the case to use for hex literals
 - Added `redundantGet` rule to remove unneeded `get {}` clause in read-only computed properties
 - `redundantParens` now removes unneeded parens from expressions and closure arguments
 

@@ -1469,6 +1469,21 @@ public func void(_ formatter: Formatter) {
     }
 }
 
+/// Ensure hex literals are all upper- or lower-cased
+public func hexLiterals(_ formatter: Formatter) {
+    let prefix = "0x"
+    formatter.forEachToken { i, token in
+        if case .number(let string) = token, string.hasPrefix(prefix) {
+            if formatter.options.uppercaseHex {
+                formatter.replaceTokenAtIndex(i, with: .number(prefix +
+                        string.substring(from: prefix.endIndex).uppercased()))
+            } else {
+                formatter.replaceTokenAtIndex(i, with: .number(string.lowercased()))
+            }
+        }
+    }
+}
+
 /// Strip header comments from the file
 public func stripHeader(_ formatter: Formatter) {
     guard formatter.options.stripHeader && !formatter.options.fragment else { return }
@@ -1506,6 +1521,7 @@ public let defaultRules: [FormatRule] = [
     redundantParens,
     redundantGet,
     void,
+    hexLiterals,
     braces,
     ranges,
     trailingCommas,

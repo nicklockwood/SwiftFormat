@@ -251,7 +251,7 @@ public enum Token: Equatable {
 extension UnicodeScalar {
     var isDigit: Bool { return isdigit(Int32(value)) > 0 }
     var isHexDigit: Bool { return isxdigit(Int32(value)) > 0 }
-    var isWhitespace: Bool { return self == " " || self == "\t" || value == 0x0b }
+    var isWhitespace: Bool { return self == " " || self == "\t" || value == 0x0B }
 }
 
 private extension String.UnicodeScalarView {

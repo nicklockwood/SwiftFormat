@@ -56,6 +56,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var allmanBraces: Bool
     public var stripHeader: Bool
     public var ifdefIndentMode: IndentMode
+    public var uppercaseHex: Bool
     public var experimentalRules: Bool
     public var fragment: Bool
 
@@ -72,6 +73,7 @@ public struct FormatOptions: CustomStringConvertible {
                 allmanBraces: Bool = false,
                 stripHeader: Bool = false,
                 ifdefIndentMode: IndentMode = .indent,
+                uppercaseHex: Bool = true,
                 experimentalRules: Bool = false,
                 fragment: Bool = false) {
 
@@ -88,6 +90,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.allmanBraces = allmanBraces
         self.stripHeader = stripHeader
         self.ifdefIndentMode = ifdefIndentMode
+        self.uppercaseHex = uppercaseHex
         self.experimentalRules = experimentalRules
         self.fragment = fragment
     }
@@ -402,6 +405,24 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
         } else {
             return outdented > indented ? .outdent : .indent
         }
+    }()
+
+    options.uppercaseHex = {
+        let prefix = "0x"
+        var uppercase = 0, lowercase = 0
+        formatter.forEachToken { i, token in
+            if case .number(let string) = token, string.hasPrefix(prefix) {
+                if string == string.lowercased() {
+                    lowercase += 1
+                } else {
+                    let value = string.substring(from: prefix.endIndex)
+                    if value == value.uppercased() {
+                        uppercase += 1
+                    }
+                }
+            }
+        }
+        return uppercase > lowercase
     }()
 
     return options

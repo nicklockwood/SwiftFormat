@@ -2691,6 +2691,30 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    // MARK: hexLiterals
+
+    func testLowercaseLiteralConvertedToUpper() {
+        let input = "let foo = 0xff45abcd"
+        let output = "let foo = 0xFF45ABCD"
+        XCTAssertEqual(try! format(input, rules: [hexLiterals]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testMixedCaseLiteralConvertedToUpper() {
+        let input = "let foo = 0xfF45aBcD"
+        let output = "let foo = 0xFF45ABCD"
+        XCTAssertEqual(try! format(input, rules: [hexLiterals]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testUppercaseLiteralConvertedToLower() {
+        let input = "let foo = 0xFF45ABCD"
+        let output = "let foo = 0xff45abcd"
+        let options = FormatOptions(uppercaseHex: false)
+        XCTAssertEqual(try! format(input, rules: [hexLiterals], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
     // MARK: stripHeader
 
     func testStripHeader() {

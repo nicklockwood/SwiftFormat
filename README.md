@@ -347,6 +347,10 @@ Here are all the rules that SwiftFormat currently applies:
 	    }
 	}
 	
+*hexLiterals* - converts all hex literals to upper- or lower-case, depending on settings:
+
+    let color = 0xFF77A5    -->   let color = 0xff77a5
+	
 *stripHeaders* - removes the comment header blocks that Xcode adds to the top of each file (off by default).
 
 

@@ -1688,6 +1688,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testIndentWrappedFunctionArgument() {
+        let input = "foobar(baz: a &&\nb)"
+        let output = "foobar(baz: a &&\n    b)"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testIndentWrappedFunctionClosureArgument() {
+        let input = "foobar(baz: { a &&\nb })"
+        let output = "foobar(baz: { a &&\n        b })"
+        XCTAssertEqual(try! format(input, rules: [indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: indent comments
 
     func testCommentIndenting() {

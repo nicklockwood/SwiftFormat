@@ -69,8 +69,8 @@ public func spaceAroundParens(_ formatter: Formatter) {
         assert(formatter.tokens[i] == .endOfScope("]"))
         guard formatter.previousToken(fromIndex: i + 1, matching: {
             !$0.isWhitespaceOrCommentOrLinebreak && $0 != .endOfScope("]") }) == .startOfScope("{"),
-            formatter.nextToken(fromIndex: i, matching: {
-                !$0.isWhitespaceOrCommentOrLinebreak && $0 != .startOfScope("(") }) == .keyword("in")
+            formatter.nextToken(fromIndex: i, matching: { !$0.isWhitespaceOrCommentOrLinebreak &&
+                    $0 != .startOfScope("(") }) == .keyword("in")
         else { return false }
         return true
     }
@@ -904,8 +904,13 @@ public func indent(_ formatter: Formatter) {
                     i += insertWhitespace("", atIndex: formatter.startOfLine(atIndex: i))
                 }
             case "[", "(":
-                if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.isLinebreak == false,
-                    let nextIndex = formatter.indexOfNextNonWhitespaceToken(fromIndex: i) {
+                if let linebreakIndex = formatter.indexOfNextLinebreakToken(fromIndex: i),
+                    let nextIndex = formatter.indexOfNextNonWhitespaceToken(fromIndex: i),
+                    nextIndex != linebreakIndex {
+                    if formatter.previousNonWhitespaceOrCommentToken(fromIndex: linebreakIndex) != .symbol(",") &&
+                        formatter.nextNonWhitespaceOrCommentToken(fromIndex: linebreakIndex) != .symbol(",") {
+                        fallthrough
+                    }
                     let start = formatter.startOfLine(atIndex: i)
                     // align indent with previous value
                     indent = ""

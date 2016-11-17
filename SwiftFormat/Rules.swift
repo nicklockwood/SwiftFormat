@@ -1348,6 +1348,30 @@ public func specifiers(_ formatter: Formatter) {
 
 /// Remove redundant parens around the arguments for loops, if statements, closures, etc.
 public func redundantParens(_ formatter: Formatter) {
+    func requiresSpacing(atIndex index: Int) -> Bool {
+        if let token = formatter.tokenAtIndex(index) {
+            switch token {
+            case .identifier, .keyword, .number:
+                return true
+            default:
+                return false
+            }
+        }
+        return false
+    }
+
+    func removeParen(atIndex index: Int) {
+        if formatter.tokenAtIndex(index - 1)?.isWhitespace == true &&
+            formatter.tokenAtIndex(index + 1)?.isWhitespace == true {
+            // Need to remove one
+            formatter.removeTokenAtIndex(index + 1)
+        } else if requiresSpacing(atIndex: index - 1) && requiresSpacing(atIndex: index + 1) {
+            // Need to insert one
+            formatter.insertToken(.whitespace(" "), atIndex: index + 1)
+        }
+        formatter.removeTokenAtIndex(index)
+    }
+
     formatter.forEachToken(.startOfScope("(")) { i, token in
         let previousIndex = formatter.indexOfPreviousNonWhitespaceOrCommentOrLinebreakToken(fromIndex: i) ?? -1
         switch formatter.tokenAtIndex(previousIndex) ?? .whitespace("") {
@@ -1364,8 +1388,8 @@ public func redundantParens(_ formatter: Formatter) {
                     labelIndex < closingIndex {
                     break
                 }
-                formatter.removeTokenAtIndex(closingIndex)
-                formatter.removeTokenAtIndex(i)
+                removeParen(atIndex: closingIndex)
+                removeParen(atIndex: i)
             }
         case .identifier, .stringBody, .endOfScope, .symbol("?"), .symbol("!"):
             break
@@ -1386,8 +1410,8 @@ public func redundantParens(_ formatter: Formatter) {
                     // TODO: improve the logic here so we don't misidentify function calls as tuples
                     break
                 }
-                formatter.removeTokenAtIndex(closingIndex)
-                formatter.removeTokenAtIndex(i)
+                removeParen(atIndex: closingIndex)
+                removeParen(atIndex: i)
                 return
             }
         default:
@@ -1400,8 +1424,8 @@ public func redundantParens(_ formatter: Formatter) {
                 }
                 switch formatter.tokens[nextTokenIndex] {
                 case .identifier, .number:
-                    formatter.removeTokenAtIndex(closingIndex)
-                    formatter.removeTokenAtIndex(i)
+                    removeParen(atIndex: closingIndex)
+                    removeParen(atIndex: i)
                     return
                 default:
                     break

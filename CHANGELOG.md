@@ -1,11 +1,12 @@
 # Change Log
 
-## [0.18](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.18) (2016-11-??)
+## [0.18](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.18) (2016-11-17)
 
 - Added `--inferoptions` command line argument for auto-configuring format options from existing source
 - Added `--ifdef` command line argument for controlling how `#if`...`#endif` clauses are indented
 - Added `--hexliterals` command line argument for specifying the case to use for hex literals
 - Added `redundantGet` rule to remove unneeded `get {}` clause in read-only computed properties
+- Fixed bug where `redundantParens` rule merged identifiers on either side of a removed paren
 - `redundantParens` now removes unneeded parens from expressions and closure arguments
 
 ## [0.17.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.17.2) (2016-11-11)

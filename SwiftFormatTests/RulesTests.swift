@@ -2668,6 +2668,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
+    func testWhitespaceInsertedWhenRemovingParens() {
+        let input = "if(x.y) {}"
+        let output = "if x.y {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
+    func testNoDoubleWhitespaceWhenRemovingParens() {
+        let input = "if ( x.y ) {}"
+        let output = "if x.y {}"
+        XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+    }
+
     // MARK: redundantGet
 
     func testRemoveSingleLineIsolatedGet() {

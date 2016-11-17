@@ -2,7 +2,7 @@
 //  SourceEditorExtension.swift
 //  Swift Formatter
 //
-//  Version 0.17.2
+//  Version 0.18
 //
 //  Created by Tony Arnold on 5/10/16.
 //  Copyright 2016 Nick Lockwood

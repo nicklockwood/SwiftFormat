@@ -422,7 +422,7 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
                 }
             }
         }
-        return uppercase > lowercase
+        return uppercase >= lowercase
     }()
 
     return options

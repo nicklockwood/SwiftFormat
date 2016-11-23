@@ -125,7 +125,7 @@ class SwiftFormatTests: XCTestCase {
 
     func testCommandLineArgumentsAreCorrect() {
         let options = FormatOptions()
-        let output = ["indent": "4", "linebreaks": "lf", "semicolons": "inline", "ranges": "spaced", "empty": "void", "commas": "always", "comments": "indent", "trimwhitespace": "always", "insertlines": "enabled", "removelines": "enabled", "allman": "false", "header": "ignore", "ifdef": "indent", "hexliterals": "uppercase"]
+        let output = ["indent": "4", "linebreaks": "lf", "semicolons": "inline", "ranges": "spaced", "empty": "void", "commas": "always", "comments": "indent", "trimwhitespace": "always", "insertlines": "enabled", "removelines": "enabled", "allman": "false", "header": "ignore", "ifdef": "indent", "wraparguments": "disabled", "hexliterals": "uppercase"]
         XCTAssertEqual(commandLineArguments(for: options), output)
     }
 }

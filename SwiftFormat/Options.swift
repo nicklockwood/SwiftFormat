@@ -36,8 +36,14 @@ import Foundation
 /// The indenting mode to use for #if/#endif statements
 public enum IndentMode: String {
     case indent
-    case noindent
+    case noIndent = "noindent"
     case outdent
+}
+
+/// Wrap mode for arguments
+public enum WrapMode: String {
+    case beforeFirst = "beforefirst"
+    case disabled
 }
 
 /// Configuration options for formatting. These aren't actually used by the
@@ -55,7 +61,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var removeBlankLines: Bool
     public var allmanBraces: Bool
     public var stripHeader: Bool
-    public var ifdefIndentMode: IndentMode
+    public var ifdefIndent: IndentMode
+    public var wrapArguments: WrapMode
     public var uppercaseHex: Bool
     public var experimentalRules: Bool
     public var fragment: Bool
@@ -72,7 +79,8 @@ public struct FormatOptions: CustomStringConvertible {
                 removeBlankLines: Bool = true,
                 allmanBraces: Bool = false,
                 stripHeader: Bool = false,
-                ifdefIndentMode: IndentMode = .indent,
+                ifdefIndent: IndentMode = .indent,
+                wrapArguments: WrapMode = .disabled,
                 uppercaseHex: Bool = true,
                 experimentalRules: Bool = false,
                 fragment: Bool = false) {
@@ -89,7 +97,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.removeBlankLines = removeBlankLines
         self.allmanBraces = allmanBraces
         self.stripHeader = stripHeader
-        self.ifdefIndentMode = ifdefIndentMode
+        self.ifdefIndent = ifdefIndent
+        self.wrapArguments = wrapArguments
         self.uppercaseHex = uppercaseHex
         self.experimentalRules = experimentalRules
         self.fragment = fragment
@@ -343,8 +352,8 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
         return allman > knr
     }()
 
-    options.ifdefIndentMode = {
-        var indented = 0, noindented = 0, outdented = 0
+    options.ifdefIndent = {
+        var indented = 0, notIndented = 0, outdented = 0
         formatter.forEachToken(.startOfScope("#if")) { i, token in
             if let indent = formatter.tokenAtIndex(i - 1), case .whitespace(let string) = indent,
                 !string.isEmpty {
@@ -358,14 +367,14 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
                             // Error?
                             return
                         } else if innerString == string {
-                            noindented += 1
+                            notIndented += 1
                         } else {
                             // Assume more indented, as less would be a mistake
                             indented += 1
                         }
                     case .linebreak:
                         // Could be noindent or outdent
-                        noindented += 1
+                        notIndented += 1
                         outdented += 1
                     default:
                         break
@@ -392,7 +401,7 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
                     }
                 case .linebreak:
                     // Could be noindent or outdent
-                    noindented += 1
+                    notIndented += 1
                     outdented += 1
                 default:
                     break
@@ -400,8 +409,8 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
             }
             // Error?
         }
-        if noindented > indented {
-            return outdented > noindented ? .outdent : .noindent
+        if notIndented > indented {
+            return outdented > notIndented ? .outdent : .noIndent
         } else {
             return outdented > indented ? .outdent : .indent
         }

@@ -263,8 +263,10 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["allman"] = options.allmanBraces ? "true" : "false"
             case "stripHeader":
                 args["header"] = options.stripHeader ? "strip" : "ignore"
-            case "ifdefIndentMode":
-                args["ifdef"] = options.ifdefIndentMode.rawValue
+            case "ifdefIndent":
+                args["ifdef"] = options.ifdefIndent.rawValue
+            case "wrapArguments":
+                args["wraparguments"] = options.wrapArguments.rawValue
             case "uppercaseHex":
                 args["hexliterals"] = options.uppercaseHex ? "uppercase" : "lowercase"
             case "experimentalRules":
@@ -295,6 +297,7 @@ let commandLineArguments = [
     "removelines",
     "header",
     "ifdef",
+    "wraparguments",
     "hexliterals",
     "experimental",
     "fragment",

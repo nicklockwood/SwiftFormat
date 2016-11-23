@@ -55,6 +55,7 @@ func showHelp() {
     print(" --removelines     remove blank line before }. \"enabled\" (default) or \"disabled\"")
     print(" --header          header comments. \"strip\" to remove, or \"ignore\" (default)")
     print(" --ifdef           #if indenting. \"indent\" (default), \"noindent\" or \"outdent\"")
+    print(" --wraparguments   wrap function args. \"beforefirst\" or \"disabled\" (default)")
     print(" --hexliterals     casing for hex literals. \"uppercase\" (default) or \"lowercase\"")
     print(" --experimental    experimental rules. \"enabled\" or \"disabled\" (default)")
     print(" --fragment        input is part of a larger file. \"true\" or \"false\" (default)")
@@ -217,7 +218,14 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
     }
     try processOption("ifdef") {
         if let mode = IndentMode(rawValue: $0) {
-            options.ifdefIndentMode = mode
+            options.ifdefIndent = mode
+        } else {
+            throw NSError()
+        }
+    }
+    try processOption("wraparguments") {
+        if let mode = WrapMode(rawValue: $0) {
+            options.wrapArguments = mode
         } else {
             throw NSError()
         }

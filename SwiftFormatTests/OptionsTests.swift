@@ -91,34 +91,34 @@ class OptionsTests: XCTestCase {
         let input = "#if foo\n    //foo\n#endif"
         let output = IndentMode.indent
         let options = inferOptions(tokenize(input))
-        XCTAssertEqual(options.ifdefIndentMode, output)
+        XCTAssertEqual(options.ifdefIndent, output)
     }
 
     func testInferIdententIfdefIndent() {
         let input = "{\n    {\n#    if foo\n        //foo\n    #endif\n    }\n}"
         let output = IndentMode.indent
         let options = inferOptions(tokenize(input))
-        XCTAssertEqual(options.ifdefIndentMode, output)
+        XCTAssertEqual(options.ifdefIndent, output)
     }
 
     func testInferIfdefNoIndent() {
         let input = "#if foo\n//foo\n#endif"
-        let output = IndentMode.noindent
+        let output = IndentMode.noIndent
         let options = inferOptions(tokenize(input))
-        XCTAssertEqual(options.ifdefIndentMode, output)
+        XCTAssertEqual(options.ifdefIndent, output)
     }
 
     func testInferIdententIfdefNoIndent() {
         let input = "{\n    {\n    #if foo\n    //foo\n    #endif\n    }\n}"
-        let output = IndentMode.noindent
+        let output = IndentMode.noIndent
         let options = inferOptions(tokenize(input))
-        XCTAssertEqual(options.ifdefIndentMode, output)
+        XCTAssertEqual(options.ifdefIndent, output)
     }
 
     func testInferIndentedIfdefOutdent() {
         let input = "{\n    {\n#if foo\n        //foo\n#endif\n    }\n}"
         let output = IndentMode.outdent
         let options = inferOptions(tokenize(input))
-        XCTAssertEqual(options.ifdefIndentMode, output)
+        XCTAssertEqual(options.ifdefIndent, output)
     }
 }

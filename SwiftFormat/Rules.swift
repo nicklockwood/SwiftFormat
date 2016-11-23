@@ -895,10 +895,10 @@ public func indent(_ formatter: Formatter) {
                 // Comments only indent one space
                 indent += " "
             case "#if":
-                switch formatter.options.ifdefIndentMode {
+                switch formatter.options.ifdefIndent {
                 case .indent:
                     indent += formatter.options.indent
-                case .noindent:
+                case .noIndent:
                     break
                 case .outdent:
                     i += insertWhitespace("", atIndex: formatter.startOfLine(atIndex: i))
@@ -975,8 +975,8 @@ public func indent(_ formatter: Formatter) {
                         scopeStartLineIndexes.append(lineIndex)
                         linewrapStack.append(false)
                     case .endOfScope("#endif"):
-                        switch formatter.options.ifdefIndentMode {
-                        case .indent, .noindent:
+                        switch formatter.options.ifdefIndent {
+                        case .indent, .noIndent:
                             break
                         case .outdent:
                             i += insertWhitespace("", atIndex: formatter.startOfLine(atIndex: i))
@@ -985,13 +985,13 @@ public func indent(_ formatter: Formatter) {
                         break
                     }
                 } else if [.keyword("#else"), .keyword("#elseif")].contains(token) {
-                    switch formatter.options.ifdefIndentMode {
+                    switch formatter.options.ifdefIndent {
                     case .indent:
                         let indent = indentStack[indentStack.count - 2]
                         i += insertWhitespace(indent, atIndex: formatter.startOfLine(atIndex: i))
                     case .outdent:
                         i += insertWhitespace("", atIndex: formatter.startOfLine(atIndex: i))
-                    case .noindent:
+                    case .noIndent:
                         break
                     }
                 }
@@ -1451,6 +1451,53 @@ public func redundantGet(_ formatter: Formatter) {
     }
 }
 
+/// Normalize argument wrapping style
+public func wrapArguments(_ formatter: Formatter) {
+    switch formatter.options.wrapArguments {
+    case .beforeFirst:
+        formatter.forEachToken(.startOfScope("(")) { i, token in
+            if let closingBraceIndex = formatter.indexOfNextToken(.endOfScope(")"), fromIndex: i),
+                let linebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
+                linebreakIndex < closingBraceIndex {
+                // Get indent
+                let start = formatter.startOfLine(atIndex: i)
+                let indent: String
+                if let indentToken = formatter.tokenAtIndex(start), case .whitespace(let string) = indentToken {
+                    indent = string
+                } else {
+                    indent = ""
+                }
+                // Insert linebreak before closing paren
+                if formatter.previousNonWhitespaceOrCommentToken(fromIndex: closingBraceIndex)?.isLinebreak == false {
+                    formatter.insertToken(.whitespace(indent), atIndex: closingBraceIndex)
+                    formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: closingBraceIndex)
+                }
+                // Insert linebreak after each comma
+                var index = closingBraceIndex
+                while index > i {
+                    guard let commaIndex = formatter.indexOfPreviousToken(.symbol(","), fromIndex: index) else {
+                        break
+                    }
+                    if let nextIndex = formatter.indexOfNextNonWhitespaceOrCommentToken(fromIndex: commaIndex, if: {
+                        !$0.isLinebreak
+                    }) {
+                        formatter.insertToken(.whitespace(indent + formatter.options.indent), atIndex: nextIndex)
+                        formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: nextIndex)
+                    }
+                    index = commaIndex
+                }
+                // Insert linebreak after opening paren
+                if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.isLinebreak == false {
+                    formatter.insertToken(.whitespace(indent + formatter.options.indent), atIndex: i + 1)
+                    formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: i + 1)
+                }
+            }
+        }
+    case .disabled:
+        break
+    }
+}
+
 /// Normalize the use of void in closure arguments and return values
 public func void(_ formatter: Formatter) {
     formatter.forEachToken(.identifier("Void")) { i, token in
@@ -1548,6 +1595,7 @@ public let defaultRules: [FormatRule] = [
     hexLiterals,
     braces,
     ranges,
+    wrapArguments,
     trailingCommas,
     elseOnSameLine,
     spaceAroundParens,

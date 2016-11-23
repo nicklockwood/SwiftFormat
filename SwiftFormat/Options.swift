@@ -416,6 +416,36 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
         }
     }()
 
+    options.wrapArguments = {
+        var beforeFirst = 0, afterFirst = 0, neither = 0
+        formatter.forEachToken(.startOfScope("(")) { i, token in
+            if let closingBraceIndex = formatter.indexOfNextToken(.endOfScope(")"), fromIndex: i),
+                let linebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
+                linebreakIndex < closingBraceIndex {
+                // Find comma
+                var index = closingBraceIndex
+                while index > i {
+                    guard let commaIndex = formatter.indexOfPreviousToken(.symbol(","), fromIndex: index) else {
+                        break
+                    }
+                    if formatter.nextNonWhitespaceOrCommentToken(fromIndex: commaIndex)?.isLinebreak == false {
+                        // More than one consecutive arg on same line
+                        neither += 1
+                        return
+                    }
+                    index = commaIndex
+                }
+                // Insert linebreak after opening paren
+                if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.isLinebreak == true {
+                    beforeFirst += 1
+                } else {
+                    afterFirst += 1
+                }
+            }
+        }
+        return beforeFirst > afterFirst && beforeFirst > neither ? .beforeFirst : .disabled
+    }()
+
     options.uppercaseHex = {
         let prefix = "0x"
         var uppercase = 0, lowercase = 0

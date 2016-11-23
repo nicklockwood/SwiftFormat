@@ -11,11 +11,15 @@ import XCTest
 
 class OptionsTests: XCTestCase {
 
+    // MARK: indent
+
     func testInferIndentLevel() {
         let input = "\t\nclass Foo {\n   func bar() {\n      //baz\n}\n}"
         let options = inferOptions(tokenize(input))
         XCTAssertEqual(options.indent, "   ")
     }
+
+    // MARK: linebreak
 
     func testInferLinebreaks() {
         let input = "foo\nbar\r\nbaz\rquux\r\n"
@@ -23,6 +27,8 @@ class OptionsTests: XCTestCase {
         let options = inferOptions(tokenize(input))
         XCTAssertEqual(options.linebreak, output)
     }
+
+    // MARK: spaceAroundRangeOperators
 
     func testInferSpaceAroundRangeOperators() {
         let input = "let foo = 0 ..< bar\n;let baz = 1...quux"
@@ -38,6 +44,8 @@ class OptionsTests: XCTestCase {
         XCTAssertEqual(options.spaceAroundRangeOperators, output)
     }
 
+    // MARK: useVoid
+
     func testInferUseVoid() {
         let input = "func foo(bar: () -> (Void), baz: ()->(), quux: () -> Void) {}"
         let output = true
@@ -51,6 +59,8 @@ class OptionsTests: XCTestCase {
         let options = inferOptions(tokenize(input))
         XCTAssertEqual(options.useVoid, output)
     }
+
+    // MARK: trailingCommas
 
     func testInferTrailingCommas() {
         let input = "let foo = [\nbar,\n]\n let baz = [\nquux\n]"
@@ -66,12 +76,16 @@ class OptionsTests: XCTestCase {
         XCTAssertEqual(options.trailingCommas, output)
     }
 
+    // MARK: indentComments
+
     func testInferIndentComments() {
         let input = "  /**\n  hello\n    - world\n  */"
         let output = false
         let options = inferOptions(tokenize(input))
         XCTAssertEqual(options.indentComments, output)
     }
+
+    // MARK: truncateBlankLines
 
     func testInferNoTruncateBlanklines() {
         let input = "class Foo {\n    \nfunc bar() {\n        \n        //baz\n\n}\n    \n}"
@@ -80,12 +94,16 @@ class OptionsTests: XCTestCase {
         XCTAssertEqual(options.truncateBlankLines, output)
     }
 
+    // MARK: allmanBraces
+
     func testInferAllmanComments() {
         let input = "func foo()\n{\n}\n\nfunc bar() {\n}\n\nfunc baz()\n{\n}"
         let output = true
         let options = inferOptions(tokenize(input))
         XCTAssertEqual(options.allmanBraces, output)
     }
+
+    // MARK: ifdefIndent
 
     func testInferIfdefIndent() {
         let input = "#if foo\n    //foo\n#endif"
@@ -120,5 +138,14 @@ class OptionsTests: XCTestCase {
         let output = IndentMode.outdent
         let options = inferOptions(tokenize(input))
         XCTAssertEqual(options.ifdefIndent, output)
+    }
+
+    // MARK: wrapArguments
+
+    func testInferWrapBeforeFirstArgument() {
+        let input = "func foo(bar: Int,\n    baz: String) {\n}\nfunc foo(\n    bar: Int,\n    baz: String) {\n}\nfunc foo(\n    bar: Int,\n    baz: String)"
+        let output = WrapMode.beforeFirst
+        let options = inferOptions(tokenize(input))
+        XCTAssertEqual(options.wrapArguments, output)
     }
 }

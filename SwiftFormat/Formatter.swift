@@ -358,4 +358,21 @@ public class Formatter {
         }
         return nil
     }
+
+    /// Either modifies or removes the existing whitespace token at the specified
+    /// index, or inserts a new one if there is not already a whitespace token present.
+    /// Returns the number of tokens inserted or removed
+    @discardableResult func insertWhitespace(_ whitespace: String, atIndex index: Int) -> Int {
+        if tokenAtIndex(index)?.isWhitespace == true {
+            if whitespace.isEmpty {
+                removeTokenAtIndex(index)
+                return -1 // Removed 1 token
+            }
+            replaceTokenAtIndex(index, with: .whitespace(whitespace))
+        } else if !whitespace.isEmpty {
+            insertToken(.whitespace(whitespace), atIndex: index)
+            return 1 // Inserted 1 token
+        }
+        return 0 // Inserted 0 tokens
+    }
 }

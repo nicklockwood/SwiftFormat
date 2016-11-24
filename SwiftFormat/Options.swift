@@ -63,6 +63,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var stripHeader: Bool
     public var ifdefIndent: IndentMode
     public var wrapArguments: WrapMode
+    public var wrapElements: WrapMode
     public var uppercaseHex: Bool
     public var experimentalRules: Bool
     public var fragment: Bool
@@ -81,6 +82,7 @@ public struct FormatOptions: CustomStringConvertible {
                 stripHeader: Bool = false,
                 ifdefIndent: IndentMode = .indent,
                 wrapArguments: WrapMode = .disabled,
+                wrapElements: WrapMode = .beforeFirst,
                 uppercaseHex: Bool = true,
                 experimentalRules: Bool = false,
                 fragment: Bool = false) {
@@ -99,6 +101,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.stripHeader = stripHeader
         self.ifdefIndent = ifdefIndent
         self.wrapArguments = wrapArguments
+        self.wrapElements = wrapElements
         self.uppercaseHex = uppercaseHex
         self.experimentalRules = experimentalRules
         self.fragment = fragment
@@ -242,7 +245,7 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
         var shouldIndent = true
         var nestedComments = 0
         var prevIndent: Int?
-        var lastToken = Token.whitespace("")
+        var lastTokenWasLinebreak = false
         for token in formatter.tokens {
             switch token {
             case .startOfScope:
@@ -253,7 +256,7 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
             case .endOfScope:
                 if token.string == "*/" {
                     if nestedComments > 0 {
-                        if case .linebreak = lastToken {
+                        if lastTokenWasLinebreak {
                             if prevIndent != nil && prevIndent! >= 2 {
                                 shouldIndent = false
                                 break
@@ -267,7 +270,7 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
                 }
                 prevIndent = nil
             case .whitespace:
-                if case .linebreak = lastToken, nestedComments > 0 {
+                if lastTokenWasLinebreak, nestedComments > 0 {
                     let indent = token.string.characters.count
                     if prevIndent != nil && abs(prevIndent! - indent) >= 2 {
                         shouldIndent = false
@@ -276,7 +279,7 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
                     prevIndent = indent
                 }
             case .commentBody:
-                if case .linebreak = lastToken, nestedComments > 0 {
+                if lastTokenWasLinebreak, nestedComments > 0 {
                     if prevIndent != nil && prevIndent! >= 2 {
                         shouldIndent = false
                         break
@@ -286,7 +289,7 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
             default:
                 break
             }
-            lastToken = token
+            lastTokenWasLinebreak = token.isLinebreak
         }
         return shouldIndent
     }()
@@ -416,10 +419,11 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
         }
     }()
 
-    options.wrapArguments = {
+    func wrapMode(for scopes: String...) -> WrapMode {
         var beforeFirst = 0, afterFirst = 0, neither = 0
-        formatter.forEachToken(.startOfScope("(")) { i, token in
-            if let closingBraceIndex = formatter.indexOfNextToken(.endOfScope(")"), fromIndex: i),
+        formatter.forEachToken({ scopes.contains($0.string) }) { i, token in
+            if let closingBraceIndex =
+                formatter.indexOfNextToken(fromIndex: i, matching: { $0.closesScopeForToken(token) }),
                 let linebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
                 linebreakIndex < closingBraceIndex {
                 // Find comma
@@ -444,7 +448,9 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
             }
         }
         return beforeFirst > afterFirst && beforeFirst > neither ? .beforeFirst : .disabled
-    }()
+    }
+    options.wrapArguments = wrapMode(for: "(", "<")
+    options.wrapElements = wrapMode(for: "[")
 
     options.uppercaseHex = {
         let prefix = "0x"

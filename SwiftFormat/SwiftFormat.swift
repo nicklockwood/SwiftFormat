@@ -267,6 +267,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["ifdef"] = options.ifdefIndent.rawValue
             case "wrapArguments":
                 args["wraparguments"] = options.wrapArguments.rawValue
+            case "wrapElements":
+                args["wrapelements"] = options.wrapElements.rawValue
             case "uppercaseHex":
                 args["hexliterals"] = options.uppercaseHex ? "uppercase" : "lowercase"
             case "experimentalRules":
@@ -298,6 +300,7 @@ let commandLineArguments = [
     "header",
     "ifdef",
     "wraparguments",
+    "wrapelements",
     "hexliterals",
     "experimental",
     "fragment",

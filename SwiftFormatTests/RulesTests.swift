@@ -309,8 +309,9 @@ class RulesTests: XCTestCase {
     func testSpaceInsideWrappedArray() {
         let input = "[ foo,\n bar ]"
         let output = "[foo,\n bar]"
+        let options = FormatOptions(wrapElements: .disabled)
         XCTAssertEqual(try! format(input, rules: [spaceInsideBrackets]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
     // MARK: spaceAroundBraces
@@ -1390,22 +1391,25 @@ class RulesTests: XCTestCase {
     func testWrappedLineBeforeCommaInsideArray() {
         let input = "[\nfoo\n, bar,\n]"
         let output = "[\n    foo\n    , bar,\n]"
+        let options = FormatOptions(wrapElements: .disabled)
         XCTAssertEqual(try! format(input, rules: [indent]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
     func testWrappedLineAfterCommaInsideInlineArray() {
         let input = "[foo,\nbar]"
         let output = "[foo,\n bar]"
+        let options = FormatOptions(wrapElements: .disabled)
         XCTAssertEqual(try! format(input, rules: [indent]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
     func testWrappedLineBeforeCommaInsideInlineArray() {
         let input = "[foo\n, bar]"
         let output = "[foo\n , bar]"
+        let options = FormatOptions(wrapElements: .disabled)
         XCTAssertEqual(try! format(input, rules: [indent]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
     func testWrappedLineAfterColonInFunction() {
@@ -1684,8 +1688,9 @@ class RulesTests: XCTestCase {
     func testIndentEnumDictionaryKeysAndValues() {
         let input = "[\n.foo:\n.bar,\n.baz:\n.quux,]"
         let output = "[\n    .foo:\n        .bar,\n    .baz:\n        .quux,]"
+        let options = FormatOptions(wrapElements: .disabled)
         XCTAssertEqual(try! format(input, rules: [indent]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
     func testIndentWrappedFunctionArgument() {
@@ -2164,8 +2169,9 @@ class RulesTests: XCTestCase {
     func testCommaNotAddedInsideEmptyDictionaryLiteral() {
         let input = "foo = [:\n]"
         let output = "foo = [:\n]"
-        XCTAssertEqual(try! format(input, rules: [trailingCommas]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
+        let options = FormatOptions(wrapElements: .disabled)
+        XCTAssertEqual(try! format(input, rules: [trailingCommas], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
     // MARK: trailingCommas = false
@@ -2720,6 +2726,14 @@ class RulesTests: XCTestCase {
         let output = "func foo(\n    bar: Int,\n    baz: String\n) {\n}"
         let options = FormatOptions(wrapArguments: .beforeFirst)
         XCTAssertEqual(try! format(input, rules: [wrapArguments], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
+    }
+
+    func testNoDoubleWhitespaceAddedToWrappedArray() {
+        let input = "[ foo, bar,\n    baz ]"
+        let output = "[\n    foo,\n    bar,\n    baz\n]"
+        let options = FormatOptions(trailingCommas: false)
+        XCTAssertEqual(try! format(input, rules: [wrapArguments, spaceInsideBrackets], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 

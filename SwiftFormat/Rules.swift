@@ -1429,49 +1429,54 @@ public func redundantGet(_ formatter: Formatter) {
 
 /// Normalize argument wrapping style
 public func wrapArguments(_ formatter: Formatter) {
-    switch formatter.options.wrapArguments {
-    case .beforeFirst:
-        formatter.forEachToken(.startOfScope("(")) { i, token in
-            if let closingBraceIndex = formatter.indexOfNextToken(.endOfScope(")"), fromIndex: i),
-                let linebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
-                linebreakIndex < closingBraceIndex {
-                // Get indent
-                let start = formatter.startOfLine(atIndex: i)
-                let indent: String
-                if let indentToken = formatter.tokenAtIndex(start), case .whitespace(let string) = indentToken {
-                    indent = string
-                } else {
-                    indent = ""
-                }
-                // Insert linebreak before closing paren
-                if formatter.previousNonWhitespaceOrCommentToken(fromIndex: closingBraceIndex)?.isLinebreak == false {
-                    formatter.insertToken(.whitespace(indent), atIndex: closingBraceIndex)
-                    formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: closingBraceIndex)
-                }
-                // Insert linebreak after each comma
-                var index = closingBraceIndex
-                while index > i {
-                    guard let commaIndex = formatter.indexOfPreviousToken(.symbol(","), fromIndex: index) else {
-                        break
+    func wrapArguments(for scopes: String..., mode: WrapMode) {
+        switch mode {
+        case .beforeFirst:
+            formatter.forEachToken({ scopes.contains($0.string) }) { i, token in
+                if let closingBraceIndex =
+                    formatter.indexOfNextToken(fromIndex: i, matching: { $0.closesScopeForToken(token) }),
+                    let linebreakIndex = formatter.indexOfNextToken(fromIndex: i, matching: { $0.isLinebreak }),
+                    linebreakIndex < closingBraceIndex {
+                    // Get indent
+                    let start = formatter.startOfLine(atIndex: i)
+                    let indent: String
+                    if let indentToken = formatter.tokenAtIndex(start), case .whitespace(let string) = indentToken {
+                        indent = string
+                    } else {
+                        indent = ""
                     }
-                    if let nextIndex = formatter.indexOfNextNonWhitespaceOrCommentToken(fromIndex: commaIndex, if: {
+                    // Insert linebreak before closing paren
+                    if let lastIndex = formatter.indexOfPreviousNonWhitespaceToken(fromIndex: closingBraceIndex, if: {
                         !$0.isLinebreak
                     }) {
-                        formatter.insertToken(.whitespace(indent + formatter.options.indent), atIndex: nextIndex)
-                        formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: nextIndex)
+                        formatter.insertWhitespace(indent, atIndex: lastIndex + 1)
+                        formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: lastIndex + 1)
                     }
-                    index = commaIndex
-                }
-                // Insert linebreak after opening paren
-                if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.isLinebreak == false {
-                    formatter.insertToken(.whitespace(indent + formatter.options.indent), atIndex: i + 1)
-                    formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: i + 1)
+                    // Insert linebreak after each comma
+                    var index = closingBraceIndex
+                    while index > i {
+                        guard let commaIndex = formatter.indexOfPreviousToken(.symbol(","), fromIndex: index) else {
+                            break
+                        }
+                        if formatter.nextNonWhitespaceOrCommentToken(fromIndex: commaIndex)?.isLinebreak == false {
+                            formatter.insertWhitespace(indent + formatter.options.indent, atIndex: commaIndex + 1)
+                            formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: commaIndex + 1)
+                        }
+                        index = commaIndex
+                    }
+                    // Insert linebreak after opening paren
+                    if formatter.nextNonWhitespaceOrCommentToken(fromIndex: i)?.isLinebreak == false {
+                        formatter.insertWhitespace(indent + formatter.options.indent, atIndex: i + 1)
+                        formatter.insertToken(.linebreak(formatter.options.linebreak), atIndex: i + 1)
+                    }
                 }
             }
+        case .disabled:
+            break
         }
-    case .disabled:
-        break
     }
+    wrapArguments(for: "(", "<", mode: formatter.options.wrapArguments)
+    wrapArguments(for: "[", mode: formatter.options.wrapElements)
 }
 
 /// Normalize the use of void in closure arguments and return values

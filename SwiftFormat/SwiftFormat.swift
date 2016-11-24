@@ -75,7 +75,6 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = ni
 public func format(_ tokens: [Token],
                    rules: [FormatRule] = defaultRules,
                    options: FormatOptions = FormatOptions()) throws -> String {
-
     // Parse
     guard options.fragment || tokens.last?.isError == false else {
         // TODO: more useful errors

@@ -307,7 +307,7 @@ func processArguments(_ args: [String]) {
             var files = 0
             var arguments = ""
             let time = timeEvent {
-                let (count, options) = inferOptions(from: inferURL)
+                let (count, options) = inferOptions(after: inferURL)
                 arguments = commandLineArguments(for: options).map({
                     "--\($0) \($1)" }).joined(separator: " ")
                 files = count

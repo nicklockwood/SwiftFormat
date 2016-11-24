@@ -40,7 +40,7 @@ class TokenizerTests: XCTestCase {
         let input = "let `foo = bar"
         let output: [Token] = [
             .keyword("let"),
-            .whitespace(" "),
+            .space(" "),
             .error("`foo = bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -50,11 +50,11 @@ class TokenizerTests: XCTestCase {
         let input = "func foo() {"
         let output: [Token] = [
             .keyword("func"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("foo"),
             .startOfScope("("),
             .endOfScope(")"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .error(""),
         ]
@@ -65,7 +65,7 @@ class TokenizerTests: XCTestCase {
         let input = "// comment"
         let output: [Token] = [
             .startOfScope("//"),
-            .whitespace(" "),
+            .space(" "),
             .commentBody("comment"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -75,7 +75,7 @@ class TokenizerTests: XCTestCase {
         let input = "/* comment"
         let output: [Token] = [
             .startOfScope("/*"),
-            .whitespace(" "),
+            .space(" "),
             .commentBody("comment"),
             .error(""),
         ]
@@ -100,22 +100,22 @@ class TokenizerTests: XCTestCase {
             .identifier("map"),
             .startOfScope("("),
             .startOfScope("{"),
-            .whitespace(" "),
+            .space(" "),
             .keyword("return"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("$0"),
-            .whitespace(" "),
+            .space(" "),
             .error(")"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
 
-    // MARK: Whitespace
+    // MARK: Space
 
     func testSpaces() {
         let input = "    "
         let output: [Token] = [
-            .whitespace("    "),
+            .space("    "),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
@@ -123,7 +123,7 @@ class TokenizerTests: XCTestCase {
     func testSpacesAndTabs() {
         let input = "  \t  \t"
         let output: [Token] = [
-            .whitespace("  \t  \t"),
+            .space("  \t  \t"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
@@ -207,9 +207,9 @@ class TokenizerTests: XCTestCase {
         let input = "// foo "
         let output: [Token] = [
             .startOfScope("//"),
-            .whitespace(" "),
+            .space(" "),
             .commentBody("foo"),
-            .whitespace(" "),
+            .space(" "),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
@@ -241,9 +241,9 @@ class TokenizerTests: XCTestCase {
         let input = "/* foo */"
         let output: [Token] = [
             .startOfScope("/*"),
-            .whitespace(" "),
+            .space(" "),
             .commentBody("foo"),
-            .whitespace(" "),
+            .space(" "),
             .endOfScope("*/"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -261,13 +261,13 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testMultilineCommentWithWhitespace() {
+    func testMultilineCommentWithSpace() {
         let input = "/*foo\n  bar*/"
         let output: [Token] = [
             .startOfScope("/*"),
             .commentBody("foo"),
             .linebreak("\n"),
-            .whitespace("  "),
+            .space("  "),
             .commentBody("bar"),
             .endOfScope("*/"),
         ]
@@ -288,21 +288,21 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testNestedCommentsWithWhitespace() {
+    func testNestedCommentsWithSpace() {
         let input = "/* foo /* bar */ baz */"
         let output: [Token] = [
             .startOfScope("/*"),
-            .whitespace(" "),
+            .space(" "),
             .commentBody("foo"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("/*"),
-            .whitespace(" "),
+            .space(" "),
             .commentBody("bar"),
-            .whitespace(" "),
+            .space(" "),
             .endOfScope("*/"),
-            .whitespace(" "),
+            .space(" "),
             .commentBody("baz"),
-            .whitespace(" "),
+            .space(" "),
             .endOfScope("*/"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -547,9 +547,9 @@ class TokenizerTests: XCTestCase {
         let input = "a / b"
         let output: [Token] = [
             .identifier("a"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("/"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("b"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -565,9 +565,9 @@ class TokenizerTests: XCTestCase {
         let input = "a *= -b"
         let output: [Token] = [
             .identifier("a"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("*="),
-            .whitespace(" "),
+            .space(" "),
             .symbol("-"),
             .identifier("b"),
         ]
@@ -590,12 +590,12 @@ class TokenizerTests: XCTestCase {
         let input = "a +/* b */"
         let output: [Token] = [
             .identifier("a"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("+"),
             .startOfScope("/*"),
-            .whitespace(" "),
+            .space(" "),
             .commentBody("b"),
-            .whitespace(" "),
+            .space(" "),
             .endOfScope("*/"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -605,9 +605,9 @@ class TokenizerTests: XCTestCase {
         let input = "/* a */-b"
         let output: [Token] = [
             .startOfScope("/*"),
-            .whitespace(" "),
+            .space(" "),
             .commentBody("a"),
-            .whitespace(" "),
+            .space(" "),
             .endOfScope("*/"),
             .symbol("-"),
             .identifier("b"),
@@ -634,9 +634,9 @@ class TokenizerTests: XCTestCase {
         let input = "foo ?? bar"
         let output: [Token] = [
             .identifier("foo"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("??"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -650,9 +650,9 @@ class TokenizerTests: XCTestCase {
             .identifier("a"),
             .symbol("<"),
             .identifier("b"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("=="),
-            .whitespace(" "),
+            .space(" "),
             .identifier("a"),
             .symbol(">"),
             .identifier("c"),
@@ -697,12 +697,12 @@ class TokenizerTests: XCTestCase {
             .symbol("<"),
             .identifier("b"),
             .symbol(","),
-            .whitespace(" "),
+            .space(" "),
             .identifier("b"),
             .symbol("<"),
             .identifier("c"),
             .symbol(","),
-            .whitespace(" "),
+            .space(" "),
             .identifier("d"),
             .symbol(">>"),
             .identifier("e"),
@@ -717,7 +717,7 @@ class TokenizerTests: XCTestCase {
             .startOfScope("<"),
             .identifier("Bar"),
             .symbol(","),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Baz"),
             .endOfScope(">"),
         ]
@@ -755,14 +755,14 @@ class TokenizerTests: XCTestCase {
         let input = "class Foo<T,U> {}"
         let output: [Token] = [
             .keyword("class"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Foo"),
             .startOfScope("<"),
             .identifier("T"),
             .symbol(","),
             .identifier("U"),
             .endOfScope(">"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .endOfScope("}"),
         ]
@@ -773,7 +773,7 @@ class TokenizerTests: XCTestCase {
         let input = "class Foo<T,U>: Bar"
         let output: [Token] = [
             .keyword("class"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Foo"),
             .startOfScope("<"),
             .identifier("T"),
@@ -781,7 +781,7 @@ class TokenizerTests: XCTestCase {
             .identifier("U"),
             .endOfScope(">"),
             .symbol(":"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -791,7 +791,7 @@ class TokenizerTests: XCTestCase {
         let input = "func foo<T>(bar:T)"
         let output: [Token] = [
             .keyword("func"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("foo"),
             .startOfScope("<"),
             .identifier("T"),
@@ -809,9 +809,9 @@ class TokenizerTests: XCTestCase {
         let input = "foo = Foo<Int,String>()"
         let output: [Token] = [
             .identifier("foo"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("="),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Foo"),
             .startOfScope("<"),
             .identifier("Int"),
@@ -970,7 +970,7 @@ class TokenizerTests: XCTestCase {
             .symbol(","),
             .identifier("Baz"),
             .endOfScope(">"),
-            .whitespace(" "),
+            .space(" "),
             .keyword("in"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -1055,7 +1055,7 @@ class TokenizerTests: XCTestCase {
         let input = "func ==<T>()"
         let output: [Token] = [
             .keyword("func"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("=="),
             .startOfScope("<"),
             .identifier("T"),
@@ -1070,7 +1070,7 @@ class TokenizerTests: XCTestCase {
         let input = "func ∘<T,U>()"
         let output: [Token] = [
             .keyword("func"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("∘"),
             .startOfScope("<"),
             .identifier("T"),
@@ -1127,17 +1127,17 @@ class TokenizerTests: XCTestCase {
         let input = "let foo: Bar<Baz> = 5"
         let output: [Token] = [
             .keyword("let"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("foo"),
             .symbol(":"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Bar"),
             .startOfScope("<"),
             .identifier("Baz"),
             .endOfScope(">"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("="),
-            .whitespace(" "),
+            .space(" "),
             .number("5"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -1161,9 +1161,9 @@ class TokenizerTests: XCTestCase {
         let input = "operator ?< {}"
         let output: [Token] = [
             .keyword("operator"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("?<"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .endOfScope("}"),
         ]
@@ -1174,9 +1174,9 @@ class TokenizerTests: XCTestCase {
         let input = "infix operator =<<"
         let output: [Token] = [
             .identifier("infix"),
-            .whitespace(" "),
+            .space(" "),
             .keyword("operator"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("=<<"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -1186,7 +1186,7 @@ class TokenizerTests: XCTestCase {
         let input = "func =<<<T>()"
         let output: [Token] = [
             .keyword("func"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("=<<"),
             .startOfScope("<"),
             .identifier("T"),
@@ -1217,7 +1217,7 @@ class TokenizerTests: XCTestCase {
             .startOfScope("("),
             .identifier("by"),
             .symbol(":"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("<"),
             .endOfScope(")"),
         ]
@@ -1231,7 +1231,7 @@ class TokenizerTests: XCTestCase {
             .startOfScope("("),
             .identifier("by"),
             .symbol(":"),
-            .whitespace(" "),
+            .space(" "),
             .symbol(">"),
             .endOfScope(")"),
         ]
@@ -1255,9 +1255,9 @@ class TokenizerTests: XCTestCase {
         let input = "foo ?= bar"
         let output: [Token] = [
             .identifier("foo"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("?="),
-            .whitespace(" "),
+            .space(" "),
             .identifier("bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -1269,15 +1269,15 @@ class TokenizerTests: XCTestCase {
         let input = "enum Foo {case Bar, Baz}"
         let output: [Token] = [
             .keyword("enum"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Foo"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .keyword("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Bar"),
             .symbol(","),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Baz"),
             .endOfScope("}"),
         ]
@@ -1288,18 +1288,18 @@ class TokenizerTests: XCTestCase {
         let input = "enum Foo<T> {case Bar, Baz}"
         let output: [Token] = [
             .keyword("enum"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Foo"),
             .startOfScope("<"),
             .identifier("T"),
             .endOfScope(">"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .keyword("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Bar"),
             .symbol(","),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Baz"),
             .endOfScope("}"),
         ]
@@ -1310,17 +1310,17 @@ class TokenizerTests: XCTestCase {
         let input = "enum Foo {\ncase Bar\ncase Baz\n}"
         let output: [Token] = [
             .keyword("enum"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Foo"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .keyword("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Bar"),
             .linebreak("\n"),
             .keyword("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Baz"),
             .linebreak("\n"),
             .endOfScope("}"),
@@ -1332,20 +1332,20 @@ class TokenizerTests: XCTestCase {
         let input = "switch x {\ncase 1:\nbreak\ncase 2:\nbreak\ndefault:\nbreak\n}"
         let output: [Token] = [
             .keyword("switch"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .endOfScope("case"),
-            .whitespace(" "),
+            .space(" "),
             .number("1"),
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("break"),
             .linebreak("\n"),
             .endOfScope("case"),
-            .whitespace(" "),
+            .space(" "),
             .number("2"),
             .startOfScope(":"),
             .linebreak("\n"),
@@ -1365,13 +1365,13 @@ class TokenizerTests: XCTestCase {
         let input = "switch x {\ncase .foo,\n.bar:\nbreak\ndefault:\nbreak\n}"
         let output: [Token] = [
             .keyword("switch"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .endOfScope("case"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("."),
             .identifier("foo"),
             .symbol(","),
@@ -1396,21 +1396,21 @@ class TokenizerTests: XCTestCase {
         let input = "switch x {\ncase foo is [Key: Value]:\nbreak\ndefault:\nbreak\n}"
         let output: [Token] = [
             .keyword("switch"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .endOfScope("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("foo"),
-            .whitespace(" "),
+            .space(" "),
             .keyword("is"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("["),
             .identifier("Key"),
             .symbol(":"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Value"),
             .endOfScope("]"),
             .startOfScope(":"),
@@ -1431,13 +1431,13 @@ class TokenizerTests: XCTestCase {
         let input = "switch x {\ncase 1:\nfoo.case\ndefault:\nbreak\n}"
         let output: [Token] = [
             .keyword("switch"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .endOfScope("case"),
-            .whitespace(" "),
+            .space(" "),
             .number("1"),
             .startOfScope(":"),
             .linebreak("\n"),
@@ -1459,13 +1459,13 @@ class TokenizerTests: XCTestCase {
         let input = "switch x {\ncase 1:\nfoo.default\ndefault:\nbreak\n}"
         let output: [Token] = [
             .keyword("switch"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .endOfScope("case"),
-            .whitespace(" "),
+            .space(" "),
             .number("1"),
             .startOfScope(":"),
             .linebreak("\n"),
@@ -1487,26 +1487,26 @@ class TokenizerTests: XCTestCase {
         let input = "switch x {\ncase 1:\nif case x = y {}\ndefault:\nbreak\n}"
         let output: [Token] = [
             .keyword("switch"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .endOfScope("case"),
-            .whitespace(" "),
+            .space(" "),
             .number("1"),
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("if"),
-            .whitespace(" "),
+            .space(" "),
             .keyword("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("="),
-            .whitespace(" "),
+            .space(" "),
             .identifier("y"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .endOfScope("}"),
             .linebreak("\n"),
@@ -1524,35 +1524,35 @@ class TokenizerTests: XCTestCase {
         let input = "switch x {\ncase 1:\nif case w = x, case y = z {}\ndefault:\nbreak\n}"
         let output: [Token] = [
             .keyword("switch"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .endOfScope("case"),
-            .whitespace(" "),
+            .space(" "),
             .number("1"),
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("if"),
-            .whitespace(" "),
+            .space(" "),
             .keyword("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("w"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("="),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
             .symbol(","),
-            .whitespace(" "),
+            .space(" "),
             .keyword("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("y"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("="),
-            .whitespace(" "),
+            .space(" "),
             .identifier("z"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .endOfScope("}"),
             .linebreak("\n"),
@@ -1570,28 +1570,28 @@ class TokenizerTests: XCTestCase {
         let input = "switch x {\ncase 1:\nguard case x = y else {}\ndefault:\nbreak\n}"
         let output: [Token] = [
             .keyword("switch"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .endOfScope("case"),
-            .whitespace(" "),
+            .space(" "),
             .number("1"),
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("guard"),
-            .whitespace(" "),
+            .space(" "),
             .keyword("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .symbol("="),
-            .whitespace(" "),
+            .space(" "),
             .identifier("y"),
-            .whitespace(" "),
+            .space(" "),
             .keyword("else"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .endOfScope("}"),
             .linebreak("\n"),
@@ -1609,33 +1609,33 @@ class TokenizerTests: XCTestCase {
         let input = "switch x {\ncase y: break\ndefault: break\n}\nenum Foo {\ncase z\n}"
         let output: [Token] = [
             .keyword("switch"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .endOfScope("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("y"),
             .startOfScope(":"),
-            .whitespace(" "),
+            .space(" "),
             .keyword("break"),
             .linebreak("\n"),
             .endOfScope("default"),
             .startOfScope(":"),
-            .whitespace(" "),
+            .space(" "),
             .keyword("break"),
             .linebreak("\n"),
             .endOfScope("}"),
             .linebreak("\n"),
             .keyword("enum"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Foo"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .keyword("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("z"),
             .linebreak("\n"),
             .endOfScope("}"),
@@ -1647,13 +1647,13 @@ class TokenizerTests: XCTestCase {
         let input = "switch x {\ncase 1:\nfoo.switch\ndefault:\nbreak\n}\nenum Foo {\ncase z\n}"
         let output: [Token] = [
             .keyword("switch"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("x"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .endOfScope("case"),
-            .whitespace(" "),
+            .space(" "),
             .number("1"),
             .startOfScope(":"),
             .linebreak("\n"),
@@ -1669,13 +1669,13 @@ class TokenizerTests: XCTestCase {
             .endOfScope("}"),
             .linebreak("\n"),
             .keyword("enum"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("Foo"),
-            .whitespace(" "),
+            .space(" "),
             .startOfScope("{"),
             .linebreak("\n"),
             .keyword("case"),
-            .whitespace(" "),
+            .space(" "),
             .identifier("z"),
             .linebreak("\n"),
             .endOfScope("}"),

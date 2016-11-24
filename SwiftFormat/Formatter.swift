@@ -53,42 +53,42 @@ public class Formatter {
     // MARK: access and mutation
 
     /// Returns the token at the specified index, or nil if index is invalid
-    public func tokenAtIndex(_ index: Int) -> Token? {
+    public func token(at index: Int) -> Token? {
         guard index >= 0 && index < tokens.count else { return nil }
         return tokens[index]
     }
 
     /// Replaces the token at the specified index with one or more new tokens
-    public func replaceTokenAtIndex(_ index: Int, with tokens: Token...) {
+    public func replaceToken(at index: Int, with tokens: Token...) {
         if tokens.count == 0 {
-            removeTokenAtIndex(index)
+            removeToken(at: index)
         } else {
             self.tokens[index] = tokens[0]
             for (i, token) in tokens.dropFirst().enumerated() {
-                insertToken(token, atIndex: index + i + 1)
+                insertToken(token, at: index + i + 1)
             }
         }
     }
 
     /// Replaces the tokens in the specified range with new tokens
-    public func replaceTokensInRange(_ range: Range<Int>, with tokens: [Token]) {
+    public func replaceTokens(inRange range: Range<Int>, with tokens: [Token]) {
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
-            replaceTokenAtIndex(range.lowerBound + i, with: tokens[i])
+            replaceToken(at: range.lowerBound + i, with: tokens[i])
         }
         if range.count > max {
             for _ in max ..< range.count {
-                removeTokenAtIndex(range.lowerBound + max)
+                removeToken(at: range.lowerBound + max)
             }
         } else {
             for i in max ..< tokens.count {
-                insertToken(tokens[i], atIndex: range.lowerBound + i)
+                insertToken(tokens[i], at: range.lowerBound + i)
             }
         }
     }
 
     /// Removes the token at the specified indez
-    public func removeTokenAtIndex(_ index: Int) {
+    public func removeToken(at index: Int) {
         tokens.remove(at: index)
         for (i, j) in indexStack.enumerated() where j >= index {
             indexStack[i] -= 1
@@ -96,8 +96,8 @@ public class Formatter {
     }
 
     /// Removes the tokens in the specified range
-    public func removeTokensInRange(_ range: Range<Int>) {
-        replaceTokensInRange(range, with: [])
+    public func removeTokens(inRange range: Range<Int>) {
+        replaceTokens(inRange: range, with: [])
     }
 
     /// Removes the last token
@@ -106,7 +106,7 @@ public class Formatter {
     }
 
     /// Inserts a tokens at the specified index
-    public func insertToken(_ token: Token, atIndex index: Int) {
+    public func insertToken(_ token: Token, at index: Int) {
         tokens.insert(token, at: index)
         for (i, j) in indexStack.enumerated() where j >= index {
             indexStack[i] += 1
@@ -130,7 +130,7 @@ public class Formatter {
     }
 
     /// As above, but only loops through tokens that match the specified filter block
-    public func forEachToken(_ matching: (Token) -> Bool, _ body: (Int, Token) -> Void) {
+    public func forEachToken(where matching: (Token) -> Bool, _ body: (Int, Token) -> Void) {
         forEachToken { index, token in
             if matching(token) {
                 body(index, token)
@@ -139,23 +139,28 @@ public class Formatter {
     }
 
     /// As above, but only loops through tokens with the specified type and string
-    public func forEachToken(_ token: Token, _ body: (Int, Token) -> Void) {
-        forEachToken({ $0 == token }, body)
+    public func forEach(_ token: Token, _ body: (Int, Token) -> Void) {
+        forEachToken(where: { $0 == token }, body)
+    }
+
+    /// As above, but only loops through tokens with the specified type and string
+    public func forEach(_ type: TokenType, _ body: (Int, Token) -> Void) {
+        forEachToken(where: { $0.is(type) }, body)
     }
 
     // MARK: utilities
 
     /// Returns the index of the next token at the current scope that matches the block
-    func indexOfNextToken(fromIndex index: Int, matching: (Token) -> Bool) -> Int? {
+    public func index(after index: Int, where matches: (Token) -> Bool) -> Int? {
         var i = index + 1
         var scopeStack: [Token] = []
-        while let token = tokenAtIndex(i) {
-            if let scope = scopeStack.last, token.closesScopeForToken(scope) {
+        while let token = token(at: i) {
+            if let scope = scopeStack.last, token.isEndOfScope(scope) {
                 scopeStack.removeLast()
                 if case .linebreak = token {
                     i -= 1
                 }
-            } else if scopeStack.count == 0 && matching(token) {
+            } else if scopeStack.count == 0 && matches(token) {
                 return i
             } else if case .startOfScope = token {
                 scopeStack.append(token)
@@ -166,90 +171,42 @@ public class Formatter {
     }
 
     /// Returns the index of the next token of the specified type
-    func indexOfNextToken(_ token: Token, fromIndex index: Int) -> Int? {
-        return indexOfNextToken(fromIndex: index) { $0 == token }
+    public func index(of token: Token, after index: Int) -> Int? {
+        return self.index(after: index, where: { $0 == token })
     }
 
-    /// Returns the index of the next linebreak token
-    func indexOfNextLinebreakToken(fromIndex index: Int) -> Int? {
-        return indexOfNextToken(fromIndex: index) { $0.isLinebreak }
-    }
-
-    /// Returns the index of the next token that isn't whitespace, a comment or a linebreak
-    func indexOfNextNonWhitespaceOrCommentOrLinebreakToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return indexOfNextToken(fromIndex: index) { !$0.isWhitespaceOrCommentOrLinebreak }.flatMap {
-            matches(tokens[$0]) ? $0 : nil }
-    }
-
-    /// Returns the index of the next token that isn't whitespace or a comment
-    func indexOfNextNonWhitespaceOrCommentToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return indexOfNextToken(fromIndex: index) { !$0.isWhitespaceOrComment }.flatMap {
-            matches(tokens[$0]) ? $0 : nil }
-    }
-
-    /// Returns the index of the next token that isn't whitespace or a linebreak
-    func indexOfNextNonWhitespaceOrLinebreakToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return indexOfNextToken(fromIndex: index) { !$0.isWhitespaceOrLinebreak }.flatMap {
-            matches(tokens[$0]) ? $0 : nil }
-    }
-
-    /// Returns the index of the next token that isn't whitespace
-    func indexOfNextNonWhitespaceToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return indexOfNextToken(fromIndex: index) { !$0.isWhitespace }.flatMap {
-            matches(tokens[$0]) ? $0 : nil }
+    /// Returns the index of the next token that isn't space or a linebreak
+    public func index(of type: TokenType, after index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return self.index(after: index, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the next token at the current scope that matches the block
-    public func nextToken(fromIndex index: Int, matching: (Token) -> Bool = { _ in true }) -> Token? {
-        return indexOfNextToken(fromIndex: index, matching: matching).map { tokens[$0] }
+    public func nextToken(after index: Int, where matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return self.index(after: index, where: matches).map { tokens[$0] }
     }
 
-    /// Returns the next token that isn't whitespace, a comment or a linebreak
-    public func nextNonWhitespaceOrCommentOrLinebreakToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return nextToken(fromIndex: index) { !$0.isWhitespaceOrCommentOrLinebreak }.flatMap {
-            matches($0) ? $0 : nil }
-    }
-
-    /// Returns the next token that isn't whitespace or a comment
-    public func nextNonWhitespaceOrCommentToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return nextToken(fromIndex: index) { !$0.isWhitespaceOrComment }.flatMap { matches($0) ? $0 : nil }
-    }
-
-    /// Returns the next token that isn't whitespace or a linebreak
-    public func nextNonWhitespaceOrLinebreakToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return nextToken(fromIndex: index) { !$0.isWhitespaceOrLinebreak }.flatMap { matches($0) ? $0 : nil }
-    }
-
-    /// Returns the next token that isn't whitespace
-    public func nextNonWhitespaceToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return nextToken(fromIndex: index) { !$0.isWhitespace }.flatMap { matches($0) ? $0 : nil }
+    /// Returns the next token at the current scope of the specified type
+    public func next(_ type: TokenType, after index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return self.index(of: type, after: index, if: matches).map { tokens[$0] }
     }
 
     /// Returns the index of the previous token at the current scope that matches the block
-    func indexOfPreviousToken(fromIndex index: Int, matching: (Token) -> Bool) -> Int? {
+    public func index(before index: Int, where matches: (Token) -> Bool) -> Int? {
         var i = index - 1
         var linebreakEncountered = false
         var scopeStack: [Token] = []
-        while let token = tokenAtIndex(i) {
+        while let token = token(at: i) {
             if case .startOfScope = token {
-                if let scope = scopeStack.last, scope.closesScopeForToken(token) {
+                if let scope = scopeStack.last, scope.isEndOfScope(token) {
                     scopeStack.removeLast()
                 } else if token.string == "//" && linebreakEncountered {
                     linebreakEncountered = false
-                } else if matching(token) {
+                } else if matches(token) {
                     return i
                 } else {
                     return nil
                 }
-            } else if scopeStack.count == 0 && matching(token) {
+            } else if scopeStack.count == 0 && matches(token) {
                 return i
             } else if case .linebreak = token {
                 linebreakEncountered = true
@@ -261,88 +218,35 @@ public class Formatter {
         return nil
     }
 
-    /// Returns the index of the previous token of the specified type
-    func indexOfPreviousToken(_ token: Token, fromIndex index: Int) -> Int? {
-        return indexOfPreviousToken(fromIndex: index) { $0 == token }
+    /// Returns the index of the previous token at the current scope of the specified type
+    public func index(of token: Token, before index: Int) -> Int? {
+        return self.index(before: index, where: { $0 == token })
     }
 
-    /// Returns the index of the previous linebreak token
-    func indexOfPreviousLinebreakToken(fromIndex index: Int) -> Int? {
-        return indexOfPreviousToken(fromIndex: index) { $0.isLinebreak }
-    }
-
-    /// Returns the index of the previous token that isn't whitespace, a comment or a linebreak
-    func indexOfPreviousNonWhitespaceOrCommentOrLinebreakToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return indexOfPreviousToken(fromIndex: index) { !$0.isWhitespaceOrCommentOrLinebreak }.flatMap {
-            matches(tokens[$0]) ? $0 : nil }
-    }
-
-    /// Returns the index of the previous token that isn't whitespace or a comment
-    func indexOfPreviousNonWhitespaceOrCommentToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return indexOfPreviousToken(fromIndex: index) { !$0.isWhitespaceOrComment }.flatMap {
-            matches(tokens[$0]) ? $0 : nil }
-    }
-
-    /// Returns the index of the previous token that isn't whitespace or a linebreak
-    func indexOfPreviousNonWhitespaceOrLinebreakToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return indexOfPreviousToken(fromIndex: index) { !$0.isWhitespaceOrLinebreak }.flatMap {
-            matches(tokens[$0]) ? $0 : nil }
-    }
-
-    /// Returns the index of the previous token that isn't whitespace
-    func indexOfPreviousNonWhitespaceToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return indexOfPreviousToken(fromIndex: index) { !$0.isWhitespace }.flatMap {
-            matches(tokens[$0]) ? $0 : nil }
+    /// Returns the index of the previous token at the current scope of the specified type
+    public func index(of type: TokenType, before index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return self.index(before: index, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the previous token at the current scope that matches the block
-    func previousToken(fromIndex index: Int, matching: (Token) -> Bool) -> Token? {
-        return indexOfPreviousToken(fromIndex: index, matching: matching).map { tokens[$0] }
+    public func lastToken(before index: Int, where matches: (Token) -> Bool) -> Token? {
+        return self.index(before: index, where: matches).map { tokens[$0] }
     }
 
-    /// Returns the previous token that isn't whitespace, a comment or a linebreak
-    func previousNonWhitespaceOrCommentOrLinebreakToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return previousToken(fromIndex: index) { !$0.isWhitespaceOrCommentOrLinebreak }.flatMap {
-            matches($0) ? $0 : nil }
-    }
-
-    /// Returns the previous token that isn't whitespace or a comment
-    func previousNonWhitespaceOrCommentToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return previousToken(fromIndex: index) { !$0.isWhitespaceOrComment }.flatMap { matches($0) ? $0 : nil }
-    }
-
-    /// Returns the previous token that isn't whitespace or a linebreak
-    func previousNonWhitespaceOrLinebreakToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return previousToken(fromIndex: index) { !$0.isWhitespaceOrLinebreak }.flatMap { matches($0) ? $0 : nil }
-    }
-
-    /// Returns the previous token that isn't whitespace
-    func previousNonWhitespaceToken(
-        fromIndex index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return previousToken(fromIndex: index) { !$0.isWhitespace }.flatMap { matches($0) ? $0 : nil }
+    /// Returns the previous token at the current scope of the specified type
+    public func last(_ type: TokenType, before index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return self.index(of: type, before: index, if: matches).map { tokens[$0] }
     }
 
     /// Returns the starting token for the containing scope at the specified index
-    public func scopeAtIndex(_ index: Int) -> Token? {
-        return previousToken(fromIndex: index) {
-            if case .startOfScope = $0 {
-                return true
-            }
-            return false
-        }
+    public func currentScope(at index: Int) -> Token? {
+        return last(.startOfScope, before: index)
     }
 
     /// Returns the index of the first token of the line containing the specified index
-    public func startOfLine(atIndex index: Int) -> Int {
+    public func startOfLine(at index: Int) -> Int {
         var index = index
-        while let token = tokenAtIndex(index - 1) {
+        while let token = token(at: index - 1) {
             if case .linebreak = token {
                 break
             }
@@ -351,26 +255,26 @@ public class Formatter {
         return index
     }
 
-    /// Returns the whitespace token at the start of the line containing the specified index
-    public func indentTokenForLineAtIndex(_ index: Int) -> Token? {
-        if let token = tokenAtIndex(startOfLine(atIndex: index)), token.isWhitespace {
-            return token
+    /// Returns the space at the start of the line containing the specified index
+    public func indentForLine(at index: Int) -> String {
+        if let token = token(at: startOfLine(at: index)), case .space(let string) = token {
+            return string
         }
-        return nil
+        return ""
     }
 
-    /// Either modifies or removes the existing whitespace token at the specified
-    /// index, or inserts a new one if there is not already a whitespace token present.
+    /// Either modifies or removes the existing space token at the specified
+    /// index, or inserts a new one if there is not already a space token present.
     /// Returns the number of tokens inserted or removed
-    @discardableResult func insertWhitespace(_ whitespace: String, atIndex index: Int) -> Int {
-        if tokenAtIndex(index)?.isWhitespace == true {
-            if whitespace.isEmpty {
-                removeTokenAtIndex(index)
+    @discardableResult func insertSpace(_ space: String, at index: Int) -> Int {
+        if token(at: index)?.isSpace == true {
+            if space.isEmpty {
+                removeToken(at: index)
                 return -1 // Removed 1 token
             }
-            replaceTokenAtIndex(index, with: .whitespace(whitespace))
-        } else if !whitespace.isEmpty {
-            insertToken(.whitespace(whitespace), atIndex: index)
+            replaceToken(at: index, with: .space(space))
+        } else if !space.isEmpty {
+            insertToken(.space(space), at: index)
             return 1 // Inserted 1 token
         }
         return 0 // Inserted 0 tokens

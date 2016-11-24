@@ -45,7 +45,7 @@ class FormatterTests: XCTestCase {
         formatter.forEachToken { i, token in
             output.append(token)
             if i == 1 {
-                formatter.removeTokenAtIndex(i)
+                formatter.removeToken(at: i)
             }
         }
         XCTAssertEqual(output, input)
@@ -62,7 +62,7 @@ class FormatterTests: XCTestCase {
         formatter.forEachToken { i, token in
             output.append(token)
             if i == 1 {
-                formatter.removeTokenAtIndex(i - 1)
+                formatter.removeToken(at: i - 1)
             }
         }
         XCTAssertEqual(output, input)
@@ -79,7 +79,7 @@ class FormatterTests: XCTestCase {
         formatter.forEachToken { i, token in
             output.append(token)
             if i == 1 {
-                formatter.removeTokenAtIndex(i + 1)
+                formatter.removeToken(at: i + 1)
             }
         }
         XCTAssertEqual(output, [Token](input.dropLast()))

@@ -944,33 +944,33 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    // MARK: trailingWhitespace
+    // MARK: trailingSpace
 
-    func testTrailingWhitespace() {
+    func testTrailingSpace() {
         let input = "foo  \nbar"
         let output = "foo\nbar"
-        XCTAssertEqual(try! format(input, rules: [trailingWhitespace]), output)
+        XCTAssertEqual(try! format(input, rules: [trailingSpace]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testTrailingWhitespaceAtEndOfFile() {
+    func testTrailingSpaceAtEndOfFile() {
         let input = "foo  "
         let output = "foo"
-        XCTAssertEqual(try! format(input, rules: [trailingWhitespace]), output)
+        XCTAssertEqual(try! format(input, rules: [trailingSpace]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testTrailingWhitespaceInMultilineComments() {
+    func testTrailingSpaceInMultilineComments() {
         let input = "/* foo  \n bar  */"
         let output = "/* foo\n bar  */"
-        XCTAssertEqual(try! format(input, rules: [trailingWhitespace]), output)
+        XCTAssertEqual(try! format(input, rules: [trailingSpace]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testTrailingWhitespaceInSingleLineComments() {
+    func testTrailingSpaceInSingleLineComments() {
         let input = "// foo  \n// bar  "
         let output = "// foo\n// bar"
-        XCTAssertEqual(try! format(input, rules: [trailingWhitespace]), output)
+        XCTAssertEqual(try! format(input, rules: [trailingSpace]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
@@ -2406,7 +2406,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testWhitespaceInSpecifiersLeftIntact() {
+    func testSpaceInSpecifiersLeftIntact() {
         let input = "weak private(set) /* read-only */\npublic var"
         let output = "private(set) /* read-only */\npublic weak var"
         XCTAssertEqual(try! format(input, rules: [specifiers]), output)
@@ -2674,14 +2674,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testWhitespaceInsertedWhenRemovingParens() {
+    func testSpaceInsertedWhenRemovingParens() {
         let input = "if(x.y) {}"
         let output = "if x.y {}"
         XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules), output + "\n")
     }
 
-    func testNoDoubleWhitespaceWhenRemovingParens() {
+    func testNoDoubleSpaceWhenRemovingParens() {
         let input = "if ( x.y ) {}"
         let output = "if x.y {}"
         XCTAssertEqual(try! format(input, rules: [redundantParens]), output)
@@ -2729,7 +2729,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: defaultRules, options: options), output + "\n")
     }
 
-    func testNoDoubleWhitespaceAddedToWrappedArray() {
+    func testNoDoubleSpaceAddedToWrappedArray() {
         let input = "[ foo, bar,\n    baz ]"
         let output = "[\n    foo,\n    bar,\n    baz\n]"
         let options = FormatOptions(trailingCommas: false)

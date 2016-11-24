@@ -50,6 +50,25 @@ private let swiftKeywords = [
     "default", "protocol",
 ]
 
+/// Classes of token used for matching
+public enum TokenType {
+    case space
+    case spaceOrComment
+    case spaceOrLinebreak
+    case spaceOrCommentOrLinebreak
+    case linebreak
+    case startOfScope
+    case endOfScope
+    case error
+
+    // Negative types
+    case nonSpace
+    case nonSpaceOrComment
+    case nonSpaceOrLinebreak
+    case nonSpaceOrCommentOrLinebreak
+}
+
+/// All token types
 public enum Token: Equatable {
     case number(String)
     case linebreak(String)
@@ -59,7 +78,7 @@ public enum Token: Equatable {
     case stringBody(String)
     case keyword(String)
     case identifier(String)
-    case whitespace(String)
+    case space(String)
     case commentBody(String)
     case error(String)
 
@@ -73,15 +92,51 @@ public enum Token: Equatable {
              .stringBody(let string),
              .keyword(let string),
              .identifier(let string),
-             .whitespace(let string),
+             .space(let string),
              .commentBody(let string),
              .error(let string):
             return string
         }
     }
 
+    public func `is`(_ type: TokenType) -> Bool {
+        switch type {
+        case .space:
+            return isSpace
+        case .spaceOrComment:
+            return isSpaceOrComment
+        case .spaceOrLinebreak:
+            return isSpaceOrLinebreak
+        case .spaceOrCommentOrLinebreak:
+            return isSpaceOrCommentOrLinebreak
+        case .linebreak:
+            return isLinebreak
+        case .startOfScope:
+            return isStartOfScope
+        case .endOfScope:
+            return isEndOfScope
+        case .error:
+            return isError
+        case .nonSpace:
+            return !isSpace
+        case .nonSpaceOrComment:
+            return !isSpaceOrComment
+        case .nonSpaceOrLinebreak:
+            return !isSpaceOrLinebreak
+        case .nonSpaceOrCommentOrLinebreak:
+            return !isSpaceOrCommentOrLinebreak
+        }
+    }
+
     public var isError: Bool {
         if case .error = self {
+            return true
+        }
+        return false
+    }
+
+    public var isStartOfScope: Bool {
+        if case .startOfScope = self {
             return true
         }
         return false
@@ -103,8 +158,8 @@ public enum Token: Equatable {
         }
     }
 
-    public var isWhitespace: Bool {
-        if case .whitespace = self {
+    public var isSpace: Bool {
+        if case .space = self {
             return true
         }
         return false
@@ -117,18 +172,18 @@ public enum Token: Equatable {
         return false
     }
 
-    public var isWhitespaceOrLinebreak: Bool {
+    public var isSpaceOrLinebreak: Bool {
         switch self {
-        case .linebreak, .whitespace:
+        case .linebreak, .space:
             return true
         default:
             return false
         }
     }
 
-    public var isWhitespaceOrComment: Bool {
+    public var isSpaceOrComment: Bool {
         switch self {
-        case .whitespace,
+        case .space,
              .commentBody,
              .startOfScope("//"),
              .startOfScope("/*"),
@@ -139,10 +194,10 @@ public enum Token: Equatable {
         }
     }
 
-    public var isWhitespaceOrCommentOrLinebreak: Bool {
+    public var isSpaceOrCommentOrLinebreak: Bool {
         switch self {
         case .linebreak,
-             .whitespace,
+             .space,
              .commentBody,
              .startOfScope("//"),
              .startOfScope("/*"),
@@ -153,7 +208,7 @@ public enum Token: Equatable {
         }
     }
 
-    public func closesScopeForToken(_ token: Token) -> Bool {
+    public func isEndOfScope(_ token: Token) -> Bool {
         switch self {
         case .endOfScope(let closing):
             guard case .startOfScope(let opening) = token else {
@@ -235,8 +290,8 @@ public enum Token: Equatable {
             if case .commentBody(string) = rhs {
                 return true
             }
-        case .whitespace(let string):
-            if case .whitespace(string) = rhs {
+        case .space(let string):
+            if case .space(string) = rhs {
                 return true
             }
         case .error(let string):
@@ -251,12 +306,12 @@ public enum Token: Equatable {
 extension UnicodeScalar {
     var isDigit: Bool { return isdigit(Int32(value)) > 0 }
     var isHexDigit: Bool { return isxdigit(Int32(value)) > 0 }
-    var isWhitespace: Bool { return self == " " || self == "\t" || value == 0x0B }
+    var isSpace: Bool { return self == " " || self == "\t" || value == 0x0B }
 }
 
 private extension String.UnicodeScalarView {
 
-    mutating func scanCharacters(_ matching: (UnicodeScalar) -> Bool) -> String? {
+    mutating func readCharacters(where matching: (UnicodeScalar) -> Bool) -> String? {
         var index = startIndex
         while index < endIndex {
             if !matching(self[index]) {
@@ -272,7 +327,7 @@ private extension String.UnicodeScalarView {
         return nil
     }
 
-    mutating func scanCharacters(head: (UnicodeScalar) -> Bool, tail: (UnicodeScalar) -> Bool) -> String? {
+    mutating func read(head: (UnicodeScalar) -> Bool, tail: (UnicodeScalar) -> Bool) -> String? {
         if let c = first, head(c) {
             var index = self.index(after: startIndex)
             while index < endIndex {
@@ -288,7 +343,7 @@ private extension String.UnicodeScalarView {
         return nil
     }
 
-    mutating func scanCharacter(_ matching: (UnicodeScalar) -> Bool = { _ in true }) -> UnicodeScalar? {
+    mutating func readCharacter(where matching: (UnicodeScalar) -> Bool = { _ in true }) -> UnicodeScalar? {
         if let c = first, matching(c) {
             self = dropFirst()
             return c
@@ -296,7 +351,7 @@ private extension String.UnicodeScalarView {
         return nil
     }
 
-    mutating func scanCharacter(_ character: UnicodeScalar) -> Bool {
+    mutating func read(_ character: UnicodeScalar) -> Bool {
         if first == character {
             self = dropFirst()
             return true
@@ -307,30 +362,30 @@ private extension String.UnicodeScalarView {
 
 private extension String.UnicodeScalarView {
 
-    mutating func parseWhitespace() -> Token? {
-        return scanCharacters({ $0.isWhitespace }).map { .whitespace($0) }
+    mutating func parseSpace() -> Token? {
+        return readCharacters(where: { $0.isSpace }).map { .space($0) }
     }
 
     mutating func parseLineBreak() -> Token? {
-        if scanCharacter("\r") {
-            if scanCharacter("\n") {
+        if read("\r") {
+            if read("\n") {
                 return .linebreak("\r\n")
             }
             return .linebreak("\r")
         }
-        return scanCharacter("\n") ? .linebreak("\n") : nil
+        return read("\n") ? .linebreak("\n") : nil
     }
 
     mutating func parsePunctuation() -> Token? {
-        return scanCharacter({ ":;,".unicodeScalars.contains($0) }).map { .symbol(String($0)) }
+        return readCharacter(where: { ":;,".unicodeScalars.contains($0) }).map { .symbol(String($0)) }
     }
 
     mutating func parseStartOfScope() -> Token? {
-        return scanCharacter({ "<([{\"".unicodeScalars.contains($0) }).map { .startOfScope(String($0)) }
+        return readCharacter(where: { "<([{\"".unicodeScalars.contains($0) }).map { .startOfScope(String($0)) }
     }
 
     mutating func parseEndOfScope() -> Token? {
-        return scanCharacter({ "}])>".unicodeScalars.contains($0) }).map { .endOfScope(String($0)) }
+        return readCharacter(where: { "}])>".unicodeScalars.contains($0) }).map { .endOfScope(String($0)) }
     }
 
     mutating func parseOperator() -> Token? {
@@ -379,7 +434,7 @@ private extension String.UnicodeScalarView {
         }
 
         var start = self
-        if var tail = scanCharacter(isHead) {
+        if var tail = readCharacter(where: isHead) {
             switch tail {
             case "?", "!":
                 return .symbol(String(tail))
@@ -391,7 +446,7 @@ private extension String.UnicodeScalarView {
             var head = ""
             // Tail may only contain dot if head does
             let headWasDot = (tail == ".")
-            while let c = scanCharacter({ isTail($0) && (headWasDot || $0 != ".") }) {
+            while let c = readCharacter(where: { isTail($0) && (headWasDot || $0 != ".") }) {
                 if tail == "/" {
                     if c == "*" {
                         if head == "" {
@@ -492,18 +547,18 @@ private extension String.UnicodeScalarView {
             }
         }
 
-        func scanIdentifier() -> String? {
-            return scanCharacters(head: isHead, tail: isTail)
+        func readIdentifier() -> String? {
+            return read(head: isHead, tail: isTail)
         }
 
         let start = self
-        if scanCharacter("`") {
-            if let identifier = scanIdentifier(), scanCharacter("`") {
+        if read("`") {
+            if let identifier = readIdentifier(), read("`") {
                 return .identifier("`" + identifier + "`")
             }
             self = start
-        } else if scanCharacter("#") {
-            if let identifier = scanIdentifier() {
+        } else if read("#") {
+            if let identifier = readIdentifier() {
                 if identifier == "if" {
                     return .startOfScope("#if")
                 }
@@ -513,12 +568,12 @@ private extension String.UnicodeScalarView {
                 return .keyword("#" + identifier)
             }
             self = start
-        } else if scanCharacter("@") {
-            if let identifier = scanIdentifier() {
+        } else if read("@") {
+            if let identifier = readIdentifier() {
                 return .keyword("@" + identifier)
             }
             self = start
-        } else if let identifier = scanIdentifier() {
+        } else if let identifier = readIdentifier() {
             if swiftKeywords.contains(identifier) {
                 return .keyword(identifier)
             }
@@ -529,23 +584,23 @@ private extension String.UnicodeScalarView {
 
     mutating func parseNumber() -> Token? {
 
-        func scanNumber(_ head: @escaping (UnicodeScalar) -> Bool) -> String? {
-            return scanCharacters(head: head, tail: { head($0) || $0 == "_" })
+        func readNumber(where head: @escaping (UnicodeScalar) -> Bool) -> String? {
+            return read(head: head, tail: { head($0) || $0 == "_" })
         }
 
-        func scanInteger() -> String? {
-            return scanNumber({ $0.isDigit })
+        func readInteger() -> String? {
+            return readNumber(where: { $0.isDigit })
         }
 
-        guard let integer = scanInteger() else {
+        guard let integer = readInteger() else {
             return nil
         }
 
         if integer == "0" {
-            if scanCharacter("x") {
-                if let hex = scanNumber({ $0.isHexDigit }) {
-                    if scanCharacter("p") {
-                        if let power = scanInteger() {
+            if read("x") {
+                if let hex = readNumber(where: { $0.isHexDigit }) {
+                    if read("p") {
+                        if let power = readInteger() {
                             return .number("0x" + hex + "p" + power)
                         }
                         return .error("0x" + hex + "p" + String(self))
@@ -553,13 +608,13 @@ private extension String.UnicodeScalarView {
                     return .number("0x" + hex)
                 }
                 return .error("0x" + String(self))
-            } else if scanCharacter("b") {
-                if let bin = scanNumber({ "01".unicodeScalars.contains($0) }) {
+            } else if read("b") {
+                if let bin = readNumber(where: { "01".unicodeScalars.contains($0) }) {
                     return .number("0b" + bin)
                 }
                 return .error("0b" + String(self))
-            } else if scanCharacter("o") {
-                if let octal = scanNumber({ ("0" ... "7").contains($0) }) {
+            } else if read("o") {
+                if let octal = readNumber(where: { ("0" ... "7").contains($0) }) {
                     return .number("0o" + octal)
                 }
                 return .error("0o" + String(self))
@@ -568,7 +623,7 @@ private extension String.UnicodeScalarView {
 
         var number: String
         let endOfInt = self
-        if scanCharacter("."), let fraction = scanInteger() {
+        if read("."), let fraction = readInteger() {
             number = integer + "." + fraction
         } else {
             self = endOfInt
@@ -576,9 +631,9 @@ private extension String.UnicodeScalarView {
         }
 
         let endOfFloat = self
-        if let e = scanCharacter({ "eE".unicodeScalars.contains($0) }) {
-            let sign = scanCharacter({ "-+".unicodeScalars.contains($0) }).map { String($0) } ?? ""
-            if let exponent = scanInteger() {
+        if let e = readCharacter(where: { "eE".unicodeScalars.contains($0) }) {
+            let sign = readCharacter(where: { "-+".unicodeScalars.contains($0) }).map { String($0) } ?? ""
+            if let exponent = readInteger() {
                 number += String(e) + sign + exponent
             } else {
                 self = endOfFloat
@@ -590,7 +645,7 @@ private extension String.UnicodeScalarView {
 
     mutating func parseToken() -> Token? {
         // Have to split into groups for Swift to be able to process this
-        if let token = parseWhitespace() ??
+        if let token = parseSpace() ??
             parseLineBreak() ??
             parseNumber() ??
             parseIdentifier() {
@@ -619,7 +674,7 @@ public func tokenize(_ source: String) -> [Token] {
     func processStringBody() {
         var string = ""
         var escaped = false
-        while let c = characters.scanCharacter() {
+        while let c = characters.readCharacter() {
             switch c {
             case "\\":
                 escaped = !escaped
@@ -654,31 +709,31 @@ public func tokenize(_ source: String) -> [Token] {
     }
 
     var comment = ""
-    var whitespace = ""
+    var space = ""
 
     func flushCommentBodyTokens() {
         if comment != "" {
             tokens.append(.commentBody(comment))
             comment = ""
         }
-        if whitespace != "" {
-            tokens.append(.whitespace(whitespace))
-            whitespace = ""
+        if space != "" {
+            tokens.append(.space(space))
+            space = ""
         }
     }
 
     func processCommentBody() {
-        while let c = characters.scanCharacter() {
+        while let c = characters.readCharacter() {
             switch c {
             case "/":
-                if characters.scanCharacter("*") {
+                if characters.read("*") {
                     flushCommentBodyTokens()
                     scopeIndexStack.append(tokens.count)
                     tokens.append(.startOfScope("/*"))
                     continue
                 }
             case "*":
-                if characters.scanCharacter("/") {
+                if characters.read("/") {
                     flushCommentBodyTokens()
                     tokens.append(.endOfScope("*/"))
                     scopeIndexStack.removeLast()
@@ -693,25 +748,25 @@ public func tokenize(_ source: String) -> [Token] {
                 continue
             case "\r":
                 flushCommentBodyTokens()
-                if characters.scanCharacter("\n") {
+                if characters.read("\n") {
                     tokens.append(.linebreak("\r\n"))
                 } else {
                     tokens.append(.linebreak("\r"))
                 }
                 continue
             default:
-                if c.isWhitespace {
-                    whitespace.append(Character(c))
+                if c.isSpace {
+                    space.append(Character(c))
                     continue
                 }
             }
-            if whitespace != "" {
+            if space != "" {
                 if comment == "" {
-                    tokens.append(.whitespace(whitespace))
+                    tokens.append(.space(space))
                 } else {
-                    comment += whitespace
+                    comment += space
                 }
-                whitespace = ""
+                space = ""
             }
             comment.append(Character(c))
         }
@@ -720,18 +775,18 @@ public func tokenize(_ source: String) -> [Token] {
     }
 
     func processSingleLineCommentBody() {
-        while let c = characters.scanCharacter({ !"\r\n".unicodeScalars.contains($0) }) {
-            if c.isWhitespace {
-                whitespace.append(Character(c))
+        while let c = characters.readCharacter(where: { !"\r\n".unicodeScalars.contains($0) }) {
+            if c.isSpace {
+                space.append(Character(c))
                 continue
             }
-            if whitespace != "" {
+            if space != "" {
                 if comment == "" {
-                    tokens.append(.whitespace(whitespace))
+                    tokens.append(.space(space))
                 } else {
-                    comment += whitespace
+                    comment += space
                 }
-                whitespace = ""
+                space = ""
             }
             comment.append(Character(c))
         }
@@ -748,7 +803,7 @@ public func tokenize(_ source: String) -> [Token] {
         assert(tokens[index] == .endOfScope(">"))
         tokens[index] = .symbol(">")
         stitchSymbols(at: index)
-        if let previousIndex = lastNonWhitespaceIndex(from: index),
+        if let previousIndex = lastNonSpaceIndex(before: index),
             tokens[previousIndex] == .endOfScope(">") {
             convertClosingChevronToSymbol(at: previousIndex, andOpeningChevron: true)
         }
@@ -761,7 +816,7 @@ public func tokenize(_ source: String) -> [Token] {
     func isUnwrapSymbolOrPunctuation(at index: Int) -> Bool {
         let token = tokens[index]
         if case .symbol(let string) = token {
-            if ["?", "!"].contains(string), index > 0, !tokens[index - 1].isWhitespaceOrLinebreak {
+            if ["?", "!"].contains(string), index > 0, !tokens[index - 1].isSpaceOrLinebreak {
                 return true
             } else if [":", ";", ","].contains(string) {
                 return true
@@ -782,8 +837,8 @@ public func tokenize(_ source: String) -> [Token] {
             tokens.remove(at: index + 1)
         }
         var index = index
-        while let previousToken: Token = index > 1 ? tokens[index - 1] : nil,
-            case .symbol(let prevString) = previousToken, !isUnwrapSymbolOrPunctuation(at: index - 1) {
+        while let prevToken: Token = index > 1 ? tokens[index - 1] : nil,
+            case .symbol(let prevString) = prevToken, !isUnwrapSymbolOrPunctuation(at: index - 1) {
             string = prevString + string
             tokens[index - 1] = .symbol(string)
             tokens.remove(at: index)
@@ -791,9 +846,9 @@ public func tokenize(_ source: String) -> [Token] {
         }
     }
 
-    func lastNonWhitespaceIndex(from index: Int) -> Int? {
+    func lastNonSpaceIndex(before index: Int) -> Int? {
         if index > 0 {
-            if !tokens[index - 1].isWhitespace {
+            if !tokens[index - 1].isSpace {
                 return index - 1
             } else if index > 1 {
                 return index - 2
@@ -804,12 +859,12 @@ public func tokenize(_ source: String) -> [Token] {
 
     func processToken() {
         let token = tokens.last!
-        if !token.isWhitespace {
+        if !token.isSpace {
             switch token {
             case .keyword(let string):
                 // Track switch/case statements
-                let previousToken = lastNonWhitespaceIndex(from: tokens.count - 1).map { tokens[$0] }
-                if previousToken == .symbol(".") {
+                let prevToken = lastNonSpaceIndex(before: tokens.count - 1).map { tokens[$0] }
+                if prevToken == .symbol(".") {
                     tokens[tokens.count - 1] = .identifier(string)
                     processToken()
                     return
@@ -823,8 +878,8 @@ public func tokenize(_ source: String) -> [Token] {
                         processToken()
                         return
                     case "case":
-                        if let previousToken = previousToken {
-                            switch previousToken {
+                        if let prevToken = prevToken {
+                            switch prevToken {
                             case .keyword("if"),
                                  .keyword("guard"),
                                  .keyword("while"),
@@ -847,9 +902,9 @@ public func tokenize(_ source: String) -> [Token] {
                 break
             }
             // Fix up misidentified generic that is actually a pair of operators
-            if let previousIndex = lastNonWhitespaceIndex(from: tokens.count - 1) {
-                let previousToken = tokens[previousIndex]
-                if case .endOfScope(">") = previousToken {
+            if let previousIndex = lastNonSpaceIndex(before: tokens.count - 1) {
+                let prevToken = tokens[previousIndex]
+                if case .endOfScope(">") = prevToken {
                     switch token {
                     case .symbol(let string):
                         if !["=", "->", ",", ":", ";", "?", "!", "."].contains(string) {
@@ -867,7 +922,7 @@ public func tokenize(_ source: String) -> [Token] {
         }
         if let scopeIndex = scopeIndexStack.last {
             let scope = tokens[scopeIndex]
-            if token.closesScopeForToken(scope) {
+            if token.isEndOfScope(scope) {
                 scopeIndexStack.removeLast()
                 switch token {
                 case .symbol(":"):

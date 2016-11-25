@@ -73,7 +73,7 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = ni
 
 /// Format a pre-parsed token array
 public func format(_ tokens: [Token],
-                   rules: [FormatRule] = defaultRules,
+                   rules: [FormatRule] = FormatRules.default,
                    options: FormatOptions = FormatOptions()) throws -> String {
     // Parse
     guard options.fragment || tokens.last?.isError == false else {
@@ -93,7 +93,7 @@ public func format(_ tokens: [Token],
 
 /// Format code with specified rules and options
 public func format(_ source: String,
-                   rules: [FormatRule] = defaultRules,
+                   rules: [FormatRule] = FormatRules.default,
                    options: FormatOptions = FormatOptions()) throws -> String {
 
     return try format(tokenize(source), rules: rules, options: options)
@@ -121,7 +121,7 @@ func inferOptions(from inputURL: URL) -> (Int, FormatOptions) {
 }
 
 func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = nil,
-                  withOptions options: FormatOptions, cacheURL: URL? = nil) -> (Int, Int) {
+                  withRules rules: [FormatRule], options: FormatOptions, cacheURL: URL? = nil) -> (Int, Int) {
     // Load cache
     let cachePrefix = version + String(describing: options)
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
@@ -147,7 +147,7 @@ func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = nil,
                     // No changes needed
                     return
                 }
-                guard let output = try? format(input, options: options) else {
+                guard let output = try? format(input, rules: rules, options: options) else {
                     print("error: could not parse file: \(inputURL.path)")
                     return
                 }
@@ -304,6 +304,8 @@ let commandLineArguments = [
     "experimental",
     "fragment",
     "cache",
+    "disable",
+    "rules",
     "help",
     "version",
 ]

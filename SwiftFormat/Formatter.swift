@@ -39,7 +39,7 @@ import Foundation
 /// The primary advantage it provides over operating on the token array
 /// directly is that it allows mutation during enumeration, and
 /// transparently handles changes that affect the current token index.
-public class Formatter {
+public class Formatter: NSObject {
     private(set) var tokens: [Token]
     let options: FormatOptions
 

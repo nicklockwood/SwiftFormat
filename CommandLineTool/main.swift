@@ -34,6 +34,7 @@
 import Foundation
 
 func showHelp() {
+    print("")
     print("swiftformat, version \(version)")
     print("copyright (c) 2016 Nick Lockwood")
     print("")
@@ -59,10 +60,13 @@ func showHelp() {
     print(" --wrapelements    wrap array elements. \"beforefirst\" (default) or \"disabled\"")
     print(" --hexliterals     casing for hex literals. \"uppercase\" (default) or \"lowercase\"")
     print(" --experimental    experimental rules. \"enabled\" or \"disabled\" (default)")
+    print(" --disable         a comma-delimited list of format rules that should be disabled")
     print(" --fragment        input is part of a larger file. \"true\" or \"false\" (default)")
     print(" --cache           path to cache file, or \"clear\" or \"ignore\" the default cache")
-    print(" --help            this help page")
-    print(" --version         version information")
+    print("")
+    print(" --rules           prints the list of all format rules")
+    print(" --help            print this help page")
+    print(" --version         prints version information")
     print("")
 }
 
@@ -288,6 +292,16 @@ func processArguments(_ args: [String]) {
         return
     }
 
+    // Version
+    if args["rules"] != nil {
+        print("")
+        for name in FormatRules.byName.keys {
+            print(" " + name)
+        }
+        print("")
+        return
+    }
+
     // Show help if requested specifically or if no arguments are passed
     if args["help"] != nil {
         showHelp()
@@ -300,6 +314,20 @@ func processArguments(_ args: [String]) {
         return
     }
 
+    // Rules
+    var rulesByName = FormatRules.byName
+    if let names = args["disable"]?.components(separatedBy: ",") {
+        for name in names {
+            var name = (name as NSString).trimmingCharacters(in: .whitespaces)
+            if !rulesByName.keys.contains(name) {
+                print("error: unknown rule '\(name)'")
+                return
+            }
+            rulesByName.removeValue(forKey: name)
+        }
+    }
+    let rules = Array(rulesByName.values)
+
     // Infer options
     if args["inferoptions"] != nil {
         if let inferURL = args["inferoptions"].map({ expandPath($0) }) {
@@ -307,7 +335,7 @@ func processArguments(_ args: [String]) {
             var files = 0
             var arguments = ""
             let time = timeEvent {
-                let (count, options) = inferOptions(after: inferURL)
+                let (count, options) = inferOptions(from: inferURL)
                 arguments = commandLineArguments(for: options).map({
                     "--\($0) \($1)" }).joined(separator: " ")
                 files = count
@@ -393,7 +421,7 @@ func processArguments(_ args: [String]) {
                 input = (input ?? "") + line
             }
             if let input = input {
-                guard let output = try? format(input, rules: defaultRules, options: options) else {
+                guard let output = try? format(input, rules: rules, options: options) else {
                     print("error: could not parse input")
                     finished = true
                     return
@@ -429,7 +457,8 @@ func processArguments(_ args: [String]) {
     var filesWritten = 0, filesChecked = 0
     let time = timeEvent {
         (filesWritten, filesChecked) =
-            processInput(inputURLs, andWriteToOutput: outputURL, withOptions: options, cacheURL: cacheURL)
+            processInput(inputURLs, andWriteToOutput: outputURL,
+                         withRules: rules, options: options, cacheURL: cacheURL)
     }
     print("swiftformat completed. \(filesWritten)/\(filesChecked) " +
         "file\(filesChecked == 1 ? "" : "s") updated in \(time)")

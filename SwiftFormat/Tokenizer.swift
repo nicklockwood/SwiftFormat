@@ -165,6 +165,18 @@ public enum Token: Equatable {
         return false
     }
 
+    public var isComment: Bool {
+        switch self {
+        case .commentBody,
+             .startOfScope("//"),
+             .startOfScope("/*"),
+             .endOfScope("*/"):
+            return true
+        default:
+            return false
+        }
+    }
+
     public var isLinebreak: Bool {
         if case .linebreak = self {
             return true
@@ -173,39 +185,19 @@ public enum Token: Equatable {
     }
 
     public var isSpaceOrLinebreak: Bool {
-        switch self {
-        case .linebreak, .space:
-            return true
-        default:
-            return false
-        }
+        return isSpace || isLinebreak
+    }
+
+    public var isCommentOrLinebreak: Bool {
+        return isComment || isLinebreak
     }
 
     public var isSpaceOrComment: Bool {
-        switch self {
-        case .space,
-             .commentBody,
-             .startOfScope("//"),
-             .startOfScope("/*"),
-             .endOfScope("*/"):
-            return true
-        default:
-            return false
-        }
+        return isSpace || isComment
     }
 
     public var isSpaceOrCommentOrLinebreak: Bool {
-        switch self {
-        case .linebreak,
-             .space,
-             .commentBody,
-             .startOfScope("//"),
-             .startOfScope("/*"),
-             .endOfScope("*/"):
-            return true
-        default:
-            return false
-        }
+        return isSpace || isComment || isLinebreak
     }
 
     public func isEndOfScope(_ token: Token) -> Bool {

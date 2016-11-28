@@ -1051,6 +1051,27 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testGenericFollowedByElipsis() {
+        let input = "foo<T>(bar: Baz<T>...)"
+        let output: [Token] = [
+            .identifier("foo"),
+            .startOfScope("<"),
+            .identifier("T"),
+            .endOfScope(">"),
+            .startOfScope("("),
+            .identifier("bar"),
+            .symbol(":"),
+            .space(" "),
+            .identifier("Baz"),
+            .startOfScope("<"),
+            .identifier("T"),
+            .endOfScope(">"),
+            .symbol("..."),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testGenericOperatorFunction() {
         let input = "func ==<T>()"
         let output: [Token] = [

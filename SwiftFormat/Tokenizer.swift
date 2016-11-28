@@ -890,6 +890,8 @@ public func tokenize(_ source: String) -> [Token] {
                 }
             case .symbol:
                 stitchSymbols(at: tokens.count - 1)
+            case .startOfScope:
+                closedGenericScopeIndexes.removeAll()
             default:
                 break
             }
@@ -899,7 +901,7 @@ public func tokenize(_ source: String) -> [Token] {
                 if case .endOfScope(">") = prevToken {
                     switch token {
                     case .symbol(let string):
-                        if !["=", "->", ",", ":", ";", "?", "!", "."].contains(string) {
+                        if !["=", "->", ",", ":", ";", "?", "!", ".", "..."].contains(string) {
                             fallthrough
                         }
                     case .identifier, .number, .startOfScope("\""):

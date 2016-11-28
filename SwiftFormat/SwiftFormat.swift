@@ -33,42 +33,72 @@
 
 import Foundation
 
+/// Errors
+public enum FormatError: Error, CustomStringConvertible {
+    case reading(String)
+    case writing(String)
+    case parsing(String)
+    case options(String)
+
+    public var description: String {
+        switch self {
+        case .reading(let string),
+             .writing(let string),
+             .parsing(let string),
+             .options(let string):
+            return string
+        }
+    }
+}
+
 /// The current SwiftFormat version
 public let version = "0.18"
 
 /// Enumerate all swift files at the specified location and (optionally) calculate an output file URL for each
-public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = nil, block: (URL, URL) -> Void) {
+public func enumerateSwiftFiles(withInputURL inputURL: URL, outputURL: URL? = nil, block: (URL, URL) throws -> Void) throws {
     let manager = FileManager.default
+    let keys: [URLResourceKey] = [.isRegularFileKey, .isDirectoryKey]
     var isDirectory: ObjCBool = false
     if manager.fileExists(atPath: inputURL.path, isDirectory: &isDirectory) {
         if isDirectory.boolValue {
             guard let files = try? manager.contentsOfDirectory(
-                at: inputURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) else {
-                print("error: failed to read contents of directory at: \(inputURL.path)")
-                return
+                at: inputURL, includingPropertiesForKeys: keys, options: .skipsHiddenFiles) else {
+                throw FormatError.reading("failed to read contents of directory at: \(inputURL.path)")
             }
-            if let outputURL = outputURL {
+            for url in files {
                 do {
-                    try manager.createDirectory(at: outputURL, withIntermediateDirectories: true, attributes: nil)
-                    for url in files {
-                        let outputPath = outputURL.path + url.path.substring(from: inputURL.path.characters.endIndex)
-                        enumerateSwiftFiles(withInputURL: url, outputURL: URL(fileURLWithPath: outputPath), block: block)
+                    let resourceValues = try url.resourceValues(forKeys: Set(keys))
+                    if resourceValues.isRegularFile != true && resourceValues.isDirectory != true {
+                        // Not a regular file or directory
+                        continue
                     }
                 } catch {
-                    print("error: failed to create directory at: \(outputURL.path), \(error)")
-                    return
+                    throw FormatError.reading("failed to read attributes for file: \(url.path)")
                 }
-            } else {
-                for url in files {
-                    enumerateSwiftFiles(withInputURL: url, block: block)
+                let outputURL = outputURL.map {
+                    URL(fileURLWithPath: $0.path + url.path.substring(from: inputURL.path.characters.endIndex))
                 }
+                try enumerateSwiftFiles(withInputURL: url, outputURL: outputURL, block: block)
             }
         } else if inputURL.pathExtension == "swift" {
-            block(inputURL, outputURL ?? inputURL)
+            try block(inputURL, outputURL ?? inputURL)
         }
     } else {
-        print("error: file not found: \(inputURL.path)")
+        throw FormatError.reading("file not found: \(inputURL.path)")
     }
+}
+
+/// Process token error
+public func parsingError(for tokens: [Token]) -> FormatError? {
+    if let last = tokens.last, case .error(let string) = last {
+        // TODO: more useful errors
+        if string.isEmpty {
+            return .parsing("unexpected end of file")
+        } else {
+            return .parsing("unexpected token '\(string)'")
+        }
+    }
+    return nil
 }
 
 /// Format a pre-parsed token array
@@ -76,9 +106,8 @@ public func format(_ tokens: [Token],
                    rules: [FormatRule] = FormatRules.default,
                    options: FormatOptions = FormatOptions()) throws -> String {
     // Parse
-    guard options.fragment || tokens.last?.isError == false else {
-        // TODO: more useful errors
-        throw NSError(domain: "SwiftFormat", code: 0, userInfo: nil)
+    if !options.fragment, let error = parsingError(for: tokens) {
+        throw error
     }
 
     // Format
@@ -101,27 +130,23 @@ public func format(_ source: String,
 
 // MARK: Internal APIs used by CLI - included here for testing purposes
 
-func inferOptions(from inputURL: URL) -> (Int, FormatOptions) {
+func inferOptions(from inputURL: URL) throws -> (Int, FormatOptions) {
     var tokens = [Token]()
     var filesChecked = 0
-    enumerateSwiftFiles(withInputURL: inputURL) { inputURL, _ in
-        if let input = try? String(contentsOf: inputURL) {
-            let _tokens = tokenize(input)
-            if _tokens.last?.isError == false {
-                filesChecked += 1
-                tokens += _tokens
-            } else {
-                print("error: could not parse file: \(inputURL.path)")
-            }
-        } else {
-            print("error: failed to read file: \(inputURL.path)")
+    try enumerateSwiftFiles(withInputURL: inputURL) { inputURL, _ in
+        let input = try String(contentsOf: inputURL)
+        let _tokens = tokenize(input)
+        if let error = parsingError(for: _tokens) {
+            throw error
         }
+        filesChecked += 1
+        tokens += _tokens
     }
     return (filesChecked, inferOptions(tokens))
 }
 
 func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = nil,
-                  withRules rules: [FormatRule], options: FormatOptions, cacheURL: URL? = nil) -> (Int, Int) {
+                  withRules rules: [FormatRule], options: FormatOptions, cacheURL: URL? = nil) throws -> (Int, Int) {
     // Load cache
     let cachePrefix = version + String(describing: options)
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
@@ -132,7 +157,7 @@ func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = nil,
     // Format files
     var filesChecked = 0, filesWritten = 0
     for inputURL in inputURLs {
-        enumerateSwiftFiles(withInputURL: inputURL, outputURL: outputURL) { inputURL, outputURL in
+        try enumerateSwiftFiles(withInputURL: inputURL, outputURL: outputURL) { inputURL, outputURL in
             filesChecked += 1
             let cacheKey: String = {
                 var path = inputURL.absoluteURL.path
@@ -143,25 +168,37 @@ func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = nil,
                 return path
             }()
             if let input = try? String(contentsOf: inputURL) {
+                let output: String
                 if cache?[cacheKey] == cachePrefix + String(input.characters.count) {
+                    output = input
+                } else {
+                    output = try format(input, rules: rules, options: options)
+                }
+                if outputURL != inputURL {
+                    if (try? String(contentsOf: outputURL)) == output {
+                        // Destination file is already the same as output
+                        return
+                    }
+                    do {
+                        try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(),
+                                                                withIntermediateDirectories: true,
+                                                                attributes: nil)
+                    } catch {
+                        throw FormatError.writing("failed to create directory at: \(outputURL.path), \(error)")
+                    }
+                } else if output == input {
                     // No changes needed
                     return
                 }
-                guard let output = try? format(input, rules: rules, options: options) else {
-                    print("error: could not parse file: \(inputURL.path)")
-                    return
+                do {
+                    try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
+                    filesWritten += 1
+                    cache?[cacheKey] = cachePrefix + String(output.characters.count)
+                } catch {
+                    throw FormatError.writing("failed to write file: \(outputURL.path), \(error)")
                 }
-                if output != input {
-                    if (try? output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)) != nil {
-                        filesWritten += 1
-                    } else {
-                        print("error: failed to write file: \(outputURL.path)")
-                        return
-                    }
-                }
-                cache?[cacheKey] = cachePrefix + String(output.characters.count)
             } else {
-                print("error: failed to read file: \(inputURL.path)")
+                throw FormatError.reading("failed to read file: \(inputURL.path)")
             }
         }
     }
@@ -169,16 +206,16 @@ func processInput(_ inputURLs: [URL], andWriteToOutput outputURL: URL? = nil,
     if let cache = cache, let cacheURL = cacheURL, let cacheDirectory = cacheDirectory {
         if !(cache as NSDictionary).write(to: cacheURL, atomically: true) {
             if FileManager.default.fileExists(atPath: cacheDirectory.path) {
-                print("error: failed to write cache file at: \(cacheURL.path)")
+                throw FormatError.writing("failed to write cache file at: \(cacheURL.path)")
             } else {
-                print("error: specified cache file directory does not exist: \(cacheDirectory.path)")
+                throw FormatError.reading("specified cache file directory does not exist: \(cacheDirectory.path)")
             }
         }
     }
     return (filesWritten, filesChecked)
 }
 
-func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String]? {
+func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String: String] {
     var anonymousArgs = 0
     var namedArgs: [String: String] = [:]
     var name = ""
@@ -187,8 +224,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String
             // Long argument names
             let key = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 2))
             if !names.contains(key) {
-                print("error: unknown argument: \(arg).")
-                return nil
+                throw FormatError.options("unknown argument: \(arg).")
             }
             name = key
             namedArgs[name] = ""
@@ -198,11 +234,9 @@ func preprocessArguments(_ args: [String], _ names: [String]) -> [String: String
             let flag = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 1))
             let matches = names.filter { $0.hasPrefix(flag) }
             if matches.count > 1 {
-                print("error: ambiguous argument: \(arg).")
-                return nil
+                throw FormatError.options("ambiguous argument: \(arg).")
             } else if matches.count == 0 {
-                print("error: unknown argument: \(arg).")
-                return nil
+                throw FormatError.options("unknown argument: \(arg).")
             } else {
                 name = matches[0]
                 namedArgs[name] = ""

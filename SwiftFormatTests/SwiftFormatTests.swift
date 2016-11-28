@@ -39,7 +39,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFileMatchesOutputFileForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)
-        enumerateSwiftFiles(withInputURL: inputURL) { inputURL, outputURL in
+        try! enumerateSwiftFiles(withInputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
             files.append(inputURL)
@@ -50,7 +50,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFileMatchesOutputFileForSameOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)
-        enumerateSwiftFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
+        try! enumerateSwiftFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
             files.append(inputURL)
@@ -61,7 +61,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFilesMatchOutputFilesForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        enumerateSwiftFiles(withInputURL: inputURL) { inputURL, outputURL in
+        try! enumerateSwiftFiles(withInputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
             files.append(inputURL)
         }
@@ -71,7 +71,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFilesMatchOutputFilesForSameOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        enumerateSwiftFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
+        try! enumerateSwiftFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
             files.append(inputURL)
         }
@@ -97,21 +97,21 @@ class SwiftFormatTests: XCTestCase {
     func testPreprocessArguments() {
         let input = ["", "foo", "bar", "-o", "baz", "-i", "4", "-l", "cr", "-s", "inline"]
         let output = ["0": "", "1": "foo", "2": "bar", "output": "baz", "indent": "4", "linebreaks": "cr", "semicolons": "inline"]
-        XCTAssertEqual(preprocessArguments(input, [
+        XCTAssertEqual(try! preprocessArguments(input, [
             "output",
             "indent",
             "linebreaks",
             "semicolons",
-        ])!, output)
+        ]), output)
     }
 
     func testEmptyArgsAreRecognized() {
         let input = ["", "--help", "--version"]
         let output = ["0": "", "help": "", "version": ""]
-        XCTAssertEqual(preprocessArguments(input, [
+        XCTAssertEqual(try! preprocessArguments(input, [
             "help",
             "version",
-        ])!, output)
+        ]), output)
     }
 
     // MARK: options to arguments

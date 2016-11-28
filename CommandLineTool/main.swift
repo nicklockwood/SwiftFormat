@@ -275,194 +275,208 @@ func optionsForArguments(_ args: [String: String]) throws -> FormatOptions {
     return options
 }
 
-func timeEvent(block: () -> Void) -> String {
+func timeEvent(block: () throws -> Void) rethrows -> String {
     let start = CFAbsoluteTimeGetCurrent()
-    block()
+    try block()
     let time = round((CFAbsoluteTimeGetCurrent() - start) * 100) / 100 // round to nearest 10ms
     return String(format: "%gs", time)
 }
 
-func processArguments(_ args: [String]) {
-    guard let args = preprocessArguments(args, commandLineArguments) else {
-        return
-    }
-
-    // Get options
-    guard let options = try? optionsForArguments(args) else {
-        return
-    }
-
-    // Version
-    if args["rules"] != nil {
-        print("")
-        for name in FormatRules.byName.keys {
-            print(" " + name)
-        }
-        print("")
-        return
-    }
-
-    // Show help if requested specifically or if no arguments are passed
-    if args["help"] != nil {
-        showHelp()
-        return
-    }
-
-    // Version
-    if args["version"] != nil {
-        print("swiftformat, version \(version)")
-        return
-    }
-
-    // Rules
-    var rulesByName = FormatRules.byName
-    if let names = args["disable"]?.components(separatedBy: ",") {
-        for name in names {
-            var name = (name as NSString).trimmingCharacters(in: .whitespaces)
-            if !rulesByName.keys.contains(name) {
-                print("error: unknown rule '\(name)'")
-                return
-            }
-            rulesByName.removeValue(forKey: name)
+extension FileHandle: TextOutputStream {
+    public func write(_ string: String) {
+        if let data = string.data(using: .utf8) {
+            write(data)
         }
     }
-    let rules = Array(rulesByName.values)
-
-    // Infer options
-    if args["inferoptions"] != nil {
-        if let inferURL = args["inferoptions"].map({ expandPath($0) }) {
-            print("inferring swiftformat options from source file(s)...")
-            var files = 0
-            var arguments = ""
-            let time = timeEvent {
-                let (count, options) = inferOptions(from: inferURL)
-                arguments = commandLineArguments(for: options).map({
-                    "--\($0) \($1)" }).joined(separator: " ")
-                files = count
-            }
-            print("options inferred from \(files) file\(files == 1 ? "" : "s") in \(time)")
-            print("")
-            print(arguments)
-            print("")
-        } else {
-            print("error: --inferoptions argument was not a valid path")
-        }
-        return
-    }
-
-    // Get input path(s)
-    var inputURLs = [URL]()
-    while let inputPath = args[String(inputURLs.count + 1)] {
-        inputURLs.append(expandPath(inputPath))
-    }
-
-    // Get output path
-    let outputURL = args["output"].map { expandPath($0) }
-    if outputURL != nil && inputURLs.count > 1 {
-        print("error: --output argument is only valid for a single input file")
-        return
-    }
-
-    // Get cache path
-    var cacheURL: URL?
-    let defaultCacheFileName = "swiftformat.cache"
-    let manager = FileManager.default
-    func setDefaultCacheURL() {
-        if let cachePath =
-            NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first {
-            let cacheDirectory = URL(fileURLWithPath: cachePath).appendingPathComponent("com.charcoaldesign.swiftformat")
-            do {
-                try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)
-                cacheURL = cacheDirectory.appendingPathComponent(defaultCacheFileName)
-            } catch {
-                print("error: failed to create cache directory at: \(cacheDirectory.path), \(error)")
-            }
-        } else {
-            print("error: failed to find cache directory at ~/Library/Caches")
-        }
-    }
-    if let cache = args["cache"] {
-        switch cache {
-        case "":
-            print("error: --cache option expects a value.")
-            return
-        case "ignore":
-            break
-        case "clear":
-            setDefaultCacheURL()
-            if let cacheURL = cacheURL, manager.fileExists(atPath: cacheURL.path) {
-                do {
-                    try manager.removeItem(at: cacheURL)
-                } catch {
-                    print("error: failed to delete cache file at: \(cacheURL.path)")
-                }
-            }
-        default:
-            cacheURL = expandPath(cache)
-            guard cacheURL != nil else {
-                print("error: unsupported --cache value: \(cache).")
-                return
-            }
-            var isDirectory: ObjCBool = false
-            if manager.fileExists(atPath: cacheURL!.path, isDirectory: &isDirectory) && isDirectory.boolValue {
-                cacheURL = cacheURL!.appendingPathComponent(defaultCacheFileName)
-            }
-        }
-    } else {
-        setDefaultCacheURL()
-    }
-
-    // If no input file, try stdin
-    if inputURLs.count == 0 {
-        var input: String?
-        var finished = false
-        DispatchQueue.global(qos: .userInitiated).async {
-            while let line = readLine(strippingNewline: false) {
-                input = (input ?? "") + line
-            }
-            if let input = input {
-                guard let output = try? format(input, rules: rules, options: options) else {
-                    print("error: could not parse input")
-                    finished = true
-                    return
-                }
-                if let outputURL = outputURL {
-                    if (try? output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)) != nil {
-                        print("swiftformat completed successfully")
-                    } else {
-                        print("error: failed to write file: \(outputURL.path)")
-                    }
-                } else {
-                    // Write to stdout
-                    print(output)
-                }
-            }
-            finished = true
-        }
-        // Wait for input
-        let start = NSDate()
-        while start.timeIntervalSinceNow > -0.01 {}
-        // If no input received by now, assume none is coming
-        if input != nil {
-            while !finished && start.timeIntervalSinceNow > -30 {}
-        } else {
-            showHelp()
-        }
-        return
-    }
-
-    print("running swiftformat...")
-
-    // Format the code
-    var filesWritten = 0, filesChecked = 0
-    let time = timeEvent {
-        (filesWritten, filesChecked) =
-            processInput(inputURLs, andWriteToOutput: outputURL,
-                         withRules: rules, options: options, cacheURL: cacheURL)
-    }
-    print("swiftformat completed. \(filesWritten)/\(filesChecked) " +
-        "file\(filesChecked == 1 ? "" : "s") updated in \(time)")
 }
 
-// Pass in arguments minus program itself
+func processArguments(_ args: [String]) {
+    do {
+        // Get options
+        let args = try preprocessArguments(args, commandLineArguments)
+        let options = try optionsForArguments(args)
+
+        // Version
+        if args["rules"] != nil {
+            print("")
+            for name in FormatRules.byName.keys {
+                print(" " + name)
+            }
+            print("")
+            return
+        }
+
+        // Show help if requested specifically or if no arguments are passed
+        if args["help"] != nil {
+            showHelp()
+            return
+        }
+
+        // Version
+        if args["version"] != nil {
+            print("swiftformat, version \(version)")
+            return
+        }
+
+        // Rules
+        var rulesByName = FormatRules.byName
+        if let names = args["disable"]?.components(separatedBy: ",") {
+            for name in names {
+                var name = (name as NSString).trimmingCharacters(in: .whitespaces)
+                if !rulesByName.keys.contains(name) {
+                    throw FormatError.options("unknown rule '\(name)'")
+                }
+                rulesByName.removeValue(forKey: name)
+            }
+        }
+        let rules = Array(rulesByName.values)
+
+        // Infer options
+        if args["inferoptions"] != nil {
+            if let inferURL = args["inferoptions"].map({ expandPath($0) }) {
+                print("inferring swiftformat options from source file(s)...")
+                var files = 0
+                var arguments = ""
+                let time = try timeEvent {
+                    let (count, options) = try inferOptions(from: inferURL)
+                    arguments = commandLineArguments(for: options).map({
+                        "--\($0) \($1)" }).joined(separator: " ")
+                    files = count
+                }
+                print("options inferred from \(files) file\(files == 1 ? "" : "s") in \(time)")
+                print("")
+                print(arguments)
+                print("")
+            } else {
+                throw FormatError.options("--inferoptions argument was not a valid path")
+            }
+            return
+        }
+
+        // Get input path(s)
+        var inputURLs = [URL]()
+        while let inputPath = args[String(inputURLs.count + 1)] {
+            inputURLs.append(expandPath(inputPath))
+        }
+
+        // Get output path
+        let outputURL = args["output"].map { expandPath($0) }
+        if outputURL != nil && inputURLs.count > 1 {
+            throw FormatError.options("--output argument is only valid for a single input file")
+        }
+
+        // Get cache path
+        var cacheURL: URL?
+        let defaultCacheFileName = "swiftformat.cache"
+        let manager = FileManager.default
+        func setDefaultCacheURL() throws {
+            if let cachePath =
+                NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first {
+                let cacheDirectory = URL(fileURLWithPath: cachePath).appendingPathComponent("com.charcoaldesign.swiftformat")
+                do {
+                    try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)
+                    cacheURL = cacheDirectory.appendingPathComponent(defaultCacheFileName)
+                } catch {
+                    throw FormatError.writing("failed to create cache directory at: \(cacheDirectory.path)")
+                }
+            } else {
+                throw FormatError.reading("failed to find cache directory at ~/Library/Caches")
+            }
+        }
+        if let cache = args["cache"] {
+            switch cache {
+            case "":
+                throw FormatError.options("--cache option expects a value.")
+            case "ignore":
+                break
+            case "clear":
+                try setDefaultCacheURL()
+                if let cacheURL = cacheURL, manager.fileExists(atPath: cacheURL.path) {
+                    do {
+                        try manager.removeItem(at: cacheURL)
+                    } catch {
+                        throw FormatError.writing("failed to delete cache file at: \(cacheURL.path)")
+                    }
+                }
+            default:
+                cacheURL = expandPath(cache)
+                guard cacheURL != nil else {
+                    throw FormatError.options("unsupported --cache value: \(cache).")
+                }
+                var isDirectory: ObjCBool = false
+                if manager.fileExists(atPath: cacheURL!.path, isDirectory: &isDirectory) && isDirectory.boolValue {
+                    cacheURL = cacheURL!.appendingPathComponent(defaultCacheFileName)
+                }
+            }
+        } else {
+            try setDefaultCacheURL()
+        }
+
+        // If no input file, try stdin
+        if inputURLs.count == 0 {
+            var input: String?
+            var asyncError: Error?
+            var finished = false
+            DispatchQueue.global(qos: .userInitiated).async {
+                while let line = readLine(strippingNewline: false) {
+                    input = (input ?? "") + line
+                }
+                if let input = input {
+                    do {
+                        let output = try format(input, rules: rules, options: options)
+                        if let outputURL = outputURL {
+                            do {
+                                try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
+                                print("swiftformat completed successfully")
+                            } catch {
+                                throw FormatError.writing("failed to write file: \(outputURL.path)")
+                            }
+                        } else {
+                            // Write to stdout
+                            print(output)
+                        }
+                    } catch {
+                        asyncError = error
+                    }
+                }
+                finished = true
+            }
+            // Wait for input
+            let start = NSDate()
+            while start.timeIntervalSinceNow > -0.01 {}
+            // If no input received by now, assume none is coming
+            if input != nil {
+                while !finished && start.timeIntervalSinceNow > -30 {
+                    if let error = asyncError {
+                        throw error
+                    }
+                }
+            } else {
+                showHelp()
+            }
+            return
+        }
+
+        print("running swiftformat...")
+
+        // Format the code
+        var filesWritten = 0, filesChecked = 0
+        let time = try timeEvent {
+            (filesWritten, filesChecked) =
+                try processInput(inputURLs, andWriteToOutput: outputURL,
+                                 withRules: rules, options: options, cacheURL: cacheURL)
+        }
+        if filesChecked == 0 {
+            let inputPaths = inputURLs.map({ $0.path }).joined(separator: ", ")
+            throw FormatError.options("no swift files found at: \(inputPaths)")
+        }
+        print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)")
+
+    } catch {
+        var stderr = FileHandle.standardError
+        print("error: \(error)", to: &stderr)
+    }
+}
+
+// Pass in arguments
 processArguments(CommandLine.arguments)

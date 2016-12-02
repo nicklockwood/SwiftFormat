@@ -34,7 +34,18 @@ That depends. There are four ways you can use SwiftFormat:
 Command-line tool
 -------------------
 
-**Installation:**
+There are multiple options for installing SwiftFormat.
+
+**Homebrew:**
+
+You can use [Homebrew](http://brew.sh/) and install the SwiftFormat tool on your system simply by running the following:
+
+```
+brew update
+brew install swiftformat
+```
+
+**Manual Installation:**
 
 1. The latest binary version of the `swiftformat` command-line tool is included in the `CommandLineTool` folder. You can either use that, or build it yourself from source. To build it yourself, open `SwiftFormat.xcodeproj` and build the `SwiftFormat (Application)` scheme.
 

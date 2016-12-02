@@ -2736,12 +2736,63 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testAfterFirstConvertedToBeforeFirst() {
+        let input = "func foo(bar: Int,\n         baz: String) {\n}"
+        let output = "func foo(\n    bar: Int,\n    baz: String\n) {\n}"
+        let options = FormatOptions(wrapArguments: .beforeFirst)
+        XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testBeforeFirstConvertedToAfterFirst() {
+        let input = "func foo(\n    bar: Int,\n    baz: String\n) {\n}"
+        let output = "func foo(bar: Int,\n         baz: String) {\n}"
+        let options = FormatOptions(wrapArguments: .afterFirst)
+        XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoWrapInnerArguments() {
+        let input = "func foo(\n    bar: Int,\n    baz: foo(bar, baz)\n) {\n}"
+        let output = "func foo(bar: Int,\n         baz: foo(bar, baz)) {\n}"
+        let options = FormatOptions(wrapArguments: .afterFirst)
+        XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testCorrectWrapIndentForNestedArguments() {
+        let input = "foo(\nbar: (\nx: 0,\ny: 0\n),\nbaz: (\nx: 0,\ny: 0\n)\n)"
+        let output = "foo(bar: (x: 0,\n          y: 0),\n    baz: (x: 0,\n          y: 0))"
+        let options = FormatOptions(wrapArguments: .afterFirst)
+        XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    // MARK: wrapElements
+
     func testNoDoubleSpaceAddedToWrappedArray() {
         let input = "[ foo,\n    bar ]"
         let output = "[\n    foo,\n    bar\n]"
-        let options = FormatOptions(trailingCommas: false)
-        XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments, FormatRules.spaceInsideBrackets],
-                                   options: options), output)
+        let options = FormatOptions(trailingCommas: false, wrapElements: .beforeFirst)
+        let rules = [FormatRules.wrapArguments, FormatRules.spaceInsideBrackets]
+        XCTAssertEqual(try! format(input, rules: rules, options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testTrailingCommasAddedToWrappedArray() {
+        let input = "[foo,\n    bar]"
+        let output = "[\n    foo,\n    bar,\n]"
+        let options = FormatOptions(trailingCommas: true, wrapElements: .beforeFirst)
+        let rules = [FormatRules.wrapArguments, FormatRules.trailingCommas]
+        XCTAssertEqual(try! format(input, rules: rules, options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSpaceAroundEnumValuesInArray() {
+        let input = "[\n    .foo,\n    .bar, .baz,\n]"
+        let output = "[\n    .foo,\n    .bar, .baz,\n]"
+        let options = FormatOptions(wrapElements: .beforeFirst)
+        XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 

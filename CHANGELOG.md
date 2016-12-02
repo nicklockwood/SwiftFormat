@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.19](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.19) (2016-12-02)
+
+- Fixed a critical bug where `redundantParens` rule failed to insert space before a prefix operator
+- Fixed a crash when encountering generic arguments followed by ...
+- Added `--disable` option for individually disabling rules without needing to recompile
+- Added `--rules` command to display all the supported rules (useful in conjunction with `--disable`)
+- Added `--wraparguments` option for controlling how function arguments are wrapped
+- Added `--wrapelements` option for controlling how array and dictionary elements are wrapped
+- Added `--symlinks` option for specifying if symlinks/aliases should be followed and formatted
+- Fixed bug where symlinks to Swift files would be replaced by a copy of the file
+
 ## [0.18](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.18) (2016-11-17)
 
 - Added `--inferoptions` command line argument for auto-configuring format options from existing source

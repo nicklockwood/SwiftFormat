@@ -6,23 +6,23 @@
 	<dict>
 		<key>Resources/Base.lproj/Main.storyboardc/Info.plist</key>
 		<data>
-		SVeb6wo91KoqRG8b+oZSU9Avt7A=
+		YjYkhDriztgJEVEA6n+U8soGFVk=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/MainMenu.nib</key>
 		<data>
-		sN8O3bl+2BJUw5XUGGsQ8siffSk=
+		t04Htts8onTlxnsH2ugv6VjH+Rw=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/NSWindowController-B8D-0N-5wS.nib</key>
 		<data>
-		5+fFBogUnh1rkYGxsn0KkHyhKX0=
+		4S4JnwHJSdHMNYLIqjdQM9p0ik0=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/ViewController.nib</key>
 		<data>
-		X2cHOjBiTdCe78QmJBR0WLuUl+g=
+		GIIrpDBq6KRTRBCDkJ+mLPp8sYE=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/XfG-lQ-9wD-view-m2S-Jp-Qdl.nib</key>
 		<data>
-		YF02pwee/elsEubOY2xXqAemPzk=
+		hDxsx6x5l8K4dT8JG6cg0gMSgNY=
 		</data>
 		<key>Resources/libswiftRemoteMirror.dylib</key>
 		<data>
@@ -130,15 +130,6 @@
 			<key>requirement</key>
 			<string>identifier "com.apple.dt.runtime.swiftQuartzCore" and anchor apple generic and certificate leaf[subject.CN] = "Mac Developer: Nick Lockwood (XDQ4XJZXHD)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
 		</dict>
-		<key>Frameworks/libswiftSwiftOnoneSupport.dylib</key>
-		<dict>
-			<key>cdhash</key>
-			<data>
-			oYjIzrxU6mKnhdB6cQcN7nWj9+Q=
-			</data>
-			<key>requirement</key>
-			<string>identifier "com.apple.dt.runtime.swiftSwiftOnoneSupport" and anchor apple generic and certificate leaf[subject.CN] = "Mac Developer: Nick Lockwood (XDQ4XJZXHD)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
-		</dict>
 		<key>Frameworks/libswiftXPC.dylib</key>
 		<dict>
 			<key>cdhash</key>
@@ -152,7 +143,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			1T4YIjNlliI+DKLvxMi2wNYFiZE=
+			huPJGCXbfxPkMZRLLGtgzyXWvMc=
 			</data>
 			<key>requirement</key>
 			<string>identifier "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension" and anchor apple generic and certificate leaf[subject.CN] = "Mac Developer: Nick Lockwood (XDQ4XJZXHD)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
@@ -161,55 +152,55 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			SVeb6wo91KoqRG8b+oZSU9Avt7A=
+			YjYkhDriztgJEVEA6n+U8soGFVk=
 			</data>
 			<key>hash2</key>
 			<data>
-			om7q/0Ol35lOxcSZ34buMe3zHvQV1uReEH/9ZI4BrIk=
+			1Wc1BiX54CRJdn/Lrdh9aNumi63MLOXR3SM0rz+L78k=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/MainMenu.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			sN8O3bl+2BJUw5XUGGsQ8siffSk=
+			t04Htts8onTlxnsH2ugv6VjH+Rw=
 			</data>
 			<key>hash2</key>
 			<data>
-			tsM5NttIV+NPg3wZOtWaDMMpmUhl9MmFIPYUbZmIkLU=
+			oaLmgw5ed9Wx2i82fXM6/tpQqn1QCVJB/XEKy1qv0V4=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/NSWindowController-B8D-0N-5wS.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			5+fFBogUnh1rkYGxsn0KkHyhKX0=
+			4S4JnwHJSdHMNYLIqjdQM9p0ik0=
 			</data>
 			<key>hash2</key>
 			<data>
-			kXqhlD43R7DrmdCiW9DPYjq4xpDfUBbLIzWnbEm1lWM=
+			sYZZppU2+8ZAkWN6ZEDjICNTRVS/g4QqLEef4O8CRA8=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/ViewController.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			X2cHOjBiTdCe78QmJBR0WLuUl+g=
+			GIIrpDBq6KRTRBCDkJ+mLPp8sYE=
 			</data>
 			<key>hash2</key>
 			<data>
-			2WfozzASTvlaVNYKyOJdKz7jL2RrkHI/XYlRR+sOAgQ=
+			CyHbI2xgAoB7Ad/P9QY9VD2v60D/CWd1ibugMueE44w=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/XfG-lQ-9wD-view-m2S-Jp-Qdl.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			YF02pwee/elsEubOY2xXqAemPzk=
+			hDxsx6x5l8K4dT8JG6cg0gMSgNY=
 			</data>
 			<key>hash2</key>
 			<data>
-			HKnfbKws9vvmsK4fozFI4suK+hXXtFs6CQbIxDpMJ1g=
+			rcKitZlRCPLgC16kjU6rmlDs8TozMI8XTD/2s4T3t4w=
 			</data>
 		</dict>
 		<key>Resources/libswiftRemoteMirror.dylib</key>

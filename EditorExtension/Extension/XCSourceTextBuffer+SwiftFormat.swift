@@ -2,7 +2,7 @@
 //  XCSourceTextBuffer+SwiftFormat.swift
 //  SwiftFormat
 //
-//  Version 0.18
+//  Version 0.19
 //
 //  Created by Nick Lockwood on 21/10/2016.
 //  Copyright © 2016 Nick Lockwood. All rights reserved.

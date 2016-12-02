@@ -2,7 +2,7 @@
 //  SwiftFormat.swift
 //  SwiftFormat
 //
-//  Version 0.18
+//  Version 0.19
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -34,7 +34,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-public let version = "0.18"
+public let version = "0.19"
 
 /// Errors
 public enum FormatError: Error, CustomStringConvertible {

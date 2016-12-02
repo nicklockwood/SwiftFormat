@@ -148,4 +148,11 @@ class OptionsTests: XCTestCase {
         let options = inferOptions(tokenize(input))
         XCTAssertEqual(options.wrapArguments, output)
     }
+
+    func testInferWrapDisabled() {
+        let input = "func foo(bar: Int,\n    baz: String, quux: String) {\n}"
+        let output = WrapMode.disabled
+        let options = inferOptions(tokenize(input))
+        XCTAssertEqual(options.wrapArguments, output)
+    }
 }

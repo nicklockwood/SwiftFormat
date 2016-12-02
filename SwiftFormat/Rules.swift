@@ -794,7 +794,8 @@ extension FormatRules {
             if let token = formatter.token(at: i) {
                 switch token {
                 case .keyword(let string) where [ // TODO: handle "in"
-                    "as", "is", "where", "dynamicType", "rethrows", "throws"].contains(string):
+                    "as", "is", "where", "dynamicType", "rethrows", "throws",
+                ].contains(string):
                     return false
                 case .symbol("."):
                     // Is this an enum value?
@@ -1446,7 +1447,7 @@ extension FormatRules {
 
     /// Normalize argument wrapping style
     public class func wrapArguments(_ formatter: Formatter) {
-        func wrapArguments(for scopes: String..., mode: WrapMode) {
+        func wrapArguments(for scopes: String..., mode: WrapMode, allowGrouping: Bool) {
             switch mode {
             case .beforeFirst:
                 formatter.forEachToken(where: { scopes.contains($0.string) }) { i, token in
@@ -1475,7 +1476,8 @@ extension FormatRules {
                             guard let commaIndex = formatter.index(of: .symbol(","), before: index) else {
                                 break
                             }
-                            if formatter.next(.nonSpaceOrComment, after: commaIndex)?.isLinebreak == false {
+                            if !allowGrouping &&
+                                formatter.next(.nonSpaceOrComment, after: commaIndex)?.isLinebreak == false {
                                 formatter.insertSpace(indent + formatter.options.indent, at: commaIndex + 1)
                                 formatter.insertToken(.linebreak(formatter.options.linebreak), at: commaIndex + 1)
                             }
@@ -1492,8 +1494,8 @@ extension FormatRules {
                 break
             }
         }
-        wrapArguments(for: "(", "<", mode: formatter.options.wrapArguments)
-        wrapArguments(for: "[", mode: formatter.options.wrapElements)
+        wrapArguments(for: "(", "<", mode: formatter.options.wrapArguments, allowGrouping: false)
+        wrapArguments(for: "[", mode: formatter.options.wrapElements, allowGrouping: true)
     }
 
     /// Normalize the use of void in closure arguments and return values

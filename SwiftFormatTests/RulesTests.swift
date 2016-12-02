@@ -2730,8 +2730,8 @@ class RulesTests: XCTestCase {
     }
 
     func testNoDoubleSpaceAddedToWrappedArray() {
-        let input = "[ foo, bar,\n    baz ]"
-        let output = "[\n    foo,\n    bar,\n    baz\n]"
+        let input = "[ foo,\n    bar ]"
+        let output = "[\n    foo,\n    bar\n]"
         let options = FormatOptions(trailingCommas: false)
         XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments, FormatRules.spaceInsideBrackets],
                                    options: options), output)

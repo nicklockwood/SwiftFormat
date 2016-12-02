@@ -416,29 +416,20 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
 
     func wrapMode(for scopes: String...) -> WrapMode {
         var beforeFirst = 0, afterFirst = 0, neither = 0
-        formatter.forEachToken(where: { scopes.contains($0.string) }) { i, token in
+        formatter.forEachToken(where: { $0.isStartOfScope && scopes.contains($0.string) }) { i, token in
             if let closingBraceIndex =
                 formatter.index(after: i, where: { $0.isEndOfScope(token) }),
+                let commaIndex = formatter.index(of: .symbol(","), after: i),
                 let linebreakIndex = formatter.index(of: .linebreak, after: i),
                 linebreakIndex < closingBraceIndex {
-                // Find comma
-                var index = closingBraceIndex
-                while index > i {
-                    guard let commaIndex = formatter.index(of: .symbol(","), before: index) else {
-                        break
-                    }
-                    if formatter.next(.nonSpaceOrComment, after: commaIndex)?.isLinebreak == false {
-                        // More than one consecutive arg on same line
-                        neither += 1
-                        return
-                    }
-                    index = commaIndex
-                }
-                // Insert linebreak after opening paren
+                // Check if linebreak is after opening paren or first comma
                 if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
                     beforeFirst += 1
-                } else {
+                } else if formatter.next(.nonSpaceOrComment, after: commaIndex)?.isLinebreak == true {
                     afterFirst += 1
+                } else {
+                    // More than one consecutive arg on a wrapped line
+                    neither += 1
                 }
             }
         }

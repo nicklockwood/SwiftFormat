@@ -1342,7 +1342,7 @@ extension FormatRules {
 
     /// Remove redundant parens around the arguments for loops, if statements, closures, etc.
     public class func redundantParens(_ formatter: Formatter) {
-        func requiresSpacing(at index: Int) -> Bool {
+        func tokenOutsideParenRequiresSpacing(at index: Int) -> Bool {
             if let token = formatter.token(at: index) {
                 switch token {
                 case .identifier, .keyword, .number:
@@ -1354,12 +1354,26 @@ extension FormatRules {
             return false
         }
 
+        func tokenInsideParenRequiresSpacing(at index: Int) -> Bool {
+            if let token = formatter.token(at: index), case .symbol = token {
+                return true
+            }
+            return tokenOutsideParenRequiresSpacing(at: index)
+        }
+
         func removeParen(at index: Int) {
             if formatter.token(at: index - 1)?.isSpace == true &&
                 formatter.token(at: index + 1)?.isSpace == true {
                 // Need to remove one
                 formatter.removeToken(at: index + 1)
-            } else if requiresSpacing(at: index - 1) && requiresSpacing(at: index + 1) {
+            } else if case .startOfScope = formatter.tokens[index] {
+                if tokenOutsideParenRequiresSpacing(at: index - 1) &&
+                    tokenInsideParenRequiresSpacing(at: index + 1) {
+                    // Need to insert one
+                    formatter.insertToken(.space(" "), at: index + 1)
+                }
+            } else if tokenInsideParenRequiresSpacing(at: index - 1) &&
+                tokenOutsideParenRequiresSpacing(at: index + 1) {
                 // Need to insert one
                 formatter.insertToken(.space(" "), at: index + 1)
             }

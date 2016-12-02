@@ -2681,6 +2681,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testSpaceInsertedWhenRemovingParens2() {
+        let input = "while(!foo) {}"
+        let output = "while !foo {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testNoDoubleSpaceWhenRemovingParens() {
         let input = "if ( x.y ) {}"
         let output = "if x.y {}"

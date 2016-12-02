@@ -117,7 +117,7 @@ public struct FormatOptions: CustomStringConvertible {
 }
 
 /// Infer default options by examining the existing source
-public func inferOptions(_ tokens: [Token]) -> FormatOptions {
+public func inferOptions(from tokens: [Token]) -> FormatOptions {
     let formatter = Formatter(tokens)
     var options = FormatOptions()
 
@@ -415,33 +415,51 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
         }
     }()
 
-    func wrapMode(for scopes: String...) -> WrapMode {
+    func wrapMode(for scopes: String..., allowGrouping: Bool) -> WrapMode {
         var beforeFirst = 0, afterFirst = 0, neither = 0
         formatter.forEachToken(where: { $0.isStartOfScope && scopes.contains($0.string) }) { i, token in
             if let closingBraceIndex =
                 formatter.index(after: i, where: { $0.isEndOfScope(token) }),
-                let commaIndex = formatter.index(of: .symbol(","), after: i),
                 let linebreakIndex = formatter.index(of: .linebreak, after: i),
-                linebreakIndex < closingBraceIndex {
+                linebreakIndex < closingBraceIndex,
+                let firstCommaIndex = formatter.index(of: .symbol(","), after: i),
+                firstCommaIndex < closingBraceIndex {
+                if !allowGrouping {
+                    // Check for two consecutive arguments on the same line
+                    var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex)!
+                    if formatter.tokens[index] != .symbol(",") {
+                        index += 1
+                    }
+                    while index > i {
+                        guard let commaIndex = formatter.index(of: .symbol(","), before: index) else {
+                            break
+                        }
+                        if formatter.next(.nonSpaceOrComment, after: commaIndex)?.isLinebreak == false {
+                            neither += 1
+                            return
+                        }
+                        index = commaIndex
+                    }
+                }
                 // Check if linebreak is after opening paren or first comma
                 if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
                     beforeFirst += 1
-                } else if formatter.next(.nonSpaceOrComment, after: commaIndex)?.isLinebreak == true {
-                    afterFirst += 1
                 } else {
-                    // More than one consecutive arg on a wrapped line
-                    neither += 1
+                    assert(formatter.next(.nonSpaceOrComment, after: firstCommaIndex)?.isLinebreak == true)
+                    afterFirst += 1
                 }
             }
         }
-        if beforeFirst >= afterFirst {
-            return beforeFirst > neither ? .beforeFirst : .disabled
+        if beforeFirst > afterFirst + neither {
+            return .beforeFirst
+        } else if afterFirst > beforeFirst + neither {
+            return .afterFirst
         } else {
-            return afterFirst > neither ? .afterFirst : .disabled
+            return .disabled
         }
     }
-    options.wrapArguments = wrapMode(for: "(", "<")
-    options.wrapElements = wrapMode(for: "[")
+    options.wrapArguments = wrapMode(for: "(", "<", allowGrouping: false)
+    options.wrapElements = wrapMode(for: "[", allowGrouping: true)
 
     options.uppercaseHex = {
         let prefix = "0x"

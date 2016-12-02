@@ -154,18 +154,18 @@ func inferOptions(from inputURL: URL) throws -> (Int, FormatOptions) {
         filesChecked += 1
         tokens += _tokens
     }
-    return (filesChecked, inferOptions(tokens))
+    return (filesChecked, inferOptions(from: tokens))
 }
 
 func processInput(_ inputURLs: [URL],
                   andWriteToOutput outputURL: URL? = nil,
                   withRules rules: [FormatRule],
-                  formatOptions: FormatOptions = FormatOptions(),
-                  enumerationOptions: EnumerationOptions = EnumerationOptions(),
+                  formatOptions: FormatOptions,
+                  enumerationOptions: EnumerationOptions,
                   cacheURL: URL? = nil) throws -> (Int, Int) {
 
     // Load cache
-    let cachePrefix = version + String(describing: formatOptions)
+    let cachePrefix = "\(version);\(formatOptions)"
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
     var cache: [String: String]?
     if let cacheURL = cacheURL {
@@ -202,6 +202,7 @@ func processInput(_ inputURLs: [URL],
                     output = input
                 } else {
                     output = try format(input, rules: rules, options: formatOptions)
+                    cache?[cacheKey] = cachePrefix + String(output.characters.count)
                 }
                 if outputURL != inputURL {
                     if (try? String(contentsOf: outputURL)) == output {
@@ -222,7 +223,6 @@ func processInput(_ inputURLs: [URL],
                 do {
                     try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
                     filesWritten += 1
-                    cache?[cacheKey] = cachePrefix + String(output.characters.count)
                 } catch {
                     throw FormatError.writing("failed to write file: \(outputURL.path), \(error)")
                 }
@@ -373,7 +373,7 @@ func enumerationOptionsFor(_ args: [String: String]) throws -> EnumerationOption
         case "ignore":
             options.followSymlinks = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     return options
@@ -390,7 +390,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                 options.indent = String(repeating: " ", count: spaces)
                 break
             }
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("allman", in: args) {
@@ -400,7 +400,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "false", "disabled":
             options.allmanBraces = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("semicolons", in: args) {
@@ -410,7 +410,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "never", "false":
             options.allowInlineSemicolons = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("commas", in: args) {
@@ -420,7 +420,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "inline", "false":
             options.trailingCommas = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("comments", in: args) {
@@ -430,7 +430,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "ignore":
             options.indentComments = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("linebreaks", in: args) {
@@ -442,7 +442,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "crlf":
             options.linebreak = "\r\n"
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("ranges", in: args) {
@@ -452,7 +452,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "nospace":
             options.spaceAroundRangeOperators = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("empty", in: args) {
@@ -462,7 +462,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "tuple", "tuples":
             options.useVoid = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("trimwhitespace", in: args) {
@@ -473,7 +473,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
              "nonempty-lines", "nonempty", "non-empty-lines", "non-empty":
             options.truncateBlankLines = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("insertlines", in: args) {
@@ -483,7 +483,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "disabled", "false":
             options.insertBlankLines = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("removelines", in: args) {
@@ -493,7 +493,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "disabled", "false":
             options.removeBlankLines = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("header", in: args) {
@@ -503,28 +503,28 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "ignore":
             options.stripHeader = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("ifdef", in: args) {
         if let mode = IndentMode(rawValue: $0) {
             options.ifdefIndent = mode
         } else {
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("wraparguments", in: args) {
         if let mode = WrapMode(rawValue: $0) {
             options.wrapArguments = mode
         } else {
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("wrapelements", in: args) {
         if let mode = WrapMode(rawValue: $0) {
             options.wrapElements = mode
         } else {
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("hexliterals", in: args) {
@@ -534,7 +534,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "lowercase", "lower":
             options.uppercaseHex = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("experimental", in: args) {
@@ -544,7 +544,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "disabled", "false":
             options.experimentalRules = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     try processOption("fragment", in: args) {
@@ -554,7 +554,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "false", "disabled":
             options.fragment = false
         default:
-            throw NSError()
+            throw FormatError.options("")
         }
     }
     return options

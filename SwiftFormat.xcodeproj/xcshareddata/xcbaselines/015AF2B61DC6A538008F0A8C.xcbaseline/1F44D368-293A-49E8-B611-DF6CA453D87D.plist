@@ -26,6 +26,16 @@
 					<string>Local Baseline</string>
 				</dict>
 			</dict>
+			<key>testInferring()</key>
+			<dict>
+				<key>com.apple.XCTPerformanceMetric_WallClockTime</key>
+				<dict>
+					<key>baselineAverage</key>
+					<real>0.12199</real>
+					<key>baselineIntegrationDisplayName</key>
+					<string>Local Baseline</string>
+				</dict>
+			</dict>
 			<key>testTokenizing()</key>
 			<dict>
 				<key>com.apple.XCTPerformanceMetric_WallClockTime</key>

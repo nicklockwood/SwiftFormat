@@ -2,7 +2,7 @@
 //  FormatSelectedSourceCommand.swift
 //  Swift Formatter
 //
-//  Version 0.18
+//  Version 0.19
 //
 //  Created by Tony Arnold on 5/10/16.
 //  Copyright 2016 Nick Lockwood
@@ -48,7 +48,7 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         }
 
         // Inspect the whole file to infer the format options
-        var options = inferOptions(tokenize(invocation.buffer.completeBuffer))
+        var options = inferOptions(from: tokenize(invocation.buffer.completeBuffer))
         options.indent = indentationString(for: invocation.buffer)
         options.fragment = true
 

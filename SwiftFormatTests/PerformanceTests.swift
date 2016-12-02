@@ -14,7 +14,7 @@ class PerformanceTests: XCTestCase {
     static let files: [String] = {
         var files = [String]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        enumerateSwiftFiles(withInputURL: inputURL) { url, _ in
+        try! enumerateSwiftFiles(withInputURL: inputURL) { url, _ in
             if let source = try? String(contentsOf: url) {
                 files.append(source)
             }
@@ -39,7 +39,15 @@ class PerformanceTests: XCTestCase {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
-            _ = tokens.flatMap { try? format($0) }
+            _ = tokens.map { try! format($0) }
+        }
+    }
+
+    func testInferring() {
+        let files = PerformanceTests.files
+        let tokens = files.flatMap { tokenize($0) }
+        measure {
+            _ = inferOptions(from: tokens)
         }
     }
 
@@ -47,7 +55,7 @@ class PerformanceTests: XCTestCase {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
-            _ = tokens.flatMap { try? format($0, rules: [indent]) }
+            _ = tokens.map { try! format($0, rules: [FormatRules.indent]) }
         }
     }
 }

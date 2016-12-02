@@ -1451,8 +1451,7 @@ extension FormatRules {
             switch mode {
             case .beforeFirst:
                 formatter.forEachToken(where: { scopes.contains($0.string) }) { i, token in
-                    if let closingBraceIndex =
-                        formatter.index(after: i, where: { $0.isEndOfScope(token) }),
+                    if let closingBraceIndex = formatter.index(after: i, where: { $0.isEndOfScope(token) }),
                         let linebreakIndex = formatter.index(of: .linebreak, after: i),
                         linebreakIndex < closingBraceIndex {
                         // Get indent
@@ -1469,6 +1468,48 @@ extension FormatRules {
                         }) {
                             formatter.insertSpace(indent, at: lastIndex + 1)
                             formatter.insertToken(.linebreak(formatter.options.linebreak), at: lastIndex + 1)
+                        }
+                        // Insert linebreak after each comma
+                        var index = closingBraceIndex
+                        while index > i {
+                            guard let commaIndex = formatter.index(of: .symbol(","), before: index) else {
+                                break
+                            }
+                            if !allowGrouping &&
+                                formatter.next(.nonSpaceOrComment, after: commaIndex)?.isLinebreak == false {
+                                formatter.insertSpace(indent + formatter.options.indent, at: commaIndex + 1)
+                                formatter.insertToken(.linebreak(formatter.options.linebreak), at: commaIndex + 1)
+                            }
+                            index = commaIndex
+                        }
+                        // Insert linebreak after opening paren
+                        if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == false {
+                            formatter.insertSpace(indent + formatter.options.indent, at: i + 1)
+                            formatter.insertToken(.linebreak(formatter.options.linebreak), at: i + 1)
+                        }
+                    }
+                }
+            case .afterFirst:
+                formatter.forEachToken(where: { scopes.contains($0.string) }) { i, token in
+                    if let closingBraceIndex = formatter.index(after: i, where: { $0.isEndOfScope(token) }),
+                        let firstArgumentIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i),
+                        let linebreakIndex = formatter.index(of: .linebreak, after: i),
+                        linebreakIndex < closingBraceIndex {
+                        // Get indent
+                        let start = formatter.startOfLine(at: i)
+                        var indent = ""
+                        for token in formatter.tokens[start ..< firstArgumentIndex] {
+                            if case .space(let string) = token {
+                                indent += string
+                            } else {
+                                indent += String(repeating: " ", count: token.string.characters.count)
+                            }
+                        }
+                        // Remove linebreak before closing paren
+                        if let lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
+                            $0.isLinebreak
+                        }) {
+                            formatter.removeToken(at: lastIndex)
                         }
                         // Insert linebreak after each comma
                         var index = closingBraceIndex

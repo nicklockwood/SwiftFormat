@@ -43,6 +43,7 @@ public enum IndentMode: String {
 /// Wrap mode for arguments
 public enum WrapMode: String {
     case beforeFirst = "beforefirst"
+    case afterFirst = "afterfirst"
     case disabled
 }
 
@@ -433,7 +434,11 @@ public func inferOptions(_ tokens: [Token]) -> FormatOptions {
                 }
             }
         }
-        return beforeFirst > afterFirst && beforeFirst > neither ? .beforeFirst : .disabled
+        if beforeFirst >= afterFirst {
+            return beforeFirst > neither ? .beforeFirst : .disabled
+        } else {
+            return afterFirst > neither ? .afterFirst : .disabled
+        }
     }
     options.wrapArguments = wrapMode(for: "(", "<")
     options.wrapElements = wrapMode(for: "[")

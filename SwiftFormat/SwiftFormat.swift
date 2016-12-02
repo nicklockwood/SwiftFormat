@@ -355,14 +355,12 @@ private func processOption(_ key: String, in args: [String: String], handler: (S
         return
     }
     guard !value.isEmpty else {
-        print("error: --\(key) option expects a value.")
-        throw NSError()
+        throw FormatError.options("--\(key) option expects a value.")
     }
     do {
         try handler(value.lowercased())
     } catch {
-        print("error: unsupported --\(key) value: \(value).")
-        throw error
+        throw FormatError.options("unsupported --\(key) value: \(value).")
     }
 }
 

@@ -2478,9 +2478,23 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testFunctionThatReturnsAFunctionThatThrows() {
+        let input = "(Void) -> Void throws -> ()"
+        let output = "() -> () throws -> Void"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testChainOfFunctionsIsNotChanged() {
         let input = "() -> () -> () -> Void"
         let output = "() -> () -> () -> Void"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.void]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testChainOfFunctionsWithThrowsIsNotChanged() {
+        let input = "() -> () throws -> () throws -> Void"
+        let output = "() -> () throws -> () throws -> Void"
         XCTAssertEqual(try! format(input, rules: [FormatRules.void]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }

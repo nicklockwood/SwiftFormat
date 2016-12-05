@@ -1578,24 +1578,29 @@ extension FormatRules {
 
     /// Normalize the use of void in closure arguments and return values
     public class func void(_ formatter: Formatter) {
+        func isArgumentToken(at index: Int) -> Bool {
+            if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) {
+                return [.symbol("->"), .keyword("throws"), .keyword("rethrows")].contains(nextToken)
+            }
+            return false
+        }
+
         formatter.forEach(.identifier("Void")) { i, token in
             if let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {
                 $0 == .startOfScope("(") }), let nextIndex = formatter.index(of:
                 .nonSpaceOrLinebreak, after: i, if: { $0 == .endOfScope(")") }) {
-                if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex),
-                    [.symbol("->"), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
+                if isArgumentToken(at: nextIndex) {
                     // Remove Void
                     formatter.removeTokens(inRange: prevIndex + 1 ..< nextIndex)
                 } else if formatter.options.useVoid {
                     // Strip parens
-                    formatter.removeTokens(inRange: i + 1 ..< nextIndex + 1)
+                    formatter.removeTokens(inRange: i + 1 ... nextIndex)
                     formatter.removeTokens(inRange: prevIndex ..< i)
                 } else {
                     // Remove Void
                     formatter.removeTokens(inRange: prevIndex + 1 ..< nextIndex)
                 }
-            } else if !formatter.options.useVoid ||
-                formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .symbol("->") {
+            } else if !formatter.options.useVoid || isArgumentToken(at: i) {
                 if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                     prevToken == .symbol(".") || prevToken == .keyword("typealias") {
                     return
@@ -1609,10 +1614,9 @@ extension FormatRules {
             formatter.forEach(.startOfScope("(")) { i, token in
                 if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .symbol("->"),
                     let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
-                        $0 == .endOfScope(")") }), formatter.next(.nonSpaceOrCommentOrLinebreak,
-                                                                  after: nextIndex) != .symbol("->") {
+                        $0 == .endOfScope(")") }), !isArgumentToken(at: nextIndex) {
                     // Replace with Void
-                    formatter.replaceTokens(inRange: i ..< nextIndex + 1, with: [.identifier("Void")])
+                    formatter.replaceTokens(inRange: i ... nextIndex, with: [.identifier("Void")])
                 }
             }
         }

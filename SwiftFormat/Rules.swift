@@ -1466,16 +1466,26 @@ extension FormatRules {
 
     /// Remove redundant `= nil` initialization for Optional properties
     public class func redundantNilInit(_ formatter: Formatter) {
-        formatter.forEach(.keyword("var")) { i, token in
-            if let optionalIndex = formatter.index(of: .unwrapSymbol, after: i),
-                !formatter.tokens[optionalIndex - 1].isSpaceOrCommentOrLinebreak,
-                let equalsIndex = formatter.index(of: .nonSpaceOrLinebreak, after: optionalIndex, if: {
-                    $0 == .symbol("=")
-                }), let nilIndex = formatter.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
-                    $0 == .identifier("nil")
-                }) {
-                formatter.removeTokens(inRange: optionalIndex + 1 ... nilIndex)
+        func search(from index: Int) {
+            if let optionalIndex = formatter.index(of: .unwrapSymbol, after: index) {
+                if let terminatorIndex = formatter.index(of: .endOfStatement, after: index),
+                    terminatorIndex < optionalIndex {
+                    return
+                }
+                if !formatter.tokens[optionalIndex - 1].isSpaceOrCommentOrLinebreak,
+                    let equalsIndex = formatter.index(of: .nonSpaceOrLinebreak, after: optionalIndex, if: {
+                        $0 == .symbol("=")
+                    }), let nilIndex = formatter.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
+                        $0 == .identifier("nil")
+                    }) {
+                    formatter.removeTokens(inRange: optionalIndex + 1 ... nilIndex)
+                }
+                search(from: optionalIndex)
             }
+        }
+
+        formatter.forEach(.keyword("var")) { i, token in
+            search(from: i)
         }
     }
 

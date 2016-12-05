@@ -57,6 +57,7 @@ public enum TokenType {
     case spaceOrLinebreak
     case spaceOrCommentOrLinebreak
     case linebreak
+    case endOfStatement
     case startOfScope
     case endOfScope
     case identifier
@@ -114,6 +115,8 @@ public enum Token: Equatable {
             return isSpaceOrCommentOrLinebreak
         case .linebreak:
             return isLinebreak
+        case .endOfStatement:
+            return isEndOfStatement
         case .startOfScope:
             return isStartOfScope
         case .endOfScope:
@@ -225,6 +228,10 @@ public enum Token: Equatable {
 
     public var isSpaceOrCommentOrLinebreak: Bool {
         return isSpace || isComment || isLinebreak
+    }
+
+    public var isEndOfStatement: Bool {
+        return self == .symbol(";") || isLinebreak
     }
 
     public func isEndOfScope(_ token: Token) -> Bool {

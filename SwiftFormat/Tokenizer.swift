@@ -59,6 +59,9 @@ public enum TokenType {
     case linebreak
     case startOfScope
     case endOfScope
+    case identifier
+    case identifierOrKeyword
+    case unwrapSymbol
     case error
 
     // Negative types
@@ -115,6 +118,12 @@ public enum Token: Equatable {
             return isStartOfScope
         case .endOfScope:
             return isEndOfScope
+        case .identifier:
+            return isIdentifier
+        case .identifierOrKeyword:
+            return isIdentifierOrKeyword
+        case .unwrapSymbol:
+            return isUnwrapSymbol
         case .error:
             return isError
         case .nonSpace:
@@ -125,6 +134,15 @@ public enum Token: Equatable {
             return !isSpaceOrLinebreak
         case .nonSpaceOrCommentOrLinebreak:
             return !isSpaceOrCommentOrLinebreak
+        }
+    }
+
+    public var isUnwrapSymbol: Bool {
+        switch self {
+        case .symbol("?"), .symbol("!"):
+            return true
+        default:
+            return false
         }
     }
 
@@ -147,6 +165,15 @@ public enum Token: Equatable {
             return true
         }
         return false
+    }
+
+    public var isIdentifier: Bool {
+        switch self {
+        case .identifier:
+            return true
+        default:
+            return false
+        }
     }
 
     public var isIdentifierOrKeyword: Bool {

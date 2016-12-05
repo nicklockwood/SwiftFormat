@@ -1458,8 +1458,23 @@ extension FormatRules {
                 let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closeIndex, if: {
                     $0 == .endOfScope("}") }) {
                 formatter.removeTokens(inRange: closeIndex ..< nextIndex)
-                formatter.removeTokens(inRange: previousIndex + 1 ..< openIndex + 1)
+                formatter.removeTokens(inRange: previousIndex + 1 ... openIndex)
                 // TODO: fix-up indenting of lines in between removed braces
+            }
+        }
+    }
+
+    /// Remove redundant `= nil` initialization for Optional properties
+    public class func redundantNilInit(_ formatter: Formatter) {
+        formatter.forEach(.keyword("var")) { i, token in
+            if let optionalIndex = formatter.index(of: .unwrapSymbol, after: i),
+                !formatter.tokens[optionalIndex - 1].isSpaceOrCommentOrLinebreak,
+                let equalsIndex = formatter.index(of: .nonSpaceOrLinebreak, after: optionalIndex, if: {
+                    $0 == .symbol("=")
+                }), let nilIndex = formatter.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
+                    $0 == .identifier("nil")
+                }) {
+                formatter.removeTokens(inRange: optionalIndex + 1 ... nilIndex)
             }
         }
     }

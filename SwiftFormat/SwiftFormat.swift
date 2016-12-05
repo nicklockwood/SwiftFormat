@@ -54,8 +54,8 @@ public enum FormatError: Error, CustomStringConvertible {
     }
 }
 
-/// Enumeration options
-public struct EnumerationOptions {
+/// File enumeration options
+public struct FileOptions {
     public var followSymlinks: Bool = false
     public var supportedFileExtensions = ["swift"]
 }
@@ -63,7 +63,7 @@ public struct EnumerationOptions {
 /// Enumerate all swift files at the specified location and (optionally) calculate an output file URL for each
 public func enumerateSwiftFiles(withInputURL inputURL: URL,
                                 outputURL: URL? = nil,
-                                options: EnumerationOptions = EnumerationOptions(),
+                                options: FileOptions = FileOptions(),
                                 block: (URL, URL) throws -> Void) throws {
 
     let manager = FileManager.default
@@ -161,7 +161,7 @@ func processInput(_ inputURLs: [URL],
                   andWriteToOutput outputURL: URL? = nil,
                   withRules rules: [FormatRule],
                   formatOptions: FormatOptions,
-                  enumerationOptions: EnumerationOptions,
+                  fileOptions: FileOptions,
                   cacheURL: URL? = nil) throws -> (Int, Int) {
 
     // Load cache
@@ -178,14 +178,14 @@ func processInput(_ inputURLs: [URL],
             forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])) else {
             throw FormatError.reading("failed to read attributes for: \(inputURL.path)")
         }
-        if !enumerationOptions.followSymlinks &&
+        if !fileOptions.followSymlinks &&
             (resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true) {
             throw FormatError.options("cannot format symbolic link or alias file: \(inputURL.path)")
         } else if resourceValues.isDirectory == false &&
-            !enumerationOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
+            !fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
             throw FormatError.options("cannot format non-Swift file: \(inputURL.path)")
         }
-        try enumerateSwiftFiles(withInputURL: inputURL, outputURL: outputURL, options: enumerationOptions) {
+        try enumerateSwiftFiles(withInputURL: inputURL, outputURL: outputURL, options: fileOptions) {
             inputURL, outputURL in
             filesChecked += 1
             let cacheKey: String = {
@@ -364,8 +364,8 @@ private func processOption(_ key: String, in args: [String: String], handler: (S
     }
 }
 
-func enumerationOptionsFor(_ args: [String: String]) throws -> EnumerationOptions {
-    var options = EnumerationOptions()
+func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
+    var options = FileOptions()
     try processOption("symlinks", in: args) {
         switch $0 {
         case "follow":
@@ -561,7 +561,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
 }
 
 let commandLineArguments = [
-    // Enumeration options
+    // File options
     "symlinks",
     // Format options
     "output",

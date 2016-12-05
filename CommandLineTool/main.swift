@@ -99,7 +99,7 @@ func processArguments(_ args: [String]) {
         // Get options
         let args = try preprocessArguments(args, commandLineArguments)
         let formatOptions = try formatOptionsFor(args)
-        let enumerationOptions = try enumerationOptionsFor(args)
+        let fileOptions = try fileOptionsFor(args)
 
         // Version
         if args["rules"] != nil {
@@ -272,7 +272,7 @@ func processArguments(_ args: [String]) {
                 andWriteToOutput: outputURL,
                 withRules: rules,
                 formatOptions: formatOptions,
-                enumerationOptions: enumerationOptions,
+                fileOptions: fileOptions,
                 cacheURL: cacheURL
             )
         }

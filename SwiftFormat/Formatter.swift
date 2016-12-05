@@ -87,6 +87,11 @@ public class Formatter: NSObject {
         }
     }
 
+    /// Replaces the tokens in the specified closed range with new tokens
+    public func replaceTokens(inRange range: ClosedRange<Int>, with tokens: [Token]) {
+        replaceTokens(inRange: range.lowerBound ..< range.upperBound + 1, with: tokens)
+    }
+
     /// Removes the token at the specified indez
     public func removeToken(at index: Int) {
         tokens.remove(at: index)
@@ -97,6 +102,11 @@ public class Formatter: NSObject {
 
     /// Removes the tokens in the specified range
     public func removeTokens(inRange range: Range<Int>) {
+        replaceTokens(inRange: range, with: [])
+    }
+
+    /// Removes the tokens in the specified closed range
+    public func removeTokens(inRange range: ClosedRange<Int>) {
         replaceTokens(inRange: range, with: [])
     }
 

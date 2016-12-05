@@ -1644,9 +1644,9 @@ extension FormatRules {
                     if let nextToken = formatter.token(at: index + 1), nextToken != .startOfScope("//") {
                         switch nextToken {
                         case .linebreak:
-                            formatter.removeTokens(inRange: 0 ..< index + 2)
+                            formatter.removeTokens(inRange: 0 ... index + 1)
                         case .space where formatter.token(at: index + 2)?.isLinebreak == true:
-                            formatter.removeTokens(inRange: 0 ..< index + 3)
+                            formatter.removeTokens(inRange: 0 ... index + 2)
                         default:
                             break
                         }

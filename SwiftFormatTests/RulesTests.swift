@@ -1686,8 +1686,8 @@ class RulesTests: XCTestCase {
     }
 
     func testIndentEnumDictionaryKeysAndValues() {
-        let input = "[\n.foo:\n.bar,\n.baz:\n.quux,]"
-        let output = "[\n    .foo:\n        .bar,\n    .baz:\n        .quux,]"
+        let input = "[\n.foo:\n.bar,\n.baz:\n.quux,\n]"
+        let output = "[\n    .foo:\n        .bar,\n    .baz:\n        .quux,\n]"
         let options = FormatOptions(wrapElements: .disabled)
         XCTAssertEqual(try! format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -2172,6 +2172,13 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(wrapElements: .disabled)
         XCTAssertEqual(try! format(input, rules: [FormatRules.trailingCommas], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testTrailingCommaRemovedInInlineArray() {
+        let input = "[foo,]"
+        let output = "[foo]"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.trailingCommas]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     // MARK: trailingCommas = false
@@ -2792,6 +2799,14 @@ class RulesTests: XCTestCase {
         let input = "[\n    .foo,\n    .bar, .baz,\n]"
         let output = "[\n    .foo,\n    .bar, .baz,\n]"
         let options = FormatOptions(wrapElements: .beforeFirst)
+        XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testTrailingCommaRemovedInWrappedArray() {
+        let input = "[\n    .foo,\n    .bar,\n    .baz,\n]"
+        let output = "[.foo,\n .bar,\n .baz]"
+        let options = FormatOptions(wrapElements: .afterFirst)
         XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }

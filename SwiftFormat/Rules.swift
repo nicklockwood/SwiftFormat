@@ -1186,9 +1186,11 @@ extension FormatRules {
         // This should't matter in practice, as nobody splits subscripts onto multiple
         // lines, but ideally we'd check for this just in case
         formatter.forEach(.endOfScope("]")) { i, token in
-            if let linebreakIndex = formatter.index(of: .nonSpaceOrComment, before: i, if: { $0.isLinebreak }) {
+            guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else { return }
+            let prevToken = formatter.tokens[prevTokenIndex]
+            if prevToken.isLinebreak {
                 if let prevTokenIndex = formatter.index(of:
-                    .nonSpaceOrCommentOrLinebreak, before: linebreakIndex + 1) {
+                    .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex + 1) {
                     switch formatter.tokens[prevTokenIndex] {
                     case .startOfScope("["), .symbol(":"):
                         break // do nothing
@@ -1202,6 +1204,8 @@ extension FormatRules {
                         }
                     }
                 }
+            } else if prevToken == .symbol(",") {
+                formatter.removeToken(at: prevTokenIndex)
             }
         }
     }
@@ -1535,6 +1539,14 @@ extension FormatRules {
                         }) {
                             formatter.removeTokens(inRange: lastIndex ..< closingBraceIndex)
                             closingBraceIndex = lastIndex
+                            // Remove trailing comma
+                            if let prevCommaIndex = formatter.index(
+                                of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex, if: {
+                                    return $0 == .symbol(",")
+                            }) {
+                                formatter.removeToken(at: prevCommaIndex)
+                                closingBraceIndex -= 1
+                            }
                         }
                         // Insert linebreak after each comma
                         var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex)!

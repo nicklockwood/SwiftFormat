@@ -162,30 +162,31 @@ public class Formatter: NSObject {
 
     /// Returns the index of the next token at the current scope that matches the block
     public func index(after index: Int, where matches: (Token) -> Bool) -> Int? {
-        var i = index + 1
         var scopeStack: [Token] = []
-        while let token = token(at: i) {
+        for i in index + 1 ..< tokens.count {
+            let token = tokens[i]
             if let scope = scopeStack.last, token.isEndOfScope(scope) {
                 scopeStack.removeLast()
-                if case .linebreak = token {
-                    i -= 1
+                if case .linebreak = token, scopeStack.count == 0, matches(token) {
+                    return i
                 }
             } else if scopeStack.count == 0 && matches(token) {
                 return i
+            } else if token.isEndOfScope {
+                return nil
             } else if case .startOfScope = token {
                 scopeStack.append(token)
             }
-            i += 1
         }
         return nil
     }
 
-    /// Returns the index of the next token of the specified type
+    /// Returns the index of the next matching token at the current scope
     public func index(of token: Token, after index: Int) -> Int? {
         return self.index(after: index, where: { $0 == token })
     }
 
-    /// Returns the index of the next token that isn't space or a linebreak
+    /// Returns the index of the next token at the current scope of the specified type
     public func index(of type: TokenType, after index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
         return self.index(after: index, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
@@ -202,10 +203,10 @@ public class Formatter: NSObject {
 
     /// Returns the index of the previous token at the current scope that matches the block
     public func index(before index: Int, where matches: (Token) -> Bool) -> Int? {
-        var i = index - 1
         var linebreakEncountered = false
         var scopeStack: [Token] = []
-        while let token = token(at: i) {
+        for i in (0 ..< index).reversed() {
+            let token = tokens[i]
             if case .startOfScope = token {
                 if let scope = scopeStack.last, scope.isEndOfScope(token) {
                     scopeStack.removeLast()
@@ -223,12 +224,11 @@ public class Formatter: NSObject {
             } else if case .endOfScope = token {
                 scopeStack.append(token)
             }
-            i -= 1
         }
         return nil
     }
 
-    /// Returns the index of the previous token at the current scope of the specified type
+    /// Returns the index of the previous matching token at the current scope
     public func index(of token: Token, before index: Int) -> Int? {
         return self.index(before: index, where: { $0 == token })
     }

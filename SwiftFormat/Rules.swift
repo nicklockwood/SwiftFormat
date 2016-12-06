@@ -1494,8 +1494,9 @@ extension FormatRules {
         func wrapArguments(for scopes: String..., mode: WrapMode, allowGrouping: Bool) {
             switch mode {
             case .beforeFirst:
-                formatter.forEachToken(where: { scopes.contains($0.string) }) { i, token in
-                    if let firstLinebreakIndex = formatter.index(of: .linebreak, after: i),
+                formatter.forEach(.startOfScope) { i, token in
+                    if scopes.contains(token.string),
+                        let firstLinebreakIndex = formatter.index(of: .linebreak, after: i),
                         let closingBraceIndex = formatter.index(after: i, where: { $0.isEndOfScope(token) }),
                         firstLinebreakIndex < closingBraceIndex {
                         // Get indent
@@ -1539,8 +1540,9 @@ extension FormatRules {
                     }
                 }
             case .afterFirst:
-                formatter.forEachToken(where: { scopes.contains($0.string) }) { i, token in
-                    if let firstLinebreakIndex = formatter.index(of: .linebreak, after: i),
+                formatter.forEach(.startOfScope) { i, token in
+                    if scopes.contains(token.string),
+                        let firstLinebreakIndex = formatter.index(of: .linebreak, after: i),
                         var closingBraceIndex = formatter.index(after: i, where: { $0.isEndOfScope(token) }),
                         firstLinebreakIndex < closingBraceIndex,
                         var firstArgumentIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i) {

@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.20](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.20) (2016-12-09)
+
+- Added `redundantNilInit` rule, to remove unnecessary nil initialization of Optional vars
+- The `trailingCommas` rule now removes trailing commas for inline array literals
+- Fixed bug in `void` rule when handling chains of throwing functions
+- Fixed some performance regressions
+
 ## [0.19](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.19) (2016-12-02)
 
 - Fixed a critical bug where `redundantParens` rule failed to insert space before a prefix operator

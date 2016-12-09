@@ -2,8 +2,6 @@
 //  CommandErrors.swift
 //  Swift Formatter
 //
-//  Version 0.19
-//
 //  Created by Tony Arnold on 6/10/16.
 //  Copyright 2016 Nick Lockwood
 //

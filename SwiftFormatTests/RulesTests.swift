@@ -2755,6 +2755,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveNonNilInit() {
+        let input = "var foo: Int? = 0"
+        let output = "var foo: Int? = 0"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantNilInit]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testRemoveRedundantImplicitUnwrapInit() {
         let input = "var foo: Int! = nil"
         let output = "var foo: Int!"

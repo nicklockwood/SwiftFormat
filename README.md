@@ -7,7 +7,7 @@ What is this?
 
 SwiftFormat is a code library and command line tool for reformatting swift code.
 
-It applies a set of rules to the whitespace around the code, leaving the meaning intact.
+It applies a set of rules to the formatting and space around the code, leaving the meaning intact.
 
 
 Why would I want to do that?
@@ -97,7 +97,7 @@ Xcode Source Editor Extension
 
 You'll find the latest version of the `SwiftFormat for Xcode` application inside the `EditorExtension` folder included in the SwiftFormat repository. Drag it into your `Applications` folder, then double-click to launch it, and follow the on-screen instructions.
 
-**NOTE:** The Extension requires Xcode 8 and macOS 10.12 Sierra. It *may* work on macOS 10.11 El Capitan if you open Terminal, execute the following command, then restart your Mac.
+**NOTE:** The Extension requires Xcode 8 and macOS 10.12 Sierra. It *may* work on macOS 10.11 El Capitan if you open Terminal, execute the following command, then restart your Mac (but it didn't work for me).
 
     > sudo /usr/libexec/xpccachectl
     
@@ -145,7 +145,11 @@ The pre-commit hook will now run whenever you run `git commit`. Running `git com
 So what does SwiftFormat actually do?
 --------------------------------------
 
-Here are all the rules that SwiftFormat currently applies:
+SwiftFormat first converts the source file into tokens, then iteratively applies a set of rules to the tokens to adjust the formatting. The tokens are then converted back into text.
+
+The rules used by SwiftFormat can be displayed using the `--rules` command line argument. You can disable them individually using `--disable` followed by a comma-delimited list of rule names.
+
+Here are all the rules that SwiftFormat currently applies, and what they do:
 
 *spaceAroundParens* - contextually adjusts the space around ( ). For example:
 
@@ -354,6 +358,14 @@ Here are all the rules that SwiftFormat currently applies:
         }
     }
     
+*redundantNilInit* - removes unnecessary nil initialization of Optional vars (which are nil by default anyway):
+
+	var foo: Int? = nil     -->   var foo: Int?
+	
+	let foo: Int? = nil     -->   let foo: Int? = nil // doesn't apply to `let` properties
+	
+	var foo: Int? = 0       -->   var foo: Int? = 0 // doesn't affect non-nil initialzation
+
 *hexLiterals* - converts all hex literals to upper- or lower-case, depending on settings:
 
     let color = 0xFF77A5    -->   let color = 0xff77a5
@@ -395,7 +407,9 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 > A. Many configuration options are exposed in the command line interface. You can either set these manually, or use the `--inferoptions` argument to automatically generate the configuration from your existing project.
 
-> If the options you want aren't exposed, the rules are implemented as functions in the file `Rules.swift`, so you can modify these and build a new version of the command line tool. If you think your changes might be generally useful, make a pull request.
+> If there is a rule that you don't like, and which cannot be disabled via the command line options, you can disable the rule by using the `--disable` argument, followed by the name of the rule. You can display a list of all rules using the `--rules` argument, and their behaviors are documented above this section in the README.
+
+> If the options you want aren't exposed, and disabling the rule doesn't solve the problem, the rules are implemented as functions in the file `Rules.swift`, so you can modify them and build a new version of the command line tool. If you think your changes might be generally useful, make a pull request.
 
 
 *Q. Why did you write yet another Swift formatting tool?*
@@ -420,9 +434,9 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. How does it work?*
 
-> A. First it loops through the source file character-by-character and breaks it into tokens, such as `number`, `identifier`, `whitespace`, etc. That's handled by the functions in `Tokenizer.swift`.
+> A. First it loops through the source file character-by-character and breaks it into tokens, such as `number`, `identifier`, `linebreak`, etc. That's handled by the functions in `Tokenizer.swift`.
 
-> Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening brace appears on the same line as the preceding non-whitespace token". Each rule is designed to be relatively independent of the others, so they can be enabled or disabled individually (the order matters though). The rules are all defined as floating functions in `Rules.swift`.
+> Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening brace appears on the same line as the preceding non-whitespace token". Each rule is designed to be relatively independent of the others, so they can be enabled or disabled individually. The rules are all defined as methods of the `FormatRules` class in `Rules.swift`. The list of rules is then extracted using some runtime magic.
 
 > Finally, the modified token array is stitched back together to re-generate the source file.
 
@@ -434,7 +448,9 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. Can I use the `SwiftFormat.framework` inside another app?*
 
-> A. I only created the framework to facilitate testing, so to be honest I've no idea if it will work in an app, but you're welcome to try. If you need to make adjustments to the public/private flags or namespaces to get it working, open an issue on Github (or evene better, a pull request).
+> A. I only created the framework to facilitate testing, so to be honest I've no idea if it will work in an app, but you're welcome to try. If you need to make adjustments to the public/private flags or namespaces to get it working, open an issue on Github (or even better, a pull request).
+
+> The SwiftFormat framework is available as a CocoaPod for easier integration.
 
 
 Cache

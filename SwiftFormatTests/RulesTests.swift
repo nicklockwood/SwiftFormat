@@ -2716,6 +2716,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testParensAroundRangeNotRemoved() {
+        let input = "(1 ..< 10).reduce(0, combine: +)"
+        let output = "(1 ..< 10).reduce(0, combine: +)"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: redundantGet
 
     func testRemoveSingleLineIsolatedGet() {
@@ -2735,6 +2742,13 @@ class RulesTests: XCTestCase {
     func testNoRemoveMultilineGetSet() {
         let input = "var foo: Int {\n    get { return 5 }\n    set { foo = newValue }\n}"
         let output = "var foo: Int {\n    get { return 5 }\n    set { foo = newValue }\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantGet]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveAttributedGet() {
+        let input = "var enabled: Bool { @objc(isEnabled) get { return true } }"
+        let output = "var enabled: Bool { @objc(isEnabled) get { return true } }"
         XCTAssertEqual(try! format(input, rules: [FormatRules.redundantGet]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }

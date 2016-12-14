@@ -52,7 +52,11 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
 
         do {
             let output = try format(tokens, options: options)
-            invocation.buffer.completeBuffer = output
+            if output == tokens {
+                // No changes needed
+                return completionHandler(nil)
+            }
+            invocation.buffer.completeBuffer = sourceCode(for: output)
         } catch let error {
             return completionHandler(error)
         }

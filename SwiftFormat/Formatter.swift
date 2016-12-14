@@ -38,12 +38,16 @@ import Foundation
 /// directly is that it allows mutation during enumeration, and
 /// transparently handles changes that affect the current token index.
 public class Formatter: NSObject {
-    private(set) var tokens: [Token]
-    let options: FormatOptions
-
     private var indexStack: [Int] = []
 
-    init(_ tokens: [Token], options: FormatOptions = FormatOptions()) {
+    /// The options that the formatter was initialized with
+    public let options: FormatOptions
+
+    /// The token array managed by the formatter (read-only)
+    private(set) public var tokens: [Token]
+
+    /// Create a new formatter instance from a token array
+    public init(_ tokens: [Token], options: FormatOptions = FormatOptions()) {
         self.tokens = tokens
         self.options = options
     }
@@ -72,7 +76,7 @@ public class Formatter: NSObject {
     public func replaceTokens(inRange range: Range<Int>, with tokens: [Token]) {
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
-            replaceToken(at: range.lowerBound + i, with: tokens[i])
+            self.tokens[range.lowerBound + i] = tokens[i]
         }
         if range.count > max {
             for _ in max ..< range.count {

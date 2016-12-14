@@ -54,11 +54,15 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         let selectionRange = selection.start.line ... min(selection.end.line, invocation.buffer.lines.count - 1)
         let sourceToFormat = selectionRange.flatMap { invocation.buffer.lines[$0] as? String }.joined()
 
-        // Remove all selections to avoid a crash when changing the contents of the buffer.
-        invocation.buffer.selections.removeAllObjects()
-
         do {
             let formattedSource = try format(sourceToFormat, options: options)
+            if formattedSource == sourceToFormat {
+                // No changes needed
+                return completionHandler(nil)
+            }
+
+            // Remove all selections to avoid a crash when changing the contents of the buffer.
+            invocation.buffer.selections.removeAllObjects()
             invocation.buffer.lines.removeObjects(in: NSMakeRange(selection.start.line, selectionRange.count))
             invocation.buffer.lines.insert(formattedSource, at: selection.start.line)
 
@@ -66,10 +70,11 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
                 in: selection, between: sourceToFormat, and: formattedSource)
 
             invocation.buffer.selections.add(updatedSelectionRange)
+
+            return completionHandler(nil)
         } catch let error {
             return completionHandler(error)
         }
-        return completionHandler(nil)
     }
 
     /// Given a source text range, an original source string and a modified target string this

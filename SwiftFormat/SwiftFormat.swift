@@ -111,23 +111,33 @@ public func parsingError(for tokens: [Token]) -> FormatError? {
     return nil
 }
 
+/// Convert a token array back into a string
+public func sourceCode(for tokens: [Token]) -> String {
+    var output = ""
+    for token in tokens { output += token.string }
+    return output
+}
+
 /// Format a pre-parsed token array
+/// Returns the formatted token array, and the number of edits made
 public func format(_ tokens: [Token],
                    rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = FormatOptions()) throws -> String {
+                   options: FormatOptions = FormatOptions()) throws -> [Token] {
     // Parse
     if !options.fragment, let error = parsingError(for: tokens) {
         throw error
     }
 
-    // Format
+    // Recursively apply rules until no changes are detected
+    var tokens = tokens
     let formatter = Formatter(tokens, options: options)
-    rules.forEach { $0(formatter) }
+    repeat {
+        tokens = formatter.tokens
+        rules.forEach { $0(formatter) }
+    } while tokens != formatter.tokens
 
     // Output
-    var output = ""
-    for token in formatter.tokens { output += token.string }
-    return output
+    return tokens
 }
 
 /// Format code with specified rules and options
@@ -135,7 +145,7 @@ public func format(_ source: String,
                    rules: [FormatRule] = FormatRules.default,
                    options: FormatOptions = FormatOptions()) throws -> String {
 
-    return try format(tokenize(source), rules: rules, options: options)
+    return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
 }
 
 // MARK: Internal APIs used by CLI - included here for testing purposes

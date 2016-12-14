@@ -1407,6 +1407,49 @@ extension FormatRules {
         }
     }
 
+    /// Remove redundant pattern in case statements
+    public class func redundantPattern(_ formatter: Formatter) {
+        func redundantBindings(inRange range: Range<Int>) -> Bool {
+            var isEmpty = true
+            for token in formatter.tokens[range.lowerBound ..< range.upperBound] {
+                switch token {
+                case .identifier("_"):
+                    isEmpty = false
+                case .space, .linebreak, .delimiter(","), .keyword("let"), .keyword("var"):
+                    break
+                default:
+                    return false
+                }
+            }
+            return !isEmpty
+        }
+
+        formatter.forEach(.startOfScope("(")) { i, token in
+            if let endIndex = formatter.index(of: .endOfScope(")"), after: i),
+                let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
+                [.startOfScope(":"), .symbol("=", .infix)].contains(nextToken),
+                redundantBindings(inRange: i + 1 ..< endIndex) {
+                let prevIndex = formatter.index(of: .nonSpaceOrComment, before: i)
+                if let prevIndex = prevIndex, let prevToken = formatter.token(at: prevIndex),
+                    [.keyword("case"), .endOfScope("case")].contains(prevToken) {
+                    // Not safe to remove
+                    return
+                }
+                formatter.removeTokens(inRange: i ... endIndex)
+                if let prevIndex = prevIndex, formatter.tokens[prevIndex].isIdentifier,
+                    formatter.last(.nonSpaceOrComment, before: prevIndex)?.string == "." {
+                    // Was an enum case
+                } else {
+                    // Was an assignment
+                    formatter.insertToken(.identifier("_"), at: i)
+                    if !(formatter.token(at: i - 1).map({ $0.isSpaceOrLinebreak }) ?? true) {
+                        formatter.insertToken(.space(" "), at: i)
+                    }
+                }
+            }
+        }
+    }
+
     /// Normalize argument wrapping style
     public class func wrapArguments(_ formatter: Formatter) {
         func wrapArguments(for scopes: String..., mode: WrapMode, allowGrouping: Bool) {

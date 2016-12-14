@@ -2796,13 +2796,62 @@ class RulesTests: XCTestCase {
         let input = "if case .foo(let _) = bar {}"
         let output = "if case .foo(_) = bar {}"
         XCTAssertEqual(try! format(input, rules: [FormatRules.redundantLet]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testRemoveRedundantVarsInCase() {
         let input = "if case .foo(var _, var /* unused */ _) = bar {}"
         let output = "if case .foo(_, /* unused */ _) = bar {}"
         XCTAssertEqual(try! format(input, rules: [FormatRules.redundantLet]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    // MARK: redundantPattern
+
+    func testRemoveRedundantPatternInIfCase() {
+        let input = "if case .foo(_, _) = bar {}"
+        let output = "if case .foo = bar {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantPattern]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveRequiredPatternInIfCase() {
+        let input = "if case (_, _) = bar {}"
+        let output = "if case (_, _) = bar {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantPattern]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveRedundantPatternInSwitchCase() {
+        let input = "switch foo {\ncase .bar(_, _): break\ndefault: break\n}"
+        let output = "switch foo {\ncase .bar: break\ndefault: break\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantPattern]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveRequiredPatternInSwitchCase() {
+        let input = "switch foo {\ncase (_, _): break\ndefault: break\n}"
+        let output = "switch foo {\ncase (_, _): break\ndefault: break\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantPattern]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testSimplifyLetPattern() {
+        let input = "let(_, _) = bar"
+        let output = "let _ = bar"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantPattern]), output)
+    }
+
+    func testNoRemoveVoidFunctionCall() {
+        let input = "if case .foo() = bar {}"
+        let output = "if case .foo() = bar {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantPattern]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveMethodSignature() {
+        let input = "func foo(_, _) {}"
+        let output = "func foo(_, _) {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantPattern]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 

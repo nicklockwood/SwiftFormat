@@ -372,6 +372,12 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
 
     if case .foo(var /* unused */ _) = bar {}   -->   if case .foo(/* unused */ _) = bar {} 
 
+*redundantPattern* - removes redundant pattern matching arguments for ignored variables:
+
+    if case .foo(_, _) = bar {}    -->    if case .foo = bar {}
+    
+    let (_, _) = bar               -->    let _ = bar
+
 *hexLiterals* - converts all hex literals to upper- or lower-case, depending on settings:
 
     let color = 0xFF77A5    -->   let color = 0xff77a5

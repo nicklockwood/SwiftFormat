@@ -605,8 +605,8 @@ class RulesTests: XCTestCase {
     }
 
     func testSpaceBeforeEnumCaseInsideClosure() {
-        let input = "{ .Bar() }"
-        let output = "{ .Bar() }"
+        let input = "{ .bar() }"
+        let output = "{ .bar() }"
         XCTAssertEqual(try! format(input, rules: [FormatRules.spaceAroundOperators]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -732,7 +732,7 @@ class RulesTests: XCTestCase {
 
     func testSpaceAroundCommentInInfixExpression() {
         let input = "foo/* hello */-bar"
-        let output = "foo/* hello */ - bar"
+        let output = "foo/* hello */ -bar"
         XCTAssertEqual(try! format(input, rules: [FormatRules.spaceAroundOperators]), output)
     }
 

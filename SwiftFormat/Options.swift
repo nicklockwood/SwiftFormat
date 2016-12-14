@@ -182,7 +182,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
     options.spaceAroundRangeOperators = {
         var spaced = 0, unspaced = 0
         formatter.forEachToken { i, token in
-            if token == .symbol("...") || token == .symbol("..<") {
+            if token.isRangeOperator {
                 if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
                     if nextToken.string != ")" && nextToken.string != "," {
                         if formatter.token(at: i + 1)?.isSpaceOrLinebreak == true {
@@ -201,17 +201,17 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         var voids = 0, tuples = 0
         formatter.forEach(.identifier("Void")) { i, token in
             if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-                prevToken == .symbol(".") || prevToken == .keyword("typealias") {
+                [.symbol(".", .prefix), .symbol(".", .infix), .keyword("typealias")].contains(prevToken) {
                 return
             }
             voids += 1
         }
         formatter.forEach(.startOfScope("(")) { i, token in
             if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
-                let prevToken = formatter.token(at: prevIndex), prevToken.string == "->",
+                let prevToken = formatter.token(at: prevIndex), prevToken == .delimiter("->"),
                 let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i),
                 let nextToken = formatter.token(at: nextIndex), nextToken.string == ")",
-                formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex)?.string != "->" {
+                formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) != .delimiter("->") {
                 tuples += 1
             }
         }
@@ -420,16 +420,16 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 formatter.index(after: i, where: { $0.isEndOfScope(token) }),
                 let linebreakIndex = formatter.index(of: .linebreak, after: i),
                 linebreakIndex < closingBraceIndex,
-                let firstCommaIndex = formatter.index(of: .symbol(","), after: i),
+                let firstCommaIndex = formatter.index(of: .delimiter(","), after: i),
                 firstCommaIndex < closingBraceIndex {
                 if !allowGrouping {
                     // Check for two consecutive arguments on the same line
                     var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex)!
-                    if formatter.tokens[index] != .symbol(",") {
+                    if formatter.tokens[index] != .symbol(",", .none) {
                         index += 1
                     }
                     while index > i {
-                        guard let commaIndex = formatter.index(of: .symbol(","), before: index) else {
+                        guard let commaIndex = formatter.index(of: .delimiter(","), before: index) else {
                             break
                         }
                         if formatter.next(.nonSpaceOrComment, after: commaIndex)?.isLinebreak == false {

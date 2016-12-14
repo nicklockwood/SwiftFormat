@@ -1397,6 +1397,16 @@ extension FormatRules {
         }
     }
 
+    /// Remove redundant let/var for unnamed variables
+    public class func redundantLet(_ formatter: Formatter) {
+        formatter.forEachToken(where: { [.keyword("let"), .keyword("var")].contains($0) }) { i, token in
+            if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .identifier("_"),
+                let nextNonSpaceIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i) {
+                formatter.removeTokens(inRange: i ..< nextNonSpaceIndex)
+            }
+        }
+    }
+
     /// Normalize argument wrapping style
     public class func wrapArguments(_ formatter: Formatter) {
         func wrapArguments(for scopes: String..., mode: WrapMode, allowGrouping: Bool) {

@@ -2790,6 +2790,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // MARK: redundantLet
+
+    func testRemoveRedundantLetInCase() {
+        let input = "if case .foo(let _) = bar {}"
+        let output = "if case .foo(_) = bar {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantLet]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveRedundantVarsInCase() {
+        let input = "if case .foo(var _, var /* unused */ _) = bar {}"
+        let output = "if case .foo(_, /* unused */ _) = bar {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantLet]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: wrapArguments
 
     func testWrapAfterFirstConvertedToWrapBefore() {

@@ -366,6 +366,12 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
 	
 	var foo: Int? = 0       -->   var foo: Int? = 0 // doesn't affect non-nil initialzation
 
+*redundantLet* - removes redundant `let` or `var` from ignored variables in bindings (which is a warning in Xcode):
+
+    if case (let foo, let _) = bar {}           -->   if case (let foo, _) = bar {}
+
+    if case .foo(var /* unused */ _) = bar {}   -->   if case .foo(/* unused */ _) = bar {} 
+
 *hexLiterals* - converts all hex literals to upper- or lower-case, depending on settings:
 
     let color = 0xFF77A5    -->   let color = 0xff77a5

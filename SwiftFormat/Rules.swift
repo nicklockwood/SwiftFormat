@@ -1399,10 +1399,11 @@ extension FormatRules {
 
     /// Remove redundant let/var for unnamed variables
     public class func redundantLet(_ formatter: Formatter) {
-        formatter.forEachToken(where: { [.keyword("let"), .keyword("var")].contains($0) }) { i, token in
-            if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .identifier("_"),
-                let nextNonSpaceIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i) {
-                formatter.removeTokens(inRange: i ..< nextNonSpaceIndex)
+        formatter.forEach(.identifier("_")) { i, token in
+            if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+                [.keyword("let"), .keyword("var")].contains($0) }),
+                let nextNonSpaceIndex = formatter.index(of: .nonSpaceOrLinebreak, after: prevIndex) {
+                formatter.removeTokens(inRange: prevIndex ..< nextNonSpaceIndex)
             }
         }
     }
@@ -1425,16 +1426,16 @@ extension FormatRules {
         }
 
         formatter.forEach(.startOfScope("(")) { i, token in
+            let prevIndex = formatter.index(of: .nonSpaceOrComment, before: i)
+            if let prevIndex = prevIndex, let prevToken = formatter.token(at: prevIndex),
+                [.keyword("case"), .endOfScope("case")].contains(prevToken) {
+                // Not safe to remove
+                return
+            }
             if let endIndex = formatter.index(of: .endOfScope(")"), after: i),
                 let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
                 [.startOfScope(":"), .symbol("=", .infix)].contains(nextToken),
                 redundantBindings(inRange: i + 1 ..< endIndex) {
-                let prevIndex = formatter.index(of: .nonSpaceOrComment, before: i)
-                if let prevIndex = prevIndex, let prevToken = formatter.token(at: prevIndex),
-                    [.keyword("case"), .endOfScope("case")].contains(prevToken) {
-                    // Not safe to remove
-                    return
-                }
                 formatter.removeTokens(inRange: i ... endIndex)
                 if let prevIndex = prevIndex, formatter.tokens[prevIndex].isIdentifier,
                     formatter.last(.nonSpaceOrComment, before: prevIndex)?.string == "." {

@@ -764,6 +764,20 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testStringAssignment() {
+        let input = "foo = \"foo\""
+        let output: [Token] = [
+            .identifier("foo"),
+            .space(" "),
+            .symbol("=", .infix),
+            .space(" "),
+            .startOfScope("\""),
+            .stringBody("foo"),
+            .endOfScope("\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: chevrons (might be operators or generics)
 
     func testLessThanGreaterThan() {

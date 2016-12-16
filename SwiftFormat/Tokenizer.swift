@@ -330,7 +330,8 @@ public enum Token: Equatable {
         case .symbol(_, .infix), .symbol(_, .postfix):
             return false
         case .identifier, .number, .symbol,
-             .startOfScope("("), .startOfScope("["), .startOfScope("{"):
+             .startOfScope("("), .startOfScope("["),
+             .startOfScope("{"), .startOfScope("\""):
             return true
         default:
             return false

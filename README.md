@@ -368,9 +368,11 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
 
 *redundantLet* - removes redundant `let` or `var` from ignored variables in bindings (which is a warning in Xcode):
 
+    let _ = resultIgnorableFunction()           -->   _ = resultIgnorableFunction()
+
     if case (let foo, let _) = bar {}           -->   if case (let foo, _) = bar {}
 
-    if case .foo(var /* unused */ _) = bar {}   -->   if case .foo(/* unused */ _) = bar {} 
+    if case .foo(var /* unused */ _) = bar {}   -->   if case .foo( /* unused */ _) = bar {} 
 
 *redundantPattern* - removes redundant pattern matching arguments for ignored variables:
 

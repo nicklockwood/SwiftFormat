@@ -611,13 +611,6 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testNoSpaceAroundOptionalChaining() {
-        let input = "foo?.bar"
-        let output = "foo?.bar"
-        XCTAssertEqual(try! format(input, rules: [FormatRules.spaceAroundOperators]), output)
-        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
     func testNoSpaceAroundMultipleOptionalChaining() {
         let input = "foo??!?!.bar"
         let output = "foo??!?!.bar"
@@ -632,23 +625,37 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testNoSpaceBetweenOptionalChaining() {
+    func testNoSpaceAddedInOptionalChaining() {
+        let input = "foo?.bar"
+        let output = "foo?.bar"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testSpaceRemovedInOptionalChaining() {
         let input = "foo? .bar"
         let output = "foo?.bar"
         XCTAssertEqual(try! format(input, rules: [FormatRules.spaceAroundOperators]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testNoSpaceBetweenForcedChaining() {
+    func testSpaceRemovedInForcedChaining() {
         let input = "foo! .bar"
         let output = "foo!.bar"
         XCTAssertEqual(try! format(input, rules: [FormatRules.spaceAroundOperators]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testNoSpaceBetweenMultipleOptionalChaining() {
+    func testSpaceRemovedInMultipleOptionalChaining() {
         let input = "foo??! .bar"
         let output = "foo??!.bar"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoSpaceAfterOptionalInsideTernary() {
+        let input = "x ? foo? .bar() : bar?.baz()"
+        let output = "x ? foo?.bar() : bar?.baz()"
         XCTAssertEqual(try! format(input, rules: [FormatRules.spaceAroundOperators]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }

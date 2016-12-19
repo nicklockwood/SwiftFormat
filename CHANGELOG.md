@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.21](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.21) (2016-12-19)
+
+- Added `redundantLet` rule to remove unnecessary `let` keyword in statements like  `let _ = foo()`
+- Added `redundantPattern` rule to simplify wildcard patterns like `.foo(_, _)` to just `.foo`
+- Rules are now run repeatedly until no changes are detected, fixing an issue where changes could be missed
+- Fixed a bug where extra space was inserted between `?` and `.` in optional chaining expressions
+- A space is no longer added between a comment and the following comma
+- Fixed some performance regressions
+
 ## [0.20](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.20) (2016-12-09)
 
 - Added `redundantNilInit` rule, to remove unnecessary nil initialization of Optional vars

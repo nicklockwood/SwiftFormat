@@ -2792,6 +2792,18 @@ class RulesTests: XCTestCase {
 
     // MARK: redundantLet
 
+    func testRemoveRedundantLet() {
+        let input = "let _ = bar {}"
+        let output = "_ = bar {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantLet]), output)
+    }
+
+    func testNoRemoveLetWithType() {
+        let input = "let _: String = bar {}"
+        let output = "let _: String = bar {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantLet]), output)
+    }
+
     func testRemoveRedundantLetInCase() {
         let input = "if case .foo(let _) = bar {}"
         let output = "if case .foo(_) = bar {}"
@@ -2803,6 +2815,30 @@ class RulesTests: XCTestCase {
         let output = "if case .foo(_, /* unused */ _) = bar {}"
         XCTAssertEqual(try! format(input, rules: [FormatRules.redundantLet]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveLetInIf() {
+        let input = "if let _ = foo {}"
+        let output = "if let _ = foo {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantLet]), output)
+    }
+
+    func testNoRemoveLetInMultiIf() {
+        let input = "if foo == bar, /* comment! */ let _ = baz {}"
+        let output = "if foo == bar, /* comment! */ let _ = baz {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantLet]), output)
+    }
+
+    func testNoRemoveLetInGuard() {
+        let input = "guard let _ = foo else {}"
+        let output = "guard let _ = foo else {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantLet]), output)
+    }
+
+    func testNoRemoveLetInWhile() {
+        let input = "while let _ = foo {}"
+        let output = "while let _ = foo {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantLet]), output)
     }
 
     // MARK: redundantPattern

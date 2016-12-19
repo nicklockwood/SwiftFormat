@@ -1400,9 +1400,22 @@ extension FormatRules {
     /// Remove redundant let/var for unnamed variables
     public class func redundantLet(_ formatter: Formatter) {
         formatter.forEach(.identifier("_")) { i, token in
-            if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
-                [.keyword("let"), .keyword("var")].contains($0) }),
+            if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":"),
+                let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+                    [.keyword("let"), .keyword("var")].contains($0) }),
                 let nextNonSpaceIndex = formatter.index(of: .nonSpaceOrLinebreak, after: prevIndex) {
+                if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) {
+                    switch prevToken {
+                    case .keyword("if"), .keyword("guard"), .keyword("while"):
+                        return
+                    case .delimiter(","):
+                        if formatter.currentScope(at: i) != .startOfScope("(") {
+                            return
+                        }
+                    default:
+                        break
+                    }
+                }
                 formatter.removeTokens(inRange: prevIndex ..< nextNonSpaceIndex)
             }
         }

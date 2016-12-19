@@ -765,6 +765,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoSpaceAroundCommentBeforeComma() {
+        let input = "(foo /* foo */ , bar)"
+        let output = "(foo /* foo */, bar)"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.spaceAroundComments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testSpaceAroundSingleLineComment() {
         let input = "func foo() {// comment\n}"
         let output = "func foo() { // comment\n}"

@@ -404,8 +404,14 @@ extension FormatRules {
                     formatter.insertToken(.space(" "), at: i)
                 }
             case .endOfScope("*/"):
-                if let nextToken = formatter.token(at: i + 1), !nextToken.isSpaceOrLinebreak {
-                    formatter.insertToken(.space(" "), at: i + 1)
+                if let nextToken = formatter.token(at: i + 1) {
+                    if !nextToken.isSpaceOrLinebreak {
+                        if nextToken != .delimiter(",") {
+                            formatter.insertToken(.space(" "), at: i + 1)
+                        }
+                    } else if formatter.next(.nonSpace, after: i + 1) == .delimiter(",") {
+                        formatter.removeToken(at: i + 1)
+                    }
                 }
             default:
                 break

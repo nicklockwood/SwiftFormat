@@ -312,19 +312,19 @@ class TokenizerTests: XCTestCase {
 
     func testZero() {
         let input = "0"
-        let output: [Token] = [.number("0")]
+        let output: [Token] = [.number("0", .integer)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testSmallInteger() {
         let input = "5"
-        let output: [Token] = [.number("5")]
+        let output: [Token] = [.number("5", .integer)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testLargeInteger() {
         let input = "12345678901234567890"
-        let output: [Token] = [.number("12345678901234567890")]
+        let output: [Token] = [.number("12345678901234567890", .integer)]
         XCTAssertEqual(tokenize(input), output)
     }
 
@@ -332,20 +332,20 @@ class TokenizerTests: XCTestCase {
         let input = "-7"
         let output: [Token] = [
             .symbol("-", .prefix),
-            .number("7"),
+            .number("7", .integer),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testSmallFloat() {
         let input = "0.2"
-        let output: [Token] = [.number("0.2")]
+        let output: [Token] = [.number("0.2", .decimal)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testLargeFloat() {
         let input = "1234.567890"
-        let output: [Token] = [.number("1234.567890")]
+        let output: [Token] = [.number("1234.567890", .decimal)]
         XCTAssertEqual(tokenize(input), output)
     }
 
@@ -353,98 +353,98 @@ class TokenizerTests: XCTestCase {
         let input = "-0.34"
         let output: [Token] = [
             .symbol("-", .prefix),
-            .number("0.34"),
+            .number("0.34", .decimal),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testExponential() {
         let input = "1234e5"
-        let output: [Token] = [.number("1234e5")]
+        let output: [Token] = [.number("1234e5", .decimal)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testPositiveExponential() {
         let input = "0.123e+4"
-        let output: [Token] = [.number("0.123e+4")]
+        let output: [Token] = [.number("0.123e+4", .decimal)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testNegativeExponential() {
         let input = "0.123e-4"
-        let output: [Token] = [.number("0.123e-4")]
+        let output: [Token] = [.number("0.123e-4", .decimal)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testCapitalExponential() {
         let input = "0.123E-4"
-        let output: [Token] = [.number("0.123E-4")]
+        let output: [Token] = [.number("0.123E-4", .decimal)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testLeadingZeros() {
         let input = "0005"
-        let output: [Token] = [.number("0005")]
+        let output: [Token] = [.number("0005", .integer)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testBinary() {
         let input = "0b101010"
-        let output: [Token] = [.number("0b101010")]
+        let output: [Token] = [.number("0b101010", .binary)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testOctal() {
         let input = "0o52"
-        let output: [Token] = [.number("0o52")]
+        let output: [Token] = [.number("0o52", .octal)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testHex() {
         let input = "0x2A"
-        let output: [Token] = [.number("0x2A")]
+        let output: [Token] = [.number("0x2A", .hex)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testHexadecimalPower() {
         let input = "0xC3p0"
-        let output: [Token] = [.number("0xC3p0")]
+        let output: [Token] = [.number("0xC3p0", .hex)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testUnderscoresInInteger() {
         let input = "1_23_4_"
-        let output: [Token] = [.number("1_23_4_")]
+        let output: [Token] = [.number("1_23_4_", .integer)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testUnderscoresInFloat() {
         let input = "0_.1_2_"
-        let output: [Token] = [.number("0_.1_2_")]
+        let output: [Token] = [.number("0_.1_2_", .decimal)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testUnderscoresInExponential() {
         let input = "0.1_2_e-3"
-        let output: [Token] = [.number("0.1_2_e-3")]
+        let output: [Token] = [.number("0.1_2_e-3", .decimal)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testUnderscoresInBinary() {
         let input = "0b0000_0000_0001"
-        let output: [Token] = [.number("0b0000_0000_0001")]
+        let output: [Token] = [.number("0b0000_0000_0001", .binary)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testUnderscoresInOctal() {
         let input = "0o123_456"
-        let output: [Token] = [.number("0o123_456")]
+        let output: [Token] = [.number("0o123_456", .octal)]
         XCTAssertEqual(tokenize(input), output)
     }
 
     func testUnderscoresInHex() {
         let input = "0xabc_def"
-        let output: [Token] = [.number("0xabc_def")]
+        let output: [Token] = [.number("0xabc_def", .hex)]
         XCTAssertEqual(tokenize(input), output)
     }
 
@@ -1072,7 +1072,7 @@ class TokenizerTests: XCTestCase {
             .delimiter(","),
             .identifier("Baz"),
             .symbol(">>>", .infix),
-            .number("5"),
+            .number("5", .integer),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
@@ -1337,7 +1337,7 @@ class TokenizerTests: XCTestCase {
             .space(" "),
             .symbol("=", .infix),
             .space(" "),
-            .number("5"),
+            .number("5", .integer),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
@@ -1399,9 +1399,9 @@ class TokenizerTests: XCTestCase {
     func testHalfOpenRangeFollowedByComment() {
         let input = "1..<5\n//comment"
         let output: [Token] = [
-            .number("1"),
+            .number("1", .integer),
             .symbol("..<", .infix),
-            .number("5"),
+            .number("5", .integer),
             .linebreak("\n"),
             .startOfScope("//"),
             .commentBody("comment"),
@@ -1575,14 +1575,14 @@ class TokenizerTests: XCTestCase {
             .linebreak("\n"),
             .endOfScope("case"),
             .space(" "),
-            .number("1"),
+            .number("1", .integer),
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("break"),
             .linebreak("\n"),
             .endOfScope("case"),
             .space(" "),
-            .number("2"),
+            .number("2", .integer),
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("break"),
@@ -1673,7 +1673,7 @@ class TokenizerTests: XCTestCase {
             .linebreak("\n"),
             .endOfScope("case"),
             .space(" "),
-            .number("1"),
+            .number("1", .integer),
             .startOfScope(":"),
             .linebreak("\n"),
             .identifier("foo"),
@@ -1701,7 +1701,7 @@ class TokenizerTests: XCTestCase {
             .linebreak("\n"),
             .endOfScope("case"),
             .space(" "),
-            .number("1"),
+            .number("1", .integer),
             .startOfScope(":"),
             .linebreak("\n"),
             .identifier("foo"),
@@ -1729,7 +1729,7 @@ class TokenizerTests: XCTestCase {
             .linebreak("\n"),
             .endOfScope("case"),
             .space(" "),
-            .number("1"),
+            .number("1", .integer),
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("if"),
@@ -1766,7 +1766,7 @@ class TokenizerTests: XCTestCase {
             .linebreak("\n"),
             .endOfScope("case"),
             .space(" "),
-            .number("1"),
+            .number("1", .integer),
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("if"),
@@ -1812,7 +1812,7 @@ class TokenizerTests: XCTestCase {
             .linebreak("\n"),
             .endOfScope("case"),
             .space(" "),
-            .number("1"),
+            .number("1", .integer),
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("guard"),
@@ -1889,7 +1889,7 @@ class TokenizerTests: XCTestCase {
             .linebreak("\n"),
             .endOfScope("case"),
             .space(" "),
-            .number("1"),
+            .number("1", .integer),
             .startOfScope(":"),
             .linebreak("\n"),
             .identifier("foo"),

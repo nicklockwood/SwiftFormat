@@ -1630,13 +1630,13 @@ extension FormatRules {
     /// Ensure hex literals are all upper- or lower-cased
     public class func hexLiterals(_ formatter: Formatter) {
         let prefix = "0x"
-        formatter.forEachToken { i, token in
-            if case .number(let string) = token, string.hasPrefix(prefix) {
+        formatter.forEach(.number) { i, token in
+            if case .number(let string, .hex) = token {
                 if formatter.options.uppercaseHex {
                     formatter.replaceToken(at: i, with: .number(prefix +
-                            string.substring(from: prefix.endIndex).uppercased()))
+                            string.substring(from: prefix.endIndex).uppercased(), .hex))
                 } else {
-                    formatter.replaceToken(at: i, with: .number(string.lowercased()))
+                    formatter.replaceToken(at: i, with: .number(string.lowercased(), .hex))
                 }
             }
         }

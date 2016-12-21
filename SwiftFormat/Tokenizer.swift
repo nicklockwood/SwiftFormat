@@ -63,6 +63,7 @@ public enum TokenType {
     case symbol
     case unwrapSymbol
     case rangeOperator
+    case number
     case error
 
     // Negative types
@@ -70,6 +71,15 @@ public enum TokenType {
     case nonSpaceOrComment
     case nonSpaceOrLinebreak
     case nonSpaceOrCommentOrLinebreak
+}
+
+/// Mumeric literal types
+public enum NumberType {
+    case integer
+    case decimal
+    case binary
+    case octal
+    case hex
 }
 
 /// Symbol/operator types
@@ -82,7 +92,7 @@ public enum SymbolType {
 
 /// All token types
 public enum Token: Equatable {
-    case number(String)
+    case number(String, NumberType)
     case linebreak(String)
     case startOfScope(String)
     case endOfScope(String)
@@ -97,7 +107,7 @@ public enum Token: Equatable {
 
     public var string: String {
         switch self {
-        case .number(let string),
+        case .number(let string, _),
              .linebreak(let string),
              .startOfScope(let string),
              .endOfScope(let string),
@@ -141,6 +151,8 @@ public enum Token: Equatable {
             return isUnwrapSymbol
         case .rangeOperator:
             return isRangeOperator
+        case .number:
+            return isNumber
         case .error:
             return isError
         case .nonSpace:
@@ -347,8 +359,8 @@ public enum Token: Equatable {
 
     public static func ==(lhs: Token, rhs: Token) -> Bool {
         switch lhs {
-        case .number(let string):
-            if case .number(string) = rhs {
+        case .number(let string, let type):
+            if case .number(string, type) = rhs {
                 return true
             }
         case .linebreak(let string):
@@ -699,32 +711,35 @@ private extension String.UnicodeScalarView {
                 if let hex = readNumber(where: { $0.isHexDigit }) {
                     if read("p") {
                         if let power = readInteger() {
-                            return .number("0x" + hex + "p" + power)
+                            return .number("0x" + hex + "p" + power, .hex)
                         }
                         return .error("0x" + hex + "p" + String(self))
                     }
-                    return .number("0x" + hex)
+                    return .number("0x" + hex, .hex)
                 }
                 return .error("0x" + String(self))
             } else if read("b") {
                 if let bin = readNumber(where: { "01".unicodeScalars.contains($0) }) {
-                    return .number("0b" + bin)
+                    return .number("0b" + bin, .binary)
                 }
                 return .error("0b" + String(self))
             } else if read("o") {
                 if let octal = readNumber(where: { ("0" ... "7").contains($0) }) {
-                    return .number("0o" + octal)
+                    return .number("0o" + octal, .octal)
                 }
                 return .error("0o" + String(self))
             }
         }
 
+        var type: NumberType
         var number: String
         let endOfInt = self
         if read("."), let fraction = readInteger() {
+            type = .decimal
             number = integer + "." + fraction
         } else {
             self = endOfInt
+            type = .integer
             number = integer
         }
 
@@ -732,13 +747,14 @@ private extension String.UnicodeScalarView {
         if let e = readCharacter(where: { "eE".unicodeScalars.contains($0) }) {
             let sign = readCharacter(where: { "-+".unicodeScalars.contains($0) }).map { String($0) } ?? ""
             if let exponent = readInteger() {
+                type = .decimal // FIXME: not necessarily
                 number += String(e) + sign + exponent
             } else {
                 self = endOfFloat
             }
         }
 
-        return .number(number)
+        return .number(number, type)
     }
 
     mutating func parseToken() -> Token? {

@@ -462,8 +462,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
     options.uppercaseHex = {
         let prefix = "0x"
         var uppercase = 0, lowercase = 0
-        formatter.forEachToken { i, token in
-            if case .number(let string) = token, string.hasPrefix(prefix) {
+        formatter.forEach(.number) { i, token in
+            if case .number(let string, .hex) = token {
                 if string == string.lowercased() {
                     lowercase += 1
                 } else {

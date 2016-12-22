@@ -2774,6 +2774,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRemoveSubscriptGet() {
+        let input = "subscript(_ index: Int) {\n    get {\n        return 5\n    }\n}"
+        let output = "subscript(_ index: Int) {\n    return 5\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantGet, FormatRules.indent]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: redundantNilInit
 
     func testRemoveRedundantNilInit() {

@@ -2919,6 +2919,29 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // MARK: redundantRawValues
+
+    func testRemoveRedundantRawString() {
+        let input = "enum Foo: String {\n    case bar = \"bar\"\n    case baz = \"baz\"\n}"
+        let output = "enum Foo: String {\n    case bar\n    case baz\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantRawValues]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveCommaDelimitedCaseRawStringCases() {
+        let input = "enum Foo: String { case bar = \"bar\", baz = \"baz\" }"
+        let output = "enum Foo: String { case bar, baz }"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantRawValues]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveRawStringIfNameDoesntMatch() {
+        let input = "enum Foo: String {\n    case bar = \"foo\"\n}"
+        let output = "enum Foo: String {\n    case bar = \"foo\"\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantRawValues]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: wrapArguments
 
     func testWrapAfterFirstConvertedToWrapBefore() {

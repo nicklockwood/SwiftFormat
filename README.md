@@ -326,13 +326,13 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
 
 *semicolons* - removes semicolons at the end of lines and (optionally) replaces inline semicolons with a linebreak:
 
-    let foo = 5;              -->  let foo = 5
+    let foo = 5;               -->   let foo = 5
     
-    let foo = 5; let bar = 6  -->  let foo = 5
-                                   let bar = 6
+    let foo = 5; let bar = 6   -->   let foo = 5
+                                     let bar = 6
                                    
-    return;                   -->  return;
-    goto(fail)                     goto(fail)
+    return;                    -->   return;
+    goto(fail)                       goto(fail)
 
 *linebreaks* - normalizes all linebreaks to use the same character, as specified in options (either CR, LF or CRLF).
 
@@ -379,6 +379,13 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     if case .foo(_, _) = bar {}    -->    if case .foo = bar {}
     
     let (_, _) = bar               -->    let _ = bar
+    
+*redundantRawValues* - removes raw string values from enum cases when they match the case name:
+
+    enum Foo {                     enum Foo {
+        case bar = "bar"    -->        case bar
+        case baz = "quux"              case baz = "quux"
+    }                              }
 
 *hexLiterals* - converts all hex literals to upper- or lower-case, depending on settings:
 

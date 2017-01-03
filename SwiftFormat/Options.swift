@@ -425,7 +425,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 if !allowGrouping {
                     // Check for two consecutive arguments on the same line
                     var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex)!
-                    if formatter.tokens[index] != .symbol(",", .none) {
+                    if formatter.tokens[index] != .delimiter(",") {
                         index += 1
                     }
                     while index > i {

@@ -1541,6 +1541,64 @@ extension FormatRules {
         }
     }
 
+    /// Replace unused arguments with an underscore
+    public class func unusedArguments(_ formatter: Formatter) {
+        formatter.forEach(.keyword("func")) { i, token in
+            guard let startIndex = formatter.index(of: .startOfScope("("), after: i),
+                let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
+            var index = startIndex
+            var argNames = [String]()
+            var nameIndexPairs = [(Int, Int)]()
+            while index < endIndex {
+                guard let externalNameIndex =
+                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: { $0.isIdentifier })
+                else { return }
+                guard let nextIndex =
+                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
+                switch formatter.tokens[nextIndex] {
+                case .identifier("_"):
+                    break // Nothing to do here
+                case .identifier(let name):
+                    argNames.append(name)
+                    nameIndexPairs.append((externalNameIndex, nextIndex))
+                case .delimiter(":"):
+                    if case .identifier(let name) = formatter.tokens[externalNameIndex], name != "_" {
+                        argNames.append(name)
+                        nameIndexPairs.append((externalNameIndex, externalNameIndex))
+                    }
+                default:
+                    return
+                }
+                index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
+            }
+            guard let bodyStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex, if: {
+                $0 == .startOfScope("{")
+            }), let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else { return }
+            for token in formatter.tokens[bodyStartIndex + 1 ..< bodyEndIndex] {
+                if case .identifier(let name) = token, let index = argNames.index(of: name) {
+                    argNames.remove(at: index)
+                    nameIndexPairs.remove(at: index)
+                    if argNames.isEmpty {
+                        break
+                    }
+                }
+            }
+            for pair in nameIndexPairs.reversed() {
+                if pair.0 == pair.1 {
+                    formatter.insertToken(.identifier("_"), at: pair.0 + 1)
+                    formatter.insertToken(.space(" "), at: pair.0 + 1)
+                } else if case .identifier("_") = formatter.tokens[pair.0] {
+                    formatter.removeToken(at: pair.1)
+                    if formatter.tokens[pair.1 - 1] == .space(" ") {
+                        formatter.removeToken(at: pair.1 - 1)
+                    }
+                } else {
+                    formatter.replaceToken(at: pair.1, with: .identifier("_"))
+                }
+            }
+        }
+    }
+
     /// Normalize argument wrapping style
     public class func wrapArguments(_ formatter: Formatter) {
         func wrapArguments(for scopes: String..., mode: WrapMode, allowGrouping: Bool) {

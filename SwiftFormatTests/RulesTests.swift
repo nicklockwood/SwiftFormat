@@ -217,8 +217,8 @@ class RulesTests: XCTestCase {
     }
 
     func testSpaceAfterInoutParam() {
-        let input = "func foo(bar: inout(Int, String)) {}"
-        let output = "func foo(bar: inout (Int, String)) {}"
+        let input = "func foo(bar _: inout(Int, String)) {}"
+        let output = "func foo(bar _: inout (Int, String)) {}"
         XCTAssertEqual(try! format(input, rules: [FormatRules.spaceAroundParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -430,8 +430,8 @@ class RulesTests: XCTestCase {
     }
 
     func testSpaceBetweenOptionalAndDefaultValueInFunction() {
-        let input = "func foo(bar: String?=nil) {}"
-        let output = "func foo(bar: String? = nil) {}"
+        let input = "func foo(bar _: String?=nil) {}"
+        let output = "func foo(bar _: String? = nil) {}"
         XCTAssertEqual(try! format(input, rules: [FormatRules.spaceAroundOperators]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -1686,15 +1686,15 @@ class RulesTests: XCTestCase {
     }
 
     func testNoIndentAfterOperatorDeclaration() {
-        let input = "infix operator ?=\nfunc ?=(lhs: Int, rhs: Int) -> Bool {}"
-        let output = "infix operator ?=\nfunc ?=(lhs: Int, rhs: Int) -> Bool {}"
+        let input = "infix operator ?=\nfunc ?=(lhs _: Int, rhs _: Int) -> Bool {}"
+        let output = "infix operator ?=\nfunc ?=(lhs _: Int, rhs _: Int) -> Bool {}"
         XCTAssertEqual(try! format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testNoIndentAfterChevronOperatorDeclaration() {
-        let input = "infix operator =<<\nfunc =<<<T>(lhs: T, rhs: T) -> T {}"
-        let output = "infix operator =<<\nfunc =<<<T>(lhs: T, rhs: T) -> T {}"
+        let input = "infix operator =<<\nfunc =<<<T>(lhs _: T, rhs _: T) -> T {}"
+        let output = "infix operator =<<\nfunc =<<<T>(lhs _: T, rhs _: T) -> T {}"
         XCTAssertEqual(try! format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -2986,43 +2986,73 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // MARK: unusedArguments
+
+    func testMarkUnusedFunctionArgument() {
+        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let output = "func foo(bar _: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testUnusedAnonymousFunctionArgument() {
+        let input = "func foo(_ foo: Int) {}"
+        let output = "func foo(_: Int) {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testUnusedInternallyRenamedFunctionArgument() {
+        let input = "func foo(foo bar: Int) {}"
+        let output = "func foo(foo _: Int) {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoMarkProtocolFunctionArgument() {
+        let input = "func foo(foo bar: Int)\nvar bar: Bool { get }"
+        let output = "func foo(foo bar: Int)\nvar bar: Bool { get }"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: wrapArguments
 
     func testWrapAfterFirstConvertedToWrapBefore() {
-        let input = "func foo(bar: Int,\n    baz: String) {\n}"
-        let output = "func foo(\n    bar: Int,\n    baz: String\n) {\n}"
+        let input = "func foo(bar _: Int,\n    baz _: String) {\n}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
         let options = FormatOptions(wrapArguments: .beforeFirst)
         XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testLinebreakInsertedAtEndOfWrappedFunction() {
-        let input = "func foo(\n    bar: Int,\n    baz: String) {\n}"
-        let output = "func foo(\n    bar: Int,\n    baz: String\n) {\n}"
+        let input = "func foo(\n    bar _: Int,\n    baz _: String) {\n}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
         let options = FormatOptions(wrapArguments: .beforeFirst)
         XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testAfterFirstConvertedToBeforeFirst() {
-        let input = "func foo(bar: Int,\n         baz: String) {\n}"
-        let output = "func foo(\n    bar: Int,\n    baz: String\n) {\n}"
+        let input = "func foo(bar _: Int,\n         baz _: String) {\n}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
         let options = FormatOptions(wrapArguments: .beforeFirst)
         XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testBeforeFirstConvertedToAfterFirst() {
-        let input = "func foo(\n    bar: Int,\n    baz: String\n) {\n}"
-        let output = "func foo(bar: Int,\n         baz: String) {\n}"
+        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
+        let output = "func foo(bar _: Int,\n         baz _: String) {\n}"
         let options = FormatOptions(wrapArguments: .afterFirst)
         XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testNoWrapInnerArguments() {
-        let input = "func foo(\n    bar: Int,\n    baz: foo(bar, baz)\n) {\n}"
-        let output = "func foo(bar: Int,\n         baz: foo(bar, baz)) {\n}"
+        let input = "func foo(\n    bar _: Int,\n    baz _: foo(bar, baz)\n) {\n}"
+        let output = "func foo(bar _: Int,\n         baz _: foo(bar, baz)) {\n}"
         let options = FormatOptions(wrapArguments: .afterFirst)
         XCTAssertEqual(try! format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

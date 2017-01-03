@@ -962,7 +962,7 @@ public func tokenize(_ source: String) -> [Token] {
 
         let type: SymbolType
         switch string {
-        case ":":
+        case ":", "=":
             type = .infix
         case ".":
             type = (prevNonSpaceToken?.isLvalue == true) ? .infix : .prefix
@@ -1068,26 +1068,33 @@ public func tokenize(_ source: String) -> [Token] {
         default:
             break
         }
-        if let previousIndex = index(of: .nonSpaceOrComment, before: tokens.count - 1) {
-            // Fix up misidentified generic that is actually a pair of operators
-            let prevToken = tokens[previousIndex]
-            if case .endOfScope(">") = prevToken {
+        if !token.isSpaceOrCommentOrLinebreak {
+            if let prevIndex = index(of: .nonSpaceOrComment, before: tokens.count - 1),
+                case .endOfScope(">") = tokens[prevIndex] {
+                // Fix up misidentified generic that is actually a pair of operators
                 switch token {
-                case .symbol(let string, _) where ["=", "?", "!", ".", "..."].contains(string):
+                case .symbol(let string, _) where ["?", "!", ".", "..."].contains(string):
                     break
+                case .symbol("=", _):
+                    if prevIndex == tokens.count - 2 {
+                        // TODO: this isn't the way swiftc disambiguates this case, so it won't
+                        // always work correctly. But in practice, it will be correct most of
+                        // the time, and when it's wrong, it should still result in code that
+                        // compiles correctly, even if it's mis-formatted
+                        fallthrough
+                    }
                 case .symbol, .identifier, .number, .startOfScope("\""):
-                    convertClosingChevronToSymbol(at: previousIndex, andOpeningChevron: true)
+                    convertClosingChevronToSymbol(at: prevIndex, andOpeningChevron: true)
                     processToken()
                     return
                 default:
                     break
                 }
             }
-        }
-        if !token.isSpaceOrCommentOrLinebreak,
-            let lastSymbolIndex = index(of: .symbol, before: tokens.count - 1) {
-            // Set operator type
-            setSymbolType(at: lastSymbolIndex)
+            if let lastSymbolIndex = index(of: .symbol, before: tokens.count - 1) {
+                // Set operator type
+                setSymbolType(at: lastSymbolIndex)
+            }
         }
         // Handle scope
         if let scopeIndex = scopeIndexStack.last {

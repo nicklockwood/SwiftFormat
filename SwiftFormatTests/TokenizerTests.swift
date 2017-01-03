@@ -1003,6 +1003,48 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testTupleOfBoolsThatReallyLooksLikeGeneric() {
+        let input = "(Foo<T,U>=V)"
+        let output: [Token] = [
+            .startOfScope("("),
+            .identifier("Foo"),
+            .symbol("<", .infix),
+            .identifier("T"),
+            .delimiter(","),
+            .identifier("U"),
+            .symbol(">=", .infix),
+            .identifier("V"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    // TODO: This case is not correctly handled at present
+    /* func testGenericDeclarationThatLooksLikeTwoExpressions() {
+     let input = "let d: a < b, b >= c"
+     let output: [Token] = [
+     .keyword("let"),
+     .space(" "),
+     .identifier("d"),
+     .delimiter(":"),
+     .space(" "),
+     .identifier("a"),
+     .space(" "),
+     .startOfScope("<"),
+     .space(" "),
+     .identifier("b"),
+     .delimiter(","),
+     .space(" "),
+     .identifier("b"),
+     .space(" "),
+     .endOfScope(">"),
+     .symbol("=", .infix),
+     .space(" "),
+     .identifier("c"),
+     ]
+     XCTAssertEqual(tokenize(input), output)
+     } */
+
     func testGenericClassInitThatLooksLikeTuple() {
         let input = "(Foo<String,Int>(Bar))"
         let output: [Token] = [

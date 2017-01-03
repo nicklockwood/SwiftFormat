@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-public let version = "0.21"
+public let version = "0.22"
 
 /// Errors
 public enum FormatError: Error, CustomStringConvertible {

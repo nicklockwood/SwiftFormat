@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.22](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.22) (2017-01-03)
+
+- Fixed critical bug where `>=` operator was misidentified as end of generic argument list
+- Added `redundantRawValues` rule to remove string enum literals that match the associated case name
+- Added `redundantVoidReturnType` rule to remove unnecessary `Void` return type from function declarations
+- Added `unusedArguments` rule, to replace unused arguments in function declarations with an underscore
+- Fixed bug with `--inferoptions` and argument wrapping
+- Fixed bug where extra space was added inside empty `TODO:` comments
+
 ## [0.21](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.21) (2016-12-19)
 
 - Added `redundantLet` rule to remove unnecessary `let` keyword in statements like  `let _ = foo()`

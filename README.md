@@ -5,7 +5,7 @@
 What is this?
 ----------------
 
-SwiftFormat is a code library and command line tool for reformatting swift code.
+SwiftFormat is a code library and command-line tool for reformatting swift code.
 
 It applies a set of rules to the formatting and space around the code, leaving the meaning intact.
 
@@ -383,8 +383,14 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
 *redundantRawValues* - removes raw string values from enum cases when they match the case name:
 
     enum Foo {                     enum Foo {
-        case bar = "bar"    -->        case bar
+        case bar = "bar"     -->       case bar
         case baz = "quux"              case baz = "quux"
+    }                              }
+    
+*redundantVoidReturnType* - removes unnecessary `Void` return type from function declarations:
+
+    func foo() -> Void {           func foo() {
+        // returns nothing   -->       // returns nothing
     }                              }
 
 *hexLiterals* - converts all hex literals to upper- or lower-case, depending on settings:
@@ -402,11 +408,22 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
                                            ...
                                       }
 
-	let foo = [bar,	                   let foo = [
-	           baz,            -->         bar,
-	           quux]       		           baz,
-                            	           quux
-                          	           ]
+	let foo = [bar,	                  let foo = [
+	           baz,            -->        bar,
+	           quux]       		          baz,
+                            	          quux
+                          	          ]
+
+*unusedArguments* - marks unused arguments in a function with _, to make it clear where they aren't used
+
+    func foo(bar: Int, baz: String) {         func foo(bar _: Int, baz: String) {
+        print("Hello \(baz)")           -->       print("Hello \(baz)")
+    }                                         }
+    
+    func foo(_ bar: Int) {                    func foo(_: Int) {
+        // no-op                        -->       // no-op
+    }                                         }
+
 
 FAQ
 -----
@@ -416,7 +433,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. What versions of Swift are supported?*
 
-> A. The framework requires Swift 3, but it can format programs written in Swift 2.x or 3.x. 
+> A. The framework requires Swift 3, but it can format programs written in Swift 2.x or 3.x. Swift 2.x is no longer actively supported however, and newer rules may not work correctly with Swift 2.x.
 
 
 *Q. I don't like how SwiftFormat formatted my code*
@@ -428,7 +445,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 > A. Many configuration options are exposed in the command line interface. You can either set these manually, or use the `--inferoptions` argument to automatically generate the configuration from your existing project.
 
-> If there is a rule that you don't like, and which cannot be disabled via the command line options, you can disable the rule by using the `--disable` argument, followed by the name of the rule. You can display a list of all rules using the `--rules` argument, and their behaviors are documented above this section in the README.
+> If there is a rule that you don't like, and which cannot be configured to your liking via the command line options, you can disable the rule by using the `--disable` argument, followed by the name of the rule. You can display a list of all rules using the `--rules` argument, and their behaviors are documented above this section in the README.
 
 > If the options you want aren't exposed, and disabling the rule doesn't solve the problem, the rules are implemented as functions in the file `Rules.swift`, so you can modify them and build a new version of the command line tool. If you think your changes might be generally useful, make a pull request.
 
@@ -457,7 +474,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 > A. First it loops through the source file character-by-character and breaks it into tokens, such as `number`, `identifier`, `linebreak`, etc. That's handled by the functions in `Tokenizer.swift`.
 
-> Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening brace appears on the same line as the preceding non-whitespace token". Each rule is designed to be relatively independent of the others, so they can be enabled or disabled individually. The rules are all defined as methods of the `FormatRules` class in `Rules.swift`. The list of rules is then extracted using some runtime magic.
+> Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening brace appears on the same line as the preceding non-space token". Each rule is designed to be independent of the others, so they can be enabled or disabled individually. The rules are defined as methods of the `FormatRules` class in `Rules.swift`, and are executed automatically using runtime magic.
 
 > Finally, the modified token array is stitched back together to re-generate the source file.
 
@@ -469,9 +486,9 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. Can I use the `SwiftFormat.framework` inside another app?*
 
-> A. I only created the framework to facilitate testing, so to be honest I've no idea if it will work in an app, but you're welcome to try. If you need to make adjustments to the public/private flags or namespaces to get it working, open an issue on Github (or even better, a pull request).
+> A. I only created the framework to facilitate testing, so to be honest I've no idea if it will work in an app, but you're welcome to try. If you need to make adjustments to the public/private access modifiers or namespaces to get it working, open an issue on Github (or even better, a pull request).
 
-> The SwiftFormat framework is available as a CocoaPod for easier integration.
+> The SwiftFormat framework is also available as a CocoaPod for easier integration.
 
 
 Cache
@@ -489,11 +506,11 @@ You can specify a custom cache file location by passing a path as the `--cache` 
 Known issues
 ---------------
 
-* The formatted file cache is based on file length, so it's possible (though unlikely) that an edited file will have the exact same character count as the previously formatted version, causing SwiftFormat to incorrectly identify it as not having changed, and fail to format it.
+* Under rare circumstances, SwiftFormat may misinterpret a generic type followed by an `=` sign as a pair of `<` and `>=` expressions. For example, the following case would be handled incorrectly:
 
-    To fix this, you can type an extra space in the file (which SwiftFormat will then remove again when it applies the formatting).
-    
-    Alternatively, use the command line option `--cache ignore` to force SwiftFormat to ignore the cache for this run.
+        let foo: Dictionary<String, String>=["Hello": "World"]
+        
+    To work around this, either manually add a space between the `>` and `=` characters to eliminate the ambiguity, or use add `--disable spaceAroundOperators` to the command-line options.
 
 * If a file begins with a comment, the `stripHeaders` rule will remove it if is followed by a blank line. To avoid this, make sure that the first comment is directly followed by a line of code.
 
@@ -538,6 +555,12 @@ Known issues
          *    }
          *  
          */
+         
+* The formatted file cache is based on file length, so it's possible (though unlikely) that an edited file will have the exact same character count as the previously formatted version, causing SwiftFormat to incorrectly identify it as not having changed, and fail to format it.
+
+    To fix this, you can type an extra space in the file (which SwiftFormat will then remove again when it applies the formatting).
+    
+    Alternatively, use the command line option `--cache ignore` to force SwiftFormat to ignore the cache for this run.
 
 
 Credits

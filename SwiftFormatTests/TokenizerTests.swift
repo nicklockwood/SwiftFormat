@@ -1086,7 +1086,7 @@ class TokenizerTests: XCTestCase {
             .delimiter(","),
             .identifier("Baz"),
             .endOfScope(">"),
-            .delimiter("->"),
+            .symbol("->", .infix),
             .identifier("Void"),
         ]
         XCTAssertEqual(tokenize(input), output)

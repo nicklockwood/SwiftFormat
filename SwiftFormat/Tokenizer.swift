@@ -181,6 +181,13 @@ public enum Token: Equatable {
         }
     }
 
+    public var isNumber: Bool {
+        if case .number = self {
+            return true
+        }
+        return false
+    }
+
     public var isError: Bool {
         if case .error = self {
             return true
@@ -561,7 +568,7 @@ private extension String.UnicodeScalarView {
                 tail = c
             }
             head.append(Character(tail))
-            return head == "->" ? .delimiter("->") : .symbol(head, .none)
+            return .symbol(head, .none)
         }
         return nil
     }
@@ -954,20 +961,22 @@ public func tokenize(_ source: String) -> [Token] {
             assertionFailure()
             return
         }
-
-        let nextToken: Token? = i < tokens.count - 1 ? tokens[i + 1] : nil
-        let nextNonSpaceToken = index(of: .nonSpaceOrCommentOrLinebreak, after: i).map { tokens[$0] }
-        let prevToken: Token? = i > 0 ? tokens[i - 1] : nil
-        let prevNonSpaceToken = index(of: .nonSpaceOrCommentOrLinebreak, before: i).map { tokens[$0] }
-
+        guard let prevNonSpaceToken =
+            index(of: .nonSpaceOrCommentOrLinebreak, before: i).map({ tokens[$0] }) else {
+            if tokens.count > i + 1 {
+                tokens[i] = .symbol(string, .prefix)
+            }
+            return
+        }
+        let prevToken: Token = tokens[i - 1]
         let type: SymbolType
         switch string {
-        case ":", "=":
+        case ":", "=", "->":
             type = .infix
         case ".":
-            type = (prevNonSpaceToken?.isLvalue == true) ? .infix : .prefix
+            type = prevNonSpaceToken.isLvalue ? .infix : .prefix
         case "?":
-            if prevToken?.isSpaceOrCommentOrLinebreak == true {
+            if prevToken.isSpaceOrCommentOrLinebreak {
                 // ? is a ternary operator, treat it as the start of a scope
                 if currentType != .infix {
                     assert(scopeIndexStack.last ?? -1 < i)
@@ -977,24 +986,28 @@ public func tokenize(_ source: String) -> [Token] {
                 break
             }
             type = .postfix
-        case "!":
-            if prevToken.map({ $0.isSpaceOrCommentOrLinebreak }) ?? true {
-                fallthrough
-            }
+        case "!" where !prevToken.isSpaceOrCommentOrLinebreak:
             type = .postfix
         default:
-            if prevToken?.isLvalue == true {
-                type = (nextToken?.isRvalue == true) ? .infix : .postfix
-            } else if nextToken?.isRvalue == true {
-                type = .prefix
-            } else if prevToken?.isSpaceOrCommentOrLinebreak == true &&
-                prevNonSpaceToken?.isLvalue == true &&
-                nextToken?.isSpaceOrCommentOrLinebreak == true &&
-                nextNonSpaceToken?.isRvalue == true {
+            guard let nextNonSpaceToken =
+                index(of: .nonSpaceOrCommentOrLinebreak, after: i).map({ tokens[$0] }) else {
+                if prevToken.isLvalue {
+                    type = .postfix
+                    break
+                }
+                return
+            }
+            let nextToken: Token = tokens[i + 1]
+            if nextToken.isRvalue {
+                type = prevToken.isLvalue ? .infix : .prefix
+            } else if prevToken.isLvalue {
+                type = .postfix
+            } else if prevToken.isSpaceOrCommentOrLinebreak && prevNonSpaceToken.isLvalue &&
+                nextToken.isSpaceOrCommentOrLinebreak && nextNonSpaceToken.isRvalue {
                 type = .infix
             } else {
                 // TODO: should we add an `identifier` type?
-                type = .none
+                return
             }
         }
         tokens[i] = .symbol(string, type)
@@ -1073,7 +1086,7 @@ public func tokenize(_ source: String) -> [Token] {
                 case .endOfScope(">") = tokens[prevIndex] {
                 // Fix up misidentified generic that is actually a pair of operators
                 switch token {
-                case .symbol(let string, _) where ["?", "!", ".", "..."].contains(string):
+                case .symbol(let string, _) where ["->", "?", "!", ".", "..."].contains(string):
                     break
                 case .symbol("=", _):
                     if prevIndex == tokens.count - 2 {

@@ -208,10 +208,10 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         }
         formatter.forEach(.startOfScope("(")) { i, token in
             if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
-                let prevToken = formatter.token(at: prevIndex), prevToken == .delimiter("->"),
+                let prevToken = formatter.token(at: prevIndex), prevToken == .symbol("->", .infix),
                 let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i),
                 let nextToken = formatter.token(at: nextIndex), nextToken.string == ")",
-                formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) != .delimiter("->") {
+                formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) != .symbol("->", .infix) {
                 tuples += 1
             }
         }

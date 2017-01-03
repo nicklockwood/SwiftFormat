@@ -374,7 +374,7 @@ extension FormatRules {
                     !prevToken.isStartOfScope {
                     formatter.insertSpace(" ", at: i)
                 }
-            case .symbol(_, .infix) where !token.isRangeOperator, .delimiter("->"):
+            case .symbol(_, .infix) where !token.isRangeOperator:
                 if (formatter.token(at: i + 1).map { !$0.isSpaceOrLinebreak }) ?? false {
                     formatter.insertToken(.space(" "), at: i + 1)
                 }
@@ -696,7 +696,7 @@ extension FormatRules {
                 case .delimiter(","):
                     // For arrays or argument lists, we already indent
                     return ["<", "[", "(", "case"].contains(scopeStack.last?.string ?? "")
-                case .delimiter("->"), .delimiter(":"), .symbol(_, .infix), .symbol(_, .prefix):
+                case .delimiter(":"), .symbol(_, .infix), .symbol(_, .prefix):
                     return false
                 case .symbol("?", .postfix), .symbol("!", .postfix):
                     if let prevToken = formatter.token(at: i - 1) {
@@ -1346,7 +1346,7 @@ extension FormatRules {
                     let closingIndex = formatter.index(of: .nonSpace, after: nextTokenIndex, if: {
                         $0 == .endOfScope(")") }) {
                     if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex),
-                        [.delimiter("->"), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
+                        [.symbol("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
                         return
                     }
                     switch formatter.tokens[nextTokenIndex] {
@@ -1588,7 +1588,7 @@ extension FormatRules {
     public class func void(_ formatter: Formatter) {
         func isArgumentToken(at index: Int) -> Bool {
             if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) {
-                return [.delimiter("->"), .keyword("throws"), .keyword("rethrows")].contains(nextToken)
+                return [.symbol("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken)
             }
             return false
         }
@@ -1620,7 +1620,7 @@ extension FormatRules {
         }
         if formatter.options.useVoid {
             formatter.forEach(.startOfScope("(")) { i, token in
-                if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .delimiter("->"),
+                if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .symbol("->", .infix),
                     let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
                         $0 == .endOfScope(")") }), !isArgumentToken(at: nextIndex) {
                     // Replace with Void

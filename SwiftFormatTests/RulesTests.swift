@@ -2942,6 +2942,50 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // MARK: redundantVoidReturnType
+
+    func testRemoveRedundantVoidReturnType() {
+        let input = "func foo() -> Void {}"
+        let output = "func foo() {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantVoidReturnType]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveRedundantEmptyReturnType() {
+        let input = "func foo() -> () {}"
+        let output = "func foo() {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantVoidReturnType]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveRedundantVoidTupleReturnType() {
+        let input = "func foo() -> (Void) {}"
+        let output = "func foo() {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantVoidReturnType]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveCommentFollowingRedundantVoidReturnType() {
+        let input = "func foo() -> Void /* void */ {}"
+        let output = "func foo() /* void */ {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantVoidReturnType]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveRequiredVoidReturnType() {
+        let input = "typealias Foo = () -> Void"
+        let output = "typealias Foo = () -> Void"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantVoidReturnType]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveChainedVoidReturnType() {
+        let input = "func foo() -> () -> Void {}"
+        let output = "func foo() -> () -> Void {}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantVoidReturnType]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: wrapArguments
 
     func testWrapAfterFirstConvertedToWrapBefore() {

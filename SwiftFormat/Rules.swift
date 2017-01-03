@@ -1505,6 +1505,42 @@ extension FormatRules {
         }
     }
 
+    /// Remove redundant void return values for function declarations
+    public class func redundantVoidReturnType(_ formatter: Formatter) {
+        formatter.forEach(.symbol("->", .infix)) { i, token in
+            guard var endIndex = formatter.index(of: .nonSpace, after: i) else { return }
+            switch formatter.tokens[endIndex] {
+            case .identifier("Void"):
+                break
+            case .startOfScope("("):
+                guard let nextIndex = formatter.index(of: .nonSpace, after: endIndex) else { return }
+                switch formatter.tokens[nextIndex] {
+                case .endOfScope(")"):
+                    endIndex = nextIndex
+                case .identifier("Void"):
+                    guard let nextIndex = formatter.index(of: .nonSpace, after: nextIndex),
+                        case .endOfScope(")") = formatter.tokens[nextIndex] else { return }
+                    endIndex = nextIndex
+                default:
+                    return
+                }
+            default:
+                return
+            }
+            guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{") else {
+                return
+            }
+            guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
+                [.endOfScope(")"), .keyword("throws"), .keyword("rethrows")].contains(prevToken) else { return }
+            guard let prevIndex = formatter.index(of: .endOfScope(")"), before: i),
+                let startIndex = formatter.index(of: .startOfScope("("), before: prevIndex),
+                formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex)?.isIdentifier == true else {
+                return
+            }
+            formatter.removeTokens(inRange: i ..< formatter.index(of: .nonSpace, after: endIndex)!)
+        }
+    }
+
     /// Normalize argument wrapping style
     public class func wrapArguments(_ formatter: Formatter) {
         func wrapArguments(for scopes: String..., mode: WrapMode, allowGrouping: Bool) {

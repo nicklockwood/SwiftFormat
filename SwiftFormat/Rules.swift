@@ -175,35 +175,24 @@ extension FormatRules {
     /// * There is space between a closing bracket and following identifier
     /// * There is space between a closing bracket and following opening brace
     public class func spaceAroundBrackets(_ formatter: Formatter) {
-
-        func spaceAfter(_ token: Token, index: Int) -> Bool {
-            switch token {
-            case .keyword:
-                return true
-            default:
-                return false
-            }
-        }
-
         formatter.forEach(.startOfScope("[")) { i, token in
             guard let prevToken = formatter.token(at: i - 1) else {
                 return
             }
-            if spaceAfter(prevToken, index: i - 1) {
+            switch prevToken {
+            case .keyword:
                 formatter.insertToken(.space(" "), at: i)
-            } else if prevToken.isSpace {
+            case .space:
                 if let token = formatter.token(at: i - 2) {
                     switch token {
-                    case .identifier, .keyword:
-                        if !spaceAfter(token, index: i - 2) {
-                            fallthrough
-                        }
-                    case .endOfScope("]"), .endOfScope("}"), .endOfScope(")"):
+                    case .identifier, .endOfScope("]"), .endOfScope("}"), .endOfScope(")"):
                         formatter.removeToken(at: i - 1)
                     default:
                         break
                     }
                 }
+            default:
+                break
             }
         }
         formatter.forEach(.endOfScope("]")) { i, token in
@@ -316,16 +305,6 @@ extension FormatRules {
     ///   single space, unless it appears at the end of a line, and is not
     ///   preceded by a space, unless it appears at the beginning of a line.
     public class func spaceAroundOperators(_ formatter: Formatter) {
-
-        func spaceAfter(_ token: Token, index: Int) -> Bool {
-            switch token {
-            case .keyword, .endOfScope("case"):
-                return true
-            default:
-                return false
-            }
-        }
-
         formatter.forEachToken { i, token in
             switch token {
             case .delimiter(":"):

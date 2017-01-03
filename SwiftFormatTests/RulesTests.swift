@@ -2265,6 +2265,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoExtraSpaceAddedAfterTodo() {
+        let input = "/* TODO: */"
+        let output = "/* TODO: */"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.todos]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: semicolons
 
     func testSemicolonRemovedAtEndOfLine() {

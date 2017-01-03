@@ -1131,17 +1131,14 @@ extension FormatRules {
                 for tag in ["TODO", "MARK", "FIXME"] {
                     if string.hasPrefix(tag) {
                         var suffix = string.substring(from: tag.endIndex)
-                        if let first = suffix.characters.first {
+                        if let first = suffix.unicodeScalars.first, !" :".unicodeScalars.contains(first) {
                             // If not followed by a space or :, don't mess with it as it may be a custom format
-                            if " :".characters.contains(first) {
-                                while let first = suffix.characters.first, " :".characters.contains(first) {
-                                    suffix = suffix.substring(from: suffix.index(after: suffix.startIndex))
-                                }
-                                formatter.replaceToken(at: i, with: .commentBody(tag + ": " + suffix))
-                            }
-                        } else {
-                            formatter.replaceToken(at: i, with: .commentBody(tag + ":"))
+                            break
                         }
+                        while let first = suffix.unicodeScalars.first, " :".unicodeScalars.contains(first) {
+                            suffix = suffix.substring(from: suffix.index(after: suffix.startIndex))
+                        }
+                        formatter.replaceToken(at: i, with: .commentBody(tag + ":" + (suffix.isEmpty ? "" : " \(suffix)")))
                         break
                     }
                 }

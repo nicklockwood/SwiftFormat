@@ -1506,14 +1506,14 @@ extension FormatRules {
             default:
                 return
             }
-            guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{") else {
-                return
-            }
+            guard let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
+                [.startOfScope("{"), .keyword("in")].contains(nextToken) else { return }
             guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 [.endOfScope(")"), .keyword("throws"), .keyword("rethrows")].contains(prevToken) else { return }
             guard let prevIndex = formatter.index(of: .endOfScope(")"), before: i),
                 let startIndex = formatter.index(of: .startOfScope("("), before: prevIndex),
-                formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex)?.isIdentifier == true else {
+                let startToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex),
+                (startToken.isIdentifier || [.startOfScope("{"), .endOfScope("]")].contains(startToken)) else {
                 return
             }
             formatter.removeTokens(inRange: i ..< formatter.index(of: .nonSpace, after: endIndex)!)

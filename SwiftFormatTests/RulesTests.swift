@@ -2986,6 +2986,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRemoveRedundantVoidInClosureArguments() {
+        let input = "{ (foo: Bar) -> Void in foo() }"
+        let output = "{ (foo: Bar) in foo() }"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.redundantVoidReturnType]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: unusedArguments
 
     func testMarkUnusedFunctionArgument() {

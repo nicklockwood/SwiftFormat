@@ -3016,6 +3016,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testMembersAreNotArguments() {
+        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(bar.baz)\")\n}"
+        let output = "func foo(bar: Int, baz _: String) {\n    print(\"Hello \\(bar.baz)\")\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testLabelsAreNotArguments() {
+        let input = "func foo(bar: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
+        let output = "func foo(bar _: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testDictionaryLiteralsRuinEverything() {
+        let input = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
+        let output = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: wrapArguments
 
     func testWrapAfterFirstConvertedToWrapBefore() {

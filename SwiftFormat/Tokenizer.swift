@@ -167,12 +167,17 @@ public enum Token: Equatable {
     }
 
     public var isSymbol: Bool {
-        switch self {
-        case .symbol:
+        if case .symbol = self {
             return true
-        default:
-            return false
         }
+        return false
+    }
+
+    public func isSymbol(_ string: String) -> Bool {
+        if case .symbol(string, _) = self {
+            return true
+        }
+        return false
     }
 
     public var isUnwrapSymbol: Bool {

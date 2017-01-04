@@ -1553,8 +1553,11 @@ extension FormatRules {
             guard let bodyStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex, if: {
                 $0 == .startOfScope("{")
             }), let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else { return }
-            for token in formatter.tokens[bodyStartIndex + 1 ..< bodyEndIndex] {
-                if case .identifier(let name) = token, let index = argNames.index(of: name) {
+            for i in bodyStartIndex + 1 ..< bodyEndIndex {
+                if case .identifier(let name) = formatter.tokens[i], let index = argNames.index(of: name),
+                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isSymbol(".") == false,
+                    (formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
+                        formatter.currentScope(at: i) == .startOfScope("[")) {
                     argNames.remove(at: index)
                     nameIndexPairs.remove(at: index)
                     if argNames.isEmpty {

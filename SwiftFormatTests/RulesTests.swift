@@ -2682,29 +2682,29 @@ class RulesTests: XCTestCase {
     }
 
     func testTypedClosureArgumentNotUnwrapped() {
-        let input = "{ (foo: Int) in }"
-        let output = "{ (foo: Int) in }"
+        let input = "{ (foo: Int) in print(foo) }"
+        let output = "{ (foo: Int) in print(foo) }"
         XCTAssertEqual(try! format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testSingleClosureArgumentAfterCaptureListUnwrapped() {
-        let input = "{ [weak self] (foo) in }"
-        let output = "{ [weak self] foo in }"
+        let input = "{ [weak self] (foo) in self.bar(foo) }"
+        let output = "{ [weak self] foo in self.bar(foo) }"
         XCTAssertEqual(try! format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testMultipleClosureArgumentUnwrapped() {
-        let input = "{ (foo, bar) in }"
-        let output = "{ foo, bar in }"
+        let input = "{ (foo, bar) in foo(bar) }"
+        let output = "{ foo, bar in foo(bar) }"
         XCTAssertEqual(try! format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testTypedMultipleClosureArgumentNotUnwrapped() {
-        let input = "{ (foo: Int, bar: String) in }"
-        let output = "{ (foo: Int, bar: String) in }"
+        let input = "{ (foo: Int, bar: String) in foo(bar) }"
+        let output = "{ (foo: Int, bar: String) in foo(bar) }"
         XCTAssertEqual(try! format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3040,6 +3040,34 @@ class RulesTests: XCTestCase {
     func testDictionaryLiteralsRuinEverything() {
         let input = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
         let output = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testUnusedTypedClosureArguments() {
+        let input = "let foo = { (bar: Int, baz: String) in\n    print(\"Hello \\(baz)\")\n}"
+        let output = "let foo = { (_: Int, baz: String) in\n    print(\"Hello \\(baz)\")\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testUnusedUntypedClosureArguments() {
+        let input = "let foo = { bar, baz in\n    print(\"Hello \\(baz)\")\n}"
+        let output = "let foo = { _, baz in\n    print(\"Hello \\(baz)\")\n}"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveClosureReturnType() {
+        let input = "let foo = { () -> Foo.Bar in baz() }"
+        let output = "let foo = { () -> Foo.Bar in baz() }"
+        XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveClosureThrows() {
+        let input = "let foo = { () throws in }"
+        let output = "let foo = { () throws in }"
         XCTAssertEqual(try! format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try! format(input + "\n", rules: FormatRules.default), output + "\n")
     }

@@ -130,7 +130,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
             }
             indents.append((indent, 0))
         }
-        formatter.forEach(.linebreak) { i, token in
+        formatter.forEach(.linebreak) { i, _ in
             let start = formatter.startOfLine(at: i)
             if case .space(let string) = formatter.tokens[start] {
                 if string.hasPrefix("\t") {
@@ -151,7 +151,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
 
     options.linebreak = {
         var cr: Int = 0, lf: Int = 0, crlf: Int = 0
-        formatter.forEachToken { i, token in
+        formatter.forEachToken { _, token in
             switch token {
             case .linebreak("\n"):
                 lf += 1
@@ -199,14 +199,14 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
 
     options.useVoid = {
         var voids = 0, tuples = 0
-        formatter.forEach(.identifier("Void")) { i, token in
+        formatter.forEach(.identifier("Void")) { i, _ in
             if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 [.symbol(".", .prefix), .symbol(".", .infix), .keyword("typealias")].contains(prevToken) {
                 return
             }
             voids += 1
         }
-        formatter.forEach(.startOfScope("(")) { i, token in
+        formatter.forEach(.startOfScope("(")) { i, _ in
             if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
                 let prevToken = formatter.token(at: prevIndex), prevToken == .symbol("->", .infix),
                 let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i),
@@ -330,7 +330,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
 
     options.allmanBraces = {
         var allman = 0, knr = 0
-        formatter.forEach(.startOfScope("{")) { i, token in
+        formatter.forEach(.startOfScope("{")) { i, _ in
             // Check this isn't an inline block
             guard let nextLinebreakIndex = formatter.index(of: .linebreak, after: i),
                 let closingBraceIndex = formatter.index(of: .endOfScope("}"), after: i),
@@ -353,7 +353,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
 
     options.ifdefIndent = {
         var indented = 0, notIndented = 0, outdented = 0
-        formatter.forEach(.startOfScope("#if")) { i, token in
+        formatter.forEach(.startOfScope("#if")) { i, _ in
             if let indent = formatter.token(at: i - 1), case .space(let string) = indent,
                 !string.isEmpty {
                 // Indented, check next line
@@ -462,7 +462,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
     options.uppercaseHex = {
         let prefix = "0x"
         var uppercase = 0, lowercase = 0
-        formatter.forEach(.number) { i, token in
+        formatter.forEach(.number) { _, token in
             if case .number(let string, .hex) = token {
                 if string == string.lowercased() {
                     lowercase += 1

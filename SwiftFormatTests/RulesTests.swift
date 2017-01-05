@@ -3122,6 +3122,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testNoRemoveLinebreakAfterCommentInArguments() {
+        let input = "a(b // comment\n)"
+        let output = "a(b) // comment\n"
+        let options = FormatOptions(wrapArguments: .afterFirst)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output)
+    }
+
     // MARK: wrapElements
 
     func testNoDoubleSpaceAddedToWrappedArray() {
@@ -3156,6 +3164,14 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(wrapElements: .afterFirst)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoRemoveLinebreakAfterCommentInElements() {
+        let input = "[a, // comment\n]"
+        let output = "[a] // comment\n"
+        let options = FormatOptions(wrapElements: .afterFirst)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output)
     }
 
     // MARK: hexLiterals

@@ -94,7 +94,7 @@ public class Formatter: NSObject {
         replaceTokens(inRange: range.lowerBound ..< range.upperBound + 1, with: tokens)
     }
 
-    /// Removes the token at the specified indez
+    /// Removes the token at the specified index
     public func removeToken(at index: Int) {
         tokens.remove(at: index)
         for (i, j) in indexStack.enumerated() where j >= index {

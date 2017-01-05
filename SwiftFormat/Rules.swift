@@ -1682,11 +1682,20 @@ extension FormatRules {
                             }
                         }
                         // Remove linebreak before closing paren
-                        if let lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
+                        if var lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
                             $0.isLinebreak
                         }) {
-                            formatter.removeTokens(inRange: lastIndex ..< closingBraceIndex)
-                            closingBraceIndex = lastIndex
+                            if let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: closingBraceIndex),
+                                case .commentBody = formatter.tokens[prevIndex],
+                                let startIndex = formatter.index(of: .startOfScope("//"), before: prevIndex) {
+                                lastIndex = formatter.index(of: .space, before: startIndex) ?? startIndex
+                                formatter.insertToken(formatter.tokens[closingBraceIndex], at: lastIndex)
+                                formatter.removeToken(at: closingBraceIndex + 1)
+                                closingBraceIndex = lastIndex
+                            } else {
+                                formatter.removeTokens(inRange: lastIndex ..< closingBraceIndex)
+                                closingBraceIndex = lastIndex
+                            }
                             // Remove trailing comma
                             if let prevCommaIndex = formatter.index(
                                 of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex, if: {

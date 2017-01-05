@@ -42,7 +42,7 @@ class SwiftFormatTests: XCTestCase {
         try! enumerateSwiftFiles(withInputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
-            files.append(inputURL)
+            return { files.append(inputURL) }
         }
         XCTAssertEqual(files.count, 1)
     }
@@ -53,7 +53,7 @@ class SwiftFormatTests: XCTestCase {
         try! enumerateSwiftFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
-            files.append(inputURL)
+            return { files.append(inputURL) }
         }
         XCTAssertEqual(files.count, 1)
     }
@@ -63,7 +63,7 @@ class SwiftFormatTests: XCTestCase {
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
         try! enumerateSwiftFiles(withInputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
-            files.append(inputURL)
+            return { files.append(inputURL) }
         }
         XCTAssertEqual(files.count, 19)
     }
@@ -73,7 +73,29 @@ class SwiftFormatTests: XCTestCase {
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
         try! enumerateSwiftFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
-            files.append(inputURL)
+            return { files.append(inputURL) }
+        }
+        XCTAssertEqual(files.count, 19)
+    }
+
+    func testConcurrentFileEnumeration() {
+        var files = [URL]()
+        let options = FileOptions(concurrently: true)
+        let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
+        try! enumerateSwiftFiles(withInputURL: inputURL, options: options) { inputURL, outputURL in
+            XCTAssertEqual(inputURL, outputURL)
+            return { files.append(inputURL) }
+        }
+        XCTAssertEqual(files.count, 19)
+    }
+
+    func testSerialFileEnumeration() {
+        var files = [URL]()
+        let options = FileOptions(concurrently: false)
+        let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
+        try! enumerateSwiftFiles(withInputURL: inputURL, options: options) { inputURL, outputURL in
+            XCTAssertEqual(inputURL, outputURL)
+            return { files.append(inputURL) }
         }
         XCTAssertEqual(files.count, 19)
     }

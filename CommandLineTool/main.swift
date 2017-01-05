@@ -92,6 +92,13 @@ extension FileHandle: TextOutputStream {
     }
 }
 
+func printErrors(_ errors: [FormatError]) {
+    var stderr = FileHandle.standardError
+    for error in errors {
+        print("error: \(error)", to: &stderr)
+    }
+}
+
 func processArguments(_ args: [String]) {
     do {
         // Get options
@@ -140,11 +147,17 @@ func processArguments(_ args: [String]) {
                 print("inferring swiftformat options from source file(s)...")
                 var files = 0
                 var arguments = ""
-                let time = try timeEvent {
-                    let (count, options) = try inferOptions(from: inferURL)
+                var errors = [FormatError]()
+                let time = timeEvent {
+                    let (count, options, _errors) = inferOptions(from: inferURL)
                     arguments = commandLineArguments(for: options).map({
                         "--\($0) \($1)" }).joined(separator: " ")
                     files = count
+                    errors = _errors
+                }
+                if errors.count > 0 {
+                    printErrors(errors)
+                    print("")
                 }
                 print("options inferred from \(files) file\(files == 1 ? "" : "s") in \(time)")
                 print("")
@@ -170,9 +183,10 @@ func processArguments(_ args: [String]) {
 
         // Get cache path
         var cacheURL: URL?
+        var errors = [FormatError]()
         let defaultCacheFileName = "swiftformat.cache"
         let manager = FileManager.default
-        func setDefaultCacheURL() throws {
+        func setDefaultCacheURL() {
             if let cachePath =
                 NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first {
                 let cacheDirectory = URL(fileURLWithPath: cachePath).appendingPathComponent("com.charcoaldesign.swiftformat")
@@ -180,10 +194,10 @@ func processArguments(_ args: [String]) {
                     try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)
                     cacheURL = cacheDirectory.appendingPathComponent(defaultCacheFileName)
                 } catch {
-                    throw FormatError.writing("failed to create cache directory at: \(cacheDirectory.path)")
+                    errors.append(FormatError.writing("failed to create cache directory at: \(cacheDirectory.path)"))
                 }
             } else {
-                throw FormatError.reading("failed to find cache directory at ~/Library/Caches")
+                errors.append(FormatError.reading("failed to find cache directory at ~/Library/Caches"))
             }
         }
         if let cache = args["cache"] {
@@ -193,12 +207,12 @@ func processArguments(_ args: [String]) {
             case "ignore":
                 break
             case "clear":
-                try setDefaultCacheURL()
+                setDefaultCacheURL()
                 if let cacheURL = cacheURL, manager.fileExists(atPath: cacheURL.path) {
                     do {
                         try manager.removeItem(at: cacheURL)
                     } catch {
-                        throw FormatError.writing("failed to delete cache file at: \(cacheURL.path)")
+                        errors.append(FormatError.writing("failed to delete cache file at: \(cacheURL.path)"))
                     }
                 }
             default:
@@ -212,13 +226,12 @@ func processArguments(_ args: [String]) {
                 }
             }
         } else {
-            try setDefaultCacheURL()
+            setDefaultCacheURL()
         }
 
         // If no input file, try stdin
         if inputURLs.count == 0 {
             var input: String?
-            var asyncError: Error?
             var finished = false
             DispatchQueue.global(qos: .userInitiated).async {
                 while let line = readLine(strippingNewline: false) {
@@ -238,8 +251,10 @@ func processArguments(_ args: [String]) {
                             // Write to stdout
                             print(output)
                         }
+                    } catch let error as FormatError {
+                        errors.append(error)
                     } catch {
-                        asyncError = error
+                        errors.append(FormatError.writing("unknown error: \(error)"))
                     }
                 }
                 finished = true
@@ -249,11 +264,8 @@ func processArguments(_ args: [String]) {
             while start.timeIntervalSinceNow > -0.01 {}
             // If no input received by now, assume none is coming
             if input != nil {
-                while !finished && start.timeIntervalSinceNow > -30 {
-                    if let error = asyncError {
-                        throw error
-                    }
-                }
+                while !finished && start.timeIntervalSinceNow > -30 {}
+                printErrors(errors)
             } else {
                 showHelp()
             }
@@ -264,8 +276,9 @@ func processArguments(_ args: [String]) {
 
         // Format the code
         var filesWritten = 0, filesChecked = 0
-        let time = try timeEvent {
-            (filesWritten, filesChecked) = try processInput(
+        let time = timeEvent {
+            var _errors = [FormatError]()
+            (filesWritten, filesChecked, _errors) = processInput(
                 inputURLs,
                 andWriteToOutput: outputURL,
                 withRules: rules,
@@ -273,12 +286,18 @@ func processArguments(_ args: [String]) {
                 fileOptions: fileOptions,
                 cacheURL: cacheURL
             )
+            errors += _errors
+        }
+        if errors.count > 0 {
+            printErrors(errors)
+            print("")
         }
         print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)")
 
+    } catch let error as FormatError {
+        printErrors([error])
     } catch {
-        var stderr = FileHandle.standardError
-        print("error: \(error)", to: &stderr)
+        printErrors([FormatError.options("unknown error: \(error)")])
     }
 }
 

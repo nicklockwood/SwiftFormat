@@ -15,8 +15,10 @@ class PerformanceTests: XCTestCase {
         var files = [String]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
         try! enumerateSwiftFiles(withInputURL: inputURL) { url, _ in
-            if let source = try? String(contentsOf: url) {
-                files.append(source)
+            return {
+                if let source = try? String(contentsOf: url) {
+                    files.append(source)
+                }
             }
         }
         return files

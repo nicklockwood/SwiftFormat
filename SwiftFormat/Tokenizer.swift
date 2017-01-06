@@ -364,20 +364,20 @@ public enum Token: Equatable {
 
     public static func ==(lhs: Token, rhs: Token) -> Bool {
         switch (lhs, rhs) {
-        case (.number(let a, let c), .number(let b, let d)):
+        case let (.number(a, c), .number(b, d)):
             return a == b && c == d
-        case (.symbol(let a, let c), .symbol(let b, let d)):
+        case let (.symbol(a, c), .symbol(b, d)):
             return a == b && c == d
-        case (.linebreak(let a), .linebreak(let b)),
-             (.startOfScope(let a), .startOfScope(let b)),
-             (.endOfScope(let a), .endOfScope(let b)),
-             (.delimiter(let a), .delimiter(let b)),
-             (.keyword(let a), .keyword(let b)),
-             (.identifier(let a), .identifier(let b)),
-             (.stringBody(let a), .stringBody(let b)),
-             (.commentBody(let a), .commentBody(let b)),
-             (.space(let a), .space(let b)),
-             (.error(let a), .error(let b)):
+        case let (.linebreak(a), .linebreak(b)),
+             let (.startOfScope(a), .startOfScope(b)),
+             let (.endOfScope(a), .endOfScope(b)),
+             let (.delimiter(a), .delimiter(b)),
+             let (.keyword(a), .keyword(b)),
+             let (.identifier(a), .identifier(b)),
+             let (.stringBody(a), .stringBody(b)),
+             let (.commentBody(a), .commentBody(b)),
+             let (.space(a), .space(b)),
+             let (.error(a), .error(b)):
             return a == b
         case (.number, _),
              (.symbol, _),

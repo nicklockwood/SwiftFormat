@@ -171,4 +171,11 @@ class OptionsTests: XCTestCase {
         let options = inferOptions(from: tokenize(input))
         XCTAssertEqual(options.wrapElements, output)
     }
+
+    func testInferWrapElementsAfterSecondArgument() {
+        let input = "[foo, bar,\n]"
+        let output = WrapMode.afterFirst
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.wrapElements, output)
+    }
 }

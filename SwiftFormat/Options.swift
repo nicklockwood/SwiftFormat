@@ -443,7 +443,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
                     beforeFirst += 1
                 } else {
-                    assert(formatter.next(.nonSpaceOrComment, after: firstCommaIndex)?.isLinebreak == true)
+                    assert(allowGrouping ||
+                        formatter.next(.nonSpaceOrComment, after: firstCommaIndex)?.isLinebreak == true)
                     afterFirst += 1
                 }
             }

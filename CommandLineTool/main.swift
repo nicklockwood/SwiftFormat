@@ -33,7 +33,7 @@ import Foundation
 
 extension String {
     private static let black = "\u{001B}[0;30m"
-    var inBlack: String { return "\(String.black)(self)" }
+    var inBlack: String { return "\(String.black)\(self)" }
     var inRed: String { return "\u{001B}[0;31m\(self)\(String.black)" }
     var inGreen: String { return "\u{001B}[0;32m\(self)\(String.black)" }
     var inYellow: String { return "\u{001B}[0;33m\(self)\(String.black)" }
@@ -150,38 +150,43 @@ func processArguments(_ args: [String]) {
         }
         let rules = Array(rulesByName.values)
 
-        // Infer options
-        if args["inferoptions"] != nil {
-            if let inferURL = args["inferoptions"].map({ expandPath($0) }) {
-                print("inferring swiftformat options from source file(s)...".inBlack)
-                var filesParsed = 0, filesChecked = 0, options = FormatOptions(), errors = [FormatError]()
-                let time = timeEvent {
-                    (filesParsed, filesChecked, options, errors) = inferOptions(from: inferURL)
-                }
-                printWarnings(errors)
-                if filesParsed == 0 {
-                    throw FormatError.parsing("failed to to infer options")
-                }
-                print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)".inGreen)
-                print("")
-                print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
-                print("")
-                return
-            } else {
-                throw FormatError.options("--inferoptions argument was not a valid path")
-            }
-        }
-
         // Get input path(s)
         var inputURLs = [URL]()
         while let inputPath = args[String(inputURLs.count + 1)] {
             inputURLs.append(expandPath(inputPath))
         }
 
+        // Infer options
+        if let arg = args["inferoptions"] {
+            if !arg.isEmpty {
+                inputURLs.append(expandPath(arg))
+            } else if inputURLs.count == 0 {
+                throw FormatError.options("--inferoptions requires one or more file paths")
+            }
+            print("inferring swiftformat options from source file(s)...".inBlack)
+            var filesParsed = 0, filesChecked = 0, options = FormatOptions(), errors = [FormatError]()
+            let time = timeEvent {
+                (filesParsed, filesChecked, options, errors) = inferOptions(from: inputURLs)
+            }
+            printWarnings(errors)
+            if filesParsed == 0 {
+                throw FormatError.parsing("failed to to infer options")
+            }
+            print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)".inGreen)
+            print("")
+            print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
+            print("")
+            return
+        }
+
         // Get output path
         let outputURL = args["output"].map { expandPath($0) }
-        if outputURL != nil && inputURLs.count > 1 {
-            throw FormatError.options("--output argument is only valid for a single input file")
+        if outputURL != nil {
+            if args["output"] == "" {
+                throw FormatError.options("--output argument expects a value")
+            } else if inputURLs.count > 1 {
+                throw FormatError.options("--output argument is only valid for a single input file")
+            }
         }
 
         // Get cache path

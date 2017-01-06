@@ -192,28 +192,30 @@ public func format(_ source: String,
 
 // MARK: Internal APIs used by CLI - included here for testing purposes
 
-func inferOptions(from inputURL: URL) -> (Int, Int, FormatOptions, [FormatError]) {
+func inferOptions(from inputURLs: [URL]) -> (Int, Int, FormatOptions, [FormatError]) {
     var tokens = [Token]()
     var errors = [FormatError]()
     var filesParsed = 0, filesChecked = 0
-    errors += enumerateSwiftFiles(withInputURL: inputURL) { inputURL, _ in
-        guard let input = try? String(contentsOf: inputURL) else {
-            return {
-                filesChecked += 1
-                errors.append(FormatError.reading("failed to read file \(inputURL.path)"))
+    for inputURL in inputURLs {
+        errors += enumerateSwiftFiles(withInputURL: inputURL) { inputURL, _ in
+            guard let input = try? String(contentsOf: inputURL) else {
+                return {
+                    filesChecked += 1
+                    errors.append(FormatError.reading("failed to read file \(inputURL.path)"))
+                }
             }
-        }
-        let _tokens = tokenize(input)
-        if let error = parsingError(for: _tokens), case .parsing(let string) = error {
-            return {
-                filesChecked += 1
-                errors.append(FormatError.parsing("\(string) in \(inputURL.path)"))
+            let _tokens = tokenize(input)
+            if let error = parsingError(for: _tokens), case .parsing(let string) = error {
+                return {
+                    filesChecked += 1
+                    errors.append(FormatError.parsing("\(string) in \(inputURL.path)"))
+                }
             }
-        }
-        return {
-            filesParsed += 1
-            filesChecked += 1
-            tokens += _tokens
+            return {
+                filesParsed += 1
+                filesChecked += 1
+                tokens += _tokens
+            }
         }
     }
     return (filesParsed, filesChecked, inferOptions(from: tokens), errors)
@@ -346,7 +348,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             // Long argument names
             let key = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 2))
             if !names.contains(key) {
-                throw FormatError.options("unknown argument: \(arg).")
+                throw FormatError.options("unknown argument: \(arg)")
             }
             name = key
             namedArgs[name] = ""
@@ -356,9 +358,9 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             let flag = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 1))
             let matches = names.filter { $0.hasPrefix(flag) }
             if matches.count > 1 {
-                throw FormatError.options("ambiguous argument: \(arg).")
+                throw FormatError.options("ambiguous argument: \(arg)")
             } else if matches.count == 0 {
-                throw FormatError.options("unknown argument: \(arg).")
+                throw FormatError.options("unknown argument: \(arg)")
             } else {
                 name = matches[0]
                 namedArgs[name] = ""
@@ -444,12 +446,12 @@ private func processOption(_ key: String, in args: [String: String], handler: (S
         return
     }
     guard !value.isEmpty else {
-        throw FormatError.options("--\(key) option expects a value.")
+        throw FormatError.options("--\(key) option expects a value")
     }
     do {
         try handler(value.lowercased())
     } catch {
-        throw FormatError.options("unsupported --\(key) value: \(value).")
+        throw FormatError.options("unsupported --\(key) value: \(value)")
     }
 }
 

@@ -56,15 +56,12 @@ public enum FormatError: Error, CustomStringConvertible {
 public struct FileOptions {
     public var followSymlinks: Bool
     public var supportedFileExtensions: [String]
-    public var concurrently: Bool
 
     public init(followSymlinks: Bool = false,
-                supportedFileExtensions: [String] = ["swift"],
-                concurrently: Bool = true) {
+                supportedFileExtensions: [String] = ["swift"]) {
 
         self.followSymlinks = followSymlinks
         self.supportedFileExtensions = supportedFileExtensions
-        self.concurrently = concurrently
     }
 }
 
@@ -73,81 +70,74 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL,
                                 outputURL: URL? = nil,
                                 options: FileOptions = FileOptions(),
                                 block: @escaping (URL, URL) -> () throws -> Void) -> [FormatError] {
-    if options.concurrently {
-        var files = [(URL, URL)]()
-        var subOptions = options
-        var errors = [FormatError]()
-        subOptions.concurrently = false
-        errors += enumerateSwiftFiles(withInputURL: inputURL, outputURL: outputURL,
-                                      options: subOptions) { inputURL, outputURL in
-            return {
-                files.append((inputURL, outputURL))
-            }
+
+    let group = DispatchGroup()
+    var completionBlocks = [() throws -> Void]()
+    let completionQueue = DispatchQueue(label: "swiftformat.enumeration")
+    func onComplete(_ block: @escaping () throws -> Void) {
+        completionQueue.async(group: group) {
+            completionBlocks.append(block)
         }
-        var completionBlocks = [() throws -> Void]()
-        let completionQueue = DispatchQueue(label: "swiftformat.enumeration")
-        let group = DispatchGroup()
-        let queue = DispatchQueue.global(qos: .userInitiated)
-        for filePair in files {
-            queue.async(group: group) {
-                let completion = block(filePair.0, filePair.1)
-                completionQueue.async(group: group) {
-                    completionBlocks.append(completion)
-                }
-            }
-        }
-        group.wait()
-        for block in completionBlocks {
-            do {
-                try block()
-            } catch let error as FormatError {
-                errors.append(error)
-            } catch {
-                errors.append(FormatError.reading("\(error)"))
-            }
-        }
-        return errors
     }
 
+    let queue = DispatchQueue.global(qos: .userInitiated)
     let manager = FileManager.default
     let keys: [URLResourceKey] = [.isRegularFileKey, .isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey]
-    guard let resourceValues = try? inputURL.resourceValues(forKeys: Set(keys)) else {
-        if manager.fileExists(atPath: inputURL.path) {
-            return [FormatError.reading("failed to read attributes for: \(inputURL.path)")]
-        } else {
-            return [FormatError.reading("file not found: \(inputURL.path)")]
+
+    func enumerate(inputURL: URL,
+                   outputURL: URL?,
+                   options: FileOptions,
+                   block: @escaping (URL, URL) -> () throws -> Void) {
+
+        guard let resourceValues = try? inputURL.resourceValues(forKeys: Set(keys)) else {
+            if manager.fileExists(atPath: inputURL.path) {
+                onComplete { throw FormatError.reading("failed to read attributes for: \(inputURL.path)") }
+            } else {
+                onComplete { throw FormatError.reading("file not found: \(inputURL.path)") }
+            }
+            return
+        }
+        if resourceValues.isRegularFile == true {
+            if options.supportedFileExtensions.contains(inputURL.pathExtension) {
+                onComplete(block(inputURL, outputURL ?? inputURL))
+            }
+        } else if resourceValues.isDirectory == true {
+            guard let files = try? manager.contentsOfDirectory(
+                at: inputURL, includingPropertiesForKeys: keys, options: .skipsHiddenFiles) else {
+                onComplete { throw FormatError.reading("failed to read contents of directory at: \(inputURL.path)") }
+                return
+            }
+            for url in files {
+                queue.async(group: group) {
+                    let outputURL = outputURL.map {
+                        URL(fileURLWithPath: $0.path + url.path.substring(from: inputURL.path.characters.endIndex))
+                    }
+                    enumerate(inputURL: url, outputURL: outputURL, options: options, block: block)
+                }
+            }
+        } else if options.followSymlinks &&
+            (resourceValues.isSymbolicLink == true || resourceValues.isAliasFile == true) {
+            let resolvedURL = inputURL.resolvingSymlinksInPath()
+            enumerate(inputURL: resolvedURL, outputURL: outputURL, options: options, block: block)
         }
     }
-    if resourceValues.isRegularFile == true {
-        if options.supportedFileExtensions.contains(inputURL.pathExtension) {
-            do {
-                try block(inputURL, outputURL ?? inputURL)()
-            } catch let error as FormatError {
-                return [error]
-            } catch {
-                return [FormatError.parsing("\(error)")]
-            }
-        }
-    } else if resourceValues.isDirectory == true {
-        guard let files = try? manager.contentsOfDirectory(
-            at: inputURL, includingPropertiesForKeys: keys, options: .skipsHiddenFiles) else {
-            return [FormatError.reading("failed to read contents of directory at: \(inputURL.path)")]
-        }
-        var errors = [FormatError]()
-        for url in files {
-            let outputURL = outputURL.map {
-                URL(fileURLWithPath: $0.path + url.path.substring(from: inputURL.path.characters.endIndex))
-            }
-            errors += enumerateSwiftFiles(withInputURL: url, outputURL: outputURL, options: options, block: block)
-        }
-        return errors
-    } else if options.followSymlinks &&
-        (resourceValues.isSymbolicLink == true || resourceValues.isAliasFile == true) {
-        let resolvedURL = inputURL.resolvingSymlinksInPath()
-        return enumerateSwiftFiles(
-            withInputURL: resolvedURL, outputURL: outputURL, options: options, block: block)
+
+    queue.async(group: group) {
+        enumerate(inputURL: inputURL, outputURL: outputURL, options: options, block: block)
     }
-    return []
+    group.wait()
+
+    var errors = [FormatError]()
+    for block in completionBlocks {
+        do {
+            try block()
+        } catch let error as FormatError {
+            errors.append(error)
+        } catch {
+            errors.append(FormatError.reading("\(error)"))
+        }
+    }
+    return errors
 }
 
 /// Process token error

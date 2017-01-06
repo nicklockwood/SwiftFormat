@@ -91,9 +91,9 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL,
 
         guard let resourceValues = try? inputURL.resourceValues(forKeys: Set(keys)) else {
             if manager.fileExists(atPath: inputURL.path) {
-                onComplete { throw FormatError.reading("failed to read attributes for: \(inputURL.path)") }
+                onComplete { throw FormatError.reading("failed to read attributes for \(inputURL.path)") }
             } else {
-                onComplete { throw FormatError.reading("file not found: \(inputURL.path)") }
+                onComplete { throw FormatError.reading("file not found at \(inputURL.path)") }
             }
             return
         }
@@ -104,7 +104,7 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL,
         } else if resourceValues.isDirectory == true {
             guard let files = try? manager.contentsOfDirectory(
                 at: inputURL, includingPropertiesForKeys: keys, options: .skipsHiddenFiles) else {
-                onComplete { throw FormatError.reading("failed to read contents of directory at: \(inputURL.path)") }
+                onComplete { throw FormatError.reading("failed to read contents of directory at \(inputURL.path)") }
                 return
             }
             for url in files {
@@ -200,14 +200,14 @@ func inferOptions(from inputURL: URL) -> (Int, Int, FormatOptions, [FormatError]
         guard let input = try? String(contentsOf: inputURL) else {
             return {
                 filesChecked += 1
-                errors.append(FormatError.reading("failed to read file: \(inputURL.path)"))
+                errors.append(FormatError.reading("failed to read file \(inputURL.path)"))
             }
         }
         let _tokens = tokenize(input)
         if let error = parsingError(for: _tokens), case .parsing(let string) = error {
             return {
                 filesChecked += 1
-                errors.append(FormatError.parsing("\(string) in file: \(inputURL.path)"))
+                errors.append(FormatError.parsing("\(string) in \(inputURL.path)"))
             }
         }
         return {
@@ -239,7 +239,11 @@ func processInput(_ inputURLs: [URL],
     for inputURL in inputURLs {
         guard let resourceValues = try? inputURL.resourceValues(
             forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])) else {
-            errors.append(FormatError.reading("failed to read attributes for: \(inputURL.path)"))
+                if FileManager.default.fileExists(atPath: inputURL.path) {
+                    errors.append(FormatError.reading("failed to read attributes for \(inputURL.path)"))
+                } else {
+                    errors.append(FormatError.reading("file not found at \(inputURL.path)"))
+                }
             continue
         }
         if !fileOptions.followSymlinks &&
@@ -256,7 +260,7 @@ func processInput(_ inputURLs: [URL],
             guard let input = try? String(contentsOf: inputURL) else {
                 return {
                     filesChecked += 1 // TODO: should this count?
-                    throw FormatError.reading("failed to read file: \(inputURL.path)")
+                    throw FormatError.reading("failed to read file \(inputURL.path)")
                 }
             }
             let cacheKey: String = {
@@ -282,7 +286,7 @@ func processInput(_ inputURLs: [URL],
                     } catch {
                         return {
                             filesChecked += 1
-                            throw FormatError.writing("failed to create directory at: \(outputURL.path), \(error)")
+                            throw FormatError.writing("failed to create directory at \(outputURL.path), \(error)")
                         }
                     }
                 } else if output == input {
@@ -302,13 +306,13 @@ func processInput(_ inputURLs: [URL],
                 } catch {
                     return {
                         filesChecked += 1
-                        throw FormatError.writing("failed to write file: \(outputURL.path), \(error)")
+                        throw FormatError.writing("failed to write file \(outputURL.path), \(error)")
                     }
                 }
             } catch FormatError.parsing(let string) {
                 return {
                     filesChecked += 1
-                    throw FormatError.parsing("\(string) in file: \(inputURL.path)")
+                    throw FormatError.parsing("\(string) in \(inputURL.path)")
                 }
             } catch {
                 return {
@@ -318,15 +322,12 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
-    if filesChecked == 0 {
-        let inputPaths = inputURLs.map({ $0.path }).joined(separator: ", ")
-        errors.append(FormatError.options("no eligible files found at: \(inputPaths)"))
-    } else {
+    if filesChecked > 0 {
         // Save cache
         if let cache = cache, let cacheURL = cacheURL, let cacheDirectory = cacheDirectory {
             if !(cache as NSDictionary).write(to: cacheURL, atomically: true) {
                 if FileManager.default.fileExists(atPath: cacheDirectory.path) {
-                    errors.append(FormatError.writing("failed to write cache file at: \(cacheURL.path)"))
+                    errors.append(FormatError.writing("failed to write cache file at \(cacheURL.path)"))
                 } else {
                     errors.append(FormatError.reading("specified cache file directory does not exist: \(cacheDirectory.path)"))
                 }

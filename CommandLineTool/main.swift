@@ -92,14 +92,15 @@ extension FileHandle: TextOutputStream {
     }
 }
 
-func printErrors(_ errors: [FormatError]) {
+func printWarnings(_ errors: [Error]) {
     var stderr = FileHandle.standardError
     for error in errors {
-        print("error: \(error)", to: &stderr)
+        print("warning: \(error)", to: &stderr)
     }
 }
 
 func processArguments(_ args: [String]) {
+    var errors = [Error]()
     do {
         // Get options
         let args = try preprocessArguments(args, commandLineArguments)
@@ -149,15 +150,18 @@ func processArguments(_ args: [String]) {
                 let time = timeEvent {
                     (filesParsed, filesChecked, options, errors) = inferOptions(from: inferURL)
                 }
-                printErrors(errors)
+                printWarnings(errors)
+                if filesParsed == 0 {
+                    throw FormatError.parsing("failed to to infer options")
+                }
                 print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)")
                 print("")
                 print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
                 print("")
+                return
             } else {
                 throw FormatError.options("--inferoptions argument was not a valid path")
             }
-            return
         }
 
         // Get input path(s)
@@ -174,7 +178,6 @@ func processArguments(_ args: [String]) {
 
         // Get cache path
         var cacheURL: URL?
-        var errors = [FormatError]()
         let defaultCacheFileName = "swiftformat.cache"
         let manager = FileManager.default
         func setDefaultCacheURL() {
@@ -185,7 +188,7 @@ func processArguments(_ args: [String]) {
                     try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)
                     cacheURL = cacheDirectory.appendingPathComponent(defaultCacheFileName)
                 } catch {
-                    errors.append(FormatError.writing("failed to create cache directory at: \(cacheDirectory.path)"))
+                    errors.append(FormatError.writing("failed to create cache directory at \(cacheDirectory.path)"))
                 }
             } else {
                 errors.append(FormatError.reading("failed to find cache directory at ~/Library/Caches"))
@@ -194,7 +197,7 @@ func processArguments(_ args: [String]) {
         if let cache = args["cache"] {
             switch cache {
             case "":
-                throw FormatError.options("--cache option expects a value.")
+                throw FormatError.options("--cache option expects a value")
             case "ignore":
                 break
             case "clear":
@@ -203,13 +206,13 @@ func processArguments(_ args: [String]) {
                     do {
                         try manager.removeItem(at: cacheURL)
                     } catch {
-                        errors.append(FormatError.writing("failed to delete cache file at: \(cacheURL.path)"))
+                        errors.append(FormatError.writing("failed to delete cache file at \(cacheURL.path)"))
                     }
                 }
             default:
                 cacheURL = expandPath(cache)
                 guard cacheURL != nil else {
-                    throw FormatError.options("unsupported --cache value: \(cache).")
+                    throw FormatError.options("unsupported --cache value `\(cache)`")
                 }
                 var isDirectory: ObjCBool = false
                 if manager.fileExists(atPath: cacheURL!.path, isDirectory: &isDirectory) && isDirectory.boolValue {
@@ -224,6 +227,7 @@ func processArguments(_ args: [String]) {
         if inputURLs.count == 0 {
             var input: String?
             var finished = false
+            var fatalError: Error?
             DispatchQueue.global(qos: .userInitiated).async {
                 while let line = readLine(strippingNewline: false) {
                     input = (input ?? "") + line
@@ -236,16 +240,14 @@ func processArguments(_ args: [String]) {
                                 try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
                                 print("swiftformat completed successfully")
                             } catch {
-                                throw FormatError.writing("failed to write file: \(outputURL.path)")
+                                throw FormatError.writing("failed to write file \(outputURL.path)")
                             }
                         } else {
                             // Write to stdout
                             print(output)
                         }
-                    } catch let error as FormatError {
-                        errors.append(error)
                     } catch {
-                        errors.append(FormatError.writing("unknown error: \(error)"))
+                        fatalError = error
                     }
                 }
                 finished = true
@@ -255,8 +257,11 @@ func processArguments(_ args: [String]) {
             while start.timeIntervalSinceNow > -0.01 {}
             // If no input received by now, assume none is coming
             if input != nil {
-                while !finished && start.timeIntervalSinceNow > -30 {}
-                printErrors(errors)
+                while !finished && start.timeIntervalSinceNow > -30 {
+                    if let fatalError = fatalError {
+                        throw fatalError
+                    }
+                }
             } else {
                 showHelp()
             }
@@ -277,15 +282,20 @@ func processArguments(_ args: [String]) {
                 fileOptions: fileOptions,
                 cacheURL: cacheURL
             )
-            errors += _errors
+            errors += _errors as [Error]
         }
-        printErrors(errors)
+        printWarnings(errors)
+        if filesChecked == 0 {
+            let inputPaths = inputURLs.map({ $0.path }).joined(separator: ", ")
+            throw FormatError.options("no eligible files found at \(inputPaths)")
+        }
         print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)")
 
-    } catch let error as FormatError {
-        printErrors([error])
     } catch {
-        printErrors([FormatError.options("unknown error: \(error)")])
+        printWarnings(errors)
+        // Fatal error
+        var stderr = FileHandle.standardError
+        print("error: \(error)", to: &stderr)
     }
 }
 

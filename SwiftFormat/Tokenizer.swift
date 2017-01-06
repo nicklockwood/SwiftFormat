@@ -472,6 +472,10 @@ private extension String.UnicodeScalarView {
         }
         return false
     }
+
+    mutating func readToEndOfToken() -> String {
+        return readCharacters { !$0.isSpace && !"\n\r".unicodeScalars.contains($0) } ?? ""
+    }
 }
 
 private extension String.UnicodeScalarView {
@@ -718,21 +722,21 @@ private extension String.UnicodeScalarView {
                         if let power = readInteger() {
                             return .number("0x" + hex + "p" + power, .hex)
                         }
-                        return .error("0x" + hex + "p" + String(self))
+                        return .error("0x" + hex + "p" + readToEndOfToken())
                     }
                     return .number("0x" + hex, .hex)
                 }
-                return .error("0x" + String(self))
+                return .error("0x" + readToEndOfToken())
             } else if read("b") {
                 if let bin = readNumber(where: { "01".unicodeScalars.contains($0) }) {
                     return .number("0b" + bin, .binary)
                 }
-                return .error("0b" + String(self))
+                return .error("0b" + readToEndOfToken())
             } else if read("o") {
                 if let octal = readNumber(where: { ("0" ... "7").contains($0) }) {
                     return .number("0o" + octal, .octal)
                 }
-                return .error("0o" + String(self))
+                return .error("0o" + readToEndOfToken())
             }
         }
 
@@ -777,7 +781,7 @@ private extension String.UnicodeScalarView {
             return token
         }
         if !isEmpty {
-            return .error(String(self))
+            return .error(readToEndOfToken())
         }
         return nil
     }

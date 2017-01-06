@@ -31,8 +31,31 @@
 
 import Foundation
 
+extension String {
+    private static let black = "\u{001B}[0;30m"
+    var inBlack: String { return "\(String.black)(self)" }
+    var inRed: String { return "\u{001B}[0;31m\(self)\(String.black)" }
+    var inGreen: String { return "\u{001B}[0;32m\(self)\(String.black)" }
+    var inYellow: String { return "\u{001B}[0;33m\(self)\(String.black)" }
+}
+
+extension FileHandle: TextOutputStream {
+    public func write(_ string: String) {
+        if let data = string.data(using: .utf8) {
+            write(data)
+        }
+    }
+}
+
+func printWarnings(_ errors: [Error]) {
+    var stderr = FileHandle.standardError
+    for error in errors {
+        print("warning: \(error)".inYellow, to: &stderr)
+    }
+}
+
 func showHelp() {
-    print("")
+    print("".inBlack)
     print("swiftformat, version \(version)")
     print("copyright (c) 2016 Nick Lockwood")
     print("")
@@ -84,21 +107,6 @@ func timeEvent(block: () throws -> Void) rethrows -> String {
     return String(format: "%gs", time)
 }
 
-extension FileHandle: TextOutputStream {
-    public func write(_ string: String) {
-        if let data = string.data(using: .utf8) {
-            write(data)
-        }
-    }
-}
-
-func printWarnings(_ errors: [Error]) {
-    var stderr = FileHandle.standardError
-    for error in errors {
-        print("warning: \(error)", to: &stderr)
-    }
-}
-
 func processArguments(_ args: [String]) {
     var errors = [Error]()
     do {
@@ -109,7 +117,7 @@ func processArguments(_ args: [String]) {
 
         // Version
         if args["rules"] != nil {
-            print("")
+            print("".inBlack)
             for name in FormatRules.byName.keys.sorted() {
                 print(" " + name)
             }
@@ -125,7 +133,7 @@ func processArguments(_ args: [String]) {
 
         // Version
         if args["version"] != nil {
-            print("swiftformat, version \(version)")
+            print("swiftformat, version \(version)".inBlack)
             return
         }
 
@@ -145,7 +153,7 @@ func processArguments(_ args: [String]) {
         // Infer options
         if args["inferoptions"] != nil {
             if let inferURL = args["inferoptions"].map({ expandPath($0) }) {
-                print("inferring swiftformat options from source file(s)...")
+                print("inferring swiftformat options from source file(s)...".inBlack)
                 var filesParsed = 0, filesChecked = 0, options = FormatOptions(), errors = [FormatError]()
                 let time = timeEvent {
                     (filesParsed, filesChecked, options, errors) = inferOptions(from: inferURL)
@@ -154,7 +162,7 @@ func processArguments(_ args: [String]) {
                 if filesParsed == 0 {
                     throw FormatError.parsing("failed to to infer options")
                 }
-                print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)")
+                print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)".inGreen)
                 print("")
                 print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
                 print("")
@@ -238,7 +246,7 @@ func processArguments(_ args: [String]) {
                         if let outputURL = outputURL {
                             do {
                                 try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
-                                print("swiftformat completed successfully")
+                                print("swiftformat completed successfully".inGreen)
                             } catch {
                                 throw FormatError.writing("failed to write file \(outputURL.path)")
                             }
@@ -268,7 +276,7 @@ func processArguments(_ args: [String]) {
             return
         }
 
-        print("running swiftformat...")
+        print("running swiftformat...".inBlack)
 
         // Format the code
         var filesWritten = 0, filesChecked = 0
@@ -289,13 +297,13 @@ func processArguments(_ args: [String]) {
             let inputPaths = inputURLs.map({ $0.path }).joined(separator: ", ")
             throw FormatError.options("no eligible files found at \(inputPaths)")
         }
-        print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)")
+        print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)".inGreen)
 
     } catch {
         printWarnings(errors)
         // Fatal error
         var stderr = FileHandle.standardError
-        print("error: \(error)", to: &stderr)
+        print("error: \(error)".inRed, to: &stderr)
     }
 }
 

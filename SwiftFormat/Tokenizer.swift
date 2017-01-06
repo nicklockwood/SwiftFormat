@@ -363,57 +363,36 @@ public enum Token: Equatable {
     }
 
     public static func ==(lhs: Token, rhs: Token) -> Bool {
-        switch lhs {
-        case .number(let string, let type):
-            if case .number(string, type) = rhs {
-                return true
-            }
-        case .linebreak(let string):
-            if case .linebreak(string) = rhs {
-                return true
-            }
-        case .startOfScope(let string):
-            if case .startOfScope(string) = rhs {
-                return true
-            }
-        case .endOfScope(let string):
-            if case .endOfScope(string) = rhs {
-                return true
-            }
-        case .delimiter(let string):
-            if case .delimiter(string) = rhs {
-                return true
-            }
-        case .symbol(let string, let type):
-            if case .symbol(string, type) = rhs {
-                return true
-            }
-        case .keyword(let string):
-            if case .keyword(string) = rhs {
-                return true
-            }
-        case .identifier(let string):
-            if case .identifier(string) = rhs {
-                return true
-            }
-        case .stringBody(let string):
-            if case .stringBody(string) = rhs {
-                return true
-            }
-        case .commentBody(let string):
-            if case .commentBody(string) = rhs {
-                return true
-            }
-        case .space(let string):
-            if case .space(string) = rhs {
-                return true
-            }
-        case .error(let string):
-            if case .error(string) = rhs {
-                return true
-            }
+        switch (lhs, rhs) {
+        case (.number(let a, let c), .number(let b, let d)):
+            return a == b && c == d
+        case (.symbol(let a, let c), .symbol(let b, let d)):
+            return a == b && c == d
+        case (.linebreak(let a), .linebreak(let b)),
+             (.startOfScope(let a), .startOfScope(let b)),
+             (.endOfScope(let a), .endOfScope(let b)),
+             (.delimiter(let a), .delimiter(let b)),
+             (.keyword(let a), .keyword(let b)),
+             (.identifier(let a), .identifier(let b)),
+             (.stringBody(let a), .stringBody(let b)),
+             (.commentBody(let a), .commentBody(let b)),
+             (.space(let a), .space(let b)),
+             (.error(let a), .error(let b)):
+            return a == b
+        case (.number, _),
+             (.symbol, _),
+             (.linebreak, _),
+             (.startOfScope, _),
+             (.endOfScope, _),
+             (.delimiter, _),
+             (.keyword, _),
+             (.identifier, _),
+             (.stringBody, _),
+             (.commentBody, _),
+             (.space, _),
+             (.error, _):
+            return false
         }
-        return false
     }
 }
 

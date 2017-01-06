@@ -103,7 +103,7 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL,
             } catch let error as FormatError {
                 errors.append(error)
             } catch {
-                errors.append(FormatError.reading("unknown error: \(error)"))
+                errors.append(FormatError.reading("\(error)"))
             }
         }
         return errors
@@ -125,7 +125,7 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL,
             } catch let error as FormatError {
                 return [error]
             } catch {
-                return [FormatError.parsing("unknown error: \(error)")]
+                return [FormatError.parsing("\(error)")]
             }
         }
     } else if resourceValues.isDirectory == true {
@@ -202,30 +202,31 @@ public func format(_ source: String,
 
 // MARK: Internal APIs used by CLI - included here for testing purposes
 
-func inferOptions(from inputURL: URL) -> (Int, FormatOptions, [FormatError]) {
+func inferOptions(from inputURL: URL) -> (Int, Int, FormatOptions, [FormatError]) {
     var tokens = [Token]()
     var errors = [FormatError]()
-    var filesChecked = 0
+    var filesParsed = 0, filesChecked = 0
     errors += enumerateSwiftFiles(withInputURL: inputURL) { inputURL, _ in
-        do {
-            guard let input = try? String(contentsOf: inputURL) else {
-                throw FormatError.reading("failed to read file: \(inputURL.path)")
-            }
-            let _tokens = tokenize(input)
-            if let error = parsingError(for: _tokens) {
-                throw error
-            }
+        guard let input = try? String(contentsOf: inputURL) else {
             return {
                 filesChecked += 1
-                tokens += _tokens
+                errors.append(FormatError.reading("failed to read file: \(inputURL.path)"))
             }
-        } catch let error as FormatError {
-            return { errors.append(error) }
-        } catch {
-            return { errors.append(FormatError.reading("unknown error: \(error)")) }
+        }
+        let _tokens = tokenize(input)
+        if let error = parsingError(for: _tokens), case .parsing(let string) = error {
+            return {
+                filesChecked += 1
+                errors.append(FormatError.parsing("\(string) in file: \(inputURL.path)"))
+            }
+        }
+        return {
+            filesParsed += 1
+            filesChecked += 1
+            tokens += _tokens
         }
     }
-    return (filesChecked, inferOptions(from: tokens), errors)
+    return (filesParsed, filesChecked, inferOptions(from: tokens), errors)
 }
 
 func processInput(_ inputURLs: [URL],
@@ -248,8 +249,8 @@ func processInput(_ inputURLs: [URL],
     for inputURL in inputURLs {
         guard let resourceValues = try? inputURL.resourceValues(
             forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])) else {
-                errors.append(FormatError.reading("failed to read attributes for: \(inputURL.path)"))
-                continue
+            errors.append(FormatError.reading("failed to read attributes for: \(inputURL.path)"))
+            continue
         }
         if !fileOptions.followSymlinks &&
             (resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true) {
@@ -313,6 +314,11 @@ func processInput(_ inputURLs: [URL],
                         filesChecked += 1
                         throw FormatError.writing("failed to write file: \(outputURL.path), \(error)")
                     }
+                }
+            } catch FormatError.parsing(let string) {
+                return {
+                    filesChecked += 1
+                    throw FormatError.parsing("\(string) in file: \(inputURL.path)")
                 }
             } catch {
                 return {

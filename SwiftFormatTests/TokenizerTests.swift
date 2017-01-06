@@ -41,7 +41,7 @@ class TokenizerTests: XCTestCase {
         let output: [Token] = [
             .keyword("let"),
             .space(" "),
-            .error("`foo = bar"),
+            .error("`foo"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

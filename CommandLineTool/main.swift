@@ -145,23 +145,14 @@ func processArguments(_ args: [String]) {
         if args["inferoptions"] != nil {
             if let inferURL = args["inferoptions"].map({ expandPath($0) }) {
                 print("inferring swiftformat options from source file(s)...")
-                var files = 0
-                var arguments = ""
-                var errors = [FormatError]()
+                var filesParsed = 0, filesChecked = 0, options = FormatOptions(), errors = [FormatError]()
                 let time = timeEvent {
-                    let (count, options, _errors) = inferOptions(from: inferURL)
-                    arguments = commandLineArguments(for: options).map({
-                        "--\($0) \($1)" }).joined(separator: " ")
-                    files = count
-                    errors = _errors
+                    (filesParsed, filesChecked, options, errors) = inferOptions(from: inferURL)
                 }
-                if errors.count > 0 {
-                    printErrors(errors)
-                    print("")
-                }
-                print("options inferred from \(files) file\(files == 1 ? "" : "s") in \(time)")
+                printErrors(errors)
+                print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)")
                 print("")
-                print(arguments)
+                print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
                 print("")
             } else {
                 throw FormatError.options("--inferoptions argument was not a valid path")
@@ -288,10 +279,7 @@ func processArguments(_ args: [String]) {
             )
             errors += _errors
         }
-        if errors.count > 0 {
-            printErrors(errors)
-            print("")
-        }
+        printErrors(errors)
         print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)")
 
     } catch let error as FormatError {

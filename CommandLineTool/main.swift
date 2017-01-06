@@ -109,7 +109,7 @@ func processArguments(_ args: [String]) {
         // Version
         if args["rules"] != nil {
             print("")
-            for name in FormatRules.byName.keys {
+            for name in FormatRules.byName.keys.sorted() {
                 print(" " + name)
             }
             print("")

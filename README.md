@@ -414,7 +414,7 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
                             	          quux
                           	          ]
 
-*unusedArguments* - marks unused arguments in a function with _, to make it clear where they aren't used
+*unusedArguments* - marks unused arguments in functions and closures with `_` to make it clear they aren't used:
 
     func foo(bar: Int, baz: String) {         func foo(bar _: Int, baz: String) {
         print("Hello \(baz)")           -->       print("Hello \(baz)")
@@ -422,6 +422,10 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     
     func foo(_ bar: Int) {                    func foo(_: Int) {
         // no-op                        -->       // no-op
+    }                                         }
+
+    request { response, data in               request { _, data in
+        self.data += data               -->       self.data += data
     }                                         }
 
 

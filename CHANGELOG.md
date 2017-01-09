@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.23](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.23) (2017-01-09)
+
+- You can now specify a whitelist of specific rules to apply using the `--rules` option
+- Input files are now processed concurrently, yielding a ~2x speed improvement
+- SwitfFormat now continues if it encounters an error when processing multiple files
+- Improved error messaging, and added color coding to the command line output
+- `--inferoptions` now accepts multiple space-delimited file paths, or piped input, just like formatting
+- `redundantVoidReturnType` now removes Void return from closures as well as ordinary functions
+- `unusedArguments` now works on closures as well as ordinary functions
+- `unusedArguments` is now more effective at detecting when an argument is unused 
+- Fixed crash in `wrapArguments` rule due to linebreak being incorrectly removed after a single-line comment
+- Format rules displayed using the `--rules` option are now sorted alphabetically
+
 ## [0.22](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.22) (2017-01-03)
 
 - Fixed critical bug where `>=` operator was misidentified as end of generic argument list

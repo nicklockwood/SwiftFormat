@@ -1590,7 +1590,7 @@ extension FormatRules {
                     switch formatter.tokens[index] {
                     case .keyword("for"):
                         return
-                    case .identifier(let name) where name != "_":
+                    case .identifier(let name) where name != "_" && name != "Void":
                         if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
                             ![.delimiter(":"), .symbol("->", .infix), .symbol(".", .infix)].contains(prevToken),
                             formatter.currentScope(at: index) != .startOfScope("[") {

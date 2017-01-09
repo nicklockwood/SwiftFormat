@@ -32,9 +32,9 @@
 import Foundation
 
 /// The current SwiftFormat version
-public let version = "0.22"
+public let version = "0.23"
 
-/// Errors
+/// An enumeration of the types of error that may be thrown by SwiftFormat
 public enum FormatError: Error, CustomStringConvertible {
     case reading(String)
     case writing(String)

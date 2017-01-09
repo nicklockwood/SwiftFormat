@@ -143,12 +143,24 @@ public func enumerateSwiftFiles(withInputURL inputURL: URL,
 /// Process token error
 public func parsingError(for tokens: [Token]) -> FormatError? {
     if let last = tokens.last, case .error(let string) = last {
-        // TODO: more useful errors
+        // Get error
+        let message: String
         if string.isEmpty {
-            return .parsing("unexpected end of file")
+            message = "unexpected end of file"
         } else {
-            return .parsing("unexpected token '\(string)'")
+            message = "unexpected token '\(string)'"
         }
+        // Get line/column
+        var line = 1, column = 0
+        for token in tokens {
+            if token.isLinebreak {
+                line += 1
+                column = 0
+            } else {
+                column += token.string.characters.count
+            }
+        }
+        return .parsing("\(message) at \(line):\(column)")
     }
     return nil
 }

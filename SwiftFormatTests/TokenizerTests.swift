@@ -61,16 +61,6 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testUnclosedSingleLineComment() {
-        let input = "// comment"
-        let output: [Token] = [
-            .startOfScope("//"),
-            .space(" "),
-            .commentBody("comment"),
-        ]
-        XCTAssertEqual(tokenize(input), output)
-    }
-
     func testUnclosedMultilineComment() {
         let input = "/* comment"
         let output: [Token] = [

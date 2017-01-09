@@ -34,12 +34,12 @@ import XCTest
 
 class SwiftFormatTests: XCTestCase {
 
-    // MARK: enumerateSwiftFiles
+    // MARK: enumerateFiles
 
     func testInputFileMatchesOutputFileForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)
-        let errors = enumerateSwiftFiles(withInputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
             return { files.append(inputURL) }
@@ -51,7 +51,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFileMatchesOutputFileForSameOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)
-        let errors = enumerateSwiftFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
             return { files.append(inputURL) }
@@ -63,7 +63,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFilesMatchOutputFilesForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateSwiftFiles(withInputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }
@@ -74,7 +74,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFilesMatchOutputFilesForSameOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateSwiftFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }

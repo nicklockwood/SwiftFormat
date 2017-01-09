@@ -115,16 +115,6 @@ func processArguments(_ args: [String]) {
         let formatOptions = try formatOptionsFor(args)
         let fileOptions = try fileOptionsFor(args)
 
-        // Version
-        if args["rules"] != nil {
-            print("".inBlack)
-            for name in FormatRules.byName.keys.sorted() {
-                print(" " + name)
-            }
-            print("")
-            return
-        }
-
         // Show help if requested specifically or if no arguments are passed
         if args["help"] != nil {
             showHelp()
@@ -139,9 +129,29 @@ func processArguments(_ args: [String]) {
 
         // Rules
         var rulesByName = FormatRules.byName
+        if let names = args["rules"]?.components(separatedBy: ",") {
+            if names.count == 1, names[0].isEmpty {
+                print("".inBlack)
+                for name in FormatRules.byName.keys.sorted() {
+                    print(" " + name)
+                }
+                print("")
+                return
+            }
+            var whitelist = [String: FormatRule]()
+            for name in names {
+                var name = (name as NSString).trimmingCharacters(in: .whitespacesAndNewlines)
+                if let rule = rulesByName[name] {
+                    whitelist[name] = rule
+                } else {
+                    throw FormatError.options("unknown rule '\(name)'")
+                }
+            }
+            rulesByName = whitelist
+        }
         if let names = args["disable"]?.components(separatedBy: ",") {
             for name in names {
-                var name = (name as NSString).trimmingCharacters(in: .whitespaces)
+                var name = (name as NSString).trimmingCharacters(in: .whitespacesAndNewlines)
                 if !rulesByName.keys.contains(name) {
                     throw FormatError.options("unknown rule '\(name)'")
                 }
@@ -160,23 +170,34 @@ func processArguments(_ args: [String]) {
         if let arg = args["inferoptions"] {
             if !arg.isEmpty {
                 inputURLs.append(expandPath(arg))
-            } else if inputURLs.count == 0 {
-                throw FormatError.options("--inferoptions requires one or more file paths")
             }
-            print("inferring swiftformat options from source file(s)...".inBlack)
-            var filesParsed = 0, filesChecked = 0, options = FormatOptions(), errors = [FormatError]()
-            let time = timeEvent {
-                (filesParsed, filesChecked, options, errors) = inferOptions(from: inputURLs)
+            if inputURLs.count > 0 {
+                print("inferring swiftformat options from source file(s)...".inBlack)
+                var filesParsed = 0, options = FormatOptions(), errors = [Error]()
+                let time = timeEvent {
+                    (filesParsed, options, errors) = inferOptions(from: inputURLs)
+                }
+                printWarnings(errors)
+                if filesParsed == 0 {
+                    throw FormatError.parsing("failed to to infer options")
+                }
+                var filesChecked = filesParsed
+                for case let error as FormatError in errors {
+                    switch error {
+                    case .parsing, .reading:
+                        filesChecked += 1
+                    case .writing:
+                        assertionFailure()
+                    case .options:
+                        break
+                    }
+                }
+                print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)".inGreen)
+                print("")
+                print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
+                print("")
+                return
             }
-            printWarnings(errors)
-            if filesParsed == 0 {
-                throw FormatError.parsing("failed to to infer options")
-            }
-            print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)".inGreen)
-            print("")
-            print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
-            print("")
-            return
         }
 
         // Get output path
@@ -247,17 +268,26 @@ func processArguments(_ args: [String]) {
                 }
                 if let input = input {
                     do {
-                        let output = try format(input, rules: rules, options: formatOptions)
-                        if let outputURL = outputURL {
-                            do {
-                                try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
-                                print("swiftformat completed successfully".inGreen)
-                            } catch {
-                                throw FormatError.writing("failed to write file \(outputURL.path)")
+                        if args["inferoptions"] != nil {
+                            let tokens = tokenize(input)
+                            if let error = parsingError(for: tokens) {
+                                throw error
                             }
+                            let options = inferOptions(from: tokens)
+                            print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
                         } else {
-                            // Write to stdout
-                            print(output)
+                            let output = try format(input, rules: rules, options: formatOptions)
+                            if let outputURL = outputURL {
+                                do {
+                                    try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
+                                    print("swiftformat completed successfully".inGreen)
+                                } catch {
+                                    throw FormatError.writing("failed to write file \(outputURL.path)")
+                                }
+                            } else {
+                                // Write to stdout
+                                print(output)
+                            }
                         }
                     } catch {
                         fatalError = error
@@ -270,12 +300,16 @@ func processArguments(_ args: [String]) {
             while start.timeIntervalSinceNow > -0.01 {}
             // If no input received by now, assume none is coming
             if input != nil {
-                while !finished && start.timeIntervalSinceNow > -30 {
-                    if let fatalError = fatalError {
-                        throw fatalError
-                    }
+                while !finished && start.timeIntervalSinceNow > -30 {}
+                if let fatalError = fatalError {
+                    throw fatalError
                 }
+            } else if args["inferoptions"] != nil {
+                throw FormatError.options("--inferoptions requires one or more input files")
             } else {
+                print("".inBlack)
+                print("swiftformat, version \(version)")
+                print("copyright (c) 2016 Nick Lockwood")
                 showHelp()
             }
             return
@@ -286,7 +320,7 @@ func processArguments(_ args: [String]) {
         // Format the code
         var filesWritten = 0, filesChecked = 0
         let time = timeEvent {
-            var _errors = [FormatError]()
+            var _errors = [Error]()
             (filesWritten, filesChecked, _errors) = processInput(
                 inputURLs,
                 andWriteToOutput: outputURL,
@@ -295,15 +329,31 @@ func processArguments(_ args: [String]) {
                 fileOptions: fileOptions,
                 cacheURL: cacheURL
             )
-            errors += _errors as [Error]
+            errors += _errors
+        }
+        var filesFailed = 0
+        for case let error as FormatError in errors {
+            switch error {
+            case .parsing, .reading, .writing:
+                filesFailed += 1
+            case .options:
+                break
+            }
+        }
+        if filesChecked == 0 {
+            if filesFailed == 0 {
+                if let error = errors.first {
+                    errors.removeAll()
+                    throw error
+                }
+                let inputPaths = inputURLs.map({ $0.path }).joined(separator: ", ")
+                throw FormatError.options("no eligible files found at \(inputPaths)")
+            } else {
+                throw FormatError.options("failed to format any files")
+            }
         }
         printWarnings(errors)
-        if filesChecked == 0 {
-            let inputPaths = inputURLs.map({ $0.path }).joined(separator: ", ")
-            throw FormatError.options("no eligible files found at \(inputPaths)")
-        }
         print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)".inGreen)
-
     } catch {
         printWarnings(errors)
         // Fatal error

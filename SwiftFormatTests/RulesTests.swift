@@ -2492,6 +2492,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testAnonymousVoidArgumentConvertedToEmptyParens() {
+        let input = "(_: Void) -> Void"
+        let output = "() -> Void"
+        XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testFunctionThatReturnsAFunction() {
         let input = "(Void) -> Void -> ()"
         let output = "() -> () -> Void"
@@ -2529,6 +2536,27 @@ class RulesTests: XCTestCase {
 
     func testEmptyClosureArgsNotMangled() {
         let input = "{ () in }"
+        let output = "{ () in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testVoidClosureArgConvertedToEmptyParens() {
+        let input = "{ Void in }"
+        let output = "{ () in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testVoidClosureArgInParensConvertedToEmptyParens() {
+        let input = "{ [self] (Void) in }"
+        let output = "{ [self] () in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testAnonymousVoidClosureArgConvertedToEmptyParens() {
+        let input = "{ (_: Void) in }"
         let output = "{ () in }"
         XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")

@@ -1744,15 +1744,29 @@ extension FormatRules {
     public class func void(_ formatter: Formatter) {
         func isArgumentToken(at index: Int) -> Bool {
             if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) {
-                return [.symbol("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken)
+                return [
+                    .symbol("->", .infix), .keyword("throws"),
+                    .keyword("rethrows"), .keyword("in"),
+                ].contains(nextToken)
             }
             return false
         }
 
         formatter.forEach(.identifier("Void")) { i, _ in
-            if let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {
-                $0 == .startOfScope("(") }), let nextIndex = formatter.index(of:
-                .nonSpaceOrLinebreak, after: i, if: { $0 == .endOfScope(")") }) {
+            if let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
+                $0 == .endOfScope(")")
+            }), var prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i), {
+                let token = formatter.tokens[prevIndex]
+                if token == .delimiter(":"),
+                    let prevPrevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: prevIndex),
+                    formatter.tokens[prevPrevIndex] == .identifier("_"),
+                    let startIndex = formatter.index(of: .nonSpaceOrLinebreak, before: prevPrevIndex),
+                    formatter.tokens[startIndex] == .startOfScope("(") {
+                    prevIndex = startIndex
+                    return true
+                }
+                return token == .startOfScope("(")
+            }() {
                 if isArgumentToken(at: nextIndex) {
                     // Remove Void
                     formatter.removeTokens(inRange: prevIndex + 1 ..< nextIndex)

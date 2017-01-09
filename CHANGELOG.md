@@ -9,7 +9,7 @@
 
 - You can now specify a whitelist of specific rules to apply using the `--rules` option
 - Input files are now processed concurrently, yielding a ~2x speed improvement
-- SwitfFormat now continues if it encounters an error when processing multiple files
+- SwiftFormat now continues if it encounters an error when processing multiple files
 - Improved error messaging, and added color coding to the command line output
 - `--inferoptions` now accepts multiple space-delimited file paths, or piped input, just like formatting
 - `redundantVoidReturnType` now removes Void return from closures as well as ordinary functions

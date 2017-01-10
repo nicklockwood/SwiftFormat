@@ -181,8 +181,8 @@
 			children = (
 				01A0EACB1D5DB5F500A0A8E3 /* CommandLineTool */,
 				90C4B6F01DA4B0BF009EB000 /* EditorExtension */,
-				01A0EAA61D5DB4CF00A0A8E3 /* SwiftFormat */,
-				01A0EAB21D5DB4D000A0A8E3 /* SwiftFormatTests */,
+				01A0EAA61D5DB4CF00A0A8E3 /* Sources */,
+				01A0EAB21D5DB4D000A0A8E3 /* Tests */,
 				90C4B6DE1DA4B059009EB000 /* Frameworks */,
 				01A0EAA51D5DB4CF00A0A8E3 /* Products */,
 			);
@@ -201,7 +201,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		01A0EAA61D5DB4CF00A0A8E3 /* SwiftFormat */ = {
+		01A0EAA61D5DB4CF00A0A8E3 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
 				01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */,
@@ -213,10 +213,10 @@
 				01F3DF8B1DB9FD3F00454944 /* Options.swift */,
 				01A0EAA91D5DB4CF00A0A8E3 /* Info.plist */,
 			);
-			path = SwiftFormat;
+			path = Sources;
 			sourceTree = "<group>";
 		};
-		01A0EAB21D5DB4D000A0A8E3 /* SwiftFormatTests */ = {
+		01A0EAB21D5DB4D000A0A8E3 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
 				0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */,
@@ -228,7 +228,7 @@
 				015AF2C91DC6A58C008F0A8C /* PerformanceTests.swift */,
 				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
 			);
-			path = SwiftFormatTests;
+			path = Tests;
 			sourceTree = "<group>";
 		};
 		01A0EACB1D5DB5F500A0A8E3 /* CommandLineTool */ = {
@@ -705,7 +705,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_TESTABILITY = YES;
-				INFOPLIST_FILE = SwiftFormatTests/Info.plist;
+				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormatTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -718,7 +718,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_TESTABILITY = YES;
-				INFOPLIST_FILE = SwiftFormatTests/Info.plist;
+				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormatTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -831,7 +831,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = SwiftFormat/Info.plist;
+				INFOPLIST_FILE = Sources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormat;
@@ -852,7 +852,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = SwiftFormat/Info.plist;
+				INFOPLIST_FILE = Sources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormat;
@@ -865,7 +865,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = SwiftFormatTests/Info.plist;
+				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormatTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -876,7 +876,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = SwiftFormatTests/Info.plist;
+				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormatTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";

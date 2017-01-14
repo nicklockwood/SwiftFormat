@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.23.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.23.1) (2017-01-14)
+
+- Fixed critical bug where closure return types could be mangled by the `unusedArguments` rule
+- Fixed issue where console text appeared as black instead of user's chosen default color
+
 ## [0.23](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.23) (2017-01-09)
 
 - You can now specify a whitelist of specific rules to apply using the `--rules` option

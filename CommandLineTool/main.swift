@@ -32,11 +32,10 @@
 import Foundation
 
 extension String {
-    private static let black = "\u{001B}[0;30m"
-    var inBlack: String { return "\(String.black)\(self)" }
-    var inRed: String { return "\u{001B}[0;31m\(self)\(String.black)" }
-    var inGreen: String { return "\u{001B}[0;32m\(self)\(String.black)" }
-    var inYellow: String { return "\u{001B}[0;33m\(self)\(String.black)" }
+    var inDefault: String { return "\u{001B}[39m\(self)" }
+    var inRed: String { return "\u{001B}[31m\(self)\u{001B}[0m" }
+    var inGreen: String { return "\u{001B}[32m\(self)\u{001B}[0m" }
+    var inYellow: String { return "\u{001B}[33m\(self)\u{001B}[0m" }
 }
 
 extension FileHandle: TextOutputStream {
@@ -52,7 +51,7 @@ private var stderr = FileHandle.standardError
 CLI.print = { message, type in
     switch type {
     case .info:
-        print(message.inBlack)
+        print(message.inDefault)
     case .success:
         print(message.inGreen)
     case .error:

@@ -100,6 +100,56 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    // MARK: Unescaping
+
+    func testUnescapeInteger() {
+        let input = Token.number("1_000_000_000", .integer)
+        let output = "1000000000"
+        XCTAssertEqual(input.unescaped(), output)
+    }
+
+    func testUnescapeDecimal() {
+        let input = Token.number("1_000.00_5", .decimal)
+        let output = "1000.005"
+        XCTAssertEqual(input.unescaped(), output)
+    }
+
+    func testUnescapeBinary() {
+        let input = Token.number("0b010_1010_101", .binary)
+        let output = "0101010101"
+        XCTAssertEqual(input.unescaped(), output)
+    }
+
+    func testUnescapeHex() {
+        let input = Token.number("0xFF_764Ep1_345", .hex)
+        let output = "FF764Ep1345"
+        XCTAssertEqual(input.unescaped(), output)
+    }
+
+    func testUnescapeIdentifier() {
+        let input = Token.identifier("`for`")
+        let output = "for"
+        XCTAssertEqual(input.unescaped(), output)
+    }
+
+    func testUnescapeLinebreak() {
+        let input = Token.stringBody("Hello\\nWorld")
+        let output = "Hello\nWorld"
+        XCTAssertEqual(input.unescaped(), output)
+    }
+
+    func testUnescapeQuotedString() {
+        let input = Token.stringBody("\\\"Hello World\\\"")
+        let output = "\"Hello World\""
+        XCTAssertEqual(input.unescaped(), output)
+    }
+
+    func testUnescapeUnicodeLiterals() {
+        let input = Token.stringBody("\\u{1F1FA}\\u{1F1F8}")
+        let output = "\u{1F1FA}\u{1F1F8}"
+        XCTAssertEqual(input.unescaped(), output)
+    }
+
     // MARK: Space
 
     func testSpaces() {

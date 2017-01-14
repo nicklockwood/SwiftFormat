@@ -105,6 +105,7 @@ public enum Token: Equatable {
     case commentBody(String)
     case error(String)
 
+    /// The original token string
     public var string: String {
         switch self {
         case .number(let string, _),
@@ -123,6 +124,71 @@ public enum Token: Equatable {
         }
     }
 
+    /// Returns the unescaped token string
+    public func unescaped() -> String {
+        switch self {
+        case .stringBody:
+            var input = string.unicodeScalars
+            var output = String.UnicodeScalarView()
+            while let c = input.readCharacter() {
+                if c == "\\" {
+                    if let c = input.readCharacter() {
+                        switch c {
+                        case "\0":
+                            output.append("\0")
+                        case "\\":
+                            output.append("\\")
+                        case "t":
+                            output.append("\t")
+                        case "n":
+                            output.append("\n")
+                        case "r":
+                            output.append("\r")
+                        case "\"":
+                            output.append("\"")
+                        case "\'":
+                            output.append("\'")
+                        case "u":
+                            guard input.read("{"),
+                                let hex = input.readCharacters(where: { $0.isHexDigit }),
+                                input.read("}"),
+                                let codepoint = Int(hex, radix: 16),
+                                let c = UnicodeScalar(codepoint) else {
+                                // Invalid. Recover and continue
+                                continue
+                            }
+                            output.append(c)
+                        default:
+                            // Invalid, but doesn't affect parsing
+                            output.append(c)
+                        }
+                    } else {
+                        // If a string body ends with \, it's probably part of a string
+                        // interpolation expression, so the next token should be a `(`
+                    }
+                } else {
+                    output.append(c)
+                }
+            }
+            return String(output)
+        case .identifier:
+            return string.replacingOccurrences(of: "`", with: "")
+        case .number(_, .integer), .number(_, .decimal):
+            return string.replacingOccurrences(of: "_", with: "")
+        case .number(_, .binary), .number(_, .octal), .number(_, .hex):
+            var characters = string.unicodeScalars
+            guard characters.count > 2, characters.removeFirst() == "0",
+                "oxb".unicodeScalars.contains(characters.removeFirst()) else {
+                return string.replacingOccurrences(of: "_", with: "")
+            }
+            return String(characters).replacingOccurrences(of: "_", with: "")
+
+        default:
+            return string
+        }
+    }
+
+    /// Test if token is of the specified type
     public func `is`(_ type: TokenType) -> Bool {
         switch type {
         case .space:

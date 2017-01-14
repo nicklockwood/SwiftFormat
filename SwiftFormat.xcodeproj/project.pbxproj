@@ -26,6 +26,9 @@
 		01B3987B1D763424009ADE61 /* FormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987A1D763424009ADE61 /* FormatterTests.swift */; };
 		01B3987D1D763493009ADE61 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
 		01B3987F1D7634A0009ADE61 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
+		01F17E821E25870700DCD359 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E811E25870700DCD359 /* CommandLine.swift */; };
+		01F17E831E25870700DCD359 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E811E25870700DCD359 /* CommandLine.swift */; };
+		01F17E851E258A4900DCD359 /* CommandLineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E841E258A4900DCD359 /* CommandLineTests.swift */; };
 		01F3DF8C1DB9FD3F00454944 /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
 		01F3DF8D1DB9FD3F00454944 /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
 		01F3DF8E1DB9FD3F00454944 /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
@@ -103,6 +106,8 @@
 		01A0EACC1D5DB5F500A0A8E3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		01B3987A1D763424009ADE61 /* FormatterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatterTests.swift; sourceTree = "<group>"; };
 		01B3987C1D763493009ADE61 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
+		01F17E811E25870700DCD359 /* CommandLine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandLine.swift; sourceTree = "<group>"; };
+		01F17E841E258A4900DCD359 /* CommandLineTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandLineTests.swift; sourceTree = "<group>"; };
 		01F3DF8B1DB9FD3F00454944 /* Options.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Options.swift; sourceTree = "<group>"; };
 		01F3DF8F1DBA003E00454944 /* OptionsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionsTests.swift; sourceTree = "<group>"; };
 		90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftFormat for Xcode.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -201,6 +206,7 @@
 			children = (
 				01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */,
 				01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */,
+				01F17E811E25870700DCD359 /* CommandLine.swift */,
 				01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */,
 				01B3987C1D763493009ADE61 /* Formatter.swift */,
 				01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */,
@@ -214,6 +220,7 @@
 			isa = PBXGroup;
 			children = (
 				0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */,
+				01F17E841E258A4900DCD359 /* CommandLineTests.swift */,
 				018E82741D62E730008CA0F8 /* TokenizerTests.swift */,
 				01B3987A1D763424009ADE61 /* FormatterTests.swift */,
 				01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */,
@@ -602,6 +609,7 @@
 				01A0EAC11D5DB4F700A0A8E3 /* Rules.swift in Sources */,
 				01A0EAC51D5DB54A00A0A8E3 /* SwiftFormat.swift in Sources */,
 				01B3987D1D763493009ADE61 /* Formatter.swift in Sources */,
+				01F17E821E25870700DCD359 /* CommandLine.swift in Sources */,
 				01F3DF8C1DB9FD3F00454944 /* Options.swift in Sources */,
 				01A0EAC21D5DB4F700A0A8E3 /* Tokenizer.swift in Sources */,
 			);
@@ -612,6 +620,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				01A0EAB41D5DB4D000A0A8E3 /* RulesTests.swift in Sources */,
+				01F17E851E258A4900DCD359 /* CommandLineTests.swift in Sources */,
 				018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */,
 				01B3987B1D763424009ADE61 /* FormatterTests.swift in Sources */,
 				0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */,
@@ -628,6 +637,7 @@
 				01B3987F1D7634A0009ADE61 /* Formatter.swift in Sources */,
 				01A0EAD41D5DC08A00A0A8E3 /* SwiftFormat.swift in Sources */,
 				01F3DF8D1DB9FD3F00454944 /* Options.swift in Sources */,
+				01F17E831E25870700DCD359 /* CommandLine.swift in Sources */,
 				01A0EACD1D5DB5F500A0A8E3 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

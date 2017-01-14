@@ -30,7 +30,7 @@
 //
 
 import XCTest
-@testable import SwiftFormat
+import SwiftFormat
 
 class SwiftFormatTests: XCTestCase {
 
@@ -68,7 +68,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 19)
+        XCTAssertEqual(files.count, 21)
     }
 
     func testInputFilesMatchOutputFilesForSameOutput() {
@@ -79,7 +79,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 19)
+        XCTAssertEqual(files.count, 21)
     }
 
     // MARK: format function
@@ -94,42 +94,5 @@ class SwiftFormatTests: XCTestCase {
         let input = "foo ()  "
         let output = "foo()\n"
         XCTAssertEqual(try! format(input), output)
-    }
-
-    // MARK: arg preprocessor
-
-    func testPreprocessArguments() {
-        let input = ["", "foo", "bar", "-o", "baz", "-i", "4", "-l", "cr", "-s", "inline"]
-        let output = ["0": "", "1": "foo", "2": "bar", "output": "baz", "indent": "4", "linebreaks": "cr", "semicolons": "inline"]
-        XCTAssertEqual(try! preprocessArguments(input, [
-            "output",
-            "indent",
-            "linebreaks",
-            "semicolons",
-        ]), output)
-    }
-
-    func testEmptyArgsAreRecognized() {
-        let input = ["", "--help", "--version"]
-        let output = ["0": "", "help": "", "version": ""]
-        XCTAssertEqual(try! preprocessArguments(input, [
-            "help",
-            "version",
-        ]), output)
-    }
-
-    // MARK: options to arguments
-
-    func testCommandLineArgumentsHaveValidNames() {
-        let arguments = commandLineArguments(for: FormatOptions())
-        for key in arguments.keys {
-            XCTAssertTrue(commandLineArguments.contains(key), "\(key) is not a valid argument name")
-        }
-    }
-
-    func testCommandLineArgumentsAreCorrect() {
-        let options = FormatOptions()
-        let output = ["indent": "4", "linebreaks": "lf", "semicolons": "inline", "ranges": "spaced", "empty": "void", "commas": "always", "comments": "indent", "trimwhitespace": "always", "insertlines": "enabled", "removelines": "enabled", "allman": "false", "header": "ignore", "ifdef": "indent", "wraparguments": "disabled", "wrapelements": "beforefirst", "hexliterals": "uppercase"]
-        XCTAssertEqual(commandLineArguments(for: options), output)
     }
 }

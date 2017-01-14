@@ -78,6 +78,22 @@ public func enumerateFiles(withInputURL inputURL: URL,
                            options: FileOptions = FileOptions(),
                            block: @escaping (URL, URL) throws -> () throws -> Void) -> [Error] {
 
+    guard let resourceValues = try? inputURL.resourceValues(
+        forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])) else {
+        if FileManager.default.fileExists(atPath: inputURL.path) {
+            return [FormatError.reading("failed to read attributes for \(inputURL.path)")]
+        }
+        return [FormatError.options("file not found at \(inputURL.path)")]
+    }
+    if !options.followSymlinks &&
+        (resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true) {
+        return [FormatError.options("symbolic link or alias was skipped: \(inputURL.path)")]
+    }
+    if resourceValues.isDirectory == false &&
+        !options.supportedFileExtensions.contains(inputURL.pathExtension) {
+        return [FormatError.options("unsupported file type: \(inputURL.path)")]
+    }
+
     let group = DispatchGroup()
     var completionBlocks = [() throws -> Void]()
     let completionQueue = DispatchQueue(label: "swiftformat.enumeration")

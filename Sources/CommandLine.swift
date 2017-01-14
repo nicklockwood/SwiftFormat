@@ -403,24 +403,6 @@ func processInput(_ inputURLs: [URL],
     var errors = [Error]()
     var filesChecked = 0, filesWritten = 0
     for inputURL in inputURLs {
-        guard let resourceValues = try? inputURL.resourceValues(
-            forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])) else {
-            if FileManager.default.fileExists(atPath: inputURL.path) {
-                errors.append(FormatError.reading("failed to read attributes for \(inputURL.path)"))
-            } else {
-                errors.append(FormatError.options("file not found at \(inputURL.path)"))
-            }
-            continue
-        }
-        if !fileOptions.followSymlinks &&
-            (resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true) {
-            errors.append(FormatError.options("cannot format symbolic link or alias file: \(inputURL.path)"))
-            continue
-        } else if resourceValues.isDirectory == false &&
-            !fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
-            errors.append(FormatError.options("cannot format non-Swift file: \(inputURL.path)"))
-            continue
-        }
         errors += enumerateFiles(withInputURL: inputURL, outputURL: outputURL, options: fileOptions) { inputURL, outputURL in
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("failed to read file \(inputURL.path)")

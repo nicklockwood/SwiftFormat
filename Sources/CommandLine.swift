@@ -554,6 +554,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["ranges"] = options.spaceAroundRangeOperators ? "spaced" : "nospace"
             case "useVoid":
                 args["empty"] = options.useVoid ? "void" : "tuples"
+            case "trailingClosures":
+                args["closures"] = options.trailingClosures ? "trailing" : "ignore"
             case "trailingCommas":
                 args["commas"] = options.trailingCommas ? "always" : "inline"
             case "indentComments":
@@ -588,8 +590,12 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
     return args
 }
 
-private func processOption(_ key: String, in args: [String: String], handler: (String) throws -> Void) throws {
+private func processOption(_ key: String, in args: [String: String],
+                           from: inout Set<String>, handler: (String) throws -> Void) throws {
     precondition(commandLineArguments.contains(key))
+    var arguments = from
+    arguments.remove(key)
+    from = arguments
     guard let value = args[key] else {
         return
     }
@@ -605,7 +611,8 @@ private func processOption(_ key: String, in args: [String: String], handler: (S
 
 func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
     var options = FileOptions()
-    try processOption("symlinks", in: args) {
+    var arguments = Set(fileArguments)
+    try processOption("symlinks", in: args, from: &arguments) {
         switch $0 {
         case "follow":
             options.followSymlinks = true
@@ -615,12 +622,14 @@ func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
             throw FormatError.options("")
         }
     }
+    assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return options
 }
 
 func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     var options = FormatOptions()
-    try processOption("indent", in: args) {
+    var arguments = Set(formatArguments)
+    try processOption("indent", in: args, from: &arguments) {
         switch $0 {
         case "tab", "tabs", "tabbed":
             options.indent = "\t"
@@ -632,7 +641,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("allman", in: args) {
+    try processOption("allman", in: args, from: &arguments) {
         switch $0 {
         case "true", "enabled":
             options.allmanBraces = true
@@ -642,7 +651,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("semicolons", in: args) {
+    try processOption("semicolons", in: args, from: &arguments) {
         switch $0 {
         case "inline":
             options.allowInlineSemicolons = true
@@ -652,7 +661,17 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("commas", in: args) {
+    try processOption("closures", in: args, from: &arguments) {
+        switch $0 {
+        case "trailing":
+            options.trailingClosures = true
+        case "ignore":
+            options.trailingClosures = false
+        default:
+            throw FormatError.options("")
+        }
+    }
+    try processOption("commas", in: args, from: &arguments) {
         switch $0 {
         case "always", "true":
             options.trailingCommas = true
@@ -662,7 +681,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("comments", in: args) {
+    try processOption("comments", in: args, from: &arguments) {
         switch $0 {
         case "indent", "indented":
             options.indentComments = true
@@ -672,7 +691,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("linebreaks", in: args) {
+    try processOption("linebreaks", in: args, from: &arguments) {
         switch $0 {
         case "cr":
             options.linebreak = "\r"
@@ -684,7 +703,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("ranges", in: args) {
+    try processOption("ranges", in: args, from: &arguments) {
         switch $0 {
         case "space", "spaced", "spaces":
             options.spaceAroundRangeOperators = true
@@ -694,7 +713,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("empty", in: args) {
+    try processOption("empty", in: args, from: &arguments) {
         switch $0 {
         case "void":
             options.useVoid = true
@@ -704,7 +723,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("trimwhitespace", in: args) {
+    try processOption("trimwhitespace", in: args, from: &arguments) {
         switch $0 {
         case "always":
             options.truncateBlankLines = true
@@ -715,7 +734,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("insertlines", in: args) {
+    try processOption("insertlines", in: args, from: &arguments) {
         switch $0 {
         case "enabled", "true":
             options.insertBlankLines = true
@@ -725,7 +744,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("removelines", in: args) {
+    try processOption("removelines", in: args, from: &arguments) {
         switch $0 {
         case "enabled", "true":
             options.removeBlankLines = true
@@ -735,7 +754,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("header", in: args) {
+    try processOption("header", in: args, from: &arguments) {
         switch $0 {
         case "strip":
             options.stripHeader = true
@@ -745,28 +764,28 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("ifdef", in: args) {
+    try processOption("ifdef", in: args, from: &arguments) {
         if let mode = IndentMode(rawValue: $0) {
             options.ifdefIndent = mode
         } else {
             throw FormatError.options("")
         }
     }
-    try processOption("wraparguments", in: args) {
+    try processOption("wraparguments", in: args, from: &arguments) {
         if let mode = WrapMode(rawValue: $0) {
             options.wrapArguments = mode
         } else {
             throw FormatError.options("")
         }
     }
-    try processOption("wrapelements", in: args) {
+    try processOption("wrapelements", in: args, from: &arguments) {
         if let mode = WrapMode(rawValue: $0) {
             options.wrapElements = mode
         } else {
             throw FormatError.options("")
         }
     }
-    try processOption("hexliterals", in: args) {
+    try processOption("hexliterals", in: args, from: &arguments) {
         switch $0 {
         case "uppercase", "upper":
             options.uppercaseHex = true
@@ -776,7 +795,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("experimental", in: args) {
+    try processOption("experimental", in: args, from: &arguments) {
         switch $0 {
         case "enabled", "true":
             options.experimentalRules = true
@@ -786,7 +805,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("fragment", in: args) {
+    try processOption("fragment", in: args, from: &arguments) {
         switch $0 {
         case "true", "enabled":
             options.fragment = true
@@ -796,25 +815,22 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
+    assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return options
 }
 
-let commandLineArguments = [
+let fileArguments = [
     // File options
-    "inferoptions",
     "symlinks",
-    "output",
-    "fragment",
-    "cache",
-    // Rules
-    "disable",
-    "rules",
+]
+
+let formatArguments = [
     // Format options
     "allman",
+    "closures",
     "commas",
     "comments",
     "empty",
-    "experimental",
     "header",
     "hexliterals",
     "ifdef",
@@ -827,7 +843,20 @@ let commandLineArguments = [
     "trimwhitespace",
     "wraparguments",
     "wrapelements",
+]
+
+let commandLineArguments = [
+    // File options
+    "inferoptions",
+    "output",
+    "fragment",
+    "cache",
+    // Rules
+    "disable",
+    "rules",
     // Misc
     "help",
     "version",
-]
+    // Format options
+    "experimental",
+] + fileArguments + formatArguments

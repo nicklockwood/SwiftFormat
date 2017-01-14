@@ -177,15 +177,19 @@ class RulesTests: XCTestCase {
     }
 
     func testNoRemoveSpaceBetweenCaptureListAndArguments() {
-        let input = "{ [weak self] (foo) in }"
-        let output = "{ [weak self] (foo) in }"
+        let input = "{ [weak self] (foo) in print(foo) }"
+        let output = "{ [weak self] (foo) in print(foo) }"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundParens]), output)
+        let rules = FormatRules.all(except: ["redundantParens"])
+        XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
     func testAddSpaceBetweenCaptureListAndArguments() {
-        let input = "{ [weak self](foo) in }"
-        let output = "{ [weak self] (foo) in }"
+        let input = "{ [weak self](foo) in print(foo) }"
+        let output = "{ [weak self] (foo) in print(foo) }"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundParens]), output)
+        let rules = FormatRules.all(except: ["redundantParens"])
+        XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
     func testSpaceBetweenClosingParenAndOpenBrace() {
@@ -327,7 +331,8 @@ class RulesTests: XCTestCase {
         let input = "foo({ $0 == 5 })"
         let output = "foo({ $0 == 5 })"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundBraces]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        let rules = FormatRules.all(except: ["redundantParens"])
+        XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
     func testNoExtraSpaceAroundBracesAtStartOrEndOfFile() {
@@ -371,7 +376,8 @@ class RulesTests: XCTestCase {
         let input = "foo({bar})"
         let output = "foo({ bar })"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceInsideBraces]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        let rules = FormatRules.all(except: ["redundantParens"])
+        XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
     func testNoExtraSpaceInsidebraces() {
@@ -385,7 +391,8 @@ class RulesTests: XCTestCase {
         let input = "foo({ })"
         let output = "foo({})"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceInsideBraces]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        let rules = FormatRules.all(except: ["redundantParens"])
+        XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
     // MARK: spaceAroundGenerics
@@ -741,12 +748,16 @@ class RulesTests: XCTestCase {
         let input = "foo/* hello */-bar"
         let output = "foo/* hello */ -bar"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        let rules = FormatRules.all(except: ["spaceAroundComments"])
+        XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
     func testSpaceAroundCommentsInInfixExpression() {
         let input = "a/* */+/* */b"
         let output = "a/* */ + /* */b"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        let rules = FormatRules.all(except: ["spaceAroundComments"])
+        XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
     func testSpaceAroundCommentInPrefixExpression() {
@@ -2002,7 +2013,8 @@ class RulesTests: XCTestCase {
         let input = "foo({ bar })"
         let output = "foo({ bar })"
         XCTAssertEqual(try format(input, rules: [FormatRules.braces]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        let rules = FormatRules.all(except: ["redundantParens"])
+        XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
     func testKnRLinebreakNotRemovedBeforeInlineBlockNot() {
@@ -2027,7 +2039,8 @@ class RulesTests: XCTestCase {
         let output = "foo({\n    bar\n})"
         let options = FormatOptions(allmanBraces: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.braces], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+        let rules = FormatRules.all(except: ["redundantParens"])
+        XCTAssertEqual(try format(input + "\n", rules: rules, options: options), output + "\n")
     }
 
     func testAllmanBraceDoClauseIndent() {
@@ -2772,6 +2785,30 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testParensAroundClosureRemoved() {
+        let input = "foo({ /* some code */ })"
+        let output = "foo { /* some code */ }"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testParensAroundClosureInExpressionNotRemoved() {
+        let input = "if let foo = foo({ /* some code */ }) {}"
+        let output = "if let foo = foo({ /* some code */ }) {}"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testParensAroundClosureInCompoundExpressionNotRemoved() {
+        let input = "if let foo = foo({ /* some code */ }), bar = baz {}"
+        let output = "if let foo = foo({ /* some code */ }), bar = baz {}"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // MARK: redundantGet
 
     func testRemoveSingleLineIsolatedGet() {
@@ -2852,18 +2889,22 @@ class RulesTests: XCTestCase {
         let input = "let _ = bar {}"
         let output = "_ = bar {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testNoRemoveLetWithType() {
         let input = "let _: String = bar {}"
         let output = "let _: String = bar {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testRemoveRedundantLetInCase() {
         let input = "if case .foo(let _) = bar {}"
         let output = "if case .foo(_) = bar {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantLet]), output)
+        let rules = FormatRules.all(except: ["redundantPattern"])
+        XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
     func testRemoveRedundantVarsInCase() {
@@ -2877,24 +2918,28 @@ class RulesTests: XCTestCase {
         let input = "if let _ = foo {}"
         let output = "if let _ = foo {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testNoRemoveLetInMultiIf() {
         let input = "if foo == bar, /* comment! */ let _ = baz {}"
         let output = "if foo == bar, /* comment! */ let _ = baz {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testNoRemoveLetInGuard() {
         let input = "guard let _ = foo else {}"
         let output = "guard let _ = foo else {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testNoRemoveLetInWhile() {
         let input = "while let _ = foo {}"
         let output = "while let _ = foo {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     // MARK: redundantPattern
@@ -2931,6 +2976,8 @@ class RulesTests: XCTestCase {
         let input = "let(_, _) = bar"
         let output = "let _ = bar"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantPattern]), output)
+        let rules = FormatRules.all(except: ["redundantLet"])
+        XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
     func testNoRemoveVoidFunctionCall() {

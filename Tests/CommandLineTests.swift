@@ -56,7 +56,7 @@ class CommandLineTests: XCTestCase {
         ]), output)
     }
 
-    // MARK: options to arguments
+    // MARK: format options to arguments
 
     func testCommandLineArgumentsHaveValidNames() {
         let arguments = commandLineArguments(for: FormatOptions())
@@ -67,8 +67,24 @@ class CommandLineTests: XCTestCase {
 
     func testCommandLineArgumentsAreCorrect() {
         let options = FormatOptions()
-        let output = ["indent": "4", "linebreaks": "lf", "semicolons": "inline", "ranges": "spaced", "empty": "void", "commas": "always", "comments": "indent", "trimwhitespace": "always", "insertlines": "enabled", "removelines": "enabled", "allman": "false", "header": "ignore", "ifdef": "indent", "wraparguments": "disabled", "wrapelements": "beforefirst", "hexliterals": "uppercase"]
+        let output = ["indent": "4", "linebreaks": "lf", "semicolons": "inline", "ranges": "spaced", "empty": "void", "closures": "ignore", "commas": "always", "comments": "indent", "trimwhitespace": "always", "insertlines": "enabled", "removelines": "enabled", "allman": "false", "header": "ignore", "ifdef": "indent", "wraparguments": "disabled", "wrapelements": "beforefirst", "hexliterals": "uppercase"]
         XCTAssertEqual(commandLineArguments(for: options), output)
+    }
+
+    // MARK: format arguments to options
+
+    func testFormatArgumentsAreAllImplemented() {
+        for key in formatArguments {
+            guard let value = commandLineArguments(for: FormatOptions())[key] else {
+                XCTFail(key)
+                continue
+            }
+            do {
+                _ = try formatOptionsFor([key: value])
+            } catch {
+                XCTFail("\(error)")
+            }
+        }
     }
 
     // MARK: help line length

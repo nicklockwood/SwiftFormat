@@ -54,6 +54,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var spaceAroundRangeOperators: Bool
     public var useVoid: Bool
     public var trailingCommas: Bool
+    public var trailingClosures: Bool
     public var indentComments: Bool
     public var truncateBlankLines: Bool
     public var insertBlankLines: Bool
@@ -73,6 +74,7 @@ public struct FormatOptions: CustomStringConvertible {
                 spaceAroundRangeOperators: Bool = true,
                 useVoid: Bool = true,
                 trailingCommas: Bool = true,
+                trailingClosures: Bool = false,
                 indentComments: Bool = true,
                 truncateBlankLines: Bool = true,
                 insertBlankLines: Bool = true,
@@ -92,6 +94,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.spaceAroundRangeOperators = spaceAroundRangeOperators
         self.useVoid = useVoid
         self.trailingCommas = trailingCommas
+        self.trailingClosures = trailingClosures
         self.indentComments = indentComments
         self.truncateBlankLines = truncateBlankLines
         self.insertBlankLines = insertBlankLines

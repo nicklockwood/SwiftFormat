@@ -53,6 +53,16 @@ public class FormatRules: NSObject {
 
     /// Default rules
     public static let `default` = Array(FormatRules.byName.values)
+
+    /// All rules except those specified
+    public static func all(except rules: [String]) -> [FormatRule] {
+        var byName = FormatRules.byName
+        for name in rules {
+            assert(byName[name] != nil, "`\(name)` is not a valid rule")
+            byName[name] = nil
+        }
+        return Array(byName.values)
+    }
 }
 
 extension FormatRules {
@@ -1250,10 +1260,15 @@ extension FormatRules {
         }
 
         func tokenInsideParenRequiresSpacing(at index: Int) -> Bool {
-            if let token = formatter.token(at: index), case .symbol = token {
-                return true
+            if let token = formatter.token(at: index) {
+                switch token {
+                case .symbol, .startOfScope("{"), .endOfScope("}"):
+                    return true
+                default:
+                    return tokenOutsideParenRequiresSpacing(at: index)
+                }
             }
-            return tokenOutsideParenRequiresSpacing(at: index)
+            return false
         }
 
         func removeParen(at index: Int) {
@@ -1294,7 +1309,36 @@ extension FormatRules {
                     removeParen(at: closingIndex)
                     removeParen(at: i)
                 }
-            case .identifier, .stringBody, .endOfScope, .symbol("?", .postfix), .symbol("!", .postfix):
+            case .identifier: // TODO: are trailing closures allowed in other cases?
+                // NOTE: Parens around trailing closures are sometimes required for disambiguation.
+                // SwiftFormat can't detect those cases, which is why `trailingClosures` is off by default
+                if formatter.options.trailingClosures,
+                    let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
+                    formatter.next(.nonSpaceOrComment, after: i) == .startOfScope("{"),
+                    formatter.last(.nonSpaceOrComment, before: closingIndex) == .endOfScope("}") {
+                    if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: closingIndex) {
+                        switch formatter.tokens[nextIndex] {
+                        case .linebreak:
+                            if let next = formatter.next(.nonSpaceOrComment, after: nextIndex) {
+                                switch next {
+                                case .symbol(_, .infix),
+                                     .symbol(_, .postfix),
+                                     .delimiter(","),
+                                     .delimiter(":"),
+                                     .startOfScope("{"):
+                                    return
+                                default:
+                                    break
+                                }
+                            }
+                        default:
+                            return
+                        }
+                    }
+                    removeParen(at: closingIndex)
+                    removeParen(at: i)
+                }
+            case .stringBody, .endOfScope, .symbol("?", .postfix), .symbol("!", .postfix):
                 break
             case .keyword(let string):
                 if ["if", "while", "switch", "for", "in", "where", "guard"].contains(string),
@@ -1315,7 +1359,6 @@ extension FormatRules {
                     }
                     removeParen(at: closingIndex)
                     removeParen(at: i)
-                    return
                 }
             default:
                 if let nextTokenIndex = formatter.index(of: .nonSpace, after: i),
@@ -1329,7 +1372,6 @@ extension FormatRules {
                     case .identifier, .number:
                         removeParen(at: closingIndex)
                         removeParen(at: i)
-                        return
                     default:
                         break
                     }

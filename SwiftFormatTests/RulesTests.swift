@@ -3072,6 +3072,34 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveClosureGenericReturnTypes() {
+        let input = "let foo = { () -> Promise<String> in return bar }"
+        let output = "let foo = { () -> Promise<String> in return bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveClosureTupleReturnTypes() {
+        let input = "let foo = { () -> (Int, Int) in return (5, 6) }"
+        let output = "let foo = { () -> (Int, Int) in return (5, 6) }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveClosureGenericArgumentTypes() {
+        let input = "let foo = { (_: Foo<Bar, Baz>) in }"
+        let output = "let foo = { (_: Foo<Bar, Baz>) in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveFunctionNameBeforeForLoop() {
+        let input = "{\n    func foo() -> Int {}\n    for a in b {}\n}"
+        let output = "{\n    func foo() -> Int {}\n    for a in b {}\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: wrapArguments
 
     func testWrapAfterFirstConvertedToWrapBefore() {

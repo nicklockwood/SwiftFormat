@@ -1585,21 +1585,28 @@ extension FormatRules {
         formatter.forEach(.keyword("in")) { i, _ in
             var argNames = [String]()
             var argIndices = [Int]()
-            if let scopeStart = formatter.index(of: .startOfScope, before: i, if: { $0 == .startOfScope("{") }) {
-                for index in scopeStart ..< i {
+            if let start = formatter.index(of: .startOfScope("{"), before: i) {
+                var index = i - 1
+                while index > start {
                     switch formatter.tokens[index] {
                     case .keyword("for"):
                         return
+                    case .symbol("->", .infix):
+                        // Everything after this was part of return value
+                        argNames.removeAll()
+                        argIndices.removeAll()
                     case .identifier(let name) where name != "_" && name != "Void":
                         if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                            ![.delimiter(":"), .symbol("->", .infix), .symbol(".", .infix)].contains(prevToken),
-                            formatter.currentScope(at: index) != .startOfScope("[") {
+                            ![.delimiter(":"), .symbol(".", .infix)].contains(prevToken),
+                            let scopeStart = formatter.index(of: .startOfScope, before: index),
+                            ![.startOfScope("["), .startOfScope("<")].contains(formatter.tokens[scopeStart]) {
                             argNames.append(name)
                             argIndices.append(index)
                         }
                     default:
                         break
                     }
+                    index -= 1
                 }
             }
             guard let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: i) else { return }

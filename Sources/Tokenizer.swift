@@ -182,7 +182,6 @@ public enum Token: Equatable {
                 return string.replacingOccurrences(of: "_", with: "")
             }
             return String(characters).replacingOccurrences(of: "_", with: "")
-
         default:
             return string
         }
@@ -756,30 +755,53 @@ private extension String.UnicodeScalarView {
             return readNumber(where: { $0.isDigit })
         }
 
+        func readHex() -> String? {
+            return readNumber(where: { $0.isHexDigit })
+        }
+
+        func readSign() -> String {
+            return readCharacter(where: { "-+".unicodeScalars.contains($0) }).map { String($0) } ?? ""
+        }
+
         guard let integer = readInteger() else {
             return nil
         }
 
         if integer == "0" {
             if read("x") {
-                if let hex = readNumber(where: { $0.isHexDigit }) {
-                    if read("p") {
+                if let hex = readHex() {
+                    if let p = readCharacter(where: { "pP".unicodeScalars.contains($0) }) {
+                        let sign = readSign()
                         if let power = readInteger() {
-                            return .number("0x" + hex + "p" + power, .hex)
+                            return .number("0x\(hex)\(p)\(sign)\(power)", .hex)
                         }
-                        return .error("0x" + hex + "p" + readToEndOfToken())
+                        return .error("0x\(hex)\(p)\(readToEndOfToken())")
                     }
-                    return .number("0x" + hex, .hex)
+                    let endOfHex = self
+                    if read("."), let fraction = readHex() {
+                        if let p = readCharacter(where: { "pP".unicodeScalars.contains($0) }) {
+                            let sign = readSign()
+                            if let power = readInteger() {
+                                return .number("0x\(hex).\(fraction)\(p)\(sign)\(power)", .hex)
+                            }
+                            return .error("0x\(hex).\(fraction)\(p)\(readToEndOfToken())")
+                        }
+                        if fraction.unicodeScalars.first?.isDigit == true {
+                            return .error("0x\(hex).\(fraction)\(readToEndOfToken())")
+                        }
+                    }
+                    self = endOfHex
+                    return .number("0x\(hex)", .hex)
                 }
                 return .error("0x" + readToEndOfToken())
             } else if read("b") {
                 if let bin = readNumber(where: { "01".unicodeScalars.contains($0) }) {
-                    return .number("0b" + bin, .binary)
+                    return .number("0b\(bin)", .binary)
                 }
                 return .error("0b" + readToEndOfToken())
             } else if read("o") {
                 if let octal = readNumber(where: { ("0" ... "7").contains($0) }) {
-                    return .number("0o" + octal, .octal)
+                    return .number("0o\(octal)", .octal)
                 }
                 return .error("0o" + readToEndOfToken())
             }
@@ -799,9 +821,9 @@ private extension String.UnicodeScalarView {
 
         let endOfFloat = self
         if let e = readCharacter(where: { "eE".unicodeScalars.contains($0) }) {
-            let sign = readCharacter(where: { "-+".unicodeScalars.contains($0) }).map { String($0) } ?? ""
+            let sign = readSign()
             if let exponent = readInteger() {
-                type = .decimal // FIXME: not necessarily
+                type = .decimal
                 number += String(e) + sign + exponent
             } else {
                 self = endOfFloat
@@ -1143,6 +1165,12 @@ public func tokenize(_ source: String) -> [Token] {
                 default:
                     break
                 }
+            }
+            fallthrough
+        case .identifier, .number:
+            let count = tokens.count
+            if count > 1, case .number = tokens[count - 2] {
+                tokens[count - 1] = .error(token.string)
             }
         case .symbol:
             stitchSymbols(at: tokens.count - 1)

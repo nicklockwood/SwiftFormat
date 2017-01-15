@@ -377,6 +377,15 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testInvalidInteger() {
+        let input = "123abc"
+        let output: [Token] = [
+            .number("123", .integer),
+            .error("abc"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testSmallFloat() {
         let input = "0.2"
         let output: [Token] = [.number("0.2", .decimal)]
@@ -422,6 +431,16 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testInvalidExponential() {
+        let input = "123.e5"
+        let output: [Token] = [
+            .number("123", .integer),
+            .symbol(".", .infix),
+            .identifier("e5"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testLeadingZeros() {
         let input = "0005"
         let output: [Token] = [.number("0005", .integer)]
@@ -449,6 +468,30 @@ class TokenizerTests: XCTestCase {
     func testHexadecimalPower() {
         let input = "0xC3p0"
         let output: [Token] = [.number("0xC3p0", .hex)]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testCapitalHexadecimalPower() {
+        let input = "0xC3P0"
+        let output: [Token] = [.number("0xC3P0", .hex)]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testNegativeHexadecimalPower() {
+        let input = "0xC3p-5"
+        let output: [Token] = [.number("0xC3p-5", .hex)]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testFloatHexadecimalPower() {
+        let input = "0xC.3p0"
+        let output: [Token] = [.number("0xC.3p0", .hex)]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testFloatNegativeHexadecimalPower() {
+        let input = "0xC.3p-5"
+        let output: [Token] = [.number("0xC.3p-5", .hex)]
         XCTAssertEqual(tokenize(input), output)
     }
 
@@ -488,6 +531,18 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testUnderscoresInHexadecimalPower() {
+        let input = "0xabc_p5"
+        let output: [Token] = [.number("0xabc_p5", .hex)]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testUnderscoresInFloatHexadecimalPower() {
+        let input = "0xa.bc_p5"
+        let output: [Token] = [.number("0xa.bc_p5", .hex)]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testNoLeadingUnderscoreInInteger() {
         let input = "_12345"
         let output: [Token] = [.identifier("_12345")]
@@ -497,6 +552,41 @@ class TokenizerTests: XCTestCase {
     func testNoLeadingUnderscoreInHex() {
         let input = "0x_12345"
         let output: [Token] = [.error("0x_12345")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testHexPropertyAccess() {
+        let input = "0x123.ee"
+        let output: [Token] = [
+            .number("0x123", .hex),
+            .symbol(".", .infix),
+            .identifier("ee"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInvalidHexadecimal() {
+        let input = "0x123.0"
+        let output: [Token] = [
+            .error("0x123.0"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAnotherInvalidHexadecimal() {
+        let input = "0x123.0p"
+        let output: [Token] = [
+            .error("0x123.0p"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInvalidOctal() {
+        let input = "0o1235678"
+        let output: [Token] = [
+            .number("0o123567", .octal),
+            .error("8"),
+        ]
         XCTAssertEqual(tokenize(input), output)
     }
 

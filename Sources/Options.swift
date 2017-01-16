@@ -45,6 +45,56 @@ public enum WrapMode: String {
     case disabled
 }
 
+/// Grouping for numeric literals
+public enum Grouping: Equatable, RawRepresentable {
+    case ignore
+    case none
+    case threshold(Int)
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "ignore":
+            self = .ignore
+        case "none":
+            self = .none
+        default:
+            guard let threshold = Int(rawValue) else {
+                return nil
+            }
+            self = .threshold(threshold)
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .ignore:
+            return "ignore"
+        case .none:
+            return "none"
+        case .threshold(let threshold):
+            return "\(threshold)"
+        }
+    }
+
+    public var description: String {
+        return rawValue
+    }
+
+    public static func ==(lhs: Grouping, rhs: Grouping) -> Bool {
+        switch (lhs, rhs) {
+        case (.ignore, .ignore),
+             (.none, .none):
+            return true
+        case let (.threshold(a), .threshold(b)):
+            return a == b
+        case (.ignore, _),
+             (.none, _),
+             (.threshold, _):
+            return false
+        }
+    }
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -65,6 +115,10 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapArguments: WrapMode
     public var wrapElements: WrapMode
     public var uppercaseHex: Bool
+    public var decimalGrouping: Grouping
+    public var binaryGrouping: Grouping
+    public var octalGrouping: Grouping
+    public var hexGrouping: Grouping
     public var experimentalRules: Bool
     public var fragment: Bool
 
@@ -85,6 +139,10 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapArguments: WrapMode = .disabled,
                 wrapElements: WrapMode = .beforeFirst,
                 uppercaseHex: Bool = true,
+                decimalGrouping: Grouping = .threshold(6),
+                binaryGrouping: Grouping = .threshold(4),
+                octalGrouping: Grouping = .threshold(4),
+                hexGrouping: Grouping = .threshold(4),
                 experimentalRules: Bool = false,
                 fragment: Bool = false) {
 
@@ -105,6 +163,10 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapArguments = wrapArguments
         self.wrapElements = wrapElements
         self.uppercaseHex = uppercaseHex
+        self.decimalGrouping = decimalGrouping
+        self.binaryGrouping = binaryGrouping
+        self.octalGrouping = octalGrouping
+        self.hexGrouping = hexGrouping
         self.experimentalRules = experimentalRules
         self.fragment = fragment
     }

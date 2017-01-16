@@ -76,17 +76,21 @@ func printHelp() {
     print("--rules            the list of rules to apply (pass nothing to print rules)")
     print("")
     print("--allman           use allman indentation style \"true\" or \"false\" (default)")
+    print("--binarygrouping   binary digit grouping. \"4\" (default) or \"none\" or \"ignore\"")
     print("--closures         use trailing closure syntax. \"trailing\" or \"ignore\" (default)")
     print("--commas           commas in collection literals. \"always\" (default) or \"inline\"")
     print("--comments         indenting of comment bodies. \"indent\" (default) or \"ignore\"")
+    print("--decimalgrouping  \"none\", \"ignore\", \"thousands\" or \"millions\" (default)")
     print("--empty            how empty values are represented. \"void\" (default) or \"tuple\"")
     print("--experimental     experimental rules. \"enabled\" or \"disabled\" (default)")
     print("--header           header comments. \"strip\" to remove, or \"ignore\" (default)")
+    print("--hexgrouping      hex digit grouping. \"4\" (default) or \"none\" or \"ignore\"")
     print("--hexliterals      casing for hex literals. \"uppercase\" (default) or \"lowercase\"")
     print("--ifdef            #if indenting. \"indent\" (default), \"noindent\" or \"outdent\"")
     print("--indent           number of spaces to indent, or \"tab\" to use tabs")
     print("--insertlines      insert blank line after {. \"enabled\" (default) or \"disabled\"")
     print("--linebreaks       linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
+    print("--octalgrouping    octal digit grouping. \"4\" (default) or \"none\" or \"ignore\"")
     print("--ranges           spacing for ranges. \"spaced\" (default) or \"nospace\"")
     print("--removelines      remove blank line before }. \"enabled\" (default) or \"disabled\"")
     print("--semicolons       allow semicolons. \"never\" or \"inline\" (default)")
@@ -560,6 +564,23 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["wrapelements"] = options.wrapElements.rawValue
             case "uppercaseHex":
                 args["hexliterals"] = options.uppercaseHex ? "uppercase" : "lowercase"
+            case "decimalGrouping":
+                args["decimalgrouping"] = ({
+                    switch $0 {
+                    case .threshold(3):
+                        return "thousands"
+                    case .threshold(6):
+                        return "millions"
+                    default:
+                        return $0.rawValue
+                    }
+                })(options.decimalGrouping)
+            case "binaryGrouping":
+                args["binarygrouping"] = options.binaryGrouping.rawValue
+            case "octalGrouping":
+                args["octalgrouping"] = options.octalGrouping.rawValue
+            case "hexGrouping":
+                args["hexgrouping"] = options.hexGrouping.rawValue
             case "experimentalRules":
                 args["experimental"] = options.experimentalRules ? "enabled" : nil
             case "fragment":
@@ -777,6 +798,37 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
+    try processOption("decimalgrouping", in: args, from: &arguments) {
+        switch $0 {
+        case "thousands":
+            options.decimalGrouping = .threshold(3)
+        case "millions":
+            options.decimalGrouping = .threshold(6)
+        default:
+            guard let grouping = Grouping(rawValue: $0) else {
+                throw FormatError.options("")
+            }
+            options.decimalGrouping = grouping
+        }
+    }
+    try processOption("binarygrouping", in: args, from: &arguments) {
+        guard let grouping = Grouping(rawValue: $0) else {
+            throw FormatError.options("")
+        }
+        options.binaryGrouping = grouping
+    }
+    try processOption("octalgrouping", in: args, from: &arguments) {
+        guard let grouping = Grouping(rawValue: $0) else {
+            throw FormatError.options("")
+        }
+        options.octalGrouping = grouping
+    }
+    try processOption("hexgrouping", in: args, from: &arguments) {
+        guard let grouping = Grouping(rawValue: $0) else {
+            throw FormatError.options("")
+        }
+        options.hexGrouping = grouping
+    }
     try processOption("experimental", in: args, from: &arguments) {
         switch $0 {
         case "enabled", "true":
@@ -809,16 +861,20 @@ let fileArguments = [
 let formatArguments = [
     // Format options
     "allman",
+    "binarygrouping",
     "closures",
     "commas",
     "comments",
+    "decimalgrouping",
     "empty",
     "header",
+    "hexgrouping",
     "hexliterals",
     "ifdef",
     "indent",
     "insertlines",
     "linebreaks",
+    "octalgrouping",
     "ranges",
     "removelines",
     "semicolons",

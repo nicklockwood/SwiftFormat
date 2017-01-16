@@ -1844,16 +1844,80 @@ extension FormatRules {
 
     /// Ensure hex literals are all upper- or lower-cased
     public class func hexLiterals(_ formatter: Formatter) {
-        let prefix = "0x"
-        formatter.forEach(.number) { i, token in
+        formatter.forEachToken { i, token in
             if case .number(let string, .hex) = token {
-                if formatter.options.uppercaseHex {
-                    formatter.replaceToken(at: i, with: .number(prefix +
-                            string.substring(from: prefix.endIndex).uppercased(), .hex))
-                } else {
-                    formatter.replaceToken(at: i, with: .number(string.lowercased(), .hex))
+                let prefix = "0x"
+                let p = formatter.options.uppercaseHex ? "p" : "P"
+                let parts = string.components(separatedBy: p)
+                var result = parts[0].substring(from: prefix.endIndex)
+                result = formatter.options.uppercaseHex ? result.uppercased() : result.lowercased()
+                if parts.count > 1 {
+                    result += "\(p)\(parts[1])"
                 }
+                formatter.replaceToken(at: i, with: .number(prefix + result, .hex))
             }
+        }
+    }
+
+    /// Standardize use of _ groups separators in numbers
+    public class func numberGrouping(_ formatter: Formatter) {
+        formatter.forEachToken { i, token in
+            guard case let .number(_, type) = token else {
+                return
+            }
+            let threshold: Grouping
+            let naturalGrouping: Int
+            let prefix: String
+            switch type {
+            case .integer, .decimal:
+                threshold = formatter.options.decimalGrouping
+                naturalGrouping = 3
+                prefix = ""
+            case .binary:
+                threshold = formatter.options.binaryGrouping
+                naturalGrouping = 0
+                prefix = "0b"
+            case .octal:
+                threshold = formatter.options.octalGrouping
+                naturalGrouping = 0
+                prefix = "0o"
+            case .hex:
+                threshold = formatter.options.hexGrouping
+                naturalGrouping = 0
+                prefix = "0x"
+            }
+            if case .ignore = threshold {
+                return
+            }
+            let escaped = token.unescaped()
+            let characters = escaped.unicodeScalars
+            let endIndex: String.UnicodeScalarView.Index
+            switch type {
+            case .decimal:
+                endIndex = characters.index { [".", "e", "E"].contains($0) } ?? characters.endIndex
+            case .hex:
+                endIndex = characters.index { [".", "p", "P"].contains($0) } ?? characters.endIndex
+            case .integer, .octal, .binary:
+                endIndex = characters.endIndex
+            }
+            let length = characters.distance(from: characters.startIndex, to: endIndex)
+            guard case .threshold(let grouping) = threshold, length > grouping else {
+                formatter.replaceToken(at: i, with: .number(prefix + escaped, type))
+                return
+            }
+            var output = characters.suffix(from: endIndex)
+            var index = endIndex
+            var count = 0
+            let size = (naturalGrouping == 0) ? grouping : naturalGrouping
+            repeat {
+                index = characters.index(before: index)
+                if count > 0 && count % size == 0 {
+                    output.insert("_", at: characters.startIndex)
+                }
+                count += 1
+                output.insert(characters[index], at: characters.startIndex)
+            } while index != characters.startIndex
+            formatter.replaceToken(at: i, with: .number(prefix + String(output), type))
         }
     }
 

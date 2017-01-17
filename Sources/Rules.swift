@@ -58,7 +58,7 @@ public class FormatRules: NSObject {
     public static func all(except rules: [String]) -> [FormatRule] {
         var byName = FormatRules.byName
         for name in rules {
-            assert(byName[name] != nil, "`\(name)` is not a valid rule")
+            precondition(byName[name] != nil, "`\(name)` is not a valid rule")
             byName[name] = nil
         }
         return Array(byName.values)
@@ -1842,27 +1842,10 @@ extension FormatRules {
         }
     }
 
-    /// Ensure hex literals are all upper- or lower-cased
-    public class func hexLiterals(_ formatter: Formatter) {
+    /// Standardize formatting of numeric literals
+    public class func numberFormatting(_ formatter: Formatter) {
         formatter.forEachToken { i, token in
-            if case .number(let string, .hex) = token {
-                let prefix = "0x"
-                let p = formatter.options.uppercaseHex ? "p" : "P"
-                let parts = string.components(separatedBy: p)
-                var result = parts[0].substring(from: prefix.endIndex)
-                result = formatter.options.uppercaseHex ? result.uppercased() : result.lowercased()
-                if parts.count > 1 {
-                    result += "\(p)\(parts[1])"
-                }
-                formatter.replaceToken(at: i, with: .number(prefix + result, .hex))
-            }
-        }
-    }
-
-    /// Standardize use of _ groups separators in numbers
-    public class func numberGrouping(_ formatter: Formatter) {
-        formatter.forEachToken { i, token in
-            guard case let .number(_, type) = token else {
+            guard case let .number(string, type) = token else {
                 return
             }
             let threshold: Grouping
@@ -1886,11 +1869,12 @@ extension FormatRules {
                 naturalGrouping = 0
                 prefix = "0x"
             }
+            let characters: String.UnicodeScalarView
             if case .ignore = threshold {
-                return
+                characters = string.unicodeScalars.suffix(from: prefix.unicodeScalars.endIndex)
+            } else {
+                characters = token.unescaped().unicodeScalars
             }
-            let escaped = token.unescaped()
-            let characters = escaped.unicodeScalars
             let endIndex: String.UnicodeScalarView.Index
             switch type {
             case .decimal:
@@ -1900,24 +1884,29 @@ extension FormatRules {
             case .integer, .octal, .binary:
                 endIndex = characters.endIndex
             }
+            var suffix = String(characters.suffix(from: endIndex))
+            suffix = formatter.options.uppercaseExponent ? suffix.uppercased() : suffix.lowercased()
             let length = characters.distance(from: characters.startIndex, to: endIndex)
-            guard case .threshold(let grouping) = threshold, length > grouping else {
-                formatter.replaceToken(at: i, with: .number(prefix + escaped, type))
-                return
+            var output: String.UnicodeScalarView
+            if case .threshold(let grouping) = threshold, length > grouping {
+                output = String.UnicodeScalarView()
+                var index = endIndex
+                var count = 0
+                let size = (naturalGrouping == 0) ? grouping : naturalGrouping
+                repeat {
+                    index = characters.index(before: index)
+                    if count > 0 && count % size == 0 {
+                        output.insert("_", at: characters.startIndex)
+                    }
+                    count += 1
+                    output.insert(characters[index], at: characters.startIndex)
+                } while index != characters.startIndex
+            } else {
+                output = characters[characters.startIndex ..< endIndex]
             }
-            var output = characters.suffix(from: endIndex)
-            var index = endIndex
-            var count = 0
-            let size = (naturalGrouping == 0) ? grouping : naturalGrouping
-            repeat {
-                index = characters.index(before: index)
-                if count > 0 && count % size == 0 {
-                    output.insert("_", at: characters.startIndex)
-                }
-                count += 1
-                output.insert(characters[index], at: characters.startIndex)
-            } while index != characters.startIndex
-            formatter.replaceToken(at: i, with: .number(prefix + String(output), type))
+            var result = String(output)
+            result = formatter.options.uppercaseHex ? result.uppercased() : result.lowercased()
+            formatter.replaceToken(at: i, with: .number(prefix + result + suffix, type))
         }
     }
 

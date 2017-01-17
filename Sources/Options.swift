@@ -115,6 +115,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapArguments: WrapMode
     public var wrapElements: WrapMode
     public var uppercaseHex: Bool
+    public var uppercaseExponent: Bool
     public var decimalGrouping: Grouping
     public var binaryGrouping: Grouping
     public var octalGrouping: Grouping
@@ -139,6 +140,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapArguments: WrapMode = .disabled,
                 wrapElements: WrapMode = .beforeFirst,
                 uppercaseHex: Bool = true,
+                uppercaseExponent: Bool = false,
                 decimalGrouping: Grouping = .threshold(6),
                 binaryGrouping: Grouping = .threshold(4),
                 octalGrouping: Grouping = .threshold(4),
@@ -163,6 +165,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapArguments = wrapArguments
         self.wrapElements = wrapElements
         self.uppercaseHex = uppercaseHex
+        self.uppercaseExponent = uppercaseExponent
         self.decimalGrouping = decimalGrouping
         self.binaryGrouping = binaryGrouping
         self.octalGrouping = octalGrouping
@@ -528,8 +531,11 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
     options.uppercaseHex = {
         let prefix = "0x"
         var uppercase = 0, lowercase = 0
-        formatter.forEach(.number) { _, token in
-            if case .number(let string, .hex) = token {
+        formatter.forEachToken { _, token in
+            if case .number(var string, .hex) = token {
+                string = string
+                    .replacingOccurrences(of: "p", with: "")
+                    .replacingOccurrences(of: "P", with: "")
                 if string == string.lowercased() {
                     lowercase += 1
                 } else {
@@ -541,6 +547,29 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
             }
         }
         return uppercase >= lowercase
+    }()
+
+    options.uppercaseExponent = {
+        var uppercase = 0, lowercase = 0
+        formatter.forEachToken { _, token in
+            switch token {
+            case .number(let string, .decimal):
+                if string.unicodeScalars.contains("e") {
+                    lowercase += 1
+                } else if string.unicodeScalars.contains("E") {
+                    uppercase += 1
+                }
+            case .number(let string, .hex):
+                if string.unicodeScalars.contains("p") {
+                    lowercase += 1
+                } else if string.unicodeScalars.contains("P") {
+                    uppercase += 1
+                }
+            default:
+                break
+            }
+        }
+        return uppercase > lowercase
     }()
 
     return options

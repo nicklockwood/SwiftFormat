@@ -83,6 +83,7 @@ func printHelp() {
     print("--decimalgrouping  \"none\", \"ignore\", \"thousands\" or \"millions\" (default)")
     print("--empty            how empty values are represented. \"void\" (default) or \"tuple\"")
     print("--experimental     experimental rules. \"enabled\" or \"disabled\" (default)")
+    print("--exponentcase     case of 'e' in numbers. \"lowercase\" or \"uppercase\" (default)")
     print("--header           header comments. \"strip\" to remove, or \"ignore\" (default)")
     print("--hexgrouping      hex digit grouping. \"4\" (default) or \"none\" or \"ignore\"")
     print("--hexliteralcase   casing for hex literals. \"uppercase\" (default) or \"lowercase\"")
@@ -564,6 +565,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["wrapelements"] = options.wrapElements.rawValue
             case "uppercaseHex":
                 args["hexliteralcase"] = options.uppercaseHex ? "uppercase" : "lowercase"
+            case "uppercaseExponent":
+                args["exponentcase"] = options.uppercaseExponent ? "uppercase" : "lowercase"
             case "decimalGrouping":
                 args["decimalgrouping"] = ({
                     switch $0 {
@@ -798,6 +801,16 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
+    try processOption("exponentcase", in: args, from: &arguments) {
+        switch $0 {
+        case "uppercase", "upper":
+            options.uppercaseExponent = true
+        case "lowercase", "lower":
+            options.uppercaseExponent = false
+        default:
+            throw FormatError.options("")
+        }
+    }
     try processOption("decimalgrouping", in: args, from: &arguments) {
         switch $0 {
         case "thousands":
@@ -879,6 +892,7 @@ let formatArguments = [
     "comments",
     "decimalgrouping",
     "empty",
+    "exponentcase",
     "header",
     "hexgrouping",
     "hexliteralcase",

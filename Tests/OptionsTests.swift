@@ -7,7 +7,7 @@
 //
 
 import XCTest
-@testable import SwiftFormat
+import SwiftFormat
 
 class OptionsTests: XCTestCase {
 
@@ -177,5 +177,45 @@ class OptionsTests: XCTestCase {
         let output = WrapMode.afterFirst
         let options = inferOptions(from: tokenize(input))
         XCTAssertEqual(options.wrapElements, output)
+    }
+
+    // MARK: uppercaseHex
+
+    func testInferUppercaseHex() {
+        let input = "[0xFF00DD, 0xFF00ee, 0xff00ee"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.uppercaseHex)
+    }
+
+    func testInferLowercaseHex() {
+        let input = "[0xff00dd, 0xFF00ee, 0xff00ee"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.uppercaseHex)
+    }
+
+    // MARK: uppercaseExponent
+
+    func testInferUppercaseExponent() {
+        let input = "[1.34E-5, 1.34E-5]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.uppercaseExponent)
+    }
+
+    func testInferLowercaseExponent() {
+        let input = "[1.34E-5, 1.34e-5]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.uppercaseExponent)
+    }
+
+    func testInferUppercaseHexExponent() {
+        let input = "[0xF1.34P5, 0xF1.34P5]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.uppercaseExponent)
+    }
+
+    func testInferLowercaseHexExponent() {
+        let input = "[0xF1.34P5, 0xF1.34p5]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.uppercaseExponent)
     }
 }

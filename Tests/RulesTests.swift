@@ -3277,19 +3277,21 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output)
     }
 
-    // MARK: hexLiterals
+    // MARK: numberFormatting
+
+    // MARK: hex case
 
     func testLowercaseLiteralConvertedToUpper() {
         let input = "let foo = 0xabcd"
         let output = "let foo = 0xABCD"
-        XCTAssertEqual(try format(input, rules: [FormatRules.hexLiterals]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testMixedCaseLiteralConvertedToUpper() {
         let input = "let foo = 0xaBcD"
         let output = "let foo = 0xABCD"
-        XCTAssertEqual(try format(input, rules: [FormatRules.hexLiterals]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
@@ -3297,33 +3299,31 @@ class RulesTests: XCTestCase {
         let input = "let foo = 0xABCD"
         let output = "let foo = 0xabcd"
         let options = FormatOptions(uppercaseHex: false)
-        XCTAssertEqual(try format(input, rules: [FormatRules.hexLiterals], options: options), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testPInExponentialNotConvertedToUpper() {
         let input = "let foo = 0xaBcDp5"
         let output = "let foo = 0xABCDp5"
-        XCTAssertEqual(try format(input, rules: [FormatRules.hexLiterals]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testPInExponentialNotConvertedToLower() {
         let input = "let foo = 0xaBcDP5"
         let output = "let foo = 0xabcdP5"
-        let options = FormatOptions(uppercaseHex: false)
-        XCTAssertEqual(try format(input, rules: [FormatRules.hexLiterals], options: options), output)
+        let options = FormatOptions(uppercaseHex: false, uppercaseExponent: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: numberGrouping
-
-    // MARK: decimal
+    // MARK: decimal grouping
 
     func testDefaultDecimalGrouping() {
         let input = "let foo = 1234_56_78"
         let output = "let foo = 12_345_678"
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
@@ -3331,7 +3331,7 @@ class RulesTests: XCTestCase {
         let input = "let foo = 1234_5_678"
         let output = "let foo = 1234_5_678"
         let options = FormatOptions(decimalGrouping: .ignore)
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping], options: options), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
@@ -3339,7 +3339,7 @@ class RulesTests: XCTestCase {
         let input = "let foo = 1234_5_678"
         let output = "let foo = 12345678"
         let options = FormatOptions(decimalGrouping: .none)
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping], options: options), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
@@ -3347,7 +3347,7 @@ class RulesTests: XCTestCase {
         let input = "let foo = 1234"
         let output = "let foo = 1_234"
         let options = FormatOptions(decimalGrouping: .threshold(3))
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping], options: options), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
@@ -3355,16 +3355,16 @@ class RulesTests: XCTestCase {
         let input = "let foo = 1234e5678"
         let output = "let foo = 1_234e5678"
         let options = FormatOptions(decimalGrouping: .threshold(3))
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping], options: options), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: binary
+    // MARK: binary grouping
 
     func testDefaultBinaryGrouping() {
         let input = "let foo = 0b11101000_00111111"
         let output = "let foo = 0b1110_1000_0011_1111"
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
@@ -3372,7 +3372,7 @@ class RulesTests: XCTestCase {
         let input = "let foo = 0b1110_10_00"
         let output = "let foo = 0b1110_10_00"
         let options = FormatOptions(binaryGrouping: .ignore)
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping], options: options), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
@@ -3380,7 +3380,7 @@ class RulesTests: XCTestCase {
         let input = "let foo = 0b1110_10_00"
         let output = "let foo = 0b11101000"
         let options = FormatOptions(binaryGrouping: .none)
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping], options: options), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
@@ -3388,16 +3388,16 @@ class RulesTests: XCTestCase {
         let input = "let foo = 0b110011"
         let output = "let foo = 0b11_00_11"
         let options = FormatOptions(binaryGrouping: .threshold(2))
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping], options: options), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: hex
+    // MARK: hex grouping
 
     func testDefaultHexGrouping() {
         let input = "let foo = 0xFF01AE45"
         let output = "let foo = 0xFF01_AE45"
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
@@ -3405,16 +3405,16 @@ class RulesTests: XCTestCase {
         let input = "let foo = 0xFF00p54"
         let output = "let foo = 0xFF_00p54"
         let options = FormatOptions(hexGrouping: .threshold(2))
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping], options: options), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: octal
+    // MARK: octal grouping
 
     func testDefaultOctalGrouping() {
         let input = "let foo = 0o12345670"
         let output = "let foo = 0o1234_5670"
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
@@ -3422,7 +3422,40 @@ class RulesTests: XCTestCase {
         let input = "let foo = 0o12345670"
         let output = "let foo = 0o12_34_56_70"
         let options = FormatOptions(octalGrouping: .threshold(2))
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberGrouping], options: options), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    // MARK: exponent case
+
+    func testLowercaseExponent() {
+        let input = "let foo = 0.456E-5"
+        let output = "let foo = 0.456e-5"
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testUppercaseExponent() {
+        let input = "let foo = 0.456e-5"
+        let output = "let foo = 0.456E-5"
+        let options = FormatOptions(uppercaseExponent: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testUppercaseHexExponent() {
+        let input = "let foo = 0xFF00p54"
+        let output = "let foo = 0xFF00P54"
+        let options = FormatOptions(uppercaseExponent: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testUppercaseGroupedHexExponent() {
+        let input = "let foo = 0xFF00_AABBp54"
+        let output = "let foo = 0xFF00_AABBP54"
+        let options = FormatOptions(uppercaseExponent: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 

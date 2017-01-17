@@ -41,7 +41,7 @@ class PerformanceTests: XCTestCase {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
-            _ = tokens.map { try! format($0) }
+            _ = tokens.map { try! format($0, rules: FormatRules.default) }
         }
     }
 
@@ -58,6 +58,14 @@ class PerformanceTests: XCTestCase {
         let tokens = files.map { tokenize($0) }
         measure {
             _ = tokens.map { try! format($0, rules: [FormatRules.indent]) }
+        }
+    }
+
+    func testNumberFormatting() {
+        let files = PerformanceTests.files
+        let tokens = files.map { tokenize($0) }
+        measure {
+            _ = tokens.map { try! format($0, rules: [FormatRules.numberFormatting]) }
         }
     }
 }

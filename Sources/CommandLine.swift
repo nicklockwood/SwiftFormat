@@ -85,7 +85,7 @@ func printHelp() {
     print("--experimental     experimental rules. \"enabled\" or \"disabled\" (default)")
     print("--header           header comments. \"strip\" to remove, or \"ignore\" (default)")
     print("--hexgrouping      hex digit grouping. \"4\" (default) or \"none\" or \"ignore\"")
-    print("--hexliterals      casing for hex literals. \"uppercase\" (default) or \"lowercase\"")
+    print("--hexliteralcase   casing for hex literals. \"uppercase\" (default) or \"lowercase\"")
     print("--ifdef            #if indenting. \"indent\" (default), \"noindent\" or \"outdent\"")
     print("--indent           number of spaces to indent, or \"tab\" to use tabs")
     print("--insertlines      insert blank line after {. \"enabled\" (default) or \"disabled\"")
@@ -563,7 +563,7 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
             case "wrapElements":
                 args["wrapelements"] = options.wrapElements.rawValue
             case "uppercaseHex":
-                args["hexliterals"] = options.uppercaseHex ? "uppercase" : "lowercase"
+                args["hexliteralcase"] = options.uppercaseHex ? "uppercase" : "lowercase"
             case "decimalGrouping":
                 args["decimalgrouping"] = ({
                     switch $0 {
@@ -788,7 +788,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("hexliterals", in: args, from: &arguments) {
+    try processOption("hexliteralcase", in: args, from: &arguments) {
         switch $0 {
         case "uppercase", "upper":
             options.uppercaseHex = true
@@ -849,6 +849,18 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
+    // Deprecated
+    try processOption("hexliterals", in: args, from: &arguments) {
+        print("`--hexliterals` option is deprecated. Use `--hexliteralcase` instead", as: .warning)
+        switch $0 {
+        case "uppercase", "upper":
+            options.uppercaseHex = true
+        case "lowercase", "lower":
+            options.uppercaseHex = false
+        default:
+            throw FormatError.options("")
+        }
+    }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return options
 }
@@ -869,7 +881,7 @@ let formatArguments = [
     "empty",
     "header",
     "hexgrouping",
-    "hexliterals",
+    "hexliteralcase",
     "ifdef",
     "indent",
     "insertlines",
@@ -897,4 +909,6 @@ let commandLineArguments = [
     "version",
     // Format options
     "experimental",
+    // Deprecated
+    "hexliterals",
 ] + fileArguments + formatArguments

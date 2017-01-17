@@ -1245,6 +1245,81 @@ extension FormatRules {
         }
     }
 
+    /// Convert closure arguments to trailing closure syntax where possible
+    public class func trailingClosures(_ formatter: Formatter) {
+
+        // NOTE: Parens around trailing closures are sometimes required for disambiguation.
+        // SwiftFormat can't detect those cases, which is why `trailingClosures` is off by default
+        guard formatter.options.trailingClosures else { return }
+
+        func removeParen(at index: Int) {
+            if formatter.token(at: index - 1)?.isSpace == true {
+                if formatter.token(at: index + 1)?.isSpace == true {
+                    // Need to remove one
+                    formatter.removeToken(at: index + 1)
+                }
+            } else if formatter.token(at: index + 1)?.isSpace == false {
+                // Need to insert one
+                formatter.insertToken(.space(" "), at: index + 1)
+            }
+            formatter.removeToken(at: index)
+        }
+
+        formatter.forEach(.startOfScope("(")) { i, _ in
+            guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
+                case .identifier = prevToken else { // TODO: are trailing closures allowed in other cases?
+                return
+            }
+            guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i), let closingBraceIndex =
+                formatter.index(of: .nonSpaceOrComment, before: closingIndex, if: { $0 == .endOfScope("}") }),
+                let openingBraceIndex = formatter.index(of: .startOfScope("{"), before: closingBraceIndex),
+                formatter.index(of: .endOfScope("}"), before: openingBraceIndex) == nil else {
+                return
+            }
+            if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: closingIndex) {
+                switch formatter.tokens[nextIndex] {
+                case .linebreak:
+                    if let next = formatter.next(.nonSpaceOrComment, after: nextIndex) {
+                        switch next {
+                        case .symbol(_, .infix),
+                             .symbol(_, .postfix),
+                             .delimiter(","),
+                             .delimiter(":"),
+                             .startOfScope("{"),
+                             .keyword("else"):
+                            return
+                        default:
+                            break
+                        }
+                    }
+                default:
+                    return
+                }
+            }
+            guard var startIndex = formatter.index(of: .nonSpaceOrLinebreak, before: openingBraceIndex) else {
+                return
+            }
+            switch formatter.tokens[startIndex] {
+            case .delimiter(","), .startOfScope("("):
+                break
+            case .delimiter(":"):
+                if let commaIndex = formatter.index(of: .delimiter(","), before: openingBraceIndex) {
+                    startIndex = commaIndex
+                } else if formatter.index(of: .startOfScope("("), before: openingBraceIndex) == i {
+                    startIndex = i
+                } else {
+                    return
+                }
+            default:
+                return
+            }
+            let wasParen = (startIndex == i)
+            removeParen(at: closingIndex)
+            formatter.replaceTokens(inRange: startIndex ..< openingBraceIndex, with:
+                wasParen ? [.space(" ")] : [.endOfScope(")"), .space(" ")])
+        }
+    }
+
     /// Remove redundant parens around the arguments for loops, if statements, closures, etc.
     public class func redundantParens(_ formatter: Formatter) {
         func tokenOutsideParenRequiresSpacing(at index: Int) -> Bool {
@@ -1309,42 +1384,9 @@ extension FormatRules {
                     removeParen(at: closingIndex)
                     removeParen(at: i)
                 }
-            case .symbol("=", .infix):
-                if let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
-                    formatter.next(.nonSpaceOrComment, after: i) == .startOfScope("{"),
-                    formatter.last(.nonSpaceOrComment, before: closingIndex) == .endOfScope("}") {
-                    removeParen(at: closingIndex)
-                    removeParen(at: i)
-                }
+            case .stringBody, .endOfScope, .symbol("?", .postfix), .symbol("!", .postfix):
+                break
             case .identifier: // TODO: are trailing closures allowed in other cases?
-                // NOTE: Parens around trailing closures are sometimes required for disambiguation.
-                // SwiftFormat can't detect those cases, which is why `trailingClosures` is off by default
-                if formatter.options.trailingClosures,
-                    let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
-                    formatter.next(.nonSpaceOrComment, after: i) == .startOfScope("{"),
-                    formatter.last(.nonSpaceOrComment, before: closingIndex) == .endOfScope("}") {
-                    if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: closingIndex) {
-                        switch formatter.tokens[nextIndex] {
-                        case .linebreak:
-                            if let next = formatter.next(.nonSpaceOrComment, after: nextIndex) {
-                                switch next {
-                                case .symbol(_, .infix),
-                                     .symbol(_, .postfix),
-                                     .delimiter(","),
-                                     .delimiter(":"),
-                                     .startOfScope("{"):
-                                    return
-                                default:
-                                    break
-                                }
-                            }
-                        default:
-                            return
-                        }
-                    }
-                    removeParen(at: closingIndex)
-                    removeParen(at: i)
-                }
                 // Parens before closure
                 if let closingIndex = formatter.index(of: .nonSpace, after: i, if: { $0 == .endOfScope(")") }),
                     let openingIndex = formatter.index(
@@ -1352,7 +1394,12 @@ extension FormatRules {
                     ), formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousIndex) != .keyword("func") {
                     if let prevIndex = formatter.index(of: .keyword, before: i) {
                         let prevKeyword = formatter.tokens[prevIndex]
-                        let disallowed: [Token] = [.keyword("in"), .keyword("while"), .keyword("if")]
+                        let disallowed: [Token] = [
+                            .keyword("in"),
+                            .keyword("while"),
+                            .keyword("if"),
+                            .keyword("case"),
+                        ]
                         if disallowed.contains(prevKeyword) {
                             break
                         }
@@ -1370,8 +1417,6 @@ extension FormatRules {
                     removeParen(at: closingIndex)
                     removeParen(at: i)
                 }
-            case .stringBody, .endOfScope, .symbol("?", .postfix), .symbol("!", .postfix):
-                break
             case .keyword(let string):
                 if ["if", "while", "switch", "for", "in", "where", "guard"].contains(string),
                     let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
@@ -1393,6 +1438,14 @@ extension FormatRules {
                     removeParen(at: closingIndex)
                     removeParen(at: i)
                 }
+            case .symbol(_, .infix):
+                guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
+                    formatter.next(.nonSpaceOrComment, after: i) == .startOfScope("{"),
+                    formatter.last(.nonSpaceOrComment, before: closingIndex) == .endOfScope("}") else {
+                    fallthrough
+                }
+                removeParen(at: closingIndex)
+                removeParen(at: i)
             default:
                 if let nextTokenIndex = formatter.index(of: .nonSpace, after: i),
                     let closingIndex = formatter.index(of: .nonSpace, after: nextTokenIndex, if: {

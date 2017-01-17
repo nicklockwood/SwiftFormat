@@ -58,6 +58,7 @@ public enum TokenType {
     case endOfStatement
     case startOfScope
     case endOfScope
+    case keyword
     case identifier
     case identifierOrKeyword
     case symbol
@@ -206,6 +207,8 @@ public enum Token: Equatable {
             return isStartOfScope
         case .endOfScope:
             return isEndOfScope
+        case .keyword:
+            return isKeyword
         case .identifier:
             return isIdentifier
         case .identifierOrKeyword:
@@ -291,22 +294,22 @@ public enum Token: Equatable {
         return false
     }
 
-    public var isIdentifier: Bool {
-        switch self {
-        case .identifier:
+    public var isKeyword: Bool {
+        if case .keyword = self {
             return true
-        default:
-            return false
         }
+        return false
+    }
+
+    public var isIdentifier: Bool {
+        if case .identifier = self {
+            return true
+        }
+        return false
     }
 
     public var isIdentifierOrKeyword: Bool {
-        switch self {
-        case .identifier, .keyword:
-            return true
-        default:
-            return false
-        }
+        return isIdentifier || isKeyword
     }
 
     public var isSpace: Bool {

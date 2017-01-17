@@ -1309,6 +1309,13 @@ extension FormatRules {
                     removeParen(at: closingIndex)
                     removeParen(at: i)
                 }
+            case .symbol("=", .infix):
+                if let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
+                    formatter.next(.nonSpaceOrComment, after: i) == .startOfScope("{"),
+                    formatter.last(.nonSpaceOrComment, before: closingIndex) == .endOfScope("}") {
+                    removeParen(at: closingIndex)
+                    removeParen(at: i)
+                }
             case .identifier: // TODO: are trailing closures allowed in other cases?
                 // NOTE: Parens around trailing closures are sometimes required for disambiguation.
                 // SwiftFormat can't detect those cases, which is why `trailingClosures` is off by default
@@ -1338,6 +1345,31 @@ extension FormatRules {
                     removeParen(at: closingIndex)
                     removeParen(at: i)
                 }
+                // Parens before closure
+                if let closingIndex = formatter.index(of: .nonSpace, after: i, if: { $0 == .endOfScope(")") }),
+                    let openingIndex = formatter.index(
+                        of: .nonSpaceOrCommentOrLinebreak, after: closingIndex, if: { $0 == .startOfScope("{") }
+                    ), formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousIndex) != .keyword("func") {
+                    if let prevIndex = formatter.index(of: .keyword, before: i) {
+                        let prevKeyword = formatter.tokens[prevIndex]
+                        let disallowed: [Token] = [.keyword("in"), .keyword("while"), .keyword("if")]
+                        if disallowed.contains(prevKeyword) {
+                            break
+                        }
+                        if [.keyword("var"), .keyword("let")].contains(prevKeyword),
+                            let prevKeyword = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                            disallowed.contains(prevKeyword) || prevKeyword == .delimiter(",") {
+                            break
+                        }
+                        if prevKeyword == .keyword("var"),
+                            let token = formatter.next(.nonSpaceOrCommentOrLinebreak, after: openingIndex),
+                            [.identifier("willSet"), .identifier("didSet")].contains(token) {
+                            break
+                        }
+                    }
+                    removeParen(at: closingIndex)
+                    removeParen(at: i)
+                }
             case .stringBody, .endOfScope, .symbol("?", .postfix), .symbol("!", .postfix):
                 break
             case .keyword(let string):
@@ -1349,6 +1381,7 @@ extension FormatRules {
                     if nextToken != .startOfScope("{") && nextToken != .delimiter(",") &&
                         !(string == "for" && nextToken == .keyword("in")) &&
                         !(string == "guard" && nextToken == .keyword("else")) {
+                        // TODO: this is confusing - refactor to move fallthrough to end of case
                         fallthrough
                     }
                     if let commaIndex = formatter.index(of: .delimiter(","), after: i),

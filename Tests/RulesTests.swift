@@ -1140,8 +1140,8 @@ class RulesTests: XCTestCase {
     }
 
     func testNoBlankLineBeforeFuncAsIdentifier() {
-        let input = "var foo: Bar?\nfoo.func() {}"
-        let output = "var foo: Bar?\nfoo.func() {}"
+        let input = "var foo: Bar?\nfoo.func(x) {}"
+        let output = "var foo: Bar?\nfoo.func(x) {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesBetweenScopes]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -2603,6 +2603,8 @@ class RulesTests: XCTestCase {
 
     // MARK: redundantParens
 
+    // MARK: around expressions
+
     func testRedundantParensRemoved() {
         let input = "if (x || y) {}"
         let output = "if x || y {}"
@@ -2715,6 +2717,36 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testSpaceInsertedWhenRemovingParens() {
+        let input = "if(x.y) {}"
+        let output = "if x.y {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testSpaceInsertedWhenRemovingParens2() {
+        let input = "while(!foo) {}"
+        let output = "while !foo {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoDoubleSpaceWhenRemovingParens() {
+        let input = "if ( x.y ) {}"
+        let output = "if x.y {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensAroundRangeNotRemoved() {
+        let input = "(1 ..< 10).reduce(0, combine: +)"
+        let output = "(1 ..< 10).reduce(0, combine: +)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    // MARK: around closure arguments
+
     func testSingleClosureArgumentUnwrapped() {
         let input = "{ (_) in }"
         let output = "{ _ in }"
@@ -2757,37 +2789,28 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testSpaceInsertedWhenRemovingParens() {
-        let input = "if(x.y) {}"
-        let output = "if x.y {}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testSpaceInsertedWhenRemovingParens2() {
-        let input = "while(!foo) {}"
-        let output = "while !foo {}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testNoDoubleSpaceWhenRemovingParens() {
-        let input = "if ( x.y ) {}"
-        let output = "if x.y {}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testParensAroundRangeNotRemoved() {
-        let input = "(1 ..< 10).reduce(0, combine: +)"
-        let output = "(1 ..< 10).reduce(0, combine: +)"
-        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
+    // MARK: around closure
 
     func testParensAroundClosureRemoved() {
         let input = "foo({ /* some code */ })"
         let output = "foo { /* some code */ }"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testParensAroundClosureThatReturnsClosureNotRemoved() {
+        // NOTE: this is allowed by the compiler, but harms clarity
+        let input = "foo({ /* some code */ })()"
+        let output = "foo({ /* some code */ })()"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testParensAroundClosureAssignmentBlockRemoved() {
+        let input = "let foo = ({ /* some code */ })()"
+        let output = "let foo = { /* some code */ }()"
         let options = FormatOptions(trailingClosures: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -2804,6 +2827,72 @@ class RulesTests: XCTestCase {
     func testParensAroundClosureInCompoundExpressionNotRemoved() {
         let input = "if let foo = foo({ /* some code */ }), bar = baz {}"
         let output = "if let foo = foo({ /* some code */ }), bar = baz {}"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    // MARK: before trailing closure
+
+    func testParensRemovedBeforeTrailingClosure() {
+        let input = "var foo = bar() { /* some code */ }"
+        let output = "var foo = bar { /* some code */ }"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testParensRemovedBeforeTrailingClosure2() {
+        let input = "let foo = bar() { /* some code */ }"
+        let output = "let foo = bar { /* some code */ }"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testParensNotRemovedBeforeVarBody() {
+        let input = "var foo = bar() { didSet {} }"
+        let output = "var foo = bar() { didSet {} }"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testParensNotRemovedBeforeFunctionBody() {
+        let input = "func bar() { /* some code */ }"
+        let output = "func bar() { /* some code */ }"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testParensNotRemovedBeforeIfBody() {
+        let input = "if let foo = bar() { /* some code */ }"
+        let output = "if let foo = bar() { /* some code */ }"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testParensNotRemovedBeforeCompoundIfBody() {
+        let input = "if let foo = bar(), let baz = quux() { /* some code */ }"
+        let output = "if let foo = bar(), let baz = quux() { /* some code */ }"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testParensNotRemovedBeforeForBody() {
+        let input = "for foo in bar() { /* some code */ }"
+        let output = "for foo in bar() { /* some code */ }"
+        let options = FormatOptions(trailingClosures: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testParensNotRemovedBeforeWhileBody() {
+        let input = "while let foo = bar() { /* some code */ }"
+        let output = "while let foo = bar() { /* some code */ }"
         let options = FormatOptions(trailingClosures: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

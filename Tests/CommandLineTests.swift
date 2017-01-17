@@ -67,7 +67,7 @@ class CommandLineTests: XCTestCase {
 
     func testCommandLineArgumentsAreCorrect() {
         let options = FormatOptions()
-        let output = ["indent": "4", "allman": "false", "wraparguments": "disabled", "removelines": "enabled", "wrapelements": "beforefirst", "exponentcase": "lowercase", "header": "ignore", "insertlines": "enabled", "binarygrouping": "4", "empty": "void", "ranges": "spaced", "trimwhitespace": "always", "hexliteralcase": "uppercase", "linebreaks": "lf", "closures": "ignore", "commas": "always", "comments": "indent", "ifdef": "indent", "decimalgrouping": "millions", "octalgrouping": "4", "hexgrouping": "4", "semicolons": "inline"]
+        let output = ["indent": "4", "allman": "false", "wraparguments": "disabled", "removelines": "enabled", "wrapelements": "beforefirst", "exponentcase": "lowercase", "header": "ignore", "insertlines": "enabled", "binarygrouping": "4,8", "empty": "void", "ranges": "spaced", "trimwhitespace": "always", "hexliteralcase": "uppercase", "linebreaks": "lf", "closures": "ignore", "commas": "always", "comments": "indent", "ifdef": "indent", "decimalgrouping": "3,6", "octalgrouping": "4,8", "hexgrouping": "4,8", "semicolons": "inline"]
         XCTAssertEqual(commandLineArguments(for: options), output)
     }
 

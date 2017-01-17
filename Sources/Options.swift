@@ -49,7 +49,7 @@ public enum WrapMode: String {
 public enum Grouping: Equatable, RawRepresentable {
     case ignore
     case none
-    case threshold(Int)
+    case group(Int, Int)
 
     public init?(rawValue: String) {
         switch rawValue {
@@ -58,10 +58,15 @@ public enum Grouping: Equatable, RawRepresentable {
         case "none":
             self = .none
         default:
-            guard let threshold = Int(rawValue) else {
+            var parts = rawValue.components(separatedBy: ",")
+            if parts.count == 1 {
+                parts.append(parts[0])
+            }
+            guard let group = Int(parts[0].trimmingCharacters(in: .whitespaces)),
+                let threshold = Int(parts[1].trimmingCharacters(in: .whitespaces)) else {
                 return nil
             }
-            self = .threshold(threshold)
+            self = (group == 0) ? .none : .group(group, threshold)
         }
     }
 
@@ -71,8 +76,8 @@ public enum Grouping: Equatable, RawRepresentable {
             return "ignore"
         case .none:
             return "none"
-        case .threshold(let threshold):
-            return "\(threshold)"
+        case let .group(group, threshold):
+            return "\(group),\(threshold)"
         }
     }
 
@@ -85,11 +90,11 @@ public enum Grouping: Equatable, RawRepresentable {
         case (.ignore, .ignore),
              (.none, .none):
             return true
-        case let (.threshold(a), .threshold(b)):
-            return a == b
+        case let (.group(a, b), .group(c, d)):
+            return a == c && b == d
         case (.ignore, _),
              (.none, _),
-             (.threshold, _):
+             (.group, _):
             return false
         }
     }
@@ -141,10 +146,10 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapElements: WrapMode = .beforeFirst,
                 uppercaseHex: Bool = true,
                 uppercaseExponent: Bool = false,
-                decimalGrouping: Grouping = .threshold(6),
-                binaryGrouping: Grouping = .threshold(4),
-                octalGrouping: Grouping = .threshold(4),
-                hexGrouping: Grouping = .threshold(4),
+                decimalGrouping: Grouping = .group(3, 6),
+                binaryGrouping: Grouping = .group(4, 8),
+                octalGrouping: Grouping = .group(4, 8),
+                hexGrouping: Grouping = .group(4, 8),
                 experimentalRules: Bool = false,
                 fragment: Bool = false) {
 
@@ -574,110 +579,92 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         return uppercase > lowercase
     }()
 
-    func grouping(for number: String, type: NumberType) -> (group: Int?, count: Int) {
-        let digits: String.CharacterView
-        let prefix = "0x"
-        switch type {
-        case .integer:
-            digits = number.characters
-        case .binary, .octal:
-            digits = number.characters.suffix(from: prefix.endIndex)
-        case .hex:
-            let endIndex =
-                number.characters.index { [".", "p", "P"].contains($0) } ?? number.endIndex
-            digits = number.characters[prefix.endIndex ..< endIndex]
-        case .decimal:
-            let endIndex =
-                number.characters.index { [".", "e", "E"].contains($0) } ?? number.endIndex
-            digits = number.characters.prefix(upTo: endIndex)
-        }
-        var count = 0
-        var index = digits.endIndex
-        var group: Int?
-        repeat {
-            index = digits.index(before: index)
-            if group == nil, digits[index] == "_" {
-                group = count
-            }
-            count += 1
-        } while index != digits.startIndex
-        return (group, count)
-    }
-    func grouping(forType type: NumberType) -> Grouping {
-        var none = 0, ignore = 0, four = 0, eight = 0
-        formatter.forEachToken { _, token in
-            guard case .number(let number, type) = token else {
-                return
-            }
-            let (group, count) = grouping(for: number, type: type)
-            if let group = group {
-                switch group {
-                case 4:
-                    four += 1
-                case 8:
-                    eight += 1
-                default:
-                    ignore += 1
-                }
-            } else if count > 4 {
-                none += 1
-            }
-        }
-        if none > four + eight {
-            if none > ignore {
-                return .none
-            } else {
-                return .ignore
-            }
-        } else if ignore > four + eight {
-            return .ignore
-        } else if eight + none > four {
-            return .threshold(8)
-        }
-        return .threshold(4)
-    }
-    options.binaryGrouping = grouping(forType: .binary)
-    options.octalGrouping = grouping(forType: .octal)
-    options.hexGrouping = grouping(forType: .hex)
-    options.decimalGrouping = {
-        var none = 0, ignore = 0, thousands = 0, millions = 0
+    func grouping(for numberType: NumberType) -> Grouping {
+        var grouping = [(group: Int, threshold: Int, count: Int)](), lowest = Int.max
         formatter.forEachToken { _, token in
             guard case .number(let number, let type) = token else {
                 return
             }
+            guard numberType == type || numberType == .decimal && type == .integer else {
+                return
+            }
+            // Strip prefix/suffix
+            let digits: String.CharacterView
+            let prefix = "0x"
             switch type {
-            case .integer, .decimal:
-                let (group, count) = grouping(for: number, type: type)
-                if let group = group {
-                    if group == 3 {
-                        if count > 6 {
-                            millions += 1
-                        } else {
-                            thousands += 1
-                        }
-                    } else {
-                        ignore += 1
+            case .integer:
+                digits = number.characters
+            case .binary, .octal:
+                digits = number.characters.suffix(from: prefix.endIndex)
+            case .hex:
+                let endIndex =
+                    number.characters.index { [".", "p", "P"].contains($0) } ?? number.endIndex
+                digits = number.characters[prefix.endIndex ..< endIndex]
+            case .decimal:
+                let endIndex =
+                    number.characters.index { [".", "e", "E"].contains($0) } ?? number.endIndex
+                digits = number.characters.prefix(upTo: endIndex)
+            }
+            // Get the group for this number
+            var count = 0
+            var index = digits.endIndex
+            var group = 0
+            repeat {
+                index = digits.index(before: index)
+                if digits[index] == "_" {
+                    if group == 0, count > 0 {
+                        group = count
+                        lowest = min(lowest, group + 1)
                     }
-                } else if count > 3 {
+                } else {
+                    count += 1
+                }
+            } while index != digits.startIndex
+            // Add To groups list
+            var found = false
+            if group > 0 {
+                for (i, g) in grouping.enumerated() {
+                    if g.group == group {
+                        grouping[i] = (group, min(g.threshold, count), g.count + 1)
+                        found = true
+                        break
+                    }
+                }
+            }
+            if !found {
+                grouping.append((group, count, 1))
+            }
+        }
+        // Only count none values whose threshold > lowest group value
+        var none = 0, maxCount = 0, total = 0
+        var group = (group: 0, threshold: 0, count: 0)
+        grouping = grouping.filter {
+            if $0.group == 0 {
+                if $0.threshold >= lowest {
                     none += 1
                 }
-            default:
-                break
+                return false
             }
+            total += $0.count
+            if $0.count > maxCount {
+                maxCount = $0.count
+                group = $0
+            }
+            return true
         }
-        if none > thousands + millions {
-            if none > ignore {
-                return .none
-            } else {
-                return .ignore
+        // Return most common
+        if group.count >= max(1, none) {
+            if group.count > total / 2 {
+                return .group(group.group, group.threshold)
             }
-        } else if ignore > thousands + millions {
             return .ignore
-        } else if millions + none > thousands {
-            return .threshold(6)
         }
-        return .threshold(3)
-    }()
+        return .none
+    }
+    options.decimalGrouping = grouping(for: .decimal)
+    options.binaryGrouping = grouping(for: .binary)
+    options.octalGrouping = grouping(for: .octal)
+    options.hexGrouping = grouping(for: .hex)
 
     return options
 }

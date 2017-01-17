@@ -1848,29 +1848,24 @@ extension FormatRules {
             guard case let .number(string, type) = token else {
                 return
             }
-            let threshold: Grouping
-            let naturalGrouping: Int
+            let grouping: Grouping
             let prefix: String
             switch type {
             case .integer, .decimal:
-                threshold = formatter.options.decimalGrouping
-                naturalGrouping = 3
+                grouping = formatter.options.decimalGrouping
                 prefix = ""
             case .binary:
-                threshold = formatter.options.binaryGrouping
-                naturalGrouping = 0
+                grouping = formatter.options.binaryGrouping
                 prefix = "0b"
             case .octal:
-                threshold = formatter.options.octalGrouping
-                naturalGrouping = 0
+                grouping = formatter.options.octalGrouping
                 prefix = "0o"
             case .hex:
-                threshold = formatter.options.hexGrouping
-                naturalGrouping = 0
+                grouping = formatter.options.hexGrouping
                 prefix = "0x"
             }
             let characters: String.UnicodeScalarView
-            if case .ignore = threshold {
+            if case .ignore = grouping {
                 characters = string.unicodeScalars.suffix(from: prefix.unicodeScalars.endIndex)
             } else {
                 characters = token.unescaped().unicodeScalars
@@ -1888,14 +1883,13 @@ extension FormatRules {
             suffix = formatter.options.uppercaseExponent ? suffix.uppercased() : suffix.lowercased()
             let length = characters.distance(from: characters.startIndex, to: endIndex)
             var output: String.UnicodeScalarView
-            if case .threshold(let grouping) = threshold, length > grouping {
+            if case let .group(group, threshold) = grouping, length >= threshold {
                 output = String.UnicodeScalarView()
                 var index = endIndex
                 var count = 0
-                let size = (naturalGrouping == 0) ? grouping : naturalGrouping
                 repeat {
                     index = characters.index(before: index)
-                    if count > 0 && count % size == 0 {
+                    if count > 0 && count % group == 0 {
                         output.insert("_", at: characters.startIndex)
                     }
                     count += 1

@@ -3346,7 +3346,7 @@ class RulesTests: XCTestCase {
     func testDecimalGroupingThousands() {
         let input = "let foo = 1234"
         let output = "let foo = 1_234"
-        let options = FormatOptions(decimalGrouping: .threshold(3))
+        let options = FormatOptions(decimalGrouping: .group(3, 3))
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -3354,7 +3354,7 @@ class RulesTests: XCTestCase {
     func testExponentialGrouping() {
         let input = "let foo = 1234e5678"
         let output = "let foo = 1_234e5678"
-        let options = FormatOptions(decimalGrouping: .threshold(3))
+        let options = FormatOptions(decimalGrouping: .group(3, 3))
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -3387,7 +3387,7 @@ class RulesTests: XCTestCase {
     func testBinaryGroupingCustom() {
         let input = "let foo = 0b110011"
         let output = "let foo = 0b11_00_11"
-        let options = FormatOptions(binaryGrouping: .threshold(2))
+        let options = FormatOptions(binaryGrouping: .group(2, 2))
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -3395,8 +3395,8 @@ class RulesTests: XCTestCase {
     // MARK: hex grouping
 
     func testDefaultHexGrouping() {
-        let input = "let foo = 0xFF01AE45"
-        let output = "let foo = 0xFF01_AE45"
+        let input = "let foo = 0xFF01FF01AE45"
+        let output = "let foo = 0xFF01_FF01_AE45"
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3404,7 +3404,7 @@ class RulesTests: XCTestCase {
     func testCustomHexGrouping() {
         let input = "let foo = 0xFF00p54"
         let output = "let foo = 0xFF_00p54"
-        let options = FormatOptions(hexGrouping: .threshold(2))
+        let options = FormatOptions(hexGrouping: .group(2, 2))
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -3412,8 +3412,8 @@ class RulesTests: XCTestCase {
     // MARK: octal grouping
 
     func testDefaultOctalGrouping() {
-        let input = "let foo = 0o12345670"
-        let output = "let foo = 0o1234_5670"
+        let input = "let foo = 0o123456701234"
+        let output = "let foo = 0o1234_5670_1234"
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3421,7 +3421,7 @@ class RulesTests: XCTestCase {
     func testCustomOctalGrouping() {
         let input = "let foo = 0o12345670"
         let output = "let foo = 0o12_34_56_70"
-        let options = FormatOptions(octalGrouping: .threshold(2))
+        let options = FormatOptions(octalGrouping: .group(2, 2))
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -3452,8 +3452,8 @@ class RulesTests: XCTestCase {
     }
 
     func testUppercaseGroupedHexExponent() {
-        let input = "let foo = 0xFF00_AABBp54"
-        let output = "let foo = 0xFF00_AABBP54"
+        let input = "let foo = 0xFF00_AABB_CCDDp54"
+        let output = "let foo = 0xFF00_AABB_CCDDP54"
         let options = FormatOptions(uppercaseExponent: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

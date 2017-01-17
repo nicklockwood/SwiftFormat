@@ -39,14 +39,14 @@ import Foundation
 // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
 // lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
 // precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
-private let swiftKeywords = [
+private let swiftKeywords = Set([
     "let", "return", "func", "var", "if", "public", "as", "else", "in", "import",
     "class", "try", "guard", "case", "for", "init", "extension", "private", "static",
     "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
     "throw", "typealias", "where", "break", "deinit", "subscript", "lazy", "is",
     "while", "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
     "default", "protocol",
-]
+])
 
 /// Classes of token used for matching
 public enum TokenType {
@@ -74,7 +74,7 @@ public enum TokenType {
     case nonSpaceOrCommentOrLinebreak
 }
 
-/// Mumeric literal types
+/// Numeric literal types
 public enum NumberType {
     case integer
     case decimal
@@ -1262,6 +1262,15 @@ public func tokenize(_ source: String) -> [Token] {
                 default:
                     break
                 }
+            } else if token == .delimiter(":"),
+                scope == .startOfScope("(") || scope == .startOfScope("["),
+                let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1),
+                case .keyword(let string) = tokens[prevIndex],
+                let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                prevPrevIndex == scopeIndex || tokens[prevPrevIndex] == .delimiter(",") {
+                tokens[prevIndex] = .identifier(string)
+                processToken()
+                return
             }
         }
         // Either there's no scope, or token didn't close it

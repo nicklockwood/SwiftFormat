@@ -590,7 +590,7 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    // MARK: Identifiers
+    // MARK: Identifiers & keywords
 
     func testFoo() {
         let input = "foo"
@@ -662,6 +662,49 @@ class TokenizerTests: XCTestCase {
     func testBacktickEscapedClass() {
         let input = "`class`"
         let output: [Token] = [.identifier("`class`")]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testDotPrefixedKeyword() {
+        let input = ".default"
+        let output: [Token] = [
+            .symbol(".", .prefix),
+            .identifier("default"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testKeywordsAsArgumentLabels() {
+        let input = "foo(for: bar, if: baz)"
+        let output: [Token] = [
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("for"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("bar"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("if"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("baz"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testKeywordAsSubscriptLabels() {
+        let input = "foo[for: bar]"
+        let output: [Token] = [
+            .identifier("foo"),
+            .startOfScope("["),
+            .identifier("for"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("bar"),
+            .endOfScope("]"),
+        ]
         XCTAssertEqual(tokenize(input), output)
     }
 

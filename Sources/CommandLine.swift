@@ -568,7 +568,7 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
             case "uppercaseExponent":
                 args["exponentcase"] = options.uppercaseExponent ? "uppercase" : "lowercase"
             case "decimalGrouping":
-                args["decimalgrouping"] = ({
+                args["decimalgrouping"] = {
                     switch $0 {
                     case .threshold(3):
                         return "thousands"
@@ -577,7 +577,7 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                     default:
                         return $0.rawValue
                     }
-                })(options.decimalGrouping)
+                }(options.decimalGrouping)
             case "binaryGrouping":
                 args["binarygrouping"] = options.binaryGrouping.rawValue
             case "octalGrouping":
@@ -842,22 +842,22 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
         options.hexGrouping = grouping
     }
-    try processOption("experimental", in: args, from: &arguments) {
-        switch $0 {
-        case "enabled", "true":
-            options.experimentalRules = true
-        case "disabled", "false":
-            options.experimentalRules = false
-        default:
-            throw FormatError.options("")
-        }
-    }
     try processOption("fragment", in: args, from: &arguments) {
         switch $0 {
         case "true", "enabled":
             options.fragment = true
         case "false", "disabled":
             options.fragment = false
+        default:
+            throw FormatError.options("")
+        }
+    }
+    try processOption("experimental", in: args, from: &arguments) {
+        switch $0 {
+        case "enabled", "true":
+            options.experimentalRules = true
+        case "disabled", "false":
+            options.experimentalRules = false
         default:
             throw FormatError.options("")
         }

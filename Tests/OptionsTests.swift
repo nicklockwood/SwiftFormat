@@ -218,4 +218,108 @@ class OptionsTests: XCTestCase {
         let options = inferOptions(from: tokenize(input))
         XCTAssertFalse(options.uppercaseExponent)
     }
+
+    // MARK: decimalGrouping
+
+    func testInferThousands() {
+        let input = "[100_000, 1_000, 1, 23, 50]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.decimalGrouping, .threshold(3))
+    }
+
+    func testInferMillions() {
+        let input = "[100_000, 1000, 1, 23, 50]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.decimalGrouping, .threshold(6))
+    }
+
+    func testInferNoDecimalGrouping() {
+        let input = "[100000, 1000, 1, 23, 50]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.decimalGrouping, .none)
+    }
+
+    func testInferIgnoreDecimalGrouping() {
+        let input = "[1000_00, 1000, 1, 23, 50]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.decimalGrouping, .ignore)
+    }
+
+    // MARK: binaryGrouping
+
+    func testInferNibbleGrouping() {
+        let input = "[0b100_0000, 0b1_0000, 0b1, 0b01, 0b11]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.binaryGrouping, .threshold(4))
+    }
+
+    func testInferByteGrouping() {
+        let input = "[0b10001101_10001101, 0b10010000, 0b1, 0b01, 0b11]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.binaryGrouping, .threshold(8))
+    }
+
+    func testInferNoBinaryGrouping() {
+        let input = "[0b1010100000, 0b100100, 0b1, 0b01, 0b11]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.binaryGrouping, .none)
+    }
+
+    func testInferIgnoreBinaryGrouping() {
+        let input = "[0b10_000_00, 0b1000_0, 0b1, 0b01, 0b11]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.binaryGrouping, .ignore)
+    }
+
+    // MARK: octalGrouping
+
+    func testInferQuadOctalGrouping() {
+        let input = "[0o123_4523, 0b1_4523, 0o5, 0o23, 0o14]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.octalGrouping, .threshold(4))
+    }
+
+    func testInferOctetOctalGrouping() {
+        let input = "[0o11234523_11234523, 0o12344563, 0o1, 0o01, 0o12]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.octalGrouping, .threshold(8))
+    }
+
+    func testInferNoOctalGrouping() {
+        let input = "[0o11234523, 0o112345, 0o1, 0o01, 0o21]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.octalGrouping, .none)
+    }
+
+    func testInferIgnoreOctalGrouping() {
+        let input = "[0o11_2345_23, 0o1000_0, 0o1, 0o01, 0o11]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.octalGrouping, .ignore)
+    }
+
+    // MARK: hexGrouping
+
+    func testInferQuadHexGrouping() {
+        let input = "[0x123_FF23, 0b1_4523, 0x5, 0x23, 0x14]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.hexGrouping, .threshold(4))
+    }
+
+    func testInferOctetHexGrouping() {
+        let input = "[0x112345FF_112AA523, 0x12344563, 0x1, 0x01, 0x12]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.hexGrouping, .threshold(8))
+    }
+
+    func testInferNoHexGrouping() {
+        let input = "[0x11234523, 0x112345, 0x1, 0x01, 0x21]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.hexGrouping, .none)
+    }
+
+    func testInferIgnoreHexGrouping() {
+        let input = "[0x11_2345_23, 0x10F0_0, 0x1, 0x01, 0x11]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertEqual(options.hexGrouping, .ignore)
+    }
 }

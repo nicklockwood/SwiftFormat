@@ -554,15 +554,17 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         formatter.forEachToken { _, token in
             switch token {
             case .number(let string, .decimal):
-                if string.unicodeScalars.contains("e") {
+                let characters = string.unicodeScalars
+                if characters.contains("e") {
                     lowercase += 1
-                } else if string.unicodeScalars.contains("E") {
+                } else if characters.contains("E") {
                     uppercase += 1
                 }
             case .number(let string, .hex):
-                if string.unicodeScalars.contains("p") {
+                let characters = string.unicodeScalars
+                if characters.contains("p") {
                     lowercase += 1
-                } else if string.unicodeScalars.contains("P") {
+                } else if characters.contains("P") {
                     uppercase += 1
                 }
             default:
@@ -570,6 +572,111 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
             }
         }
         return uppercase > lowercase
+    }()
+
+    func grouping(for number: String, type: NumberType) -> (group: Int?, count: Int) {
+        let digits: String.CharacterView
+        let prefix = "0x"
+        switch type {
+        case .integer:
+            digits = number.characters
+        case .binary, .octal:
+            digits = number.characters.suffix(from: prefix.endIndex)
+        case .hex:
+            let endIndex =
+                number.characters.index { [".", "p", "P"].contains($0) } ?? number.endIndex
+            digits = number.characters[prefix.endIndex ..< endIndex]
+        case .decimal:
+            let endIndex =
+                number.characters.index { [".", "e", "E"].contains($0) } ?? number.endIndex
+            digits = number.characters.prefix(upTo: endIndex)
+        }
+        var count = 0
+        var index = digits.endIndex
+        var group: Int?
+        repeat {
+            index = digits.index(before: index)
+            if group == nil, digits[index] == "_" {
+                group = count
+            }
+            count += 1
+        } while index != digits.startIndex
+        return (group, count)
+    }
+    func grouping(forType type: NumberType) -> Grouping {
+        var none = 0, ignore = 0, four = 0, eight = 0
+        formatter.forEachToken { _, token in
+            guard case .number(let number, type) = token else {
+                return
+            }
+            let (group, count) = grouping(for: number, type: type)
+            if let group = group {
+                switch group {
+                case 4:
+                    four += 1
+                case 8:
+                    eight += 1
+                default:
+                    ignore += 1
+                }
+            } else if count > 4 {
+                none += 1
+            }
+        }
+        if none > four + eight {
+            if none > ignore {
+                return .none
+            } else {
+                return .ignore
+            }
+        } else if ignore > four + eight {
+            return .ignore
+        } else if eight + none > four {
+            return .threshold(8)
+        }
+        return .threshold(4)
+    }
+    options.binaryGrouping = grouping(forType: .binary)
+    options.octalGrouping = grouping(forType: .octal)
+    options.hexGrouping = grouping(forType: .hex)
+    options.decimalGrouping = {
+        var none = 0, ignore = 0, thousands = 0, millions = 0
+        formatter.forEachToken { _, token in
+            guard case .number(let number, let type) = token else {
+                return
+            }
+            switch type {
+            case .integer, .decimal:
+                let (group, count) = grouping(for: number, type: type)
+                if let group = group {
+                    if group == 3 {
+                        if count > 6 {
+                            millions += 1
+                        } else {
+                            thousands += 1
+                        }
+                    } else {
+                        ignore += 1
+                    }
+                } else if count > 3 {
+                    none += 1
+                }
+            default:
+                break
+            }
+        }
+        if none > thousands + millions {
+            if none > ignore {
+                return .none
+            } else {
+                return .ignore
+            }
+        } else if ignore > thousands + millions {
+            return .ignore
+        } else if millions + none > thousands {
+            return .threshold(6)
+        }
+        return .threshold(3)
     }()
 
     return options

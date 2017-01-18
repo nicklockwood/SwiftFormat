@@ -2828,6 +2828,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testParensNotRemovedBeforeIfBodyAfterTry() {
+        let input = "if let foo = try bar() { /* some code */ }"
+        let output = "if let foo = try bar() { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testParensNotRemovedBeforeCompoundIfBody() {
         let input = "if let foo = bar(), let baz = quux() { /* some code */ }"
         let output = "if let foo = bar(), let baz = quux() { /* some code */ }"
@@ -2852,6 +2859,13 @@ class RulesTests: XCTestCase {
     func testParensNotRemovedBeforeCaseBody() {
         let input = "if case foo = bar() { /* some code */ }"
         let output = "if case foo = bar() { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedBeforeSwitchBody() {
+        let input = "switch foo() {\ndefault: break\n}"
+        let output = "switch foo() {\ndefault: break\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

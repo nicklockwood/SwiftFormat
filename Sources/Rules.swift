@@ -1395,20 +1395,26 @@ extension FormatRules {
                     let openingIndex = formatter.index(
                         of: .nonSpaceOrCommentOrLinebreak, after: closingIndex, if: { $0 == .startOfScope("{") }
                     ), formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousIndex) != .keyword("func") {
-                    if let prevIndex = formatter.index(of: .keyword, before: i) {
-                        let prevKeyword = formatter.tokens[prevIndex]
+                    if var prevIndex = formatter.index(of: .keyword, before: i) {
+                        var prevKeyword = formatter.tokens[prevIndex]
+                        if [.keyword("try"), .keyword("is"), .keyword("as")].contains(prevKeyword),
+                            let index = formatter.index(of: .keyword, before: prevIndex) {
+                            prevIndex = index
+                            prevKeyword = formatter.tokens[prevIndex]
+                        }
                         let disallowed: [Token] = [
                             .keyword("in"),
                             .keyword("while"),
                             .keyword("if"),
                             .keyword("case"),
+                            .keyword("switch"),
                         ]
                         if disallowed.contains(prevKeyword) {
                             break
                         }
                         if [.keyword("var"), .keyword("let")].contains(prevKeyword),
-                            let prevKeyword = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
-                            disallowed.contains(prevKeyword) || prevKeyword == .delimiter(",") {
+                            let keyword = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                            disallowed.contains(keyword) || keyword == .delimiter(",") {
                             break
                         }
                         if prevKeyword == .keyword("var"),

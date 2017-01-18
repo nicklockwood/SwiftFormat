@@ -1,5 +1,21 @@
 # Change Log
 
+## [0.24](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24) (2017-01-18)
+
+- Fixed a critical bug where closure arguments could be mangled by the `unusedArguments` rule
+- Added `trailingClosures` rule, to automatically convert closure arguments to trailing closure syntax
+- Added `--enable` option to enable optional rules such as `trailingClosures` (which is disabled by default)
+- Added `--stripunusedargs` option to provide more fine-grained control of the `unusedArguments` rule
+- Added `--decimalgrouping`, `--hexgrouping`, `--binarygrouping` and `--octalgrouping` options
+- Added `--exponentcase` option for controlling the case of "e" in exponential literals, e.g. `3.4e-5`
+- Merged `hexLiterals` rule into new `numberFormatting` rule that handles case and grouping of numbers
+- Renamed `--hexliterals` option to `--hexliteralcase`
+- The `void` rule now converts `(_: Void)` to `()` automatically
+- The `redundantParens` rule now removes empty `()` before a trailing closure
+- Fixed some bugs with floating-point hex literal support
+- Fixed bug where keywords used as function argument names were not parsed correctly
+- Added Swift Package Manager support
+
 ## [0.23.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.23.1) (2017-01-14)
 
 - Fixed critical bug where closure return types could be mangled by the `unusedArguments` rule

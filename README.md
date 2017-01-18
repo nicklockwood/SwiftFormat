@@ -175,7 +175,7 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
 
     foo.filter{ return true }.map{ $0 }   -->   foo.filter { return true }.map { $0 }
     
-    foo({})                                 -->   foo({})
+    foo({})                               -->   foo({})
 
 *spaceInsideBraces* - adds space inside { }. For example:
 
@@ -271,7 +271,7 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     if x                 if x {
     {                        //foo
         //foo            } 
-    }               -->   else {
+    }              -->   else {
     else                     //bar
     {                    }
         //bar
@@ -315,7 +315,7 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     let bar: Void -> Void     -->    let bar: () -> Void
     
     let baz: (Void) -> Void   -->    let baz: () -> Void
-    
+        
     func quux() -> (Void)     -->    func quux() -> Void
 
 *todos* - ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon (else they're ignored by Xcode)
@@ -344,11 +344,15 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     
     convenience private init()                        -->    private convenience init() 
 
-*redundantParens* - removes unnecessary parens from around `if`, `while` or `switch` conditions:
+*redundantParens* - removes unnecessary parens from expressions and branch conditions:
 
-    if (foo == true) {}         -->    if foo == true {}
+    if (foo == true) {}           -->    if foo == true {}
     
-    while (i < bar.count) {}    -->    while i < bar.count {}
+    while (i < bar.count) {}      -->    while i < bar.count {}
+    
+    queue.async() { ... }         -->    queue.async { ... }
+    
+    let foo: Int = ({ ... })()    -->    let foo: Int = { ... }()
     
 *redundantGet* - removes unnecessary `get { }`clause from inside read-only computed properties:
 
@@ -395,7 +399,7 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
 
 *hexLiterals* - converts all hex literals to upper- or lower-case, depending on settings:
 
-    let color = 0xFF77A5    -->   let color = 0xff77a5
+    let color = 0xFF77A5     -->   let color = 0xff77a5
     
 *stripHeaders* - removes the comment header blocks that Xcode adds to the top of each file (off by default).
 
@@ -414,7 +418,7 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
                             	          quux
                           	          ]
 
-*unusedArguments* - marks unused arguments in functions and closures with `_` to make it clear they aren't used:
+*unusedArguments* - marks unused arguments in functions and closures with `_` to make it clear they aren't used. Use the `--stripunusedargs` option to configure which argument types are affected.
 
     func foo(bar: Int, baz: String) {         func foo(bar _: Int, baz: String) {
         print("Hello \(baz)")           -->       print("Hello \(baz)")
@@ -427,6 +431,14 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     request { response, data in               request { _, data in
         self.data += data               -->       self.data += data
     }                                         }
+
+*trailingClosures* - converts the last closure argument in a function call to trailing closure syntax where possible.
+
+    DispatchQueue.main.async(execute: {          DispatchQueue.main.async {
+       // do stuff                        -->       // do stuff
+    })                                           }
+
+**NOTE:** Occasionally, using trailing closure syntax makes a function call ambiguous, and the compiler can't understand it. Since SwiftFormat isn't able to detect this in all cases, the `trailingClosures` rule is disabled by default, and must be manually enabled by adding `--enable trailingClosures` to the command-line.
 
 
 FAQ
@@ -454,6 +466,11 @@ There haven't been many questions yet, but here's what I'd like to think people 
 > If the options you want aren't exposed, and disabling the rule doesn't solve the problem, the rules are implemented as functions in the file `Rules.swift`, so you can modify them and build a new version of the command line tool. If you think your changes might be generally useful, make a pull request.
 
 
+*Q. After applying SwiftFormat, my code won't compile. Is that a bug?*
+
+> A. SwiftFormat should never break your code. Check the known issues below, and if it's not already listed there, please raise an issue on github: https://github.com/nicklockwood/SwiftFormat/issues
+
+
 *Q. Why did you write yet another Swift formatting tool?*
 
 > A. Surprisingly, there really aren't that many other options out there, and none of them currently support all the rules I wanted. The only other comparable ones I'm aware of are Realm's [SwiftLint](https://github.com/realm/SwiftLint) and Jintin's [Swimat](https://github.com/Jintin/Swimat) - you might want to try those if SwiftFormat doesn't meet your requirements.
@@ -478,7 +495,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 > A. First it loops through the source file character-by-character and breaks it into tokens, such as `number`, `identifier`, `linebreak`, etc. That's handled by the functions in `Tokenizer.swift`.
 
-> Next, it applies a series of formatting rules to the token array, such as "remove whitespace at the end of a line", or "ensure each opening brace appears on the same line as the preceding non-space token". Each rule is designed to be independent of the others, so they can be enabled or disabled individually. The rules are defined as methods of the `FormatRules` class in `Rules.swift`, and are executed automatically using runtime magic.
+> Next, it applies a series of formatting rules to the token array, such as removing whitespace at the end of a line, or ensuring each opening brace appears on the same line as the preceding non-space token. Each rule is designed to be independent of the others, so they can be enabled or disabled individually. The rules are defined as methods of the `FormatRules` class in `Rules.swift`, and are executed automatically using runtime magic.
 
 > Finally, the modified token array is stitched back together to re-generate the source file.
 
@@ -510,11 +527,13 @@ You can specify a custom cache file location by passing a path as the `--cache` 
 Known issues
 ---------------
 
+* The `trailingClosures` rule will sometimes generate ambiguous code that breaks your program. For this reason, the rule is disabled by default. It is recommended that you apply this rule manually and review the changes, rather than including it in an automatic formatting process.
+
 * Under rare circumstances, SwiftFormat may misinterpret a generic type followed by an `=` sign as a pair of `<` and `>=` expressions. For example, the following case would be handled incorrectly:
 
         let foo: Dictionary<String, String>=["Hello": "World"]
         
-    To work around this, either manually add a space between the `>` and `=` characters to eliminate the ambiguity, or use add `--disable spaceAroundOperators` to the command-line options.
+    To work around this, either manually add a space between the `>` and `=` characters to eliminate the ambiguity, or add `--disable spaceAroundOperators` to the command-line options.
 
 * If a file begins with a comment, the `stripHeaders` rule will remove it if is followed by a blank line. To avoid this, make sure that the first comment is directly followed by a line of code.
 

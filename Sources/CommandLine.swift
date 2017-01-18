@@ -95,6 +95,7 @@ func printHelp() {
     print("--ranges           spacing for ranges. \"spaced\" (default) or \"nospace\"")
     print("--removelines      remove blank line before }. \"enabled\" (default) or \"disabled\"")
     print("--semicolons       allow semicolons. \"never\" or \"inline\" (default)")
+    print("--stripunusedargs  \"closure-only\", \"unnamed-only\" or \"always\" (default)")
     print("--trimwhitespace   trim trailing space. \"always\" (default) or \"nonblank-lines\"")
     print("--wraparguments    wrap function args. \"beforefirst\", \"afterfirst\", \"disabled\"")
     print("--wrapelements     wrap array/dict. \"beforefirst\", \"afterfirst\", \"disabled\"")
@@ -587,6 +588,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["octalgrouping"] = options.octalGrouping.rawValue
             case "hexGrouping":
                 args["hexgrouping"] = options.hexGrouping.rawValue
+            case "stripUnusedArguments":
+                args["stripunusedargs"] = options.stripUnusedArguments.rawValue
             case "experimentalRules":
                 args["experimental"] = options.experimentalRules ? "enabled" : nil
             case "fragment":
@@ -838,6 +841,12 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
+    try processOption("stripunusedargs", in: args, from: &arguments) {
+        guard let type = ArgumentType(rawValue: $0) else {
+            throw FormatError.options("")
+        }
+        options.stripUnusedArguments = type
+    }
     try processOption("experimental", in: args, from: &arguments) {
         switch $0 {
         case "enabled", "true":
@@ -889,6 +898,7 @@ let formatArguments = [
     "ranges",
     "removelines",
     "semicolons",
+    "stripunusedargs",
     "trimwhitespace",
     "wraparguments",
     "wrapelements",

@@ -1653,7 +1653,7 @@ extension FormatRules {
 
     /// Replace unused arguments with an underscore
     public class func unusedArguments(_ formatter: Formatter) {
-        func removeUnused<T>(from argNames: inout [String], with associatedData: inout [T], in range: Range<Int>) {
+        func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: Range<Int>) {
             for i in range.lowerBound ..< range.upperBound {
                 if case .identifier(let name) = formatter.tokens[i], let index = argNames.index(of: name),
                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
@@ -1664,51 +1664,6 @@ extension FormatRules {
                     if argNames.isEmpty {
                         break
                     }
-                }
-            }
-        }
-        // Function arguments
-        formatter.forEach(.keyword("func")) { i, _ in
-            guard let startIndex = formatter.index(of: .startOfScope("("), after: i),
-                let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
-            var index = startIndex
-            var argNames = [String]()
-            var nameIndexPairs = [(Int, Int)]()
-            while index < endIndex {
-                guard let externalNameIndex =
-                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: { $0.isIdentifier })
-                else { return }
-                guard let nextIndex =
-                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
-                switch formatter.tokens[nextIndex] {
-                case .identifier(let name) where name != "_":
-                    argNames.append(name)
-                    nameIndexPairs.append((externalNameIndex, nextIndex))
-                case .delimiter(":"):
-                    if case .identifier(let name) = formatter.tokens[externalNameIndex], name != "_" {
-                        argNames.append(name)
-                        nameIndexPairs.append((externalNameIndex, externalNameIndex))
-                    }
-                default:
-                    return
-                }
-                index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
-            }
-            guard let bodyStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex, if: {
-                $0 == .startOfScope("{")
-            }), let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else { return }
-            removeUnused(from: &argNames, with: &nameIndexPairs, in: bodyStartIndex + 1 ..< bodyEndIndex)
-            for pair in nameIndexPairs.reversed() {
-                if pair.0 == pair.1 {
-                    formatter.insertToken(.identifier("_"), at: pair.0 + 1)
-                    formatter.insertToken(.space(" "), at: pair.0 + 1)
-                } else if case .identifier("_") = formatter.tokens[pair.0] {
-                    formatter.removeToken(at: pair.1)
-                    if formatter.tokens[pair.1 - 1] == .space(" ") {
-                        formatter.removeToken(at: pair.1 - 1)
-                    }
-                } else {
-                    formatter.replaceToken(at: pair.1, with: .identifier("_"))
                 }
             }
         }
@@ -1741,9 +1696,60 @@ extension FormatRules {
                 }
             }
             guard let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: i) else { return }
-            removeUnused(from: &argNames, with: &argIndices, in: i + 1 ..< bodyEndIndex)
+            removeUsed(from: &argNames, with: &argIndices, in: i + 1 ..< bodyEndIndex)
             for index in argIndices.reversed() {
                 formatter.replaceToken(at: index, with: .identifier("_"))
+            }
+        }
+        // Function arguments
+        guard formatter.options.stripUnusedArguments != .closureOnly else {
+            return
+        }
+        formatter.forEach(.keyword("func")) { i, _ in
+            guard let startIndex = formatter.index(of: .startOfScope("("), after: i),
+                let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
+            var index = startIndex
+            var argNames = [String]()
+            var nameIndexPairs = [(Int, Int)]()
+            while index < endIndex {
+                guard let externalNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
+                    if case .identifier(let name) = $0 {
+                        return formatter.options.stripUnusedArguments != .unnamedOnly || name == "_"
+                    }
+                    return false
+                }) else { return }
+                guard let nextIndex =
+                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
+                switch formatter.tokens[nextIndex] {
+                case .identifier(let name) where name != "_":
+                    argNames.append(name)
+                    nameIndexPairs.append((externalNameIndex, nextIndex))
+                case .delimiter(":"):
+                    if case .identifier(let name) = formatter.tokens[externalNameIndex], name != "_" {
+                        argNames.append(name)
+                        nameIndexPairs.append((externalNameIndex, externalNameIndex))
+                    }
+                default:
+                    return
+                }
+                index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
+            }
+            guard let bodyStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex, if: {
+                $0 == .startOfScope("{")
+            }), let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else { return }
+            removeUsed(from: &argNames, with: &nameIndexPairs, in: bodyStartIndex + 1 ..< bodyEndIndex)
+            for pair in nameIndexPairs.reversed() {
+                if pair.0 == pair.1 {
+                    formatter.insertToken(.identifier("_"), at: pair.0 + 1)
+                    formatter.insertToken(.space(" "), at: pair.0 + 1)
+                } else if case .identifier("_") = formatter.tokens[pair.0] {
+                    formatter.removeToken(at: pair.1)
+                    if formatter.tokens[pair.1 - 1] == .space(" ") {
+                        formatter.removeToken(at: pair.1 - 1)
+                    }
+                } else {
+                    formatter.replaceToken(at: pair.1, with: .identifier("_"))
+                }
             }
         }
     }

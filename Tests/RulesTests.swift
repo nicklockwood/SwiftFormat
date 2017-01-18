@@ -3230,54 +3230,7 @@ class RulesTests: XCTestCase {
 
     // MARK: unusedArguments
 
-    func testMarkUnusedFunctionArgument() {
-        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
-        let output = "func foo(bar _: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testUnusedAnonymousFunctionArgument() {
-        let input = "func foo(_ foo: Int) {}"
-        let output = "func foo(_: Int) {}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testUnusedInternallyRenamedFunctionArgument() {
-        let input = "func foo(foo bar: Int) {}"
-        let output = "func foo(foo _: Int) {}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testNoMarkProtocolFunctionArgument() {
-        let input = "func foo(foo bar: Int)\nvar bar: Bool { get }"
-        let output = "func foo(foo bar: Int)\nvar bar: Bool { get }"
-        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testMembersAreNotArguments() {
-        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(bar.baz)\")\n}"
-        let output = "func foo(bar: Int, baz _: String) {\n    print(\"Hello \\(bar.baz)\")\n}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testLabelsAreNotArguments() {
-        let input = "func foo(bar: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
-        let output = "func foo(bar _: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testDictionaryLiteralsRuinEverything() {
-        let input = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
-        let output = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
+    // MARK: closures
 
     func testUnusedTypedClosureArguments() {
         let input = "let foo = { (bar: Int, baz: String) in\n    print(\"Hello \\(baz)\")\n}"
@@ -3333,6 +3286,93 @@ class RulesTests: XCTestCase {
         let output = "{\n    func foo() -> Int {}\n    for a in b {}\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    // MARK: functions
+
+    func testMarkUnusedFunctionArgument() {
+        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let output = "func foo(bar _: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testUnusedAnonymousFunctionArgument() {
+        let input = "func foo(_ foo: Int) {}"
+        let output = "func foo(_: Int) {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testUnusedInternallyRenamedFunctionArgument() {
+        let input = "func foo(foo bar: Int) {}"
+        let output = "func foo(foo _: Int) {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoMarkProtocolFunctionArgument() {
+        let input = "func foo(foo bar: Int)\nvar bar: Bool { get }"
+        let output = "func foo(foo bar: Int)\nvar bar: Bool { get }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testMembersAreNotArguments() {
+        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(bar.baz)\")\n}"
+        let output = "func foo(bar: Int, baz _: String) {\n    print(\"Hello \\(bar.baz)\")\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testLabelsAreNotArguments() {
+        let input = "func foo(bar: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
+        let output = "func foo(bar _: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testDictionaryLiteralsRuinEverything() {
+        let input = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
+        let output = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    // MARK: functions (closure-only)
+
+    func testNoMarkFunctionArgument() {
+        let input = "func foo(_ bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let output = "func foo(_ bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let options = FormatOptions(stripUnusedArguments: .closureOnly)
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    // MARK: functions (unnamed-only)
+
+    func testNoMarkNamedFunctionArgument() {
+        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let output = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let options = FormatOptions(stripUnusedArguments: .unnamedOnly)
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testRemoveUnnamedFunctionArgument() {
+        let input = "func foo(_ foo: Int) {}"
+        let output = "func foo(_: Int) {}"
+        let options = FormatOptions(stripUnusedArguments: .unnamedOnly)
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testRemoveInternalFunctionArgumentName() {
+        let input = "func foo(foo bar: Int) {}"
+        let output = "func foo(foo bar: Int) {}"
+        let options = FormatOptions(stripUnusedArguments: .unnamedOnly)
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     // MARK: wrapArguments

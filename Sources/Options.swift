@@ -45,6 +45,13 @@ public enum WrapMode: String {
     case disabled
 }
 
+/// Argument type for stripping
+public enum ArgumentType: String {
+    case unnamedOnly = "unnamed-only"
+    case closureOnly = "closure-only"
+    case all = "always"
+}
+
 /// Grouping for numeric literals
 public enum Grouping: Equatable, RawRepresentable {
     case ignore
@@ -124,6 +131,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var binaryGrouping: Grouping
     public var octalGrouping: Grouping
     public var hexGrouping: Grouping
+    public var stripUnusedArguments: ArgumentType
     public var experimentalRules: Bool
     public var fragment: Bool
 
@@ -148,6 +156,7 @@ public struct FormatOptions: CustomStringConvertible {
                 binaryGrouping: Grouping = .group(4, 8),
                 octalGrouping: Grouping = .group(4, 8),
                 hexGrouping: Grouping = .group(4, 8),
+                stripUnusedArguments: ArgumentType = .all,
                 experimentalRules: Bool = false,
                 fragment: Bool = false) {
 
@@ -172,6 +181,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.binaryGrouping = binaryGrouping
         self.octalGrouping = octalGrouping
         self.hexGrouping = hexGrouping
+        self.stripUnusedArguments = stripUnusedArguments
         self.experimentalRules = experimentalRules
         self.fragment = fragment
     }

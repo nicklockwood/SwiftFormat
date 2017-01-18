@@ -1679,16 +1679,25 @@ extension FormatRules {
             var argIndices = [Int]()
             if let start = formatter.index(of: .startOfScope("{"), before: i) {
                 var index = i - 1
+                var argCountStack = [0]
                 while index > start {
                     switch formatter.tokens[index] {
                     case .keyword("for"):
                         return
+                    case .endOfScope(")"):
+                        argCountStack.append(argNames.count)
+                    case .startOfScope("("):
+                        argCountStack.removeLast()
+                    case .delimiter(","):
+                        argCountStack[argCountStack.count - 1] = argNames.count
                     case .operator("->", .infix):
                         // Everything after this was part of return value
-                        argNames.removeAll()
-                        argIndices.removeAll()
-                    case .identifier(let name) where name != "_" && name != "Void":
-                        if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
+                        let count = argCountStack.last ?? 0
+                        argNames.removeSubrange(count ..< argNames.count)
+                        argIndices.removeSubrange(count ..< argIndices.count)
+                    case .identifier(let name) where name != "_":
+                        if argCountStack.count < 3,
+                            let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
                             ![.delimiter(":"), .operator(".", .infix)].contains(prevToken),
                             let scopeStart = formatter.index(of: .startOfScope, before: index),
                             ![.startOfScope("["), .startOfScope("<")].contains(formatter.tokens[scopeStart]) {
@@ -1712,6 +1721,7 @@ extension FormatRules {
             return
         }
         formatter.forEach(.keyword("func")) { i, _ in
+            let isOperator = (formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isOperator == true)
             guard let startIndex = formatter.index(of: .startOfScope("("), after: i),
                 let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
             var index = startIndex
@@ -1746,8 +1756,12 @@ extension FormatRules {
             removeUsed(from: &argNames, with: &nameIndexPairs, in: bodyStartIndex + 1 ..< bodyEndIndex)
             for pair in nameIndexPairs.reversed() {
                 if pair.0 == pair.1 {
-                    formatter.insertToken(.identifier("_"), at: pair.0 + 1)
-                    formatter.insertToken(.space(" "), at: pair.0 + 1)
+                    if isOperator {
+                        formatter.replaceToken(at: pair.0, with: .identifier("_"))
+                    } else {
+                        formatter.insertToken(.identifier("_"), at: pair.0 + 1)
+                        formatter.insertToken(.space(" "), at: pair.0 + 1)
+                    }
                 } else if case .identifier("_") = formatter.tokens[pair.0] {
                     formatter.removeToken(at: pair.1)
                     if formatter.tokens[pair.1 - 1] == .space(" ") {

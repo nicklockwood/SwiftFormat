@@ -2549,20 +2549,6 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testVoidClosureArgConvertedToEmptyParens() {
-        let input = "{ Void in }"
-        let output = "{ () in }"
-        XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testVoidClosureArgInParensConvertedToEmptyParens() {
-        let input = "{ [self] (Void) in }"
-        let output = "{ [self] () in }"
-        XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
     func testAnonymousVoidClosureArgConvertedToEmptyParens() {
         let input = "{ (_: Void) in }"
         let output = "{ () in }"
@@ -3302,6 +3288,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testClosureTypeInClosureArgumentsIsNotMangled() {
+        let input = "{ (foo: (Int) -> Void) in }"
+        let output = "{ (_: (Int) -> Void) in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testArgAfterClosureTypeInClosureArgumentsIsNotMangled() {
+        let input = "{ (foo: (Int) -> Void, bar: String) in }"
+        let output = "{ (_: (Int) -> Void, _: String) in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: functions
 
     func testMarkUnusedFunctionArgument() {
@@ -3349,6 +3349,13 @@ class RulesTests: XCTestCase {
     func testDictionaryLiteralsRuinEverything() {
         let input = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
         let output = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testOperatorArgumentsAreUnnamed() {
+        let input = "func ==(lhs: Int, rhs: Int) { return false }"
+        let output = "func ==(_: Int, _: Int) { return false }"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

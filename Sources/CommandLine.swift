@@ -73,11 +73,11 @@ func printHelp() {
     print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
     print("")
     print("--disable          a list of format rules to be disabled (comma-delimited)")
+    print("--enable           a list of disabled rules to be re-enabled (comma-delimited)")
     print("--rules            the list of rules to apply (pass nothing to print rules)")
     print("")
     print("--allman           use allman indentation style \"true\" or \"false\" (default)")
     print("--binarygrouping   binary grouping,threshold or \"none\", \"ignore\". default: 4,8")
-    print("--closures         use trailing closure syntax. \"trailing\" or \"ignore\" (default)")
     print("--commas           commas in collection literals. \"always\" (default) or \"inline\"")
     print("--comments         indenting of comment bodies. \"indent\" (default) or \"ignore\"")
     print("--decimalgrouping  decimal grouping,threshold or \"none\", \"ignore\". default: 3,6")
@@ -139,11 +139,31 @@ func processArguments(_ args: [String]) {
 
         // Rules
         var rulesByName = FormatRules.byName
+        var disabled = Set(FormatRules.disabledByDefault)
+        if let names = args["enable"]?.components(separatedBy: ",") {
+            for name in names {
+                var name = (name as NSString).trimmingCharacters(in: .whitespacesAndNewlines)
+                if !rulesByName.keys.contains(name) {
+                    throw FormatError.options("unknown rule '\(name)'")
+                }
+                disabled.remove(name)
+            }
+        }
+        if let names = args["disable"]?.components(separatedBy: ",") {
+            for name in names {
+                var name = (name as NSString).trimmingCharacters(in: .whitespacesAndNewlines)
+                if !rulesByName.keys.contains(name) {
+                    throw FormatError.options("unknown rule '\(name)'")
+                }
+                disabled.insert(name)
+            }
+        }
         if let names = args["rules"]?.components(separatedBy: ",") {
             if names.count == 1, names[0].isEmpty {
                 print("")
                 for name in FormatRules.byName.keys.sorted() {
-                    print(" " + name)
+                    let disabled = disabled.contains(name) ? " (disabled)" : ""
+                    print(" \(name)\(disabled)")
                 }
                 print("")
                 return
@@ -159,14 +179,8 @@ func processArguments(_ args: [String]) {
             }
             rulesByName = whitelist
         }
-        if let names = args["disable"]?.components(separatedBy: ",") {
-            for name in names {
-                var name = (name as NSString).trimmingCharacters(in: .whitespacesAndNewlines)
-                if !rulesByName.keys.contains(name) {
-                    throw FormatError.options("unknown rule '\(name)'")
-                }
-                rulesByName.removeValue(forKey: name)
-            }
+        for name in disabled {
+            rulesByName[name] = nil
         }
         let rules = Array(rulesByName.values)
 
@@ -541,8 +555,6 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["ranges"] = options.spaceAroundRangeOperators ? "spaced" : "nospace"
             case "useVoid":
                 args["empty"] = options.useVoid ? "void" : "tuples"
-            case "trailingClosures":
-                args["closures"] = options.trailingClosures ? "trailing" : "ignore"
             case "trailingCommas":
                 args["commas"] = options.trailingCommas ? "always" : "inline"
             case "indentComments":
@@ -654,16 +666,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.allowInlineSemicolons = true
         case "never", "false":
             options.allowInlineSemicolons = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("closures", in: args, from: &arguments) {
-        switch $0 {
-        case "trailing":
-            options.trailingClosures = true
-        case "ignore":
-            options.trailingClosures = false
         default:
             throw FormatError.options("")
         }
@@ -871,7 +873,6 @@ let formatArguments = [
     // Format options
     "allman",
     "binarygrouping",
-    "closures",
     "commas",
     "comments",
     "decimalgrouping",
@@ -901,6 +902,7 @@ let commandLineArguments = [
     "cache",
     // Rules
     "disable",
+    "enable",
     "rules",
     // Misc
     "help",

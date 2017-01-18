@@ -51,8 +51,8 @@ public class FormatRules: NSObject {
         return rules
     }()
 
-    /// Default rules
-    public static let `default` = Array(FormatRules.byName.values)
+    /// All rules
+    public static let all = Array(FormatRules.byName.values)
 
     /// All rules except those specified
     public static func all(except rules: [String]) -> [FormatRule] {
@@ -63,6 +63,12 @@ public class FormatRules: NSObject {
         }
         return Array(byName.values)
     }
+
+    /// Rules that are disabled by default
+    public static let disabledByDefault = ["trailingClosures"]
+
+    /// Default rules
+    public static let `default` = all(except: disabledByDefault)
 }
 
 extension FormatRules {
@@ -1246,12 +1252,9 @@ extension FormatRules {
     }
 
     /// Convert closure arguments to trailing closure syntax where possible
+    /// NOTE: Parens around trailing closures are sometimes required for disambiguation.
+    /// SwiftFormat can't detect those cases, so `trailingClosures` is disabled by default
     public class func trailingClosures(_ formatter: Formatter) {
-
-        // NOTE: Parens around trailing closures are sometimes required for disambiguation.
-        // SwiftFormat can't detect those cases, which is why `trailingClosures` is off by default
-        guard formatter.options.trailingClosures else { return }
-
         func removeParen(at index: Int) {
             if formatter.token(at: index - 1)?.isSpace == true {
                 if formatter.token(at: index + 1)?.isSpace == true {

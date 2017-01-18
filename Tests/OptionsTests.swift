@@ -32,75 +32,66 @@ class OptionsTests: XCTestCase {
 
     func testInferSpaceAroundRangeOperators() {
         let input = "let foo = 0 ..< bar\n;let baz = 1...quux"
-        let output = true
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.spaceAroundRangeOperators, output)
+        XCTAssertTrue(options.spaceAroundRangeOperators)
     }
 
     func testInferNoSpaceAroundRangeOperators() {
         let input = "let foo = 0..<bar\n;let baz = 1...quux"
-        let output = false
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.spaceAroundRangeOperators, output)
+        XCTAssertFalse(options.spaceAroundRangeOperators)
     }
 
     // MARK: useVoid
 
     func testInferUseVoid() {
         let input = "func foo(bar: () -> (Void), baz: ()->(), quux: () -> Void) {}"
-        let output = true
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.useVoid, output)
+        XCTAssertTrue(options.useVoid)
     }
 
     func testInferDontUseVoid() {
         let input = "func foo(bar: () -> (), baz: ()->(), quux: () -> Void) {}"
-        let output = false
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.useVoid, output)
+        XCTAssertFalse(options.useVoid)
     }
 
     // MARK: trailingCommas
 
     func testInferTrailingCommas() {
         let input = "let foo = [\nbar,\n]\n let baz = [\nquux\n]"
-        let output = true
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.trailingCommas, output)
+        XCTAssertTrue(options.trailingCommas)
     }
 
     func testInferNoTrailingCommas() {
         let input = "let foo = [\nbar\n]\n let baz = [\nquux\n]"
-        let output = false
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.trailingCommas, output)
+        XCTAssertFalse(options.trailingCommas)
     }
 
     // MARK: indentComments
 
     func testInferIndentComments() {
         let input = "  /**\n  hello\n    - world\n  */"
-        let output = false
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.indentComments, output)
+        XCTAssertFalse(options.indentComments)
     }
 
     // MARK: truncateBlankLines
 
     func testInferNoTruncateBlanklines() {
         let input = "class Foo {\n    \nfunc bar() {\n        \n        //baz\n\n}\n    \n}"
-        let output = false
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.truncateBlankLines, output)
+        XCTAssertFalse(options.truncateBlankLines)
     }
 
     // MARK: allmanBraces
 
     func testInferAllmanComments() {
         let input = "func foo()\n{\n}\n\nfunc bar() {\n}\n\nfunc baz()\n{\n}"
-        let output = true
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.allmanBraces, output)
+        XCTAssertTrue(options.allmanBraces)
     }
 
     // MARK: ifdefIndent

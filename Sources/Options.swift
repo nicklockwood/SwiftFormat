@@ -274,17 +274,17 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         var voids = 0, tuples = 0
         formatter.forEach(.identifier("Void")) { i, _ in
             if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-                [.symbol(".", .prefix), .symbol(".", .infix), .keyword("typealias")].contains(prevToken) {
+                [.operator(".", .prefix), .operator(".", .infix), .keyword("typealias")].contains(prevToken) {
                 return
             }
             voids += 1
         }
         formatter.forEach(.startOfScope("(")) { i, _ in
             if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
-                let prevToken = formatter.token(at: prevIndex), prevToken == .symbol("->", .infix),
+                let prevToken = formatter.token(at: prevIndex), prevToken == .operator("->", .infix),
                 let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i),
                 let nextToken = formatter.token(at: nextIndex), nextToken.string == ")",
-                formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) != .symbol("->", .infix) {
+                formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) != .operator("->", .infix) {
                 tuples += 1
             }
         }

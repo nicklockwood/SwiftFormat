@@ -51,23 +51,25 @@ private let swiftKeywords = Set([
 /// Classes of token used for matching
 public enum TokenType {
     case space
-    case spaceOrComment
-    case spaceOrLinebreak
-    case spaceOrCommentOrLinebreak
     case linebreak
     case endOfStatement
     case startOfScope
     case endOfScope
     case keyword
     case identifier
-    case identifierOrKeyword
-    case symbol
-    case unwrapSymbol
+    case `operator`
+    case unwrapOperator
     case rangeOperator
     case number
     case error
 
-    // Negative types
+    // OR types
+    case spaceOrComment
+    case spaceOrLinebreak
+    case spaceOrCommentOrLinebreak
+    case identifierOrKeyword
+
+    // NOT types
     case nonSpace
     case nonSpaceOrComment
     case nonSpaceOrLinebreak
@@ -98,7 +100,7 @@ public enum Token: Equatable {
     case startOfScope(String)
     case endOfScope(String)
     case delimiter(String)
-    case symbol(String, SymbolType)
+    case `operator`(String, SymbolType)
     case stringBody(String)
     case keyword(String)
     case identifier(String)
@@ -114,7 +116,7 @@ public enum Token: Equatable {
              .startOfScope(let string),
              .endOfScope(let string),
              .delimiter(let string),
-             .symbol(let string, _),
+             .operator(let string, _),
              .stringBody(let string),
              .keyword(let string),
              .identifier(let string),
@@ -213,10 +215,10 @@ public enum Token: Equatable {
             return isIdentifier
         case .identifierOrKeyword:
             return isIdentifierOrKeyword
-        case .symbol:
-            return isSymbol
-        case .unwrapSymbol:
-            return isUnwrapSymbol
+        case .operator:
+            return isOperator
+        case .unwrapOperator:
+            return isUnwrapOperator
         case .rangeOperator:
             return isRangeOperator
         case .number:
@@ -234,86 +236,75 @@ public enum Token: Equatable {
         }
     }
 
-    public var isSymbol: Bool {
-        if case .symbol = self {
-            return true
+    private enum Match {
+        case none
+        case type
+        case typeAndSubtype
+        case typeAndString
+        case exact
+    }
+
+    private func match(with token: Token) -> Match {
+        switch (self, token) {
+        case let (.number(a, c), .number(b, d)):
+            return a == b ?
+                (c == d ? .exact : .typeAndString) :
+                (c == d ? .typeAndSubtype : .type)
+        case let (.operator(a, c), .operator(b, d)):
+            return a == b ?
+                (c == d ? .exact : .typeAndString) :
+                (c == d ? .typeAndSubtype : .type)
+        case let (.linebreak(a), .linebreak(b)),
+             let (.startOfScope(a), .startOfScope(b)),
+             let (.endOfScope(a), .endOfScope(b)),
+             let (.delimiter(a), .delimiter(b)),
+             let (.keyword(a), .keyword(b)),
+             let (.identifier(a), .identifier(b)),
+             let (.stringBody(a), .stringBody(b)),
+             let (.commentBody(a), .commentBody(b)),
+             let (.space(a), .space(b)),
+             let (.error(a), .error(b)):
+            return a == b ? .exact : .type
+        case (.number, _),
+             (.operator, _),
+             (.linebreak, _),
+             (.startOfScope, _),
+             (.endOfScope, _),
+             (.delimiter, _),
+             (.keyword, _),
+             (.identifier, _),
+             (.stringBody, _),
+             (.commentBody, _),
+             (.space, _),
+             (.error, _):
+            return .none
         }
-        return false
     }
 
-    public func isSymbol(_ string: String) -> Bool {
-        if case .symbol(string, _) = self {
-            return true
-        }
-        return false
+    private func hasType(of token: Token) -> Bool {
+        return match(with: token) != .none
     }
 
-    public var isUnwrapSymbol: Bool {
-        switch self {
-        case .symbol("?", _), .symbol("!", _):
-            return true
-        default:
-            return false
-        }
-    }
+    public var isOperator: Bool { return hasType(of: .operator("", .none)) }
+    public var isUnwrapOperator: Bool { return isOperator("?") || isOperator("!") }
+    public var isRangeOperator: Bool { return isOperator("...") || isOperator("..<") }
+    public var isNumber: Bool { return hasType(of: .number("", .integer)) }
+    public var isError: Bool { return hasType(of: .error("")) }
+    public var isStartOfScope: Bool { return hasType(of: .startOfScope("")) }
+    public var isEndOfScope: Bool { return hasType(of: .endOfScope("")) }
+    public var isKeyword: Bool { return hasType(of: .keyword("")) }
+    public var isIdentifier: Bool { return hasType(of: .identifier("")) }
+    public var isIdentifierOrKeyword: Bool { return isIdentifier || isKeyword }
+    public var isSpace: Bool { return hasType(of: .space("")) }
+    public var isLinebreak: Bool { return hasType(of: .linebreak("")) }
+    public var isEndOfStatement: Bool { return self == .delimiter(";") || isLinebreak }
+    public var isSpaceOrLinebreak: Bool { return isSpace || isLinebreak }
+    public var isSpaceOrComment: Bool { return isSpace || isComment }
+    public var isSpaceOrCommentOrLinebreak: Bool { return isSpaceOrComment || isLinebreak }
+    public var isCommentOrLinebreak: Bool { return isComment || isLinebreak }
 
-    public var isRangeOperator: Bool {
-        switch self {
-        case .symbol("...", _), .symbol("..<", _):
-            return true
-        default:
-            return false
-        }
-    }
-
-    public var isNumber: Bool {
-        if case .number = self {
-            return true
-        }
-        return false
-    }
-
-    public var isError: Bool {
-        if case .error = self {
-            return true
-        }
-        return false
-    }
-
-    public var isStartOfScope: Bool {
-        if case .startOfScope = self {
-            return true
-        }
-        return false
-    }
-
-    public var isEndOfScope: Bool {
-        if case .endOfScope = self {
-            return true
-        }
-        return false
-    }
-
-    public var isKeyword: Bool {
-        if case .keyword = self {
-            return true
-        }
-        return false
-    }
-
-    public var isIdentifier: Bool {
-        if case .identifier = self {
-            return true
-        }
-        return false
-    }
-
-    public var isIdentifierOrKeyword: Bool {
-        return isIdentifier || isKeyword
-    }
-
-    public var isSpace: Bool {
-        if case .space = self {
+    public func isOperator(_ string: String) -> Bool {
+        if case .operator(string, _) = self {
             return true
         }
         return false
@@ -329,36 +320,6 @@ public enum Token: Equatable {
         default:
             return false
         }
-    }
-
-    public var isLinebreak: Bool {
-        if case .linebreak = self {
-            return true
-        }
-        return false
-    }
-
-    public var isSpaceOrLinebreak: Bool {
-        return isSpace || isLinebreak
-    }
-
-    public var isCommentOrLinebreak: Bool {
-        return isComment || isLinebreak
-    }
-
-    public var isSpaceOrComment: Bool {
-        return isSpace || isComment
-    }
-
-    public var isSpaceOrCommentOrLinebreak: Bool {
-        return isSpace || isComment || isLinebreak
-    }
-
-    public var isEndOfStatement: Bool {
-        if case .delimiter(";") = self {
-            return true
-        }
-        return isLinebreak
     }
 
     public func isEndOfScope(_ token: Token) -> Bool {
@@ -395,7 +356,7 @@ public enum Token: Equatable {
         case .delimiter(":"):
             // Special case, only used in tokenizer
             switch token {
-            case .endOfScope("case"), .endOfScope("default"), .symbol("?", .infix):
+            case .endOfScope("case"), .endOfScope("default"), .operator("?", .infix):
                 return true
             default:
                 return false
@@ -407,7 +368,7 @@ public enum Token: Equatable {
 
     var isLvalue: Bool {
         switch self {
-        case .identifier, .number, .symbol(_, .postfix),
+        case .identifier, .number, .operator(_, .postfix),
              .endOfScope(")"), .endOfScope("]"),
              .endOfScope("}"), .endOfScope(">"),
              .endOfScope("\""):
@@ -419,9 +380,9 @@ public enum Token: Equatable {
 
     var isRvalue: Bool {
         switch self {
-        case .symbol(_, .infix), .symbol(_, .postfix):
+        case .operator(_, .infix), .operator(_, .postfix):
             return false
-        case .identifier, .number, .symbol,
+        case .identifier, .number, .operator,
              .startOfScope("("), .startOfScope("["),
              .startOfScope("{"), .startOfScope("\""):
             return true
@@ -431,36 +392,7 @@ public enum Token: Equatable {
     }
 
     public static func ==(lhs: Token, rhs: Token) -> Bool {
-        switch (lhs, rhs) {
-        case let (.number(a, c), .number(b, d)):
-            return a == b && c == d
-        case let (.symbol(a, c), .symbol(b, d)):
-            return a == b && c == d
-        case let (.linebreak(a), .linebreak(b)),
-             let (.startOfScope(a), .startOfScope(b)),
-             let (.endOfScope(a), .endOfScope(b)),
-             let (.delimiter(a), .delimiter(b)),
-             let (.keyword(a), .keyword(b)),
-             let (.identifier(a), .identifier(b)),
-             let (.stringBody(a), .stringBody(b)),
-             let (.commentBody(a), .commentBody(b)),
-             let (.space(a), .space(b)),
-             let (.error(a), .error(b)):
-            return a == b
-        case (.number, _),
-             (.symbol, _),
-             (.linebreak, _),
-             (.startOfScope, _),
-             (.endOfScope, _),
-             (.delimiter, _),
-             (.keyword, _),
-             (.identifier, _),
-             (.stringBody, _),
-             (.commentBody, _),
-             (.space, _),
-             (.error, _):
-            return false
-        }
+        return lhs.match(with: rhs) == .exact
     }
 }
 
@@ -602,7 +534,7 @@ private extension String.UnicodeScalarView {
         if var tail = readCharacter(where: isHead) {
             switch tail {
             case "?", "!":
-                return .symbol(String(tail), .none)
+                return .operator(String(tail), .none)
             case "/":
                 break
             default:
@@ -619,14 +551,14 @@ private extension String.UnicodeScalarView {
                         }
                         // Can't return two tokens, so put /* back to be parsed next time
                         self = start
-                        return .symbol(head, .none)
+                        return .operator(head, .none)
                     } else if c == "/" {
                         if head == "" {
                             return .startOfScope("//")
                         }
                         // Can't return two tokens, so put // back to be parsed next time
                         self = start
-                        return .symbol(head, .none)
+                        return .operator(head, .none)
                     }
                 }
                 if c != "/" {
@@ -636,7 +568,7 @@ private extension String.UnicodeScalarView {
                 tail = c
             }
             head.append(Character(tail))
-            return .symbol(head, .none)
+            return .operator(head, .none)
         }
         return nil
     }
@@ -991,13 +923,13 @@ public func tokenize(_ source: String) -> [Token] {
         if scopeIndexStack.last == index {
             scopeIndexStack.removeLast()
         }
-        tokens[index] = .symbol("<", .none)
+        tokens[index] = .operator("<", .none)
         stitchSymbols(at: index)
     }
 
     func convertClosingChevronToSymbol(at i: Int, andOpeningChevron: Bool) {
         assert(tokens[i] == .endOfScope(">"))
-        tokens[i] = .symbol(">", .none)
+        tokens[i] = .operator(">", .none)
         stitchSymbols(at: i)
         if let previousIndex = index(of: .nonSpaceOrComment, before: i),
             tokens[previousIndex] == .endOfScope(">") {
@@ -1011,7 +943,7 @@ public func tokenize(_ source: String) -> [Token] {
 
     func isUnwrapOperator(at index: Int) -> Bool {
         let token = tokens[index]
-        if case .symbol(let string, _) = token, ["?", "!"].contains(string) &&
+        if case .operator(let string, _) = token, ["?", "!"].contains(string) &&
             index > 0 && !tokens[index - 1].isSpaceOrLinebreak {
             return true
         }
@@ -1019,31 +951,31 @@ public func tokenize(_ source: String) -> [Token] {
     }
 
     func stitchSymbols(at index: Int) {
-        guard case .symbol(var string, _) = tokens[index] else {
+        guard case .operator(var string, _) = tokens[index] else {
             assertionFailure()
             return
         }
         while let nextToken: Token = index + 1 < tokens.count ? tokens[index + 1] : nil,
-            case .symbol(let nextString, _) = nextToken,
+            case .operator(let nextString, _) = nextToken,
             string.hasPrefix(".") || !nextString.contains(".") {
             if scopeIndexStack.last == index {
                 // In case of a ? previously interpreted as a ternary
                 scopeIndexStack.removeLast()
             }
             string += nextString
-            tokens[index] = .symbol(string, .none)
+            tokens[index] = .operator(string, .none)
             tokens.remove(at: index + 1)
         }
         var index = index
         while let prevToken: Token = index > 1 ? tokens[index - 1] : nil,
-            case .symbol(let prevString, _) = prevToken, !isUnwrapOperator(at: index - 1),
+            case .operator(let prevString, _) = prevToken, !isUnwrapOperator(at: index - 1),
             prevString.hasPrefix(".") || !string.contains(".") {
             if scopeIndexStack.last == index - 1 {
                 // In case of a ? previously interpreted as a ternary
                 scopeIndexStack.removeLast()
             }
             string = prevString + string
-            tokens[index - 1] = .symbol(string, .none)
+            tokens[index - 1] = .operator(string, .none)
             tokens.remove(at: index)
             index -= 1
         }
@@ -1052,14 +984,14 @@ public func tokenize(_ source: String) -> [Token] {
 
     func setSymbolType(at i: Int) {
         let token = tokens[i]
-        guard case .symbol(let string, let currentType) = token else {
+        guard case .operator(let string, let currentType) = token else {
             assertionFailure()
             return
         }
         guard let prevNonSpaceToken =
             index(of: .nonSpaceOrCommentOrLinebreak, before: i).map({ tokens[$0] }) else {
             if tokens.count > i + 1 {
-                tokens[i] = .symbol(string, .prefix)
+                tokens[i] = .operator(string, .prefix)
             }
             return
         }
@@ -1105,7 +1037,7 @@ public func tokenize(_ source: String) -> [Token] {
                 return
             }
         }
-        tokens[i] = .symbol(string, type)
+        tokens[i] = .operator(string, type)
     }
 
     func index(of type: TokenType, before index: Int) -> Int? {
@@ -1137,7 +1069,7 @@ public func tokenize(_ source: String) -> [Token] {
             // Track switch/case statements
             let prevToken =
                 index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1).map { tokens[$0] }
-            if let prevToken = prevToken, case .symbol(".", _) = prevToken {
+            if let prevToken = prevToken, case .operator(".", _) = prevToken {
                 tokens[tokens.count - 1] = .identifier(string)
                 processToken()
                 return
@@ -1175,7 +1107,7 @@ public func tokenize(_ source: String) -> [Token] {
             if count > 1, case .number = tokens[count - 2] {
                 tokens[count - 1] = .error(token.string)
             }
-        case .symbol:
+        case .operator:
             stitchSymbols(at: tokens.count - 1)
         case .startOfScope:
             closedGenericScopeIndexes.removeAll()
@@ -1187,9 +1119,9 @@ public func tokenize(_ source: String) -> [Token] {
                 case .endOfScope(">") = tokens[prevIndex] {
                 // Fix up misidentified generic that is actually a pair of operators
                 switch token {
-                case .symbol(let string, _) where ["->", "?", "!", ".", "..."].contains(string):
+                case .operator(let string, _) where ["->", "?", "!", ".", "..."].contains(string):
                     break
-                case .symbol("=", _):
+                case .operator("=", _):
                     if prevIndex == tokens.count - 2 {
                         // TODO: this isn't the way swiftc disambiguates this case, so it won't
                         // always work correctly. But in practice, it will be correct most of
@@ -1197,7 +1129,7 @@ public func tokenize(_ source: String) -> [Token] {
                         // compiles correctly, even if it's mis-formatted
                         fallthrough
                     }
-                case .symbol, .identifier, .number, .startOfScope("\""):
+                case .operator, .identifier, .number, .startOfScope("\""):
                     convertClosingChevronToSymbol(at: prevIndex, andOpeningChevron: true)
                     processToken()
                     return
@@ -1205,7 +1137,7 @@ public func tokenize(_ source: String) -> [Token] {
                     break
                 }
             }
-            if let lastSymbolIndex = index(of: .symbol, before: tokens.count - 1) {
+            if let lastSymbolIndex = index(of: .operator, before: tokens.count - 1) {
                 // Set operator type
                 setSymbolType(at: lastSymbolIndex)
             }
@@ -1217,8 +1149,8 @@ public func tokenize(_ source: String) -> [Token] {
                 scopeIndexStack.removeLast()
                 switch token {
                 case .delimiter(":"):
-                    if case .symbol("?", .infix) = scope {
-                        tokens[tokens.count - 1] = .symbol(":", .infix)
+                    if case .operator("?", .infix) = scope {
+                        tokens[tokens.count - 1] = .operator(":", .infix)
                     } else {
                         tokens[tokens.count - 1] = .startOfScope(":")
                         scopeIndexStack.append(tokens.count - 1)
@@ -1245,7 +1177,7 @@ public func tokenize(_ source: String) -> [Token] {
             } else if scope == .startOfScope("<") {
                 // We think it's a generic at this point, but could be wrong
                 switch token {
-                case .symbol(let string, _):
+                case .operator(let string, _):
                     switch string {
                     case ".", "==", "?", "!":
                         break
@@ -1326,7 +1258,7 @@ public func tokenize(_ source: String) -> [Token] {
     }
 
     // Set final operator type
-    if let lastSymbolIndex = index(of: .symbol, before: tokens.count) {
+    if let lastSymbolIndex = index(of: .operator, before: tokens.count) {
         setSymbolType(at: lastSymbolIndex)
     }
 

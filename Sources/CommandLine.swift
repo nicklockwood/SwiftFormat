@@ -139,12 +139,12 @@ func processArguments(_ args: [String]) {
         }
 
         // Rules
-        var rulesByName = FormatRules.byName
+        var rules = Set(FormatRules.byName.keys)
         var disabled = Set(FormatRules.disabledByDefault)
         if let names = args["enable"]?.components(separatedBy: ",") {
             for name in names {
-                var name = (name as NSString).trimmingCharacters(in: .whitespacesAndNewlines)
-                if !rulesByName.keys.contains(name) {
+                var name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !rules.contains(name) {
                     throw FormatError.options("unknown rule '\(name)'")
                 }
                 disabled.remove(name)
@@ -152,8 +152,8 @@ func processArguments(_ args: [String]) {
         }
         if let names = args["disable"]?.components(separatedBy: ",") {
             for name in names {
-                var name = (name as NSString).trimmingCharacters(in: .whitespacesAndNewlines)
-                if !rulesByName.keys.contains(name) {
+                var name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !rules.contains(name) {
                     throw FormatError.options("unknown rule '\(name)'")
                 }
                 disabled.insert(name)
@@ -162,28 +162,28 @@ func processArguments(_ args: [String]) {
         if let names = args["rules"]?.components(separatedBy: ",") {
             if names.count == 1, names[0].isEmpty {
                 print("")
-                for name in FormatRules.byName.keys.sorted() {
+                for name in Array(rules).sorted() {
                     let disabled = disabled.contains(name) ? " (disabled)" : ""
                     print(" \(name)\(disabled)")
                 }
                 print("")
                 return
             }
-            var whitelist = [String: FormatRule]()
+            var whitelist = Set<String>()
             for name in names {
-                var name = (name as NSString).trimmingCharacters(in: .whitespacesAndNewlines)
-                if let rule = rulesByName[name] {
-                    whitelist[name] = rule
+                var name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                if rules.contains(name) {
+                    whitelist.insert(name)
                 } else {
                     throw FormatError.options("unknown rule '\(name)'")
                 }
             }
-            rulesByName = whitelist
+            rules = whitelist
+        } else {
+            for name: String in disabled {
+                rules.remove(name)
+            }
         }
-        for name in disabled {
-            rulesByName[name] = nil
-        }
-        let rules = Array(rulesByName.values)
 
         // Get input path(s)
         var inputURLs = [URL]()
@@ -301,6 +301,7 @@ func processArguments(_ args: [String]) {
                             let options = inferOptions(from: tokens)
                             print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
                         } else {
+                            let rules = FormatRules.all(except: Array(rules))
                             let output = try format(input, rules: rules, options: formatOptions)
                             if let outputURL = outputURL {
                                 do {
@@ -346,7 +347,7 @@ func processArguments(_ args: [String]) {
             (filesWritten, filesChecked, _errors) = processInput(
                 inputURLs,
                 andWriteToOutput: outputURL,
-                withRules: rules,
+                withRules: Array(rules),
                 formatOptions: formatOptions,
                 fileOptions: fileOptions,
                 cacheURL: cacheURL
@@ -407,19 +408,30 @@ func inferOptions(from inputURLs: [URL]) -> (Int, FormatOptions, [Error]) {
 
 func processInput(_ inputURLs: [URL],
                   andWriteToOutput outputURL: URL? = nil,
-                  withRules rules: [FormatRule],
+                  withRules enabled: [String],
                   formatOptions: FormatOptions,
                   fileOptions: FileOptions,
                   cacheURL: URL? = nil) -> (Int, Int, [Error]) {
 
+    // Filter rules
+    var disabled = [String]()
+    for name: String in FormatRules.byName.keys {
+        if !enabled.contains(name) {
+            disabled.append(name)
+        }
+    }
+    let ruleNames = enabled.count <= disabled.count ?
+        (enabled.count == 0 ? "" : "rules:\(enabled.joined(separator: ","));") :
+        (disabled.count == 0 ? "" : "disabled:\(disabled.joined(separator: ","));")
     // Load cache
-    let cachePrefix = "\(version);\(formatOptions)"
+    let cachePrefix = "\(version);\(formatOptions)\(ruleNames)"
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
     var cache: [String: String]?
     if let cacheURL = cacheURL {
         cache = NSDictionary(contentsOf: cacheURL) as? [String: String] ?? [:]
     }
     // Format files
+    let rules = FormatRules.all(except: disabled)
     var errors = [Error]()
     var filesChecked = 0, filesWritten = 0
     for inputURL in inputURLs {

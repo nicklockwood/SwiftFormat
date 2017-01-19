@@ -53,7 +53,7 @@ public enum ArgumentType: String {
 }
 
 /// Grouping for numeric literals
-public enum Grouping: Equatable, RawRepresentable {
+public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
     case ignore
     case none
     case group(Int, Int)

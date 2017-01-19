@@ -43,9 +43,6 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
         let sourceToFormat = invocation.buffer.completeBuffer
         let tokens = tokenize(sourceToFormat)
 
-        // Remove all selections to avoid a crash when changing the contents of the buffer.
-        invocation.buffer.selections.removeAllObjects()
-
         // Infer format options
         var options = inferOptions(from: tokens)
         options.indent = indentationString(for: invocation.buffer)
@@ -56,24 +53,24 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
                 // No changes needed
                 return completionHandler(nil)
             }
+
+            // Remove all selections to avoid a crash when changing the contents of the buffer.
+            invocation.buffer.selections.removeAllObjects()
+
+            // Update buffer
             invocation.buffer.completeBuffer = sourceCode(for: output)
+
+            // For the time being, set the selection back to the last character of the buffer
+            guard let lastLine = invocation.buffer.lines.lastObject as? String else {
+                return completionHandler(FormatCommandError.invalidSelection)
+            }
+            let position = XCSourceTextPosition(line: invocation.buffer.lines.count - 1, column: lastLine.characters.count)
+            let updatedSelectionRange = XCSourceTextRange(start: position, end: position)
+            invocation.buffer.selections.add(updatedSelectionRange)
+
+            return completionHandler(nil)
         } catch let error {
             return completionHandler(error)
         }
-
-        // For the time being, set the selection back to the last character of the buffer
-        guard let lastLine = invocation.buffer.lines.lastObject as? String else {
-            return completionHandler(FormatCommandError.invalidSelection)
-        }
-
-        let position = XCSourceTextPosition(line: invocation.buffer.lines.count - 1, column: lastLine.characters.count)
-        let updatedSelectionRange = XCSourceTextRange(
-            start: position,
-            end: position
-        )
-
-        invocation.buffer.selections.add(updatedSelectionRange)
-
-        return completionHandler(nil)
     }
 }

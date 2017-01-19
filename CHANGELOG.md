@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.24.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.1) (2017-01-19)
+
+- Fixed crash in Xcode extension when formatted file has no changes
+- Fixed caching bug that meant enabled/disabled rules were not taken into account
+- Unix shebang/hashbang directive at start of a source file is no longer treated as an error
+
 ## [0.24](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24) (2017-01-18)
 
 - Fixed a critical bug where closure arguments could be mangled by the `unusedArguments` rule

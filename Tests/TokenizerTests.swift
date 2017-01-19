@@ -100,6 +100,39 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    // MARK: hashbang
+
+    func testHashbangOnItsOwnInFile() {
+        let input = "#!/usr/bin/swift"
+        let output: [Token] = [
+            .startOfScope("#!"),
+            .commentBody("/usr/bin/swift"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testHashbangAtStartOfFile() {
+        let input = "#!/usr/bin/swift \n"
+        let output: [Token] = [
+            .startOfScope("#!"),
+            .commentBody("/usr/bin/swift"),
+            .space(" "),
+            .linebreak("\n"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testHashbangAfterFirstLine() {
+        let input = "//Hello World\n#!/usr/bin/swift \n"
+        let output: [Token] = [
+            .startOfScope("//"),
+            .commentBody("Hello World"),
+            .linebreak("\n"),
+            .error("#!/usr/bin/swift"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Unescaping
 
     func testUnescapeInteger() {

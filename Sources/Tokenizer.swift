@@ -352,7 +352,12 @@ public enum Token: Equatable {
                 return false
             }
         case .linebreak:
-            return token == .startOfScope("//")
+            switch token {
+            case .startOfScope("//"), .startOfScope("#!"):
+                return true
+            default:
+                return false
+            }
         case .delimiter(":"):
             // Special case, only used in tokenizer
             switch token {
@@ -1232,6 +1237,14 @@ public func tokenize(_ source: String) -> [Token] {
         }
     }
 
+    // Ignore hashbang at start of file
+    if source.hasPrefix("#!") {
+        characters.removeFirst(2)
+        tokens.append(.startOfScope("#!"))
+        processSingleLineCommentBody()
+    }
+
+    // Parse tokens
     while let token = characters.parseToken() {
         tokens.append(token)
         if case .error = token {

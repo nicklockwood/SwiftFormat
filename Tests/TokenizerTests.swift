@@ -707,7 +707,7 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testKeywordsAsArgumentLabels() {
+    func testKeywordsAsArgumentLabelNames() {
         let input = "foo(for: bar, if: baz)"
         let output: [Token] = [
             .identifier("foo"),
@@ -722,6 +722,60 @@ class TokenizerTests: XCTestCase {
             .delimiter(":"),
             .space(" "),
             .identifier("baz"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testKeywordAsInternalArgumentLabelName() {
+        let input = "func foo(all in: Array)"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("all"),
+            .space(" "),
+            .identifier("in"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("Array"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testKeywordAsExternalArgumentLabelName() {
+        let input = "func foo(in array: Array)"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("in"),
+            .space(" "),
+            .identifier("array"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("Array"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testKeywordAsBothArgumentLabelNames() {
+        let input = "func foo(for in: Array)"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("for"),
+            .space(" "),
+            .identifier("in"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("Array"),
             .endOfScope(")"),
         ]
         XCTAssertEqual(tokenize(input), output)

@@ -1202,12 +1202,14 @@ public func tokenize(_ source: String) -> [Token] {
             } else if token == .delimiter(":"),
                 scope == .startOfScope("(") || scope == .startOfScope("["),
                 let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1),
-                case .keyword(let string) = tokens[prevIndex],
-                let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
-                prevPrevIndex == scopeIndex || tokens[prevPrevIndex] == .delimiter(",") {
-                tokens[prevIndex] = .identifier(string)
-                processToken()
-                return
+                tokens[prevIndex].isIdentifierOrKeyword,
+                let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex) {
+                if case .keyword(let name) = tokens[prevIndex] {
+                    tokens[prevIndex] = .identifier(name)
+                }
+                if case .keyword(let name) = tokens[prevPrevIndex] {
+                    tokens[prevPrevIndex] = .identifier(name)
+                }
             }
         }
         // Either there's no scope, or token didn't close it

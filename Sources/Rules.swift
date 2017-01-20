@@ -1732,6 +1732,7 @@ extension FormatRules {
                     if case .identifier(let name) = $0 {
                         return formatter.options.stripUnusedArguments != .unnamedOnly || name == "_"
                     }
+                    // Shouldn't happen unless there's a syntax error or tokenizer bug
                     return false
                 }) else { return }
                 guard let nextIndex =
@@ -1750,9 +1751,30 @@ extension FormatRules {
                 }
                 index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
             }
-            guard let bodyStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex, if: {
-                $0 == .startOfScope("{")
-            }), let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else { return }
+            guard let bodyStartIndex = formatter.index(after: endIndex, where: {
+                switch $0 {
+                case .startOfScope("{"): // What we're looking for
+                    return true
+                case .identifier,
+                     .startOfScope("("),
+                     .startOfScope("["),
+                     .startOfScope("<"),
+                     .delimiter(":"),
+                     .delimiter(","),
+                     .operator("&", .infix),
+                     .operator("->", .infix),
+                     .keyword("throws"),
+                     .keyword("rethrows"):
+                    return false
+                case _ where $0.isSpaceOrCommentOrLinebreak:
+                    return false
+                default: // Not valid between end of arguments and start of body
+                    return true
+                }
+            }), formatter.tokens[bodyStartIndex] == .startOfScope("{"),
+                let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else {
+                return
+            }
             removeUsed(from: &argNames, with: &nameIndexPairs, in: bodyStartIndex + 1 ..< bodyEndIndex)
             for pair in nameIndexPairs.reversed() {
                 if pair.0 == pair.1 {

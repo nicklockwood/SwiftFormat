@@ -1184,7 +1184,7 @@ public func tokenize(_ source: String) -> [Token] {
                 switch token {
                 case .operator(let string, _):
                     switch string {
-                    case ".", "==", "?", "!":
+                    case ".", "==", "?", "!", "&":
                         break
                     default:
                         // Not a generic scope

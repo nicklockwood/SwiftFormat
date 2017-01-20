@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.24.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.2) (2017-01-20)
+
+- Unused arguments are now handled correctly in non-Void functions
+- Fixed another bug where keywords used as function argument names were not parsed correctly
+- Fixed bug when parsing generics containing a `&` protocol-combining operator
+- Fixed bug where parsing error location was reported incorrectly
+
 ## [0.24.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.1) (2017-01-19)
 
 - Fixed crash in Xcode extension when formatted file has no changes

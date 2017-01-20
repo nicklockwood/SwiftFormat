@@ -86,7 +86,7 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
     ///   - targetText: Modified text
     /// - Returns: Source text range that should be usable with the passed modified text
     private func rangeForDifferences(in textRange: XCSourceTextRange,
-                                     between sourceText: String, and targetText: String) -> XCSourceTextRange {
+                                     between _: String, and targetText: String) -> XCSourceTextRange {
 
         // Ensure that we're not greedy about end selections — this can cause empty lines to be removed
         let lineCountOfTarget = targetText.components(separatedBy: CharacterSet.newlines).count

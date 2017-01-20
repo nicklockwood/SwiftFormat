@@ -95,4 +95,14 @@ class SwiftFormatTests: XCTestCase {
         let output = "foo()\n"
         XCTAssertEqual(try! format(input), output)
     }
+
+    // MARK: offsetForToken
+
+    func testOffsetForToken() {
+        let source = "// a comment\n    let foo = 5\n"
+        let tokens = tokenize(source)
+        let (line, column) = offsetForToken(at: 7, in: tokens)
+        XCTAssertEqual(line, 2)
+        XCTAssertEqual(column, 8)
+    }
 }

@@ -166,9 +166,10 @@ public func enumerateFiles(withInputURL inputURL: URL,
 }
 
 /// Get line/column offset for token
-public func offsetForToken(at index: Int, in tokens: [Token]) -> (Int, Int) {
+/// Note: line indexes start at 1, columns start at zero
+public func offsetForToken(at index: Int, in tokens: [Token]) -> (line: Int, column: Int) {
     var line = 1, column = 0
-    for token in tokens {
+    for token in tokens[0 ..< index] {
         if token.isLinebreak {
             line += 1
             column = 0
@@ -186,7 +187,7 @@ public func parsingError(for tokens: [Token]) -> FormatError? {
         if string.isEmpty {
             message = "unexpected end of file"
         } else {
-            message = "unexpected token '\(string)'"
+            message = "unexpected token \(string)"
         }
         let (line, column) = offsetForToken(at: tokens.count - 1, in: tokens)
         return .parsing("\(message) at \(line):\(column)")

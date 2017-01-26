@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.24.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.3) (2017-01-26)
+
+- Fixed critical bug where unused `inout` closure arguments were mangled
+- Fixed critical bug where comma was incorrectly inserted into subscript expressions
+- Fixed critical bug where functions named "get" could be incorrectly stripped 
+- Unused arguments are now handled correctly in `init` and `subscript` functions
+- Fixed bug where `_` was doubled up for unused closure arguments
+
 ## [0.24.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.2) (2017-01-20)
 
 - Unused arguments are now handled correctly in non-Void functions

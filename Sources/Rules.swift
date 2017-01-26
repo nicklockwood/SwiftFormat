@@ -1676,7 +1676,7 @@ extension FormatRules {
         // Closure arguments
         formatter.forEach(.keyword("in")) { i, _ in
             var argNames = [String]()
-            var argIndices = [Int]()
+            var nameIndexPairs = [(Int, Int)]()
             if let start = formatter.index(of: .startOfScope("{"), before: i) {
                 var index = i - 1
                 var argCountStack = [0]
@@ -1694,15 +1694,26 @@ extension FormatRules {
                         // Everything after this was part of return value
                         let count = argCountStack.last ?? 0
                         argNames.removeSubrange(count ..< argNames.count)
-                        argIndices.removeSubrange(count ..< argIndices.count)
-                    case .identifier(let name) where name != "_":
+                        nameIndexPairs.removeSubrange(count ..< nameIndexPairs.count)
+                    case .identifier(let name):
                         if argCountStack.count < 3,
                             let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                            [.delimiter(","), .startOfScope("("), .startOfScope("{")].contains(prevToken),
+                            [
+                                .delimiter(","), .startOfScope("("),
+                                .startOfScope("{"), .endOfScope("]"),
+                            ].contains(prevToken),
                             let scopeStart = formatter.index(of: .startOfScope, before: index),
                             ![.startOfScope("["), .startOfScope("<")].contains(formatter.tokens[scopeStart]) {
-                            argNames.append(name)
-                            argIndices.append(index)
+                            if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                                case .identifier(let internalName) = formatter.tokens[nextIndex] {
+                                if internalName != "_" {
+                                    argNames.append(internalName)
+                                    nameIndexPairs.append((index, nextIndex))
+                                }
+                            } else if name != "_" {
+                                argNames.append(name)
+                                nameIndexPairs.append((index, index))
+                            }
                         }
                     default:
                         break
@@ -1711,9 +1722,16 @@ extension FormatRules {
                 }
             }
             guard let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: i) else { return }
-            removeUsed(from: &argNames, with: &argIndices, in: i + 1 ..< bodyEndIndex)
-            for index in argIndices.reversed() {
-                formatter.replaceToken(at: index, with: .identifier("_"))
+            removeUsed(from: &argNames, with: &nameIndexPairs, in: i + 1 ..< bodyEndIndex)
+            for pair in nameIndexPairs.reversed() {
+                if case .identifier("_") = formatter.tokens[pair.0], pair.0 != pair.1 {
+                    formatter.removeToken(at: pair.1)
+                    if formatter.tokens[pair.1 - 1] == .space(" ") {
+                        formatter.removeToken(at: pair.1 - 1)
+                    }
+                } else {
+                    formatter.replaceToken(at: pair.1, with: .identifier("_"))
+                }
             }
         }
         // Function arguments

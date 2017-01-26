@@ -3295,9 +3295,9 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testNamedArgumentsIsNotMangled() {
-        let input = "{ (foo: (Int) -> Void) in }"
-        let output = "{ (_: (Int) -> Void) in }"
+    func testUnusedUnnamedClosureArgument() {
+        let input = "{ (_ foo: Int) in }"
+        let output = "{ (_: Int) in }"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

@@ -1698,7 +1698,7 @@ extension FormatRules {
                     case .identifier(let name) where name != "_":
                         if argCountStack.count < 3,
                             let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                            ![.delimiter(":"), .operator(".", .infix)].contains(prevToken),
+                            [.delimiter(","), .startOfScope("("), .startOfScope("{")].contains(prevToken),
                             let scopeStart = formatter.index(of: .startOfScope, before: index),
                             ![.startOfScope("["), .startOfScope("<")].contains(formatter.tokens[scopeStart]) {
                             argNames.append(name)

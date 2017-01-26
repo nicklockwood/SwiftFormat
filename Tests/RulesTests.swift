@@ -3295,9 +3295,16 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testArgAfterClosureTypeInClosureArgumentsIsNotMangled() {
-        let input = "{ (foo: (Int) -> Void, bar: String) in }"
-        let output = "{ (_: (Int) -> Void, _: String) in }"
+    func testNamedArgumentsIsNotMangled() {
+        let input = "{ (foo: (Int) -> Void) in }"
+        let output = "{ (_: (Int) -> Void) in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testUnusedInoutClosureArgumentIsNotMangled() {
+        let input = "{ (foo: inout Foo) in }"
+        let output = "{ (_: inout Foo) in }"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3332,9 +3339,16 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testUnusedAnonymousFunctionArgument() {
+    func testUnusedUnnamedFunctionArgument() {
         let input = "func foo(_ foo: Int) {}"
         let output = "func foo(_: Int) {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testUnusedInoutFunctionArgumentIsNotMangled() {
+        let input = "func foo(_ foo: inout Foo) {}"
+        let output = "func foo(_: inout Foo) {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

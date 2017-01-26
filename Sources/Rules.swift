@@ -1096,6 +1096,10 @@ extension FormatRules {
         // lines, but ideally we'd check for this just in case
         formatter.forEach(.endOfScope("]")) { i, _ in
             guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else { return }
+            if let startIndex = formatter.index(of: .startOfScope("["), before: i),
+                let prevToken = formatter.last(.nonSpaceOrComment, before: startIndex),
+                prevToken.isIdentifier || prevToken.isUnwrapOperator ||
+                [.endOfScope(")"), .endOfScope("]")].contains(prevToken) { return }
             let prevToken = formatter.tokens[prevTokenIndex]
             if prevToken.isLinebreak {
                 if let prevTokenIndex = formatter.index(of:

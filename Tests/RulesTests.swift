@@ -2205,6 +2205,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testTrailingCommaNotAddedToSubscript() {
+        let input = "foo[\n    bar\n]"
+        let output = "foo[\n    bar\n]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingCommas]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testTrailingCommaNotAddedToSubscript2() {
+        let input = "foo?[\n    bar\n]"
+        let output = "foo?[\n    bar\n]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingCommas]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testTrailingCommaNotAddedToSubscript3() {
+        let input = "foo()[\n    bar\n]"
+        let output = "foo()[\n    bar\n]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingCommas]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // trailingCommas = false
 
     func testCommaNotAddedToLastItem() {

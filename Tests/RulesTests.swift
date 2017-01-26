@@ -1218,7 +1218,9 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: indent parens
+    // MARK: indent
+
+    // indent parens
 
     func testSimpleScope() {
         let input = "foo(\nbar\n)"
@@ -1276,7 +1278,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: indent specifiers
+    // indent specifiers
 
     func testNoIndentWrappedSpecifiersForProtocol() {
         let input = "@objc\nprivate\nprotocol Foo {}"
@@ -1285,7 +1287,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: indent braces
+    // indent braces
 
     func testElseClauseIndenting() {
         let input = "if x {\nbar\n} else {\nbaz\n}"
@@ -1329,7 +1331,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: indent switch/case
+    // indent switch/case
 
     func testSwitchCaseIndenting() {
         let input = "switch x {\ncase foo:\nbreak\ncase bar:\nbreak\ndefault:\nbreak\n}"
@@ -1380,7 +1382,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: indent wrapped line
+    // indent wrapped lines
 
     func testWrappedLineAfterOperator() {
         let input = "if x {\nlet y = foo +\nbar\n}"
@@ -1729,7 +1731,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: indent comments
+    // indent comments
 
     func testCommentIndenting() {
         let input = "/* foo\nbar */"
@@ -1760,7 +1762,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: indent #if/#else/#elseif/#endif (mode: indent)
+    // indent #if/#else/#elseif/#endif (mode: indent)
 
     func testIfEndifIndenting() {
         let input = "#if x\n// foo\n#endif"
@@ -1783,7 +1785,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: indent #if/#else/#elseif/#endif (mode: noindent)
+    // indent #if/#else/#elseif/#endif (mode: noindent)
 
     func testIfEndifNoIndenting() {
         let input = "#if x\n// foo\n#endif"
@@ -1809,7 +1811,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: indent #if/#else/#elseif/#endif (mode: outdent)
+    // indent #if/#else/#elseif/#endif (mode: outdent)
 
     func testIfEndifOutdenting() {
         let input = "#if x\n// foo\n#endif"
@@ -1875,7 +1877,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: indent expression after return
+    // indent expression after return
 
     func testIndentIdentifierAfterReturn() {
         let input = "if foo {\n    return\n        bar\n}"
@@ -1933,7 +1935,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: indent fragments
+    // indent fragments
 
     func testIndentFragment() {
         let input = "   func foo() {\nbar()\n}"
@@ -1983,7 +1985,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: knr braces
+    // MARK: braces
 
     func testAllmanBracesAreConverted() {
         let input = "func foo()\n{\n    statement\n}"
@@ -2020,7 +2022,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: allman braces
+    // allman style
 
     func testKnRBracesAreConverted() {
         let input = "func foo() {\n    statement\n}"
@@ -2203,7 +2205,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: trailingCommas = false
+    // trailingCommas = false
 
     func testCommaNotAddedToLastItem() {
         let input = "[\n    foo,\n    bar\n]"
@@ -2412,7 +2414,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: specifiers
+    // specifiers
 
     func testVarSpecifiersCorrected() {
         let input = "unowned private static var foo"
@@ -2556,7 +2558,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: useVoid = false
+    // useVoid = false
 
     func testUseVoidOptionFalse() {
         let input = "(Void) -> Void"
@@ -2584,7 +2586,7 @@ class RulesTests: XCTestCase {
 
     // MARK: redundantParens
 
-    // MARK: around expressions
+    // around expressions
 
     func testRedundantParensRemoved() {
         let input = "if (x || y) {}"
@@ -2733,7 +2735,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: around closure arguments
+    // around closure arguments
 
     func testSingleClosureArgumentUnwrapped() {
         let input = "{ (_) in }"
@@ -2777,7 +2779,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: before trailing closure
+    // before trailing closure
 
     func testParensRemovedBeforeTrailingClosure() {
         let input = "var foo = bar() { /* some code */ }"
@@ -2856,7 +2858,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: closure expression
+    // closure expression
 
     func testParensAroundClosureRemoved() {
         let input = "let foo = ({ /* some code */ })"
@@ -2931,7 +2933,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    // MARK: solitary argument
+    // solitary argument
 
     func testParensAroundSolitaryClosureArgumentRemoved() {
         let input = "foo({ /* some code */ })"
@@ -3000,8 +3002,8 @@ class RulesTests: XCTestCase {
     }
 
     func testRemoveSubscriptGet() {
-        let input = "subscript(_ index: Int) {\n    get {\n        return 5\n    }\n}"
-        let output = "subscript(_ index: Int) {\n    return 5\n}"
+        let input = "subscript(_ index: Int) {\n    get {\n        return self.lookup(index)\n    }\n}"
+        let output = "subscript(_ index: Int) {\n    return self.lookup(index)\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantGet, FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3230,7 +3232,7 @@ class RulesTests: XCTestCase {
 
     // MARK: unusedArguments
 
-    // MARK: closures
+    // closures
 
     func testUnusedTypedClosureArguments() {
         let input = "let foo = { (bar: Int, baz: String) in\n    print(\"Hello \\(baz)\")\n}"
@@ -3309,7 +3311,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: functions
+    // functions
 
     func testMarkUnusedFunctionArgument() {
         let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
@@ -3395,7 +3397,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    // MARK: functions (closure-only)
+    // functions (closure-only)
 
     func testNoMarkFunctionArgument() {
         let input = "func foo(_ bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
@@ -3405,7 +3407,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: functions (unnamed-only)
+    // functions (unnamed-only)
 
     func testNoMarkNamedFunctionArgument() {
         let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
@@ -3429,6 +3431,38 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(stripUnusedArguments: .unnamedOnly)
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    // init
+
+    func testMarkUnusedInitArgument() {
+        let input = "init(bar: Int, baz: String) {\n    self.baz = baz\n}"
+        let output = "init(bar _: Int, baz: String) {\n    self.baz = baz\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    // subscript
+
+    func testMarkUnusedSubscriptArgument() {
+        let input = "subscript(foo: Int, baz: String) -> String {\n    return self.get(baz)\n}"
+        let output = "subscript(_: Int, baz: String) -> String {\n    return self.get(baz)\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testMarkUnusedUnnamedSubscriptArgument() {
+        let input = "subscript(_ foo: Int, baz: String) -> String {\n    return self.get(baz)\n}"
+        let output = "subscript(_: Int, baz: String) -> String {\n    return self.get(baz)\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testMarkUnusedNamedSubscriptArgument() {
+        let input = "subscript(foo foo: Int, baz: String) -> String {\n    return self.get(baz)\n}"
+        let output = "subscript(foo _: Int, baz: String) -> String {\n    return self.get(baz)\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     // MARK: wrapArguments
@@ -3535,7 +3569,7 @@ class RulesTests: XCTestCase {
 
     // MARK: numberFormatting
 
-    // MARK: hex case
+    // hex case
 
     func testLowercaseLiteralConvertedToUpper() {
         let input = "let foo = 0xabcd"
@@ -3574,7 +3608,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: decimal grouping
+    // decimal grouping
 
     func testDefaultDecimalGrouping() {
         let input = "let foo = 1234_56_78"
@@ -3615,7 +3649,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: binary grouping
+    // binary grouping
 
     func testDefaultBinaryGrouping() {
         let input = "let foo = 0b11101000_00111111"
@@ -3648,7 +3682,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: hex grouping
+    // hex grouping
 
     func testDefaultHexGrouping() {
         let input = "let foo = 0xFF01FF01AE45"
@@ -3665,7 +3699,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: octal grouping
+    // octal grouping
 
     func testDefaultOctalGrouping() {
         let input = "let foo = 0o123456701234"
@@ -3682,7 +3716,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: exponent case
+    // exponent case
 
     func testLowercaseExponent() {
         let input = "let foo = 0.456E-5"

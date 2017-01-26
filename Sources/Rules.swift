@@ -1738,10 +1738,12 @@ extension FormatRules {
         guard formatter.options.stripUnusedArguments != .closureOnly else {
             return
         }
-        formatter.forEach(.keyword("func")) { i, _ in
-            let isOperator = (formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isOperator == true)
-            guard let startIndex = formatter.index(of: .startOfScope("("), after: i),
+        formatter.forEachToken { i, token in
+            guard case .keyword(let keyword) = token, ["func", "init", "subscript"].contains(keyword),
+                let startIndex = formatter.index(of: .startOfScope("("), after: i),
                 let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
+            let isOperator = (keyword == "subscript") ||
+                (formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isOperator == true)
             var index = startIndex
             var argNames = [String]()
             var nameIndexPairs = [(Int, Int)]()

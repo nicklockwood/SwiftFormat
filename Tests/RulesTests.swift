@@ -3029,6 +3029,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testGetNotRemovedInFunction() {
+        let input = "func foo() {\n    get {\n        return self.lookup(index)\n    }\n}"
+        let output = "func foo() {\n    get {\n        return self.lookup(index)\n    }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantGet, FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: redundantNilInit
 
     func testRemoveRedundantNilInit() {

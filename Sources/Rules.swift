@@ -1483,8 +1483,9 @@ extension FormatRules {
     public class func redundantGet(_ formatter: Formatter) {
         formatter.forEach(.identifier("get")) { i, _ in
             if let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
-                $0 == .startOfScope("{") }), let openIndex = formatter.index(of:
-                .nonSpaceOrCommentOrLinebreak, after: i, if: { $0 == .startOfScope("{") }),
+                $0 == .startOfScope("{") }), let prevKeyword = formatter.last(.keyword, before: previousIndex),
+                [.keyword("var"), .keyword("subscript")].contains(prevKeyword), let openIndex = formatter.index(of:
+                    .nonSpaceOrCommentOrLinebreak, after: i, if: { $0 == .startOfScope("{") }),
                 let closeIndex = formatter.index(of: .endOfScope("}"), after: openIndex),
                 let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closeIndex, if: {
                     $0 == .endOfScope("}") }) {

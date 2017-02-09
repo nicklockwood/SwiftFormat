@@ -2032,6 +2032,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testAllmanBlankLineAfterBraceRemoved() {
+        let input = "func foo() {\n    \n    statement\n}"
+        let output = "func foo()\n{\n    statement\n}"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     func testAllmanBraceInsideParensNotConverted() {
         let input = "foo({\n    bar\n})"
         let output = "foo({\n    bar\n})"
@@ -2075,6 +2083,14 @@ class RulesTests: XCTestCase {
     func testAllmanBraceThrowsFunctionIndent() {
         let input = "func foo() throws {\n    bar\n}"
         let output = "func foo() throws\n{\n    bar\n}"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testAllmanBraceAfterCommentIndent() {
+        let input = "func foo() { // foo\n\n    bar\n}"
+        let output = "func foo()\n{ // foo\n    bar\n}"
         let options = FormatOptions(allmanBraces: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.braces], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

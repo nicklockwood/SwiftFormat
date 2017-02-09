@@ -1010,6 +1010,10 @@ extension FormatRules {
                     switch prevToken {
                     case .identifier, .keyword, .endOfScope, .operator("?", .postfix), .operator("!", .postfix):
                         formatter.insertToken(.linebreak(formatter.options.linebreak), at: i)
+                        if let breakIndex = formatter.index(of: .linebreak, after: i + 1),
+                            let nextIndex = formatter.index(of: .nonSpace, after: breakIndex, if: { $0.isLinebreak }) {
+                            formatter.removeTokens(inRange: breakIndex ..< nextIndex)
+                        }
                         formatter.insertSpace(formatter.indentForLine(at: i), at: i + 1)
                         if formatter.tokens[i - 1].isSpace {
                             formatter.removeToken(at: i - 1)

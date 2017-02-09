@@ -1008,7 +1008,7 @@ extension FormatRules {
                 if let prevTokenIndex = formatter.index(of: .nonSpace, before: i),
                     let prevToken = formatter.token(at: prevTokenIndex) {
                     switch prevToken {
-                    case .identifier, .keyword, .endOfScope:
+                    case .identifier, .keyword, .endOfScope, .operator("?", .postfix), .operator("!", .postfix):
                         formatter.insertToken(.linebreak(formatter.options.linebreak), at: i)
                         formatter.insertSpace(formatter.indentForLine(at: i), at: i + 1)
                         if formatter.tokens[i - 1].isSpace {

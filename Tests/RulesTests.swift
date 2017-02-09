@@ -2064,6 +2064,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testAllmanBraceOptionalComputedPropertyIndent() {
+        let input = "var foo: Int? {\n    return 5\n}"
+        let output = "var foo: Int?\n{\n    return 5\n}"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testAllmanBraceThrowsFunctionIndent() {
+        let input = "func foo() throws {\n    bar\n}"
+        let output = "func foo() throws\n{\n    bar\n}"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // MARK: elseOnSameLine
 
     func testelseOnSameLine() {

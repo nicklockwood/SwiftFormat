@@ -63,5 +63,9 @@ CLI.print = { message, type in
     }
 }
 
+CLI.readLine = {
+    return readLine(strippingNewline: false)
+}
+
 // Pass in arguments
 processArguments(CommandLine.arguments)

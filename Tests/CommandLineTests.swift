@@ -106,4 +106,29 @@ class CommandLineTests: XCTestCase {
         }
         printHelp()
     }
+
+    // MARK: pipe
+
+    func testPipe() {
+        CLI.print = { message, _ in
+            XCTAssertEqual(message, "func foo() {\n    bar()\n}\n")
+        }
+        var readCount = 0
+        CLI.readLine = {
+            readCount += 1
+            switch readCount {
+            case 1:
+                return "func foo()\n"
+            case 2:
+                return "{\n"
+            case 3:
+                return "bar()\n"
+            case 4:
+                return "}"
+            default:
+                return nil
+            }
+        }
+        processArguments([""])
+    }
 }

@@ -43,7 +43,11 @@ enum OutputType {
 
 struct CLI {
     static var print: (String, OutputType) -> Void = { _ in
-        fatalError("No printing hook set")
+        fatalError("No print hook set")
+    }
+
+    static var readLine: () -> String? = {
+        fatalError("No readLine hook set")
     }
 }
 
@@ -288,7 +292,7 @@ func processArguments(_ args: [String]) {
             var finished = false
             var fatalError: Error?
             DispatchQueue.global(qos: .userInitiated).async {
-                while let line = readLine(strippingNewline: false) {
+                while let line = CLI.readLine() {
                     input = (input ?? "") + line
                 }
                 if let input = input {
@@ -301,7 +305,9 @@ func processArguments(_ args: [String]) {
                             let options = inferOptions(from: tokens)
                             print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
                         } else {
-                            let rules = FormatRules.all(except: Array(rules))
+                            let rules = FormatRules.byName.enumerated().flatMap { _, rule in
+                                return rules.contains(rule.key) ? rule.value : nil
+                            }
                             let output = try format(input, rules: rules, options: formatOptions)
                             if let outputURL = outputURL {
                                 do {

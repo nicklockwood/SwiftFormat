@@ -419,7 +419,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
             if let prevTokenIndex = formatter.index(of: .nonSpace, before: i),
                 let prevToken = formatter.token(at: prevTokenIndex) {
                 switch prevToken {
-                case .identifier, .endOfScope:
+                case .identifier, .keyword, .endOfScope, .operator("?", .postfix), .operator("!", .postfix):
                     knr += 1
                 case .linebreak:
                     allman += 1

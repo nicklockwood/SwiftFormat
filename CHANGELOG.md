@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.24.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.4) (2017-02-09)
+
+- Fixed format rules not being applied when processing input from stdin
+- Fixed allman brace formatting of optional computed vars
+- Allman brace rule now removes the blank line immediately after an opening brace
+
 ## [0.24.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.3) (2017-01-26)
 
 - Fixed critical bug where unused `inout` closure arguments were mangled

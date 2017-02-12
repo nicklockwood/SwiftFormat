@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.24.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.5) (2017-02-12)
+
+- Fixed critical bug where trailing commas were incorrectly added to array or dictionary type declarations
+
 ## [0.24.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.4) (2017-02-09)
 
 - Fixed format rules not being applied when processing input from stdin

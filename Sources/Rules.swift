@@ -1095,15 +1095,26 @@ extension FormatRules {
     /// Ensure that the last item in a multi-line array literal is followed by a comma.
     /// This is useful for preventing noise in commits when items are added to end of array.
     public class func trailingCommas(_ formatter: Formatter) {
-        // TODO: we don't currently check if [] is a subscript rather than a literal.
-        // This should't matter in practice, as nobody splits subscripts onto multiple
-        // lines, but ideally we'd check for this just in case
         formatter.forEach(.endOfScope("]")) { i, _ in
             guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else { return }
             if let startIndex = formatter.index(of: .startOfScope("["), before: i),
-                let prevToken = formatter.last(.nonSpaceOrComment, before: startIndex),
-                prevToken.isIdentifier || prevToken.isUnwrapOperator ||
-                [.endOfScope(")"), .endOfScope("]")].contains(prevToken) { return }
+                let prevToken = formatter.last(.nonSpaceOrComment, before: startIndex) {
+                // Check for subscript
+                if prevToken.isIdentifier || prevToken.isUnwrapOperator ||
+                    [.endOfScope(")"), .endOfScope("]")].contains(prevToken) { return }
+                // Check for type declaration
+                if prevToken == .delimiter(":") {
+                    if let scopeStart = formatter.index(of: .startOfScope, before: startIndex),
+                        formatter.tokens[scopeStart] == .startOfScope("(") {
+                        if formatter.last(.keyword, before: scopeStart) == .keyword("func") {
+                            return
+                        }
+                    } else if let token = formatter.last(.keyword, before: startIndex),
+                        [.keyword("let"), .keyword("var")].contains(token) {
+                        return
+                    }
+                }
+            }
             let prevToken = formatter.tokens[prevTokenIndex]
             if prevToken.isLinebreak {
                 if let prevTokenIndex = formatter.index(of:

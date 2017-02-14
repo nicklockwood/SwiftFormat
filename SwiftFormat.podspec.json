@@ -13,6 +13,7 @@
     "tag": "0.24.5"
   },
   "source_files": "Sources",
+  "preserve_paths": "CommandLineTool/swiftformat",
   "requires_arc": true,
   "platforms": {
     "ios": "9.0",

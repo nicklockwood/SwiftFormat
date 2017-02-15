@@ -12,8 +12,18 @@
     "git": "https://github.com/nicklockwood/SwiftFormat.git",
     "tag": "0.24.5"
   },
-  "source_files": "Sources",
-  "preserve_paths": "CommandLineTool/swiftformat",
+  "default_subspec": "Core",
+  "subspecs": [
+    {
+      "name": "Core",
+      "source_files": "Sources"
+    },
+    {
+      "name": "CLI",
+      "source_files": "CommandLineTool",
+      "preserve_paths": "CommandLineTool/swiftformat"
+    }
+  ],
   "requires_arc": true,
   "platforms": {
     "ios": "9.0",

@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.24.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.6) (2017-02-16)
+
+- Fixed critical bug where automatic removal of Void return type in closures could alter the type signature
+- Command-line tool can now be installed via CocoaPods
+
 ## [0.24.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.5) (2017-02-12)
 
 - Fixed critical bug where trailing commas were incorrectly added to array or dictionary type declarations

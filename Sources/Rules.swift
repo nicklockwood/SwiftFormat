@@ -1663,8 +1663,9 @@ extension FormatRules {
             default:
                 return
             }
-            guard let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
-                [.startOfScope("{"), .keyword("in")].contains(nextToken) else { return }
+            guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{") else {
+                return
+            }
             guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 [.endOfScope(")"), .keyword("throws"), .keyword("rethrows")].contains(prevToken) else { return }
             guard let prevIndex = formatter.index(of: .endOfScope(")"), before: i),
@@ -1960,10 +1961,16 @@ extension FormatRules {
     public class func void(_ formatter: Formatter) {
         func isArgumentToken(at index: Int) -> Bool {
             if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) {
-                return [
-                    .operator("->", .infix), .keyword("throws"),
-                    .keyword("rethrows"), .keyword("in"),
-                ].contains(nextToken)
+                if [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
+                    return true
+                }
+                if nextToken == .keyword("in"),
+                    let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) {
+                    if prevToken == .operator("->", .infix) {
+                        return false
+                    }
+                    return prevToken == .startOfScope("{")
+                }
             }
             return false
         }
@@ -1983,7 +1990,7 @@ extension FormatRules {
                 }
                 return token == .startOfScope("(")
             }() {
-                if isArgumentToken(at: nextIndex) {
+                if isArgumentToken(at: i) {
                     // Remove Void
                     formatter.removeTokens(inRange: prevIndex + 1 ..< nextIndex)
                 } else if formatter.options.useVoid {

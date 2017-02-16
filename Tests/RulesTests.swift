@@ -2618,11 +2618,18 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testEmptyClosureReturnValueConvertedToVoid() {
+        let input = "{ () -> () in }"
+        let output = "{ () -> Void in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testAnonymousVoidClosureArgConvertedToEmptyParens() {
         let input = "{ (_: Void) in }"
         let output = "{ () in }"
         XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"])), output + "\n")
     }
 
     // useVoid = false
@@ -2646,6 +2653,14 @@ class RulesTests: XCTestCase {
     func testTypealiasVoidNotConverted() {
         let input = "public typealias Void = ()"
         let output = "public typealias Void = ()"
+        let options = FormatOptions(useVoid: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.void], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testVoidClosureReturnValueConvertedToEmptyTuple() {
+        let input = "{ () -> Void in }"
+        let output = "{ () -> () in }"
         let options = FormatOptions(useVoid: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.void], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -3297,9 +3312,9 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testRemoveRedundantVoidInClosureArguments() {
+    func testNoRemoveRedundantVoidInClosureArguments() {
         let input = "{ (foo: Bar) -> Void in foo() }"
-        let output = "{ (foo: Bar) in foo() }"
+        let output = "{ (foo: Bar) -> Void in foo() }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantVoidReturnType]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

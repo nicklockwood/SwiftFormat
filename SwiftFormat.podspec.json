@@ -16,16 +16,16 @@
   "subspecs": [
     {
       "name": "Core",
-      "source_files": "Sources"
+      "source_files": "Sources",
+      "platforms": {
+        "ios": "9.0",
+        "osx": "10.11"
+      }
     },
     {
       "name": "CLI",
       "preserve_paths": "CommandLineTool/swiftformat"
     }
   ],
-  "requires_arc": true,
-  "platforms": {
-    "ios": "9.0",
-    "osx": "10.11"
-  }
+  "requires_arc": true
 }

@@ -1,6 +1,6 @@
 {
   "name": "SwiftFormat",
-  "version": "0.24.6",
+  "version": "0.24.7",
   "license": {
     "type": "zlib",
     "file": "LICENCE.md"
@@ -10,22 +10,26 @@
   "authors": "Nick Lockwood",
   "source": {
     "git": "https://github.com/nicklockwood/SwiftFormat.git",
-    "tag": "0.24.6"
+    "tag": "0.24.7"
   },
   "default_subspecs": "Core",
   "subspecs": [
     {
       "name": "Core",
-      "source_files": "Sources",
-      "platforms": {
-        "ios": "9.0",
-        "osx": "10.11"
-      }
+      "source_files": "Sources"
     },
     {
       "name": "CLI",
-      "preserve_paths": "CommandLineTool/swiftformat"
+      "preserve_paths": "CommandLineTool/swiftformat",
+      "platforms": {
+	  	"ios": "7.0",
+    	"osx": "10.9"
+      }
     }
   ],
+  "platforms": {
+    "ios": "9.0",
+    "osx": "10.11"
+  },
   "requires_arc": true
 }

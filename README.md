@@ -41,14 +41,9 @@ The simplest way to install the `swiftformat` command-line tool is via [Homebrew
     > brew update
     > brew install swiftformat
 
-Another way to install CLI tool is via [CocoaPods](https://cocoapods.org/).
-Just add the following line to your `Podfile` and then run `$ pod install`.
+Then you're done. If you are installing SwiftFormat into your project directory, you can also use [CocoaPods](https://cocoapods.org/) - see the Xcode build phase instructions below for details.
 
-```ruby
-pod 'SwiftFormat/CLI'
-```
-
-Then you're done. Alternatively, to build it yourself from source:
+Alternatively, to build the command-line app yourself:
 
 1. open `SwiftFormat.xcodeproj` and build the `SwiftFormat (Application)` scheme.
 
@@ -118,11 +113,15 @@ Xcode build phase
 
 To set up SwiftFormat as an Xcode build phase, do the following:
 
-1. Add the `swiftformat` binary to your project directory (this is better than referencing a locally installed copy because it means that project will still compile on machines that don't have the `swiftformat` command-line tool installed).
+1. Add the `swiftformat` binary to your project directory (this is better than referencing a locally installed copy because it means that project will still compile on machines that don't have the `swiftformat` command-line tool installed). You can install the binary manually, or via [CocoaPods](https://cocoapods.org/), by adding the following line to your Podfile then running `pod install`:
+
+		pod 'SwiftFormat/CLI'
+		
+	**NOTE:** This will only install the pre-built command-line app, not the source code for the SwiftFormat framework.
 
 2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `"${SRCROOT}/path/to/swiftformat" "${SRCROOT}/path/to/your/swift/code/"` (both paths should be relative to the directory containing your Xcode project).
 
-**NOTE:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
+	**NOTE:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you do find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
 
 
 Git pre-commit hook
@@ -132,7 +131,7 @@ Git pre-commit hook
 
 2. Edit or create a `.git/hooks/pre-commit` file in your project folder. The .git folder is hidden but should already exist if you are using Git with your project, so open in with the terminal, or the Finder's `Go > Go to Folder...` menu.
 
-3. Add the following line in the pre-commit file (unlike the Xcode build phase approach, this uses your locally installed version of swiftformat, not a separate copy in your project repository)
+3. Add the following line in the pre-commit file (unlike the Xcode build phase approach, this uses your locally installed version of SwiftFormat, not a separate copy in your project repository)
 
         #!/bin/bash
         git status --porcelain | grep -e '^[AM]\(.*\).swift$' | cut -c 3- | while read line; do

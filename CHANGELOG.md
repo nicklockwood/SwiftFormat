@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.24.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.7) (2017-02-28)
+
+- Fixed a bug where switch cases containing a `..<` operator were parsed incorrectly, resulting in incorrect indentation
+- Fixed a potential bug where source code could be truncated after an error when running with `--fragment` enabled
+- Command-line tool installation via CocoaPods no longer requires a minimum deployment target of iOS 9 / macOS 10.11
+
 ## [0.24.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.6) (2017-02-16)
 
 - Fixed critical bug where automatic removal of Void return type in closures could alter the type signature

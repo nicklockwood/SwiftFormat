@@ -1242,7 +1242,6 @@ public func tokenize(_ source: String) -> [Token] {
             return
         case .endOfScope(let string):
             // Previous scope wasn't closed correctly
-            // Note: because of this, error may not be last token in the array
             tokens[tokens.count - 1] = .error(string)
             return
         default:
@@ -1260,9 +1259,6 @@ public func tokenize(_ source: String) -> [Token] {
     // Parse tokens
     while let token = characters.parseToken() {
         tokens.append(token)
-        if case .error = token {
-            return tokens
-        }
         processToken()
     }
 

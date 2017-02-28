@@ -182,7 +182,7 @@ public func offsetForToken(at index: Int, in tokens: [Token]) -> (line: Int, col
 
 /// Process token error
 public func parsingError(for tokens: [Token]) -> FormatError? {
-    if let last = tokens.last, case .error(let string) = last {
+    if let token = tokens.first(where: { $0.isError }), case .error(let string) = token {
         let message: String
         if string.isEmpty {
             message = "unexpected end of file"

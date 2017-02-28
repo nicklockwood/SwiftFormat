@@ -42,6 +42,10 @@ class TokenizerTests: XCTestCase {
             .keyword("let"),
             .space(" "),
             .error("`foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .identifier("bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
@@ -129,6 +133,8 @@ class TokenizerTests: XCTestCase {
             .commentBody("Hello World"),
             .linebreak("\n"),
             .error("#!/usr/bin/swift"),
+            .space(" "),
+            .linebreak("\n"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

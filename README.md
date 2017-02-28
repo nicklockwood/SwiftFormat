@@ -40,7 +40,14 @@ The simplest way to install the `swiftformat` command-line tool is via [Homebrew
 
     > brew update
     > brew install swiftformat
-    
+
+Another way to install CLI tool is via [CocoaPods](https://cocoapods.org/).
+Just add the following line to your `Podfile` and then run `$ pod install`.
+
+```ruby
+pod 'SwiftFormat/CLI'
+```
+
 Then you're done. Alternatively, to build it yourself from source:
 
 1. open `SwiftFormat.xcodeproj` and build the `SwiftFormat (Application)` scheme.

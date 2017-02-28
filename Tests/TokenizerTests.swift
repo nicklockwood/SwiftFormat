@@ -2196,6 +2196,36 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testSwitchCaseContainingRangeOperator() {
+        let input = "switch x {\ncase 0 ..< 2:\nbreak\ndefault:\nbreak\n}"
+        let output: [Token] = [
+            .keyword("switch"),
+            .space(" "),
+            .identifier("x"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .endOfScope("case"),
+            .space(" "),
+            .number("0", .integer),
+            .space(" "),
+            .operator("..<", .infix),
+            .space(" "),
+            .number("2", .integer),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("default"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: dot prefix
 
     func testEnumValueInDictionaryLiteral() {

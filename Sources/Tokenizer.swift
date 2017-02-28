@@ -929,13 +929,13 @@ public func tokenize(_ source: String) -> [Token] {
             scopeIndexStack.removeLast()
         }
         tokens[index] = .operator("<", .none)
-        stitchSymbols(at: index)
+        stitchOperators(at: index)
     }
 
     func convertClosingChevronToSymbol(at i: Int, andOpeningChevron: Bool) {
         assert(tokens[i] == .endOfScope(">"))
         tokens[i] = .operator(">", .none)
-        stitchSymbols(at: i)
+        stitchOperators(at: i)
         if let previousIndex = index(of: .nonSpaceOrComment, before: i),
             tokens[previousIndex] == .endOfScope(">") {
             convertClosingChevronToSymbol(at: previousIndex, andOpeningChevron: true)
@@ -955,7 +955,7 @@ public func tokenize(_ source: String) -> [Token] {
         return false
     }
 
-    func stitchSymbols(at index: Int) {
+    func stitchOperators(at index: Int) {
         guard case .operator(var string, _) = tokens[index] else {
             assertionFailure()
             return
@@ -1113,7 +1113,17 @@ public func tokenize(_ source: String) -> [Token] {
                 tokens[count - 1] = .error(token.string)
             }
         case .operator:
-            stitchSymbols(at: tokens.count - 1)
+            stitchOperators(at: tokens.count - 1)
+        case .startOfScope("<"):
+            if tokens.count >= 2 && tokens[tokens.count - 2].isOperator,
+                let index = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 2),
+                ![.keyword("func"), .keyword("init")].contains(tokens[index]) {
+                tokens[tokens.count - 1] = .operator("<", .none)
+                stitchOperators(at: tokens.count - 1)
+                processToken()
+                return
+            }
+            fallthrough
         case .startOfScope:
             closedGenericScopeIndexes.removeAll()
         default:
@@ -1232,6 +1242,7 @@ public func tokenize(_ source: String) -> [Token] {
             return
         case .endOfScope(let string):
             // Previous scope wasn't closed correctly
+            // Note: because of this, error may not be last token in the array
             tokens[tokens.count - 1] = .error(string)
             return
         default:

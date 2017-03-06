@@ -1570,15 +1570,15 @@ class RulesTests: XCTestCase {
     }
 
     func testIndentIfCase() {
-        let input = "{\nif case .Foo(let msg) = error {}\n}"
-        let output = "{\n    if case .Foo(let msg) = error {}\n}"
+        let input = "{\nif case let .foo(msg) = error {}\n}"
+        let output = "{\n    if case let .foo(msg) = error {}\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testIndentIfCaseCommaCase() {
-        let input = "{\nif case .Foo(let msg) = a,\ncase .Bar(let msg) = b {}\n}"
-        let output = "{\n    if case .Foo(let msg) = a,\n        case .Bar(let msg) = b {}\n}"
+        let input = "{\nif case let .foo(msg) = a,\ncase let .bar(msg) = b {}\n}"
+        let output = "{\n    if case let .foo(msg) = a,\n        case let .bar(msg) = b {}\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3558,6 +3558,92 @@ class RulesTests: XCTestCase {
         let input = "subscript(foo foo: Int, baz: String) -> String {\n    return self.get(baz)\n}"
         let output = "subscript(foo _: Int, baz: String) -> String {\n    return self.get(baz)\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    // MARK: hoistPatternLet
+
+    func testHoistCaseLet() {
+        let input = "if case .foo(let bar, let baz) = quux {}"
+        let output = "if case let .foo(bar, baz) = quux {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testHoistCaseVar() {
+        let input = "if case .foo(var bar, var baz) = quux {}"
+        let output = "if case var .foo(bar, baz) = quux {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testHoistTupleLet() {
+        let input = "(let bar, let baz) = quux()"
+        let output = "let (bar, baz) = quux()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoHoistMixedCaseLetVar() {
+        let input = "if case .foo(let bar, var baz) = quux {}"
+        let output = "if case .foo(let bar, var baz) = quux {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoHoistIfFirstArgSpecified() {
+        let input = "if case .foo(bar, let baz) = quux {}"
+        let output = "if case .foo(bar, let baz) = quux {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoHoistIfLastArgSpecified() {
+        let input = "if case .foo(let bar, baz) = quux {}"
+        let output = "if case .foo(let bar, baz) = quux {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testHoistIfArgIsNumericLiteral() {
+        let input = "if case .foo(5, let baz) = quux {}"
+        let output = "if case let .foo(5, baz) = quux {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testHoistIfArgIsEnumCaseLiteral() {
+        let input = "if case .foo(.bar, let baz) = quux {}"
+        let output = "if case let .foo(.bar, baz) = quux {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testHoistIfArgIsUnderscore() {
+        let input = "if case .foo(_, let baz) = quux {}"
+        let output = "if case let .foo(_, baz) = quux {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNestedHoistLet() {
+        let input = "if case (.foo(let a, let b), .bar(let c, let d)) = quux {}"
+        let output = "if case let (.foo(a, b), .bar(c, d)) = quux {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoNestedHoistLetWithSpecifiedArgs() {
+        let input = "if case (.foo(let a, b), .bar(let c, d)) = quux {}"
+        let output = "if case (.foo(let a, b), .bar(let c, d)) = quux {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoHoistClosureVariables() {
+        let input = "foo({ let bar = 5 })"
+        let output = "foo({ let bar = 5 })"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 

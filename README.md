@@ -115,13 +115,13 @@ To set up SwiftFormat as an Xcode build phase, do the following:
 
 1. Add the `swiftformat` binary to your project directory (this is better than referencing a locally installed copy because it means that project will still compile on machines that don't have the `swiftformat` command-line tool installed). You can install the binary manually, or via [CocoaPods](https://cocoapods.org/), by adding the following line to your Podfile then running `pod install`:
 
-		pod 'SwiftFormat/CLI'
-		
-	**NOTE:** This will only install the pre-built command-line app, not the source code for the SwiftFormat framework.
+        pod 'SwiftFormat/CLI'
+
+    **NOTE:** This will only install the pre-built command-line app, not the source code for the SwiftFormat framework.
 
 2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `"${SRCROOT}/path/to/swiftformat" "${SRCROOT}/path/to/your/swift/code/"` (both paths should be relative to the directory containing your Xcode project).
 
-	**NOTE:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you do find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
+    **NOTE:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you do find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
 
 
 Git pre-commit hook
@@ -370,11 +370,11 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     
 *redundantNilInit* - removes unnecessary nil initialization of Optional vars (which are nil by default anyway):
 
-	var foo: Int? = nil     -->   var foo: Int?
-	
-	let foo: Int? = nil     -->   let foo: Int? = nil // doesn't apply to `let` properties
-	
-	var foo: Int? = 0       -->   var foo: Int? = 0 // doesn't affect non-nil initialzation
+    var foo: Int? = nil     -->   var foo: Int?
+    
+    let foo: Int? = nil     -->   let foo: Int? = nil // doesn't apply to `let` properties
+    
+    var foo: Int? = 0       -->   var foo: Int? = 0 // doesn't affect non-nil initialzation
 
 *redundantLet* - removes redundant `let` or `var` from ignored variables in bindings (which is a warning in Xcode):
 
@@ -418,11 +418,11 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
                                            ...
                                       }
 
-	let foo = [bar,	                  let foo = [
-	           baz,            -->        bar,
-	           quux]       		          baz,
-                            	          quux
-                          	          ]
+    let foo = [bar,                   let foo = [
+               baz,            -->        bar,
+               quux]                      baz,
+                                          quux
+                                      ]
 
 *unusedArguments* - marks unused arguments in functions and closures with `_` to make it clear they aren't used. Use the `--stripunusedargs` option to configure which argument types are affected.
 
@@ -437,6 +437,14 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     request { response, data in               request { _, data in
         self.data += data               -->       self.data += data
     }                                         }
+    
+*hoistPatternLet* - moves `let` or `var` bindings inside patterns or tuples to the start of the expression:
+
+    (let foo, let bar) = baz()                 -->    let (foo, bar) = baz()
+
+    if case .foo(let bar, let baz) = quux {           if case let .foo(bar, baz) = quux {
+        ...                                    -->        ...
+    }                                                 }
 
 *trailingClosures* - converts the last closure argument in a function call to trailing closure syntax where possible.
 

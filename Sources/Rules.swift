@@ -1837,6 +1837,70 @@ extension FormatRules {
         }
     }
 
+    /// Move `let` and `var` inside patterns to the beginning
+    public class func hoistPatternLet(_ formatter: Formatter) {
+        func indicesOf(_ keyword: String, in range: CountableRange<Int>) -> [Int]? {
+            var indices = [Int]()
+            var keywordFound = false, identifierFound = false
+            for index in range {
+                switch formatter.tokens[index] {
+                case .keyword(keyword):
+                    indices.append(index)
+                    keywordFound = true
+                case .identifier("_"):
+                    break
+                case .identifier where formatter.last(.nonSpaceOrComment, before: index)?.string != ".":
+                    identifierFound = true
+                case .delimiter(","):
+                    guard keywordFound || !identifierFound else { return nil }
+                    keywordFound = false
+                    identifierFound = false
+                case .startOfScope("{"):
+                    return nil
+                default:
+                    break
+                }
+            }
+            return (identifierFound && !keywordFound) || indices.isEmpty ? nil : indices
+        }
+
+        formatter.forEach(.startOfScope("(")) { i, _ in
+            // Check pattern does not already start with let/var
+            var startIndex = i
+            if var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) {
+                if case .identifier = formatter.tokens[prevIndex] {
+                    prevIndex = formatter.index(of: .spaceOrCommentOrLinebreak, before: prevIndex) ?? -1
+                    startIndex = prevIndex + 1
+                    prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) ?? 0
+                }
+                guard ![.keyword("let"), .keyword("var")].contains(formatter.tokens[prevIndex]) else { return }
+            }
+            // Find let/var keyword indices
+            guard let endIndex = formatter.index(of: .endOfScope(")"), after: i) else { return }
+            var keyword = "let"
+            guard let indices: [Int] = ({
+                guard let indices = indicesOf(keyword, in: i + 1 ..< endIndex) else {
+                    keyword = "var"
+                    return indicesOf(keyword, in: i + 1 ..< endIndex)
+                }
+                return indices
+            }()) else { return }
+            // Removed keywords inside parens
+            for index in indices.reversed() {
+                if formatter.tokens[index + 1].isSpace {
+                    formatter.removeToken(at: index + 1)
+                }
+                formatter.removeToken(at: index)
+            }
+            // Insert keyword before parens
+            formatter.insertToken(.keyword(keyword), at: startIndex)
+            formatter.insertToken(.space(" "), at: startIndex + 1)
+            if formatter.token(at: startIndex - 1)?.isSpaceOrCommentOrLinebreak == false {
+                formatter.insertToken(.space(" "), at: startIndex)
+            }
+        }
+    }
+
     /// Normalize argument wrapping style
     public class func wrapArguments(_ formatter: Formatter) {
         func wrapArguments(for scopes: String..., mode: WrapMode, allowGrouping: Bool) {

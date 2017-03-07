@@ -117,12 +117,19 @@ public class Formatter: NSObject {
         tokens.removeLast()
     }
 
-    /// Inserts a tokens at the specified index
-    public func insertToken(_ token: Token, at index: Int) {
-        tokens.insert(token, at: index)
-        for (i, j) in indexStack.enumerated() where j >= index {
-            indexStack[i] += 1
+    /// Inserts an array of tokens at the specified index
+    public func insertTokens(_ tokens: [Token], at index: Int) {
+        for token in tokens.reversed() {
+            self.tokens.insert(token, at: index)
         }
+        for (i, j) in indexStack.enumerated() where j >= index {
+            indexStack[i] += tokens.count
+        }
+    }
+
+    /// Inserts a single token at the specified index
+    public func insertToken(_ token: Token, at index: Int) {
+        insertTokens([token], at: index)
     }
 
     // MARK: enumeration

@@ -121,7 +121,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var insertBlankLines: Bool
     public var removeBlankLines: Bool
     public var allmanBraces: Bool
-    public var stripHeader: Bool
+    public var fileHeader: String?
     public var ifdefIndent: IndentMode
     public var wrapArguments: WrapMode
     public var wrapElements: WrapMode
@@ -146,7 +146,7 @@ public struct FormatOptions: CustomStringConvertible {
                 insertBlankLines: Bool = true,
                 removeBlankLines: Bool = true,
                 allmanBraces: Bool = false,
-                stripHeader: Bool = false,
+                fileHeader: String? = nil,
                 ifdefIndent: IndentMode = .indent,
                 wrapArguments: WrapMode = .disabled,
                 wrapElements: WrapMode = .beforeFirst,
@@ -171,7 +171,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.insertBlankLines = insertBlankLines
         self.removeBlankLines = removeBlankLines
         self.allmanBraces = allmanBraces
-        self.stripHeader = stripHeader
+        self.fileHeader = fileHeader
         self.ifdefIndent = ifdefIndent
         self.wrapArguments = wrapArguments
         self.wrapElements = wrapElements
@@ -187,7 +187,7 @@ public struct FormatOptions: CustomStringConvertible {
     }
 
     public var description: String {
-        let allowedCharacters = CharacterSet.whitespacesAndNewlines.inverted
+        let allowedCharacters = CharacterSet.newlines.inverted
         return Mirror(reflecting: self).children.map({
             return "\($0.value);".addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? ""
         }).joined()

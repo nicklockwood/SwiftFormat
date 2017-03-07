@@ -88,6 +88,18 @@ class CommandLineTests: XCTestCase {
         }
     }
 
+    func testFileHeaderYearReplacement() {
+        do {
+            let options = try formatOptionsFor(["header": " Copyright 1981 - {year}"])
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy"
+            let year = formatter.string(from: Date())
+            XCTAssertEqual(options.fileHeader, "//Copyright 1981 - \(year)")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
     // MARK: help
 
     func testHelpLineLength() {

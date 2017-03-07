@@ -4026,29 +4026,61 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // MARK: stripHeader
+    // MARK: fileHeader
 
     func testStripHeader() {
         let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
         let output = "// func\nfunc foo() {}"
-        let options = FormatOptions(stripHeader: true)
-        XCTAssertEqual(try format(input, rules: [FormatRules.stripHeader], options: options), output)
+        let options = FormatOptions(fileHeader: "")
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testMultilineCommentHeader() {
+        let input = "/****************************/\n/* Created by Nick Lockwood */\n/****************************/\n\n\n// func\nfunc foo() {}"
+        let output = "// func\nfunc foo() {}"
+        let options = FormatOptions(fileHeader: "")
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testNoStripHeaderWhenDisabled() {
         let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
         let output = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
-        let options = FormatOptions(stripHeader: false)
-        XCTAssertEqual(try format(input, rules: [FormatRules.stripHeader], options: options), output)
+        let options = FormatOptions(fileHeader: nil)
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testNoStripComment() {
         let input = "\n// func\nfunc foo() {}"
         let output = "\n// func\nfunc foo() {}"
-        let options = FormatOptions(stripHeader: true)
-        XCTAssertEqual(try format(input, rules: [FormatRules.stripHeader], options: options), output)
+        let options = FormatOptions(fileHeader: "")
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSetSingleLineHeader() {
+        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
+        let output = "// Hello World\n\n// func\nfunc foo() {}"
+        let options = FormatOptions(fileHeader: "// Hello World")
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSetMultilineHeader() {
+        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
+        let output = "// Hello\n// World\n\n// func\nfunc foo() {}"
+        let options = FormatOptions(fileHeader: "// Hello\n// World")
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSetMultilineHeaderWithMarkup() {
+        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
+        let output = "/*--- Hello ---*/\n/*--- World ---*/\n\n// func\nfunc foo() {}"
+        let options = FormatOptions(fileHeader: "/*--- Hello ---*/\n/*--- World ---*/")
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 }

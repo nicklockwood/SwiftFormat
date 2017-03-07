@@ -418,6 +418,20 @@ extension FormatRules {
     /// carefully preformatted comments, such as star boxes, etc.
     public class func spaceInsideComments(_ formatter: Formatter) {
         guard formatter.options.indentComments else { return }
+        formatter.forEach(.startOfScope("//")) { i, _ in
+            guard let nextToken = formatter.token(at: i + 1), case .commentBody(let string) = nextToken else { return }
+            guard case let characters = string.characters, let first = characters.first else { return }
+            if "/!:".characters.contains(first) {
+                if characters.count > 1, case let next = characters[characters.index(after: characters.startIndex)],
+                    !" /t".characters.contains(next) {
+                    let string = String(string.characters.first!) + " " +
+                        string.substring(from: string.characters.index(string.startIndex, offsetBy: 1))
+                    formatter.replaceToken(at: i + 1, with: .commentBody(string))
+                }
+            } else if !" /t".characters.contains(first), !string.hasPrefix("===") { // Special-case check for swift stdlib codebase
+                formatter.insertToken(.space(" "), at: i + 1)
+            }
+        }
         formatter.forEach(.startOfScope("/*")) { i, _ in
             guard let nextToken = formatter.token(at: i + 1), case .commentBody(let string) = nextToken else { return }
             if case let characters = string.characters, let first = characters.first, "*!:".characters.contains(first) {
@@ -427,27 +441,13 @@ extension FormatRules {
                         string.substring(from: string.characters.index(string.startIndex, offsetBy: 1))
                     formatter.replaceToken(at: i + 1, with: .commentBody(string))
                 }
-            } else {
+            } else if !string.hasPrefix("---") {
                 formatter.insertToken(.space(" "), at: i + 1)
             }
-        }
-        formatter.forEach(.startOfScope("//")) { i, _ in
-            guard let nextToken = formatter.token(at: i + 1), case .commentBody(let string) = nextToken else { return }
-            if case let characters = string.characters, let first = characters.first, "/!:".characters.contains(first) {
-                if characters.count > 1, case let next = characters[characters.index(after: characters.startIndex)],
-                    !" /t".characters.contains(next) {
-                    let string = String(string.characters.first!) + " " +
-                        string.substring(from: string.characters.index(string.startIndex, offsetBy: 1))
-                    formatter.replaceToken(at: i + 1, with: .commentBody(string))
+            if let i = formatter.index(of: .endOfScope("*/"), after: i), let prevToken = formatter.token(at: i - 1) {
+                if !prevToken.isSpaceOrLinebreak, !prevToken.string.hasSuffix("*"), !prevToken.string.hasSuffix("---") {
+                    formatter.insertToken(.space(" "), at: i)
                 }
-            } else if !string.hasPrefix("===") { // Special-case check for swift stdlib codebase
-                formatter.insertToken(.space(" "), at: i + 1)
-            }
-        }
-        formatter.forEach(.endOfScope("*/")) { i, _ in
-            guard let prevToken = formatter.token(at: i - 1) else { return }
-            if !prevToken.isSpaceOrLinebreak && !prevToken.string.hasSuffix("*") {
-                formatter.insertToken(.space(" "), at: i)
             }
         }
     }
@@ -2219,8 +2219,8 @@ extension FormatRules {
     }
 
     /// Strip header comments from the file
-    public class func stripHeader(_ formatter: Formatter) {
-        guard formatter.options.stripHeader && !formatter.options.fragment else { return }
+    public class func fileHeader(_ formatter: Formatter) {
+        guard let header = formatter.options.fileHeader, !formatter.options.fragment else { return }
         if let startIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1) {
             switch formatter.tokens[startIndex] {
             case .startOfScope("//"):
@@ -2235,16 +2235,33 @@ extension FormatRules {
                         default:
                             break
                         }
-                        return
+                        break
                     }
                     lastIndex = index
                 }
             case .startOfScope("/*"):
-                // TODO: handle multiline comment headers
-                break
+                while let endIndex = formatter.index(of: .endOfScope("*/"), after: startIndex) {
+                    formatter.removeTokens(inRange: 0 ... endIndex)
+                    if let linebreakIndex = formatter.index(of: .linebreak, after: -1) {
+                        formatter.removeTokens(inRange: 0 ... linebreakIndex)
+                    }
+                    if formatter.next(.nonSpace, after: -1) != .startOfScope("/*") {
+                        if let endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1) {
+                            formatter.removeTokens(inRange: 0 ..< endIndex)
+                        }
+                        break
+                    }
+                }
             default:
-                return
+                break
             }
         }
+        guard !header.isEmpty else { return }
+        if formatter.tokens.first?.isSpaceOrLinebreak == false {
+            formatter.insertToken(.linebreak(formatter.options.linebreak), at: 0)
+        }
+        formatter.insertToken(.linebreak(formatter.options.linebreak), at: 0)
+        let headerTokens = tokenize(header)
+        formatter.insertTokens(headerTokens, at: 0)
     }
 }

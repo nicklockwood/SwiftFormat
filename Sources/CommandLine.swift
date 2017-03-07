@@ -88,7 +88,7 @@ func printHelp() {
     print("--empty            how empty values are represented. \"void\" (default) or \"tuple\"")
     print("--experimental     experimental rules. \"enabled\" or \"disabled\" (default)")
     print("--exponentcase     case of 'e' in numbers. \"lowercase\" or \"uppercase\" (default)")
-    print("--header           header comments. \"strip\" to remove, or \"ignore\" (default)")
+    print("--header           header comments. \"strip\", \"ignore\", or the text you wish use")
     print("--hexgrouping      hex grouping,threshold or \"none\", \"ignore\". default: 4,8")
     print("--hexliteralcase   casing for hex literals. \"uppercase\" (default) or \"lowercase\"")
     print("--ifdef            #if indenting. \"indent\" (default), \"noindent\" or \"outdent\"")
@@ -586,8 +586,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["removelines"] = options.removeBlankLines ? "enabled" : "disabled"
             case "allmanBraces":
                 args["allman"] = options.allmanBraces ? "true" : "false"
-            case "stripHeader":
-                args["header"] = options.stripHeader ? "strip" : "ignore"
+            case "fileHeader":
+                args["header"] = options.fileHeader.map { $0.isEmpty ? "strip" : $0 } ?? "ignore"
             case "ifdefIndent":
                 args["ifdef"] = options.ifdefIndent.rawValue
             case "wrapArguments":
@@ -633,7 +633,7 @@ private func processOption(_ key: String, in args: [String: String],
         throw FormatError.options("--\(key) option expects a value")
     }
     do {
-        try handler(value.lowercased())
+        try handler(value)
     } catch {
         throw FormatError.options("unsupported --\(key) value: \(value)")
     }
@@ -643,7 +643,7 @@ func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
     var options = FileOptions()
     var arguments = Set(fileArguments)
     try processOption("symlinks", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "follow":
             options.followSymlinks = true
         case "ignore":
@@ -660,7 +660,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     var options = FormatOptions()
     var arguments = Set(formatArguments)
     try processOption("indent", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "tab", "tabs", "tabbed":
             options.indent = "\t"
         default:
@@ -672,7 +672,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("allman", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "true", "enabled":
             options.allmanBraces = true
         case "false", "disabled":
@@ -682,7 +682,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("semicolons", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "inline":
             options.allowInlineSemicolons = true
         case "never", "false":
@@ -692,7 +692,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("commas", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "always", "true":
             options.trailingCommas = true
         case "inline", "false":
@@ -702,7 +702,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("comments", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "indent", "indented":
             options.indentComments = true
         case "ignore":
@@ -712,7 +712,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("linebreaks", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "cr":
             options.linebreak = "\r"
         case "lf":
@@ -724,7 +724,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("ranges", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "space", "spaced", "spaces":
             options.spaceAroundRangeOperators = true
         case "nospace":
@@ -734,7 +734,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("empty", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "void":
             options.useVoid = true
         case "tuple", "tuples":
@@ -744,7 +744,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("trimwhitespace", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "always":
             options.truncateBlankLines = true
         case "nonblank-lines", "nonblank", "non-blank-lines", "non-blank",
@@ -755,7 +755,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("insertlines", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "enabled", "true":
             options.insertBlankLines = true
         case "disabled", "false":
@@ -765,7 +765,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("removelines", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "enabled", "true":
             options.removeBlankLines = true
         case "disabled", "false":
@@ -775,38 +775,57 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("header", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "strip":
-            options.stripHeader = true
+            options.fileHeader = ""
         case "ignore":
-            options.stripHeader = false
+            options.fileHeader = nil
         default:
-            throw FormatError.options("")
+            // Normalize the header
+            let header = $0.trimmingCharacters(in: .whitespacesAndNewlines)
+            let isMultiline = header.hasPrefix("/*")
+            var lines = header.components(separatedBy: "\\n")
+            lines = lines.flatMap {
+                var line = $0
+                if !isMultiline, !line.hasPrefix("//") {
+                    line = "//" + line
+                }
+                if let range = line.range(of: "{year}") {
+                    let formatter = DateFormatter()
+                    formatter.dateFormat = "yyyy"
+                    line.replaceSubrange(range, with: formatter.string(from: Date()))
+                }
+                return line
+            }
+            while lines.last?.isEmpty == true {
+                lines.removeLast()
+            }
+            options.fileHeader = lines.joined(separator: "\n")
         }
     }
     try processOption("ifdef", in: args, from: &arguments) {
-        if let mode = IndentMode(rawValue: $0) {
+        if let mode = IndentMode(rawValue: $0.lowercased()) {
             options.ifdefIndent = mode
         } else {
             throw FormatError.options("")
         }
     }
     try processOption("wraparguments", in: args, from: &arguments) {
-        if let mode = WrapMode(rawValue: $0) {
+        if let mode = WrapMode(rawValue: $0.lowercased()) {
             options.wrapArguments = mode
         } else {
             throw FormatError.options("")
         }
     }
     try processOption("wrapelements", in: args, from: &arguments) {
-        if let mode = WrapMode(rawValue: $0) {
+        if let mode = WrapMode(rawValue: $0.lowercased()) {
             options.wrapElements = mode
         } else {
             throw FormatError.options("")
         }
     }
     try processOption("hexliteralcase", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "uppercase", "upper":
             options.uppercaseHex = true
         case "lowercase", "lower":
@@ -816,7 +835,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("exponentcase", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "uppercase", "upper":
             options.uppercaseExponent = true
         case "lowercase", "lower":
@@ -826,31 +845,31 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("decimalgrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0) else {
+        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
             throw FormatError.options("")
         }
         options.decimalGrouping = grouping
     }
     try processOption("binarygrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0) else {
+        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
             throw FormatError.options("")
         }
         options.binaryGrouping = grouping
     }
     try processOption("octalgrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0) else {
+        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
             throw FormatError.options("")
         }
         options.octalGrouping = grouping
     }
     try processOption("hexgrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0) else {
+        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
             throw FormatError.options("")
         }
         options.hexGrouping = grouping
     }
     try processOption("fragment", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "true", "enabled":
             options.fragment = true
         case "false", "disabled":
@@ -860,13 +879,13 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
     }
     try processOption("stripunusedargs", in: args, from: &arguments) {
-        guard let type = ArgumentType(rawValue: $0) else {
+        guard let type = ArgumentType(rawValue: $0.lowercased()) else {
             throw FormatError.options("")
         }
         options.stripUnusedArguments = type
     }
     try processOption("experimental", in: args, from: &arguments) {
-        switch $0 {
+        switch $0.lowercased() {
         case "enabled", "true":
             options.experimentalRules = true
         case "disabled", "false":
@@ -878,7 +897,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     // Deprecated
     try processOption("hexliterals", in: args, from: &arguments) {
         print("`--hexliterals` option is deprecated. Use `--hexliteralcase` instead", as: .warning)
-        switch $0 {
+        switch $0.lowercased() {
         case "uppercase", "upper":
             options.uppercaseHex = true
         case "lowercase", "lower":

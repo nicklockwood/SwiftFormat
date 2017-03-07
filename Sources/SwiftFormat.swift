@@ -214,10 +214,12 @@ public func format(_ tokens: [Token],
 
     // Recursively apply rules until no changes are detected
     var tokens = tokens
+    var options = options
     let formatter = Formatter(tokens, options: options)
     repeat {
         tokens = formatter.tokens
         rules.forEach { $0(formatter) }
+        options.fileHeader = nil // Prevents infinite recursion
     } while tokens != formatter.tokens
 
     // Output

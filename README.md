@@ -417,7 +417,7 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
 
     let color = 0xFF77A5     -->   let color = 0xff77a5
     
-*stripHeaders* - removes the comment header blocks that Xcode adds to the top of each file (off by default).
+*fileHeaders* - remove or replace the comment header block that Xcode adds to the top of each file. By default this does nothing, but pass `--header strip` to the command line to remove headers, or pass a format string such as `--header "Copyright MyCorp Inc 2015 - {year}"`:
 
 *wrapArguments* - wraps function arguments and array elements depending on the mode specified. E.g. for `beforeFirst`:
 
@@ -546,6 +546,33 @@ By default, the cache is stored in `~/Library/Caches/com.charcoaldesign.swiftfor
 The cache is shared between all projects. The file is fairly small, as it only stores the path and size for each file, not the contents. If you do start experiencing slowdown due to the cache growing too large, you might want to consider using a separate cache file for each project.
 
 You can specify a custom cache file location by passing a path as the `--cache` option value. For example, you might want to store the cache file inside your project directory. It is fine to check in the cache file if you want to share it between different users of your project, as the paths stored in the cache are relative to the location of the formatted files.
+
+
+File headers
+-------------
+
+SwiftFormat can be configured to strip or replace the header comments in every file it processes with a template. The "header comment" is defined as a comment block that begins on the first nonblank line in the file, and is followed by at least one blank line. This may consist of a single comment body, or multiple comments on consecutive lines:
+
+    // This is a header comment
+    
+    // This is a regular comment
+    func foo(bar: Int) -> Void { ... }
+
+The header template is a string that you provide using the `--header` command-line option. Passing a value of `ignore` (the default) will leave the header comments unmodified. Passing `strip` or an empty string `""` will remove them. If you wish to provide a custom header template, the format is as follows:
+
+For a single-line template: `--header "Copyright (c) 2017 Foobar Industries"`
+
+For a multiline comment, mark linebreaks with `\n`: `--header "First line\nSecond line"
+
+You can optionally include the comment syntax in the template if you wish: `--header "/*--- Header comment ---*/"`
+
+If you do not include comment markup, each line in the template will be prepended with `//` and a single space.
+
+Finally, it is common practice to include the current year in a comment header copyright notice. To do that, use the following syntax:
+
+    `--header "Copyright (c) {year} Foobar Industries"`
+    
+And the `{year}` token will be automatically replaced by the current year whenever SwiftFormat is applied (**Note:** the year is determined from the locale and timezone of the machine running the script).
 
 
 Known issues

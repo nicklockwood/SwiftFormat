@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-public let version = "0.24.7"
+public let version = "0.25.0"
 
 /// An enumeration of the types of error that may be thrown by SwiftFormat
 public enum FormatError: Error, CustomStringConvertible {
@@ -43,10 +43,10 @@ public enum FormatError: Error, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .reading(let string),
-             .writing(let string),
-             .parsing(let string),
-             .options(let string):
+        case let .reading(string),
+             let .writing(string),
+             let .parsing(string),
+             let .options(string):
             return string
         }
     }
@@ -182,7 +182,7 @@ public func offsetForToken(at index: Int, in tokens: [Token]) -> (line: Int, col
 
 /// Process token error
 public func parsingError(for tokens: [Token]) -> FormatError? {
-    if let token = tokens.first(where: { $0.isError }), case .error(let string) = token {
+    if let token = tokens.first(where: { $0.isError }), case let .error(string) = token {
         let message: String
         if string.isEmpty {
             message = "unexpected end of file"

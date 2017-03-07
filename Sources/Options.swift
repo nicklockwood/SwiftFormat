@@ -189,7 +189,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var description: String {
         let allowedCharacters = CharacterSet.newlines.inverted
         return Mirror(reflecting: self).children.map({
-            return "\($0.value);".addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? ""
+            "\($0.value);".addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? ""
         }).joined()
     }
 }
@@ -212,7 +212,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         }
         formatter.forEach(.linebreak) { i, _ in
             let start = formatter.startOfLine(at: i)
-            if case .space(let string) = formatter.tokens[start] {
+            if case let .space(string) = formatter.tokens[start] {
                 if string.hasPrefix("\t") {
                     increment("\t")
                 } else {
@@ -434,13 +434,13 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
     options.ifdefIndent = {
         var indented = 0, notIndented = 0, outdented = 0
         formatter.forEach(.startOfScope("#if")) { i, _ in
-            if let indent = formatter.token(at: i - 1), case .space(let string) = indent,
+            if let indent = formatter.token(at: i - 1), case let .space(string) = indent,
                 !string.isEmpty {
                 // Indented, check next line
                 if let nextLineIndex = formatter.index(of: .linebreak, after: i),
                     let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: nextLineIndex) {
                     switch formatter.tokens[nextIndex - 1] {
-                    case .space(let innerString):
+                    case let .space(innerString):
                         if innerString.isEmpty {
                             // Error?
                             return
@@ -465,7 +465,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
             if let nextLineIndex = formatter.index(of: .linebreak, after: i),
                 let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: nextLineIndex) {
                 switch formatter.tokens[nextIndex - 1] {
-                case .space(let string):
+                case let .space(string):
                     if string.isEmpty {
                         fallthrough
                     } else if string == formatter.options.indent {
@@ -544,7 +544,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         let prefix = "0x"
         var uppercase = 0, lowercase = 0
         formatter.forEachToken { _, token in
-            if case .number(var string, .hex) = token {
+            if case var .number(string, .hex) = token {
                 string = string
                     .replacingOccurrences(of: "p", with: "")
                     .replacingOccurrences(of: "P", with: "")
@@ -565,14 +565,14 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         var uppercase = 0, lowercase = 0
         formatter.forEachToken { _, token in
             switch token {
-            case .number(let string, .decimal):
+            case let .number(string, .decimal):
                 let characters = string.unicodeScalars
                 if characters.contains("e") {
                     lowercase += 1
                 } else if characters.contains("E") {
                     uppercase += 1
                 }
-            case .number(let string, .hex):
+            case let .number(string, .hex):
                 let characters = string.unicodeScalars
                 if characters.contains("p") {
                     lowercase += 1
@@ -589,7 +589,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
     func grouping(for numberType: NumberType) -> Grouping {
         var grouping = [(group: Int, threshold: Int, count: Int)](), lowest = Int.max
         formatter.forEachToken { _, token in
-            guard case .number(let number, let type) = token else {
+            guard case let .number(number, type) = token else {
                 return
             }
             guard numberType == type || numberType == .decimal && type == .integer else {

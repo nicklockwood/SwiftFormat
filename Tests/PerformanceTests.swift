@@ -31,7 +31,7 @@ class PerformanceTests: XCTestCase {
             tokens = files.map { tokenize($0) }
         }
         for tokens in tokens {
-            if let token = tokens.last, case .error(let msg) = token {
+            if let token = tokens.last, case let .error(msg) = token {
                 XCTFail("error: \(msg)")
             }
         }

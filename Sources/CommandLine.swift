@@ -400,7 +400,7 @@ func inferOptions(from inputURLs: [URL]) -> (Int, FormatOptions, [Error]) {
                 throw FormatError.reading("failed to read file \(inputURL.path)")
             }
             let _tokens = tokenize(input)
-            if let error = parsingError(for: _tokens), case .parsing(let string) = error {
+            if let error = parsingError(for: _tokens), case let .parsing(string) = error {
                 throw FormatError.parsing("\(string) in \(inputURL.path)")
             }
             return {
@@ -485,7 +485,7 @@ func processInput(_ inputURLs: [URL],
                 } catch {
                     throw FormatError.writing("failed to write file \(outputURL.path), \(error)")
                 }
-            } catch FormatError.parsing(let string) {
+            } catch let FormatError.parsing(string) {
                 throw FormatError.parsing("\(string) in \(inputURL.path)")
             } catch {
                 throw error

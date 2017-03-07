@@ -276,7 +276,7 @@ public class Formatter: NSObject {
 
     /// Returns the space at the start of the line containing the specified index
     public func indentForLine(at index: Int) -> String {
-        if let token = token(at: startOfLine(at: index)), case .space(let string) = token {
+        if let token = token(at: startOfLine(at: index)), case let .space(string) = token {
             return string
         }
         return ""

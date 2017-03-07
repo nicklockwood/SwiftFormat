@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.25.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.25.0) (2017-03-07)
+
+- The `stripHeaders` rule is now `fileHeaders`, which can strip or replace header comments with a custom template (see README for details)
+- Added `hoistPatternLet` rule that moves `let` and `var` to the beginning of `switch/case` patterns, or tuple assignments
+- Added `redundantReturn` rule that strips the `return` keyword from single-line closures
+- Added `redundantBackticks` rule that removes unnecessary ``escaping`` of keywords
+
 ## [0.24.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.7) (2017-02-28)
 
 - Fixed a bug where switch cases containing a `..<` operator were parsed incorrectly, resulting in incorrect indentation

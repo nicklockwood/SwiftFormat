@@ -407,6 +407,12 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
 
     array.filter { return $0.foo == bar }    -->    array.filter { $0.foo == bar }
 
+*redundantBackticks* - removes unnecessary escaping of identifiers using backticks, e.g. in cases where the escaped word is not a keyword, or is not ambiguous in that context:
+
+    let `infix` = bar                   -->    let infix = bar
+    
+    func foo(with `default`: Int) {}    -->    func foo(with default: Int) {}   
+
 *hexLiterals* - converts all hex literals to upper- or lower-case, depending on settings:
 
     let color = 0xFF77A5     -->   let color = 0xff77a5

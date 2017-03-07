@@ -45,8 +45,15 @@ private let swiftKeywords = Set([
     "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
     "throw", "typealias", "where", "break", "deinit", "subscript", "lazy", "is",
     "while", "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
-    "default", "protocol",
+    "default", "protocol", "defer",
 ])
+
+public extension String {
+    /// Is this string a reserved keyword in Swift?
+    var isSwiftKeyword: Bool {
+        return swiftKeywords.contains(self)
+    }
+}
 
 /// Classes of token used for matching
 public enum TokenType {
@@ -677,10 +684,7 @@ private extension String.UnicodeScalarView {
             }
             self = start
         } else if let identifier = readIdentifier() {
-            if swiftKeywords.contains(identifier) {
-                return .keyword(identifier)
-            }
-            return .identifier(identifier)
+            return identifier.isSwiftKeyword ? .keyword(identifier) : .identifier(identifier)
         }
         return nil
     }

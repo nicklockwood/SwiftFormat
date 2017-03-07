@@ -1711,6 +1711,42 @@ extension FormatRules {
         }
     }
 
+    /// Remove redundant backticks around non-keywords, or in places where keywords don't need escaping
+    public class func redundantBackticks(_ formatter: Formatter) {
+        formatter.forEach(.identifier) { i, token in
+            guard token.string.characters.first == "`" else { return }
+            let unescaped = token.unescaped()
+            guard unescaped.isSwiftKeyword else {
+                switch unescaped {
+                case "Type" where formatter.currentScope(at: i) == .startOfScope("{"):
+                    // TODO: check it's actually inside a type declaration, otherwise backticks aren't needed
+                    return
+                case "get", "set":
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope("{") {
+                        break
+                    }
+                    return
+                default:
+                    break
+                }
+                formatter.replaceToken(at: i, with: .identifier(unescaped))
+                return
+            }
+            if i > 0, case .operator(".", _) = formatter.tokens[i - 1] {
+                formatter.replaceToken(at: i, with: .identifier(unescaped))
+                return
+            }
+            guard let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) else { return }
+            let nextToken = formatter.tokens[nextIndex]
+            if formatter.currentScope(at: i) == .startOfScope("("),
+                nextToken == .delimiter(":") || (nextToken.isIdentifier &&
+                    formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .delimiter(":")) {
+                formatter.replaceToken(at: i, with: .identifier(unescaped))
+                return
+            }
+        }
+    }
+
     /// Replace unused arguments with an underscore
     public class func unusedArguments(_ formatter: Formatter) {
         func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: Range<Int>) {

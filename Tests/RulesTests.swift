@@ -3384,6 +3384,43 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // MARK: redundantBackticks
+
+    func testRemoveRedundantBackticksInLet() {
+        let input = "let `foo` = bar"
+        let output = "let foo = bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveBackticksAroundKeyword() {
+        let input = "let `let` = foo"
+        let output = "let `let` = foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveBackticksAroundKeywordFollowedByType() {
+        let input = "let `default`: Int = foo"
+        let output = "let `default`: Int = foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveBackticksAroundContextualGet() {
+        let input = "var foo: Int {\n    `get`()\n    return 5\n}"
+        let output = "var foo: Int {\n    `get`()\n    return 5\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveBackticksAroundType() {
+        let input = "struct Foo {\n    enum `Type` {}\n}"
+        let output = "struct Foo {\n    enum `Type` {}\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: unusedArguments
 
     // closures

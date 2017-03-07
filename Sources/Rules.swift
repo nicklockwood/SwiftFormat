@@ -1678,6 +1678,39 @@ extension FormatRules {
         }
     }
 
+    /// Remove redundant return keyword from single-line closures
+    public class func redundantReturn(_ formatter: Formatter) {
+        formatter.forEach(.startOfScope("{")) { i, _ in
+            guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .identifier("get") else { return }
+            if let prevKeywordIndex = formatter.index(of: .keyword, before: i) {
+                var keyword = formatter.tokens[prevKeywordIndex].string
+                if ["try", "as", "is"].contains(keyword) {
+                    keyword = formatter.last(.keyword, before: prevKeywordIndex)?.string ?? ""
+                }
+                if [
+                    "let", "var", "func", "throws", "rethrows", "init", "subscript", "else", "if",
+                    "case", "where", "for", "while", "repeat", "do", "catch",
+                ].contains(keyword) { return }
+            }
+            var startIndex = i
+            if let inIndex = formatter.index(of: .keyword, after: i, if: { $0 == .keyword("in") }) {
+                startIndex = inIndex
+            }
+            guard let firstIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex) else {
+                return
+            }
+            if formatter.tokens[firstIndex] == .keyword("return") {
+                if formatter.next(.nonSpaceOrCommentOrLinebreak, after: firstIndex) == .endOfScope("}") {
+                    return
+                }
+                formatter.removeToken(at: firstIndex)
+                if formatter.token(at: firstIndex)?.isSpace == true {
+                    formatter.removeToken(at: firstIndex)
+                }
+            }
+        }
+    }
+
     /// Replace unused arguments with an underscore
     public class func unusedArguments(_ formatter: Formatter) {
         func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: Range<Int>) {

@@ -402,6 +402,10 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     func foo() -> Void {           func foo() {
         // returns nothing   -->       // returns nothing
     }                              }
+    
+*redundantReturn* - removes unnecessary `return` keyword from single-line closures:
+
+    array.filter { return $0.foo == bar }    -->    array.filter { $0.foo == bar }
 
 *hexLiterals* - converts all hex literals to upper- or lower-case, depending on settings:
 

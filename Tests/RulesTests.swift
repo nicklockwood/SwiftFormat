@@ -2434,8 +2434,8 @@ class RulesTests: XCTestCase {
     }
 
     func testSemicolonReplacedAfterReturnIfEndOfScope() {
-        let input = "{ return; }"
-        let output = "{ return }"
+        let input = "do { return; }"
+        let output = "do { return }"
         XCTAssertEqual(try format(input, rules: [FormatRules.semicolons]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3323,6 +3323,64 @@ class RulesTests: XCTestCase {
         let input = "{ (foo: Bar) -> Void in foo() }"
         let output = "{ (foo: Bar) -> Void in foo() }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantVoidReturnType]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    // MARK: redundantReturn
+
+    func testRemoveRedundantReturnInClosure() {
+        let input = "foo(with: { return 5 })"
+        let output = "foo(with: { 5 })"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveRedundantReturnInClosureWithArgs() {
+        let input = "foo(with: { foo in return foo })"
+        let output = "foo(with: { foo in foo })"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveReturnInComputedVar() {
+        let input = "var foo: Int { return 5 }"
+        let output = "var foo: Int { return 5 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveReturnInGet() {
+        let input = "var foo: Int {\n    get { return 5 }\n    set { _foo = newValue }\n}"
+        let output = "var foo: Int {\n    get { return 5 }\n    set { _foo = newValue }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveReturnInFunction() {
+        let input = "func foo() -> Int { return 5 }"
+        let output = "func foo() -> Int { return 5 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveReturnInForWhere() {
+        let input = "for foo in bar where baz { return 5 }"
+        let output = "for foo in bar where baz { return 5 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveReturnInIfTry() {
+        let input = "if let foo = try? bar() { return 5 }"
+        let output = "if let foo = try? bar() { return 5 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveVoidReturn() {
+        let input = "{ _ in return }"
+        let output = "{ _ in return }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 

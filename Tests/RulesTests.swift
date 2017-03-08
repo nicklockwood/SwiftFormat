@@ -3363,6 +3363,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveReturnInForIn() {
+        let input = "for foo in bar { return 5 }"
+        let output = "for foo in bar { return 5 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testNoRemoveReturnInForWhere() {
         let input = "for foo in bar where baz { return 5 }"
         let output = "for foo in bar where baz { return 5 }"
@@ -3373,6 +3380,13 @@ class RulesTests: XCTestCase {
     func testNoRemoveReturnInIfTry() {
         let input = "if let foo = try? bar() { return 5 }"
         let output = "if let foo = try? bar() { return 5 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveReturnAfterMultipleAs() {
+        let input = "if foo as? bar as? baz { return 5 }"
+        let output = "if foo as? bar as? baz { return 5 }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

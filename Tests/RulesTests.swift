@@ -3588,6 +3588,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testUnusedtFailableInitArgumentsAreNotMangled() {
+        let input = "init?(foo: Bar) {}"
+        let output = "init?(foo _: Bar) {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

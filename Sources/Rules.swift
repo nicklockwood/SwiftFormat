@@ -1833,7 +1833,7 @@ extension FormatRules {
                 let startIndex = formatter.index(of: .startOfScope("("), after: i),
                 let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
             let isOperator = (keyword == "subscript") ||
-                (formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isOperator == true)
+                (keyword == "func" && formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isOperator == true)
             var index = startIndex
             var argNames = [String]()
             var nameIndexPairs = [(Int, Int)]()

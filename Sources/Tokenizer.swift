@@ -34,8 +34,8 @@ import Foundation
 // https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/LexicalStructure.html
 
 // Used to speed up matching
-// Note: super, self, nil, etc. have been omitted deliberately, as they behave like
-// identifiers. So too have context-specific keywords such as the following:
+// Note: super, self, nil, true and false have been omitted deliberately, as they
+// behave like identifiers. So too have context-specific keywords such as the following:
 // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
 // lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
 // precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
@@ -45,7 +45,7 @@ private let swiftKeywords = Set([
     "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
     "throw", "typealias", "where", "break", "deinit", "subscript", "lazy", "is",
     "while", "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
-    "default", "protocol", "defer",
+    "default", "protocol", "defer", /* super, self, nil, true, false */
 ])
 
 public extension String {

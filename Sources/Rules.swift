@@ -1718,6 +1718,8 @@ extension FormatRules {
             let unescaped = token.unescaped()
             guard unescaped.isSwiftKeyword else {
                 switch unescaped {
+                case "super", "self", "nil", "true", "false":
+                    return
                 case "Type" where formatter.currentScope(at: i) == .startOfScope("{"):
                     // TODO: check it's actually inside a type declaration, otherwise backticks aren't needed
                     return

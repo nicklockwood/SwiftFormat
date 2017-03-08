@@ -3400,6 +3400,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveBackticksAroundSelf() {
+        let input = "let `self` = foo"
+        let output = "let `self` = foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testNoRemoveBackticksAroundKeywordFollowedByType() {
         let input = "let `default`: Int = foo"
         let output = "let `default`: Int = foo"

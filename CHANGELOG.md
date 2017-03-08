@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.25.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.25.1) (2017-03-08)
+
+- Fixed bug where unused arguments in a failable initializer could be incorrectly formatted
+- Fixed bug where backtick escaping would be incorrectly removed from certain keywords
+
 ## [0.25.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.25.0) (2017-03-07)
 
 - The `stripHeaders` rule is now `fileHeaders`, which can strip or replace header comments with a custom template (see README for details)

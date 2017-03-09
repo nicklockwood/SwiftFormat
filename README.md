@@ -413,10 +413,11 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     
     func foo(with `default`: Int) {}    -->    func foo(with default: Int) {}   
 
-*hexLiterals* - converts all hex literals to upper- or lower-case, depending on settings:
+*numberFormatting* - handles case and grouping of number literals  
 
-    let color = 0xFF77A5     -->   let color = 0xff77a5
-    
+    let color = 0xFF77A5     -->    let color = 0xff77a5
+    let big = 123456.123     -->    let big = 123_456.123
+
 *fileHeaders* - remove or replace the comment header block that Xcode adds to the top of each file. By default this does nothing, but pass `--header strip` to the command line to remove headers, or pass a format string such as `--header "Copyright MyCorp Inc 2015 - {year}"`:
 
 *wrapArguments* - wraps function arguments and array elements depending on the mode specified. E.g. for `beforeFirst`:

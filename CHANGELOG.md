@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.25.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.25.2) (2017-03-09)
+
+- Fixed bug where `return` keyword could be incorrectly removed inside a conditional statement
+- Fixed bug where backtick escaping would be incorrectly removed from `Self`
+
 ## [0.25.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.25.1) (2017-03-08)
 
 - Fixed bug where unused arguments in a failable initializer could be incorrectly formatted

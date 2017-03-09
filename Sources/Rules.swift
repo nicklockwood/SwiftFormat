@@ -1727,6 +1727,9 @@ extension FormatRules {
                 case "Type" where formatter.currentScope(at: i) == .startOfScope("{"):
                     // TODO: check it's actually inside a type declaration, otherwise backticks aren't needed
                     return
+                case "Self" where formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"):
+                    // TODO: check for other cases where it's safe to use unescaped
+                    return
                 case "get", "set":
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope("{") {
                         break

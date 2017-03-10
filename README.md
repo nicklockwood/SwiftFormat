@@ -221,7 +221,7 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
 
 *consecutiveBlankLines* - reduces multiple sequential blank lines to a single blank line
 
-*blankLinesAtEndOfScope* - removes trailing bank lines from inside braces, brackets, parens or chevrons:
+*blankLinesAtEndOfScope* - removes trailing blank lines from inside braces, brackets, parens or chevrons:
 
     func foo() {          func foo() {
         //foo       -->       //foo
@@ -236,7 +236,7 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     ]
     
     if x {                if x {         
-        print("x")               print("x")
+        print("x")            print("x")
 
     } else if y {   -->   } else if y {
         print("y")            print("y")

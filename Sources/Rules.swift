@@ -1720,32 +1720,34 @@ extension FormatRules {
         formatter.forEach(.identifier) { i, token in
             guard token.string.characters.first == "`" else { return }
             let unescaped = token.unescaped()
-            guard unescaped.isSwiftKeyword else {
+            if !unescaped.isSwiftKeyword {
                 switch unescaped {
                 case "super", "self", "nil", "true", "false":
-                    return
+                    break
                 case "Type" where formatter.currentScope(at: i) == .startOfScope("{"):
                     // TODO: check it's actually inside a type declaration, otherwise backticks aren't needed
-                    return
+                    break
                 case "Self" where formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"):
                     // TODO: check for other cases where it's safe to use unescaped
-                    return
-                case "get", "set":
-                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope("{") {
-                        break
-                    }
-                    return
-                default:
                     break
+                case "get", "set":
+                    guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope("{") else {
+                        return
+                    }
+                    fallthrough
+                default:
+                    formatter.replaceToken(at: i, with: .identifier(unescaped))
+                    return
                 }
-                formatter.replaceToken(at: i, with: .identifier(unescaped))
-                return
             }
             if i > 0, case .operator(".", _) = formatter.tokens[i - 1] {
                 formatter.replaceToken(at: i, with: .identifier(unescaped))
                 return
             }
-            guard let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) else { return }
+            guard !["let", "var"].contains(unescaped),
+                let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) else {
+                return
+            }
             let nextToken = formatter.tokens[nextIndex]
             if formatter.currentScope(at: i) == .startOfScope("("),
                 nextToken == .delimiter(":") || (nextToken.isIdentifier &&

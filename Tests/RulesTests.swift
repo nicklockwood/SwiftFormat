@@ -3651,6 +3651,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testTreatEscapedArgumentsAsUsed() {
+        let input = "func foo(default: Int) -> Int {\n    return `default`\n}"
+        let output = "func foo(default: Int) -> Int {\n    return `default`\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

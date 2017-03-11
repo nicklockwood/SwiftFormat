@@ -1762,7 +1762,8 @@ extension FormatRules {
     public class func unusedArguments(_ formatter: Formatter) {
         func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: Range<Int>) {
             for i in range.lowerBound ..< range.upperBound {
-                if case let .identifier(name) = formatter.tokens[i], let index = argNames.index(of: name),
+                let token = formatter.tokens[i]
+                if case .identifier = token, let index = argNames.index(of: token.unescaped()),
                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
                     (formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
                         formatter.currentScope(at: i) == .startOfScope("[")) {
@@ -1782,7 +1783,8 @@ extension FormatRules {
                 var index = i - 1
                 var argCountStack = [0]
                 while index > start {
-                    switch formatter.tokens[index] {
+                    let token = formatter.tokens[index]
+                    switch token {
                     case .keyword("for"):
                         return
                     case .endOfScope(")"):
@@ -1796,7 +1798,8 @@ extension FormatRules {
                         let count = argCountStack.last ?? 0
                         argNames.removeSubrange(count ..< argNames.count)
                         nameIndexPairs.removeSubrange(count ..< nameIndexPairs.count)
-                    case let .identifier(name):
+                    case .identifier:
+                        let name = token.unescaped()
                         if argCountStack.count < 3,
                             let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
                             [
@@ -1806,7 +1809,8 @@ extension FormatRules {
                             let scopeStart = formatter.index(of: .startOfScope, before: index),
                             ![.startOfScope("["), .startOfScope("<")].contains(formatter.tokens[scopeStart]) {
                             if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                                case let .identifier(internalName) = formatter.tokens[nextIndex] {
+                                let nextToken = formatter.token(at: nextIndex), case .identifier = nextToken {
+                                let internalName = nextToken.unescaped()
                                 if internalName != "_" {
                                     argNames.append(internalName)
                                     nameIndexPairs.append((index, nextIndex))
@@ -1853,18 +1857,20 @@ extension FormatRules {
                     if case let .identifier(name) = $0 {
                         return formatter.options.stripUnusedArguments != .unnamedOnly || name == "_"
                     }
-                    // Shouldn't happen unless there's a syntax error or tokenizer bug
+                    // Probably an empty argument list
                     return false
                 }) else { return }
                 guard let nextIndex =
                     formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
-                switch formatter.tokens[nextIndex] {
+                let nextToken = formatter.tokens[nextIndex]
+                switch nextToken {
                 case let .identifier(name) where name != "_":
-                    argNames.append(name)
+                    argNames.append(nextToken.unescaped())
                     nameIndexPairs.append((externalNameIndex, nextIndex))
                 case .delimiter(":"):
-                    if case let .identifier(name) = formatter.tokens[externalNameIndex], name != "_" {
-                        argNames.append(name)
+                    let externalNameToken = formatter.tokens[externalNameIndex]
+                    if case let .identifier(name) = externalNameToken, name != "_" {
+                        argNames.append(externalNameToken.unescaped())
                         nameIndexPairs.append((externalNameIndex, externalNameIndex))
                     }
                 default:

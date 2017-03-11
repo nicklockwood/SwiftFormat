@@ -3574,6 +3574,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testMarkUnusedArgumentsInOptionalReturningFunction() {
+        let input = "func foo(bar: Int, baz: String) -> String? {\n    return \"Hello \\(baz)\"\n}"
+        let output = "func foo(bar _: Int, baz: String) -> String? {\n    return \"Hello \\(baz)\"\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testNoMarkUnusedArgumentsInProtocolFunction() {
         let input = "protocol Foo {\n    func foo(bar: Int) -> Int\n    var bar: Int { get }\n}"
         let output = "protocol Foo {\n    func foo(bar: Int) -> Int\n    var bar: Int { get }\n}"

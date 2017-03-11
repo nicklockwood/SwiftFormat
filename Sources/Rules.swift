@@ -1876,21 +1876,15 @@ extension FormatRules {
                 switch $0 {
                 case .startOfScope("{"): // What we're looking for
                     return true
-                case .identifier,
-                     .startOfScope("("),
-                     .startOfScope("["),
-                     .startOfScope("<"),
-                     .delimiter(":"),
-                     .delimiter(","),
-                     .operator("&", .infix),
-                     .operator("->", .infix),
-                     .keyword("throws"),
-                     .keyword("rethrows"):
-                    return false
-                case _ where $0.isSpaceOrCommentOrLinebreak:
-                    return false
-                default: // Not valid between end of arguments and start of body
-                    return true
+                case .keyword("throws"),
+                     .keyword("rethrows"),
+                     .keyword("where"),
+                     .keyword("is"):
+                    return false // Keep looking
+                case .keyword:
+                    return true // Not valid between end of arguments and start of body
+                default:
+                    return false // Keep looking
                 }
             }), formatter.tokens[bodyStartIndex] == .startOfScope("{"),
                 let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else {

@@ -7,7 +7,7 @@
 - Added `--patternlet` command-line option for toggling behavior of the `hoistPatternLet` rule
 - Fixed bug where escaped arguments were treated as unused
 - Fixed some `unusedArguments` cases
-- The `removedBackticks` rule now handles more cases
+- The `redundantBackticks` rule now handles more cases
 
 ## [0.25.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.25.2) (2017-03-09)
 

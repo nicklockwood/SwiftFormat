@@ -153,7 +153,9 @@ So what does SwiftFormat actually do?
 
 SwiftFormat first converts the source file into tokens, then iteratively applies a set of rules to the tokens to adjust the formatting. The tokens are then converted back into text.
 
-The rules used by SwiftFormat can be displayed using the `--rules` command line argument. You can disable them individually using `--disable` followed by a comma-delimited list of rule names.
+The rules used by SwiftFormat can be displayed using the `--rules` command line argument. You can disable them individually using `--disable` followed by a comma-delimited list of rule names, or enable additional rules with `--enable`.
+
+To see exactly which rules were applied to a given file, you can use the `--verbose` command-line option to force SwiftFormat to print a more detailed log as it applies the formatting. **NOTE:** running in verbose mode is slower than the default mode.
 
 Here are all the rules that SwiftFormat currently applies, and what they do:
 
@@ -412,6 +414,14 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
     let `infix` = bar                   -->    let infix = bar
     
     func foo(with `default`: Int) {}    -->    func foo(with default: Int) {}   
+    
+*redundantSelf* - removes the `self.` prefix from instance method and variable references in cases where it isn't needed:
+
+    init(foo: Int, bar: Int) {           init(foo: Int, bar: Int) {
+        self.foo = foo                       self.foo = foo
+        self.bar = bar            -->        self.bar = bar
+        self.baz = 42                        baz = 42
+    }                                    }
 
 *numberFormatting* - handles case and grouping of number literals  
 
@@ -449,7 +459,7 @@ Here are all the rules that SwiftFormat currently applies, and what they do:
         self.data += data               -->       self.data += data
     }                                         }
     
-*hoistPatternLet* - moves `let` or `var` bindings inside patterns or tuples to the start of the expression:
+*hoistPatternLet* - moves `let` or `var` bindings inside patterns to the start of the expression, or vice-versa. Use the `--patternlet` command-line option to toggle between hoisted and inline style.
 
     (let foo, let bar) = baz()                 -->    let (foo, bar) = baz()
 
@@ -474,7 +484,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. What versions of Swift are supported?*
 
-> A. The framework requires Swift 3, but it can format programs written in Swift 2.x or 3.x. Swift 2.x is no longer actively supported however, and newer rules may not work correctly with Swift 2.x.
+> A. The framework requires Swift 3, but it can format programs written in Swift 2.x or 3.x. Swift 2.x is no longer actively supported however, and newer rules may not work correctly with Swift 2.x. If you find that SwiftFormat breaks your 2.x codebase, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a subset of rules.
 
 
 *Q. I don't like how SwiftFormat formatted my code*
@@ -520,9 +530,9 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 > A. First it loops through the source file character-by-character and breaks it into tokens, such as `number`, `identifier`, `linebreak`, etc. That's handled by the functions in `Tokenizer.swift`.
 
-> Next, it applies a series of formatting rules to the token array, such as removing whitespace at the end of a line, or ensuring each opening brace appears on the same line as the preceding non-space token. Each rule is designed to be independent of the others, so they can be enabled or disabled individually. The rules are defined as methods of the `FormatRules` class in `Rules.swift`, and are executed automatically using runtime magic.
+> Next, it applies a series of formatting rules to the token array, such as removing whitespace at the end of a line, or ensuring each opening brace appears on the same line as the preceding non-space token. The rules are defined as methods of the `FormatRules` class in `Rules.swift`, and are detected automatically using runtime magic. Each rule is designed to be independent of the others, so they can be enabled or disabled individually.
 
-> Finally, the modified token array is stitched back together to re-generate the source file.
+> Rules are applied recursively until no changes are detected. Finally, the modified token array is stitched back together to re-generate the source file.
 
 
 *Q. Why aren't you using regular expressions?*
@@ -534,7 +544,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 > A. I only created the framework to facilitate testing, so to be honest I've no idea if it will work in an app, but you're welcome to try. If you need to make adjustments to the public/private access modifiers or namespaces to get it working, open an issue on Github (or even better, a pull request).
 
-> The SwiftFormat framework is also available as a CocoaPod for easier integration.
+> The SwiftFormat framework is also available as a [CocoaPod](https://cocoapods.org/pods/SwiftFormat) for easier integration.
 
 
 Cache

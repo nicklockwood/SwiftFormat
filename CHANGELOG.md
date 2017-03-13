@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.26.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.26.0) (2017-03-13)
+
+- Added `redundantSelf` rule for removing `self.` prefix for member references in cases where it isn't needed
+- Added `--verbose` command-line option for tracking which rules were applied to each file
+- Added `--patternlet` command-line option for toggling behavior of the `hoistPatternLet` rule
+- Fixed bug where escaped arguments were treated as unused
+- Fixed some `unusedArguments` cases
+- The `removedBackticks` rule now handles more cases
+
 ## [0.25.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.25.2) (2017-03-09)
 
 - Fixed bug where `return` keyword could be incorrectly removed inside a conditional statement

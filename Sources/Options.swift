@@ -676,5 +676,63 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
     options.octalGrouping = grouping(for: .octal)
     options.hexGrouping = grouping(for: .hex)
 
+    options.hoistPatternLet = {
+        var hoisted = 0, unhoisted = 0
+
+        func hoistable(_ keyword: String, in range: CountableRange<Int>) -> Bool {
+            var found = 0, keywordFound = false, identifierFound = false
+            for index in range {
+                switch formatter.tokens[index] {
+                case .keyword(keyword):
+                    keywordFound = true
+                    found += 1
+                case .identifier("_"):
+                    break
+                case .identifier where formatter.last(.nonSpaceOrComment, before: index)?.string != ".":
+                    identifierFound = true
+                case .delimiter(","):
+                    guard keywordFound || !identifierFound else { return false }
+                    keywordFound = false
+                    identifierFound = false
+                case .startOfScope("{"):
+                    return false
+                default:
+                    break
+                }
+            }
+            return (keywordFound || !identifierFound) && found > 0
+        }
+
+        formatter.forEach(.startOfScope("(")) { i, _ in
+            // Check if pattern starts with let/var
+            var startIndex = i
+            guard let endIndex = formatter.index(of: .endOfScope(")"), after: i) else { return }
+            if var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) {
+                if case .identifier = formatter.tokens[prevIndex] {
+                    prevIndex = formatter.index(of: .spaceOrCommentOrLinebreak, before: prevIndex) ?? -1
+                    startIndex = prevIndex + 1
+                    prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) ?? 0
+                }
+                let prevToken = formatter.tokens[prevIndex]
+                switch prevToken {
+                case .keyword("let"), .keyword("var"):
+                    guard let prevPrevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                        [.keyword("case"), .endOfScope("case"), .delimiter(",")].contains(prevPrevToken) else {
+                        // Tuple assignment, not a pattern
+                        return
+                    }
+                    hoisted += 1
+                case .keyword("case"), .endOfScope("case"), .delimiter(","):
+                    if hoistable("let", in: i + 1 ..< endIndex) || hoistable("var", in: i + 1 ..< endIndex) {
+                        unhoisted += 1
+                    }
+                default:
+                    return
+                }
+            }
+        }
+        return hoisted >= unhoisted
+    }()
+
     return options
 }

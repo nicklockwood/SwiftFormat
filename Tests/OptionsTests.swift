@@ -313,4 +313,18 @@ class OptionsTests: XCTestCase {
         let options = inferOptions(from: tokenize(input))
         XCTAssertEqual(options.hexGrouping, .ignore)
     }
+
+    // MARK: hoistPatternLet
+
+    func testInferHoisted() {
+        let input = "if case let .foo(bar, baz) = quux {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.hoistPatternLet)
+    }
+
+    func testInferUnhoisted() {
+        let input = "if case .foo(let bar, let baz) = quux {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.hoistPatternLet)
+    }
 }

@@ -76,6 +76,7 @@ public struct FileOptions {
 public func enumerateFiles(withInputURL inputURL: URL,
                            outputURL: URL? = nil,
                            options: FileOptions = FileOptions(),
+                           concurrent: Bool = true,
                            block: @escaping (URL, URL) throws -> () throws -> Void) -> [Error] {
 
     guard let resourceValues = try? inputURL.resourceValues(
@@ -103,9 +104,9 @@ public func enumerateFiles(withInputURL inputURL: URL,
         }
     }
 
-    let queue = DispatchQueue.global(qos: .userInitiated)
     let manager = FileManager.default
     let keys: [URLResourceKey] = [.isRegularFileKey, .isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey]
+    let queue = concurrent ? DispatchQueue.global(qos: .userInitiated) : completionQueue
 
     func enumerate(inputURL: URL,
                    outputURL: URL?,

@@ -75,6 +75,7 @@ func printHelp() {
     print("--symlinks         how symlinks are handled. \"follow\" or \"ignore\" (default)")
     print("--fragment         input is part of a larger file. \"true\" or \"false\" (default)")
     print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
+    print("--verbose          display detailed formatting output")
     print("")
     print("--disable          a list of format rules to be disabled (comma-delimited)")
     print("--enable           a list of disabled rules to be re-enabled (comma-delimited)")
@@ -196,9 +197,23 @@ func processArguments(_ args: [String]) {
             inputURLs.append(expandPath(inputPath))
         }
 
+        // Verbose
+        var verbose = false
+        if let arg = args["verbose"] {
+            verbose = true
+            if !arg.isEmpty {
+                // verbose doesn't take an argument, so treat argument as another input path
+                inputURLs.append(expandPath(arg))
+            }
+            if inputURLs.isEmpty, args["output"] ?? "" != "" {
+                throw FormatError.options("--verbose option has no effect unless an output file is specified")
+            }
+        }
+
         // Infer options
         if let arg = args["inferoptions"] {
             if !arg.isEmpty {
+                // inferoptions doesn't take an argument, so treat argument as another input path
                 inputURLs.append(expandPath(arg))
             }
             if inputURLs.count > 0 {
@@ -305,22 +320,31 @@ func processArguments(_ args: [String]) {
                             }
                             let options = inferOptions(from: tokens)
                             print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
+                        } else if let outputURL = outputURL {
+                            if verbose {
+                                print("running swiftformat...")
+                            }
+                            let output = try format(
+                                input,
+                                ruleNames: Array(rules),
+                                options: formatOptions,
+                                verbose: verbose
+                            )
+                            do {
+                                try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
+                                print("swiftformat completed successfully", as: .success)
+                            } catch {
+                                throw FormatError.writing("failed to write file \(outputURL.path)")
+                            }
                         } else {
-                            let rules = FormatRules.byName.enumerated().flatMap { _, rule in
-                                return rules.contains(rule.key) ? rule.value : nil
-                            }
-                            let output = try format(input, rules: rules, options: formatOptions)
-                            if let outputURL = outputURL {
-                                do {
-                                    try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
-                                    print("swiftformat completed successfully")
-                                } catch {
-                                    throw FormatError.writing("failed to write file \(outputURL.path)")
-                                }
-                            } else {
-                                // Write to stdout
-                                print(output, as: .output)
-                            }
+                            // Write to stdout
+                            let output = try format(
+                                input,
+                                ruleNames: Array(rules),
+                                options: formatOptions,
+                                verbose: false
+                            )
+                            print(output, as: .output)
                         }
                     } catch {
                         fatalError = error
@@ -345,7 +369,9 @@ func processArguments(_ args: [String]) {
             return
         }
 
-        print("running swiftformat...")
+        if !verbose {
+            print("running swiftformat...")
+        }
 
         // Format the code
         var filesWritten = 0, filesChecked = 0
@@ -357,6 +383,7 @@ func processArguments(_ args: [String]) {
                 withRules: Array(rules),
                 formatOptions: formatOptions,
                 fileOptions: fileOptions,
+                verbose: verbose,
                 cacheURL: cacheURL
             )
             errors += _errors
@@ -413,12 +440,60 @@ func inferOptions(from inputURLs: [URL]) -> (Int, FormatOptions, [Error]) {
     return (filesParsed, inferOptions(from: tokens), errors)
 }
 
+public func format(_ source: String,
+                   ruleNames: [String],
+                   options: FormatOptions,
+                   verbose: Bool) throws -> String {
+    // Parse
+    var tokens = tokenize(source)
+    if !options.fragment, let error = parsingError(for: tokens) {
+        throw error
+    }
+
+    // Recursively apply rules until no changes are detected
+    var options = options
+    let formatter = Formatter(tokens, options: options)
+    let rulesByName = FormatRules.byName
+    var rulesApplied = Set<String>()
+    repeat {
+        tokens = formatter.tokens
+        if verbose {
+            for ruleName in ruleNames {
+                let before = formatter.tokens
+                rulesByName[ruleName]!(formatter)
+                if formatter.tokens != before {
+                    rulesApplied.insert(ruleName)
+                }
+            }
+        } else {
+            for ruleName in ruleNames {
+                rulesByName[ruleName]!(formatter)
+            }
+        }
+        options.fileHeader = nil // Prevents infinite recursion
+    } while tokens != formatter.tokens
+
+    // Info
+    if verbose {
+        if rulesApplied.isEmpty {
+            print(" -- no changes", as: .success)
+        } else {
+            let sortedNames = Array(rulesApplied).sorted().joined(separator: ", ")
+            print(" -- rules applied: \(sortedNames)", as: .success)
+        }
+    }
+
+    // Output
+    return sourceCode(for: tokens)
+}
+
 func processInput(_ inputURLs: [URL],
-                  andWriteToOutput outputURL: URL? = nil,
+                  andWriteToOutput outputURL: URL?,
                   withRules enabled: [String],
                   formatOptions: FormatOptions,
                   fileOptions: FileOptions,
-                  cacheURL: URL? = nil) -> (Int, Int, [Error]) {
+                  verbose: Bool,
+                  cacheURL: URL?) -> (Int, Int, [Error]) {
 
     // Filter rules
     var disabled = [String]()
@@ -438,11 +513,14 @@ func processInput(_ inputURLs: [URL],
         cache = NSDictionary(contentsOf: cacheURL) as? [String: String] ?? [:]
     }
     // Format files
-    let rules = FormatRules.all(except: disabled)
     var errors = [Error]()
     var filesChecked = 0, filesWritten = 0
     for inputURL in inputURLs {
-        errors += enumerateFiles(withInputURL: inputURL, outputURL: outputURL, options: fileOptions) { inputURL, outputURL in
+        errors += enumerateFiles(withInputURL: inputURL,
+                                 outputURL: outputURL,
+                                 options: fileOptions,
+                                 concurrent: !verbose) { inputURL, outputURL in
+
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("failed to read file \(inputURL.path)")
             }
@@ -455,11 +533,17 @@ func processInput(_ inputURLs: [URL],
                 return path
             }()
             do {
+                if verbose {
+                    print("formatting \(inputURL.path)")
+                }
                 let output: String
                 if cache?[cacheKey] == cachePrefix + String(input.characters.count) {
                     output = input
+                    if verbose {
+                        print("-- no changes", as: .success)
+                    }
                 } else {
-                    output = try format(input, rules: rules, options: formatOptions)
+                    output = try format(input, ruleNames: enabled, options: formatOptions, verbose: verbose)
                 }
                 if outputURL != inputURL, (try? String(contentsOf: outputURL)) != output {
                     do {
@@ -965,6 +1049,7 @@ let commandLineArguments = [
     "output",
     "fragment",
     "cache",
+    "verbose",
     // Rules
     "disable",
     "enable",

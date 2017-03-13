@@ -3584,6 +3584,76 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRemoveSelfInsideClassInit() {
+        let input = "class Foo {\n    var bar = 5\n    init() { self.bar = 6 }\n}"
+        let output = "class Foo {\n    var bar = 5\n    init() { bar = 6 }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfInClosureInsideIf() {
+        let input = "if foo { bar { self.baz() } }"
+        let output = "if foo { bar { self.baz() } }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForErrorInCatch() {
+        let input = "do {} catch { self.error = error }"
+        let output = "do {} catch { self.error = error }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForNewValueInSet() {
+        let input = "var foo: Int { set { self.newValue = newValue } get { return 0 } }"
+        let output = "var foo: Int { set { self.newValue = newValue } get { return 0 } }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForNewValueInWillSet() {
+        let input = "var foo: Int { willSet { self.newValue = newValue } }"
+        let output = "var foo: Int { willSet { self.newValue = newValue } }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForOldValueInDidSet() {
+        let input = "var foo: Int { didSet { self.oldValue = oldValue } }"
+        let output = "var foo: Int { didSet { self.oldValue = oldValue } }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForIndexVarInFor() {
+        let input = "for foo in bar { self.foo = foo }"
+        let output = "for foo in bar { self.foo = foo }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForKeyValueTupleInFor() {
+        let input = "for (foo, bar) in baz { self.foo = foo; self.bar = bar }"
+        let output = "for (foo, bar) in baz { self.foo = foo; self.bar = bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfFromLazyVar() {
+        let input = "lazy var foo = self.bar"
+        let output = "lazy var foo = self.bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfFromLazyVarClosure() {
+        let input = "lazy var foo = { self.bar }()"
+        let output = "lazy var foo = { self.bar }()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: unusedArguments
 
     // closures

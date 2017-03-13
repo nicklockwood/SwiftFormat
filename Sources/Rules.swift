@@ -1730,7 +1730,7 @@ extension FormatRules {
                 case "Self" where formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"):
                     // TODO: check for other cases where it's safe to use unescaped
                     break
-                case "get", "set":
+                case "get", "set", "willSet", "didSet":
                     guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope("{") else {
                         return
                     }
@@ -1760,7 +1760,7 @@ extension FormatRules {
 
     /// Remove redundant self keyword
     public class func redundantSelf(_ formatter: Formatter) {
-        func processBody(at index: inout Int, localNames: Set<String>) {
+        func processBody(at index: inout Int, localNames: Set<String>, isTypeRoot: Bool) {
             var localNames = localNames
             var scopeStack = [Token]()
             var lastKeyword = ""
@@ -1774,15 +1774,16 @@ extension FormatRules {
                 case .keyword("extension"), .keyword("class"), .keyword("struct"), .keyword("enum"):
                     guard let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
                     index = scopeStart + 1
-                    processBody(at: &index, localNames: ["init"])
+                    processBody(at: &index, localNames: ["init"], isTypeRoot: true)
                 case .keyword("var"), .keyword("let"):
                     index += 1
+                    let lazy = (lastKeyword == "lazy")
                     lastKeyword = token.string
                     loop: while let token = formatter.token(at: index) {
                         switch token {
                         case .identifier:
                             let name = token.unescaped()
-                            if name != "_" {
+                            if name != "_", !(isTypeRoot && scopeStack.isEmpty) {
                                 localNames.insert(name)
                             }
                             guard let nextIndex = formatter.index(of: .delimiter(","), after: index) else {
@@ -1794,15 +1795,44 @@ extension FormatRules {
                         }
                         index += 1
                     }
+                    guard lazy else { break }
+                    loop: while let nextIndex =
+                        formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                        switch formatter.tokens[nextIndex] {
+                        case .keyword("as"), .keyword("is"), .keyword("try"):
+                            break
+                        case .keyword:
+                            break loop
+                        default:
+                            break
+                        }
+                        index = nextIndex
+                    }
                 case let .keyword(name):
                     lastKeyword = name
                 case .startOfScope("("):
                     scopeStack.append(token)
-                case .startOfScope(":") where ["switch", "where", "case"].contains(lastKeyword),
-                     .startOfScope("{") where [
-                         "for", "in", "where", "if", "else", "while",
-                         "repeat", "do", "catch", "switch",
-                     ].contains(lastKeyword):
+                case .startOfScope("{") where lastKeyword == "catch":
+                    lastKeyword = ""
+                    scopeStack.append(token)
+                    localNames.insert("error") // Implicit error argument
+                case .startOfScope("{") where lastKeyword == "in":
+                    lastKeyword = ""
+                    scopeStack.append(token)
+                    guard let keywordIndex = formatter.index(of: .keyword, before: index),
+                        let prevKeywordIndex = formatter.index(of: .keyword, before: keywordIndex),
+                        let prevKeywordToken = formatter.token(at: prevKeywordIndex),
+                        case .keyword("for") = prevKeywordToken else { return }
+                    for token in formatter.tokens[prevKeywordIndex + 1 ..< keywordIndex] {
+                        if case let .identifier(name) = token, name != "_" {
+                            localNames.insert(token.unescaped())
+                        }
+                    }
+                case .startOfScope("{") where [
+                    "for", "where", "if", "else", "while",
+                    "repeat", "do", "switch",
+                ].contains(lastKeyword), .startOfScope(":"):
+                    lastKeyword = ""
                     scopeStack.append(token)
                 case .startOfScope:
                     index += 1
@@ -1884,10 +1914,10 @@ extension FormatRules {
                 return
             }
             index = bodyStartIndex + 1
-            processBody(at: &index, localNames: localNames)
+            processBody(at: &index, localNames: localNames, isTypeRoot: false)
         }
         var index = 0
-        processBody(at: &index, localNames: ["init"])
+        processBody(at: &index, localNames: ["init"], isTypeRoot: false)
     }
 
     /// Replace unused arguments with an underscore

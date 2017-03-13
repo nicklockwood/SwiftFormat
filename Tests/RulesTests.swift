@@ -135,8 +135,8 @@ class RulesTests: XCTestCase {
     }
 
     func testNoSpaceBetweenHashKeyPathAndBrace() {
-        let input = "#keyPath (self.foo.bar)"
-        let output = "#keyPath(self.foo.bar)"
+        let input = "#keyPath (foo.bar)"
+        let output = "#keyPath(foo.bar)"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3091,8 +3091,8 @@ class RulesTests: XCTestCase {
     }
 
     func testRemoveSubscriptGet() {
-        let input = "subscript(_ index: Int) {\n    get {\n        return self.lookup(index)\n    }\n}"
-        let output = "subscript(_ index: Int) {\n    return self.lookup(index)\n}"
+        let input = "subscript(_ index: Int) {\n    get {\n        return lookup(index)\n    }\n}"
+        let output = "subscript(_ index: Int) {\n    return lookup(index)\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantGet, FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3470,6 +3470,120 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // MARK: redundantSelf
+
+    func testSimpleRemoveRedundantSelf() {
+        let input = "func foo() { self.bar() }"
+        let output = "func foo() { bar() }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForArgument() {
+        let input = "func foo(bar: Int) { self.bar = bar }"
+        let output = "func foo(bar: Int) { self.bar = bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForLocalVariable() {
+        let input = "func foo() { var bar = self.bar }"
+        let output = "func foo() { var bar = self.bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForCommaDelimitedLocalVariables() {
+        let input = "func foo() { let foo = self.foo, bar = self.bar }"
+        let output = "func foo() { let foo = self.foo, bar = self.bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForCommaDelimitedLocalVariables2() {
+        let input = "func foo() {\n    let foo: Foo, bar: Bar\n    foo = self.foo\n    bar = self.bar\n}"
+        let output = "func foo() {\n    let foo: Foo, bar: Bar\n    foo = self.foo\n    bar = self.bar\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForTupleAssignedVariables() {
+        let input = "func foo() { let (foo, bar) = (self.foo, self.bar) }"
+        let output = "func foo() { let (foo, bar) = (self.foo, self.bar) }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForTupleAssignedVariablesFollowedByRegularVariable() {
+        let input = "func foo() {\n    let (foo, bar) = (self.foo, self.bar)\n    let baz = self.baz\n}"
+        let output = "func foo() {\n    let (foo, bar) = (self.foo, self.bar)\n    let baz = self.baz\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveRedundantNestedFunctionSelf() {
+        let input = "func foo() { func bar() { self.bar() } }"
+        let output = "func foo() { func bar() { bar() } }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveNonRedundantNestedFunctionSelf() {
+        let input = "func foo() { let bar = 5; func bar() { self.bar = bar } }"
+        let output = "func foo() { let bar = 5; func bar() { self.bar = bar } }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveClosureSelf() {
+        let input = "func foo() { bar { self.bar = 5 } }"
+        let output = "func foo() { bar { self.bar = 5 } }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfAfterOptionalReturn() {
+        let input = "func foo() -> String? {\n    var index = startIndex\n    if !matching(self[index]) {\n        break\n    }\n    index = self.index(after: index)\n}"
+        let output = "func foo() -> String? {\n    var index = startIndex\n    if !matching(self[index]) {\n        break\n    }\n    index = self.index(after: index)\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveRequiredSelfInExtensions() {
+        let input = "extension Foo {\n    func foo() {\n        var index = 5\n        if true {\n            break\n        }\n        index = self.index(after: index)\n    }\n}"
+        let output = "extension Foo {\n    func foo() {\n        var index = 5\n        if true {\n            break\n        }\n        index = self.index(after: index)\n    }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfBeforeInit() {
+        let input = "convenience init() { self.init(5) }"
+        let output = "convenience init() { self.init(5) }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSelfInsideSwitch() {
+        let input = "func foo() {\n    switch self.bar {\n    case .foo:\n        self.baz()\n    }\n}"
+        let output = "func foo() {\n    switch bar {\n    case .foo:\n        baz()\n    }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSelfInsideSwitchWhere() {
+        let input = "func foo() {\n    switch self.bar {\n    case .foo where a == b:\n        self.baz()\n    }\n}"
+        let output = "func foo() {\n    switch bar {\n    case .foo where a == b:\n        baz()\n    }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSelfInsideSwitchWhereAs() {
+        let input = "func foo() {\n    switch self.bar {\n    case .foo where a == b as C:\n        self.baz()\n    }\n}"
+        let output = "func foo() {\n    switch bar {\n    case .foo where a == b as C:\n        baz()\n    }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: unusedArguments
 
     // closures
@@ -3706,22 +3820,22 @@ class RulesTests: XCTestCase {
     // subscript
 
     func testMarkUnusedSubscriptArgument() {
-        let input = "subscript(foo: Int, baz: String) -> String {\n    return self.get(baz)\n}"
-        let output = "subscript(_: Int, baz: String) -> String {\n    return self.get(baz)\n}"
+        let input = "subscript(foo: Int, baz: String) -> String {\n    return get(baz)\n}"
+        let output = "subscript(_: Int, baz: String) -> String {\n    return get(baz)\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testMarkUnusedUnnamedSubscriptArgument() {
-        let input = "subscript(_ foo: Int, baz: String) -> String {\n    return self.get(baz)\n}"
-        let output = "subscript(_: Int, baz: String) -> String {\n    return self.get(baz)\n}"
+        let input = "subscript(_ foo: Int, baz: String) -> String {\n    return get(baz)\n}"
+        let output = "subscript(_: Int, baz: String) -> String {\n    return get(baz)\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testMarkUnusedNamedSubscriptArgument() {
-        let input = "subscript(foo foo: Int, baz: String) -> String {\n    return self.get(baz)\n}"
-        let output = "subscript(foo _: Int, baz: String) -> String {\n    return self.get(baz)\n}"
+        let input = "subscript(foo foo: Int, baz: String) -> String {\n    return get(baz)\n}"
+        let output = "subscript(foo _: Int, baz: String) -> String {\n    return get(baz)\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

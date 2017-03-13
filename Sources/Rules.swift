@@ -1758,6 +1758,138 @@ extension FormatRules {
         }
     }
 
+    /// Remove redundant self keyword
+    public class func redundantSelf(_ formatter: Formatter) {
+        func processBody(at index: inout Int, localNames: Set<String>) {
+            var localNames = localNames
+            var scopeStack = [Token]()
+            var lastKeyword = ""
+            while let token = formatter.token(at: index) {
+                switch token {
+                case .keyword("is"), .keyword("as"), .keyword("try"):
+                    break
+                case .keyword("func"), .keyword("init"), .keyword("subscript"):
+                    lastKeyword = ""
+                    processFunction(at: &index, localNames: localNames)
+                case .keyword("extension"), .keyword("class"), .keyword("struct"), .keyword("enum"):
+                    guard let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
+                    index = scopeStart + 1
+                    processBody(at: &index, localNames: ["init"])
+                case .keyword("var"), .keyword("let"):
+                    index += 1
+                    lastKeyword = token.string
+                    loop: while let token = formatter.token(at: index) {
+                        switch token {
+                        case .identifier:
+                            let name = token.unescaped()
+                            if name != "_" {
+                                localNames.insert(name)
+                            }
+                            guard let nextIndex = formatter.index(of: .delimiter(","), after: index) else {
+                                break loop
+                            }
+                            index = nextIndex
+                        default:
+                            break
+                        }
+                        index += 1
+                    }
+                case let .keyword(name):
+                    lastKeyword = name
+                case .startOfScope("("):
+                    scopeStack.append(token)
+                case .startOfScope(":") where ["switch", "where", "case"].contains(lastKeyword),
+                     .startOfScope("{") where [
+                         "for", "in", "where", "if", "else", "while",
+                         "repeat", "do", "catch", "switch",
+                     ].contains(lastKeyword):
+                    scopeStack.append(token)
+                case .startOfScope:
+                    index += 1
+                    scopeStack.append(token)
+                    while let scope = scopeStack.last, let nextToken = formatter.token(at: index) {
+                        if nextToken.isEndOfScope(scope) {
+                            scopeStack.removeLast()
+                        } else if nextToken.isStartOfScope {
+                            scopeStack.append(nextToken)
+                        }
+                        index += 1
+                    }
+                case .endOfScope("}") where scopeStack.isEmpty:
+                    index += 1
+                    return
+                case .identifier("self"), .identifier("`self`"):
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
+                        let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
+                            $0 == .operator(".", .infix)
+                        }), let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {
+                            $0.isIdentifier && !localNames.contains($0.string)
+                        }) {
+                        formatter.removeTokens(inRange: index ..< nextIndex)
+                    }
+                default:
+                    if let scope = scopeStack.last, token.isEndOfScope(scope) {
+                        scopeStack.removeLast()
+                    }
+                    break
+                }
+                index += 1
+            }
+        }
+        func processFunction(at index: inout Int, localNames: Set<String>) {
+            var localNames = localNames
+            guard let startIndex = formatter.index(of: .startOfScope("("), after: index),
+                let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
+            // Get argument names
+            index = startIndex
+            while index < endIndex {
+                guard let externalNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
+                    if case let .identifier(name) = $0 {
+                        return formatter.options.stripUnusedArguments != .unnamedOnly || name == "_"
+                    }
+                    // Probably an empty argument list
+                    return false
+                }) else { break }
+                guard let nextIndex =
+                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
+                let token = formatter.tokens[nextIndex]
+                switch token {
+                case let .identifier(name) where name != "_":
+                    localNames.insert(token.unescaped())
+                case .delimiter(":"):
+                    let externalNameToken = formatter.tokens[externalNameIndex]
+                    if case let .identifier(name) = externalNameToken, name != "_" {
+                        localNames.insert(externalNameToken.unescaped())
+                    }
+                default:
+                    return
+                }
+                index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
+            }
+            guard let bodyStartIndex = formatter.index(after: endIndex, where: {
+                switch $0 {
+                case .startOfScope("{"): // What we're looking for
+                    return true
+                case .keyword("throws"),
+                     .keyword("rethrows"),
+                     .keyword("where"),
+                     .keyword("is"):
+                    return false // Keep looking
+                case .keyword:
+                    return true // Not valid between end of arguments and start of body
+                default:
+                    return false // Keep looking
+                }
+            }), formatter.tokens[bodyStartIndex] == .startOfScope("{") else {
+                return
+            }
+            index = bodyStartIndex + 1
+            processBody(at: &index, localNames: localNames)
+        }
+        var index = 0
+        processBody(at: &index, localNames: ["init"])
+    }
+
     /// Replace unused arguments with an underscore
     public class func unusedArguments(_ formatter: Formatter) {
         func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: Range<Int>) {
@@ -1801,10 +1933,8 @@ extension FormatRules {
                     case .identifier:
                         let name = token.unescaped()
                         if argCountStack.count < 3,
-                            let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                            [
-                                .delimiter(","), .startOfScope("("),
-                                .startOfScope("{"), .endOfScope("]"),
+                            let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index), [
+                                .delimiter(","), .startOfScope("("), .startOfScope("{"), .endOfScope("]"),
                             ].contains(prevToken),
                             let scopeStart = formatter.index(of: .startOfScope, before: index),
                             ![.startOfScope("["), .startOfScope("<")].contains(formatter.tokens[scopeStart]) {

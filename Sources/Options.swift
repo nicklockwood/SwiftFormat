@@ -131,6 +131,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var binaryGrouping: Grouping
     public var octalGrouping: Grouping
     public var hexGrouping: Grouping
+    public var hoistPatternLet: Bool
     public var stripUnusedArguments: ArgumentType
     public var experimentalRules: Bool
     public var fragment: Bool
@@ -156,6 +157,7 @@ public struct FormatOptions: CustomStringConvertible {
                 binaryGrouping: Grouping = .group(4, 8),
                 octalGrouping: Grouping = .group(4, 8),
                 hexGrouping: Grouping = .group(4, 8),
+                hoistPatternLet: Bool = true,
                 stripUnusedArguments: ArgumentType = .all,
                 experimentalRules: Bool = false,
                 fragment: Bool = false) {
@@ -181,6 +183,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.binaryGrouping = binaryGrouping
         self.octalGrouping = octalGrouping
         self.hexGrouping = hexGrouping
+        self.hoistPatternLet = hoistPatternLet
         self.stripUnusedArguments = stripUnusedArguments
         self.experimentalRules = experimentalRules
         self.fragment = fragment

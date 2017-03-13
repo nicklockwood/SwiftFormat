@@ -3842,6 +3842,8 @@ class RulesTests: XCTestCase {
 
     // MARK: hoistPatternLet
 
+    // hoist = true
+
     func testHoistCaseLet() {
         let input = "if case .foo(let bar, let baz) = quux {}"
         let output = "if case let .foo(bar, baz) = quux {}"
@@ -3852,13 +3854,6 @@ class RulesTests: XCTestCase {
     func testHoistCaseVar() {
         let input = "if case .foo(var bar, var baz) = quux {}"
         let output = "if case var .foo(bar, baz) = quux {}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testHoistTupleLet() {
-        let input = "(let bar, let baz) = quux()"
-        let output = "let (bar, baz) = quux()"
         XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3924,6 +3919,48 @@ class RulesTests: XCTestCase {
         let output = "foo({ let bar = 5 })"
         XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    // hoist = false
+
+    func testUnhoistCaseLet() {
+        let input = "if case let .foo(bar, baz) = quux {}"
+        let output = "if case .foo(let bar, let baz) = quux {}"
+        let options = FormatOptions(hoistPatternLet: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testUnhoistCaseVar() {
+        let input = "if case var .foo(bar, baz) = quux {}"
+        let output = "if case .foo(var bar, var baz) = quux {}"
+        let options = FormatOptions(hoistPatternLet: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testUnhoistSingleCaseLet() {
+        let input = "if case let .foo(bar) = quux {}"
+        let output = "if case .foo(let bar) = quux {}"
+        let options = FormatOptions(hoistPatternLet: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testUnhoistIfArgIsEnumCaseLiteral() {
+        let input = "if case let .foo(.bar, baz) = quux {}"
+        let output = "if case .foo(.bar, let baz) = quux {}"
+        let options = FormatOptions(hoistPatternLet: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoUnhoistTupleLet() {
+        let input = "let (bar, baz) = quux()"
+        let output = "let (bar, baz) = quux()"
+        let options = FormatOptions(hoistPatternLet: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     // MARK: wrapArguments

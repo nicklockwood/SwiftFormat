@@ -96,6 +96,7 @@ func printHelp() {
     print("--insertlines      insert blank line after {. \"enabled\" (default) or \"disabled\"")
     print("--linebreaks       linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
     print("--octalgrouping    octal grouping,threshold or \"none\", \"ignore\". default: 4,8")
+    print("--patternlet       let/var placement in patterns. \"hoist\" (default) or \"inline\"")
     print("--ranges           spacing for ranges. \"spaced\" (default) or \"nospace\"")
     print("--removelines      remove blank line before }. \"enabled\" (default) or \"disabled\"")
     print("--semicolons       allow semicolons. \"never\" or \"inline\" (default)")
@@ -606,6 +607,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["octalgrouping"] = options.octalGrouping.rawValue
             case "hexGrouping":
                 args["hexgrouping"] = options.hexGrouping.rawValue
+            case "hoistPatternLet":
+                args["patternlet"] = options.hoistPatternLet ? "hoist" : "inline"
             case "stripUnusedArguments":
                 args["stripunusedargs"] = options.stripUnusedArguments.rawValue
             case "experimentalRules":
@@ -868,6 +871,16 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         }
         options.hexGrouping = grouping
     }
+    try processOption("patternlet", in: args, from: &arguments) {
+        switch $0.lowercased() {
+        case "hoist":
+            options.hoistPatternLet = true
+        case "inline":
+            options.hoistPatternLet = false
+        default:
+            throw FormatError.options("")
+        }
+    }
     try processOption("fragment", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "true", "enabled":
@@ -939,6 +952,11 @@ let formatArguments = [
     "trimwhitespace",
     "wraparguments",
     "wrapelements",
+    "patternlet",
+]
+
+let deprecatedArguments = [
+    "hexliterals",
 ]
 
 let commandLineArguments = [
@@ -956,6 +974,4 @@ let commandLineArguments = [
     "version",
     // Format options
     "experimental",
-    // Deprecated
-    "hexliterals",
-] + fileArguments + formatArguments
+] + deprecatedArguments + fileArguments + formatArguments

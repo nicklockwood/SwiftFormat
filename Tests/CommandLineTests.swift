@@ -67,7 +67,7 @@ class CommandLineTests: XCTestCase {
 
     func testCommandLineArgumentsAreCorrect() {
         let options = FormatOptions()
-        let output = ["indent": "4", "allman": "false", "wraparguments": "disabled", "removelines": "enabled", "wrapelements": "beforefirst", "exponentcase": "lowercase", "stripunusedargs": "always", "header": "ignore", "insertlines": "enabled", "binarygrouping": "4,8", "empty": "void", "ranges": "spaced", "trimwhitespace": "always", "hexliteralcase": "uppercase", "linebreaks": "lf", "decimalgrouping": "3,6", "commas": "always", "comments": "indent", "ifdef": "indent", "octalgrouping": "4,8", "hexgrouping": "4,8", "semicolons": "inline"]
+        let output = ["indent": "4", "allman": "false", "wraparguments": "disabled", "removelines": "enabled", "wrapelements": "beforefirst", "exponentcase": "lowercase", "stripunusedargs": "always", "header": "ignore", "insertlines": "enabled", "binarygrouping": "4,8", "empty": "void", "ranges": "spaced", "trimwhitespace": "always", "hexliteralcase": "uppercase", "linebreaks": "lf", "decimalgrouping": "3,6", "commas": "always", "comments": "indent", "ifdef": "indent", "octalgrouping": "4,8", "hexgrouping": "4,8", "patternlet": "hoist", "semicolons": "inline"]
         XCTAssertEqual(commandLineArguments(for: options), output)
     }
 
@@ -117,6 +117,19 @@ class CommandLineTests: XCTestCase {
             }
         }
         printHelp()
+    }
+
+    func testHelpOptionsDocumented() {
+        var arguments = Set(commandLineArguments)
+        deprecatedArguments.forEach { arguments.remove($0) }
+        CLI.print = { message, _ in
+            if message.hasPrefix("--") {
+                let name = message.substring(from: "--".endIndex).components(separatedBy: " ")[0]
+                arguments.remove(name)
+            }
+        }
+        printHelp()
+        XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     }
 
     // MARK: pipe

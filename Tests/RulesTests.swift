@@ -3654,6 +3654,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveSelfFromLazyVarClosure2() {
+        let input = "lazy var foo = { let bar = self.baz }()"
+        let output = "lazy var foo = { let bar = self.baz }()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: unusedArguments
 
     // closures

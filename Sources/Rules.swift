@@ -1808,6 +1808,7 @@ extension FormatRules {
                         }
                         index = nextIndex
                     }
+                    continue
                 case let .keyword(name):
                     lastKeyword = name
                 case .startOfScope("("):

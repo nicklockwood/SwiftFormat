@@ -1890,6 +1890,10 @@ extension FormatRules {
                         }), let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {
                             $0.isIdentifier && !localNames.contains($0.string)
                         }) {
+                        if case let .identifier(name) = formatter.tokens[nextIndex], name.isContextualKeyword {
+                            // May not be necessary, but will be reverted by `redundantBackticks` rule if so
+                            formatter.replaceToken(at: nextIndex, with: .identifier("`\(name)`"))
+                        }
                         formatter.removeTokens(inRange: index ..< nextIndex)
                     }
                 default:

@@ -1684,7 +1684,7 @@ extension FormatRules {
             guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .identifier("get") else { return }
             if var prevKeywordIndex = formatter.index(of: .keyword, before: i) {
                 var keyword = formatter.tokens[prevKeywordIndex].string
-                while ["try", "as", "is"].contains(keyword) {
+                while ["try", "as", "is"].contains(keyword) || keyword.hasPrefix("#") || keyword.hasPrefix("@") {
                     prevKeywordIndex = formatter.index(of: .keyword, before: prevKeywordIndex) ?? -1
                     guard prevKeywordIndex > -1 else {
                         return

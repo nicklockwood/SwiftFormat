@@ -3398,6 +3398,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveReturnAfterKeyPath() {
+        let input = "func foo() { if bar == #keyPath(baz) { return 5 } }"
+        let output = "func foo() { if bar == #keyPath(baz) { return 5 } }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

@@ -3661,6 +3661,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRemoveSelfFromVarInFuncWithUnusedArgument() {
+        let input = "func foo(bar _: Int) { self.baz = 5 }"
+        let output = "func foo(bar _: Int) { baz = 5 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSelfFromVarMatchingUnusedArgument() {
+        let input = "func foo(bar _: Int) { self.bar = 5 }"
+        let output = "func foo(bar _: Int) { bar = 5 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: unusedArguments
 
     // closures

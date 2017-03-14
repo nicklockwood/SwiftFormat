@@ -1885,8 +1885,8 @@ extension FormatRules {
                     formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
                 let token = formatter.tokens[nextIndex]
                 switch token {
-                case let .identifier(name) where name != "_":
-                    localNames.insert(token.unescaped())
+                case .identifier:
+                    break
                 case .delimiter(":"):
                     let externalNameToken = formatter.tokens[externalNameIndex]
                     if case let .identifier(name) = externalNameToken, name != "_" {

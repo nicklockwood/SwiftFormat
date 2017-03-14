@@ -3675,9 +3675,30 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRemoveSelfFromVarMatchingRenamedArgument() {
+        let input = "func foo(bar baz: Int) { self.baz = baz }"
+        let output = "func foo(bar baz: Int) { self.baz = baz }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testNoRemoveSelfFromVarRedeclaredInSubscope() {
         let input = "func foo() {\n    if quux {\n        let bar = 5\n    }\n    let baz = self.bar\n}"
         let output = "func foo() {\n    if quux {\n        let bar = 5\n    }\n    let baz = bar\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfFromVarDeclaredLaterInScope() {
+        let input = "func foo() {\n    let bar = self.baz\n    let baz = quux\n}"
+        let output = "func foo() {\n    let bar = self.baz\n    let baz = quux\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfFromVarDeclaredLaterInOuterScope() {
+        let input = "func foo() {\n    if quux {\n        let bar = self.baz\n    }\n    let baz = 6\n}"
+        let output = "func foo() {\n    if quux {\n        let bar = self.baz\n    }\n    let baz = 6\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

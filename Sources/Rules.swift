@@ -1762,6 +1762,48 @@ extension FormatRules {
     public class func redundantSelf(_ formatter: Formatter) {
         func processBody(at index: inout Int, localNames: Set<String>, isTypeRoot: Bool) {
             var localNames = localNames
+            // Gather local variables
+            var i = index
+            outer: while let token = formatter.token(at: i) {
+                switch token {
+                case .keyword("var"), .keyword("let"):
+                    i += 1
+                    inner: while let token = formatter.token(at: i) {
+                        switch token {
+                        case .identifier:
+                            let name = token.unescaped()
+                            if name != "_", !isTypeRoot {
+                                localNames.insert(name)
+                            }
+                            guard let nextIndex = formatter.index(of: .delimiter(","), after: i) else {
+                                break inner
+                            }
+                            i = nextIndex
+                        default:
+                            break
+                        }
+                        i += 1
+                    }
+                case .startOfScope:
+                    i += 1
+                    var scopeStack = [token]
+                    while let scope = scopeStack.last, let nextToken = formatter.token(at: i) {
+                        if nextToken.isEndOfScope(scope) {
+                            scopeStack.removeLast()
+                        } else if nextToken.isStartOfScope {
+                            scopeStack.append(nextToken)
+                        }
+                        i += 1
+                    }
+                case .endOfScope("}"):
+                    i += 1
+                    break outer
+                default:
+                    break
+                }
+                i += 1
+            }
+            // Remove redundant self
             var scopeStack = [Token]()
             var lastKeyword = ""
             while let token = formatter.token(at: index) {
@@ -1779,22 +1821,6 @@ extension FormatRules {
                     index += 1
                     let lazy = (lastKeyword == "lazy")
                     lastKeyword = token.string
-                    loop: while let token = formatter.token(at: index) {
-                        switch token {
-                        case .identifier:
-                            let name = token.unescaped()
-                            if name != "_", !(isTypeRoot && scopeStack.isEmpty) {
-                                localNames.insert(name)
-                            }
-                            guard let nextIndex = formatter.index(of: .delimiter(","), after: index) else {
-                                break loop
-                            }
-                            index = nextIndex
-                        default:
-                            break
-                        }
-                        index += 1
-                    }
                     guard lazy else { break }
                     loop: while let nextIndex =
                         formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
@@ -1892,15 +1918,15 @@ extension FormatRules {
                     formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
                 let token = formatter.tokens[nextIndex]
                 switch token {
-                case .identifier:
-                    break
+                case let .identifier(name) where name != "_":
+                    localNames.insert(token.unescaped())
                 case .delimiter(":"):
                     let externalNameToken = formatter.tokens[externalNameIndex]
                     if case let .identifier(name) = externalNameToken, name != "_" {
                         localNames.insert(externalNameToken.unescaped())
                     }
                 default:
-                    return
+                    break
                 }
                 index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
             }

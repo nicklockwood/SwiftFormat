@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.26.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.26.1) (2017-03-14)
+
+- Fixed critical bug where `self` could be incorrectly removed inside lazy var declarations
+
 ## [0.26.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.26.0) (2017-03-13)
 
 - Added `redundantSelf` rule for removing `self.` prefix for member references in cases where it isn't needed

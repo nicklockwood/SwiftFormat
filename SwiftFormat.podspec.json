@@ -23,12 +23,14 @@
       "preserve_paths": "CommandLineTool/swiftformat",
       "platforms": {
 	  	"ios": "7.0",
+	  	"tvos": "9.0",
     	"osx": "10.9"
       }
     }
   ],
   "platforms": {
     "ios": "9.0",
+  	"tvos": "9.0",
     "osx": "10.11"
   },
   "requires_arc": true

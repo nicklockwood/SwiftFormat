@@ -1827,7 +1827,7 @@ extension FormatRules {
                         switch formatter.tokens[nextIndex] {
                         case .keyword("as"), .keyword("is"), .keyword("try"):
                             break
-                        case .keyword:
+                        case .keyword, .startOfScope("{"):
                             break loop
                         default:
                             break

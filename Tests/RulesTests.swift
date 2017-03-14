@@ -3668,6 +3668,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveSelfFromLazyVarClosure3() {
+        let input = "lazy var foo = { [unowned self] in let bar = self.baz }()"
+        let output = "lazy var foo = { [unowned self] in let bar = self.baz }()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testRemoveSelfFromVarInFuncWithUnusedArgument() {
         let input = "func foo(bar _: Int) { self.baz = 5 }"
         let output = "func foo(bar _: Int) { baz = 5 }"

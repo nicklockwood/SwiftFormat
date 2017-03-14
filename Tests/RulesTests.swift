@@ -3675,6 +3675,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveSelfFromVarRedeclaredInSubscope() {
+        let input = "func foo() {\n    if quux {\n        let bar = 5\n    }\n    let baz = self.bar\n}"
+        let output = "func foo() {\n    if quux {\n        let bar = 5\n    }\n    let baz = bar\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: unusedArguments
 
     // closures

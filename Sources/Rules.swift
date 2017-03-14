@@ -1815,11 +1815,14 @@ extension FormatRules {
                     scopeStack.append(token)
                 case .startOfScope("{") where lastKeyword == "catch":
                     lastKeyword = ""
-                    scopeStack.append(token)
+                    var localNames = localNames
                     localNames.insert("error") // Implicit error argument
+                    index += 1
+                    processBody(at: &index, localNames: localNames, isTypeRoot: false)
+                    continue
                 case .startOfScope("{") where lastKeyword == "in":
                     lastKeyword = ""
-                    scopeStack.append(token)
+                    var localNames = localNames
                     guard let keywordIndex = formatter.index(of: .keyword, before: index),
                         let prevKeywordIndex = formatter.index(of: .keyword, before: keywordIndex),
                         let prevKeywordToken = formatter.token(at: prevKeywordIndex),
@@ -1829,12 +1832,17 @@ extension FormatRules {
                             localNames.insert(token.unescaped())
                         }
                     }
+                    index += 1
+                    processBody(at: &index, localNames: localNames, isTypeRoot: false)
+                    continue
                 case .startOfScope("{") where [
                     "for", "where", "if", "else", "while",
                     "repeat", "do", "switch",
                 ].contains(lastKeyword), .startOfScope(":"):
                     lastKeyword = ""
-                    scopeStack.append(token)
+                    index += 1
+                    processBody(at: &index, localNames: localNames, isTypeRoot: false)
+                    continue
                 case .startOfScope:
                     index += 1
                     scopeStack.append(token)
@@ -1846,7 +1854,7 @@ extension FormatRules {
                         }
                         index += 1
                     }
-                case .endOfScope("}") where scopeStack.isEmpty:
+                case .endOfScope("}"):
                     index += 1
                     return
                 case .identifier("self"), .identifier("`self`"):
@@ -1862,7 +1870,6 @@ extension FormatRules {
                     if let scope = scopeStack.last, token.isEndOfScope(scope) {
                         scopeStack.removeLast()
                     }
-                    break
                 }
                 index += 1
             }

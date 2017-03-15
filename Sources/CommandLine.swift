@@ -127,6 +127,7 @@ func timeEvent(block: () throws -> Void) rethrows -> String {
 
 func processArguments(_ args: [String]) {
     var errors = [Error]()
+    var verbose = false
     do {
         // Get options
         let args = try preprocessArguments(args, commandLineArguments)
@@ -205,7 +206,6 @@ func processArguments(_ args: [String]) {
         }
 
         // Verbose
-        var verbose = false
         if let arg = args["verbose"] {
             verbose = true
             if !arg.isEmpty {
@@ -405,6 +405,10 @@ func processArguments(_ args: [String]) {
                 break
             }
         }
+        
+        if verbose {
+            print("")
+        }
         if filesChecked == 0 {
             if filesFailed == 0 {
                 if let error = errors.first {
@@ -420,7 +424,10 @@ func processArguments(_ args: [String]) {
         printWarnings(errors)
         print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)", as: .success)
     } catch {
-        printWarnings(errors)
+        if !verbose {
+            // Warnings would be redundant at this point
+            printWarnings(errors)
+        }
         // Fatal error
         print("error: \(error)", as: .error)
     }
@@ -580,12 +587,23 @@ func processInput(_ inputURLs: [URL],
                 } catch {
                     throw FormatError.writing("failed to write file \(outputURL.path), \(error)")
                 }
-            } catch let FormatError.parsing(string) {
-                throw FormatError.parsing("\(string) in \(inputURL.path)")
             } catch {
-                throw error
+                if verbose {
+                    print("-- error: \(error)", as: .error)
+                }
+                return {
+                    filesChecked += 1
+                    if case let FormatError.parsing(string) = error {
+                        throw FormatError.parsing("\(string) in \(inputURL.path)")
+                    }
+                    throw error
+                }
             }
         }
+    }
+    if verbose, errors.count > 0 {
+        // Replace individual warnings with a generic message, to avoid repetition
+        errors = [FormatError.writing("\(errors.count) file\(errors.count == 1 ? "" : "s") could not be formatted")]
     }
     if filesChecked > 0 {
         // Save cache

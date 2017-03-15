@@ -72,6 +72,7 @@ func printHelp() {
     print("")
     print("--inferoptions     instead of formatting the input, infer format options from it")
     print("--output           output path for formatted file(s) (defaults to input path)")
+    print("--exclude          list of file or directory path(s) to ignore (comma-delimited)")
     print("--symlinks         how symlinks are handled. \"follow\" or \"ignore\" (default)")
     print("--fragment         input is part of a larger file. \"true\" or \"false\" (default)")
     print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
@@ -197,6 +198,12 @@ func processArguments(_ args: [String]) {
             inputURLs.append(expandPath(inputPath))
         }
 
+        // Get path(s) that will be excluded
+        var excludedURLs = [URL]()
+        for path in args["exclude"]?.components(separatedBy: ",") ?? [] {
+            excludedURLs.append(expandPath(path))
+        }
+
         // Verbose
         var verbose = false
         if let arg = args["verbose"] {
@@ -220,7 +227,7 @@ func processArguments(_ args: [String]) {
                 print("inferring swiftformat options from source file(s)...")
                 var filesParsed = 0, options = FormatOptions(), errors = [Error]()
                 let time = timeEvent {
-                    (filesParsed, options, errors) = inferOptions(from: inputURLs)
+                    (filesParsed, options, errors) = inferOptions(from: inputURLs, excluding: excludedURLs)
                 }
                 printWarnings(errors)
                 if filesParsed == 0 {
@@ -379,6 +386,7 @@ func processArguments(_ args: [String]) {
             var _errors = [Error]()
             (filesWritten, filesChecked, _errors) = processInput(
                 inputURLs,
+                excluding: excludedURLs,
                 andWriteToOutput: outputURL,
                 withRules: Array(rules),
                 formatOptions: formatOptions,
@@ -418,12 +426,12 @@ func processArguments(_ args: [String]) {
     }
 }
 
-func inferOptions(from inputURLs: [URL]) -> (Int, FormatOptions, [Error]) {
+func inferOptions(from inputURLs: [URL], excluding excludedURLs: [URL]) -> (Int, FormatOptions, [Error]) {
     var tokens = [Token]()
     var errors = [Error]()
     var filesParsed = 0
     for inputURL in inputURLs {
-        errors += enumerateFiles(withInputURL: inputURL) { inputURL, _ in
+        errors += enumerateFiles(withInputURL: inputURL, excluding: excludedURLs) { inputURL, _ in
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("failed to read file \(inputURL.path)")
             }
@@ -488,6 +496,7 @@ public func format(_ source: String,
 }
 
 func processInput(_ inputURLs: [URL],
+                  excluding excludedURLs: [URL],
                   andWriteToOutput outputURL: URL?,
                   withRules enabled: [String],
                   formatOptions: FormatOptions,
@@ -517,6 +526,7 @@ func processInput(_ inputURLs: [URL],
     var filesChecked = 0, filesWritten = 0
     for inputURL in inputURLs {
         errors += enumerateFiles(withInputURL: inputURL,
+                                 excluding: excludedURLs,
                                  outputURL: outputURL,
                                  options: fileOptions,
                                  concurrent: !verbose) { inputURL, outputURL in
@@ -1047,6 +1057,7 @@ let commandLineArguments = [
     // File options
     "inferoptions",
     "output",
+    "exclude",
     "fragment",
     "cache",
     "verbose",

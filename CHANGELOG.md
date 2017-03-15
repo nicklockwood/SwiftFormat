@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.26.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.26.2) (2017-03-15)
+
+- Fixed critical bug where `return` was incorrectly removed after a `#selector` or `#keyPath` directive
+- Fixed several more critical cases where `self` could be incorrectly removed
+- Fixed case where identifier could be mistaken for a keyword after `self` was removed
+- Fixed some cases where `self` should have been removed but wasn't
+- Added tvOS support to the podspec
+
 ## [0.26.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.26.1) (2017-03-14)
 
 - Fixed critical bug where `self` could be incorrectly removed inside lazy var declarations

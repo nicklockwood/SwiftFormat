@@ -366,7 +366,7 @@ extension FormatRules {
                         formatter.removeToken(at: i - 1)
                     }
                 } else if let prevToken = formatter.last(.nonSpace, before: i),
-                    !prevToken.isStartOfScope {
+                    !prevToken.isStartOfScope, !prevToken.isOperator(ofType: .prefix) {
                     formatter.insertSpace(" ", at: i)
                 }
             case .operator(_, .infix) where !token.isRangeOperator:

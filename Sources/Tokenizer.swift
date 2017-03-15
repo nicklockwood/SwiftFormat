@@ -106,7 +106,7 @@ public enum NumberType {
 }
 
 /// Symbol/operator types
-public enum SymbolType {
+public enum OperatorType {
     case none
     case infix
     case prefix
@@ -120,7 +120,7 @@ public enum Token: Equatable {
     case startOfScope(String)
     case endOfScope(String)
     case delimiter(String)
-    case `operator`(String, SymbolType)
+    case `operator`(String, OperatorType)
     case stringBody(String)
     case keyword(String)
     case identifier(String)
@@ -330,6 +330,13 @@ public enum Token: Equatable {
         return false
     }
 
+    public func isOperator(ofType type: OperatorType) -> Bool {
+        if case .operator(_, type) = self {
+            return true
+        }
+        return false
+    }
+
     public var isComment: Bool {
         switch self {
         case .commentBody,
@@ -405,6 +412,8 @@ public enum Token: Equatable {
 
     var isRvalue: Bool {
         switch self {
+        case .operator(".", _):
+            return true
         case .operator(_, .infix), .operator(_, .postfix):
             return false
         case .identifier, .number, .operator,
@@ -1018,7 +1027,7 @@ public func tokenize(_ source: String) -> [Token] {
             return
         }
         let prevToken: Token = tokens[i - 1]
-        let type: SymbolType
+        let type: OperatorType
         switch string {
         case ":", "=", "->":
             type = .infix

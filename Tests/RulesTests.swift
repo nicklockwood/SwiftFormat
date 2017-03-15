@@ -764,6 +764,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testPrefixMinusBeforeMember() {
+        let input = "-.foo"
+        let output = "-.foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testInfixMinusBeforeMember() {
+        let input = "foo-.bar"
+        let output = "foo - .bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: spaceAroundComments
 
     func testSpaceAroundCommentInParens() {

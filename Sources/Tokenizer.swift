@@ -33,27 +33,26 @@ import Foundation
 
 // https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/LexicalStructure.html
 
+// Used to speed up matching
+// Note: Self, self, super, nil, true and false have been omitted deliberately, as they
+// behave like identifiers. So too have context-specific keywords such as the following:
+// associativity, convenience, dynamic, didSet, final, get, infix, indirect,
+// lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
+// precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
+private let swiftKeywords = Set([
+    "let", "return", "func", "var", "if", "public", "as", "else", "in", "import",
+    "class", "try", "guard", "case", "for", "init", "extension", "private", "static",
+    "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
+    "throw", "typealias", "where", "break", "deinit", "subscript", "lazy", "is",
+    "while", "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
+    "default", "protocol", "defer", /* Self, self, super, nil, true, false */
+])
+
 public extension String {
 
     /// Is this string a reserved keyword in Swift?
     var isSwiftKeyword: Bool {
-
-        // Note: Self, self, super, nil, true and false have been omitted deliberately, as they
-        // behave like identifiers. So too have context-specific keywords such as the following:
-        // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
-        // lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
-        // precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
-        switch self {
-        case "let", "return", "func", "var", "if", "public", "as", "else", "in", "import",
-             "class", "try", "guard", "case", "for", "init", "extension", "private", "static",
-             "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
-             "throw", "typealias", "where", "break", "deinit", "subscript", "lazy", "is",
-             "while", "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
-             "default", "protocol", "defer": /* Self, self, super, nil, true, false */
-            return true
-        default:
-            return false
-        }
+        return swiftKeywords.contains(self)
     }
 
     /// Is this string a keyword in some contexts?

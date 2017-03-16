@@ -1083,6 +1083,20 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testCustomChevronOperatorFollowedByParen() {
+        let input = "foo <?> (bar)"
+        let output: [Token] = [
+            .identifier("foo"),
+            .space(" "),
+            .operator("<?>", .infix),
+            .space(" "),
+            .startOfScope("("),
+            .identifier("bar"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testBitshift() {
         let input = "a>>b"
         let output: [Token] = [

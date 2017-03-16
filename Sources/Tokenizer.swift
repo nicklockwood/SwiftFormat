@@ -1221,7 +1221,10 @@ public func tokenize(_ source: String) -> [Token] {
                 case let .operator(string, _):
                     switch string {
                     case ".", "==", "?", "!", "&":
-                        break
+                        if scopeIndex == tokens.count - 2 {
+                            // These are allowed in a generic, but not as the first character
+                            fallthrough
+                        }
                     default:
                         // Not a generic scope
                         convertOpeningChevronToSymbol(at: scopeIndex)

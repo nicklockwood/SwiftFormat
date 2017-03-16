@@ -3491,6 +3491,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveBackticksAroundTypeProperty() {
+        let input = "var type: Foo.`Type`"
+        let output = "var type: Foo.`Type`"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveBackticksAroundTrueProperty() {
+        let input = "var type = Foo.`true`"
+        let output = "var type = Foo.`true`"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: redundantSelf
 
     func testSimpleRemoveRedundantSelf() {

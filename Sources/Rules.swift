@@ -1722,14 +1722,16 @@ extension FormatRules {
             let unescaped = token.unescaped()
             if !unescaped.isSwiftKeyword {
                 switch unescaped {
-                case "super", "self", "nil", "true", "false":
+                case "Self" where formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"):
+                    // TODO: check for other cases where it's safe to use unescaped
                     break
                 case "Type" where formatter.currentScope(at: i) == .startOfScope("{"):
                     // TODO: check it's actually inside a type declaration, otherwise backticks aren't needed
                     break
-                case "Self" where formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"):
-                    // TODO: check for other cases where it's safe to use unescaped
-                    break
+                case "super", "self", "nil", "true", "false", "Type":
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {
+                        return
+                    }
                 case "get", "set", "willSet", "didSet":
                     guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope("{") else {
                         return
@@ -1740,7 +1742,7 @@ extension FormatRules {
                     return
                 }
             }
-            if i > 0, case .operator(".", _) = formatter.tokens[i - 1] {
+            if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {
                 formatter.replaceToken(at: i, with: .identifier(unescaped))
                 return
             }

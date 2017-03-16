@@ -1791,9 +1791,20 @@ extension FormatRules {
             }
         }
         func processBody(at index: inout Int, localNames: Set<String>, isTypeRoot: Bool) {
+            // Check if scope actually includes self before we waste a bunch of time
+            var containsSelf = false
+            for token in formatter.tokens[index ..< formatter.tokens.count] {
+                if case .identifier("self") = token {
+                    containsSelf = true
+                    break
+                }
+            }
+            if !containsSelf {
+                return
+            }
+            // Gather local variables
             var localNames = localNames
             if !isTypeRoot {
-                // Gather local variables
                 var i = index
                 outer: while let token = formatter.token(at: i) {
                     switch token {
@@ -1842,9 +1853,7 @@ extension FormatRules {
                     processBody(at: &index, localNames: ["init"], isTypeRoot: true)
                 case .keyword("var"), .keyword("let"):
                     index += 1
-                    let prevKeyword = lastKeyword
-                    lastKeyword = token.string
-                    switch prevKeyword {
+                    switch lastKeyword {
                     case "lazy":
                         loop: while let nextIndex =
                             formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
@@ -1858,7 +1867,7 @@ extension FormatRules {
                             }
                             index = nextIndex
                         }
-                        continue
+                        lastKeyword = ""
                     case "if", "while", "guard":
                         // Guard is included because it's an error to reference guard vars in body
                         var scopedNames = localNames
@@ -1868,8 +1877,9 @@ extension FormatRules {
                         }
                         index = startIndex + 1
                         processBody(at: &index, localNames: scopedNames, isTypeRoot: false)
+                        lastKeyword = ""
                     default:
-                        break
+                        lastKeyword = token.string
                     }
                 case let .keyword(name):
                     lastKeyword = name

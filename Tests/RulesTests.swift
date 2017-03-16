@@ -3682,6 +3682,21 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // TODO: better detection of closures
+    //    func testRemoveSelfFromComputedVar() {
+    //        let input = "var foo: Int { return self.bar }"
+    //        let output = "var foo: Int { return bar }"
+    //        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+    //        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    //    }
+
+    func testNoRemoveSelfFromVarClosure() {
+        let input = "var foo = { self.bar }"
+        let output = "var foo = { self.bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testNoRemoveSelfFromLazyVar() {
         let input = "lazy var foo = self.bar"
         let output = "lazy var foo = self.bar"

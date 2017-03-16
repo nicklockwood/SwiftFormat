@@ -4179,9 +4179,25 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testUnhoistIfArgIsUnderscore() {
+        let input = "if case let .foo(_, baz) = quux {}"
+        let output = "if case .foo(_, let baz) = quux {}"
+        let options = FormatOptions(hoistPatternLet: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     func testNoUnhoistTupleLet() {
         let input = "let (bar, baz) = quux()"
         let output = "let (bar, baz) = quux()"
+        let options = FormatOptions(hoistPatternLet: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoUnhoistIfLetTuple() {
+        let input = "if let x = y, let (_, a) = z {}"
+        let output = "if let x = y, let (_, a) = z {}"
         let options = FormatOptions(hoistPatternLet: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

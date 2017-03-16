@@ -2196,6 +2196,22 @@ extension FormatRules {
                         // No changes needed
                         return
                     }
+                    var prevKeywordIndex = prevIndex
+                    loop: while let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevKeywordIndex) {
+                        switch formatter.tokens[index] {
+                        case .keyword("case"), .endOfScope("case"):
+                            break loop
+                        case .keyword("let"), .keyword("var"),
+                             .keyword("as"), .keyword("is"), .keyword("try"):
+                            break
+                        case .keyword, .startOfScope("{"), .endOfScope("}"):
+                            // Tuple assignment, not a pattern
+                            return
+                        default:
+                            break
+                        }
+                        prevKeywordIndex = index
+                    }
                     guard let prevPrevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
                         [.keyword("case"), .endOfScope("case"), .delimiter(",")].contains(prevPrevToken) else {
                         // Tuple assignment, not a pattern
@@ -2243,9 +2259,11 @@ extension FormatRules {
                     switch token {
                     case .delimiter(","), .startOfScope("("):
                         wasParenOrComma = true
-                    case .identifier where wasParenOrComma:
+                    case let .identifier(name) where wasParenOrComma:
                         wasParenOrComma = false
-                        indices.append(index)
+                        if name != "_" {
+                            indices.append(index)
+                        }
                     case _ where token.isSpaceOrCommentOrLinebreak:
                         break
                     default:

@@ -405,7 +405,7 @@ func processArguments(_ args: [String]) {
                 break
             }
         }
-        
+
         if verbose {
             print("")
         }

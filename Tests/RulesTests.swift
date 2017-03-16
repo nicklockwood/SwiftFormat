@@ -3536,6 +3536,13 @@ class RulesTests: XCTestCase {
     }
 
     func testNoRemoveSelfForTupleAssignedVariablesFollowedByRegularVariable() {
+        let input = "func foo() {\n    let (foo, bar) = (self.foo, self.bar), baz = self.baz\n}"
+        let output = "func foo() {\n    let (foo, bar) = (self.foo, self.bar), baz = self.baz\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForTupleAssignedVariablesFollowedByRegularLet() {
         let input = "func foo() {\n    let (foo, bar) = (self.foo, self.bar)\n    let baz = self.baz\n}"
         let output = "func foo() {\n    let (foo, bar) = (self.foo, self.bar)\n    let baz = self.baz\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
@@ -3734,6 +3741,55 @@ class RulesTests: XCTestCase {
     func testNoRemoveSelfFromKeyword() {
         let input = "func foo() { self.default = 5 }"
         let output = "func foo() { `default` = 5 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfInWhilePreceededByVarDeclaration() {
+        let input = "var index = start\nwhile index < end {\n    index = self.index(after: index)\n}"
+        let output = "var index = start\nwhile index < end {\n    index = self.index(after: index)\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfInLocalVarPrecededByLocalVarFollowedByIfComma() {
+        let input = "func foo() {\n    let bar = Bar()\n    let baz = Baz()\n    self.baz = baz\n    if let bar = bar, bar > 0 {}\n}"
+        let output = "func foo() {\n    let bar = Bar()\n    let baz = Baz()\n    self.baz = baz\n    if let bar = bar, bar > 0 {}\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfInLocalVarPrecededByIfLetContainingClosure() {
+        let input = "func foo() {\n    if let bar = 5 { baz { _ in } }\n    let quux = self.quux\n}"
+        let output = "func foo() {\n    if let bar = 5 { baz { _ in } }\n    let quux = self.quux\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForVarCreatedInGuardScope() {
+        let input = "func foo() {\n    guard let bar = 5 else {}\n    let baz = self.bar\n}"
+        let output = "func foo() {\n    guard let bar = 5 else {}\n    let baz = self.bar\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSelfForVarCreatedInIfScope() {
+        let input = "func foo() {\n    if let bar = bar {}\n    let baz = self.bar\n}"
+        let output = "func foo() {\n    if let bar = bar {}\n    let baz = bar\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfForVarDeclaredInWhileCondition() {
+        let input = "while let foo = bar { self.foo = foo }"
+        let output = "while let foo = bar { self.foo = foo }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSelfForVarNotDeclaredInWhileCondition() {
+        let input = "while let foo == bar { self.baz = 5 }"
+        let output = "while let foo == bar { baz = 5 }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

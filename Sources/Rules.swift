@@ -1760,48 +1760,69 @@ extension FormatRules {
 
     /// Remove redundant self keyword
     public class func redundantSelf(_ formatter: Formatter) {
-        func processBody(at index: inout Int, localNames: Set<String>, isTypeRoot: Bool) {
-            var localNames = localNames
-            // Gather local variables
-            var i = index
-            outer: while let token = formatter.token(at: i) {
+        func processDeclaredVariables(at index: inout Int, localNames: inout Set<String>) {
+            while let token = formatter.token(at: index) {
                 switch token {
-                case .keyword("var"), .keyword("let"):
-                    i += 1
-                    inner: while let token = formatter.token(at: i) {
-                        switch token {
-                        case .identifier:
-                            let name = token.unescaped()
-                            if name != "_", !isTypeRoot {
-                                localNames.insert(name)
-                            }
-                            guard let nextIndex = formatter.index(of: .delimiter(","), after: i) else {
-                                break inner
-                            }
-                            i = nextIndex
+                case .identifier:
+                    let name = token.unescaped()
+                    if name != "_" {
+                        localNames.insert(name)
+                    }
+                    inner: while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                        switch formatter.tokens[nextIndex] {
+                        case .keyword("as"), .keyword("is"), .keyword("try"):
+                            break
+                        case .keyword, .startOfScope("{"):
+                            return
+                        case .delimiter(","):
+                            index = nextIndex
+                            break inner
                         default:
                             break
                         }
-                        i += 1
+                        index = nextIndex
                     }
-                case .startOfScope:
-                    i += 1
-                    var scopeStack = [token]
-                    while let scope = scopeStack.last, let nextToken = formatter.token(at: i) {
-                        if nextToken.isEndOfScope(scope) {
-                            scopeStack.removeLast()
-                        } else if nextToken.isStartOfScope {
-                            scopeStack.append(nextToken)
-                        }
-                        i += 1
-                    }
-                case .endOfScope("}"):
-                    i += 1
-                    break outer
                 default:
                     break
                 }
-                i += 1
+                index += 1
+            }
+        }
+        func processBody(at index: inout Int, localNames: Set<String>, isTypeRoot: Bool) {
+            var localNames = localNames
+            if !isTypeRoot {
+                // Gather local variables
+                var i = index
+                outer: while let token = formatter.token(at: i) {
+                    switch token {
+                    case .keyword("if"), .keyword("while"):
+                        guard let nextIndex = formatter.index(of: .startOfScope("{"), after: i) else {
+                            return // error
+                        }
+                        i = nextIndex
+                        continue
+                    case .keyword("var"), .keyword("let"):
+                        i += 1
+                        processDeclaredVariables(at: &i, localNames: &localNames)
+                    case .startOfScope:
+                        i += 1
+                        var scopeStack = [token]
+                        while let scope = scopeStack.last, let nextToken = formatter.token(at: i) {
+                            if nextToken.isEndOfScope(scope) {
+                                scopeStack.removeLast()
+                            } else if nextToken.isStartOfScope {
+                                scopeStack.append(nextToken)
+                            }
+                            i += 1
+                        }
+                    case .endOfScope("}"):
+                        i += 1
+                        break outer
+                    default:
+                        break
+                    }
+                    i += 1
+                }
             }
             // Remove redundant self
             var scopeStack = [Token]()
@@ -1819,22 +1840,35 @@ extension FormatRules {
                     processBody(at: &index, localNames: ["init"], isTypeRoot: true)
                 case .keyword("var"), .keyword("let"):
                     index += 1
-                    let lazy = (lastKeyword == "lazy")
+                    let prevKeyword = lastKeyword
                     lastKeyword = token.string
-                    guard lazy else { break }
-                    loop: while let nextIndex =
-                        formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
-                        switch formatter.tokens[nextIndex] {
-                        case .keyword("as"), .keyword("is"), .keyword("try"):
-                            break
-                        case .keyword, .startOfScope("{"):
-                            break loop
-                        default:
-                            break
+                    switch prevKeyword {
+                    case "lazy":
+                        loop: while let nextIndex =
+                            formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                            switch formatter.tokens[nextIndex] {
+                            case .keyword("as"), .keyword("is"), .keyword("try"):
+                                break
+                            case .keyword, .startOfScope("{"):
+                                break loop
+                            default:
+                                break
+                            }
+                            index = nextIndex
                         }
-                        index = nextIndex
+                        continue
+                    case "if", "while", "guard":
+                        // Guard is included because it's an error to reference guard vars in body
+                        var scopedNames = localNames
+                        processDeclaredVariables(at: &index, localNames: &scopedNames)
+                        guard let startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
+                            return // error
+                        }
+                        index = startIndex + 1
+                        processBody(at: &index, localNames: scopedNames, isTypeRoot: false)
+                    default:
+                        break
                     }
-                    continue
                 case let .keyword(name):
                     lastKeyword = name
                 case .startOfScope("("):

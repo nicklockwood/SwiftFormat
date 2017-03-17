@@ -64,7 +64,7 @@ CLI.print = { message, type in
 }
 
 CLI.readLine = {
-    return readLine(strippingNewline: false)
+    readLine(strippingNewline: false)
 }
 
 // Pass in arguments

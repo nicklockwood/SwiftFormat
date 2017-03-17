@@ -201,8 +201,13 @@ func processArguments(_ args: [String]) {
 
         // Get path(s) that will be excluded
         var excludedURLs = [URL]()
-        for path in args["exclude"]?.components(separatedBy: ",") ?? [] {
-            excludedURLs.append(expandPath(path))
+        if let arg = args["exclude"] {
+            if inputURLs.isEmpty {
+                throw FormatError.options("--exclude option has no effect unless an input path is specified")
+            }
+            for path in arg.components(separatedBy: ",") {
+                excludedURLs.append(expandPath(path))
+            }
         }
 
         // Verbose

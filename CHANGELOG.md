@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.27.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.27.0) (2017-03-17)
+
+- Added `--exclude` command-line option for excluding specific files or folders from formatting
+- Improved grouping and logging of errors when using `--verbose` mode
+- Fixed a bug when using prefix operators with with shorthand class or enum members like `-.someValue`
+- Fixed some more cases where `self` was incorrectly removed, or wasn't removed when it should have been
+- Fixed some cases where backtick escaping was incorrectly removed around reserved words
+- Fixed a bug where `--patternlet inline` could incorrectly move `let` inside a tuple assignment
+- Fixed parsing of custom operators containing chevrons, e.g. `<?>`
+- Fixed redundant `return` not being removed from closures in a var declaration
+- Fixed a performance regression introduced in version 0.26.2
+- Fixed bug where `Void()` literal was replaced by `()()` when using `--empty tuple`
+
 ## [0.26.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.26.2) (2017-03-15)
 
 - Fixed critical bug where `return` was incorrectly removed after a `#selector` or `#keyPath` directive

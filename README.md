@@ -119,9 +119,15 @@ To set up SwiftFormat as an Xcode build phase, do the following:
 
     **NOTE:** This will only install the pre-built command-line app, not the source code for the SwiftFormat framework.
 
-2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be `"${SRCROOT}/path/to/swiftformat" "${SRCROOT}/path/to/your/swift/code/"` (both paths should be relative to the directory containing your Xcode project).
+2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be
 
-    **NOTE:** This will slightly increase your build time, but shouldn't impact it too much, as SwiftFormat is quite fast compared to compilation. If you do find that it has a noticeable impact, file a bug report and I'll try to diagnose why.
+        "${SRCROOT}/path/to/swiftformat" "${SRCROOT}/path/to/your/swift/code/"
+        
+	Both paths should be relative to the directory containing your Xcode project. If you are installing SwiftFormat as a Cocoapod, the swiftformat path will most likely be
+	
+	    "${SRCROOT}/Pods/SwiftFormat/CommandLineTool/swiftformat"
+
+    **NOTE:** Adding this script will slightly increase your build time, and will make changes to your source files as you work on them, which can have annoying side-effects such as clearing the undo buffer. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 
 
 Git pre-commit hook

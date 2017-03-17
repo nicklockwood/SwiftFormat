@@ -3823,6 +3823,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveSelfForVarDeclaredInSwitchCase() {
+        let input = "switch foo {\ncase bar: let baz = self.baz\n}"
+        let output = "switch foo {\ncase bar: let baz = self.baz\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfAfterGenericInit() {
+        let input = "init(bar: Int) {\n    self = Foo<Bar>()\n    self.bar(bar)\n}"
+        let output = "init(bar: Int) {\n    self = Foo<Bar>()\n    self.bar(bar)\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: unusedArguments
 
     // closures

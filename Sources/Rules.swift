@@ -1791,6 +1791,9 @@ extension FormatRules {
             }
         }
         func processBody(at index: inout Int, localNames: Set<String>, isTypeRoot: Bool) {
+            assert({ formatter.currentScope(at: index).map {
+                [.startOfScope("{"), .startOfScope(":")].contains($0)
+            } ?? true }())
             // Check if scope actually includes self before we waste a bunch of time
             var containsSelf = false
             for token in formatter.tokens[index ..< formatter.tokens.count] {
@@ -1926,9 +1929,7 @@ extension FormatRules {
                         }
                         index += 1
                     }
-                case .endOfScope("}"):
-                    index += 1
-                    return
+                    continue
                 case .identifier("self"), .identifier("`self`"):
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
                         let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
@@ -1942,10 +1943,17 @@ extension FormatRules {
                         }
                         formatter.removeTokens(inRange: index ..< nextIndex)
                     }
-                default:
-                    if let scope = scopeStack.last, token.isEndOfScope(scope) {
+                case .endOfScope:
+                    if let scope = scopeStack.last {
+                        assert(token.isEndOfScope(scope))
                         scopeStack.removeLast()
+                    } else {
+                        assert(token.isEndOfScope(formatter.currentScope(at: index)!))
+                        index += 1
+                        return
                     }
+                default:
+                    break
                 }
                 index += 1
             }

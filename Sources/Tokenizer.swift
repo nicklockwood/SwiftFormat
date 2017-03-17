@@ -1010,6 +1010,14 @@ public func tokenize(_ source: String) -> [Token] {
             index -= 1
         }
         setSymbolType(at: index)
+        // Fix ternary that may not have been correctly closed in the first pass
+        if let scopeIndex = scopeIndexStack.last, tokens[scopeIndex] == .operator("?", .infix) {
+            for i in index ..< tokens.count where tokens[i] == .delimiter(":") {
+                tokens[i] = .operator(":", .infix)
+                scopeIndexStack.removeLast()
+                break
+            }
+        }
     }
 
     func setSymbolType(at i: Int) {

@@ -1097,11 +1097,21 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testBitshift() {
+    func testRightShift() {
         let input = "a>>b"
         let output: [Token] = [
             .identifier("a"),
             .operator(">>", .infix),
+            .identifier("b"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testLeftShift() {
+        let input = "a<<b"
+        let output: [Token] = [
+            .identifier("a"),
+            .operator("<<", .infix),
             .identifier("b"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -1117,12 +1127,30 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testTripleShiftEquals() {
+    func testRightShiftEquals() {
         let input = "a>>=b"
         let output: [Token] = [
             .identifier("a"),
             .operator(">>=", .infix),
             .identifier("b"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testLeftShiftInsideTernary() {
+        let input = "foo ? bar<<24 : 0"
+        let output: [Token] = [
+            .identifier("foo"),
+            .space(" "),
+            .operator("?", .infix),
+            .space(" "),
+            .identifier("bar"),
+            .operator("<<", .infix),
+            .number("24", .integer),
+            .space(" "),
+            .operator(":", .infix),
+            .space(" "),
+            .number("0", .integer),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

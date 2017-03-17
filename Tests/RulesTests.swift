@@ -2653,6 +2653,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"])), output + "\n")
     }
 
+    func testVoidLiteralNotConvertedToParens() {
+        let input = "foo(Void())"
+        let output = "foo(Void())"
+        XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // useVoid = false
 
     func testUseVoidOptionFalse() {
@@ -2682,6 +2689,14 @@ class RulesTests: XCTestCase {
     func testVoidClosureReturnValueConvertedToEmptyTuple() {
         let input = "{ () -> Void in }"
         let output = "{ () -> () in }"
+        let options = FormatOptions(useVoid: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.void], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testVoidLiteralNotConvertedToParensWithVoidOptionFalse() {
+        let input = "foo(Void())"
+        let output = "foo(Void())"
         let options = FormatOptions(useVoid: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.void], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

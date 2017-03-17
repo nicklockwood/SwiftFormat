@@ -2467,6 +2467,7 @@ extension FormatRules {
                     [.operator(".", .prefix), .operator(".", .infix), .keyword("typealias")].contains(prevToken) {
                     return
                 }
+                if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .startOfScope("(") { return }
                 // Convert to parens
                 formatter.replaceToken(at: i, with: .endOfScope(")"))
                 formatter.insertToken(.startOfScope("("), at: i)

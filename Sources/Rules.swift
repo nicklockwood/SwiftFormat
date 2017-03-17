@@ -1682,7 +1682,8 @@ extension FormatRules {
     public class func redundantReturn(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .identifier("get") else { return }
-            if var prevKeywordIndex = formatter.index(of: .keyword, before: i) {
+            if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .operator("=", .infix),
+                var prevKeywordIndex = formatter.index(of: .keyword, before: i) {
                 var keyword = formatter.tokens[prevKeywordIndex].string
                 while ["try", "as", "is"].contains(keyword) || keyword.hasPrefix("#") || keyword.hasPrefix("@") {
                     prevKeywordIndex = formatter.index(of: .keyword, before: prevKeywordIndex) ?? -1

@@ -3370,6 +3370,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRemoveReturnInVarClosure() {
+        let input = "var foo = { return 5 }()"
+        let output = "var foo = { 5 }()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveReturnInParenthesizedClosure() {
+        let input = "var foo = ({ return 5 }())"
+        let output = "var foo = ({ 5 }())"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testNoRemoveReturnInFunction() {
         let input = "func foo() -> Int { return 5 }"
         let output = "func foo() -> Int { return 5 }"
@@ -3870,15 +3884,15 @@ class RulesTests: XCTestCase {
     }
 
     func testNoRemoveClosureGenericReturnTypes() {
-        let input = "let foo = { () -> Promise<String> in return bar }"
-        let output = "let foo = { () -> Promise<String> in return bar }"
+        let input = "let foo = { () -> Promise<String> in bar }"
+        let output = "let foo = { () -> Promise<String> in bar }"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testNoRemoveClosureTupleReturnTypes() {
-        let input = "let foo = { () -> (Int, Int) in return (5, 6) }"
-        let output = "let foo = { () -> (Int, Int) in return (5, 6) }"
+        let input = "let foo = { () -> (Int, Int) in (5, 6) }"
+        let output = "let foo = { () -> (Int, Int) in (5, 6) }"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

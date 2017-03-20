@@ -982,6 +982,8 @@ class RulesTests: XCTestCase {
 
     // MARK: trailingSpace
 
+    // truncateBlankLines = true
+
     func testTrailingSpace() {
         let input = "foo  \nbar"
         let output = "foo\nbar"
@@ -1008,6 +1010,30 @@ class RulesTests: XCTestCase {
         let output = "// foo\n// bar"
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingSpace]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testTruncateBlankLine() {
+        let input = "foo {\n    // bar\n    \n    // baz\n}"
+        let output = "foo {\n    // bar\n\n    // baz\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingSpace]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testTrailingSpaceInArray() {
+        let input = "let foo = [\n    1,\n    \n    2,\n]"
+        let output = "let foo = [\n    1,\n\n    2,\n]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingSpace]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["redundantSelf"])), output + "\n")
+    }
+
+    // truncateBlankLines = false
+
+    func testNoTruncateBlankLine() {
+        let input = "foo {\n    // bar\n    \n    // baz\n}"
+        let output = "foo {\n    // bar\n    \n    // baz\n}"
+        let options = FormatOptions(truncateBlankLines: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingSpace], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     // MARK: consecutiveBlankLines

@@ -501,13 +501,18 @@ extension FormatRules {
     /// Remove trailing space from the end of lines, as it has no semantic
     /// meaning and leads to noise in commits.
     public class func trailingSpace(_ formatter: Formatter) {
-        formatter.forEach(.linebreak) { i, _ in
-            if formatter.token(at: i - 1)?.isSpace == true {
-                formatter.removeToken(at: i - 1)
+        var wasLinebreak = true
+        for i in formatter.tokens.indices.reversed() {
+            let token = formatter.tokens[i]
+            if token.isLinebreak {
+                wasLinebreak = true
+            } else if wasLinebreak {
+                if token.isSpace,
+                    formatter.options.truncateBlankLines || i == 0 || !formatter.tokens[i - 1].isLinebreak {
+                    formatter.removeToken(at: i)
+                }
+                wasLinebreak = false
             }
-        }
-        if formatter.tokens.last?.isSpace == true {
-            formatter.removeLastToken()
         }
     }
 
@@ -2336,7 +2341,8 @@ extension FormatRules {
                             break
                         }
                         let linebreakIndex = formatter.index(of: .nonSpaceOrComment, after: commaIndex)!
-                        if formatter.tokens[linebreakIndex].isLinebreak {
+                        if formatter.tokens[linebreakIndex].isLinebreak, !formatter.options.truncateBlankLines ||
+                            formatter.next(.nonSpace, after: linebreakIndex).map({ !$0.isLinebreak }) ?? false {
                             formatter.insertSpace(indent + formatter.options.indent, at: linebreakIndex + 1)
                         } else if !allowGrouping {
                             formatter.insertToken(.linebreak(formatter.options.linebreak), at: linebreakIndex)

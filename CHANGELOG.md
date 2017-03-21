@@ -1,9 +1,16 @@
 # Change Log
 
+## [0.27.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.27.1) (2017-03-21)
+
+- Fixed trailing space that was incorrectly added to blank lines when `redundantSelf` rule is disabled
+- Fixed a bug where `self` could be incorrectly removed when using nested function declarations
+- Fixed a bug where `self` could be incorrectly removed inside class functions
+- Improved formatting and inferoptions performance
+
 ## [0.27.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.27.0) (2017-03-17)
 
 - Added `--exclude` command-line option for excluding specific files or folders from formatting
-- Improved grouping and logging of errors when using `--verbose` mode
+- Improved grouping and logging of formatting errors when running in `--verbose` mode
 - Fixed a bug when using prefix operators with with shorthand class or enum members like `-.someValue`
 - Fixed some more cases where `self` was incorrectly removed, or wasn't removed when it should have been
 - Fixed some cases where backtick escaping was incorrectly removed around reserved words
@@ -27,7 +34,7 @@
 
 ## [0.26.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.26.0) (2017-03-13)
 
-- Added `redundantSelf` rule for removing `self.` prefix for member references in cases where it isn't needed
+- Added `redundantSelf` rule for removing the `self` prefix from member references in cases where it isn't needed
 - Added `--verbose` command-line option for tracking which rules were applied to each file
 - Added `--patternlet` command-line option for toggling behavior of the `hoistPatternLet` rule
 - Fixed bug where escaped arguments were treated as unused
@@ -42,18 +49,18 @@
 ## [0.25.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.25.1) (2017-03-08)
 
 - Fixed bug where unused arguments in a failable initializer could be incorrectly formatted
-- Fixed bug where backtick escaping would be incorrectly removed from certain keywords
+- Fixed bug where backtick escaping would be incorrectly removed from certain reserved identifiers
 
 ## [0.25.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.25.0) (2017-03-07)
 
-- The `stripHeaders` rule is now `fileHeaders`, which can strip or replace header comments with a custom template (see README for details)
-- Added `hoistPatternLet` rule that moves `let` and `var` to the beginning of `switch/case` patterns, or tuple assignments
+- The `stripHeaders` rule is now `fileHeaders`, which can strip or replace header comments with a template (see README)
+- Added `hoistPatternLet` rule that moves `let` and `var` to the beginning of `switch/case` patterns
 - Added `redundantReturn` rule that strips the `return` keyword from single-line closures
-- Added `redundantBackticks` rule that removes unnecessary ``escaping`` of keywords
+- Added `redundantBackticks` rule that removes unnecessary backtick escaping of keywords
 
 ## [0.24.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.24.7) (2017-02-28)
 
-- Fixed a bug where switch cases containing a `..<` operator were parsed incorrectly, resulting in incorrect indentation
+- Fixed a bug where switch cases containing a `..<` operator were parsed incorrectly, resulting in wrong indentation
 - Fixed a potential bug where source code could be truncated after an error when running with `--fragment` enabled
 - Command-line tool installation via CocoaPods no longer requires a minimum deployment target of iOS 9 / macOS 10.11
 
@@ -112,14 +119,14 @@
 ## [0.23.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.23.1) (2017-01-14)
 
 - Fixed critical bug where closure return types could be mangled by the `unusedArguments` rule
-- Fixed issue where console text appeared as black instead of user's chosen default color
+- Fixed issue where console text appeared as black instead of the user's chosen default color
 
 ## [0.23](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.23) (2017-01-09)
 
 - You can now specify a whitelist of specific rules to apply using the `--rules` option
 - Input files are now processed concurrently, yielding a ~2x speed improvement
 - SwiftFormat now continues if it encounters an error when processing multiple files
-- Improved error messaging, and added color coding to the command line output
+- Improved error messaging, and added color-coding to the command-line output
 - `--inferoptions` now accepts multiple space-delimited file paths, or piped input, just like formatting
 - `redundantVoidReturnType` now removes Void return from closures as well as ordinary functions
 - `unusedArguments` now works on closures as well as ordinary functions
@@ -197,7 +204,7 @@
 ## [0.16.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.16.4) (2016-11-07)
 
 - SwiftFormat is now ~3X faster!
-- Fixed bug with spacing after an @convention() attribute
+- Fixed bug with spacing after an `@convention()` attribute
 - Fixed bug where the space at the start of a multi-line comment could increase after each format
 - Fixed bug where wrong indent was applied to wrapped array literal values
 - Fixed bug where K&R indenting would remove the linebreak before an inline block
@@ -229,7 +236,7 @@
 
 ## [0.15](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.15) (2016-10-27)
 
-- Added `allman` command line option to enable Allman style indenting instead of K&R style
+- Added `allman` command line option to enable Allman-style indenting instead of default K&R style
 - Added `removelines` command line option to disable automatic removal of blank lines
 - Added `insertlines` command line option to disable automatic blank line insertion
 - Added `trimwhitespace` command line option for disabling truncation of blank lines
@@ -242,7 +249,7 @@
 
 - Xcode Source Editor Extension now automatically infers formatting options from the file
 - Wrapped function arguments and array/dictionary literal value indenting now works more like Xcode
-- Added `void` rule for normalizing how Void return values are represented
+- Added `void` rule for normalizing how `Void` return values are represented
 - Added `empty` command line option for configuring the void rule
 - Added `commas` command line option for disabling trailing commas
 - Improved formatting of fragments containing unbalanced braces
@@ -274,7 +281,7 @@
 ## [0.11.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.11.3) (2016-10-04)
 
 - Fixed spacing between closure capture list and arguments
-- Fixed incorrect indenting of closures after and `if` statement, and other braced clauses
+- Fixed incorrect indenting of closures after an `if` statement, and other braced clauses
 
 ## [0.11.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.11.2) (2016-10-04)
 
@@ -315,7 +322,7 @@
 
 ## [0.9.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.9.4) (2016-09-14)
 
-- Fixed bug where parsing would fail if a `switch/case` statement contained `default` or `case` indentifiers (valid in Swift 3)
+- Fixed bug where parsing would fail if a `switch/case` statement contained `default` or `case` identifiers (valid in Swift 3)
 
 ## [0.9.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.9.3) (2016-09-12)
 

@@ -601,7 +601,7 @@ Known issues
 
         let foo: Dictionary<String, String>=["Hello": "World"]
         
-    To work around this, either manually add a space between the `>` and `=` characters to eliminate the ambiguity, or add `--disable spaceAroundOperators` to the command-line options.
+    To work around this, either manually add spaces around the `=` character to eliminate the ambiguity, or add `--disable spaceAroundOperators` to the command-line options.
 
 * If a file begins with a comment, the `stripHeaders` rule will remove it if is followed by a blank line. To avoid this, make sure that the first comment is directly followed by a line of code.
 
@@ -649,10 +649,8 @@ Known issues
          
 * The formatted file cache is based on file length, so it's possible (though unlikely) that an edited file will have the exact same character count as the previously formatted version, causing SwiftFormat to incorrectly identify it as not having changed, and fail to format it.
 
-    To fix this, you can type an extra space in the file (which SwiftFormat will then remove again when it applies the formatting).
+    To fix this, you can use the command line option `--cache ignore` to force SwiftFormat to ignore the cache for this run, or just type an extra space in the file (which SwiftFormat will then remove again when it applies the formatting).
     
-    Alternatively, use the command line option `--cache ignore` to force SwiftFormat to ignore the cache for this run.
-
 
 Credits
 ------------
@@ -660,6 +658,7 @@ Credits
 * @tonyarnold - Xcode Source Editor Extension
 * @bourvill - Git pre-commit hook script
 * @palleas - Homebrew formula
+* @aliak00 - Several path-related CLI enhancements
 * @nicklockwood - Everything else
 
 ([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

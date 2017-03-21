@@ -3618,14 +3618,21 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testRemoveRedundantNestedFunctionSelf() {
+    func testNoRemoveNonRedundantNestedFunctionSelf() {
         let input = "func foo() { func bar() { self.bar() } }"
-        let output = "func foo() { func bar() { bar() } }"
+        let output = "func foo() { func bar() { self.bar() } }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testNoRemoveNonRedundantNestedFunctionSelf() {
+    func testNoRemoveNonRedundantNestedFunctionSelf2() {
+        let input = "func foo() {\n    func bar() {}\n    self.bar()\n}"
+        let output = "func foo() {\n    func bar() {}\n    self.bar()\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveNonRedundantNestedFunctionSelf3() {
         let input = "func foo() { let bar = 5; func bar() { self.bar = bar } }"
         let output = "func foo() { let bar = 5; func bar() { self.bar = bar } }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)

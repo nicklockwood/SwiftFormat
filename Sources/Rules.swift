@@ -1826,6 +1826,10 @@ extension FormatRules {
                     case .keyword("var"), .keyword("let"):
                         i += 1
                         processDeclaredVariables(at: &i, localNames: &localNames)
+                    case .keyword("func"):
+                        if let nameToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
+                            localNames.insert(nameToken.unescaped())
+                        }
                     case .startOfScope:
                         i += 1
                         var scopeStack = [token]

@@ -38,7 +38,7 @@ import Foundation
 /// directly is that it allows mutation during enumeration, and
 /// transparently handles changes that affect the current token index.
 public class Formatter: NSObject {
-    private var indexStack: [Int] = []
+    private var enumerationIndex = -1
 
     /// The options that the formatter was initialized with
     public let options: FormatOptions
@@ -97,8 +97,8 @@ public class Formatter: NSObject {
     /// Removes the token at the specified index
     public func removeToken(at index: Int) {
         tokens.remove(at: index)
-        for (i, j) in indexStack.enumerated() where j >= index {
-            indexStack[i] -= 1
+        if enumerationIndex >= index {
+            enumerationIndex -= 1
         }
     }
 
@@ -122,8 +122,8 @@ public class Formatter: NSObject {
         for token in tokens.reversed() {
             self.tokens.insert(token, at: index)
         }
-        for (i, j) in indexStack.enumerated() where j >= index {
-            indexStack[i] += tokens.count
+        if enumerationIndex >= index {
+            enumerationIndex += tokens.count
         }
     }
 
@@ -138,14 +138,13 @@ public class Formatter: NSObject {
     /// array inside the body block, but note that the index and token arguments
     /// may not reflect the current token any more after a mutation
     public func forEachToken(_ body: (Int, Token) -> Void) {
-        let i = indexStack.count
-        indexStack.append(0)
-        while indexStack[i] < tokens.count {
-            let index = indexStack[i]
-            body(index, tokens[index]) // May mutate indexStack
-            indexStack[i] += 1
+        assert(enumerationIndex == -1, "forEachToken does not support re-entrancy")
+        enumerationIndex = 0
+        while enumerationIndex < tokens.count {
+            body(enumerationIndex, tokens[enumerationIndex]) // May mutate enumerationIndex
+            enumerationIndex += 1
         }
-        indexStack.removeLast()
+        enumerationIndex = -1
     }
 
     /// As above, but only loops through tokens that match the specified filter block

@@ -61,6 +61,14 @@ class PerformanceTests: XCTestCase {
         }
     }
 
+    func testRedundantSelf() {
+        let files = PerformanceTests.files
+        let tokens = files.map { tokenize($0) }
+        measure {
+            _ = tokens.map { try! format($0, rules: [FormatRules.redundantSelf]) }
+        }
+    }
+
     func testNumberFormatting() {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }

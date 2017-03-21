@@ -2092,7 +2092,9 @@ extension FormatRules {
                     index -= 1
                 }
             }
-            guard let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: i) else { return }
+            guard !argNames.isEmpty, let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: i) else {
+                return
+            }
             removeUsed(from: &argNames, with: &nameIndexPairs, in: i + 1 ..< bodyEndIndex)
             for pair in nameIndexPairs.reversed() {
                 if case .identifier("_") = formatter.tokens[pair.0], pair.0 != pair.1 {
@@ -2144,7 +2146,7 @@ extension FormatRules {
                 }
                 index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
             }
-            guard let bodyStartIndex = formatter.index(after: endIndex, where: {
+            guard !argNames.isEmpty, let bodyStartIndex = formatter.index(after: endIndex, where: {
                 switch $0 {
                 case .startOfScope("{"): // What we're looking for
                     return true

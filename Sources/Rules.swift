@@ -1860,7 +1860,11 @@ extension FormatRules {
                 case .keyword("func"), .keyword("init"), .keyword("subscript"):
                     lastKeyword = ""
                     processFunction(at: &index, localNames: localNames)
-                case .keyword("extension"), .keyword("class"), .keyword("struct"), .keyword("enum"):
+                case .keyword("class"):
+                    if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) != .keyword("func") {
+                        fallthrough
+                    }
+                case .keyword("extension"), .keyword("struct"), .keyword("enum"):
                     guard let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
                     index = scopeStart + 1
                     processBody(at: &index, localNames: ["init"], isTypeRoot: true)

@@ -3801,7 +3801,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testRemoveSelfFromVarMatchingRenamedArgument() {
+    func testNoRemoveSelfFromVarMatchingRenamedArgument() {
         let input = "func foo(bar baz: Int) { self.baz = baz }"
         let output = "func foo(bar baz: Int) { self.baz = baz }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
@@ -3895,6 +3895,13 @@ class RulesTests: XCTestCase {
     func testNoRemoveSelfAfterGenericInit() {
         let input = "init(bar: Int) {\n    self = Foo<Bar>()\n    self.bar(bar)\n}"
         let output = "init(bar: Int) {\n    self = Foo<Bar>()\n    self.bar(bar)\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfInClassFunction() {
+        let input = "class func foo() {\n    var foo: Int\n    func bar() { self.foo = 5 }\n}"
+        let output = "class func foo() {\n    var foo: Int\n    func bar() { self.foo = 5 }\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

@@ -1861,7 +1861,7 @@ extension FormatRules {
                     lastKeyword = ""
                     processFunction(at: &index, localNames: localNames)
                 case .keyword("class"):
-                    if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) != .keyword("func") {
+                    if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)?.isIdentifier == true {
                         fallthrough
                     }
                 case .keyword("extension"), .keyword("struct"), .keyword("enum"):

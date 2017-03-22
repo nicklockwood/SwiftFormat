@@ -3899,9 +3899,30 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRemoveSelfInClassFunction() {
+        let input = "class Foo {\n    class func foo() {\n        func bar() { self.foo() }\n    }\n}"
+        let output = "class Foo {\n    class func foo() {\n        func bar() { foo() }\n    }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSelfInStaticFunction() {
+        let input = "struct Foo {\n    static func foo() {\n        func bar() { self.foo() }\n    }\n}"
+        let output = "struct Foo {\n    static func foo() {\n        func bar() { foo() }\n    }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSelfInClassFunctionWithSpecifiers() {
+        let input = "class Foo {\n    class private func foo() {\n        func bar() { self.foo() }\n    }\n}"
+        let output = "class Foo {\n    class private func foo() {\n        func bar() { foo() }\n    }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["specifiers"])), output + "\n")
+    }
+
     func testNoRemoveSelfInClassFunction() {
-        let input = "class func foo() {\n    var foo: Int\n    func bar() { self.foo = 5 }\n}"
-        let output = "class func foo() {\n    var foo: Int\n    func bar() { self.foo = 5 }\n}"
+        let input = "class Foo {\n    class func foo() {\n        var foo: Int\n        func bar() { self.foo() }\n    }\n}"
+        let output = "class Foo {\n    class func foo() {\n        var foo: Int\n        func bar() { self.foo() }\n    }\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

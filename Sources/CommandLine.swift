@@ -447,42 +447,35 @@ func inferOptions(from inputURLs: [URL], excluding excludedURLs: [URL]) -> (Int,
     return (filesParsed, inferOptions(from: tokens), errors)
 }
 
-public func format(_ source: String,
-                   ruleNames: [String],
-                   options: FormatOptions,
-                   verbose: Bool) throws -> String {
-    // Parse
-    var tokens = tokenize(source)
-    if !options.fragment, let error = parsingError(for: tokens) {
-        throw error
-    }
+func format(_ source: String,
+            ruleNames: [String],
+            options: FormatOptions,
+            verbose: Bool) throws -> String {
 
-    // Recursively apply rules until no changes are detected
-    var options = options
-    let formatter = Formatter(tokens, options: options)
+    // Parse source
+    let originalTokens = tokenize(source)
+    var tokens = originalTokens
+
+    // Apply rules
     let rulesByName = FormatRules.byName
-    var rulesApplied = Set<String>()
-    repeat {
-        tokens = formatter.tokens
-        if verbose {
-            for ruleName in ruleNames {
-                let before = formatter.tokens
-                rulesByName[ruleName]!(formatter)
-                if formatter.tokens != before {
-                    rulesApplied.insert(ruleName)
-                }
-            }
-        } else {
-            for ruleName in ruleNames {
-                rulesByName[ruleName]!(formatter)
-            }
+    var rules = [FormatRule]()
+    for name in ruleNames {
+        if let rule = rulesByName[name] {
+            rules.append(rule)
         }
-        options.fileHeader = nil // Prevents infinite recursion
-    } while tokens != formatter.tokens
+    }
+    var rulesApplied = Set<String>()
+    let callback: ((Int, [Token]) -> Void)? = verbose ? { i, updatedTokens in
+        if updatedTokens != tokens {
+            rulesApplied.insert(ruleNames[i])
+            tokens = updatedTokens
+        }
+    } : nil
+    try applyRules(rules, to: &tokens, with: options, callback: callback)
 
-    // Info
+    // Display info
     if verbose {
-        if rulesApplied.isEmpty {
+        if rulesApplied.isEmpty || tokens == originalTokens {
             print(" -- no changes", as: .success)
         } else {
             let sortedNames = Array(rulesApplied).sorted().joined(separator: ", ")

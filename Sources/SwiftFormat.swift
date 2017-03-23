@@ -210,27 +210,42 @@ public func sourceCode(for tokens: [Token]) -> String {
     return output
 }
 
-/// Format a pre-parsed token array
-/// Returns the formatted token array, and the number of edits made
-public func format(_ tokens: [Token],
-                   rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = FormatOptions()) throws -> [Token] {
+/// Apply specified rules to a token array with optional callback
+/// Useful for perfoming additional logic after each rule is applied
+public func applyRules(_ rules: [FormatRule],
+                       to tokens: inout [Token],
+                       with options: FormatOptions,
+                       callback: ((Int, [Token]) -> Void)? = nil) throws {
     // Parse
     if !options.fragment, let error = parsingError(for: tokens) {
         throw error
     }
 
     // Recursively apply rules until no changes are detected
-    var tokens = tokens
     var options = options
-    let formatter = Formatter(tokens, options: options)
-    repeat {
+    for _ in 0 ..< 10 {
+        let formatter = Formatter(tokens, options: options)
+        for (i, rule) in rules.enumerated() {
+            rule(formatter)
+            callback?(i, formatter.tokens)
+        }
+        if tokens == formatter.tokens {
+            return
+        }
         tokens = formatter.tokens
-        rules.forEach { $0(formatter) }
         options.fileHeader = nil // Prevents infinite recursion
-    } while tokens != formatter.tokens
+    }
+    throw FormatError.writing("failed to terminate")
+}
 
-    // Output
+/// Format a pre-parsed token array
+/// Returns the formatted token array, and the number of edits made
+public func format(_ tokens: [Token],
+                   rules: [FormatRule] = FormatRules.default,
+                   options: FormatOptions = FormatOptions()) throws -> [Token] {
+
+    var tokens = tokens
+    try applyRules(rules, to: &tokens, with: options)
     return tokens
 }
 

@@ -4035,6 +4035,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testMalformedFunctionNotMisidentifiedAsClosure() {
+        let input = "func foo() { bar(5) {} in }"
+        let output = "func foo() { bar(5) {} in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // functions
 
     func testMarkUnusedFunctionArgument() {

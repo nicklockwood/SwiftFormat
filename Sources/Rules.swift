@@ -2094,7 +2094,9 @@ extension FormatRules {
                 while index > start {
                     let token = formatter.tokens[index]
                     switch token {
-                    case .keyword("for"):
+                    case let .keyword(name) where !name.hasPrefix("@") && !name.hasPrefix("#") && name != "inout":
+                        return
+                    case .endOfScope("}"), .startOfScope("{"):
                         return
                     case .endOfScope(")"):
                         argCountStack.append(argNames.count)

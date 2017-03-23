@@ -333,9 +333,7 @@ func processArguments(_ args: [String]) {
                             let options = inferOptions(from: tokens)
                             print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
                         } else if let outputURL = outputURL {
-                            if verbose {
-                                print("running swiftformat...")
-                            }
+                            print("running swiftformat...")
                             let output = try format(
                                 input,
                                 ruleNames: Array(rules),
@@ -381,9 +379,7 @@ func processArguments(_ args: [String]) {
             return
         }
 
-        if !verbose {
-            print("running swiftformat...")
-        }
+        print("running swiftformat...")
 
         // Format the code
         var filesWritten = 0, filesChecked = 0
@@ -401,30 +397,21 @@ func processArguments(_ args: [String]) {
             )
             errors += _errors
         }
-        var filesFailed = 0
-        for case let error as FormatError in errors {
-            switch error {
-            case .parsing, .reading, .writing:
-                filesFailed += 1
-            case .options:
-                break
-            }
-        }
 
-        if verbose {
-            print("")
-        }
-        if filesChecked == 0 {
-            if filesFailed == 0 {
+        if filesWritten == 0 {
+            if filesChecked == 0 {
                 if let error = errors.first {
                     errors.removeAll()
                     throw error
                 }
                 let inputPaths = inputURLs.map({ $0.path }).joined(separator: ", ")
                 throw FormatError.options("no eligible files found at \(inputPaths)")
-            } else {
+            } else if !errors.isEmpty {
                 throw FormatError.options("failed to format any files")
             }
+        }
+        if verbose {
+            print("")
         }
         printWarnings(errors)
         print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)", as: .success)
@@ -606,9 +593,24 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
-    if verbose, errors.count > 0 {
-        // Replace individual warnings with a generic message, to avoid repetition
-        errors = [FormatError.writing("\(errors.count) file\(errors.count == 1 ? "" : "s") could not be formatted")]
+    if verbose {
+        var errorCount = errors.count
+        errors = errors.filter { error in
+            guard let error = error as? FormatError else {
+                return true
+            }
+            switch error {
+            case .options, .reading:
+                return true
+            case .parsing, .writing:
+                return false
+            }
+        }
+        errorCount -= errors.count
+        if errorCount > 0 {
+            // Replace individual warnings with a generic message, to avoid repetition
+            errors.append(FormatError.writing("\(errorCount) file\(errorCount == 1 ? "" : "s") could not be formatted"))
+        }
     }
     if filesChecked > 0 {
         // Save cache

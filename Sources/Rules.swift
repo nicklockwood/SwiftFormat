@@ -1932,6 +1932,47 @@ extension FormatRules {
                     index += 1
                     processBody(at: &index, localNames: localNames, isTypeRoot: false)
                     continue
+                case .startOfScope("{") where lastKeyword == "var":
+                    lastKeyword = ""
+                    var prevIndex = index - 1
+                    while let token = formatter.token(at: prevIndex), token != .keyword("var") {
+                        if token == .operator("=", .infix) {
+                            // It's a closure
+                            fallthrough
+                        }
+                        prevIndex -= 1
+                    }
+                    var foundAccessors = false
+                    while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
+                        [.identifier("get"), .identifier("set"), .identifier("didSet"), .identifier("willSet")].contains($0)
+                    }), let startIndex = formatter.index(of: .startOfScope("{"), after: nextIndex) {
+                        foundAccessors = true
+                        index = startIndex + 1
+                        var localNames = localNames
+                        if let parenStart = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex, if: {
+                            $0 == .startOfScope("(")
+                        }), let varToken = formatter.next(.identifier, after: parenStart) {
+                            localNames.insert(varToken.unescaped())
+                        } else {
+                            switch formatter.tokens[nextIndex].string {
+                            case "set", "willSet":
+                                localNames.insert("newValue")
+                            case "didSet":
+                                localNames.insert("oldValue")
+                            default:
+                                break
+                            }
+                        }
+                        processBody(at: &index, localNames: localNames, isTypeRoot: false)
+                    }
+                    if foundAccessors {
+                        guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
+                        index = endIndex
+                        continue
+                    }
+                    index += 1
+                    processBody(at: &index, localNames: localNames, isTypeRoot: false)
+                    continue
                 case .startOfScope:
                     index += 1
                     scopeStack.append(token)

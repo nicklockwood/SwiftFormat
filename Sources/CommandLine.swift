@@ -103,6 +103,7 @@ func printHelp() {
     print("--ranges           spacing for ranges. \"spaced\" (default) or \"nospace\"")
     print("--removelines      remove blank line before }. \"enabled\" (default) or \"disabled\"")
     print("--semicolons       allow semicolons. \"never\" or \"inline\" (default)")
+    print("--self             use self for member variables. \"remove\" (default) or \"insert\"")
     print("--stripunusedargs  \"closure-only\", \"unnamed-only\" or \"always\" (default)")
     print("--trimwhitespace   trim trailing space. \"always\" (default) or \"nonblank-lines\"")
     print("--wraparguments    wrap function args. \"beforefirst\", \"afterfirst\", \"disabled\"")
@@ -718,6 +719,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["patternlet"] = options.hoistPatternLet ? "hoist" : "inline"
             case "stripUnusedArguments":
                 args["stripunusedargs"] = options.stripUnusedArguments.rawValue
+            case "removeSelf":
+                args["self"] = options.removeSelf ? "remove" : "insert"
             case "experimentalRules":
                 args["experimental"] = options.experimentalRules ? "enabled" : nil
             case "fragment":
@@ -990,6 +993,16 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
+    try processOption("self", in: args, from: &arguments) {
+        switch $0.lowercased() {
+        case "remove":
+            options.removeSelf = true
+        case "insert":
+            options.removeSelf = false
+        default:
+            throw FormatError.options("")
+        }
+    }
     try processOption("fragment", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "true", "enabled":
@@ -1072,6 +1085,7 @@ let formatArguments = [
     "wraparguments",
     "wrapelements",
     "patternlet",
+    "self",
 ]
 
 let deprecatedArguments = [

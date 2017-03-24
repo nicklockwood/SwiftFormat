@@ -133,6 +133,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var hexGrouping: Grouping
     public var hoistPatternLet: Bool
     public var stripUnusedArguments: ArgumentType
+    public var removeSelf: Bool
     public var experimentalRules: Bool
     public var fragment: Bool
 
@@ -162,6 +163,7 @@ public struct FormatOptions: CustomStringConvertible {
                 hexGrouping: Grouping = .group(4, 8),
                 hoistPatternLet: Bool = true,
                 stripUnusedArguments: ArgumentType = .all,
+                removeSelf: Bool = true,
                 experimentalRules: Bool = false,
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false) {
@@ -189,6 +191,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.hexGrouping = hexGrouping
         self.hoistPatternLet = hoistPatternLet
         self.stripUnusedArguments = stripUnusedArguments
+        self.removeSelf = removeSelf
         self.experimentalRules = experimentalRules
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

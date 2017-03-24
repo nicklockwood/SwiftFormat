@@ -3562,6 +3562,8 @@ class RulesTests: XCTestCase {
 
     // MARK: redundantSelf
 
+    // removeSelf = true
+
     func testSimpleRemoveRedundantSelf() {
         let input = "func foo() { self.bar() }"
         let output = "func foo() { bar() }"
@@ -3952,6 +3954,64 @@ class RulesTests: XCTestCase {
         let output = "class Foo {\n    class func foo() {\n        var foo: Int\n        func bar() { self.foo() }\n    }\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    // removeSelf = false
+
+    func testInsertSelf() {
+        let input = "class Foo {\n    let foo: Int\n    init() { foo = 5 }\n}"
+        let output = "class Foo {\n    let foo: Int\n    init() { self.foo = 5 }\n}"
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoInterpretGenericTypesAsMembers() {
+        let input = "class Foo {\n    let foo: Bar<Int, Int>\n    init() { self.foo = Int(5) }\n}"
+        let output = "class Foo {\n    let foo: Bar<Int, Int>\n    init() { self.foo = Int(5) }\n}"
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testInsertSelfForStaticMemberInClassFunction() {
+        let input = "class Foo {\n    static var foo: Int\n    class func bar() { foo = 5 }\n}"
+        let output = "class Foo {\n    static var foo: Int\n    class func bar() { self.foo = 5 }\n}"
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoInsertSelfForInstanceMemberInClassFunction() {
+        let input = "class Foo {\n    var foo: Int\n    class func bar() { foo = 5 }\n}"
+        let output = "class Foo {\n    var foo: Int\n    class func bar() { foo = 5 }\n}"
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoInsertSelfForStaticMemberInInstanceFunction() {
+        let input = "class Foo {\n    static var foo: Int\n    func bar() { foo = 5 }\n}"
+        let output = "class Foo {\n    static var foo: Int\n    func bar() { foo = 5 }\n}"
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoInsertSelfForShadowedClassMemberInClassFunction() {
+        let input = "class Foo {\n    class func foo() {\n        var foo: Int\n        func bar() { foo = 5 }\n    }\n}"
+        let output = "class Foo {\n    class func foo() {\n        var foo: Int\n        func bar() { foo = 5 }\n    }\n}"
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoInsertSelfInForLoopTuple() {
+        let input = "class Foo {\n    var bar: Int\n    func foo() { for (bar, baz) in quux {} }\n}"
+        let output = "class Foo {\n    var bar: Int\n    func foo() { for (bar, baz) in quux {} }\n}"
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     // MARK: unusedArguments

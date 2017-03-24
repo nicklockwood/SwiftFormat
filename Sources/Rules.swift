@@ -1768,18 +1768,25 @@ extension FormatRules {
 
     /// Remove redundant self keyword
     public class func redundantSelf(_ formatter: Formatter) {
-        func processDeclaredVariables(at index: inout Int, localNames: inout Set<String>) {
+        func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
             while let token = formatter.token(at: index) {
                 switch token {
                 case .identifier:
                     let name = token.unescaped()
                     if name != "_" {
-                        localNames.insert(name)
+                        names.insert(name)
                     }
                     inner: while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
                         switch formatter.tokens[nextIndex] {
                         case .keyword("as"), .keyword("is"), .keyword("try"):
                             break
+                        case .startOfScope("<"):
+                            guard let endIndex = formatter.index(of: .endOfScope(">"), after: nextIndex) else {
+                                assertionFailure()
+                                return
+                            }
+                            index = endIndex
+                            continue
                         case .keyword, .startOfScope("{"):
                             return
                         case .delimiter(","):
@@ -1796,27 +1803,34 @@ extension FormatRules {
                 index += 1
             }
         }
-        func processBody(at index: inout Int, localNames: Set<String>, isTypeRoot: Bool) {
+        func processBody(at index: inout Int, localNames: Set<String>, members: Set<String>, isTypeRoot: Bool) {
             assert({ formatter.currentScope(at: index).map {
                 [.startOfScope("{"), .startOfScope(":")].contains($0)
             } ?? true }())
-            // Check if scope actually includes self before we waste a bunch of time
-            var containsSelf = false
-            for token in formatter.tokens[index ..< formatter.tokens.count] {
-                if case .identifier("self") = token {
-                    containsSelf = true
-                    break
+            if formatter.options.removeSelf {
+                // Check if scope actually includes self before we waste a bunch of time
+                var containsSelf = false
+                for token in formatter.tokens[index ..< formatter.tokens.count] {
+                    if case .identifier("self") = token {
+                        containsSelf = true
+                        break
+                    }
+                }
+                if !containsSelf {
+                    return
                 }
             }
-            if !containsSelf {
-                return
-            }
-            // Gather local variables
+            // Gather members & local variables
+            var members = members
+            var classMembers = Set<String>()
             var localNames = localNames
-            if !isTypeRoot {
+            if !isTypeRoot || !formatter.options.removeSelf {
                 var i = index
+                var classOrStatic = false
                 outer: while let token = formatter.token(at: i) {
                     switch token {
+                    case .keyword("class"), .keyword("static"):
+                        classOrStatic = true
                     case .keyword("if"), .keyword("while"):
                         guard let nextIndex = formatter.index(of: .startOfScope("{"), after: i) else {
                             return // error
@@ -1825,13 +1839,32 @@ extension FormatRules {
                         continue
                     case .keyword("var"), .keyword("let"):
                         i += 1
-                        processDeclaredVariables(at: &i, localNames: &localNames)
+                        if isTypeRoot {
+                            if classOrStatic {
+                                processDeclaredVariables(at: &i, names: &classMembers)
+                                classOrStatic = false
+                            } else {
+                                processDeclaredVariables(at: &i, names: &members)
+                            }
+                        } else {
+                            processDeclaredVariables(at: &i, names: &localNames)
+                        }
                     case .keyword("func"):
                         if let nameToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
-                            localNames.insert(nameToken.unescaped())
+                            if isTypeRoot {
+                                if classOrStatic {
+                                    classMembers.insert(nameToken.unescaped())
+                                    classOrStatic = false
+                                } else {
+                                    members.insert(nameToken.unescaped())
+                                }
+                            } else {
+                                localNames.insert(nameToken.unescaped())
+                            }
                         }
                     case .startOfScope:
                         i += 1
+                        classOrStatic = false
                         var scopeStack = [token]
                         while let scope = scopeStack.last, let nextToken = formatter.token(at: i) {
                             if nextToken.isEndOfScope(scope) {
@@ -1850,24 +1883,34 @@ extension FormatRules {
                     i += 1
                 }
             }
-            // Remove redundant self
+            // Remove or add `self`
             var scopeStack = [Token]()
             var lastKeyword = ""
+            var classOrStatic = false
             while let token = formatter.token(at: index) {
                 switch token {
                 case .keyword("is"), .keyword("as"), .keyword("try"):
                     break
                 case .keyword("func"), .keyword("init"), .keyword("subscript"):
                     lastKeyword = ""
-                    processFunction(at: &index, localNames: localNames)
+                    if classOrStatic {
+                        assert(isTypeRoot)
+                        processFunction(at: &index, localNames: localNames, members: classMembers)
+                        classOrStatic = false
+                    } else {
+                        processFunction(at: &index, localNames: localNames, members: members)
+                    }
+                case .keyword("static"):
+                    classOrStatic = true
                 case .keyword("class"):
                     if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)?.isIdentifier == true {
                         fallthrough
                     }
+                    classOrStatic = true
                 case .keyword("extension"), .keyword("struct"), .keyword("enum"):
                     guard let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
                     index = scopeStart + 1
-                    processBody(at: &index, localNames: ["init"], isTypeRoot: true)
+                    processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: true)
                 case .keyword("var"), .keyword("let"):
                     index += 1
                     switch lastKeyword {
@@ -1886,18 +1929,20 @@ extension FormatRules {
                         }
                         lastKeyword = ""
                     case "if", "while", "guard":
+                        assert(!isTypeRoot)
                         // Guard is included because it's an error to reference guard vars in body
                         var scopedNames = localNames
-                        processDeclaredVariables(at: &index, localNames: &scopedNames)
+                        processDeclaredVariables(at: &index, names: &scopedNames)
                         guard let startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
                             return // error
                         }
                         index = startIndex + 1
-                        processBody(at: &index, localNames: scopedNames, isTypeRoot: false)
+                        processBody(at: &index, localNames: scopedNames, members: members, isTypeRoot: false)
                         lastKeyword = ""
                     default:
                         lastKeyword = token.string
                     }
+                    classOrStatic = false
                 case let .keyword(name):
                     lastKeyword = name
                 case .startOfScope("("):
@@ -1907,7 +1952,7 @@ extension FormatRules {
                     var localNames = localNames
                     localNames.insert("error") // Implicit error argument
                     index += 1
-                    processBody(at: &index, localNames: localNames, isTypeRoot: false)
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
                     continue
                 case .startOfScope("{") where lastKeyword == "in":
                     lastKeyword = ""
@@ -1922,7 +1967,13 @@ extension FormatRules {
                         }
                     }
                     index += 1
-                    processBody(at: &index, localNames: localNames, isTypeRoot: false)
+                    if classOrStatic {
+                        assert(isTypeRoot)
+                        processBody(at: &index, localNames: localNames, members: classMembers, isTypeRoot: false)
+                        classOrStatic = false
+                    } else {
+                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    }
                     continue
                 case .startOfScope("{") where [
                     "for", "where", "if", "else", "while",
@@ -1930,7 +1981,7 @@ extension FormatRules {
                 ].contains(lastKeyword), .startOfScope(":"):
                     lastKeyword = ""
                     index += 1
-                    processBody(at: &index, localNames: localNames, isTypeRoot: false)
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
                     lastKeyword = ""
@@ -1963,7 +2014,7 @@ extension FormatRules {
                                 break
                             }
                         }
-                        processBody(at: &index, localNames: localNames, isTypeRoot: false)
+                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
                     }
                     if foundAccessors {
                         guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
@@ -1971,7 +2022,7 @@ extension FormatRules {
                         continue
                     }
                     index += 1
-                    processBody(at: &index, localNames: localNames, isTypeRoot: false)
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
                     continue
                 case .startOfScope:
                     index += 1
@@ -1985,18 +2036,34 @@ extension FormatRules {
                         index += 1
                     }
                     continue
-                case .identifier("self"), .identifier("`self`"):
-                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
+                case .identifier("self") where !isTypeRoot:
+                    if formatter.options.removeSelf,
+                        formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
                         let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
                             $0 == .operator(".", .infix)
                         }), let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {
-                            $0.isIdentifier && !localNames.contains($0.string)
+                            $0.isIdentifier && !localNames.contains($0.unescaped())
                         }) {
                         if case let .identifier(name) = formatter.tokens[nextIndex], name.isContextualKeyword {
                             // May not be necessary, but will be reverted by `redundantBackticks` rule if so
                             formatter.replaceToken(at: nextIndex, with: .identifier("`\(name)`"))
                         }
                         formatter.removeTokens(inRange: index ..< nextIndex)
+                    }
+                case .identifier where !formatter.options.removeSelf && !isTypeRoot:
+                    let name = token.unescaped()
+                    if members.contains(name), !localNames.contains(name), lastKeyword != "for" {
+                        if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
+                            lastToken.isOperator(".") || lastToken.isKeyword {
+                            break
+                        }
+                        if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index),
+                            nextToken.isIdentifierOrKeyword || nextToken == .delimiter(":") {
+                            break
+                        }
+                        formatter.insertTokens([.identifier("self"), .operator(".", .infix)], at: index)
+                        index += 3
+                        continue
                     }
                 case .endOfScope:
                     if let scope = scopeStack.last {
@@ -2013,22 +2080,16 @@ extension FormatRules {
                 index += 1
             }
         }
-        func processFunction(at index: inout Int, localNames: Set<String>) {
+        func processFunction(at index: inout Int, localNames: Set<String>, members: Set<String>) {
             var localNames = localNames
             guard let startIndex = formatter.index(of: .startOfScope("("), after: index),
                 let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
             // Get argument names
             index = startIndex
             while index < endIndex {
-                guard let externalNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
-                    if case let .identifier(name) = $0 {
-                        return formatter.options.stripUnusedArguments != .unnamedOnly || name == "_"
-                    }
-                    // Probably an empty argument list
-                    return false
-                }) else { break }
-                guard let nextIndex =
-                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
+                guard let externalNameIndex = formatter.index(of: .identifier, after: index),
+                    let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex)
+                else { break }
                 let token = formatter.tokens[nextIndex]
                 switch token {
                 case let .identifier(name) where name != "_":
@@ -2061,10 +2122,10 @@ extension FormatRules {
                 return
             }
             index = bodyStartIndex + 1
-            processBody(at: &index, localNames: localNames, isTypeRoot: false)
+            processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
         }
         var index = 0
-        processBody(at: &index, localNames: ["init"], isTypeRoot: false)
+        processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false)
     }
 
     /// Replace unused arguments with an underscore

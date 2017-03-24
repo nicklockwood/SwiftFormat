@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.28.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.0) (2017-03-24)
+
+- Added `--self insert` option to optionally insert `self` when accessing member variables/functions
+- The `--self` and `--stripunusedargs` arguments can now be inferred automatically using `--inferoptions`
+- SwiftFormat now detects and rejects source files that contain merge conflict markers
+- Added `--conflictmarkers` option to optionally ignore conflict markers (e.g. if they clash with a custom operator)
+- The `redundantSelf` rule now correctly strips `self` from computed var setters and getters
+- The `redundantSelf` rule now handles static and class variables/functions correctly
+- Fixed a potential bug where command-line tool might get stuck in an infinite loop
+- Fixed a bug where a invalid source code could causes variables to be incorrectly removed
+- Fixed some bugs in error reporting
+
 ## [0.27.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.27.1) (2017-03-21)
 
 - Fixed trailing space that was incorrectly added to blank lines when `redundantSelf` rule is disabled

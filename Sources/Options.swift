@@ -742,5 +742,352 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         return hoisted >= unhoisted
     }()
 
+    options.removeSelf = {
+        var removed = 0, unremoved = 0
+
+        func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
+            while let token = formatter.token(at: index) {
+                switch token {
+                case .identifier:
+                    let name = token.unescaped()
+                    if name != "_" {
+                        names.insert(name)
+                    }
+                    inner: while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                        switch formatter.tokens[nextIndex] {
+                        case .keyword("as"), .keyword("is"), .keyword("try"):
+                            break
+                        case .startOfScope("<"):
+                            guard let endIndex = formatter.index(of: .endOfScope(">"), after: nextIndex) else {
+                                assertionFailure()
+                                return
+                            }
+                            index = endIndex
+                            continue
+                        case .keyword, .startOfScope("{"):
+                            return
+                        case .delimiter(","):
+                            index = nextIndex
+                            break inner
+                        default:
+                            break
+                        }
+                        index = nextIndex
+                    }
+                default:
+                    break
+                }
+                index += 1
+            }
+        }
+        func processBody(at index: inout Int, localNames: Set<String>, members: Set<String>, isTypeRoot: Bool) {
+            assert({ formatter.currentScope(at: index).map {
+                [.startOfScope("{"), .startOfScope(":")].contains($0)
+            } ?? true }())
+            // Gather members & local variables
+            var members = members
+            var classMembers = Set<String>()
+            var localNames = localNames
+            do {
+                var i = index
+                var classOrStatic = false
+                outer: while let token = formatter.token(at: i) {
+                    switch token {
+                    case .keyword("class"), .keyword("static"):
+                        classOrStatic = true
+                    case .keyword("if"), .keyword("while"):
+                        guard let nextIndex = formatter.index(of: .startOfScope("{"), after: i) else {
+                            return // error
+                        }
+                        i = nextIndex
+                        continue
+                    case .keyword("var"), .keyword("let"):
+                        i += 1
+                        if isTypeRoot {
+                            if classOrStatic {
+                                processDeclaredVariables(at: &i, names: &classMembers)
+                                classOrStatic = false
+                            } else {
+                                processDeclaredVariables(at: &i, names: &members)
+                            }
+                        } else {
+                            processDeclaredVariables(at: &i, names: &localNames)
+                        }
+                    case .keyword("func"):
+                        if let nameToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
+                            if isTypeRoot {
+                                if classOrStatic {
+                                    classMembers.insert(nameToken.unescaped())
+                                    classOrStatic = false
+                                } else {
+                                    members.insert(nameToken.unescaped())
+                                }
+                            } else {
+                                localNames.insert(nameToken.unescaped())
+                            }
+                        }
+                    case .startOfScope:
+                        i += 1
+                        classOrStatic = false
+                        var scopeStack = [token]
+                        while let scope = scopeStack.last, let nextToken = formatter.token(at: i) {
+                            if nextToken.isEndOfScope(scope) {
+                                scopeStack.removeLast()
+                            } else if nextToken.isStartOfScope {
+                                scopeStack.append(nextToken)
+                            }
+                            i += 1
+                        }
+                    case .endOfScope("}"):
+                        i += 1
+                        break outer
+                    default:
+                        break
+                    }
+                    i += 1
+                }
+            }
+            // Detect self
+            var scopeStack = [Token]()
+            var lastKeyword = ""
+            var classOrStatic = false
+            while let token = formatter.token(at: index) {
+                switch token {
+                case .keyword("is"), .keyword("as"), .keyword("try"):
+                    break
+                case .keyword("func"), .keyword("init"), .keyword("subscript"):
+                    lastKeyword = ""
+                    if classOrStatic {
+                        assert(isTypeRoot)
+                        processFunction(at: &index, localNames: localNames, members: classMembers)
+                        classOrStatic = false
+                    } else {
+                        processFunction(at: &index, localNames: localNames, members: members)
+                    }
+                case .keyword("static"):
+                    classOrStatic = true
+                case .keyword("class"):
+                    if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)?.isIdentifier == true {
+                        fallthrough
+                    }
+                    classOrStatic = true
+                case .keyword("extension"), .keyword("struct"), .keyword("enum"):
+                    guard let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
+                    index = scopeStart + 1
+                    processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: true)
+                case .keyword("var"), .keyword("let"):
+                    index += 1
+                    switch lastKeyword {
+                    case "lazy":
+                        loop: while let nextIndex =
+                            formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                            switch formatter.tokens[nextIndex] {
+                            case .keyword("as"), .keyword("is"), .keyword("try"):
+                                break
+                            case .keyword, .startOfScope("{"):
+                                break loop
+                            default:
+                                break
+                            }
+                            index = nextIndex
+                        }
+                        lastKeyword = ""
+                    case "if", "while", "guard":
+                        assert(!isTypeRoot)
+                        // Guard is included because it's an error to reference guard vars in body
+                        var scopedNames = localNames
+                        processDeclaredVariables(at: &index, names: &scopedNames)
+                        guard let startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
+                            return // error
+                        }
+                        index = startIndex + 1
+                        processBody(at: &index, localNames: scopedNames, members: members, isTypeRoot: false)
+                        lastKeyword = ""
+                    default:
+                        lastKeyword = token.string
+                    }
+                    classOrStatic = false
+                case let .keyword(name):
+                    lastKeyword = name
+                case .startOfScope("("):
+                    scopeStack.append(token)
+                case .startOfScope("{") where lastKeyword == "catch":
+                    lastKeyword = ""
+                    var localNames = localNames
+                    localNames.insert("error") // Implicit error argument
+                    index += 1
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    continue
+                case .startOfScope("{") where lastKeyword == "in":
+                    lastKeyword = ""
+                    var localNames = localNames
+                    guard let keywordIndex = formatter.index(of: .keyword, before: index),
+                        let prevKeywordIndex = formatter.index(of: .keyword, before: keywordIndex),
+                        let prevKeywordToken = formatter.token(at: prevKeywordIndex),
+                        case .keyword("for") = prevKeywordToken else { return }
+                    for token in formatter.tokens[prevKeywordIndex + 1 ..< keywordIndex] {
+                        if case let .identifier(name) = token, name != "_" {
+                            localNames.insert(token.unescaped())
+                        }
+                    }
+                    index += 1
+                    if classOrStatic {
+                        assert(isTypeRoot)
+                        processBody(at: &index, localNames: localNames, members: classMembers, isTypeRoot: false)
+                        classOrStatic = false
+                    } else {
+                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    }
+                    continue
+                case .startOfScope("{") where [
+                    "for", "where", "if", "else", "while",
+                    "repeat", "do", "switch",
+                ].contains(lastKeyword), .startOfScope(":"):
+                    lastKeyword = ""
+                    index += 1
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    continue
+                case .startOfScope("{") where lastKeyword == "var":
+                    lastKeyword = ""
+                    var prevIndex = index - 1
+                    while let token = formatter.token(at: prevIndex), token != .keyword("var") {
+                        if token == .operator("=", .infix) {
+                            // It's a closure
+                            fallthrough
+                        }
+                        prevIndex -= 1
+                    }
+                    var foundAccessors = false
+                    while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
+                        [.identifier("get"), .identifier("set"), .identifier("didSet"), .identifier("willSet")].contains($0)
+                    }), let startIndex = formatter.index(of: .startOfScope("{"), after: nextIndex) {
+                        foundAccessors = true
+                        index = startIndex + 1
+                        var localNames = localNames
+                        if let parenStart = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex, if: {
+                            $0 == .startOfScope("(")
+                        }), let varToken = formatter.next(.identifier, after: parenStart) {
+                            localNames.insert(varToken.unescaped())
+                        } else {
+                            switch formatter.tokens[nextIndex].string {
+                            case "set", "willSet":
+                                localNames.insert("newValue")
+                            case "didSet":
+                                localNames.insert("oldValue")
+                            default:
+                                break
+                            }
+                        }
+                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    }
+                    if foundAccessors {
+                        guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
+                        index = endIndex
+                        continue
+                    }
+                    index += 1
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    continue
+                case .startOfScope:
+                    index += 1
+                    scopeStack.append(token)
+                    while let scope = scopeStack.last, let nextToken = formatter.token(at: index) {
+                        if nextToken.isEndOfScope(scope) {
+                            scopeStack.removeLast()
+                        } else if nextToken.isStartOfScope {
+                            scopeStack.append(nextToken)
+                        }
+                        index += 1
+                    }
+                    continue
+                case .identifier("self") where !isTypeRoot:
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
+                        let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
+                            $0 == .operator(".", .infix)
+                        }), let token = formatter.next(.nonSpaceOrLinebreak, after: dotIndex), token.isIdentifier {
+                        let name = token.unescaped()
+                        if members.contains(name), !localNames.contains(name) {
+                            unremoved += 1
+                        }
+                    }
+                case .identifier where !isTypeRoot:
+                    let name = token.unescaped()
+                    if members.contains(name), !localNames.contains(name), lastKeyword != "for" {
+                        if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
+                            lastToken.isOperator(".") || lastToken.isKeyword {
+                            break
+                        }
+                        if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index),
+                            nextToken.isIdentifierOrKeyword || nextToken == .delimiter(":") {
+                            break
+                        }
+                        removed += 1
+                        index += 1
+                        continue
+                    }
+                case .endOfScope:
+                    if let scope = scopeStack.last {
+                        assert(token.isEndOfScope(scope))
+                        scopeStack.removeLast()
+                    } else {
+                        assert(token.isEndOfScope(formatter.currentScope(at: index)!))
+                        index += 1
+                        return
+                    }
+                default:
+                    break
+                }
+                index += 1
+            }
+        }
+        func processFunction(at index: inout Int, localNames: Set<String>, members: Set<String>) {
+            var localNames = localNames
+            guard let startIndex = formatter.index(of: .startOfScope("("), after: index),
+                let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
+            // Get argument names
+            index = startIndex
+            while index < endIndex {
+                guard let externalNameIndex = formatter.index(of: .identifier, after: index),
+                    let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex)
+                else { break }
+                let token = formatter.tokens[nextIndex]
+                switch token {
+                case let .identifier(name) where name != "_":
+                    localNames.insert(token.unescaped())
+                case .delimiter(":"):
+                    let externalNameToken = formatter.tokens[externalNameIndex]
+                    if case let .identifier(name) = externalNameToken, name != "_" {
+                        localNames.insert(externalNameToken.unescaped())
+                    }
+                default:
+                    break
+                }
+                index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
+            }
+            guard let bodyStartIndex = formatter.index(after: endIndex, where: {
+                switch $0 {
+                case .startOfScope("{"): // What we're looking for
+                    return true
+                case .keyword("throws"),
+                     .keyword("rethrows"),
+                     .keyword("where"),
+                     .keyword("is"):
+                    return false // Keep looking
+                case .keyword:
+                    return true // Not valid between end of arguments and start of body
+                default:
+                    return false // Keep looking
+                }
+            }), formatter.tokens[bodyStartIndex] == .startOfScope("{") else {
+                return
+            }
+            index = bodyStartIndex + 1
+            processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+        }
+        var index = 0
+        processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false)
+        return removed >= unremoved
+    }()
+
     return options
 }

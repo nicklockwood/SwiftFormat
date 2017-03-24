@@ -188,16 +188,25 @@ public func offsetForToken(at index: Int, in tokens: [Token]) -> (line: Int, col
     return (line, column)
 }
 
-/// Process token error
-public func parsingError(for tokens: [Token]) -> FormatError? {
-    if let token = tokens.first(where: { $0.isError }), case let .error(string) = token {
+/// Process parsing errors
+public func parsingError(for tokens: [Token], options: FormatOptions) -> FormatError? {
+    if let index = tokens.index(where: {
+        guard options.fragment || !$0.isError else { return true }
+        guard !options.ignoreConflictMarkers, case let .operator(string, _) = $0 else { return false }
+        return string.hasPrefix("<<<<<") || string.hasPrefix("=====") || string.hasPrefix(">>>>>")
+    }) {
         let message: String
-        if string.isEmpty {
+        switch tokens[index] {
+        case .error(""):
             message = "unexpected end of file"
-        } else {
+        case let .error(string):
             message = "unexpected token \(string)"
+        case let .operator(string, _):
+            message = "found conflict marker \(string)"
+        default:
+            preconditionFailure()
         }
-        let (line, column) = offsetForToken(at: tokens.count - 1, in: tokens)
+        let (line, column) = offsetForToken(at: index, in: tokens)
         return .parsing("\(message) at \(line):\(column)")
     }
     return nil
@@ -217,7 +226,7 @@ public func applyRules(_ rules: [FormatRule],
                        with options: FormatOptions,
                        callback: ((Int, [Token]) -> Void)? = nil) throws {
     // Parse
-    if !options.fragment, let error = parsingError(for: tokens) {
+    if let error = parsingError(for: tokens, options: options) {
         throw error
     }
 

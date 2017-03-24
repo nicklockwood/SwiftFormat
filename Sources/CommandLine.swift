@@ -75,6 +75,7 @@ func printHelp() {
     print("--exclude          list of file or directory path(s) to ignore (comma-delimited)")
     print("--symlinks         how symlinks are handled. \"follow\" or \"ignore\" (default)")
     print("--fragment         input is part of a larger file. \"true\" or \"false\" (default)")
+    print("--conflictmarkers  merge conflict markers, either \"reject\" (default) or\"ignore\"")
     print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
     print("--verbose          display detailed formatting output")
     print("")
@@ -327,9 +328,6 @@ func processArguments(_ args: [String]) {
                     do {
                         if args["inferoptions"] != nil {
                             let tokens = tokenize(input)
-                            if let error = parsingError(for: tokens) {
-                                throw error
-                            }
                             let options = inferOptions(from: tokens)
                             print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
                         } else if let outputURL = outputURL {
@@ -435,9 +433,6 @@ func inferOptions(from inputURLs: [URL], excluding excludedURLs: [URL]) -> (Int,
                 throw FormatError.reading("failed to read file \(inputURL.path)")
             }
             let _tokens = tokenize(input)
-            if let error = parsingError(for: _tokens), case let .parsing(string) = error {
-                throw FormatError.parsing("\(string) in \(inputURL.path)")
-            }
             return {
                 filesParsed += 1
                 tokens += _tokens
@@ -727,6 +722,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["experimental"] = options.experimentalRules ? "enabled" : nil
             case "fragment":
                 args["fragment"] = options.fragment ? "true" : nil
+            case "ignoreConflictMarkers":
+                args["conflictmarkers"] = options.ignoreConflictMarkers ? "ignore" : nil
             default:
                 assertionFailure("Unknown option: \(label)")
             }
@@ -1003,6 +1000,16 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
+    try processOption("conflictmarkers", in: args, from: &arguments) {
+        switch $0.lowercased() {
+        case "true", "enabled":
+            options.fragment = true
+        case "false", "disabled":
+            options.fragment = false
+        default:
+            throw FormatError.options("")
+        }
+    }
     try processOption("stripunusedargs", in: args, from: &arguments) {
         guard let type = ArgumentType(rawValue: $0.lowercased()) else {
             throw FormatError.options("")
@@ -1077,6 +1084,7 @@ let commandLineArguments = [
     "output",
     "exclude",
     "fragment",
+    "conflictmarkers",
     "cache",
     "verbose",
     // Rules

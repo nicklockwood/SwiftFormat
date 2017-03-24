@@ -39,7 +39,7 @@ class CommandLineTests: XCTestCase {
     func testPreprocessArguments() {
         let input = ["", "foo", "bar", "-o", "baz", "-i", "4", "-l", "cr", "-s", "inline"]
         let output = ["0": "", "1": "foo", "2": "bar", "output": "baz", "indent": "4", "linebreaks": "cr", "semicolons": "inline"]
-        XCTAssertEqual(try! preprocessArguments(input, [
+        XCTAssertEqual(try preprocessArguments(input, [
             "output",
             "indent",
             "linebreaks",
@@ -50,7 +50,7 @@ class CommandLineTests: XCTestCase {
     func testEmptyArgsAreRecognized() {
         let input = ["", "--help", "--version"]
         let output = ["0": "", "help": "", "version": ""]
-        XCTAssertEqual(try! preprocessArguments(input, [
+        XCTAssertEqual(try preprocessArguments(input, [
             "help",
             "version",
         ]), output)

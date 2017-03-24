@@ -100,13 +100,43 @@ class SwiftFormatTests: XCTestCase {
     func testFormatReturnsInputWithNoRules() {
         let input = "foo ()  "
         let output = "foo ()  "
-        XCTAssertEqual(try! format(input, rules: []), output)
+        XCTAssertEqual(try format(input, rules: []), output)
     }
 
     func testFormatUsesDefaultRulesIfNoneSpecified() {
         let input = "foo ()  "
         let output = "foo()\n"
-        XCTAssertEqual(try! format(input), output)
+        XCTAssertEqual(try format(input), output)
+    }
+
+    // MARK: fragments
+
+    func testFormattingFailsForFragment() {
+        let input = "foo () {"
+        XCTAssertThrowsError(try format(input, rules: [])) {
+            XCTAssertEqual("\($0)", "unexpected end of file at 1:8")
+        }
+    }
+
+    func testFormattingSucceedsForFragmentWithOption() {
+        let input = "foo () {"
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try format(input, rules: [], options: options), input)
+    }
+
+    // MARK: conflict markers
+
+    func testFormattingFailsForConflict() {
+        let input = "foo () {\n<<<<<< old\n    bar()\n======\n    baz()\n>>>>>> new\n}"
+        XCTAssertThrowsError(try format(input, rules: [])) {
+            XCTAssertEqual("\($0)", "found conflict marker <<<<<< at 2:0")
+        }
+    }
+
+    func testFormattingSucceedsForConflictWithOption() {
+        let input = "foo () {\n<<<<<< old\n    bar()\n======\n    baz()\n>>>>>> new\n}"
+        let options = FormatOptions(ignoreConflictMarkers: true)
+        XCTAssertEqual(try format(input, rules: [], options: options), input)
     }
 
     // MARK: offsetForToken

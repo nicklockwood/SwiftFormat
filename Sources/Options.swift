@@ -136,6 +136,9 @@ public struct FormatOptions: CustomStringConvertible {
     public var experimentalRules: Bool
     public var fragment: Bool
 
+    // Doesn't really belong here, but hard to put elsewhere
+    public var ignoreConflictMarkers: Bool
+
     public init(indent: String = "    ",
                 linebreak: String = "\n",
                 allowInlineSemicolons: Bool = true,
@@ -160,7 +163,8 @@ public struct FormatOptions: CustomStringConvertible {
                 hoistPatternLet: Bool = true,
                 stripUnusedArguments: ArgumentType = .all,
                 experimentalRules: Bool = false,
-                fragment: Bool = false) {
+                fragment: Bool = false,
+                ignoreConflictMarkers: Bool = false) {
 
         self.indent = indent
         self.linebreak = linebreak
@@ -187,6 +191,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.stripUnusedArguments = stripUnusedArguments
         self.experimentalRules = experimentalRules
         self.fragment = fragment
+        self.ignoreConflictMarkers = ignoreConflictMarkers
     }
 
     public var description: String {

@@ -742,6 +742,106 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         return hoisted >= unhoisted
     }()
 
+    options.stripUnusedArguments = {
+        var functionArgsRemoved = 0, functionArgsKept = 0
+        var unnamedFunctionArgsRemoved = 0, unnamedFunctionArgsKept = 0
+
+        func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: Range<Int>) {
+            for i in range.lowerBound ..< range.upperBound {
+                let token = formatter.tokens[i]
+                if case .identifier = token, let index = argNames.index(of: token.unescaped()),
+                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
+                    (formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
+                        formatter.currentScope(at: i) == .startOfScope("[")) {
+                    argNames.remove(at: index)
+                    associatedData.remove(at: index)
+                    if argNames.isEmpty {
+                        break
+                    }
+                }
+            }
+        }
+        // Function arguments
+        formatter.forEachToken { i, token in
+            guard case let .keyword(keyword) = token, ["func", "init", "subscript"].contains(keyword),
+                let startIndex = formatter.index(of: .startOfScope("("), after: i),
+                let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
+            let isOperator = (keyword == "subscript") ||
+                (keyword == "func" && formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isOperator == true)
+            var index = startIndex
+            var argNames = [String]()
+            var nameIndices = [Int]()
+            while index < endIndex {
+                guard let externalNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
+                    if case .identifier = $0 { return true }
+                    // Probably an empty argument list
+                    return false
+                }) else { return }
+                guard let nextIndex =
+                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
+                let nextToken = formatter.tokens[nextIndex]
+                switch nextToken {
+                case let .identifier(name):
+                    if name == "_" {
+                        functionArgsRemoved += 1
+                        let externalNameToken = formatter.tokens[externalNameIndex]
+                        if case .identifier("_") = externalNameToken {
+                            unnamedFunctionArgsRemoved += 1
+                        }
+                    } else {
+                        argNames.append(nextToken.unescaped())
+                        nameIndices.append(externalNameIndex)
+                    }
+                case .delimiter(":"):
+                    let externalNameToken = formatter.tokens[externalNameIndex]
+                    if case .identifier("_") = externalNameToken {
+                        functionArgsRemoved += 1
+                        unnamedFunctionArgsRemoved += 1
+                    } else {
+                        argNames.append(externalNameToken.unescaped())
+                        nameIndices.append(externalNameIndex)
+                    }
+                default:
+                    return
+                }
+                index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
+            }
+            guard !argNames.isEmpty, let bodyStartIndex = formatter.index(after: endIndex, where: {
+                switch $0 {
+                case .startOfScope("{"): // What we're looking for
+                    return true
+                case .keyword("throws"),
+                     .keyword("rethrows"),
+                     .keyword("where"),
+                     .keyword("is"):
+                    return false // Keep looking
+                case .keyword:
+                    return true // Not valid between end of arguments and start of body
+                default:
+                    return false // Keep looking
+                }
+            }), formatter.tokens[bodyStartIndex] == .startOfScope("{"),
+                let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else {
+                return
+            }
+            removeUsed(from: &argNames, with: &nameIndices, in: bodyStartIndex + 1 ..< bodyEndIndex)
+            for index in nameIndices.reversed() {
+                functionArgsKept += 1
+                if case .identifier("_") = formatter.tokens[index] {
+                    unnamedFunctionArgsKept += 1
+                }
+            }
+        }
+        if functionArgsRemoved >= functionArgsKept {
+            return .all
+        } else if unnamedFunctionArgsRemoved >= unnamedFunctionArgsKept {
+            return .unnamedOnly
+        } else {
+            // TODO: infer not removing args at all
+            return .closureOnly
+        }
+    }()
+
     options.removeSelf = {
         var removed = 0, unremoved = 0
 

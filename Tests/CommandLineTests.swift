@@ -32,6 +32,12 @@
 import XCTest
 @testable import SwiftFormat
 
+private var readme: String = {
+    let directoryURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
+    let readmeURL = directoryURL.appendingPathComponent("README.md")
+    return try! String(contentsOf: readmeURL, encoding: .utf8)
+}()
+
 class CommandLineTests: XCTestCase {
 
     // MARK: arg preprocessor
@@ -100,6 +106,31 @@ class CommandLineTests: XCTestCase {
         }
     }
 
+    // MARK: pipe
+
+    func testPipe() {
+        CLI.print = { message, _ in
+            XCTAssertEqual(message, "func foo() {\n    bar()\n}\n")
+        }
+        var readCount = 0
+        CLI.readLine = {
+            readCount += 1
+            switch readCount {
+            case 1:
+                return "func foo()\n"
+            case 2:
+                return "{\n"
+            case 3:
+                return "bar()\n"
+            case 4:
+                return "}"
+            default:
+                return nil
+            }
+        }
+        processArguments([""])
+    }
+
     // MARK: help
 
     func testHelpLineLength() {
@@ -132,28 +163,43 @@ class CommandLineTests: XCTestCase {
         XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     }
 
-    // MARK: pipe
+    // MARK: documentation
 
-    func testPipe() {
-        CLI.print = { message, _ in
-            XCTAssertEqual(message, "func foo() {\n    bar()\n}\n")
+    func testAllRulesInReadme() {
+        for ruleName in FormatRules.byName.keys {
+            XCTAssertTrue(readme.contains("*\(ruleName)* - "), ruleName)
         }
-        var readCount = 0
-        CLI.readLine = {
-            readCount += 1
-            switch readCount {
-            case 1:
-                return "func foo()\n"
-            case 2:
-                return "{\n"
-            case 3:
-                return "bar()\n"
-            case 4:
-                return "}"
-            default:
-                return nil
-            }
+    }
+
+    func testNoInvalidRulesInReadme() {
+        let ruleNames = Set(FormatRules.byName.keys)
+        var range = readme.startIndex ..< readme.endIndex
+        while let match = readme.range(of: "\\*[a-zA-Z]+\\* - ", options: .regularExpression, range: range, locale: nil) {
+            let lower = readme.index(after: match.lowerBound)
+            let upper = readme.index(match.upperBound, offsetBy: -4)
+            let ruleName = readme[lower ..< upper]
+            XCTAssertTrue(ruleNames.contains(ruleName), ruleName)
+            range = match.upperBound ..< range.upperBound
         }
-        processArguments([""])
+    }
+
+    func testAllOptionsInReadme() {
+        var arguments = Set(formatArguments)
+        deprecatedArguments.forEach { arguments.remove($0) }
+        for argument in arguments {
+            XCTAssertTrue(readme.contains("`--\(argument)`"), argument)
+        }
+    }
+
+    func testNoInvalidOptionsInReadme() {
+        let arguments = Set(commandLineArguments)
+        var range = readme.startIndex ..< readme.endIndex
+        while let match = readme.range(of: "`--[a-zA-Z]+`", options: .regularExpression, range: range, locale: nil) {
+            let lower = readme.index(match.lowerBound, offsetBy: 3)
+            let upper = readme.index(before: match.upperBound)
+            let argument = readme[lower ..< upper]
+            XCTAssertTrue(arguments.contains(argument), argument)
+            range = match.upperBound ..< range.upperBound
+        }
     }
 }

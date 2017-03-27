@@ -44,8 +44,10 @@ public class FormatRules: NSObject {
         let methods = class_copyMethodList(object_getClass(FormatRules.self), &numberOfMethods)
         for i in 0 ..< Int(numberOfMethods) {
             if let selector = method_getName(methods?[i].unsafelyUnwrapped) {
-                let name = String(String(describing: selector).characters.dropLast())
-                rules[name] = { FormatRules.perform(selector, with: $0) }
+                let name = String(describing: selector)
+                if name.hasSuffix(":") {
+                    rules[String(name.characters.dropLast())] = { FormatRules.perform(selector, with: $0) }
+                }
             }
         }
         return rules

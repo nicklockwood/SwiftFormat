@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.28.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.1) (2017-03-28)
+
+- Fixed a bug where `redundantSelf` rule incorrectly removed `self` after a `repeat...while` loop
+- Fixed some bugs where `--self insert` option wrongly added `self` in places it shouldn't have
+- Improved the documentation of rules and options in the README file and command-line help
+
 ## [0.28.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.0) (2017-03-24)
 
 - Added `--self insert` option to optionally insert `self` when accessing member variables/functions

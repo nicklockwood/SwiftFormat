@@ -299,7 +299,7 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
     
     func foo(with `default`: Int) {}    -->    func foo(with default: Int) {}
 
-*redundantGet* - removes unnecessary `get { }`clause from inside read-only computed properties:
+*redundantGet* - removes unnecessary `get { }` clauses from inside read-only computed properties:
 
     var foo: Int {               var foo: Int {
         get {                        return 5
@@ -341,7 +341,7 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
     
 *redundantRawValues* - removes raw string values from enum cases when they match the case name:
 
-    enum Foo {                     enum Foo {
+    enum Foo: String {             enum Foo: String {
         case bar = "bar"     -->       case bar
         case baz = "quux"              case baz = "quux"
     }                              }
@@ -408,25 +408,25 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 
     switch(x){    -->   switch (x) {
 
-*spaceInsideBraces* - adds space inside { }. For example:
+*spaceInsideBraces* - adds space inside `{ ... }`. For example:
 
     foo.filter {return true}    -->    foo.filter { return true }
 
-*spaceInsideBrackets* - removes the space inside [ ]. For example:
+*spaceInsideBrackets* - removes the space inside `[ ... ]`. For example:
 
     [ 1, 2, 3 ]    -->    [1, 2, 3]
 
-*spaceInsideComments* - adds space inside /* ... */ comments and at the start of // comments. Configure using `--comments` option:
+*spaceInsideComments* - adds space inside `/* ... */` comments and at the start of `//` comments. Configure using `--comments` option:
 
     let a = 5 //assignment     -->   let a = 5 // assignment
     
     func foo() { /*no-op*/ }   -->   func foo() { /* no-op */ }
 
-*spaceInsideGenerics* - removes the space inside < >. For example:
+*spaceInsideGenerics* - removes the space inside `< ... >`. For example:
 
     Foo< Bar, Baz >    -->    Foo<Bar, Baz>
 
-*spaceInsideParens* - removes the space inside ( ). For example:
+*spaceInsideParens* - removes the space inside `( ... )`. For example:
 
     ( a, b )    -->    (a, b)
 
@@ -486,7 +486,7 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
         
     func quux() -> (Void)     -->    func quux() -> Void
 
-*wrapArguments* - wraps function arguments and array elements depending on the `--wraparguments`, and `--wrapelements` modes specified. E.g. for `beforefirst`:
+*wrapArguments* - wraps function arguments and array elements depending on the `--wraparguments`, and `--wrapelements` modes specified. E.g. for a value of `beforefirst`:
 
     func foo(bar: Int,                func foo(
              baz: String) {               bar: Int,
@@ -529,7 +529,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. After applying SwiftFormat, my code won't compile. Is that a bug?*
 
-> A. SwiftFormat should never break your code. Check the known issues below, and if it's not already listed there, please raise an issue on github: https://github.com/nicklockwood/SwiftFormat/issues
+> A. SwiftFormat should never break your code. Check the known issues below, and if it's not already listed there, or the suggested workaround doesn't solve your problem, please raise an issue on github: https://github.com/nicklockwood/SwiftFormat/issues
 
 
 *Q. Why did you write yet another Swift formatting tool?*
@@ -588,7 +588,7 @@ You can specify a custom cache file location by passing a path as the `--cache` 
 File headers
 -------------
 
-SwiftFormat can be configured to strip or replace the header comments in every file it processes with a template. The "header comment" is defined as a comment block that begins on the first nonblank line in the file, and is followed by at least one blank line. This may consist of a single comment body, or multiple comments on consecutive lines:
+SwiftFormat can be configured to strip or replace the header comments in every file with a template. The "header comment" is defined as a comment block that begins on the first nonblank line in the file, and is followed by at least one blank line. This may consist of a single comment body, or multiple comments on consecutive lines:
 
     // This is a header comment
     
@@ -601,7 +601,7 @@ For a single-line template: `--header "Copyright (c) 2017 Foobar Industries"`
 
 For a multiline comment, mark linebreaks with `\n`: `--header "First line\nSecond line"
 
-You can optionally include the comment syntax in the template if you wish: `--header "/*--- Header comment ---*/"`
+You can optionally include Swift comment markup in the template if you wish: `--header "/*--- Header comment ---*/"`
 
 If you do not include comment markup, each line in the template will be prepended with `//` and a single space.
 

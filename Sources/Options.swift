@@ -847,7 +847,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
             while let token = formatter.token(at: index) {
                 switch token {
-                case .identifier:
+                case .identifier where
+                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false:
                     let name = token.unescaped()
                     if name != "_" {
                         names.insert(name)

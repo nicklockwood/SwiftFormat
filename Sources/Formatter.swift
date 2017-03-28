@@ -170,6 +170,7 @@ public class Formatter: NSObject {
 
     /// Returns the index of the next token at the current scope that matches the block
     public func index(after index: Int, where matches: (Token) -> Bool) -> Int? {
+        guard index < tokens.count else { return nil }
         var scopeStack: [Token] = []
         for i in index + 1 ..< tokens.count {
             let token = tokens[i]
@@ -211,6 +212,7 @@ public class Formatter: NSObject {
 
     /// Returns the index of the previous token at the current scope that matches the block
     public func index(before index: Int, where matches: (Token) -> Bool) -> Int? {
+        guard index > 0 else { return nil }
         var linebreakEncountered = false
         var scopeStack: [Token] = []
         for i in (0 ..< index).reversed() {

@@ -1832,6 +1832,11 @@ extension FormatRules {
                     switch token {
                     case .keyword("class"), .keyword("static"):
                         classOrStatic = true
+                    case .keyword("repeat"):
+                        guard let nextIndex = formatter.index(of: .keyword("while"), after: i) else {
+                            return // error
+                        }
+                        i = nextIndex
                     case .keyword("if"), .keyword("while"):
                         guard let nextIndex = formatter.index(of: .startOfScope("{"), after: i) else {
                             return // error
@@ -1935,6 +1940,8 @@ extension FormatRules {
                         lastKeyword = token.string
                     }
                     classOrStatic = false
+                case .keyword("while") where lastKeyword == "repeat":
+                    lastKeyword = ""
                 case let .keyword(name):
                     lastKeyword = name
                 case .startOfScope("("):
@@ -1968,10 +1975,11 @@ extension FormatRules {
                     }
                     continue
                 case .startOfScope("{") where [
-                    "for", "where", "if", "else", "while",
-                    "repeat", "do", "switch",
+                    "for", "where", "if", "else", "while", "do", "switch",
                 ].contains(lastKeyword), .startOfScope(":"):
                     lastKeyword = ""
+                    fallthrough
+                case .startOfScope("{") where lastKeyword == "repeat":
                     index += 1
                     processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
                     continue

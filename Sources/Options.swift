@@ -893,6 +893,11 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     switch token {
                     case .keyword("class"), .keyword("static"):
                         classOrStatic = true
+                    case .keyword("repeat"):
+                        guard let nextIndex = formatter.index(of: .keyword("while"), after: i) else {
+                            return // error
+                        }
+                        i = nextIndex
                     case .keyword("if"), .keyword("while"):
                         guard let nextIndex = formatter.index(of: .startOfScope("{"), after: i) else {
                             return // error
@@ -996,6 +1001,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                         lastKeyword = token.string
                     }
                     classOrStatic = false
+                case .keyword("while") where lastKeyword == "repeat":
+                    lastKeyword = ""
                 case let .keyword(name):
                     lastKeyword = name
                 case .startOfScope("("):
@@ -1033,6 +1040,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     "repeat", "do", "switch",
                 ].contains(lastKeyword), .startOfScope(":"):
                     lastKeyword = ""
+                    fallthrough
+                case .startOfScope("{") where lastKeyword == "repeat":
                     index += 1
                     processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
                     continue

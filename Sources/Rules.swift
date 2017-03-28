@@ -1779,12 +1779,24 @@ extension FormatRules {
                         names.insert(name)
                     }
                     inner: while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
-                        switch formatter.tokens[nextIndex] {
+                        let token = formatter.tokens[nextIndex]
+                        switch token {
                         case .keyword("as"), .keyword("is"), .keyword("try"):
                             break
                         case .startOfScope("<"):
                             guard let endIndex = formatter.index(of: .endOfScope(">"), after: nextIndex) else {
-                                assertionFailure()
+                                return
+                            }
+                            index = endIndex
+                            continue
+                        case .startOfScope("["):
+                            guard let endIndex = formatter.index(of: .endOfScope("]"), after: nextIndex) else {
+                                return
+                            }
+                            index = endIndex
+                            continue
+                        case .startOfScope("("):
+                            guard let endIndex = formatter.index(of: .endOfScope(")"), after: nextIndex) else {
                                 return
                             }
                             index = endIndex

@@ -1779,25 +1779,12 @@ extension FormatRules {
                         names.insert(name)
                     }
                     inner: while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
-                        let token = formatter.tokens[nextIndex]
-                        switch token {
+                        switch formatter.tokens[nextIndex] {
                         case .keyword("as"), .keyword("is"), .keyword("try"):
                             break
-                        case .startOfScope("<"):
-                            guard let endIndex = formatter.index(of: .endOfScope(">"), after: nextIndex) else {
-                                return
-                            }
-                            index = endIndex
-                            continue
-                        case .startOfScope("["):
-                            guard let endIndex = formatter.index(of: .endOfScope("]"), after: nextIndex) else {
-                                return
-                            }
-                            index = endIndex
-                            continue
-                        case .startOfScope("("):
-                            guard let endIndex = formatter.index(of: .endOfScope(")"), after: nextIndex) else {
-                                return
+                        case .startOfScope("<"), .startOfScope("["), .startOfScope("("):
+                            guard let endIndex = formatter.endOfScope(at: nextIndex) else {
+                                return // error
                             }
                             index = endIndex
                             continue
@@ -1877,17 +1864,8 @@ extension FormatRules {
                             }
                         }
                     case .startOfScope:
-                        i += 1
                         classOrStatic = false
-                        var scopeStack = [token]
-                        while let scope = scopeStack.last, let nextToken = formatter.token(at: i) {
-                            if nextToken.isEndOfScope(scope) {
-                                scopeStack.removeLast()
-                            } else if nextToken.isStartOfScope {
-                                scopeStack.append(nextToken)
-                            }
-                            i += 1
-                        }
+                        i = formatter.endOfScope(at: i) ?? (formatter.tokens.count - 1)
                     case .endOfScope("}"):
                         i += 1
                         break outer
@@ -2039,16 +2017,7 @@ extension FormatRules {
                     processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
                     continue
                 case .startOfScope:
-                    index += 1
-                    scopeStack.append(token)
-                    while let scope = scopeStack.last, let nextToken = formatter.token(at: index) {
-                        if nextToken.isEndOfScope(scope) {
-                            scopeStack.removeLast()
-                        } else if nextToken.isStartOfScope {
-                            scopeStack.append(nextToken)
-                        }
-                        index += 1
-                    }
+                    index = (formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)) + 1
                     continue
                 case .identifier("self") where !isTypeRoot:
                     if formatter.options.removeSelf,
@@ -2438,7 +2407,7 @@ extension FormatRules {
             formatter.forEach(.startOfScope) { i, token in
                 guard scopes.contains(token.string),
                     let firstLinebreakIndex = formatter.index(of: .linebreak, after: i),
-                    var closingBraceIndex = formatter.index(after: i, where: { $0.isEndOfScope(token) }),
+                    var closingBraceIndex = formatter.endOfScope(at: i),
                     firstLinebreakIndex < closingBraceIndex else {
                     return
                 }

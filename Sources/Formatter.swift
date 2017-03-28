@@ -261,6 +261,23 @@ public class Formatter: NSObject {
         return last(.startOfScope, before: index)
     }
 
+    /// Returns the index of the ending token for the current scope
+    public func endOfScope(at index: Int) -> Int? {
+        let startIndex: Int
+        guard var startToken = token(at: index) else { return nil }
+        if case .startOfScope = startToken {
+            startIndex = index
+        } else if let index = self.index(of: .startOfScope, before: index) {
+            startToken = tokens[index]
+            startIndex = index
+        } else {
+            return nil
+        }
+        return self.index(after: startIndex) {
+            $0.isEndOfScope(startToken)
+        }
+    }
+
     /// Returns the index of the first token of the line containing the specified index
     public func startOfLine(at index: Int) -> Int {
         var index = index

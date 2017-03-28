@@ -506,9 +506,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
 
     func wrapMode(for scopes: String..., allowGrouping: Bool) -> WrapMode {
         var beforeFirst = 0, afterFirst = 0, neither = 0
-        formatter.forEachToken(where: { $0.isStartOfScope && scopes.contains($0.string) }) { i, token in
-            if let closingBraceIndex =
-                formatter.index(after: i, where: { $0.isEndOfScope(token) }),
+        formatter.forEachToken(where: { $0.isStartOfScope && scopes.contains($0.string) }) { i, _ in
+            if let closingBraceIndex = formatter.endOfScope(at: i),
                 let linebreakIndex = formatter.index(of: .linebreak, after: i),
                 linebreakIndex < closingBraceIndex,
                 let firstCommaIndex = formatter.index(of: .delimiter(","), after: i),
@@ -857,10 +856,9 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                         switch formatter.tokens[nextIndex] {
                         case .keyword("as"), .keyword("is"), .keyword("try"):
                             break
-                        case .startOfScope("<"):
-                            guard let endIndex = formatter.index(of: .endOfScope(">"), after: nextIndex) else {
-                                assertionFailure()
-                                return
+                        case .startOfScope("<"), .startOfScope("["), .startOfScope("("):
+                            guard let endIndex = formatter.endOfScope(at: nextIndex) else {
+                                return // error
                             }
                             index = endIndex
                             continue
@@ -927,17 +925,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                             }
                         }
                     case .startOfScope:
-                        i += 1
                         classOrStatic = false
-                        var scopeStack = [token]
-                        while let scope = scopeStack.last, let nextToken = formatter.token(at: i) {
-                            if nextToken.isEndOfScope(scope) {
-                                scopeStack.removeLast()
-                            } else if nextToken.isStartOfScope {
-                                scopeStack.append(nextToken)
-                            }
-                            i += 1
-                        }
+                        i = formatter.endOfScope(at: i) ?? (formatter.tokens.count - 1)
                     case .endOfScope("}"):
                         i += 1
                         break outer
@@ -1089,16 +1078,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
                     continue
                 case .startOfScope:
-                    index += 1
-                    scopeStack.append(token)
-                    while let scope = scopeStack.last, let nextToken = formatter.token(at: index) {
-                        if nextToken.isEndOfScope(scope) {
-                            scopeStack.removeLast()
-                        } else if nextToken.isStartOfScope {
-                            scopeStack.append(nextToken)
-                        }
-                        index += 1
-                    }
+                    index = (formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)) + 1
                     continue
                 case .identifier("self") where !isTypeRoot:
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
@@ -1186,7 +1166,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         }
         var index = 0
         processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false)
-        return removed >= unremoved
+        return removed > unremoved // if both zero, should be false
     }()
 
     return options

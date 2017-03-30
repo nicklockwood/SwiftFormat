@@ -1121,6 +1121,11 @@ public func tokenize(_ source: String) -> [Token] {
                     processToken()
                     return
                 case "case":
+                    if let scopeIndex = scopeIndexStack.last,
+                        let keywordIndex = index(of: .keyword, before: scopeIndex),
+                        case .keyword("enum") = tokens[keywordIndex] {
+                        break
+                    }
                     if let prevToken = prevToken {
                         switch prevToken {
                         case .keyword("if"),

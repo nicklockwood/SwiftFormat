@@ -1429,6 +1429,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testIndentEnumDeclarationInsideSwitchCase() {
+        let input = "switch x {\ncase y:\nenum Foo {\ncase z\n}\nbreak\ndefault: break\n}"
+        let output = "switch x {\ncase y:\n    enum Foo {\n        case z\n    }\n    break\ndefault: break\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // indent wrapped lines
 
     func testWrappedLineAfterOperator() {

@@ -2295,6 +2295,44 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testEnumDeclarationInsideSwitchCase() {
+        let input = "switch x {\ncase y:\nenum Foo {\ncase z\n}\nbreak\ndefault: break\n}"
+        let output: [Token] = [
+            .keyword("switch"),
+            .space(" "),
+            .identifier("x"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .endOfScope("case"),
+            .space(" "),
+            .identifier("y"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("enum"),
+            .space(" "),
+            .identifier("Foo"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .keyword("case"),
+            .space(" "),
+            .identifier("z"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("default"),
+            .startOfScope(":"),
+            .space(" "),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: dot prefix
 
     func testEnumValueInDictionaryLiteral() {

@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.28.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.2) (2017-03-30)
+
+- Fixed error when parsing an `enum` declaration inside a `switch` statement
+- Fixed incorrect removal of backticks when accessing an overloaded `Type` member
+
 ## [0.28.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.1) (2017-03-28)
 
 - Fixed a bug where `redundantSelf` rule incorrectly removed `self` after a `repeat...while` loop

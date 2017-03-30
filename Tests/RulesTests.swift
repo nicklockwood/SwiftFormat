@@ -3539,7 +3539,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testNoRemoveBackticksAroundType() {
+    func testRemoveBackticksAroundTypeAtRootLevel() {
+        let input = "enum `Type` {}"
+        let output = "enum Type {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveBackticksAroundTypeInsideType() {
         let input = "struct Foo {\n    enum `Type` {}\n}"
         let output = "struct Foo {\n    enum `Type` {}\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
@@ -3556,6 +3563,13 @@ class RulesTests: XCTestCase {
     func testNoRemoveBackticksAroundTypeProperty() {
         let input = "var type: Foo.`Type`"
         let output = "var type: Foo.`Type`"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveBackticksAroundTypePropertyInsideType() {
+        let input = "struct Foo {\n    enum `Type` {}\n}"
+        let output = "struct Foo {\n    enum `Type` {}\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

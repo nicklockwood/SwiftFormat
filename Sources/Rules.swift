@@ -1730,21 +1730,29 @@ extension FormatRules {
             let unescaped = token.unescaped()
             if !unescaped.isSwiftKeyword {
                 switch unescaped {
-                case "Self" where formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"):
-                    // TODO: check for other cases where it's safe to use unescaped
-                    break
-                case "Type" where formatter.currentScope(at: i) == .startOfScope("{"):
-                    // TODO: check it's actually inside a type declaration, otherwise backticks aren't needed
-                    break
-                case "super", "self", "nil", "true", "false", "Type":
+                case "super", "self", "nil", "true", "false":
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {
                         return
                     }
+                case "Self" where formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"):
+                    // TODO: check for other cases where it's safe to use unescaped
+                    break
+                case "Type":
+                    if formatter.currentScope(at: i) == .startOfScope("{") {
+                        // TODO: check it's actually inside a type declaration, otherwise backticks aren't needed
+                        return
+                    }
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {
+                        return
+                    }
+                    formatter.replaceToken(at: i, with: .identifier(unescaped))
+                    return
                 case "get", "set", "willSet", "didSet":
                     guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope("{") else {
                         return
                     }
-                    fallthrough
+                    formatter.replaceToken(at: i, with: .identifier(unescaped))
+                    return
                 default:
                     formatter.replaceToken(at: i, with: .identifier(unescaped))
                     return

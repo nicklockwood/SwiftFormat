@@ -96,6 +96,7 @@ func printHelp() {
 
     <file> <file> ...  one or more swift files or directory paths to be processed
 
+    --config           path to configuration file (ignores command line options)
     --inferoptions     instead of formatting input, use it to infer format options
     --output           output path for formatted file(s) (defaults to input path)
     --exclude          list of file or directory paths to ignore (comma-delimited)
@@ -264,7 +265,12 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // Options
-        let formatOptions = try formatOptionsFor(args) ?? .default
+        let formatOptions: FormatOptions
+        if let file = args["config"] {
+            formatOptions = try formatOptionsFromFile(file)
+        } else {
+            formatOptions = try formatOptionsFor(args) ?? .default
+        }
         let fileOptions = try fileOptionsFor(args)
 
         // Input path(s)
@@ -317,6 +323,9 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
 
         // Infer options
         if let arg = args["inferoptions"] {
+            guard args["config"] == nil else {
+                throw FormatError.options("--inferoptions option can't be used along with a config file")
+            }
             if !arg.isEmpty {
                 // inferoptions doesn't take an argument, so treat argument as another input path
                 inputURLs.append(expandPath(arg, in: directory))
@@ -850,6 +859,31 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
     return containsFormatOption ? options : nil
 }
 
+func formatOptionsFromFile(_ configPath: String) throws -> FormatOptions {
+    let configFileUrl = URL(fileURLWithPath: configPath)
+    guard let configFileContents = try? String(contentsOf: configFileUrl) else {
+        throw FormatError.reading("failed to read configuration file \(configFileUrl.path)")
+    }
+
+    let configLines = configFileContents.components(separatedBy: .newlines)
+    var args: [String: String] = [:]
+    _ = configLines
+        .filter({ !$0.isEmpty && !$0.hasPrefix("#") })
+        .map({ line in
+            let components = line.components(separatedBy: ":")
+            guard components.count == 2 else { return }
+            let key = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
+            let value = components[1].trimmingCharacters(in: .whitespacesAndNewlines)
+            args.updateValue(value, forKey: key)
+        })
+
+    do {
+        return try formatOptionsFor(args) ?? .default
+    } catch {
+        throw error
+    }
+}
+
 let fileArguments = [
     // File options
     "symlinks",
@@ -860,6 +894,7 @@ let internalArguments = FormatOptions.Descriptor.internal.map { $0.argumentName 
 
 let commandLineArguments = [
     // File options
+    "config",
     "inferoptions",
     "output",
     "exclude",

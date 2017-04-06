@@ -43,6 +43,7 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
         let sourceToFormat = invocation.buffer.completeBuffer
         let tokens = tokenize(sourceToFormat)
 
+        // TODO: Add support for config file here.
         // Infer format options
         var options = inferOptions(from: tokens)
         options.indent = indentationString(for: invocation.buffer)

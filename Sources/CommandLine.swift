@@ -83,6 +83,7 @@ func printHelp() {
     print("--conflictmarkers  merge conflict markers, either \"reject\" (default) or\"ignore\"")
     print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
     print("--verbose          display detailed formatting output and warnings/errors")
+    print("--config           path to configuration file (ignores command line options)")
     print("")
     print("swiftformat has a number of rules that can be enabled or disabled. by default")
     print("most rules are enabled. use --rules to display all enabled/disabled rules:")
@@ -141,8 +142,6 @@ func processArguments(_ args: [String]) {
     do {
         // Get options
         let args = try preprocessArguments(args, commandLineArguments)
-        let formatOptions = try formatOptionsFor(args)
-        let fileOptions = try fileOptionsFor(args)
 
         // Show help if requested specifically or if no arguments are passed
         if args["help"] != nil {
@@ -155,6 +154,17 @@ func processArguments(_ args: [String]) {
             print("swiftformat, version \(version)")
             return
         }
+
+        // Get format options
+        var formatOptions: FormatOptions
+        if let file = args["config"] {
+            formatOptions = try formatOptionsFromFile(file)
+        } else {
+            formatOptions = try formatOptionsFor(args)
+        }
+
+        // Get file options
+        let fileOptions = try fileOptionsFor(args)
 
         // Rules
         var rules = Set(FormatRules.byName.keys)
@@ -234,6 +244,11 @@ func processArguments(_ args: [String]) {
 
         // Infer options
         if let arg = args["inferoptions"] {
+
+            guard args["config"] == nil else {
+                throw FormatError.options("--inferoptions option can't be used along with a config file")
+            }
+
             if !arg.isEmpty {
                 // inferoptions doesn't take an argument, so treat argument as another input path
                 inputURLs.append(expandPath(arg))
@@ -779,6 +794,32 @@ func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
     return options
 }
 
+func formatOptionsFromFile(_ configPath: String) throws -> FormatOptions {
+
+    let configFileUrl = URL(fileURLWithPath: configPath)
+    guard let configFileContents = try? String(contentsOf: configFileUrl) else {
+        throw FormatError.reading("failed to read configuration file \(configFileUrl.path)")
+    }
+
+    let configLines = configFileContents.components(separatedBy: .newlines)
+    var args: [String: String] = [:]
+    _ = configLines
+        .filter({ !$0.isEmpty && !$0.isShellComment() })
+        .map({ line in
+            let components = line.components(separatedBy: ":")
+            guard components.count == 2 else { return }
+            let key = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
+            let value = components[1].trimmingCharacters(in: .whitespacesAndNewlines)
+            args.updateValue(value, forKey: key)
+        })
+
+    do {
+        return try formatOptionsFor(args)
+    } catch {
+        throw error
+    }
+}
+
 func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     var options = FormatOptions()
     var arguments = Set(formatArguments)
@@ -1109,6 +1150,7 @@ let commandLineArguments = [
     "conflictmarkers",
     "cache",
     "verbose",
+    "config",
     // Rules
     "disable",
     "enable",

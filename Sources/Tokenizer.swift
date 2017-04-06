@@ -65,6 +65,12 @@ public extension String {
             return isSwiftKeyword
         }
     }
+
+    func isShellComment() -> Bool {
+        let trimmedLine = self.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let firstCharacter = trimmedLine.characters.first else { return false }
+        return firstCharacter == "#"
+    }
 }
 
 /// Classes of token used for matching

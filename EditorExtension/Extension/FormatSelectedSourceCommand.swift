@@ -45,6 +45,7 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
             return completionHandler(FormatCommandError.noSelection)
         }
 
+        // TODO: Add support for config file here.
         // Inspect the whole file to infer the format options
         var options = inferOptions(from: tokenize(invocation.buffer.completeBuffer))
         options.indent = indentationString(for: invocation.buffer)

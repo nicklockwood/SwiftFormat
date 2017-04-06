@@ -1,0 +1,52 @@
+# Swift Format File
+
+# use allman indentation style. "true" or "false" (default)
+allman: false
+# binary grouping,threshold or "none", "ignore". default: 4,8
+binarygrouping: 4,8
+# commas in collection literals. "always" (default) or "inline"
+commas: always
+# indenting of comment bodies. "indent" (default) or "ignore"
+comments: indent
+# decimal grouping,threshold or "none", "ignore". default: 3,6
+decimalgrouping: 3,6
+# how empty values are represented. "void" (default) or "tuple"
+empty: void
+# experimental rules. "enabled" or "disabled" (default)
+experimental: disabled
+# case of 'e' in numbers. "lowercase" or "uppercase" (default)
+exponentcase: uppercase
+# header comments. "strip", "ignore", or the text you wish use
+header: ignore
+# hex grouping,threshold or "none", "ignore". default: 4,8
+hexgrouping: 4,8
+# casing for hex literals. "uppercase" (default) or "lowercase"
+hexliteralcase: uppercase
+# if indenting. "indent" (default), "noindent" or "outdent"
+ifdef: indent
+# number of spaces to indent, or "tab" to use tabs
+indent: 4
+# insert blank line after {. "enabled" (default) or "disabled"
+insertlines: enabled
+# linebreak character to use. "cr", "crlf" or "lf" (default)
+linebreaks: lf
+# octal grouping,threshold or "none", "ignore". default: 4,8
+octalgrouping: 4,8
+# let/var placement in patterns. "hoist" (default) or "inline"
+patternlet: hoist
+# spacing for ranges. "spaced" (default) or "nospace"
+ranges: spaced
+# remove blank line before }. "enabled" (default) or "disabled"
+removelines: enabled
+# allow semicolons. "never" or "inline" (default)
+semicolons: inline
+# use self for member variables. "remove" (default) or "insert"
+self: remove
+# "closure-only", "unnamed-only" or "always" (default)
+stripunusedargs: always
+# trim trailing space. "always" (default) or "nonblank-lines"
+trimwhitespace: always
+# wrap function args. "beforefirst", "afterfirst", "disabled"
+wraparguments: disabled
+# wrap array/dict. "beforefirst", "afterfirst", "disabled"
+wrapelements: disabled

@@ -2,6 +2,25 @@
 [![License](https://img.shields.io/badge/license-zlib-lightgrey.svg?maxAge=2592000)](https://opensource.org/licenses/Zlib)
 [![Twitter](https://img.shields.io/badge/twitter-@nicklockwood-blue.svg?maxAge=2592000)](http://twitter.com/nicklockwood)
 
+Table of Contents
+-----------------
+
+- [What?](#what-is-this)
+- [Why?](#why-would-i-want-to-do-that)
+- [How To Install](#how-do-i-install-it)
+  - [Install Via: Command-Line Tool](#command-line-tool)
+  - [Install Via: Xcode Source Editor Extension](#xcode-source-editor-extension)
+  - [Install Via: Xcode Build Phase](#xcode-build-phase)
+  - [Install Via: Git Pre-Commit Hook](#git-pre-commit-hook)
+- [How?](#so-what-does-swiftformat-actually-do)
+- [Options](#options)
+- [Rules](#rules)
+- [FAQ](#faq)
+- [Cache](#cache)
+- [File Headers](#file-headers)
+- [Known Issues](#known-issues)
+- [Credits](#credits)
+
 What is this?
 ----------------
 
@@ -183,323 +202,631 @@ To see exactly which rules were applied to a given file, you can use the `--verb
 
 Here are all the rules that SwiftFormat currently applies, and the effect that they have:
 
-*blankLinesAtEndOfScope* - removes trailing blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
+***blankLinesAtEndOfScope*** - removes trailing blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
 
-	func foo() {          func foo() {
-		//foo       -->       //foo
-						  }
-	}
-	
-	array = [             array = [
-		foo,                  foo,
-		bar,        -->       bar,
-		baz,                  baz,
-						  ]
-	]
-	
-	if x {                if x {         
-		print("x")            print("x")
+```diff
+- func foo() {
+-   // foo
+- 
+- }
 
-	} else if y {   -->   } else if y {
-		print("y")            print("y")
-						  }
-	}
++ func foo() {
++   // foo
++ }
+```
 
-*blankLinesBetweenScopes* - adds a blank line before each class, struct, enum, extension, protocol or function. This rule can be configured using the `--insertlines` option:
+```diff
+- array = [
+-   foo,
+-   bar,
+-   baz,
+- 
+- ]
 
-    func foo() {         func foo() {
-        //foo                //foo
-    }                    }
-    func bar() {         
-        //bar      -->   func bar() {
-    }                        //bar
-    var baz: Bool        }
-    var quux: Int
-                         var baz: Bool
-                         var quux: Int
++ array = [
++   foo,
++   bar,
++   baz,
++ ]
+```
+
+***blankLinesBetweenScopes*** - adds a blank line before each class, struct, enum, extension, protocol or function. This rule can be configured using the `--insertlines` option:
+
+```diff
+- func foo() {
+-   // foo
+- }
+- func bar() {
+-   // bar
+- }
+- var baz: Bool
+- var quux: Int
+
++ func foo() {
++   // foo
++ }
++ 
++ func bar() {
++   // bar
++ }
++ 
++ var baz: Bool
++ var quux: Int
+```
                          
-*braces* - implements K&R (default) or Allman-style indentation, depending on the `--allman` option:
+***braces*** - implements K&R (default) or Allman-style indentation, depending on the `--allman` option:
 
-    if x                 if x {
-    {                        //foo
-        //foo            } 
-    }              -->   else {
-    else                     //bar
-    {                    }
-        //bar
-    }
+```diff
+- if x
+- {
+-   // foo
+- }
+- else
+- {
+-   // bar
+- }
+
++ if x {
++   // foo
++ }
++ else {
++   // bar
++ }
+```
                          
-*consecutiveBlankLines* - reduces multiple sequential blank lines to a single blank line
+***consecutiveBlankLines*** - reduces multiple sequential blank lines to a single blank line
 
-*consecutiveSpaces* - reduces a sequence of spaces to a single space:
+```diff
+- func foo() {
+-   let x = "bar"
+- 
+- 
+-   print(x)
+- }
 
-    let  foo =  5    -->    let foo = 5
++ func foo() {
++   let x = "bar"
++ 
++   print(x)
++ }
+```
 
-*elseOnSameLine* - controls whether an `else`, `catch` or `while` after a `}` appears on the same line:
+***consecutiveSpaces*** - reduces a sequence of spaces to a single space:
 
-    if x {               if x {
-        //foo                //foo
-    }              -->   } else {
-    else {                   //bar
-        //bar            }
-    }
+```diff
+- let     foo = 5
++ let foo = 5
+```
 
-    do {                 do {
-        try foo              try foo
-    }              -->   } catch {
-    catch {                  //bar
-        //bar            }
-    }
-    
-    repeat {             repeat {
-        //foo                //foo
-    }              -->   } while x {
-    while x {                //bar
-        //bar            }
-    }
+***elseOnSameLine*** - controls whether an `else`, `catch` or `while` after a `}` appears on the same line:
+
+```diff
+- if x {
+-   // foo
+- }
+- else {
+-   // bar
+- }
+
++ if x {
++   // foo
++ } else {
++   // bar
++ }
+```
+```diff
+- do {
+-   // try foo
+- }
+- catch {
+-   // bar
+- }
+
++ do {
++   // try foo
++ } catch {
++   // bar
++ }
+```
+```diff
+- repeat {
+-   // foo
+- }
+- while {
+-   // bar
+- }
+
++ repeat {
++   // foo
++ } while {
++   // bar
++ }
+```
    
-*fileHeader* - remove or replace the comment header block that Xcode adds to the top of each file. By default this does nothing, but pass `--header strip` to the command-line to remove headers, or pass a format string such as `--header "Copyright MyCorp Inc 2015 - {year}"`:
+***fileHeader*** - allows the replacement or removal of Xcode's automated comment header blocks. By default, no action is taken, but passing one of the following arguments to the command-line will activate its function.
 
-*hoistPatternLet* - moves `let` or `var` bindings inside patterns to the start of the expression, or vice-versa. Use the `--patternlet` command-line option to toggle between hoisted and inline style.
+- `--header strip`: removes all automated comment header blocks
+- `--header "Copyright Text {year}"`: replaces all automated comment header blocks with the text specified
 
-    (let foo, let bar) = baz()                 -->    let (foo, bar) = baz()
+***hoistPatternLet*** - moves `let` or `var` bindings inside patterns to the start of the expression, or vice-versa. Use the `--patternlet` command-line option to toggle between hoisted and inline style.
 
-    if case .foo(let bar, let baz) = quux {           if case let .foo(bar, baz) = quux {
-        ...                                    -->        ...
-    }                                                 }
+```diff
+- (let foo, let bar) = baz()
++ let (foo, bar) = baz()
+```
 
-*indent* - adjusts leading whitespace based on scope and line wrapping. Uses either tabs or spaces, depending on the `--indent` option. May also affects comments and `#if ...` statements, depending on the configuration of the `--comments` and `--ifdef` options:
+```diff
+- if case .foo(let bar, let baz) = quux {
+-   // inner foo
+- }
 
-    if x {               if x {
-     //foo                   //foo
-    } else {       -->   } else {
-        //bar                //bar
-       }                 }
++ if case let .foo(bar, baz) = quux {
++   // inner foo
++ }
+```
+
+***indent*** - adjusts leading whitespace based on scope and line wrapping. Uses either tabs or spaces, depending on the `--indent` option. May also affects comments and `#if ...` statements, depending on the configuration of the `--comments` and `--ifdef` options:
+
+```diff
+- if x {
+-     // foo
+- } else {
+-     // bar
+-       }
+
++ if x {
++   // foo
++ } else {
++   // bar
++ }
+```
+
+```diff
+- let array = [
+-   foo,
+-     bar,
+-       baz
+-   ]
+
++ let array = [
++   foo,
++   bar,
++   baz
++ ]
+```
+
+***linebreakAtEndOfFile*** - ensures that the last line of the file is empty.
        
-    let array = [        let array = [
-           foo,              foo,
-          bar,     -->       bar,
-         baz                 baz
-       ]  				 ]
+***linebreaks*** - normalizes all linebreaks to use the same character, as specified in options (either CR, LF or CRLF, depending on the `--linebreaks` option).
 
-*linebreakAtEndOfFile* - ensures that the last line of the file is empty.
-       
-*linebreaks* - normalizes all linebreaks to use the same character, as specified in options (either CR, LF or CRLF, depending on the `--linebreaks` option).
+***numberFormatting*** - handles case and grouping of number literals, depending on the `--hexliteralcase`, `--exponentcase`, `--hexgrouping`, `--binarygrouping`, `--decimalgrouping`, and `--octalgrouping` options:
 
-*numberFormatting* - handles case and grouping of number literals, depending on the `--hexliteralcase`, `--exponentcase`, `--hexgrouping`, `--binarygrouping`, `--decimalgrouping`, and `--octalgrouping` options:
+```diff
+- let color = 0xFF77A5
++ let color = 0xff77a5
+```
 
-    let color = 0xFF77A5     -->    let color = 0xff77a5
-    let big = 123456.123     -->    let big = 123_456.123
+```diff
+- let big = 123456.123
++ let big = 123_456.123
+```
 
-*ranges* - controls the spacing around range operators. By default, a space is added, but this can be configured using the `--ranges` option.
+***ranges*** - controls the spacing around range operators. By default, a space is added, but this can be configured using the `--ranges` option.
 
-*redundantBackticks* - removes unnecessary escaping of identifiers using backticks, e.g. in cases where the escaped word is not a keyword, or is not ambiguous in that context:
+***redundantBackticks*** - removes unnecessary escaping of identifiers using backticks, e.g. in cases where the escaped word is not a keyword, or is not ambiguous in that context:
 
-    let `infix` = bar                   -->    let infix = bar
+```diff
+- let `infix` = bar
++ let infix = bar
+```
+
+```diff
+- func foo(with `default`: Int) {}
++ func foo(with default: Int) {}
+```
+
+***redundantGet*** - removes unnecessary `get { }` clauses from inside read-only computed properties:
+
+```diff
+- var foo: Int {
+-   get {
+-     return 5
+-   }
+- }
+
++ var foo: Int {
++   return 5
++ }
+```
+
+***redundantLet*** - removes redundant `let` or `var` from ignored variables in bindings (which is a warning in Xcode):
+
+```diff
+- let _ = resultIgnorableFunction()
++ _ = resultIgnorableFunction()
+```
+
+```diff
+- if case (let foo, let _) = bar {}
++ if case (let foo, _) = bar {}
+```
+
+```diff
+- if case .foo(var /* unused */ _) = bar {}
++ if case .foo( /* unused */ _) = bar {}
+```
+
+***redundantNilInit*** - removes unnecessary nil initialization of Optional vars (which are nil by default anyway):
+
+```diff
+- var foo: Int? = nil
++ var foo: Int?
+```
+
+```diff
+- let foo: Int? = nil
++ let foo: Int? = nil
+// doesn't apply to `let` properties
+```
+
+```diff
+- var foo: Int? = 0
++ var foo: Int? = 0
+// doesn't affect non-nil initialzation
+```
+
+***redundantParens*** - removes unnecessary parens from expressions and branch conditions:
+
+```diff
+- if (foo == true) {} 
++ if foo == true {}
+```
+
+```diff
+- while (i < bar.count) {}
++ while i < bar.count {}
+```
+
+```diff
+- queue.async() { ... }
++ queue.async { ... }
+```
+
+```diff
+- let foo: Int = ({ ... })()
++ let foo: Int = { ... }()
+```
     
-    func foo(with `default`: Int) {}    -->    func foo(with default: Int) {}
+***redundantPattern*** - removes redundant pattern matching arguments for ignored variables:
 
-*redundantGet* - removes unnecessary `get { }` clauses from inside read-only computed properties:
+```diff
+- if case .foo(_, _) = bar {}
++ if case .foo = bar {}
+```
 
-    var foo: Int {               var foo: Int {
-        get {                        return 5
-            return 5     -->     }
-        }
-    }
-
-*redundantLet* - removes redundant `let` or `var` from ignored variables in bindings (which is a warning in Xcode):
-
-    let _ = resultIgnorableFunction()           -->   _ = resultIgnorableFunction()
-
-    if case (let foo, let _) = bar {}           -->   if case (let foo, _) = bar {}
-
-    if case .foo(var /* unused */ _) = bar {}   -->   if case .foo( /* unused */ _) = bar {} 
-
-*redundantNilInit* - removes unnecessary nil initialization of Optional vars (which are nil by default anyway):
-
-    var foo: Int? = nil     -->   var foo: Int?
+```diff
+- let (_, _) = bar
++ let _ = bar
+```
     
-    let foo: Int? = nil     -->   let foo: Int? = nil // doesn't apply to `let` properties
+***redundantRawValues*** - removes raw string values from enum cases when they match the case name:
+
+```diff
+- enum Foo: String {
+-   case bar = "bar"
+-   case baz = "quux"
+- }
+
++ enum Foo: String {
++   case bar
++   case baz = "quux"
++ }
+```
+
+***redundantReturn*** - removes unnecessary `return` keyword from single-line closures:
+
+```diff
+- array.filter { return $0.foo == bar }
++ array.filter { $0.foo == bar }
+```
     
-    var foo: Int? = 0       -->   var foo: Int? = 0 // doesn't affect non-nil initialzation
+***redundantSelf*** - removes or inserts `self` prefix from class and instance member references, depending on the `--self` option:
 
-*redundantParens* - removes unnecessary parens from expressions and branch conditions:
+```diff
+- init(foo: Int, bar: Int) {
+-   self.foo = foo
+-   self.bar = bar
+-   self.baz = 42
+- }
 
-    if (foo == true) {}           -->    if foo == true {}
++ init(foo: Int, bar: Int) {
++   self.foo = foo
++   self.bar = bar
++   baz = 42
++ }  
+```
     
-    while (i < bar.count) {}      -->    while i < bar.count {}
+***redundantVoidReturnType*** - removes unnecessary `Void` return type from function declarations:
+
+```diff
+- func foo() -> Void {
+-   // returns nothing
+- }
+
++ func foo() {
++   // returns nothing
++ }
+```
     
-    queue.async() { ... }         -->    queue.async { ... }
-    
-    let foo: Int = ({ ... })()    -->    let foo: Int = { ... }()
-    
-*redundantPattern* - removes redundant pattern matching arguments for ignored variables:
+***semicolons*** - removes semicolons at the end of lines and optionally (depending on the `--semicolons` option) replaces inline semicolons with a linebreak:
 
-    if case .foo(_, _) = bar {}    -->    if case .foo = bar {}
-    
-    let (_, _) = bar               -->    let _ = bar
-    
-*redundantRawValues* - removes raw string values from enum cases when they match the case name:
+```diff
+- let foo = 5;
++ let foo = 5
+```
 
-    enum Foo: String {             enum Foo: String {
-        case bar = "bar"     -->       case bar
-        case baz = "quux"              case baz = "quux"
-    }                              }
-    
-*redundantReturn* - removes unnecessary `return` keyword from single-line closures:
+```diff
+- let foo = 5; let bar = 6
++ let foo = 5
++ let bar = 6
+```
 
-    array.filter { return $0.foo == bar }    -->    array.filter { $0.foo == bar }
-    
-*redundantSelf* - removes or inserts `self` prefix from class and instance member references, depending on the `--self` option:
+```diff
+- return;
+- goto(fail)
++ return;
++ goto(fail)
+```
 
-    init(foo: Int, bar: Int) {           init(foo: Int, bar: Int) {
-        self.foo = foo                       self.foo = foo
-        self.bar = bar            -->        self.bar = bar
-        self.baz = 42                        baz = 42
-    }                                    }
-    
-*redundantVoidReturnType* - removes unnecessary `Void` return type from function declarations:
+***spaceAroundBraces*** - contextually adds space around { }. For example:
 
-    func foo() -> Void {           func foo() {
-        // returns nothing   -->       // returns nothing
-    }                              }
-    
-*semicolons* - removes semicolons at the end of lines and optionally (depending on the `--semicolons` option) replaces inline semicolons with a linebreak:
+```diff
+- foo.filter{ return true }.map{ $0 }
++ foo.filter { return true }.map { $0 }
+```
 
-    let foo = 5;               -->   let foo = 5
-    
-    let foo = 5; let bar = 6   -->   let foo = 5
-                                     let bar = 6
-                                   
-    return;                    -->   return;
-    goto(fail)                       goto(fail)
+```diff
+- foo({})
++ foo({})
+```
 
-*spaceAroundBraces* - contextually adds space around { }. For example:
+***spaceAroundBrackets*** - contextually adjusts the space around [ ]. For example:
 
-    foo.filter{ return true }.map{ $0 }   -->   foo.filter { return true }.map { $0 }
-    
-    foo({})                               -->   foo({})
+```diff
+- foo as[String]
++ foo as [String]
+```
 
-*spaceAroundBrackets* - contextually adjusts the space around [ ]. For example:
+```diff
+- foo = bar [5]
++ foo = bar[5]
+```
 
-    foo as[String]   -->   foo as [String]
-    
-    foo = bar [5]    -->   foo = bar[5]
+***spaceAroundComments*** - adds space around /* ... */ comments and before // comments. Configure using `--comments` option:
 
-*spaceAroundComments* - adds space around /* ... */ comments and before // comments. Configure using `--comments` option:
+```diff
+- let a = 5// assignment
++ let a = 5 // assignment
+```
 
-    let a = 5// assignment     -->   let a = 5 // assignment
-    
-    func foo() {/* no-op */}   -->   func foo() { /* no-op */ }
+```diff
+- func foo() {/* no-op */}
++ func foo() { /* no-op */ }
+```
 
-*spaceAroundGenerics* - removes the space around < >. For example:
+***spaceAroundGenerics*** - removes the space around < >. For example:
 
-    Foo <Bar> ()    -->    Foo<Bar>()
+```diff
+- Foo <Bar> ()
++ Foo<Bar>()
+```
 
-*spaceAroundOperators* - contextually adjusts the space around infix operators:
+***spaceAroundOperators*** - contextually adjusts the space around infix operators:
 
-    foo . bar()   -->    foo.bar()
-    
-    a+b+c         -->    a + b + c
+```diff
+- foo . bar()
++ foo.bar()
+```
 
-*spaceAroundParens* - contextually adjusts the space around ( ). For example:
+```diff
+- a+b+c
++ a + b + c
+```
 
-    init (foo)    -->   init(foo)
+***spaceAroundParens*** - contextually adjusts the space around ( ). For example:
 
-    switch(x){    -->   switch (x) {
+```diff
+- init (foo)
++ init(foo)
+```
 
-*spaceInsideBraces* - adds space inside `{ ... }`. For example:
+```diff
+- switch(x){
++ switch (x) {
+```
 
-    foo.filter {return true}    -->    foo.filter { return true }
+***spaceInsideBraces*** - adds space inside `{ ... }`. For example:
 
-*spaceInsideBrackets* - removes the space inside `[ ... ]`. For example:
+```diff
+- foo.filter {return true}
++ foo.filter { return true }
+```
 
-    [ 1, 2, 3 ]    -->    [1, 2, 3]
+***spaceInsideBrackets*** - removes the space inside `[ ... ]`. For example:
 
-*spaceInsideComments* - adds space inside `/* ... */` comments and at the start of `//` comments. Configure using `--comments` option:
+```diff
+- [ 1, 2, 3 ]
++ [1, 2, 3]
+```
 
-    let a = 5 //assignment     -->   let a = 5 // assignment
-    
-    func foo() { /*no-op*/ }   -->   func foo() { /* no-op */ }
+***spaceInsideComments*** - adds space inside `/* ... */` comments and at the start of `//` comments. Configure using `--comments` option:
 
-*spaceInsideGenerics* - removes the space inside `< ... >`. For example:
+```diff
+- let a = 5 //assignment
++ let a = 5 // assignment
+```
 
-    Foo< Bar, Baz >    -->    Foo<Bar, Baz>
+```diff
+- func foo() { /*no-op*/ }
++ func foo() { /* no-op */ }
+```
 
-*spaceInsideParens* - removes the space inside `( ... )`. For example:
+***spaceInsideGenerics*** - removes the space inside `< ... >`. For example:
 
-    ( a, b )    -->    (a, b)
+```diff
+- Foo< Bar, Baz >
++ Foo<Bar, Baz>
+```
 
-*specifiers* - normalizes the order for access specifiers, and other property/function/class/etc. specifiers:
+***spaceInsideParens*** - removes the space inside `( ... )`. For example:
 
-    lazy public weak private(set) var foo: UIView?    -->    private(set) public lazy weak var foo: UIView?
-    
-    public override final func foo()                  -->    final override public func foo() 
-    
-    convenience private init()                        -->    private convenience init() 
+```diff
+- ( a, b )
++ (a, b)
+```
 
-*trailingClosures* - converts the last closure argument in a function call to trailing closure syntax where possible.
+***specifiers*** - normalizes the order for access specifiers, and other property/function/class/etc. specifiers:
 
-    DispatchQueue.main.async(execute: {          DispatchQueue.main.async {
-       // do stuff                        -->       // do stuff
-    })                                           }
+```diff
+- lazy public weak private(set) var foo: UIView? foo: UIView?
++ private(set) public lazy weak var
+```
+
+```diff
+- public override final func foo()
++ final override public func foo()
+```
+
+```diff
+- convenience private init() 
++ private convenience init()
+```
+
+***trailingClosures*** - converts the last closure argument in a function call to trailing closure syntax where possible.
+
+```diff
+- DispatchQueue.main.async(execute: {
+-   // do stuff
+- })
+
++ DispatchQueue.main.async {
++   // do stuff
++ }
+```
 
 **NOTE:** Occasionally, using trailing closure syntax makes a function call ambiguous, and the compiler can't understand it. Since SwiftFormat isn't able to detect this in all cases, the `trailingClosures` rule is disabled by default, and must be manually enabled by adding `--enable trailingClosures` to the command-line.
 
-*trailingCommas* - adds or removes trailing commas from the last item in an array or dictionary literal, depending on the `--commas` option:
+***trailingCommas*** - adds or removes trailing commas from the last item in an array or dictionary literal, depending on the `--commas` option:
 
-    let array = [        let array = [
-        foo,                 foo,
-        bar,       -->       bar,
-        baz                  baz,
-    ]                    ]
+```diff
+let array = [
+  foo,
+  bar,
+-   baz
+]
 
-*trailingSpace* - removes the whitespace at the end of a line. This rule can be configured using the `--trimwhitespace` option.
+let array = [
+  foo,
+  bar,
++   baz,
+]
+```
+
+***trailingSpace*** - removes the whitespace at the end of a line. This rule can be configured using the `--trimwhitespace` option.
  
-*todos* - ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon (else they're ignored by Xcode)
+***todos*** - ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon (else they're ignored by Xcode)
 
-    /* TODO fix this properly */    -->   /* TODO: fix this properly */
+```diff
+- /* TODO fix this properly */
++ /* TODO: fix this properly */
+```
+
+```diff
+- // MARK - UIScrollViewDelegate
++ // MARK: - UIScrollViewDelegate
+```
+
+***unusedArguments*** - marks unused arguments in functions and closures with `_` to make it clear they aren't used. Use the `--stripunusedargs` option to configure which argument types are affected.
+
+```diff
+- func foo(bar: Int, baz: String) {
+-   print("Hello \(baz)")
+- }
+
++ func foo(bar _: Int, baz: String) {
++   print("Hello \(baz)")
++ }
+```
+
+```diff
+- func foo(_ bar: Int) {
+-   // no-op
+- }
+
++ func foo(_: Int) {
++   // no-op
++ }
+```
+
+```diff
+- request { response, data in
+-   self.data += data
+- }
+
++ request { _, data in
++   self.data += data
++ }
+```
     
-    // MARK - UIScrollViewDelegate  -->   // MARK: - UIScrollViewDelegate
+***void*** - standardizes the use of `Void` vs an empty tuple `()` to represent empty argument lists and return values, depending on the `--empty` option:
 
-*unusedArguments* - marks unused arguments in functions and closures with `_` to make it clear they aren't used. Use the `--stripunusedargs` option to configure which argument types are affected.
+```diff
+- let foo: () -> (
++ let foo: () -> Void
+```
 
-    func foo(bar: Int, baz: String) {         func foo(bar _: Int, baz: String) {
-        print("Hello \(baz)")           -->       print("Hello \(baz)")
-    }                                         }
-    
-    func foo(_ bar: Int) {                    func foo(_: Int) {
-        // no-op                        -->       // no-op
-    }                                         }
+```diff
+- let bar: Void -> Void
++ let bar: () -> Void
+```
 
-    request { response, data in               request { _, data in
-        self.data += data               -->       self.data += data
-    }                                         }
-    
-*void* - standardizes the use of `Void` vs an empty tuple `()` to represent empty argument lists and return values, depending on the `--empty` option:
+```diff
+- let baz: (Void) -> Void
++ let baz: () -> Void
+```
 
-    let foo: () -> ()         -->    let foo: () -> Void
-    
-    let bar: Void -> Void     -->    let bar: () -> Void
-    
-    let baz: (Void) -> Void   -->    let baz: () -> Void
-        
-    func quux() -> (Void)     -->    func quux() -> Void
+```diff
+- func quux() -> (Void)
++ func quux() -> Void
+```
 
-*wrapArguments* - wraps function arguments and array elements depending on the `--wraparguments`, and `--wrapelements` modes specified. E.g. for a value of `beforefirst`:
+***wrapArguments*** - wraps function arguments and array elements depending on the `--wraparguments`, and `--wrapelements` modes specified. E.g. for a value of `beforefirst`:
 
-    func foo(bar: Int,                func foo(
-             baz: String) {               bar: Int,
-        ...                    -->        baz: String
-    }                                 ) {
-                                           ...
-                                      }
+```diff
+- func foo(bar: Int,
+-          baz: String) {
+-   // foo function
+- }
 
-    let foo = [bar,                   let foo = [
-               baz,            -->        bar,
-               quux]                      baz,
-                                          quux
-                                      ]
++ func foo(
++   bar: Int,
++   baz: String
++ ) {
++   // foo function
++ }
+```
+
+```diff
+- let foo = [bar,
+-            baz,
+-            quuz]
+
++ let foo = [
++   bar,
++   baz,
++   quuz
++ ]
+```
 
 
 FAQ

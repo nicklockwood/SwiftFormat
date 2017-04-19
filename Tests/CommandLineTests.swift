@@ -167,7 +167,7 @@ class CommandLineTests: XCTestCase {
 
     func testAllRulesInReadme() {
         for ruleName in FormatRules.byName.keys {
-            XCTAssertTrue(readme.contains("*\(ruleName)* - "), ruleName)
+            XCTAssertTrue(readme.contains("***\(ruleName)*** - "), ruleName)
         }
     }
 

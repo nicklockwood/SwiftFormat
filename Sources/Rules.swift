@@ -1996,7 +1996,9 @@ extension FormatRules {
                     lastKeyword = ""
                     var prevIndex = index - 1
                     while let token = formatter.token(at: prevIndex), token != .keyword("var") {
-                        if token == .operator("=", .infix) {
+                        if token == .operator("=", .infix) || (token.isLvalue && formatter.nextToken(after: prevIndex, where: {
+                            !$0.isSpaceOrCommentOrLinebreak && !$0.isStartOfScope
+                        }).map({ $0.isRvalue && !$0.isOperator(".") }) == true) {
                             // It's a closure
                             fallthrough
                         }

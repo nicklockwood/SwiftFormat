@@ -3795,6 +3795,34 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRemoveSelfFromOptionalComputedVar() {
+        let input = "var foo: Int? { return self.bar }"
+        let output = "var foo: Int? { return bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSelfFromNamespacedComputedVar() {
+        let input = "var foo: Swift.String { return self.bar }"
+        let output = "var foo: Swift.String { return bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSelfFromGenericComputedVar() {
+        let input = "var foo: Array<Int> { return self.bar }"
+        let output = "var foo: Array<Int> { return bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSelfFromComputedArrayVar() {
+        let input = "var foo: [Int] { return self.bar }"
+        let output = "var foo: [Int] { return bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testRemoveSelfFromVarSetter() {
         let input = "var foo: Int { didSet { self.bar() } }"
         let output = "var foo: Int { didSet { bar() } }"
@@ -3987,6 +4015,41 @@ class RulesTests: XCTestCase {
     func testNoRemoveSelfForVarInClosureAfterRepeatWhile() {
         let input = "class Foo {\n    let foo = 5\n    func bar() {\n        repeat {} while foo\n        ({ self.foo() })()\n    }\n}"
         let output = "class Foo {\n    let foo = 5\n    func bar() {\n        repeat {} while foo\n        ({ self.foo() })()\n    }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfInClosureAfterVar() {
+        let input = "var foo: String\nbar { self.baz() }"
+        let output = "var foo: String\nbar { self.baz() }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfInClosureAfterNamespacedVar() {
+        let input = "var foo: Swift.String\nbar { self.baz() }"
+        let output = "var foo: Swift.String\nbar { self.baz() }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfInClosureAfterOptionalVar() {
+        let input = "var foo: String?\nbar { self.baz() }"
+        let output = "var foo: String?\nbar { self.baz() }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfInClosureAfterGenericVar() {
+        let input = "var foo: Array<Int>\nbar { self.baz() }"
+        let output = "var foo: Array<Int>\nbar { self.baz() }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfInClosureAfterArray() {
+        let input = "var foo: [Int]\nbar { self.baz() }"
+        let output = "var foo: [Int]\nbar { self.baz() }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

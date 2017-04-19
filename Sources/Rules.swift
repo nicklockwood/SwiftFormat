@@ -2056,7 +2056,7 @@ extension FormatRules {
                     let name = token.unescaped()
                     if members.contains(name), !localNames.contains(name), lastKeyword != "for" {
                         if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                            lastToken.isOperator(".") || lastToken.isKeyword {
+                            lastToken.isOperator(".") {
                             break
                         }
                         if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index),

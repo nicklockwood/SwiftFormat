@@ -4064,6 +4064,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testInsertSelfAfterReturn() {
+        let input = "class Foo {\n    let foo: Int\n    func bar() -> Int { return foo }\n}"
+        let output = "class Foo {\n    let foo: Int\n    func bar() -> Int { return self.foo }\n}"
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     func testNoInterpretGenericTypesAsMembers() {
         let input = "class Foo {\n    let foo: Bar<Int, Int>\n    init() { self.foo = Int(5) }\n}"
         let output = "class Foo {\n    let foo: Bar<Int, Int>\n    init() { self.foo = Int(5) }\n}"

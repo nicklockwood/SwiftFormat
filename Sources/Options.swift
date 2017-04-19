@@ -1098,7 +1098,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                             $0 == .operator(".", .infix)
                         }), let token = formatter.next(.nonSpaceOrLinebreak, after: dotIndex), token.isIdentifier {
                         let name = token.unescaped()
-                        if members.contains(name), !localNames.contains(name) {
+                        if !localNames.contains(name) {
                             unremoved += 1
                         }
                     }
@@ -1106,7 +1106,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     let name = token.unescaped()
                     if members.contains(name), !localNames.contains(name), lastKeyword != "for" {
                         if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                            lastToken.isOperator(".") || lastToken.isKeyword {
+                            lastToken.isOperator(".") {
                             break
                         }
                         if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index),

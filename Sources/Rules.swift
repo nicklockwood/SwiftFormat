@@ -1914,7 +1914,8 @@ extension FormatRules {
                     }
                     classOrStatic = true
                 case .keyword("extension"), .keyword("struct"), .keyword("enum"):
-                    guard let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
+                    guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .keyword("import"),
+                        let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
                     index = scopeStart + 1
                     processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: true)
                 case .keyword("var"), .keyword("let"):

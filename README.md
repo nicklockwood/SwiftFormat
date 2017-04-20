@@ -1,25 +1,26 @@
-[![Travis](https://img.shields.io/travis/nicklockwood/SwiftFormat.svg?maxAge=2592000)](https://travis-ci.org/nicklockwood/SwiftFormat)
-[![License](https://img.shields.io/badge/license-zlib-lightgrey.svg?maxAge=2592000)](https://opensource.org/licenses/Zlib)
-[![Twitter](https://img.shields.io/badge/twitter-@nicklockwood-blue.svg?maxAge=2592000)](http://twitter.com/nicklockwood)
+[![Travis](https://img.shields.io/travis/nicklockwood/SwiftFormat.svg)](https://travis-ci.org/nicklockwood/SwiftFormat)
+[![License](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
+[![Twitter](https://img.shields.io/badge/twitter-@nicklockwood-blue.svg)](http://twitter.com/nicklockwood)
 
 Table of Contents
 -----------------
 
 - [What?](#what-is-this)
 - [Why?](#why-would-i-want-to-do-that)
-- [How To Install](#how-do-i-install-it)
-  - [Install Via: Command-Line Tool](#command-line-tool)
-  - [Install Via: Xcode Source Editor Extension](#xcode-source-editor-extension)
-  - [Install Via: Xcode Build Phase](#xcode-build-phase)
-  - [Install Via: Git Pre-Commit Hook](#git-pre-commit-hook)
-- [How?](#so-what-does-swiftformat-actually-do)
-- [Options](#options)
-- [Rules](#rules)
+- [How?](#how-do-i-install-it)
+    - [Command-Line Tool](#command-line-tool)
+    - [Xcode Source Editor Extension](#xcode-source-editor-extension)
+    - [Xcode Build Phase](#xcode-build-phase)
+    - [Git Pre-Commit Hook](#git-pre-commit-hook)
+- [Usage](#so-what-does-swiftformat-actually-do)
+    - [Options](#options)
+    - [Rules](#rules)
 - [FAQ](#faq)
 - [Cache](#cache)
 - [File Headers](#file-headers)
 - [Known Issues](#known-issues)
 - [Credits](#credits)
+
 
 What is this?
 ----------------
@@ -347,6 +348,8 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 
 - `--header strip`: removes all automated comment header blocks
 - `--header "Copyright Text {year}"`: replaces all automated comment header blocks with the text specified
+
+    See the File Headers section below for more information.
 
 ***hoistPatternLet*** - moves `let` or `var` bindings inside patterns to the start of the expression, or vice-versa. Use the `--patternlet` command-line option to toggle between hoisted and inline style.
 
@@ -942,9 +945,11 @@ And the `{year}` token will be automatically replaced by the current year whenev
 Known issues
 ---------------
 
+* When using the `--self remove` option, the `redundantSelf` rule will remove references to `self` in autoclosure arguments, which may change the meaning of the code, or cause it not to compile. Currently, the only workaround is to use `--disable redundantSelf` to disable the rule for any affected files. If you are using the `--self insert` option then this is not an issue.
+
 * The `--self insert` option can only recognize locally declared member variables, not ones inherited from superclasses or extensions, so it cannot insert missing `self` references for those. Note that the reverse is not true: `--self remove` should remove *all* redundant `self` references.
 
-* The `trailingClosures` rule will sometimes generate ambiguous code that breaks your program. For this reason, the rule is disabled by default. It is recommended that you apply this rule manually and review the changes, rather than including it in an automatic formatting process.
+* The `trailingClosures` rule will sometimes generate ambiguous code that breaks your program. For this reason, the rule is disabled by default. It is recommended that you apply this rule manually and review the changes, rather than including it in an automated formatting process.
 
 * Under rare circumstances, SwiftFormat may misinterpret a generic type followed by an `=` sign as a pair of `<` and `>=` expressions. For example, the following case would be handled incorrectly:
 

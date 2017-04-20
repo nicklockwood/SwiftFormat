@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.28.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.3) (2017-04-20)
+
+- Fixed bug where `self` was incorrectly removed in a closure immediately after a var declaration
+- Fixed incorrect insertion of `self` before a subscript `get` or `set` block
+- Fixed incorrect insertion of `self` after an `import class` statement
+- Fixed bug where `self` was not inserted after a return statement
+
 ## [0.28.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.2) (2017-03-30)
 
 - Fixed error when parsing an `enum` declaration inside a `switch` statement

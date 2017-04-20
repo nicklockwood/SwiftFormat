@@ -26,14 +26,12 @@ class PerformanceTests: XCTestCase {
 
     func testTokenizing() {
         let files = PerformanceTests.files
-        var tokens = [[Token]]()
+        var tokens = [Token]()
         measure {
-            tokens = files.map { tokenize($0) }
+            tokens = files.flatMap { tokenize($0) }
         }
-        for tokens in tokens {
-            if let token = tokens.last, case let .error(msg) = token {
-                XCTFail("error: \(msg)")
-            }
+        for case let .error(msg) in tokens {
+            XCTFail("error: \(msg)")
         }
     }
 

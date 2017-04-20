@@ -590,7 +590,7 @@ extension FormatRules {
                  .keyword("struct"),
                  .keyword("extension"),
                  .keyword("enum"):
-                isSpaceableScopeType = true
+                isSpaceableScopeType = (formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .keyword("import"))
             case .keyword("func"), .keyword("var"):
                 isSpaceableScopeType = false
             case .startOfScope("{"):
@@ -749,8 +749,11 @@ extension FormatRules {
                 switch token {
                 case let .keyword(string):
                     switch string {
-                    case "class", "struct", "enum", "protocol", "extension",
-                         "var", "func", "init", "subscript",
+                    case "class", "struct", "enum", "protocol", "var", "func":
+                        if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .keyword("import") {
+                            return false
+                        }
+                    case "extension", "init", "subscript",
                          "if", "switch", "guard", "else",
                          "for", "while", "repeat",
                          "do", "catch":
@@ -1434,6 +1437,7 @@ extension FormatRules {
                             .keyword("if"),
                             .keyword("case"),
                             .keyword("switch"),
+                            .keyword("import"),
                         ]
                         if disallowed.contains(prevKeyword) {
                             break

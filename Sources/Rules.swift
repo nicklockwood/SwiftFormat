@@ -1749,6 +1749,7 @@ extension FormatRules {
                     return
                 case "get", "set", "willSet", "didSet":
                     guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope("{") else {
+                        // TODO: check it's actually inside a var or subscript
                         return
                     }
                     formatter.replaceToken(at: i, with: .identifier(unescaped))
@@ -2005,36 +2006,7 @@ extension FormatRules {
                         }
                         prevIndex -= 1
                     }
-                    var foundAccessors = false
-                    while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
-                        [.identifier("get"), .identifier("set"), .identifier("didSet"), .identifier("willSet")].contains($0)
-                    }), let startIndex = formatter.index(of: .startOfScope("{"), after: nextIndex) {
-                        foundAccessors = true
-                        index = startIndex + 1
-                        var localNames = localNames
-                        if let parenStart = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex, if: {
-                            $0 == .startOfScope("(")
-                        }), let varToken = formatter.next(.identifier, after: parenStart) {
-                            localNames.insert(varToken.unescaped())
-                        } else {
-                            switch formatter.tokens[nextIndex].string {
-                            case "set", "willSet":
-                                localNames.insert("newValue")
-                            case "didSet":
-                                localNames.insert("oldValue")
-                            default:
-                                break
-                            }
-                        }
-                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
-                    }
-                    if foundAccessors {
-                        guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
-                        index = endIndex
-                        continue
-                    }
-                    index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    processAccessors(["get", "set", "willSet", "didSet"], at: &index, localNames: localNames, members: members)
                     continue
                 case .startOfScope:
                     index = (formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)) + 1
@@ -2048,7 +2020,7 @@ extension FormatRules {
                             $0.isIdentifier && !localNames.contains($0.unescaped())
                         }) {
                         if case let .identifier(name) = formatter.tokens[nextIndex], name.isContextualKeyword {
-                            // May not be necessary, but will be reverted by `redundantBackticks` rule if so
+                            // May be unnecessary, but will be reverted by `redundantBackticks` rule if so
                             formatter.replaceToken(at: nextIndex, with: .identifier("`\(name)`"))
                         }
                         formatter.removeTokens(inRange: index ..< nextIndex)
@@ -2083,7 +2055,40 @@ extension FormatRules {
                 index += 1
             }
         }
+        func processAccessors(_ names: [String], at index: inout Int, localNames: Set<String>, members: Set<String>) {
+            var foundAccessors = false
+            while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
+                if case let .identifier(name) = $0, names.contains(name) { return true } else { return false }
+            }), let startIndex = formatter.index(of: .startOfScope("{"), after: nextIndex) {
+                foundAccessors = true
+                index = startIndex + 1
+                var localNames = localNames
+                if let parenStart = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex, if: {
+                    $0 == .startOfScope("(")
+                }), let varToken = formatter.next(.identifier, after: parenStart) {
+                    localNames.insert(varToken.unescaped())
+                } else {
+                    switch formatter.tokens[nextIndex].string {
+                    case "set", "willSet":
+                        localNames.insert("newValue")
+                    case "didSet":
+                        localNames.insert("oldValue")
+                    default:
+                        break
+                    }
+                }
+                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+            }
+            if foundAccessors {
+                guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
+                index = endIndex
+            } else {
+                index += 1
+                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+            }
+        }
         func processFunction(at index: inout Int, localNames: Set<String>, members: Set<String>) {
+            let isSubscript = (formatter.tokens[index] == .keyword("subscript"))
             var localNames = localNames
             guard let startIndex = formatter.index(of: .startOfScope("("), after: index),
                 let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
@@ -2124,8 +2129,13 @@ extension FormatRules {
             }), formatter.tokens[bodyStartIndex] == .startOfScope("{") else {
                 return
             }
-            index = bodyStartIndex + 1
-            processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+            if isSubscript {
+                index = bodyStartIndex
+                processAccessors(["get", "set"], at: &index, localNames: localNames, members: members)
+            } else {
+                index = bodyStartIndex + 1
+                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+            }
         }
         var index = 0
         processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false)

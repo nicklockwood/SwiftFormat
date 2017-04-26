@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.28.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.4) (2017-04-26)
+
+- Fixed bug where `self` was incorrectly inserted inside an `if case let` condition
+- Fixed incorrect insertion of `self` inside a pattern let clause
+
 ## [0.28.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.3) (2017-04-20)
 
 - Fixed bug where `self` was incorrectly removed in a closure immediately after a var declaration

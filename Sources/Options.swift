@@ -863,7 +863,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                             }
                             index = endIndex
                             continue
-                        case .keyword, .startOfScope("{"):
+                        case .keyword, .startOfScope("{"), .startOfScope(":"):
                             return
                         case .delimiter(","):
                             index = nextIndex
@@ -930,6 +930,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                                 localNames.insert(nameToken.unescaped())
                             }
                         }
+                    case .startOfScope("("), .endOfScope(")"):
+                        break
                     case .startOfScope:
                         classOrStatic = false
                         i = formatter.endOfScope(at: i) ?? (formatter.tokens.count - 1)
@@ -1037,10 +1039,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                         processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
                     }
                     continue
-                case .startOfScope("{") where [
-                    "for", "where", "if", "else", "while",
-                    "repeat", "do", "switch",
-                ].contains(lastKeyword), .startOfScope(":"):
+                case .startOfScope(":"),
+                     .startOfScope("{") where ["for", "where", "if", "else", "while", "do", "switch"].contains(lastKeyword):
                     lastKeyword = ""
                     fallthrough
                 case .startOfScope("{") where lastKeyword == "repeat":

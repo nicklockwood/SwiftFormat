@@ -1076,7 +1076,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     }
                 case .identifier where !isTypeRoot:
                     let name = token.unescaped()
-                    if members.contains(name), !localNames.contains(name), lastKeyword != "for" {
+                    if members.contains(name), !localNames.contains(name), !["for", "var", "let"].contains(lastKeyword) {
                         if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
                             lastToken.isOperator(".") {
                             break

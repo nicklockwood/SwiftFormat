@@ -4168,6 +4168,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testNoInsertSelfInIfCaseLet() {
+        let input = "enum Foo {\n    case bar(Int)\n    var value: Int? {\n        if case let .bar(value) = self { return value }\n    }\n}"
+        let output = "enum Foo {\n    case bar(Int)\n    var value: Int? {\n        if case let .bar(value) = self { return value }\n    }\n}"
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // MARK: unusedArguments
 
     // closures

@@ -1438,6 +1438,7 @@ extension FormatRules {
                             .keyword("case"),
                             .keyword("switch"),
                             .keyword("import"),
+                            .keyword("where"),
                         ]
                         if disallowed.contains(prevKeyword) {
                             break

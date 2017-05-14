@@ -2886,6 +2886,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testParensForLoopWhereClauseMethodNotRemoved() {
+        let input = "for foo in foos where foo.method() { print(foo) }"
+        let output = "for foo in foos where foo.method() { print(foo) }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // around closure arguments
 
     func testSingleClosureArgumentUnwrapped() {

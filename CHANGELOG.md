@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.28.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.5) (2017-05-14)
+
+- The `redundantParens` rule no longer removes parens after a function call inside a `where` clause
+- Fixed bug where nil default value was incorrectly removed from lazy var declarations
+
 ## [0.28.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.4) (2017-04-26)
 
 - Fixed bug where `self` was incorrectly inserted inside an `if case let` condition

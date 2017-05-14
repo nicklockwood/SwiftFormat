@@ -3210,6 +3210,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveLazyVarNilInit() {
+        let input = "lazy var foo: Int? = nil"
+        let output = "lazy var foo: Int? = nil"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantNilInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveLazyPublicPrivateSetVarNilInit() {
+        let input = "lazy private(set) public var foo: Int? = nil"
+        let output = "lazy private(set) public var foo: Int? = nil"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantNilInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["specifiers"])), output + "\n")
+    }
+
     // MARK: redundantLet
 
     func testRemoveRedundantLet() {

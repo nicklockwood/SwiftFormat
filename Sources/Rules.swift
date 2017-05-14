@@ -1543,7 +1543,54 @@ extension FormatRules {
             }
         }
 
+        // Check specifiers don't include `lazy`
+        // TODO: reduce duplication between this and the `specifiers` rule
+        let specifiers = Set([
+            "private", "fileprivate", "internal", "public", "open",
+            "final", "dynamic", // Can't be both
+            "optional", "required",
+            "override",
+            "lazy",
+            "weak", "unowned",
+            "static", "class",
+            "mutating", "nonmutating",
+        ])
         formatter.forEach(.keyword("var")) { i, _ in
+            var index = i - 1
+            loop: while let token = formatter.token(at: index) {
+                switch token {
+                case .keyword("lazy"):
+                    return // Can't remove the init
+                case let .keyword(string), let .identifier(string):
+                    if !specifiers.contains(string) {
+                        break loop
+                    }
+                case .endOfScope(")"):
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("set") {
+                        // Skip tokens for entire private(set) expression
+                        while let token = formatter.token(at: index) {
+                            if case let .keyword(string) = token,
+                                ["private", "fileprivate", "public", "internal"].contains(string) {
+                                break
+                            }
+                            index -= 1
+                        }
+                    }
+                case .linebreak,
+                     .space,
+                     .commentBody,
+                     .startOfScope("//"),
+                     .startOfScope("/*"),
+                     .endOfScope("*/"):
+                    break
+                default:
+                    // Not a specifier
+                    break loop
+                }
+                index -= 1
+            }
+
+            // Find the nil
             search(from: i)
         }
     }

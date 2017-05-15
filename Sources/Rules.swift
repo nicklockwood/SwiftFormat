@@ -372,18 +372,22 @@ extension FormatRules {
                     formatter.insertSpace(" ", at: i)
                 }
             case .operator(_, .infix) where !token.isRangeOperator:
-                if (formatter.token(at: i + 1).map { !$0.isSpaceOrLinebreak }) ?? false {
+                if formatter.token(at: i + 1)?.isSpaceOrLinebreak == false {
                     formatter.insertToken(.space(" "), at: i + 1)
                 }
-                if (formatter.token(at: i - 1).map { !$0.isSpaceOrLinebreak }) ?? false {
+                if formatter.token(at: i - 1)?.isSpaceOrLinebreak == false {
                     formatter.insertToken(.space(" "), at: i)
                 }
             case .operator(_, .prefix):
-                if (formatter.token(at: i - 1).map { !$0.isSpaceOrLinebreak }) ?? false {
+                if let prevIndex = formatter.index(of: .nonSpace, before: i, if: {
+                    [.startOfScope("["), .startOfScope("("), .startOfScope("<")].contains($0)
+                }) {
+                    formatter.removeTokens(inRange: prevIndex + 1 ..< i)
+                } else if formatter.token(at: i - 1)?.isSpaceOrLinebreak == false {
                     formatter.insertToken(.space(" "), at: i)
                 }
             case .operator(_, .postfix):
-                if (formatter.token(at: i + 1).map { !$0.isSpaceOrLinebreak }) ?? false {
+                if formatter.token(at: i + 1)?.isSpaceOrLinebreak == false {
                     formatter.insertToken(.space(" "), at: i + 1)
                 }
             default:

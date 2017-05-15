@@ -778,6 +778,34 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoInsertSpaceBeforeNegativeIndex() {
+        let input = "foo[-bar]"
+        let output = "foo[-bar]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSpaceBeforeNegativeIndex() {
+        let input = "foo[ -bar]"
+        let output = "foo[-bar]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoInsertSpaceBeforeUnlabelledAddressArgument() {
+        let input = "foo(&bar)"
+        let output = "foo(&bar)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSpaceBeforeUnlabelledAddressArgument() {
+        let input = "foo( &bar, baz: &baz)"
+        let output = "foo(&bar, baz: &baz)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: spaceAroundComments
 
     func testSpaceAroundCommentInParens() {

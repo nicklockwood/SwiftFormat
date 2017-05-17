@@ -378,7 +378,7 @@ extension FormatRules {
                 if (formatter.token(at: i - 1).map { !$0.isSpaceOrLinebreak }) ?? false {
                     formatter.insertToken(.space(" "), at: i)
                 }
-            case .operator(_, .prefix):
+            case .operator(_, .prefix) where !token.isAmpersandOperator:
                 if (formatter.token(at: i - 1).map { !$0.isSpaceOrLinebreak }) ?? false {
                     formatter.insertToken(.space(" "), at: i)
                 }

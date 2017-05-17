@@ -778,6 +778,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testAmpersandArgumentFunctionExpression() {
+        let input = "foo(&r, green: &g, blue: &b, alpha: &a)"
+        let output = "foo(&r, green: &g, blue: &b, alpha: &a)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testBitwiseAndExpression() {
+        let input = "c =a&b"
+        let output = "c = a & b"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testMultiplyIgnoreOverflowExpression() {
+        let input = "c = a&*b"
+        let output = "c = a &* b"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: spaceAroundComments
 
     func testSpaceAroundCommentInParens() {

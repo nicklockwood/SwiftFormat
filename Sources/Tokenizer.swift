@@ -306,6 +306,7 @@ public enum Token: Equatable {
 
     public var isOperator: Bool { return hasType(of: .operator("", .none)) }
     public var isUnwrapOperator: Bool { return isOperator("?") || isOperator("!") }
+    public var isAmpersandOperator: Bool { return isOperator("&") }
     public var isRangeOperator: Bool { return isOperator("...") || isOperator("..<") }
     public var isNumber: Bool { return hasType(of: .number("", .integer)) }
     public var isError: Bool { return hasType(of: .error("")) }

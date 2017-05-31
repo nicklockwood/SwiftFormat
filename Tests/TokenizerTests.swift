@@ -1784,6 +1784,56 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testGenericsWithWhereClause() {
+        let input = "<A where A.B == C>"
+        let output: [Token] = [
+            .startOfScope("<"),
+            .identifier("A"),
+            .space(" "),
+            .keyword("where"),
+            .space(" "),
+            .identifier("A"),
+            .operator(".", .infix),
+            .identifier("B"),
+            .space(" "),
+            .operator("==", .infix),
+            .space(" "),
+            .identifier("C"),
+            .endOfScope(">"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testIfLessThanIfGreaterThan() {
+        let input = "if x < 0 {}\nif y > (0) {}"
+        let output: [Token] = [
+            .keyword("if"),
+            .space(" "),
+            .identifier("x"),
+            .space(" "),
+            .operator("<", .infix),
+            .space(" "),
+            .number("0", .integer),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+            .linebreak("\n"),
+            .keyword("if"),
+            .space(" "),
+            .identifier("y"),
+            .space(" "),
+            .operator(">", .infix),
+            .space(" "),
+            .startOfScope("("),
+            .number("0", .integer),
+            .endOfScope(")"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: optionals
 
     func testAssignOptional() {

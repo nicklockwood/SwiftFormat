@@ -1241,8 +1241,10 @@ public func tokenize(_ source: String) -> [Token] {
                         // Not a generic scope
                         convertOpeningChevronToSymbol(at: scopeIndex)
                     }
-                case .endOfScope:
-                    // If we encountered a closing scope token that wasn't >
+                case .keyword("where"):
+                    break
+                case .endOfScope, .keyword:
+                    // If we encountered a keyword, or closing scope token that wasn't >
                     // then the opening < must have been an operator after all
                     convertOpeningChevronToSymbol(at: scopeIndex)
                     processToken()

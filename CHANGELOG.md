@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.28.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.6) (2017-05-31)
+
+- Fixed bug where consecutive `if` statements containing `<` and `>` were misidentified as a generic argument list
+- Fixed space being removed between a closure capture list and subsequent arguments under some circumstances
+- Fixed extra space added before prefix operators inside brackets or parens
+
 ## [0.28.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.5) (2017-05-14)
 
 - The `redundantParens` rule no longer removes parens after a function call inside a `where` clause

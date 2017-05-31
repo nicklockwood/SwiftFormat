@@ -111,8 +111,10 @@ extension FormatRules {
             assert(formatter.tokens[i] == .endOfScope("]"))
             guard formatter.lastToken(before: i + 1, where: {
                 !$0.isSpaceOrCommentOrLinebreak && $0 != .endOfScope("]") }) == .startOfScope("{"),
-                formatter.nextToken(after: i, where: {
-                    !$0.isSpaceOrCommentOrLinebreak && $0 != .startOfScope("(") }) == .keyword("in")
+                let nextToken = formatter.nextToken(after: i, where: {
+                    !$0.isSpaceOrCommentOrLinebreak && $0 != .startOfScope("(")
+                }),
+                [.operator("->", .infix), .keyword("throws"), .keyword("rethrows"), .keyword("in")].contains(nextToken)
             else { return false }
             return true
         }

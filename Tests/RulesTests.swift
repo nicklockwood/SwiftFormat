@@ -184,12 +184,40 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
+    func testNoRemoveSpaceBetweenCaptureListAndArguments2() {
+        let input = "{ [weak self] () -> Void in }"
+        let output = "{ [weak self] () -> Void in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSpaceBetweenCaptureListAndArguments3() {
+        let input = "{ [weak self] () throws -> Void in }"
+        let output = "{ [weak self] () throws -> Void in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testAddSpaceBetweenCaptureListAndArguments() {
         let input = "{ [weak self](foo) in print(foo) }"
         let output = "{ [weak self] (foo) in print(foo) }"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundParens]), output)
         let rules = FormatRules.all(except: ["redundantParens"])
         XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
+    }
+
+    func testAddSpaceBetweenBetweenCaptureListAndArguments2() {
+        let input = "{ [weak self]() -> Void in }"
+        let output = "{ [weak self] () -> Void in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testAddSpaceBetweenBetweenCaptureListAndArguments3() {
+        let input = "{ [weak self]() throws -> Void in }"
+        let output = "{ [weak self] () throws -> Void in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testSpaceBetweenClosingParenAndOpenBrace() {

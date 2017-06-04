@@ -42,7 +42,7 @@ enum OutputType {
 }
 
 struct CLI {
-    static var print: (String, OutputType) -> Void = { _ in
+    static var print: (String, OutputType) -> Void = { _, _ in
         fatalError("No print hook set")
     }
 
@@ -261,7 +261,7 @@ func processArguments(_ args: [String]) {
                 }
                 print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)")
                 print("")
-                print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
+                print(commandLineArguments(for: options).map({ "--\($0.key) \($0.value)" }).joined(separator: " "))
                 print("")
                 return
             }
@@ -338,7 +338,7 @@ func processArguments(_ args: [String]) {
                         if args["inferoptions"] != nil {
                             let tokens = tokenize(input)
                             let options = inferOptions(from: tokens)
-                            print(commandLineArguments(for: options).map({ "--\($0) \($1)" }).joined(separator: " "))
+                            print(commandLineArguments(for: options).map({ "--\($0.key) \($0.value)" }).joined(separator: " "))
                         } else if let outputURL = outputURL {
                             print("running swiftformat...")
                             let output = try format(

@@ -3072,6 +3072,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testParensNotRemovedAroundTupleArgument() {
+        let input = "foo((bar, baz))"
+        let output = "foo((bar, baz))"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // closure expression
 
     func testParensAroundClosureRemoved() {

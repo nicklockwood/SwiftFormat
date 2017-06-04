@@ -83,7 +83,7 @@ extension FormatRules {
     /// * There is space between a closing paren and following identifier
     /// * There is space between a closing paren and following opening brace
     /// * There is no space between a closing paren and following opening square bracket
-    public class func spaceAroundParens(_ formatter: Formatter) {
+    @objc public class func spaceAroundParens(_ formatter: Formatter) {
 
         func spaceAfter(_ keyword: String, index: Int) -> Bool {
             switch keyword {
@@ -172,7 +172,7 @@ extension FormatRules {
     }
 
     /// Remove space immediately inside parens
-    public class func spaceInsideParens(_ formatter: Formatter) {
+    @objc public class func spaceInsideParens(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("(")) { i, _ in
             if formatter.token(at: i + 1)?.isSpace == true &&
                 formatter.token(at: i + 2)?.isComment == false {
@@ -194,7 +194,7 @@ extension FormatRules {
     /// * There is no space between an opening bracket and the preceding closing square bracket
     /// * There is space between a closing bracket and following identifier
     /// * There is space between a closing bracket and following opening brace
-    public class func spaceAroundBrackets(_ formatter: Formatter) {
+    @objc public class func spaceAroundBrackets(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("[")) { i, token in
             guard let prevToken = formatter.token(at: i - 1) else {
                 return
@@ -231,7 +231,7 @@ extension FormatRules {
     }
 
     /// Remove space immediately inside square brackets
-    public class func spaceInsideBrackets(_ formatter: Formatter) {
+    @objc public class func spaceInsideBrackets(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("[")) { i, _ in
             if formatter.token(at: i + 1)?.isSpace == true {
                 formatter.removeToken(at: i + 1)
@@ -247,7 +247,7 @@ extension FormatRules {
 
     /// Ensure that there is space between an opening brace and the preceding
     /// identifier, and between a closing brace and the following identifier.
-    public class func spaceAroundBraces(_ formatter: Formatter) {
+    @objc public class func spaceAroundBraces(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("{")) { i, _ in
             if let prevToken = formatter.token(at: i - 1) {
                 switch prevToken {
@@ -273,7 +273,7 @@ extension FormatRules {
     }
 
     /// Ensure that there is space immediately inside braces
-    public class func spaceInsideBraces(_ formatter: Formatter) {
+    @objc public class func spaceInsideBraces(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("{")) { i, _ in
             if let nextToken = formatter.token(at: i + 1) {
                 if nextToken.isSpace {
@@ -294,7 +294,7 @@ extension FormatRules {
     }
 
     /// Ensure there is no space between an opening chevron and the preceding identifier
-    public class func spaceAroundGenerics(_ formatter: Formatter) {
+    @objc public class func spaceAroundGenerics(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("<")) { i, _ in
             if formatter.token(at: i - 1)?.isSpace == true &&
                 formatter.token(at: i - 2)?.isIdentifierOrKeyword == true {
@@ -304,7 +304,7 @@ extension FormatRules {
     }
 
     /// Remove space immediately inside chevrons
-    public class func spaceInsideGenerics(_ formatter: Formatter) {
+    @objc public class func spaceInsideGenerics(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("<")) { i, _ in
             if formatter.token(at: i + 1)?.isSpace == true {
                 formatter.removeToken(at: i + 1)
@@ -324,7 +324,7 @@ extension FormatRules {
     /// * Delimiters, such as commas and colons, are consistently followed by a
     ///   single space, unless it appears at the end of a line, and is not
     ///   preceded by a space, unless it appears at the beginning of a line.
-    public class func spaceAroundOperators(_ formatter: Formatter) {
+    @objc public class func spaceAroundOperators(_ formatter: Formatter) {
         formatter.forEachToken { i, token in
             switch token {
             case .delimiter(":"):
@@ -399,7 +399,7 @@ extension FormatRules {
     }
 
     /// Add space around comments, except at the start or end of a line
-    public class func spaceAroundComments(_ formatter: Formatter) {
+    @objc public class func spaceAroundComments(_ formatter: Formatter) {
         formatter.forEachToken { i, token in
             switch token {
             case .startOfScope("/*"), .startOfScope("//"):
@@ -424,7 +424,7 @@ extension FormatRules {
 
     /// Add space inside comments, taking care not to mangle headerdoc or
     /// carefully preformatted comments, such as star boxes, etc.
-    public class func spaceInsideComments(_ formatter: Formatter) {
+    @objc public class func spaceInsideComments(_ formatter: Formatter) {
         guard formatter.options.indentComments else { return }
         formatter.forEach(.startOfScope("//")) { i, _ in
             guard let nextToken = formatter.token(at: i + 1), case let .commentBody(string) = nextToken else { return }
@@ -461,7 +461,7 @@ extension FormatRules {
     }
 
     /// Adds or removes the space around range operators
-    public class func ranges(_ formatter: Formatter) {
+    @objc public class func ranges(_ formatter: Formatter) {
         formatter.forEach(.rangeOperator) { i, _ in
             if !formatter.options.spaceAroundRangeOperators {
                 if formatter.token(at: i + 1)?.isSpace == true {
@@ -486,7 +486,7 @@ extension FormatRules {
     /// Collapse all consecutive space characters to a single space, except at
     /// the start of a line or inside a comment or string, as these have no semantic
     /// meaning and lead to noise in commits.
-    public class func consecutiveSpaces(_ formatter: Formatter) {
+    @objc public class func consecutiveSpaces(_ formatter: Formatter) {
         formatter.forEach(.space) { i, token in
             if let prevToken = formatter.token(at: i - 1), !prevToken.isLinebreak {
                 switch token {
@@ -508,7 +508,7 @@ extension FormatRules {
 
     /// Remove trailing space from the end of lines, as it has no semantic
     /// meaning and leads to noise in commits.
-    public class func trailingSpace(_ formatter: Formatter) {
+    @objc public class func trailingSpace(_ formatter: Formatter) {
         var wasLinebreak = true
         for i in formatter.tokens.indices.reversed() {
             let token = formatter.tokens[i]
@@ -525,7 +525,7 @@ extension FormatRules {
     }
 
     /// Collapse all consecutive blank lines into a single blank line
-    public class func consecutiveBlankLines(_ formatter: Formatter) {
+    @objc public class func consecutiveBlankLines(_ formatter: Formatter) {
         var linebreakCount = 0
         var lastTokenWasSpace = false
         formatter.forEachToken { i, token in
@@ -553,7 +553,7 @@ extension FormatRules {
 
     /// Remove blank lines immediately before a closing brace, bracket, paren or chevron,
     /// unless it's followed by more code on the same line (e.g. } else { )
-    public class func blankLinesAtEndOfScope(_ formatter: Formatter) {
+    @objc public class func blankLinesAtEndOfScope(_ formatter: Formatter) {
         guard formatter.options.removeBlankLines else { return }
         formatter.forEachToken { i, token in
             guard [.endOfScope("}"), .endOfScope(")"), .endOfScope("]"), .endOfScope(">")].contains(token),
@@ -586,7 +586,7 @@ extension FormatRules {
     }
 
     /// Adds a blank line immediately after a closing brace, unless followed by another closing brace
-    public class func blankLinesBetweenScopes(_ formatter: Formatter) {
+    @objc public class func blankLinesBetweenScopes(_ formatter: Formatter) {
         guard formatter.options.insertBlankLines else { return }
         var spaceableScopeStack = [true]
         var isSpaceableScopeType = false
@@ -652,7 +652,7 @@ extension FormatRules {
 
     /// Always end file with a linebreak, to avoid incompatibility with certain unix tools:
     /// http://stackoverflow.com/questions/2287967/why-is-it-recommended-to-have-empty-line-in-the-end-of-file
-    public class func linebreakAtEndOfFile(_ formatter: Formatter) {
+    @objc public class func linebreakAtEndOfFile(_ formatter: Formatter) {
         guard !formatter.options.fragment else { return }
         if formatter.last(.nonSpace, before: formatter.tokens.count, if: { !$0.isLinebreak && !$0.isError }) != nil {
             formatter.insertToken(.linebreak(formatter.options.linebreak), at: formatter.tokens.count)
@@ -662,7 +662,7 @@ extension FormatRules {
     /// Indent code according to standard scope indenting rules.
     /// The type (tab or space) and level (2 spaces, 4 spaces, etc.) of the
     /// indenting can be configured with the `options` parameter of the formatter.
-    public class func indent(_ formatter: Formatter) {
+    @objc public class func indent(_ formatter: Formatter) {
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []
         var lastNonSpaceOrLinebreakIndex = -1
@@ -1013,7 +1013,7 @@ extension FormatRules {
     }
 
     // Implement brace-wrapping rules
-    public class func braces(_ formatter: Formatter) {
+    @objc public class func braces(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("{")) { i, token in
             // Check this isn't an inline block
             guard let nextLinebreakIndex = formatter.index(of: .linebreak, after: i),
@@ -1070,7 +1070,7 @@ extension FormatRules {
     /// Ensure that an `else` statement following `if { ... }` appears on the same line
     /// as the closing brace. This has no effect on the `else` part of a `guard` statement.
     /// Also applies to `catch` after `try` and `while` after `repeat`.
-    public class func elseOnSameLine(_ formatter: Formatter) {
+    @objc public class func elseOnSameLine(_ formatter: Formatter) {
         var closingBraceIndex: Int?
         formatter.forEachToken { i, token in
             switch token {
@@ -1110,7 +1110,7 @@ extension FormatRules {
 
     /// Ensure that the last item in a multi-line array literal is followed by a comma.
     /// This is useful for preventing noise in commits when items are added to end of array.
-    public class func trailingCommas(_ formatter: Formatter) {
+    @objc public class func trailingCommas(_ formatter: Formatter) {
         formatter.forEach(.endOfScope("]")) { i, _ in
             guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else { return }
             if let startIndex = formatter.index(of: .startOfScope("["), before: i),
@@ -1155,7 +1155,7 @@ extension FormatRules {
     }
 
     /// Ensure that TODO, MARK and FIXME comments are followed by a : as required
-    public class func todos(_ formatter: Formatter) {
+    @objc public class func todos(_ formatter: Formatter) {
         formatter.forEachToken { i, token in
             if case let .commentBody(string) = token {
                 for tag in ["TODO", "MARK", "FIXME"] {
@@ -1177,7 +1177,7 @@ extension FormatRules {
     }
 
     /// Remove semicolons, except where doing so would change the meaning of the code
-    public class func semicolons(_ formatter: Formatter) {
+    @objc public class func semicolons(_ formatter: Formatter) {
         formatter.forEach(.delimiter(";")) { i, _ in
             if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
                 let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)
@@ -1205,14 +1205,14 @@ extension FormatRules {
     }
 
     /// Standardise linebreak characters as whatever is specified in the options (\n by default)
-    public class func linebreaks(_ formatter: Formatter) {
+    @objc public class func linebreaks(_ formatter: Formatter) {
         formatter.forEach(.linebreak) { i, _ in
             formatter.replaceToken(at: i, with: .linebreak(formatter.options.linebreak))
         }
     }
 
     /// Standardise the order of property specifiers
-    public class func specifiers(_ formatter: Formatter) {
+    @objc public class func specifiers(_ formatter: Formatter) {
         let order = [
             "private(set)", "fileprivate(set)", "internal(set)", "public(set)",
             "private", "fileprivate", "internal", "public", "open",
@@ -1289,7 +1289,7 @@ extension FormatRules {
     /// Convert closure arguments to trailing closure syntax where possible
     /// NOTE: Parens around trailing closures are sometimes required for disambiguation.
     /// SwiftFormat can't detect those cases, so `trailingClosures` is disabled by default
-    public class func trailingClosures(_ formatter: Formatter) {
+    @objc public class func trailingClosures(_ formatter: Formatter) {
         func removeParen(at index: Int) {
             if formatter.token(at: index - 1)?.isSpace == true {
                 if formatter.token(at: index + 1)?.isSpace == true {
@@ -1359,7 +1359,7 @@ extension FormatRules {
     }
 
     /// Remove redundant parens around the arguments for loops, if statements, closures, etc.
-    public class func redundantParens(_ formatter: Formatter) {
+    @objc public class func redundantParens(_ formatter: Formatter) {
         func tokenOutsideParenRequiresSpacing(at index: Int) -> Bool {
             if let token = formatter.token(at: index) {
                 switch token {
@@ -1513,7 +1513,7 @@ extension FormatRules {
     }
 
     /// Remove redundant `get {}` clause inside read-only computed property
-    public class func redundantGet(_ formatter: Formatter) {
+    @objc public class func redundantGet(_ formatter: Formatter) {
         formatter.forEach(.identifier("get")) { i, _ in
             if let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
                 $0 == .startOfScope("{") }), let prevKeyword = formatter.last(.keyword, before: previousIndex),
@@ -1530,7 +1530,7 @@ extension FormatRules {
     }
 
     /// Remove redundant `= nil` initialization for Optional properties
-    public class func redundantNilInit(_ formatter: Formatter) {
+    @objc public class func redundantNilInit(_ formatter: Formatter) {
         func search(from index: Int) {
             if let optionalIndex = formatter.index(of: .unwrapOperator, after: index) {
                 if let terminatorIndex = formatter.index(of: .endOfStatement, after: index),
@@ -1602,7 +1602,7 @@ extension FormatRules {
     }
 
     /// Remove redundant let/var for unnamed variables
-    public class func redundantLet(_ formatter: Formatter) {
+    @objc public class func redundantLet(_ formatter: Formatter) {
         formatter.forEach(.identifier("_")) { i, _ in
             if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":"),
                 let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
@@ -1626,7 +1626,7 @@ extension FormatRules {
     }
 
     /// Remove redundant pattern in case statements
-    public class func redundantPattern(_ formatter: Formatter) {
+    @objc public class func redundantPattern(_ formatter: Formatter) {
         func redundantBindings(inRange range: Range<Int>) -> Bool {
             var isEmpty = true
             for token in formatter.tokens[range.lowerBound ..< range.upperBound] {
@@ -1669,7 +1669,7 @@ extension FormatRules {
     }
 
     /// Remove redundant raw string values for case statements
-    public class func redundantRawValues(_ formatter: Formatter) {
+    @objc public class func redundantRawValues(_ formatter: Formatter) {
         formatter.forEach(.keyword("enum")) { i, _ in
             if let nameIndex = formatter.index(
                 of: .nonSpaceOrCommentOrLinebreak, after: i, if: { $0.isIdentifier }),
@@ -1707,7 +1707,7 @@ extension FormatRules {
     }
 
     /// Remove redundant void return values for function declarations
-    public class func redundantVoidReturnType(_ formatter: Formatter) {
+    @objc public class func redundantVoidReturnType(_ formatter: Formatter) {
         formatter.forEach(.operator("->", .infix)) { i, _ in
             guard var endIndex = formatter.index(of: .nonSpace, after: i) else { return }
             switch formatter.tokens[endIndex] {
@@ -1744,7 +1744,7 @@ extension FormatRules {
     }
 
     /// Remove redundant return keyword from single-line closures
-    public class func redundantReturn(_ formatter: Formatter) {
+    @objc public class func redundantReturn(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .identifier("get") else { return }
             if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .operator("=", .infix),
@@ -1782,7 +1782,7 @@ extension FormatRules {
     }
 
     /// Remove redundant backticks around non-keywords, or in places where keywords don't need escaping
-    public class func redundantBackticks(_ formatter: Formatter) {
+    @objc public class func redundantBackticks(_ formatter: Formatter) {
         formatter.forEach(.identifier) { i, token in
             guard token.string.characters.first == "`" else { return }
             let unescaped = token.unescaped()
@@ -1836,7 +1836,7 @@ extension FormatRules {
     }
 
     /// Remove redundant self keyword
-    public class func redundantSelf(_ formatter: Formatter) {
+    @objc public class func redundantSelf(_ formatter: Formatter) {
         func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
             while let token = formatter.token(at: index) {
                 switch token {
@@ -2201,7 +2201,7 @@ extension FormatRules {
     }
 
     /// Replace unused arguments with an underscore
-    public class func unusedArguments(_ formatter: Formatter) {
+    @objc public class func unusedArguments(_ formatter: Formatter) {
         func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: Range<Int>) {
             for i in range.lowerBound ..< range.upperBound {
                 let token = formatter.tokens[i]
@@ -2362,7 +2362,7 @@ extension FormatRules {
     }
 
     /// Move `let` and `var` inside patterns to the beginning
-    public class func hoistPatternLet(_ formatter: Formatter) {
+    @objc public class func hoistPatternLet(_ formatter: Formatter) {
         func indicesOf(_ keyword: String, in range: CountableRange<Int>) -> [Int]? {
             var indices = [Int]()
             var keywordFound = false, identifierFound = false
@@ -2490,7 +2490,7 @@ extension FormatRules {
     }
 
     /// Normalize argument wrapping style
-    public class func wrapArguments(_ formatter: Formatter) {
+    @objc public class func wrapArguments(_ formatter: Formatter) {
         func wrapArguments(for scopes: String..., mode: WrapMode, allowGrouping: Bool) {
             guard mode != .disabled else { return }
             formatter.forEach(.startOfScope) { i, token in
@@ -2611,7 +2611,7 @@ extension FormatRules {
     }
 
     /// Normalize the use of void in closure arguments and return values
-    public class func void(_ formatter: Formatter) {
+    @objc public class func void(_ formatter: Formatter) {
         func isArgumentToken(at index: Int) -> Bool {
             if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) {
                 if [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
@@ -2678,7 +2678,7 @@ extension FormatRules {
     }
 
     /// Standardize formatting of numeric literals
-    public class func numberFormatting(_ formatter: Formatter) {
+    @objc public class func numberFormatting(_ formatter: Formatter) {
         formatter.forEachToken { i, token in
             guard case let .number(string, type) = token else {
                 return
@@ -2740,7 +2740,7 @@ extension FormatRules {
     }
 
     /// Strip header comments from the file
-    public class func fileHeader(_ formatter: Formatter) {
+    @objc public class func fileHeader(_ formatter: Formatter) {
         guard let header = formatter.options.fileHeader, !formatter.options.fragment else { return }
         if let startIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1) {
             switch formatter.tokens[startIndex] {

@@ -177,7 +177,7 @@ class CommandLineTests: XCTestCase {
         while let match = readme.range(of: "\\*[a-zA-Z]+\\* - ", options: .regularExpression, range: range, locale: nil) {
             let lower = readme.index(after: match.lowerBound)
             let upper = readme.index(match.upperBound, offsetBy: -4)
-            let ruleName = readme[lower ..< upper]
+            let ruleName = readme.substring(with: lower ..< upper)
             XCTAssertTrue(ruleNames.contains(ruleName), ruleName)
             range = match.upperBound ..< range.upperBound
         }
@@ -197,7 +197,7 @@ class CommandLineTests: XCTestCase {
         while let match = readme.range(of: "`--[a-zA-Z]+`", options: .regularExpression, range: range, locale: nil) {
             let lower = readme.index(match.lowerBound, offsetBy: 3)
             let upper = readme.index(before: match.upperBound)
-            let argument = readme[lower ..< upper]
+            let argument = readme.substring(with: lower ..< upper)
             XCTAssertTrue(arguments.contains(argument), argument)
             range = match.upperBound ..< range.upperBound
         }

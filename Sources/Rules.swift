@@ -2790,25 +2790,25 @@ extension FormatRules {
         // Assumes identifier is a type if starting with capital
         func isType(_ token: Token) -> Bool {
             let str = token.string
-            
+
             guard !str.isEmpty else {
                 return false
             }
-            
+
             let firstChar = str.substring(to: str.index(after: str.startIndex))
-            
+
             guard firstChar != "$" else {
                 return false
             }
-            
+
             return firstChar.uppercased() == firstChar
         }
-        
+
         formatter.forEach(.identifier) { i, token in
             guard isType(token) else {
                 return
             }
-            
+
             guard let dot = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
                 dot == .operator(".", .infix),
                 let dotIndex = formatter.index(of: dot, after: i),
@@ -2819,8 +2819,8 @@ extension FormatRules {
             else {
                 return
             }
-            
-            formatter.removeTokens(inRange: dotIndex...initIndex)
+
+            formatter.removeTokens(inRange: dotIndex ... initIndex)
         }
     }
 }

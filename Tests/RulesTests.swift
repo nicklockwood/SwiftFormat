@@ -5014,7 +5014,7 @@ class RulesTests: XCTestCase {
     }
 
     // MARK: redundantInit
-    
+
     func testRemoveRedundantInit() {
         do {
             let input = "[1].flatMap{String.init($0)}"
@@ -5032,31 +5032,31 @@ class RulesTests: XCTestCase {
             XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
         }
     }
-        
+
     func testDontRemoveInitInSuperCall() {
         let input = "import Foundation; class C: NSObject { override init() { super.init() }}"
         let output = "import Foundation; class C: NSObject { override init() { super.init() }}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
     }
-    
+
     func testDontRemoveInitInSelfCall() {
         let input = "struct S { let n: Int }; extension S { init() { self.init(n: 1) } }"
         let output = "struct S { let n: Int }; extension S { init() { self.init(n: 1) } }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
     }
-    
+
     func testDontRemoveInitWhenPassedAsFunction() {
         let input = "[1].flatMap(String.init)"
         let output = "[1].flatMap(String.init)"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
     }
-    
+
     func testDontRemoveInitWhenUsedOnMetatype() {
         let input = "[String.self].map { type in type.init(1) }"
         let output = "[String.self].map { type in type.init(1) }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
     }
-    
+
     func testDontRemoveInitWhenUsedOnImplicitClosureMetatype() {
         let input = "[String.self].map { $0.init(1) }"
         let output = "[String.self].map { $0.init(1) }"

@@ -560,6 +560,14 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 +   // returns nothing
 + }
 ```
+
+***redundantInit*** - removes unnecessary `init` when instantiating Types:
+
+```diff
+- String.init("text")
+
++ String("text")
+```
     
 ***semicolons*** - removes semicolons at the end of lines and optionally (depending on the `--semicolons` option) replaces inline semicolons with a linebreak:
 

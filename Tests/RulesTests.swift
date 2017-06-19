@@ -5016,17 +5016,23 @@ class RulesTests: XCTestCase {
     // MARK: redundantInit
     
     func testRemoveRedundantInit() {
-        let input = "[1].flatMap{String.init($0)}"
-        let output = "[1].flatMap{String($0)}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        do {
+            let input = "[1].flatMap{String.init($0)}"
+            let output = "[1].flatMap{String($0)}"
+            XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        }
+        do {
+            let input = "[String.self].map { Type in Type.init(1) }"
+            let output = "[String.self].map { Type in Type(1) }"
+            XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        }
+        do {
+            let input = "String.init(\"text\")"
+            let output = "String(\"text\")"
+            XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        }
     }
-    
-    func testRemoveRedundantInit2() {
-        let input = "[String.self].map { Type in Type.init(1) }"
-        let output = "[String.self].map { Type in Type(1) }"
-        XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
-    }
-    
+        
     func testDontRemoveInitInSuperCall() {
         let input = "import Foundation; class C: NSObject { override init() { super.init() }}"
         let output = "import Foundation; class C: NSObject { override init() { super.init() }}"

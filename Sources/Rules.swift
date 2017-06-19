@@ -2785,4 +2785,42 @@ extension FormatRules {
         let headerTokens = tokenize(header)
         formatter.insertTokens(headerTokens, at: 0)
     }
+
+    public class func redundantInit(_ formatter: Formatter) {
+        // Assumes identifier is a type if starting with capital
+        func isType(_ token: Token) -> Bool {
+            let str = token.string
+            
+            guard !str.isEmpty else {
+                return false
+            }
+            
+            let firstChar = str.substring(to: str.index(after: str.startIndex))
+            
+            guard firstChar != "$" else {
+                return false
+            }
+            
+            return firstChar.uppercased() == firstChar
+        }
+        
+        formatter.forEach(.identifier) { i, token in
+            guard isType(token) else {
+                return
+            }
+            
+            guard let dot = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
+                dot == .operator(".", .infix),
+                let dotIndex = formatter.index(of: dot, after: i),
+                let initToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: dotIndex),
+                let initIndex = formatter.index(of: initToken, after: dotIndex),
+                let openScope = formatter.next(.nonSpaceOrCommentOrLinebreak, after: initIndex),
+                openScope == .startOfScope("(")
+            else {
+                return
+            }
+            
+            formatter.removeTokens(inRange: dotIndex...initIndex)
+        }
+    }
 }

@@ -2792,7 +2792,7 @@ extension FormatRules {
         formatter.insertTokens(headerTokens, at: 0)
     }
 
-    /// Strip redundant `.init` from type instantions
+    /// Strip redundant `.init` from type instantiations
     @objc public class func redundantInit(_ formatter: Formatter) {
         formatter.forEach(.identifier("init")) { i, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {

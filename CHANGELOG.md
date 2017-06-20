@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.29.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.0) (2017-06-20)
+
+- Changed specifier order from `private(set) public` to `public private(set)`
+- Added `redundantInit` rule to remove explict `init` references where they aren't needed
+- Fixed indentation of class declarations with protocols wrapped onto multiple lines
+
 ## [0.28.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.6) (2017-05-31)
 
 - Fixed bug where consecutive `if` statements containing `<` and `>` were misidentified as a generic argument list

@@ -44,7 +44,7 @@ public class Formatter: NSObject {
     public let options: FormatOptions
 
     /// The token array managed by the formatter (read-only)
-    private(set) public var tokens: [Token]
+    public private(set) var tokens: [Token]
 
     /// Create a new formatter instance from a token array
     public init(_ tokens: [Token], options: FormatOptions = FormatOptions()) {

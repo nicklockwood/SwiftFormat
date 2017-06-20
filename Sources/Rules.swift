@@ -1220,8 +1220,8 @@ extension FormatRules {
     /// Standardise the order of property specifiers
     @objc public class func specifiers(_ formatter: Formatter) {
         let order = [
-            "private(set)", "fileprivate(set)", "internal(set)", "public(set)",
             "private", "fileprivate", "internal", "public", "open",
+            "private(set)", "fileprivate(set)", "internal(set)", "public(set)",
             "final", "dynamic", // Can't be both
             "optional", "required",
             "convenience",

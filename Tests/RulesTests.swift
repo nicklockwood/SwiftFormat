@@ -2608,8 +2608,8 @@ class RulesTests: XCTestCase {
     }
 
     func testPrivateSetSpecifierNotMangled() {
-        let input = "public private(set) weak lazy var foo"
-        let output = "private(set) public lazy weak var foo"
+        let input = "private(set) public weak lazy var foo"
+        let output = "public private(set) lazy weak var foo"
         XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -2630,7 +2630,7 @@ class RulesTests: XCTestCase {
 
     func testSpaceInSpecifiersLeftIntact() {
         let input = "weak private(set) /* read-only */\npublic var"
-        let output = "private(set) /* read-only */\npublic weak var"
+        let output = "public private(set) /* read-only */\nweak var"
         XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

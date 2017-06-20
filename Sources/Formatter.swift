@@ -213,7 +213,7 @@ public class Formatter: NSObject {
     /// Returns the index of the previous token at the current scope that matches the block
     public func index(before index: Int, where matches: (Token) -> Bool) -> Int? {
         guard index > 0 else { return nil }
-        var linebreakEncountered = false
+        var linebreakEncountered = (token(at: index)?.isLinebreak == true)
         var scopeStack: [Token] = []
         for i in (0 ..< index).reversed() {
             let token = tokens[i]

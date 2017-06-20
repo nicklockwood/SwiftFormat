@@ -770,6 +770,12 @@ extension FormatRules {
                 case .startOfScope:
                     return true
                 case .linebreak:
+                    var prevTokenIndex = prevTokenIndex
+                    if formatter.token(at: prevTokenIndex)?.isLinebreak == true {
+                        prevTokenIndex = formatter.index(before: prevTokenIndex, where: {
+                            !$0.isSpaceOrCommentOrLinebreak && (!$0.isEndOfScope || $0 == .endOfScope("}"))
+                        }) ?? -1
+                    }
                     if tokenIsEndOfStatement(prevTokenIndex) && tokenIsStartOfStatement(nextTokenIndex) {
                         return true
                     }

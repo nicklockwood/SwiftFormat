@@ -84,4 +84,32 @@ class FormatterTests: XCTestCase {
         }
         XCTAssertEqual(output, [Token](input.dropLast()))
     }
+
+    func testIndexBeforeComment() {
+        let input: [Token] = [
+            .identifier("foo"),
+            .startOfScope("//"),
+            .space(" "),
+            .commentBody("bar"),
+            .linebreak("\n"),
+        ]
+        let formatter = Formatter(input, options: FormatOptions())
+        let index = formatter.index(before: 4, where: { !$0.isSpaceOrComment })
+        XCTAssertEqual(index, 0)
+    }
+
+    func testIndexBeforeMultilineComment() {
+        let input: [Token] = [
+            .identifier("foo"),
+            .startOfScope("/*"),
+            .space(" "),
+            .commentBody("bar"),
+            .space(" "),
+            .endOfScope("*/"),
+            .linebreak("\n"),
+        ]
+        let formatter = Formatter(input, options: FormatOptions())
+        let index = formatter.index(before: 6, where: { !$0.isSpaceOrComment })
+        XCTAssertEqual(index, 0)
+    }
 }

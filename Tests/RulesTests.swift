@@ -1841,6 +1841,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testIndentClassDeclarationContainingComment() {
+        let input = "class Foo: Bar,\n    // Comment\n    Baz {\n}"
+        let output = "class Foo: Bar,\n    // Comment\n    Baz {\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // indent comments
 
     func testCommentIndenting() {

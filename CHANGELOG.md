@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.29.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.1) (2017-06-29)
+
+- Fixed bug where `redundantInit` rule removed a required init in some cases
+
 ## [0.29.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.0) (2017-06-20)
 
 - Changed specifier order from `private(set) public` to `public private(set)`

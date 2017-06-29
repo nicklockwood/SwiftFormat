@@ -2797,7 +2797,10 @@ extension FormatRules {
         formatter.forEach(.identifier("init")) { i, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
                 $0 == .operator(".", .infix)
-            }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .startOfScope("("),
+            }), let openParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                $0 == .startOfScope("(")
+            }), let closeParenIndex = formatter.index(of: .endOfScope(")"), after: openParenIndex),
+                formatter.last(.nonSpaceOrCommentOrLinebreak, before: closeParenIndex) != .delimiter(":"),
                 let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: dotIndex),
                 case let .identifier(name) = prevToken, let firstChar = name.characters.first,
                 firstChar != "$", String(firstChar).uppercased() == String(firstChar) else {

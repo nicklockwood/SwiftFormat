@@ -5030,50 +5030,65 @@ class RulesTests: XCTestCase {
     // MARK: redundantInit
 
     func testRemoveRedundantInit() {
-        do {
-            let input = "[1].flatMap{String.init($0)}"
-            let output = "[1].flatMap{String($0)}"
-            XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
-        }
-        do {
-            let input = "[String.self].map { Type in Type.init(1) }"
-            let output = "[String.self].map { Type in Type(1) }"
-            XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
-        }
-        do {
-            let input = "String.init(\"text\")"
-            let output = "String(\"text\")"
-            XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
-        }
+        let input = "[1].flatMap { String.init($0) }"
+        let output = "[1].flatMap { String($0) }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveRedundantInit2() {
+        let input = "[String.self].map { Type in Type.init(foo: 1) }"
+        let output = "[String.self].map { Type in Type(foo: 1) }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveRedundantInit3() {
+        let input = "String.init(\"text\")"
+        let output = "String(\"text\")"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testDontRemoveInitInSuperCall() {
-        let input = "import Foundation; class C: NSObject { override init() { super.init() }}"
-        let output = "import Foundation; class C: NSObject { override init() { super.init() }}"
+        let input = "class C: NSObject { override init() { super.init() } }"
+        let output = "class C: NSObject { override init() { super.init() } }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testDontRemoveInitInSelfCall() {
         let input = "struct S { let n: Int }; extension S { init() { self.init(n: 1) } }"
         let output = "struct S { let n: Int }; extension S { init() { self.init(n: 1) } }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testDontRemoveInitWhenPassedAsFunction() {
         let input = "[1].flatMap(String.init)"
         let output = "[1].flatMap(String.init)"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testDontRemoveInitWhenUsedOnMetatype() {
         let input = "[String.self].map { type in type.init(1) }"
         let output = "[String.self].map { type in type.init(1) }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testDontRemoveInitWhenUsedOnImplicitClosureMetatype() {
         let input = "[String.self].map { $0.init(1) }"
         let output = "[String.self].map { $0.init(1) }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testDontRemoveInitWithExplicitSignature() {
+        let input = "[String.self].map(Foo.init(bar:))"
+        let output = "[String.self].map(Foo.init(bar:))"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 }

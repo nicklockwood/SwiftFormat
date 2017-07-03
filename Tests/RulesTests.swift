@@ -3699,6 +3699,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRemoveSelfInsideStringInterpolation() {
+        let input = "class Foo {\n    var bar: String?\n    func baz() {\n        print(\"\\(self.bar)\")\n    }\n}"
+        let output = "class Foo {\n    var bar: String?\n    func baz() {\n        print(\"\\(bar)\")\n    }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testNoRemoveSelfForArgument() {
         let input = "func foo(bar: Int) { self.bar = bar }"
         let output = "func foo(bar: Int) { self.bar = bar }"
@@ -4174,6 +4181,14 @@ class RulesTests: XCTestCase {
     func testInsertSelfAfterReturn() {
         let input = "class Foo {\n    let foo: Int\n    func bar() -> Int { return foo }\n}"
         let output = "class Foo {\n    let foo: Int\n    func bar() -> Int { return self.foo }\n}"
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testInsertSelfInsideStringInterpolation() {
+        let input = "class Foo {\n    var bar: String?\n    func baz() {\n        print(\"\\(bar)\")\n    }\n}"
+        let output = "class Foo {\n    var bar: String?\n    func baz() {\n        print(\"\\(self.bar)\")\n    }\n}"
         let options = FormatOptions(removeSelf: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

@@ -2086,6 +2086,12 @@ extension FormatRules {
                         }
                         formatter.removeTokens(inRange: index ..< nextIndex)
                     }
+                case .identifier("type"): // Special case for type(of:)
+                    guard let parenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
+                        $0 == .startOfScope("(")
+                    }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: parenIndex) == .identifier("of") else {
+                        fallthrough
+                    }
                 case .identifier where !formatter.options.removeSelf && !isTypeRoot:
                     let name = token.unescaped()
                     if members.contains(name), !localNames.contains(name), !["for", "var", "let"].contains(lastKeyword) {

@@ -2598,6 +2598,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testNoSpaceAddedAroundTrailingRangeOperator() {
+        let input = "foo[bar...]"
+        let output = "foo[bar...]"
+        let options = FormatOptions(spaceAroundRangeOperators: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoSpaceAddedBeforeLeadingRangeOperator() {
+        let input = "foo[...bar]"
+        let output = "foo[...bar]"
+        let options = FormatOptions(spaceAroundRangeOperators: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // specifiers
 
     func testVarSpecifiersCorrected() {

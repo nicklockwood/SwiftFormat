@@ -327,29 +327,6 @@ extension FormatRules {
     @objc public class func spaceAroundOperators(_ formatter: Formatter) {
         formatter.forEachToken { i, token in
             switch token {
-            case .delimiter(":"):
-                // TODO: make this check more robust, and remove redundant space
-                if formatter.token(at: i + 1)?.isIdentifier == true &&
-                    formatter.token(at: i + 2) == .delimiter(":") {
-                    // It's a selector
-                    break
-                }
-                fallthrough
-            case .delimiter(","), .delimiter(";"):
-                if let nextToken = formatter.token(at: i + 1) {
-                    switch nextToken {
-                    case .space, .linebreak, .endOfScope:
-                        break
-                    default:
-                        // Ensure there is a space after the token
-                        formatter.insertToken(.space(" "), at: i + 1)
-                    }
-                }
-                if formatter.token(at: i - 1)?.isSpace == true &&
-                    formatter.token(at: i - 2)?.isLinebreak == false {
-                    // Remove space before the token
-                    formatter.removeToken(at: i - 1)
-                }
             case .operator("?", .postfix), .operator("!", .postfix):
                 if let prevToken = formatter.token(at: i - 1),
                     formatter.token(at: i + 1)?.isSpaceOrLinebreak == false,
@@ -388,9 +365,28 @@ extension FormatRules {
                 } else if formatter.token(at: i - 1)?.isSpaceOrLinebreak == false {
                     formatter.insertToken(.space(" "), at: i)
                 }
-            case .operator(_, .postfix):
-                if formatter.token(at: i + 1)?.isSpaceOrLinebreak == false {
-                    formatter.insertToken(.space(" "), at: i + 1)
+            case .delimiter(":"):
+                // TODO: make this check more robust, and remove redundant space
+                if formatter.token(at: i + 1)?.isIdentifier == true &&
+                    formatter.token(at: i + 2) == .delimiter(":") {
+                    // It's a selector
+                    break
+                }
+                fallthrough
+            case .operator(_, .postfix), .delimiter(","), .delimiter(";"):
+                if let nextToken = formatter.token(at: i + 1) {
+                    switch nextToken {
+                    case .space, .linebreak, .endOfScope:
+                        break
+                    default:
+                        // Ensure there is a space after the token
+                        formatter.insertToken(.space(" "), at: i + 1)
+                    }
+                }
+                if formatter.token(at: i - 1)?.isSpace == true &&
+                    formatter.token(at: i - 2)?.isLinebreak == false {
+                    // Remove space before the token
+                    formatter.removeToken(at: i - 1)
                 }
             default:
                 break
@@ -470,14 +466,14 @@ extension FormatRules {
                 if formatter.token(at: i - 1)?.isSpace == true {
                     formatter.removeToken(at: i - 1)
                 }
-            } else if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
-                if nextToken != .endOfScope(")") && nextToken != .delimiter(",") {
-                    if formatter.token(at: i + 1)?.isSpaceOrLinebreak == false {
-                        formatter.insertToken(.space(" "), at: i + 1)
-                    }
-                    if formatter.token(at: i - 1)?.isSpaceOrLinebreak == false {
-                        formatter.insertToken(.space(" "), at: i)
-                    }
+            } else if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
+                let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
+                nextToken.isRvalue, prevToken.isLvalue {
+                if formatter.token(at: i + 1)?.isSpaceOrLinebreak == false {
+                    formatter.insertToken(.space(" "), at: i + 1)
+                }
+                if formatter.token(at: i - 1)?.isSpaceOrLinebreak == false {
+                    formatter.insertToken(.space(" "), at: i)
                 }
             }
         }

@@ -723,8 +723,14 @@ extension FormatRules {
             if let token = formatter.token(at: i) {
                 switch token {
                 case let .keyword(string) where [ // TODO: handle "in"
-                    "as", "is", "where", "dynamicType", "rethrows", "throws",
+                    "where", "dynamicType", "rethrows", "throws",
                 ].contains(string):
+                    return false
+                case .keyword("as"), .keyword("in"):
+                    if scopeStack.last?.string == "case" {
+                        // For case statements, we already indent
+                        return true
+                    }
                     return false
                 case .delimiter(","), .delimiter(":"):
                     if let scope = scopeStack.last?.string, ["<", "[", "(", "case"].contains(scope) {

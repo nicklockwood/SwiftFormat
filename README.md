@@ -206,53 +206,53 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 ***blankLinesAtEndOfScope*** - removes trailing blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
 
 ```diff
-- func foo() {
--   // foo
+  func foo() {
+    // foo
 - 
-- }
+  }
 
-+ func foo() {
-+   // foo
-+ }
+  func foo() {
+    // foo
+  }
 ```
 
 ```diff
-- array = [
--   foo,
--   bar,
--   baz,
+  array = [
+    foo,
+    bar,
+    baz,
 - 
-- ]
+  ]
 
-+ array = [
-+   foo,
-+   bar,
-+   baz,
-+ ]
+  array = [
+    foo,
+    bar,
+    baz,
+  ]
 ```
 
 ***blankLinesBetweenScopes*** - adds a blank line before each class, struct, enum, extension, protocol or function. This rule can be configured using the `--insertlines` option:
 
 ```diff
-- func foo() {
--   // foo
-- }
-- func bar() {
--   // bar
-- }
-- var baz: Bool
-- var quux: Int
+  func foo() {
+    // foo
+  }
+  func bar() {
+    // bar
+  }
+  var baz: Bool
+  var quux: Int
 
-+ func foo() {
-+   // foo
-+ }
+  func foo() {
+    // foo
+  }
 + 
-+ func bar() {
-+   // bar
-+ }
+  func bar() {
+    // bar
+  }
 + 
-+ var baz: Bool
-+ var quux: Int
+  var baz: Bool
+  var quux: Int
 ```
                          
 ***braces*** - implements K&R (default) or Allman-style indentation, depending on the `--allman` option:
@@ -260,36 +260,36 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 ```diff
 - if x
 - {
--   // foo
-- }
+    // foo
+  }
 - else
 - {
--   // bar
-- }
+    // bar
+  }
 
 + if x {
-+   // foo
-+ }
+    // foo
+  }
 + else {
-+   // bar
-+ }
+    // bar
+  }
 ```
                          
 ***consecutiveBlankLines*** - reduces multiple sequential blank lines to a single blank line
 
 ```diff
-- func foo() {
--   let x = "bar"
+  func foo() {
+    let x = "bar"
 - 
-- 
--   print(x)
-- }
+ 
+    print(x)
+  }
 
-+ func foo() {
-+   let x = "bar"
-+ 
-+   print(x)
-+ }
+  func foo() {
+    let x = "bar"
+ 
+    print(x)
+  }
 ```
 
 ***consecutiveSpaces*** - reduces a sequence of spaces to a single space:
@@ -302,46 +302,48 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 ***elseOnSameLine*** - controls whether an `else`, `catch` or `while` after a `}` appears on the same line:
 
 ```diff
-- if x {
--   // foo
+  if x {
+    // foo
 - }
 - else {
--   // bar
-- }
+    // bar
+  }
 
-+ if x {
-+   // foo
+  if x {
+    // foo
 + } else {
-+   // bar
-+ }
+    // bar
+  }
 ```
+
 ```diff
-- do {
--   // try foo
+  do {
+    // try foo
 - }
 - catch {
--   // bar
-- }
+    // bar
+  }
 
-+ do {
-+   // try foo
+  do {
+    // try foo
 + } catch {
-+   // bar
-+ }
+    // bar
+  }
 ```
+
 ```diff
-- repeat {
--   // foo
+  repeat {
+    // foo
 - }
 - while {
--   // bar
-- }
+    // bar
+  }
 
-+ repeat {
-+   // foo
+  repeat {
+    // foo
 + } while {
-+   // bar
-+ }
+    // bar
+  }
 ```
    
 ***fileHeader*** - allows the replacement or removal of Xcode's automated comment header blocks. By default, no action is taken, but passing one of the following arguments to the command-line will activate its function.
@@ -360,39 +362,39 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 
 ```diff
 - if case .foo(let bar, let baz) = quux {
--   // inner foo
-- }
+    // inner foo
+  }
 
 + if case let .foo(bar, baz) = quux {
-+   // inner foo
-+ }
+    // inner foo
+  }
 ```
 
 ***indent*** - adjusts leading whitespace based on scope and line wrapping. Uses either tabs or spaces, depending on the `--indent` option. May also affects comments and `#if ...` statements, depending on the configuration of the `--comments` and `--ifdef` options:
 
 ```diff
-- if x {
+  if x {
 -     // foo
-- } else {
+  } else {
 -     // bar
 -       }
 
-+ if x {
+  if x {
 +   // foo
-+ } else {
+  } else {
 +   // bar
 + }
 ```
 
 ```diff
-- let array = [
--   foo,
+  let array = [
+    foo,
 -     bar,
 -       baz
 -   ]
 
-+ let array = [
-+   foo,
+  let array = [
+    foo,
 +   bar,
 +   baz
 + ]
@@ -431,15 +433,15 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 ***redundantGet*** - removes unnecessary `get { }` clauses from inside read-only computed properties:
 
 ```diff
-- var foo: Int {
+  var foo: Int {
 -   get {
 -     return 5
 -   }
-- }
+  }
 
-+ var foo: Int {
+  var foo: Int {
 +   return 5
-+ }
+  }
 ```
 
 ***redundantLet*** - removes redundant `let` or `var` from ignored variables in bindings (which is a warning in Xcode):
@@ -467,15 +469,13 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 ```
 
 ```diff
-- let foo: Int? = nil
-+ let foo: Int? = nil
 // doesn't apply to `let` properties
+let foo: Int? = nil
 ```
 
 ```diff
-- var foo: Int? = 0
-+ var foo: Int? = 0
 // doesn't affect non-nil initialzation
+var foo: Int? = 0
 ```
 
 ***redundantParens*** - removes unnecessary parens from expressions and branch conditions:
@@ -515,15 +515,15 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 ***redundantRawValues*** - removes raw string values from enum cases when they match the case name:
 
 ```diff
-- enum Foo: String {
+  enum Foo: String {
 -   case bar = "bar"
--   case baz = "quux"
-- }
+    case baz = "quux"
+  }
 
-+ enum Foo: String {
+  enum Foo: String {
 +   case bar
-+   case baz = "quux"
-+ }
+    case baz = "quux"
+  }
 ```
 
 ***redundantReturn*** - removes unnecessary `return` keyword from single-line closures:
@@ -536,36 +536,35 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 ***redundantSelf*** - removes or inserts `self` prefix from class and instance member references, depending on the `--self` option:
 
 ```diff
-- init(foo: Int, bar: Int) {
--   self.foo = foo
--   self.bar = bar
+  init(foo: Int, bar: Int) {
+    self.foo = foo
+    self.bar = bar
 -   self.baz = 42
-- }
+  }
 
-+ init(foo: Int, bar: Int) {
-+   self.foo = foo
-+   self.bar = bar
+  init(foo: Int, bar: Int) {
+    self.foo = foo
+    self.bar = bar
 +   baz = 42
-+ }  
+  }  
 ```
     
 ***redundantVoidReturnType*** - removes unnecessary `Void` return type from function declarations:
 
 ```diff
 - func foo() -> Void {
--   // returns nothing
-- }
+    // returns nothing
+  }
 
 + func foo() {
-+   // returns nothing
-+ }
+    // returns nothing
+  }
 ```
 
 ***redundantInit*** - removes unnecessary `init` when instantiating Types:
 
 ```diff
 - String.init("text")
-
 + String("text")
 ```
     
@@ -583,13 +582,12 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 ```
 
 ```diff
-- return;
-- goto(fail)
-+ return;
-+ goto(fail)
+// semicolon is not removed if it would affect the behavior of the code
+return;
+goto(fail)
 ```
 
-***spaceAroundBraces*** - contextually adds space around { }. For example:
+***spaceAroundBraces*** - contextually adds or removes space around { }. For example:
 
 ```diff
 - foo.filter{ return true }.map{ $0 }
@@ -597,7 +595,7 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 ```
 
 ```diff
-- foo({})
+- foo( {} )
 + foo({})
 ```
 
@@ -717,11 +715,11 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 
 ```diff
 - DispatchQueue.main.async(execute: {
--   // do stuff
+    // do stuff
 - })
 
 + DispatchQueue.main.async {
-+   // do stuff
+    // do stuff
 + }
 ```
 
@@ -730,17 +728,17 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 ***trailingCommas*** - adds or removes trailing commas from the last item in an array or dictionary literal, depending on the `--commas` option:
 
 ```diff
-let array = [
-  foo,
-  bar,
+  let array = [
+    foo,
+    bar,
 -   baz
-]
+  ]
 
-let array = [
-  foo,
-  bar,
+  let array = [
+    foo,
+    bar,
 +   baz,
-]
+  ]
 ```
 
 ***trailingSpace*** - removes the whitespace at the end of a line. This rule can be configured using the `--trimwhitespace` option.
@@ -761,32 +759,32 @@ let array = [
 
 ```diff
 - func foo(bar: Int, baz: String) {
--   print("Hello \(baz)")
-- }
+    print("Hello \(baz)")
+  }
 
 + func foo(bar _: Int, baz: String) {
-+   print("Hello \(baz)")
-+ }
+    print("Hello \(baz)")
+  }
 ```
 
 ```diff
 - func foo(_ bar: Int) {
--   // no-op
-- }
+    // no-op
+  }
 
 + func foo(_: Int) {
-+   // no-op
-+ }
+    // no-op
+  }
 ```
 
 ```diff
 - request { response, data in
--   self.data += data
-- }
+    self.data += data
+  }
 
 + request { _, data in
-+   self.data += data
-+ }
+    self.data += data
+  }
 ```
     
 ***void*** - standardizes the use of `Void` vs an empty tuple `()` to represent empty argument lists and return values, depending on the `--empty` option:
@@ -816,25 +814,25 @@ let array = [
 ```diff
 - func foo(bar: Int,
 -          baz: String) {
--   // foo function
-- }
+    // foo function
+  }
 
 + func foo(
 +   bar: Int,
 +   baz: String
 + ) {
-+   // foo function
-+ }
+    // foo function
+  }
 ```
 
 ```diff
 - let foo = [bar,
--            baz,
+             baz,
 -            quuz]
 
 + let foo = [
 +   bar,
-+   baz,
+    baz,
 +   quuz
 + ]
 ```

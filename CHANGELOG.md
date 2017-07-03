@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.29.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.2) (2017-07-03)
+
+- Fixed critical bug where space was incorrectly inserted around unary range operators
+- Fixed bug where `self` could be incorrectly inserted before `type(of:)` if using `--self insert` option
+- Fixed space being incorrectly inserted after postfix operator inside a subscript or collection literal
+- Wrapped `case is Type` statements are now indented correctly
+
 ## [0.29.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.1) (2017-06-29)
 
 - Fixed bug where `redundantInit` rule removed a required init in some cases

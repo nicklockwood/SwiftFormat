@@ -1027,6 +1027,8 @@ extension FormatRules {
             guard let nextLinebreakIndex = formatter.index(of: .linebreak, after: i),
                 let closingBraceIndex = formatter.index(of: .endOfScope("}"), after: i),
                 nextLinebreakIndex < closingBraceIndex else { return }
+            guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
+                prevToken != .delimiter(","), !prevToken.is(.startOfScope) else { return }
             if formatter.options.allmanBraces {
                 // Implement Allman-style braces, where opening brace appears on the next line
                 if let prevTokenIndex = formatter.index(of: .nonSpace, before: i),

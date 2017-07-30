@@ -1886,6 +1886,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    // indent multiline strings
+
+    func testSimpleMultilineString() {
+        let input = "\"\"\"\n    hello\n    world\n\"\"\""
+        let output = "\"\"\"\n    hello\n    world\n\"\"\""
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testIndentIndentedSimpleMultilineString() {
+        let input = "{\n    \"\"\"\n    hello\n    world\n    \"\"\"\n}"
+        let output = "{\n    \"\"\"\n    hello\n    world\n    \"\"\"\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // indent #if/#else/#elseif/#endif (mode: indent)
 
     func testIfEndifIndenting() {

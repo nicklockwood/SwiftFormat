@@ -200,7 +200,11 @@ public func parsingError(for tokens: [Token], options: FormatOptions) -> FormatE
         case .error(""):
             message = "unexpected end of file"
         case let .error(string):
-            message = "unexpected token \(string)"
+            if string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                message = "inconsistent whitespace in multi-line string literal"
+            } else {
+                message = "unexpected token \(string)"
+            }
         case let .operator(string, _):
             message = "found conflict marker \(string)"
         default:

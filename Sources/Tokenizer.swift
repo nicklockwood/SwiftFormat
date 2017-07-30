@@ -374,6 +374,8 @@ public enum Token: Equatable {
                 return closing == "#endif"
             case "\"":
                 return closing == "\""
+            case "\"\"\"":
+                return closing == "\"\"\""
             default:
                 return false
             }
@@ -402,7 +404,7 @@ public enum Token: Equatable {
         case .identifier, .number, .operator(_, .postfix),
              .endOfScope(")"), .endOfScope("]"),
              .endOfScope("}"), .endOfScope(">"),
-             .endOfScope("\""):
+             .endOfScope("\""), .endOfScope("\"\"\""):
             return true
         default:
             return false
@@ -416,8 +418,8 @@ public enum Token: Equatable {
         case .operator(_, .infix), .operator(_, .postfix):
             return false
         case .identifier, .number, .operator,
-             .startOfScope("("), .startOfScope("["),
-             .startOfScope("{"), .startOfScope("\""):
+             .startOfScope("("), .startOfScope("["), .startOfScope("{"),
+             .startOfScope("\""), .startOfScope("\"\"\""):
             return true
         default:
             return false
@@ -511,7 +513,14 @@ private extension String.UnicodeScalarView {
     }
 
     mutating func parseStartOfScope() -> Token? {
-        return readCharacter(where: { "<([{\"".unicodeScalars.contains($0) }).map { .startOfScope(String($0)) }
+        if read("\"") {
+            if first == "\"", self[index(after: startIndex)] == "\"" {
+                removeFirst(2)
+                return .startOfScope("\"\"\"")
+            }
+            return .startOfScope("\"")
+        }
+        return readCharacter(where: { "<([{".unicodeScalars.contains($0) }).map { .startOfScope(String($0)) }
     }
 
     mutating func parseEndOfScope() -> Token? {
@@ -863,6 +872,88 @@ public func tokenize(_ source: String) -> [Token] {
         }
     }
 
+    func processMultilineStringBody() {
+        var string = ""
+        var escaped = false
+        while let c = characters.readCharacter() {
+            switch c {
+            case "\\":
+                escaped = !escaped
+            case "\"":
+                if !escaped, tokens[scopeIndexStack.last!] == .startOfScope("\"\"\""),
+                    characters.first == "\"", characters[characters.index(after: characters.startIndex)] == "\"" {
+                    characters.removeFirst(2)
+                    if string != "" {
+                        tokens.append(.error(string)) // Not permitted by the spec
+                    } else {
+                        var offset = ""
+                        if case let .space(_offset) = tokens.last! {
+                            offset = _offset
+                        }
+                        // Fix up indents
+                        for index in (scopeIndexStack.last! ..< tokens.count - 1).reversed() {
+                            if case let .space(indent) = tokens[index] {
+                                guard offset.isEmpty || indent.hasPrefix(offset) else {
+                                    tokens[index] = .error(indent) // Mismatched whitespace
+                                    break
+                                }
+                                let remainder = indent.substring(from: offset.endIndex)
+                                if case let .stringBody(body) = tokens[index + 1] {
+                                    tokens[index + 1] = .stringBody(remainder + body)
+                                } else {
+                                    tokens.insert(.stringBody(remainder), at: index + 1)
+                                }
+                                if offset.isEmpty {
+                                    tokens.remove(at: index)
+                                } else {
+                                    tokens[index] = .space(offset)
+                                }
+                            }
+                        }
+                    }
+                    tokens.append(.endOfScope("\"\"\""))
+                    scopeIndexStack.removeLast()
+                    return
+                }
+                escaped = false
+            case "(":
+                if escaped {
+                    if string != "" {
+                        tokens.append(.stringBody(string))
+                    }
+                    scopeIndexStack.append(tokens.count)
+                    tokens.append(.startOfScope("("))
+                    return
+                }
+                escaped = false
+            case "\r", "\n":
+                if escaped {
+                    string.append("\"") // Escaping linebreaks is not permitted
+                }
+                if string != "" {
+                    tokens.append(.stringBody(string))
+                    string = ""
+                }
+                if c == "\r", characters.read("\n") {
+                    tokens.append(.linebreak("\r\n"))
+                } else {
+                    tokens.append(.linebreak(String(c)))
+                }
+                if let space = characters.parseSpace() {
+                    tokens.append(space)
+                }
+                escaped = false
+                continue
+            default:
+                escaped = false
+            }
+            string.append(Character(c))
+        }
+        if string != "" {
+            tokens.append(.stringBody(string))
+        }
+    }
+
     var comment = ""
     var space = ""
 
@@ -1182,7 +1273,7 @@ public func tokenize(_ source: String) -> [Token] {
                         // compiles correctly, even if it's mis-formatted
                         fallthrough
                     }
-                case .operator, .identifier, .number, .startOfScope("\""):
+                case .operator, .identifier, .number, .startOfScope("\""), .startOfScope("\"\"\""):
                     convertClosingChevronToSymbol(at: prevIndex, andOpeningChevron: true)
                     processToken()
                     return
@@ -1215,8 +1306,13 @@ public func tokenize(_ source: String) -> [Token] {
                         nestedSwitches -= 1
                     }
                 case .endOfScope(")"):
-                    if scopeIndexStack.last.map({ tokens[$0] }) == .startOfScope("\"") {
+                    guard let scope = scopeIndexStack.last.map({ tokens[$0] }) else {
+                        break
+                    }
+                    if scope == .startOfScope("\"") {
                         processStringBody()
+                    } else if scope == .startOfScope("\"\"\"") {
+                        processMultilineStringBody()
                     }
                 default:
                     break
@@ -1272,6 +1368,8 @@ public func tokenize(_ source: String) -> [Token] {
             switch string {
             case "\"":
                 processStringBody()
+            case "\"\"\"":
+                processMultilineStringBody()
             case "/*":
                 processCommentBody()
             case "//":

@@ -837,6 +837,9 @@ extension FormatRules {
                 case "/*":
                     // Comments only indent one space
                     indent += " "
+                case "\"\"\"":
+                    // Don't indent multiline string literals
+                    break
                 case "#if":
                     switch formatter.options.ifdefIndent {
                     case .indent:
@@ -855,7 +858,7 @@ extension FormatRules {
                             fallthrough
                         }
                         let start = formatter.startOfLine(at: i)
-                        // align indent with previous value
+                        // Align indent with previous value
                         indentCount = 1
                         indent = ""
                         for token in formatter.tokens[start ..< nextIndex] {
@@ -912,7 +915,7 @@ extension FormatRules {
                             if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
                                 indent += formatter.options.indent
                             } else {
-                                // align indent with previous case value
+                                // Align indent with previous case value
                                 indent += "     "
                             }
                             indentStack.append(indent)

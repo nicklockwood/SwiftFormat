@@ -271,6 +271,49 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    // MARK: Multiline strings
+
+    func testSimpleMultilineString() {
+        let input = "\"\"\"\n    hello\n    world\n    \"\"\""
+        let output: [Token] = [
+            .startOfScope("\"\"\""),
+            .linebreak("\n"),
+            .space("    "),
+            .stringBody("hello"),
+            .linebreak("\n"),
+            .space("    "),
+            .stringBody("world"),
+            .linebreak("\n"),
+            .space("    "),
+            .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testIndentedSimpleMultilineString() {
+        let input = "\"\"\"\n    hello\n    world\n\"\"\""
+        let output: [Token] = [
+            .startOfScope("\"\"\""),
+            .linebreak("\n"),
+            .stringBody("    hello"),
+            .linebreak("\n"),
+            .stringBody("    world"),
+            .linebreak("\n"),
+            .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testEmptyMultilineString() {
+        let input = "\"\"\"\n\"\"\""
+        let output: [Token] = [
+            .startOfScope("\"\"\""),
+            .linebreak("\n"),
+            .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Single-line comments
 
     func testSingleLineComment() {

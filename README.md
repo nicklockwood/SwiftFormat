@@ -145,7 +145,7 @@ To set up SwiftFormat as an Xcode build phase, do the following:
         
 	Both paths should be relative to the directory containing your Xcode project. If you are installing SwiftFormat as a Cocoapod, the swiftformat path will most likely be
 	
-	    "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat"
+	    `${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat .`
 
     **NOTE:** Adding this script will slightly increase your build time, and will make changes to your source files as you work on them, which can have annoying side-effects such as clearing the undo buffer. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 

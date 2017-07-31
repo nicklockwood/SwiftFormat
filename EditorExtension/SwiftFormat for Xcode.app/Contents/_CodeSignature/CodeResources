@@ -6,23 +6,23 @@
 	<dict>
 		<key>Resources/Base.lproj/Main.storyboardc/Info.plist</key>
 		<data>
-		Xt+R581K4n/HJLyVS+vg46Va1b4=
+		T2+Jnx1qre0YGmDzZ+oDrDtrVWk=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/MainMenu.nib</key>
 		<data>
-		+kPQE5lmeFxGeCiasmyjvbZqBlE=
+		TiNSD28onUa6cOK3OiZx40soPGE=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/NSWindowController-B8D-0N-5wS.nib</key>
 		<data>
-		qWiz/2xpqP1IKEvqfyYa6EppzVQ=
+		jYCEflDkx49f7ovKkYI9ootp9Mg=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/ViewController.nib</key>
 		<data>
-		KtWVsXX/jKduMXH9yhu5xn7MSKc=
+		XGPchpSdDWU8UirmXmKV+KMphis=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/XfG-lQ-9wD-view-m2S-Jp-Qdl.nib</key>
 		<data>
-		7RsvRHwFAF7f19d7lIEA9Pa+QIE=
+		NwW90swgehamzPfC2x71CS6JEBs=
 		</data>
 		<key>Resources/libswiftRemoteMirror.dylib</key>
 		<data>
@@ -143,7 +143,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			IwoAFbQNpOzZpGiIrD3JAF5nRfc=
+			iQLa3tYqQDNr/4jLLl2KbHXRmas=
 			</data>
 			<key>requirement</key>
 			<string>identifier "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension" and anchor apple generic and certificate leaf[subject.CN] = "Mac Developer: Nick Lockwood (XDQ4XJZXHD)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
@@ -152,55 +152,55 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			Xt+R581K4n/HJLyVS+vg46Va1b4=
+			T2+Jnx1qre0YGmDzZ+oDrDtrVWk=
 			</data>
 			<key>hash2</key>
 			<data>
-			aYem/Mz9jPzxc6iXFLYFbhkMgquEZ5S3tXtVCgM/eiY=
+			d3PCOF9hIfZQFRTYvFH62ZRK7XJom/hOR3x711r3iGs=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/MainMenu.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			+kPQE5lmeFxGeCiasmyjvbZqBlE=
+			TiNSD28onUa6cOK3OiZx40soPGE=
 			</data>
 			<key>hash2</key>
 			<data>
-			5P1PgBDqgc114cPvq9eMStFsbJQYoGgGFcawQ0b0wWo=
+			UtxzG3ZcCvryGTAo61MCo91APngOoJRyekveRkLAIwo=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/NSWindowController-B8D-0N-5wS.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			qWiz/2xpqP1IKEvqfyYa6EppzVQ=
+			jYCEflDkx49f7ovKkYI9ootp9Mg=
 			</data>
 			<key>hash2</key>
 			<data>
-			Y6bZa0zGsNb5tLwiC+sCbQxoWzL7I8fi72iLbNA9tFo=
+			rd6qm6dE/pvThWzyMKSfu/Pcvhxv9Usda/pabiLOW70=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/ViewController.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			KtWVsXX/jKduMXH9yhu5xn7MSKc=
+			XGPchpSdDWU8UirmXmKV+KMphis=
 			</data>
 			<key>hash2</key>
 			<data>
-			KBuXEIOk97Oflqf2V1vPIzTsNHMY69IKDCMCb1m7hco=
+			pn0NJsx8+6tTh1MWBTOZtvEGy72lUcEl/NE7fcG0sjs=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/XfG-lQ-9wD-view-m2S-Jp-Qdl.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			7RsvRHwFAF7f19d7lIEA9Pa+QIE=
+			NwW90swgehamzPfC2x71CS6JEBs=
 			</data>
 			<key>hash2</key>
 			<data>
-			e/n7el9KvBSHHiqDrJMFfGo+4haAGYyjCNAxJAKIujw=
+			wq6BrccmVA4dCOk4gMBxKWfSUbxePgLOz4ivGmdCyO0=
 			</data>
 		</dict>
 		<key>Resources/libswiftRemoteMirror.dylib</key>

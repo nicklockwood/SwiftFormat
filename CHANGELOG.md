@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.29.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.3) (2017-07-31)
+
+- Added support for Swift 4's multi-line string literal syntax
+- Fixed a bug with handling inline comments inside an array literal
+
 ## [0.29.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.2) (2017-07-03)
 
 - Fixed critical bug where space was incorrectly inserted around unary range operators

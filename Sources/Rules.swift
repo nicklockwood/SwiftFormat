@@ -2720,7 +2720,7 @@ extension FormatRules {
             }
             let characters: String.UnicodeScalarView
             if case .ignore = grouping {
-                characters = string.unicodeScalars.suffix(from: prefix.unicodeScalars.endIndex)
+                characters = String.UnicodeScalarView(string.unicodeScalars.suffix(from: prefix.unicodeScalars.endIndex))
             } else {
                 characters = token.unescaped().unicodeScalars
             }

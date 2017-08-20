@@ -449,7 +449,7 @@ private extension String.UnicodeScalarView {
         }
         if index > startIndex {
             let string = String(prefix(upTo: index))
-            self = suffix(from: index)
+            self = String.UnicodeScalarView(suffix(from: index))
             return string
         }
         return nil
@@ -465,7 +465,7 @@ private extension String.UnicodeScalarView {
                 index = self.index(after: index)
             }
             let string = String(prefix(upTo: index))
-            self = suffix(from: index)
+            self = String.UnicodeScalarView(suffix(from: index))
             return string
         }
         return nil
@@ -473,7 +473,7 @@ private extension String.UnicodeScalarView {
 
     mutating func readCharacter(where matching: (UnicodeScalar) -> Bool = { _ in true }) -> UnicodeScalar? {
         if let c = first, matching(c) {
-            self = dropFirst()
+            self = String.UnicodeScalarView(dropFirst())
             return c
         }
         return nil
@@ -481,7 +481,7 @@ private extension String.UnicodeScalarView {
 
     mutating func read(_ character: UnicodeScalar) -> Bool {
         if first == character {
-            self = dropFirst()
+            self = String.UnicodeScalarView(dropFirst())
             return true
         }
         return false

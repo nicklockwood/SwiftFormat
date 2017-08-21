@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.29.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.4) (2017-08-21)
+
+- Fixed a bug where `self` could be incorrectly inserted if local variable is declared inside an `#if` block
+
 ## [0.29.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.3) (2017-07-31)
 
 - Added support for Swift 4's multi-line string literal syntax

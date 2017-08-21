@@ -1,4 +1,3 @@
 language: objective-c
 osx_image: xcode8.3
-script: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx
-
+script: xcodebuild test -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx

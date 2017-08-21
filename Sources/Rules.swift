@@ -2028,7 +2028,7 @@ extension FormatRules {
                     lastKeyword = ""
                 case let .keyword(name):
                     lastKeyword = name
-                case .startOfScope("("), .startOfScope("\""):
+                case .startOfScope("("), .startOfScope("\""), .startOfScope("#if"):
                     scopeStack.append(token)
                 case .startOfScope("{") where lastKeyword == "catch":
                     lastKeyword = ""

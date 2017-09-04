@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.29.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.5) (2017-09-04)
+
+- Fixed bounds crash when parsing an empty string literal at the end of a file
+- SwiftFormat now compiles without modification in Xcode 9 using Swift 3.2 or 4.0
+
 ## [0.29.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.4) (2017-08-21)
 
 - Fixed a bug where `self` could be incorrectly inserted if local variable is declared inside an `#if` block

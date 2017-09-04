@@ -160,7 +160,7 @@ Git pre-commit hook
 3. Add the following line in the pre-commit file (unlike the Xcode build phase approach, this uses your locally installed version of SwiftFormat, not a separate copy in your project repository)
 
         #!/bin/bash
-        git status --porcelain | grep -e '^ [AM] \(.*\).swift$' | cut -c 3- | while read line; do
+        git diff --staged --name-only | grep -e '\(.*\).swift$' | while read line; do
           swiftformat ${line};
           git add $line;
         done

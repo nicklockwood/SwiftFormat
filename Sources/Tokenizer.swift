@@ -633,7 +633,7 @@ private extension UnicodeScalarView {
 
     mutating func parseStartOfScope() -> Token? {
         if read("\"") {
-            if first == "\"", self[index(after: startIndex)] == "\"" {
+            if count >= 2, first == "\"", self[index(after: startIndex)] == "\"" {
                 removeFirst(2)
                 return .startOfScope("\"\"\"")
             }
@@ -999,7 +999,7 @@ public func tokenize(_ source: String) -> [Token] {
             case "\\":
                 escaped = !escaped
             case "\"":
-                if !escaped, tokens[scopeIndexStack.last!] == .startOfScope("\"\"\""),
+                if !escaped, tokens[scopeIndexStack.last!] == .startOfScope("\"\"\""), characters.count >= 2,
                     characters.first == "\"", characters[characters.index(after: characters.startIndex)] == "\"" {
                     characters.removeFirst(2)
                     if string != "" {

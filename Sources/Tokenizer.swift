@@ -150,7 +150,7 @@ public enum Token: Equatable {
     public func unescaped() -> String {
         switch self {
         case .stringBody:
-            var input = string.unicodeScalars
+            var input = UnicodeScalarView(string.unicodeScalars)
             var output = String.UnicodeScalarView()
             while let c = input.readCharacter() {
                 if c == "\\" {
@@ -437,7 +437,126 @@ extension UnicodeScalar {
     var isSpace: Bool { return self == " " || self == "\t" || value == 0x0B }
 }
 
-private extension String.UnicodeScalarView {
+#if swift(>=3.2)
+
+    // Workaround for horribly slow String.UnicodeScalarView.Subsequence perf
+
+    struct UnicodeScalarView {
+        public typealias Index = String.UnicodeScalarView.Index
+
+        private let characters: String.UnicodeScalarView
+        public private(set) var startIndex: Index
+        public private(set) var endIndex: Index
+
+        public init(_ unicodeScalars: String.UnicodeScalarView) {
+            characters = unicodeScalars
+            startIndex = characters.startIndex
+            endIndex = characters.endIndex
+        }
+
+        public init(_ unicodeScalars: String.UnicodeScalarView.SubSequence) {
+            self.init(String.UnicodeScalarView(unicodeScalars))
+        }
+
+        public init(_ string: String) {
+            self.init(string.unicodeScalars)
+        }
+
+        public var first: UnicodeScalar? {
+            return isEmpty ? nil : characters[startIndex]
+        }
+
+        public var count: Int {
+            return characters.distance(from: startIndex, to: endIndex)
+        }
+
+        public var isEmpty: Bool {
+            return startIndex >= endIndex
+        }
+
+        public subscript(_ index: Index) -> UnicodeScalar {
+            return characters[index]
+        }
+
+        public func index(after index: Index) -> Index {
+            return characters.index(after: index)
+        }
+
+        public func prefix(upTo index: Index) -> UnicodeScalarView {
+            var view = UnicodeScalarView(characters)
+            view.startIndex = startIndex
+            view.endIndex = index
+            return view
+        }
+
+        public func suffix(from index: Index) -> UnicodeScalarView {
+            var view = UnicodeScalarView(characters)
+            view.startIndex = index
+            view.endIndex = endIndex
+            return view
+        }
+
+        public func dropFirst() -> UnicodeScalarView {
+            var view = UnicodeScalarView(characters)
+            view.startIndex = characters.index(after: startIndex)
+            view.endIndex = endIndex
+            return view
+        }
+
+        public mutating func popFirst() -> UnicodeScalar? {
+            if isEmpty {
+                return nil
+            }
+            let char = characters[startIndex]
+            startIndex = characters.index(after: startIndex)
+            return char
+        }
+
+        /// Will crash if n > remaining char count
+        public mutating func removeFirst(_ n: Int) {
+            startIndex = characters.index(startIndex, offsetBy: n)
+        }
+
+        /// Will crash if collection is empty
+        @discardableResult
+        public mutating func removeFirst() -> UnicodeScalar {
+            let oldIndex = startIndex
+            startIndex = characters.index(after: startIndex)
+            return characters[oldIndex]
+        }
+
+        /// Returns the remaining characters
+        fileprivate var unicodeScalars: String.UnicodeScalarView.SubSequence {
+            return characters[startIndex ..< endIndex]
+        }
+    }
+
+    typealias _UnicodeScalarView = UnicodeScalarView
+    extension String {
+        init(_ unicodeScalarView: _UnicodeScalarView) {
+            self.init(unicodeScalarView.unicodeScalars)
+        }
+    }
+
+    extension String.UnicodeScalarView {
+        init(_ unicodeScalarView: _UnicodeScalarView) {
+            self.init(unicodeScalarView.unicodeScalars)
+        }
+    }
+
+    extension String.UnicodeScalarView.SubSequence {
+        init(_ unicodeScalarView: _UnicodeScalarView) {
+            self.init(unicodeScalarView.unicodeScalars)
+        }
+    }
+
+#else
+
+    typealias UnicodeScalarView = String.UnicodeScalarView
+
+#endif
+
+private extension UnicodeScalarView {
 
     mutating func readCharacters(where matching: (UnicodeScalar) -> Bool) -> String? {
         var index = startIndex
@@ -492,7 +611,7 @@ private extension String.UnicodeScalarView {
     }
 }
 
-private extension String.UnicodeScalarView {
+private extension UnicodeScalarView {
 
     mutating func parseSpace() -> Token? {
         return readCharacters(where: { $0.isSpace }).map { .space($0) }
@@ -831,7 +950,7 @@ private extension String.UnicodeScalarView {
 public func tokenize(_ source: String) -> [Token] {
     var scopeIndexStack: [Int] = []
     var tokens: [Token] = []
-    var characters = source.unicodeScalars
+    var characters = UnicodeScalarView(source.unicodeScalars)
     var closedGenericScopeIndexes: [Int] = []
     var nestedSwitches = 0
 
@@ -897,7 +1016,7 @@ public func tokenize(_ source: String) -> [Token] {
                                     tokens[index] = .error(indent) // Mismatched whitespace
                                     break
                                 }
-                                let remainder = indent.substring(from: offset.endIndex)
+                                let remainder: String = String(indent[offset.endIndex ..< indent.endIndex])
                                 if case let .stringBody(body) = tokens[index + 1] {
                                     tokens[index + 1] = .stringBody(remainder + body)
                                 } else {

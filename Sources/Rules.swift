@@ -41,13 +41,12 @@ public class FormatRules: NSObject {
     public static let byName: [String: FormatRule] = {
         var rules = [String: FormatRule]()
         var numberOfMethods: CUnsignedInt = 0
-        let methods = class_copyMethodList(object_getClass(FormatRules.self), &numberOfMethods)
+        let methods = class_copyMethodList(object_getClass(FormatRules.self), &numberOfMethods)!
         for i in 0 ..< Int(numberOfMethods) {
-            if let selector = method_getName(methods?[i].unsafelyUnwrapped) {
-                let name = String(describing: selector)
-                if name.hasSuffix(":") {
-                    rules[String(name.characters.dropLast())] = { FormatRules.perform(selector, with: $0) }
-                }
+            let selector: Selector = method_getName(methods[i])
+            let name = String(describing: selector)
+            if name.hasSuffix(":") {
+                rules[String(name.characters.dropLast())] = { FormatRules.perform(selector, with: $0) }
             }
         }
         return rules
@@ -428,8 +427,7 @@ extension FormatRules {
             if "/!:".characters.contains(first) {
                 if characters.count > 1, case let next = characters[characters.index(after: characters.startIndex)],
                     !" /t".characters.contains(next) {
-                    let string = String(string.characters.first!) + " " +
-                        string.substring(from: string.characters.index(string.startIndex, offsetBy: 1))
+                    let string = String(string.characters.first!) + " " + String(string.characters.dropFirst())
                     formatter.replaceToken(at: i + 1, with: .commentBody(string))
                 }
             } else if !" /t".characters.contains(first), !string.hasPrefix("===") { // Special-case check for swift stdlib codebase
@@ -441,8 +439,7 @@ extension FormatRules {
             if case let characters = string.characters, let first = characters.first, "*!:".characters.contains(first) {
                 if characters.count > 1, case let next = characters[characters.index(after: characters.startIndex)],
                     !" /t".characters.contains(next), !string.hasPrefix("**"), !string.hasPrefix("*/") {
-                    let string = String(string.characters.first!) + " " +
-                        string.substring(from: string.characters.index(string.startIndex, offsetBy: 1))
+                    let string = String(string.characters.first!) + " " + String(string.characters.dropFirst())
                     formatter.replaceToken(at: i + 1, with: .commentBody(string))
                 }
             } else if !string.hasPrefix("---") {
@@ -1173,13 +1170,13 @@ extension FormatRules {
             if case let .commentBody(string) = token {
                 for tag in ["TODO", "MARK", "FIXME"] {
                     if string.hasPrefix(tag) {
-                        var suffix = string.substring(from: tag.endIndex)
+                        var suffix: String = String(string[tag.endIndex ..< string.endIndex])
                         if let first = suffix.unicodeScalars.first, !" :".unicodeScalars.contains(first) {
                             // If not followed by a space or :, don't mess with it as it may be a custom format
                             break
                         }
                         while let first = suffix.unicodeScalars.first, " :".unicodeScalars.contains(first) {
-                            suffix = suffix.substring(from: suffix.index(after: suffix.startIndex))
+                            suffix = String(suffix.unicodeScalars.dropFirst())
                         }
                         formatter.replaceToken(at: i, with: .commentBody(tag + ":" + (suffix.isEmpty ? "" : " \(suffix)")))
                         break
@@ -2718,11 +2715,11 @@ extension FormatRules {
                 grouping = formatter.options.hexGrouping
                 prefix = "0x"
             }
-            let characters: String.UnicodeScalarView
+            let characters: String.UnicodeScalarView.SubSequence
             if case .ignore = grouping {
                 characters = string.unicodeScalars.suffix(from: prefix.unicodeScalars.endIndex)
             } else {
-                characters = token.unescaped().unicodeScalars
+                characters = String.UnicodeScalarView.SubSequence(token.unescaped().unicodeScalars)
             }
             let endIndex: String.UnicodeScalarView.Index
             switch type {
@@ -2736,9 +2733,9 @@ extension FormatRules {
             var suffix = String(characters.suffix(from: endIndex))
             suffix = formatter.options.uppercaseExponent ? suffix.uppercased() : suffix.lowercased()
             let length = characters.distance(from: characters.startIndex, to: endIndex)
-            var output: String.UnicodeScalarView
+            var output: String.UnicodeScalarView.SubSequence
             if case let .group(group, threshold) = grouping, length >= threshold {
-                output = String.UnicodeScalarView()
+                output = String.UnicodeScalarView.SubSequence()
                 var index = endIndex
                 var count = 0
                 repeat {

@@ -561,7 +561,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 if string == string.lowercased() {
                     lowercase += 1
                 } else {
-                    let value = string.substring(from: prefix.endIndex)
+                    let value = string[prefix.endIndex ..< string.endIndex]
                     if value == value.uppercased() {
                         uppercase += 1
                     }

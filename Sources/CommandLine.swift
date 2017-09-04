@@ -534,7 +534,7 @@ func processInput(_ inputURLs: [URL],
                 var path = inputURL.absoluteURL.path
                 if let cacheDirectory = cacheDirectory {
                     let commonPrefix = path.commonPrefix(with: cacheDirectory.path)
-                    path = path.substring(from: commonPrefix.endIndex)
+                    path = String(path[commonPrefix.endIndex ..< path.endIndex])
                 }
                 return path
             }()
@@ -631,7 +631,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     for arg in args {
         if arg.hasPrefix("--") {
             // Long argument names
-            let key = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 2))
+            let key = String(arg.unicodeScalars.dropFirst(2))
             if !names.contains(key) {
                 throw FormatError.options("unknown argument: \(arg)")
             }
@@ -640,7 +640,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             continue
         } else if arg.hasPrefix("-") {
             // Short argument names
-            let flag = arg.substring(from: arg.characters.index(arg.startIndex, offsetBy: 1))
+            let flag = String(arg.unicodeScalars.dropFirst())
             let matches = names.filter { $0.hasPrefix(flag) }
             if matches.count > 1 {
                 throw FormatError.options("ambiguous argument: \(arg)")

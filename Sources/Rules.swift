@@ -2717,7 +2717,7 @@ extension FormatRules {
             }
             let characters: String.UnicodeScalarView.SubSequence
             if case .ignore = grouping {
-                characters = string.unicodeScalars.suffix(from: prefix.unicodeScalars.endIndex)
+                characters = String.UnicodeScalarView(string.unicodeScalars.suffix(from: prefix.unicodeScalars.endIndex))
             } else {
                 characters = String.UnicodeScalarView.SubSequence(token.unescaped().unicodeScalars)
             }

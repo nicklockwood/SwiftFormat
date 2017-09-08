@@ -117,6 +117,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
 
         for excludedURL in excludedURLs {
             if inputURL.absoluteString.hasPrefix(excludedURL.absoluteString) {
+                print("skipping \(inputURL.path)")
                 return
             }
         }

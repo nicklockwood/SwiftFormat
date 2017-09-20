@@ -4676,6 +4676,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testHoistIfArgIsNamespacedEnumCaseLiteralInParens() {
+        let input = "switch foo {\ncase (Foo.bar(let baz)):\n}"
+        let output = "switch foo {\ncase let (Foo.bar(baz)):\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testHoistIfArgIsUnderscore() {
         let input = "if case .foo(_, let baz) = quux {}"
         let output = "if case let .foo(_, baz) = quux {}"
@@ -4738,6 +4745,30 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testUnhoistIfArgIsEnumCaseLiteralInParens() {
+        let input = "switch foo {\ncase let (.bar(baz)):\n}"
+        let output = "switch foo {\ncase (.bar(let baz)):\n}"
+        let options = FormatOptions(hoistPatternLet: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testUnhoistIfArgIsNamespacedEnumCaseLiteral() {
+        let input = "switch foo {\ncase let Foo.bar(baz):\n}"
+        let output = "switch foo {\ncase Foo.bar(let baz):\n}"
+        let options = FormatOptions(hoistPatternLet: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testUnhoistIfArgIsNamespacedEnumCaseLiteralInParens() {
+        let input = "switch foo {\ncase let (Foo.bar(baz)):\n}"
+        let output = "switch foo {\ncase (Foo.bar(let baz)):\n}"
+        let options = FormatOptions(hoistPatternLet: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     func testUnhoistIfArgIsUnderscore() {
         let input = "if case let .foo(_, baz) = quux {}"
         let output = "if case .foo(_, let baz) = quux {}"
@@ -4757,6 +4788,14 @@ class RulesTests: XCTestCase {
     func testNoUnhoistIfLetTuple() {
         let input = "if let x = y, let (_, a) = z {}"
         let output = "if let x = y, let (_, a) = z {}"
+        let options = FormatOptions(hoistPatternLet: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoUnhoistIfArgIsNamespacedEnumCaseLiteralInParens() {
+        let input = "switch foo {\ncase (Foo.bar(let baz)):\n}"
+        let output = "switch foo {\ncase (Foo.bar(let baz)):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

@@ -2389,7 +2389,7 @@ extension FormatRules {
                     keywordFound = true
                 case .identifier("_"):
                     break
-                case .identifier where formatter.last(.nonSpaceOrComment, before: index)?.string != ".":
+                case .identifier where formatter.last(.nonSpaceOrComment, before: index) != .operator(".", .prefix):
                     identifierFound = true
                 case .delimiter(","):
                     guard keywordFound || !identifierFound else { return nil }
@@ -2487,7 +2487,7 @@ extension FormatRules {
                         wasParenOrComma = true
                     case let .identifier(name) where wasParenOrComma:
                         wasParenOrComma = false
-                        if name != "_" {
+                        if name != "_", formatter.next(.nonSpaceOrComment, after: index) != .operator(".", .infix) {
                             indices.append(index)
                         }
                     case _ where token.isSpaceOrCommentOrLinebreak:

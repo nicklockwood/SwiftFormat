@@ -2876,6 +2876,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRedundantParensRemoved5() {
+        let input = "if (.bar) {}"
+        let output = "if .bar {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRedundantParensRemoved6() {
+        let input = "if (Foo.bar) {}"
+        let output = "if Foo.bar {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testRequiredParensNotRemoved() {
         let input = "if (x || y) * z {}"
         let output = "if (x || y) * z {}"
@@ -2886,6 +2900,27 @@ class RulesTests: XCTestCase {
     func testOuterParensRemoved() {
         let input = "while ((x || y) && z) {}"
         let output = "while (x || y) && z {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testOuterParensRemoved2() {
+        let input = "if (Foo.bar(baz)) {}"
+        let output = "if Foo.bar(baz) {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testCaseOuterParensRemoved() {
+        let input = "switch foo {\ncase (Foo.bar(let baz)):\n}"
+        let output = "switch foo {\ncase Foo.bar(let baz):\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["hoistPatternLet"])), output + "\n")
+    }
+
+    func testCaseLetOuterParensRemoved() {
+        let input = "switch foo {\ncase let (Foo.bar(baz)):\n}"
+        let output = "switch foo {\ncase let Foo.bar(baz):\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -4680,7 +4715,7 @@ class RulesTests: XCTestCase {
         let input = "switch foo {\ncase (Foo.bar(let baz)):\n}"
         let output = "switch foo {\ncase let (Foo.bar(baz)):\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["redundantParens"])), output + "\n")
     }
 
     func testHoistIfArgIsUnderscore() {
@@ -4750,7 +4785,7 @@ class RulesTests: XCTestCase {
         let output = "switch foo {\ncase (.bar(let baz)):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["redundantParens"]), options: options), output + "\n")
     }
 
     func testUnhoistIfArgIsNamespacedEnumCaseLiteral() {
@@ -4766,7 +4801,7 @@ class RulesTests: XCTestCase {
         let output = "switch foo {\ncase (Foo.bar(let baz)):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["redundantParens"]), options: options), output + "\n")
     }
 
     func testUnhoistIfArgIsUnderscore() {
@@ -4798,7 +4833,7 @@ class RulesTests: XCTestCase {
         let output = "switch foo {\ncase (Foo.bar(let baz)):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["redundantParens"]), options: options), output + "\n")
     }
 
     // MARK: wrapArguments

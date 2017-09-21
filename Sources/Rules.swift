@@ -1415,7 +1415,8 @@ extension FormatRules {
 
         formatter.forEach(.startOfScope("(")) { i, _ in
             let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
-            switch formatter.token(at: previousIndex) ?? .space("") {
+            let token = formatter.token(at: previousIndex) ?? .space("")
+            switch token {
             case .endOfScope("]"):
                 if let startIndex = formatter.index(of: .startOfScope("["), before: previousIndex),
                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex) == .startOfScope("{") {
@@ -1432,7 +1433,7 @@ extension FormatRules {
                     removeParen(at: closingIndex)
                     removeParen(at: i)
                 }
-            case .stringBody, .endOfScope, .operator("?", .postfix), .operator("!", .postfix):
+            case .stringBody, .operator("?", .postfix), .operator("!", .postfix):
                 break
             case .identifier: // TODO: are trailing closures allowed in other cases?
                 // Parens before closure
@@ -1473,13 +1474,15 @@ extension FormatRules {
                     removeParen(at: closingIndex)
                     removeParen(at: i)
                 }
-            case let .keyword(string):
-                if ["if", "while", "switch", "for", "in", "where", "guard"].contains(string),
+            case .keyword, .endOfScope:
+                let string = token.string
+                if ["if", "while", "switch", "for", "in", "where", "guard", "let", "case"].contains(string),
                     let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
-                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: closingIndex)
-                    != .endOfScope("}"),
+                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: closingIndex) != .endOfScope("}"),
                     let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) {
-                    if nextToken != .startOfScope("{") && nextToken != .delimiter(",") &&
+                    if nextToken != .startOfScope("{") &&
+                        nextToken != .delimiter(",") &&
+                        nextToken != .startOfScope(":") &&
                         !(string == "for" && nextToken == .keyword("in")) &&
                         !(string == "guard" && nextToken == .keyword("else")) {
                         // TODO: this is confusing - refactor to move fallthrough to end of case

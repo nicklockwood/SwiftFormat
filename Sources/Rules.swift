@@ -425,7 +425,8 @@ extension FormatRules {
             guard let nextToken = formatter.token(at: i + 1), case let .commentBody(string) = nextToken else { return }
             guard case let characters = string.characters, let first = characters.first else { return }
             if "/!:".characters.contains(first) {
-                if characters.count > 1, case let next = characters[characters.index(after: characters.startIndex)],
+                let nextIndex = characters.index(after: characters.startIndex)
+                if nextIndex < characters.endIndex, case let next = characters[nextIndex],
                     !" /t".characters.contains(next) {
                     let string = String(string.characters.first!) + " " + String(string.characters.dropFirst())
                     formatter.replaceToken(at: i + 1, with: .commentBody(string))
@@ -437,7 +438,8 @@ extension FormatRules {
         formatter.forEach(.startOfScope("/*")) { i, _ in
             guard let nextToken = formatter.token(at: i + 1), case let .commentBody(string) = nextToken else { return }
             if case let characters = string.characters, let first = characters.first, "*!:".characters.contains(first) {
-                if characters.count > 1, case let next = characters[characters.index(after: characters.startIndex)],
+                let nextIndex = characters.index(after: characters.startIndex)
+                if nextIndex < characters.endIndex, case let next = characters[nextIndex],
                     !" /t".characters.contains(next), !string.hasPrefix("**"), !string.hasPrefix("*/") {
                     let string = String(string.characters.first!) + " " + String(string.characters.dropFirst())
                     formatter.replaceToken(at: i + 1, with: .commentBody(string))

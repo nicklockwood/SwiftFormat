@@ -154,9 +154,9 @@ public enum Token: Equatable {
         case .stringBody:
             var input = UnicodeScalarView(string.unicodeScalars)
             var output = String.UnicodeScalarView()
-            while let c = input.readCharacter() {
+            while let c = input.popFirst() {
                 if c == "\\" {
-                    if let c = input.readCharacter() {
+                    if let c = input.popFirst() {
                         switch c {
                         case "\0":
                             output.append("\0")
@@ -200,9 +200,10 @@ public enum Token: Equatable {
         case .number(_, .integer), .number(_, .decimal):
             return string.replacingOccurrences(of: "_", with: "")
         case .number(_, .binary), .number(_, .octal), .number(_, .hex):
-            var characters = string.unicodeScalars
-            guard characters.count > 2, characters.removeFirst() == "0",
-                "oxb".unicodeScalars.contains(characters.removeFirst()) else {
+            var characters = UnicodeScalarView(string.unicodeScalars)
+            guard characters.read("0"), characters.readCharacter(where: {
+                "oxb".unicodeScalars.contains($0)
+            }) != nil else {
                 return string.replacingOccurrences(of: "_", with: "")
             }
             return String(characters).replacingOccurrences(of: "_", with: "")
@@ -468,6 +469,7 @@ extension UnicodeScalar {
             return isEmpty ? nil : characters[startIndex]
         }
 
+        @available(*, deprecated, message: "Really hurts performance - use a different approach")
         public var count: Int {
             return characters.distance(from: startIndex, to: endIndex)
         }
@@ -592,7 +594,7 @@ private extension UnicodeScalarView {
         return nil
     }
 
-    mutating func readCharacter(where matching: (UnicodeScalar) -> Bool = { _ in true }) -> UnicodeScalar? {
+    mutating func readCharacter(where matching: (UnicodeScalar) -> Bool) -> UnicodeScalar? {
         if let c = first, matching(c) {
             self = dropFirst()
             return c
@@ -635,7 +637,8 @@ private extension UnicodeScalarView {
 
     mutating func parseStartOfScope() -> Token? {
         if read("\"") {
-            if count >= 2, first == "\"", self[index(after: startIndex)] == "\"" {
+            let nextIndex = index(after: startIndex)
+            if nextIndex < endIndex, first == "\"", self[nextIndex] == "\"" {
                 removeFirst(2)
                 return .startOfScope("\"\"\"")
             }
@@ -959,7 +962,7 @@ public func tokenize(_ source: String) -> [Token] {
     func processStringBody() {
         var string = ""
         var escaped = false
-        while let c = characters.readCharacter() {
+        while let c = characters.popFirst() {
             switch c {
             case "\\":
                 escaped = !escaped
@@ -996,13 +999,13 @@ public func tokenize(_ source: String) -> [Token] {
     func processMultilineStringBody() {
         var string = ""
         var escaped = false
-        while let c = characters.readCharacter() {
+        while let c = characters.popFirst() {
             switch c {
             case "\\":
                 escaped = !escaped
             case "\"":
-                if !escaped, tokens[scopeIndexStack.last!] == .startOfScope("\"\"\""), characters.count >= 2,
-                    characters.first == "\"", characters[characters.index(after: characters.startIndex)] == "\"" {
+                let nextIndex = characters.index(after: characters.startIndex)
+                if nextIndex < characters.endIndex, !escaped, tokens[scopeIndexStack.last!] == .startOfScope("\"\"\""), characters.first == "\"", characters[nextIndex] == "\"" {
                     characters.removeFirst(2)
                     if string != "" {
                         tokens.append(.error(string)) // Not permitted by the spec
@@ -1090,7 +1093,7 @@ public func tokenize(_ source: String) -> [Token] {
     }
 
     func processCommentBody() {
-        while let c = characters.readCharacter() {
+        while let c = characters.popFirst() {
             switch c {
             case "/":
                 if characters.read("*") {

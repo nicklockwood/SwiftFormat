@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.29.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.6) (2017-09-21)
+
+- Fixed bug in `hoistPatternLet` rule when formatting `case let` patterns with outer parens
+- The `redundantParens` rule now correctly removes the outer parens in the aforementioned case
+- Fixed performance regression introduced in 0.29.5
+
 ## [0.29.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.5) (2017-09-04)
 
 - Fixed bounds crash when parsing an empty string literal at the end of a file

@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.29.5
+//  Version 0.29.6
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -444,7 +444,7 @@ extension UnicodeScalar {
 
     // Workaround for horribly slow String.UnicodeScalarView.Subsequence perf
 
-    struct UnicodeScalarView {
+    private struct UnicodeScalarView {
         public typealias Index = String.UnicodeScalarView.Index
 
         private let characters: String.UnicodeScalarView
@@ -535,20 +535,20 @@ extension UnicodeScalar {
         }
     }
 
-    typealias _UnicodeScalarView = UnicodeScalarView
-    extension String {
+    private typealias _UnicodeScalarView = UnicodeScalarView
+    private extension String {
         init(_ unicodeScalarView: _UnicodeScalarView) {
             self.init(unicodeScalarView.unicodeScalars)
         }
     }
 
-    extension String.UnicodeScalarView {
+    private extension String.UnicodeScalarView {
         init(_ unicodeScalarView: _UnicodeScalarView) {
             self.init(unicodeScalarView.unicodeScalars)
         }
     }
 
-    extension String.UnicodeScalarView.SubSequence {
+    private extension String.UnicodeScalarView.SubSequence {
         init(_ unicodeScalarView: _UnicodeScalarView) {
             self.init(unicodeScalarView.unicodeScalars)
         }
@@ -556,7 +556,7 @@ extension UnicodeScalar {
 
 #else
 
-    typealias UnicodeScalarView = String.UnicodeScalarView
+    private typealias UnicodeScalarView = String.UnicodeScalarView
 
 #endif
 

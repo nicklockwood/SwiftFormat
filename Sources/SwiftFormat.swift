@@ -79,6 +79,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                            outputURL: URL? = nil,
                            options: FileOptions = FileOptions(),
                            concurrent: Bool = true,
+                           verbose: Bool = false,
                            block: @escaping (URL, URL) throws -> () throws -> Void) -> [Error] {
 
     guard let resourceValues = try? inputURL.resourceValues(
@@ -113,11 +114,14 @@ public func enumerateFiles(withInputURL inputURL: URL,
     func enumerate(inputURL: URL,
                    outputURL: URL?,
                    options: FileOptions,
+                   verbose: Bool,
                    block: @escaping (URL, URL) throws -> () throws -> Void) {
 
         for excludedURL in excludedURLs {
             if inputURL.absoluteString.hasPrefix(excludedURL.absoluteString) {
-                print("skipping \(inputURL.path)")
+                if verbose {
+                    print("skipping \(inputURL.path)")
+                }
                 return
             }
         }
@@ -144,13 +148,13 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     let outputURL = outputURL.map {
                         URL(fileURLWithPath: $0.path + url.path[inputURL.path.characters.endIndex ..< url.path.endIndex])
                     }
-                    enumerate(inputURL: url, outputURL: outputURL, options: options, block: block)
+                    enumerate(inputURL: url, outputURL: outputURL, options: options, verbose: verbose, block: block)
                 }
             }
         } else if options.followSymlinks &&
             (resourceValues.isSymbolicLink == true || resourceValues.isAliasFile == true) {
             let resolvedURL = inputURL.resolvingSymlinksInPath()
-            enumerate(inputURL: resolvedURL, outputURL: outputURL, options: options, block: block)
+            enumerate(inputURL: resolvedURL, outputURL: outputURL, options: options, verbose: verbose, block: block)
         }
     }
 
@@ -159,7 +163,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
             onComplete { throw FormatError.options("file not found at \(inputURL.path)") }
             return
         }
-        enumerate(inputURL: inputURL, outputURL: outputURL, options: options, block: block)
+        enumerate(inputURL: inputURL, outputURL: outputURL, options: options, verbose: verbose, block: block)
     }
     group.wait()
 

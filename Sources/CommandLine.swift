@@ -525,7 +525,8 @@ func processInput(_ inputURLs: [URL],
                                  excluding: excludedURLs,
                                  outputURL: outputURL,
                                  options: fileOptions,
-                                 concurrent: !verbose) { inputURL, outputURL in
+                                 concurrent: !verbose,
+                                 verbose: verbose) { inputURL, outputURL in
 
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("failed to read file \(inputURL.path)")

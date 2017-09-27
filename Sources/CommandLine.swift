@@ -97,6 +97,7 @@ func printHelp() {
     print("--conflictmarkers  merge conflict markers, either \"reject\" (default) or \"ignore\"")
     print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
     print("--verbose          display detailed formatting output and warnings/errors")
+    print("--dry              run in dry mode without actually changing any files")
     print("")
     print("swiftformat has a number of rules that can be enabled or disabled. by default")
     print("most rules are enabled. use --rules to display all enabled/disabled rules:")
@@ -192,6 +193,8 @@ func parseArguments(_ argumentString: String) -> [String] {
 func processArguments(_ args: [String], in directory: String) {
     var errors = [Error]()
     var verbose = false
+    var dry = false
+    let exitCode: Int32
     do {
         // Get options
         let args = try preprocessArguments(args, commandLineArguments)
@@ -263,17 +266,6 @@ func processArguments(_ args: [String], in directory: String) {
             inputURLs.append(expandPath(inputPath, in: directory))
         }
 
-        // Get path(s) that will be excluded
-        var excludedURLs = [URL]()
-        if let arg = args["exclude"] {
-            if inputURLs.isEmpty {
-                throw FormatError.options("--exclude option has no effect unless an input path is specified")
-            }
-            for path in arg.components(separatedBy: ",") {
-                excludedURLs.append(expandPath(path, in: directory))
-            }
-        }
-
         // Verbose
         if let arg = args["verbose"] {
             verbose = true
@@ -283,6 +275,27 @@ func processArguments(_ args: [String], in directory: String) {
             }
             if inputURLs.isEmpty, args["output"] ?? "" != "" {
                 throw FormatError.options("--verbose option has no effect unless an output file is specified")
+            }
+        }
+
+        // Dry
+        if let arg = args["dry"] {
+            dry = true
+            if !arg.isEmpty {
+                // dry doesn't take an argument, so treat argument as another input path
+                inputURLs.append(expandPath(arg, in: directory))
+            }
+        }
+
+        // Get path(s) that will be excluded
+        // Get path(s) that will be excluded
+        var excludedURLs = [URL]()
+        if let arg = args["exclude"] {
+            if inputURLs.isEmpty {
+                throw FormatError.options("--exclude option has no effect unless an input path is specified")
+            }
+            for path in arg.components(separatedBy: ",") {
+                excludedURLs.append(expandPath(path, in: directory))
             }
         }
 
@@ -443,10 +456,10 @@ func processArguments(_ args: [String], in directory: String) {
         print("running swiftformat...")
 
         // Format the code
-        var filesWritten = 0, filesChecked = 0
+        var filesWritten = 0, filesFailed = 0, filesChecked = 0
         let time = timeEvent {
             var _errors = [Error]()
-            (filesWritten, filesChecked, _errors) = processInput(
+            (filesWritten, filesFailed, filesChecked, _errors) = processInput(
                 inputURLs,
                 excluding: excludedURLs,
                 andWriteToOutput: outputURL,
@@ -454,6 +467,7 @@ func processArguments(_ args: [String], in directory: String) {
                 formatOptions: formatOptions,
                 fileOptions: fileOptions,
                 verbose: verbose,
+                dry: dry,
                 cacheURL: cacheURL
             )
             errors += _errors
@@ -467,7 +481,7 @@ func processArguments(_ args: [String], in directory: String) {
                 }
                 let inputPaths = inputURLs.map({ $0.path }).joined(separator: ", ")
                 throw FormatError.options("no eligible files found at \(inputPaths)")
-            } else if !errors.isEmpty {
+            } else if !dry && !errors.isEmpty {
                 throw FormatError.options("failed to format any files")
             }
         }
@@ -475,7 +489,12 @@ func processArguments(_ args: [String], in directory: String) {
             print("")
         }
         printWarnings(errors)
-        print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)", as: .success)
+        if dry {
+            print("swiftformat completed. \(filesFailed)/\(filesChecked) files would have been updated in \(time)", as: .success)
+        } else {
+            print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)", as: .success)
+        }
+        exitCode = filesFailed > 0 ? 1 : 0
     } catch {
         if !verbose {
             // Warnings would be redundant at this point
@@ -483,7 +502,9 @@ func processArguments(_ args: [String], in directory: String) {
         }
         // Fatal error
         print("error: \(error)", as: .error)
+        exitCode = 1
     }
+    exit(exitCode)
 }
 
 func inferOptions(from inputURLs: [URL], excluding excludedURLs: [URL]) -> (Int, FormatOptions, [Error]) {
@@ -552,7 +573,8 @@ func processInput(_ inputURLs: [URL],
                   formatOptions: FormatOptions,
                   fileOptions: FileOptions,
                   verbose: Bool,
-                  cacheURL: URL?) -> (Int, Int, [Error]) {
+                  dry: Bool,
+                  cacheURL: URL?) -> (Int, Int, Int, [Error]) {
 
     // Filter rules
     var disabled = [String]()
@@ -573,7 +595,7 @@ func processInput(_ inputURLs: [URL],
     }
     // Format files
     var errors = [Error]()
-    var filesChecked = 0, filesWritten = 0
+    var filesChecked = 0, filesFailed = 0, filesWritten = 0
     for inputURL in inputURLs {
         errors += enumerateFiles(withInputURL: inputURL,
                                  excluding: excludedURLs,
@@ -620,15 +642,26 @@ func processInput(_ inputURLs: [URL],
                         cache?[cacheKey] = cachePrefix + String(output.count)
                     }
                 }
-                do {
-                    try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
+                if dry {
+                    if output != input {
+                        print("-- would have written \(outputURL.path)", as: .error)
+                    }
                     return {
                         filesChecked += 1
-                        filesWritten += 1
-                        cache?[cacheKey] = cachePrefix + String(output.count)
+                        filesFailed += 1
                     }
-                } catch {
-                    throw FormatError.writing("failed to write file \(outputURL.path), \(error)")
+                } else {
+                    do {
+                        try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
+                        return {
+                            filesChecked += 1
+                            filesFailed += 1
+                            filesWritten += 1
+                            cache?[cacheKey] = cachePrefix + String(output.count)
+                        }
+                    } catch {
+                        throw FormatError.writing("failed to write file \(outputURL.path), \(error)")
+                    }
                 }
             } catch {
                 if verbose {
@@ -675,7 +708,7 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
-    return (filesWritten, filesChecked, errors)
+    return (filesWritten, filesFailed, filesChecked, errors)
 }
 
 func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String: String] {
@@ -1202,6 +1235,7 @@ let commandLineArguments = [
     "conflictmarkers",
     "cache",
     "verbose",
+    "dry",
     // Rules
     "disable",
     "enable",

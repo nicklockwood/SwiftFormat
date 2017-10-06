@@ -654,7 +654,7 @@ private extension UnicodeScalarView {
     mutating func parseOperator() -> Token? {
 
         func isHead(_ c: UnicodeScalar) -> Bool {
-            if "./=­-+!*%&|^~?".unicodeScalars.contains(c) {
+            if "./\\=­-+!*%&|^~?".unicodeScalars.contains(c) {
                 return true
             }
             switch c.value {

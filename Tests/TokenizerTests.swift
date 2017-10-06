@@ -2497,4 +2497,59 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqual(tokenize(input), output)
     }
+
+    // MARK: keypaths
+
+    func testNamespacedKeyPath() {
+        let input = "let foo = \\Foo.bar"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("\\", .prefix),
+            .identifier("Foo"),
+            .operator(".", .infix),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAnonymousKeyPath() {
+        let input = "let foo = \\.bar"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("\\", .prefix),
+            .operator(".", .prefix),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAnonymousSubscriptKeyPath() {
+        let input = "let foo = \\.[0].bar"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("\\", .prefix),
+            .operator(".", .prefix),
+            .startOfScope("["),
+            .number("0", .integer),
+            .endOfScope("]"),
+            .operator(".", .infix),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
 }

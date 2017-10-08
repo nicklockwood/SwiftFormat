@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.29.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.7) (2017-10-08)
+
+- Added support for Swift 4 keyPath syntax
+
 ## [0.29.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.6) (2017-09-21)
 
 - Fixed bug in `hoistPatternLet` rule when formatting `case let` patterns with outer parens

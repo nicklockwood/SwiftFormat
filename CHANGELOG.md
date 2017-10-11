@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.29.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.8) (2017-10-11)
+
+- Fixed bug where space was incorrectly removed around postfix/suffix range operators
+
 ## [0.29.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.7) (2017-10-08)
 
 - Added support for Swift 4 keyPath syntax

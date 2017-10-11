@@ -2651,6 +2651,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testSpaceNotRemovedBeforeLeadingRangeOperator() {
+        let input = "let range = ..<foo.endIndex"
+        let output = "let range = ..<foo.endIndex"
+        let options = FormatOptions(spaceAroundRangeOperators: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSpaceNotRemovedBeforeLeadingRangeOperatorWithSpaceAroundRangeOperatorsFalse() {
+        let input = "let range = ..<foo.endIndex"
+        let output = "let range = ..<foo.endIndex"
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // specifiers
 
     func testVarSpecifiersCorrected() {

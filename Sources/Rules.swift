@@ -457,7 +457,8 @@ extension FormatRules {
 
     /// Adds or removes the space around range operators
     @objc public class func ranges(_ formatter: Formatter) {
-        formatter.forEach(.rangeOperator) { i, _ in
+        formatter.forEach(.rangeOperator) { i, token in
+            guard case .operator(_, .infix) = token else { return }
             if !formatter.options.spaceAroundRangeOperators {
                 if formatter.token(at: i + 1)?.isSpace == true {
                     formatter.removeToken(at: i + 1)

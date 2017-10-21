@@ -4769,6 +4769,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // TODO: this could actually hoist out the let to the next level, but that's tricky
+    // to implement without breaking the `testNoOverHoistSwitchCaseWithNestedParens` case
+    func testHoistSwitchCaseWithNestedParens() {
+        let input = "import Foo\nswitch (foo, bar) {\ncase (.baz(let quux), Foo.bar): break\n}"
+        let output = "import Foo\nswitch (foo, bar) {\ncase (let .baz(quux), Foo.bar): break\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoOverHoistSwitchCaseWithNestedParens() {
+        let input = "import Foo\nswitch (foo, bar) {\ncase (.baz(let quux), bar): break\n}"
+        let output = "import Foo\nswitch (foo, bar) {\ncase (let .baz(quux), bar): break\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // hoist = false
 
     func testUnhoistCaseLet() {

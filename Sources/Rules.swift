@@ -2418,7 +2418,9 @@ extension FormatRules {
             var keyword = "let"
             if var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) {
                 if case .identifier = formatter.tokens[prevIndex] {
-                    prevIndex = formatter.index(of: .spaceOrCommentOrLinebreak, before: prevIndex) ?? -1
+                    prevIndex = formatter.index(before: prevIndex) {
+                        $0.isSpaceOrCommentOrLinebreak || $0.isStartOfScope
+                    } ?? -1
                     startIndex = prevIndex + 1
                     prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) ?? 0
                 }
@@ -2478,7 +2480,8 @@ extension FormatRules {
                 // Insert keyword before parens
                 formatter.insertToken(.keyword(keyword), at: startIndex)
                 formatter.insertToken(.space(" "), at: startIndex + 1)
-                if formatter.token(at: startIndex - 1)?.isSpaceOrCommentOrLinebreak == false {
+                if let prevToken = formatter.token(at: startIndex - 1),
+                    !prevToken.isSpaceOrCommentOrLinebreak, !prevToken.isStartOfScope {
                     formatter.insertToken(.space(" "), at: startIndex)
                 }
             } else {

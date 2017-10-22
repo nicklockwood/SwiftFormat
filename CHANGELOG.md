@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.29.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.9) (2017-10-22)
+
+- Fixed critical bug where `hoistPatternLet` rule could corrupt tuples in a switch case clause
+- Comments immediately before a case statement are now indented level with the case
+
 ## [0.29.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.8) (2017-10-11)
 
 - Fixed bug where space was incorrectly removed around postfix/suffix range operators

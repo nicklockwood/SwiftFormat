@@ -143,7 +143,7 @@ class CommandLineTests: XCTestCase {
     func testHelpOptionsImplemented() {
         CLI.print = { message, _ in
             if message.hasPrefix("--") {
-                let name = message.substring(from: "--".endIndex).components(separatedBy: " ")[0]
+                let name = String(message["--".endIndex ..< message.endIndex]).components(separatedBy: " ")[0]
                 XCTAssertTrue(commandLineArguments.contains(name), name)
             }
         }
@@ -155,7 +155,7 @@ class CommandLineTests: XCTestCase {
         deprecatedArguments.forEach { arguments.remove($0) }
         CLI.print = { message, _ in
             if message.hasPrefix("--") {
-                let name = message.substring(from: "--".endIndex).components(separatedBy: " ")[0]
+                let name = String(message["--".endIndex ..< message.endIndex]).components(separatedBy: " ")[0]
                 arguments.remove(name)
             }
         }
@@ -177,7 +177,7 @@ class CommandLineTests: XCTestCase {
         while let match = readme.range(of: "\\*[a-zA-Z]+\\* - ", options: .regularExpression, range: range, locale: nil) {
             let lower = readme.index(after: match.lowerBound)
             let upper = readme.index(match.upperBound, offsetBy: -4)
-            let ruleName = readme.substring(with: lower ..< upper)
+            let ruleName: String = String(readme[lower ..< upper])
             XCTAssertTrue(ruleNames.contains(ruleName), ruleName)
             range = match.upperBound ..< range.upperBound
         }
@@ -197,7 +197,7 @@ class CommandLineTests: XCTestCase {
         while let match = readme.range(of: "`--[a-zA-Z]+`", options: .regularExpression, range: range, locale: nil) {
             let lower = readme.index(match.lowerBound, offsetBy: 3)
             let upper = readme.index(before: match.upperBound)
-            let argument = readme.substring(with: lower ..< upper)
+            let argument: String = String(readme[lower ..< upper])
             XCTAssertTrue(arguments.contains(argument), argument)
             range = match.upperBound ..< range.upperBound
         }

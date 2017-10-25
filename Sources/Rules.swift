@@ -1814,7 +1814,7 @@ extension FormatRules {
             let unescaped = token.unescaped()
             if !unescaped.isSwiftKeyword {
                 switch unescaped {
-                case "super", "self", "nil", "true", "false":
+                case "Any", "super", "self", "nil", "true", "false":
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {
                         return
                     }

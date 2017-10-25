@@ -3797,6 +3797,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveBackticksAroundAnyProperty() {
+        let input = "enum Foo {\n    case `Any`\n}"
+        let output = "enum Foo {\n    case `Any`\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: redundantSelf
 
     // removeSelf = true

@@ -1,7 +1,8 @@
 [![Travis](https://img.shields.io/travis/nicklockwood/SwiftFormat.svg)](https://travis-ci.org/nicklockwood/SwiftFormat)
-[![Swift](https://img.shields.io/badge/swift-3.1-yellow.svg?style=flat)](https://developer.apple.com/swift)
-[![Swift](https://img.shields.io/badge/swift-3.2-orange.svg?style=flat)](https://developer.apple.com/swift)
-[![Swift](https://img.shields.io/badge/swift-4.0-red.svg?style=flat)](https://developer.apple.com/swift)
+[![Coveralls](https://coveralls.io/repos/github/nicklockwood/SwiftFormat/badge.svg)](https://coveralls.io/github/nicklockwood/SwiftFormat)
+[![Swift 3.1](https://img.shields.io/badge/swift-3.1-yellow.svg?style=flat)](https://developer.apple.com/swift)
+[![Swift 3.2](https://img.shields.io/badge/swift-3.2-orange.svg?style=flat)](https://developer.apple.com/swift)
+[![Swift 4.0](https://img.shields.io/badge/swift-4.0-red.svg?style=flat)](https://developer.apple.com/swift)
 [![License](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
 [![Twitter](https://img.shields.io/badge/twitter-@nicklockwood-blue.svg)](http://twitter.com/nicklockwood)
 
@@ -633,7 +634,7 @@ goto(fail)
 + Foo<Bar>()
 ```
 
-***spaceAroundOperators*** - contextually adjusts the space around infix operators:
+***spaceAroundOperators*** - contextually adjusts the space around infix operators. Also adds or removes the space between an oeprator function declaration and its arguments, depending on value of the `--operatorfunc` option.
 
 ```diff
 - foo . bar()
@@ -643,6 +644,11 @@ goto(fail)
 ```diff
 - a+b+c
 + a + b + c
+```
+
+```diff
+- func ==(lhs: Int, rhs: Int) -> Bool
++ func == (lhs: Int, rhs: Int) -> Bool
 ```
 
 ***spaceAroundParens*** - contextually adjusts the space around ( ). For example:

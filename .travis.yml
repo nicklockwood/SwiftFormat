@@ -1,3 +1,13 @@
-language: objective-c
-osx_image: xcode8.3
-script: xcodebuild test -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx
+language: swift
+osx_image: xcode9
+
+env:
+  - LC_CTYPE=en_US.UTF-8 LANG=en_US.UTF-8
+before_install:
+  - rvm install ruby-2.4.2
+install:
+  - bundle install --without=documentation
+script:
+  - set -o pipefail
+  -  xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test | bundle exec xcpretty
+after_success: bundle exec slather

@@ -1214,5 +1214,27 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         return nospace <= space
     }()
 
+    options.elseOnNextLine = {
+        var sameLine = 0, nextLine = 0
+        formatter.forEach(.keyword) { i, token in
+            guard ["else", "catch", "while"].contains(token.string) else { return }
+            // Check for brace
+            guard let braceIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+                $0 == .endOfScope("}")
+            }) else { return }
+            // Check this isn't an inline block
+            guard let prevBraceIndex = formatter.index(of: .startOfScope("{"), before: braceIndex),
+                let prevLinebreakIndex = formatter.index(of: .linebreak, before: braceIndex),
+                prevLinebreakIndex > prevBraceIndex else { return }
+            // Check if wrapped
+            if let linebreakIndex = formatter.index(of: .linebreak, before: i), linebreakIndex > braceIndex {
+                nextLine += 1
+            } else {
+                sameLine += 1
+            }
+        }
+        return sameLine < nextLine
+    }()
+
     return options
 }

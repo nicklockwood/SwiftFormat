@@ -341,4 +341,24 @@ class OptionsTests: XCTestCase {
         let options = inferOptions(from: tokenize(input))
         XCTAssertFalse(options.spaceAroundOperatorDeclarations)
     }
+
+    // MARK: elseOnNextLine
+
+    func testInferElseOnNextLine() {
+        let input = "if foo {\n}\nelse {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.elseOnNextLine)
+    }
+
+    func testInferElseOnSameLine() {
+        let input = "if foo {\n} else {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.elseOnNextLine)
+    }
+
+    func testIgnoreInlineIfElse() {
+        let input = "if foo {} else {}\nif foo {\n}\nelse {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.elseOnNextLine)
+    }
 }

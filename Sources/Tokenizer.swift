@@ -1248,6 +1248,13 @@ public func tokenize(_ source: String) -> [Token] {
             }
             return
         }
+        switch prevNonSpaceToken {
+        case .keyword("func"), .keyword("operator"):
+            tokens[i] = .operator(string, .none)
+            return
+        default:
+            break
+        }
         let prevToken: Token = tokens[i - 1]
         let type: OperatorType
         switch string {

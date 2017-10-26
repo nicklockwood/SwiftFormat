@@ -1746,13 +1746,50 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testInfixQuestionMarkChevronOperator() {
+    func testInfixEqualsOperatorWithSpace() {
+        let input = "operator == {}"
+        let output: [Token] = [
+            .keyword("operator"),
+            .space(" "),
+            .operator("==", .none),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInfixEqualsOperatorWithoutSpace() {
+        let input = "operator =={}"
+        let output: [Token] = [
+            .keyword("operator"),
+            .space(" "),
+            .operator("==", .none),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInfixQuestionMarkChevronOperatorWithSpace() {
         let input = "operator ?< {}"
         let output: [Token] = [
             .keyword("operator"),
             .space(" "),
             .operator("?<", .none),
             .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInfixQuestionMarkChevronOperatorWithoutSpace() {
+        let input = "operator ?<{}"
+        let output: [Token] = [
+            .keyword("operator"),
+            .space(" "),
+            .operator("?<", .none),
             .startOfScope("{"),
             .endOfScope("}"),
         ]

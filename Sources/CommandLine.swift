@@ -99,6 +99,7 @@ func printHelp() {
     print("--commas           commas in collection literals. \"always\" (default) or \"inline\"")
     print("--comments         indenting of comment bodies. \"indent\" (default) or \"ignore\"")
     print("--decimalgrouping  decimal grouping,threshold or \"none\", \"ignore\". default: 3,6")
+    print("--elseposition     placement of else/catch. \"same-line\" (default) or \"next-line\"")
     print("--empty            how empty values are represented. \"void\" (default) or \"tuple\"")
     print("--experimental     experimental rules. \"enabled\" or \"disabled\" (default)")
     print("--exponentcase     case of 'e' in numbers. \"lowercase\" or \"uppercase\" (default)")
@@ -730,6 +731,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["patternlet"] = options.hoistPatternLet ? "hoist" : "inline"
             case "stripUnusedArguments":
                 args["stripunusedargs"] = options.stripUnusedArguments.rawValue
+            case "elseOnNextLine":
+                args["elseposition"] = options.elseOnNextLine ? "next-line" : "same-line"
             case "removeSelf":
                 args["self"] = options.removeSelf ? "remove" : "insert"
             case "experimentalRules":
@@ -865,6 +868,16 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.spaceAroundOperatorDeclarations = true
         case "nospace":
             options.spaceAroundOperatorDeclarations = false
+        default:
+            throw FormatError.options("")
+        }
+    }
+    try processOption("elseposition", in: args, from: &arguments) {
+        switch $0.lowercased() {
+        case "nextline", "next-line":
+            options.elseOnNextLine = true
+        case "sameline", "same-line":
+            options.elseOnNextLine = false
         default:
             throw FormatError.options("")
         }
@@ -1088,6 +1101,7 @@ let formatArguments = [
     "commas",
     "comments",
     "decimalgrouping",
+    "elseposition",
     "empty",
     "exponentcase",
     "header",

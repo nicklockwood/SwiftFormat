@@ -303,7 +303,7 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 + let foo = 5
 ```
 
-***elseOnSameLine*** - controls whether an `else`, `catch` or `while` after a `}` appears on the same line:
+***elseOnSameLine*** - controls whether an `else`, `catch` or `while` keyword after a `}` appears on the same line, depending on the `--elseposition` option:
 
 ```diff
   if x {

@@ -1122,10 +1122,10 @@ extension FormatRules {
                     if formatter.last(.nonSpace, before: closingBraceIndex)?.isLinebreak == true {
                         if let prevLinebreakIndex = formatter.index(of: .linebreak, before: i),
                             closingBraceIndex < prevLinebreakIndex {
-                            if !formatter.options.allmanBraces {
+                            if !formatter.options.allmanBraces, !formatter.options.elseOnNextLine {
                                 formatter.replaceTokens(inRange: closingBraceIndex + 1 ..< i, with: [.space(" ")])
                             }
-                        } else if formatter.options.allmanBraces {
+                        } else if formatter.options.allmanBraces || formatter.options.elseOnNextLine {
                             formatter.replaceTokens(inRange: closingBraceIndex + 1 ..< i, with:
                                 [.linebreak(formatter.options.linebreak)])
                             formatter.insertSpace(formatter.indentForLine(at: i), at: closingBraceIndex + 2)

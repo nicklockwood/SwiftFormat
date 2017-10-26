@@ -2331,14 +2331,14 @@ class RulesTests: XCTestCase {
 
     // MARK: elseOnSameLine
 
-    func testelseOnSameLine() {
+    func testElseOnSameLine() {
         let input = "if true {\n    1\n}\nelse { 2 }"
         let output = "if true {\n    1\n} else { 2 }"
         XCTAssertEqual(try format(input, rules: [FormatRules.elseOnSameLine]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testelseOnSameLineOnlyAppliedToDanglingBrace() {
+    func testElseOnSameLineOnlyAppliedToDanglingBrace() {
         let input = "if true { 1 }\nelse { 2 }"
         let output = "if true { 1 }\nelse { 2 }"
         XCTAssertEqual(try format(input, rules: [FormatRules.elseOnSameLine]), output)
@@ -2352,7 +2352,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testelseOnSameLineDoesntEatPreviousStatement() {
+    func testElseOnSameLineDoesntEatPreviousStatement() {
         let input = "if true {}\nguard true else { return }"
         let output = "if true {}\nguard true else { return }"
         XCTAssertEqual(try format(input, rules: [FormatRules.elseOnSameLine]), output)
@@ -2363,6 +2363,14 @@ class RulesTests: XCTestCase {
         let input = "if true\n{\n    1\n} else { 2 }"
         let output = "if true\n{\n    1\n}\nelse { 2 }"
         let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.elseOnSameLine], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testElseOnNextLineOption() {
+        let input = "if true {\n    1\n} else { 2 }"
+        let output = "if true {\n    1\n}\nelse { 2 }"
+        let options = FormatOptions(elseOnNextLine: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.elseOnSameLine], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }

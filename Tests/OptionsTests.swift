@@ -327,4 +327,18 @@ class OptionsTests: XCTestCase {
         let options = inferOptions(from: tokenize(input))
         XCTAssertFalse(options.hoistPatternLet)
     }
+
+    // MARK: spaceAroundOperatorDeclarations
+
+    func testInferSpaceAfterOperatorFunc() {
+        let input = "func == (lhs: Int, rhs: Int) -> Bool {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.spaceAroundOperatorDeclarations)
+    }
+
+    func testInferNoSpaceAfterOperatorFunc() {
+        let input = "func ==(lhs: Int, rhs: Int) -> Bool {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.spaceAroundOperatorDeclarations)
+    }
 }

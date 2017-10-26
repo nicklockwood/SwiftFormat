@@ -1194,5 +1194,22 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         return removed > unremoved // if both zero, should be false
     }()
 
+    options.spaceAroundOperatorDeclarations = {
+        var space = 0, nospace = 0
+        formatter.forEach(.operator) { i, token in
+            guard case .operator(_, .none) = token,
+                formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .keyword("func"),
+                let token = formatter.token(at: i + 1) else {
+                return
+            }
+            if token.isSpaceOrLinebreak {
+                space += 1
+            } else {
+                nospace += 1
+            }
+        }
+        return nospace <= space
+    }()
+
     return options
 }

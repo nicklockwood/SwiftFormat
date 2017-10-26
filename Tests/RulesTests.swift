@@ -1514,8 +1514,8 @@ class RulesTests: XCTestCase {
     }
 
     func testIndentMultilineSwitchCaseCommentsCorrectly() {
-        let input = "switch x {\n/*\n * comment\n */\ncase y:\nbreak\n/*\n * comment\n */\ncase z:\nbreak\n}"
-        let output = "switch x {\n/*\n * comment\n */\ncase y:\n    break\n/*\n * comment\n */\ncase z:\n    break\n}"
+        let input = "switch x {\n/*\n * comment\n */\ncase y:\nbreak\n/*\n * comment\n */\ndefault:\nbreak\n}"
+        let output = "switch x {\n/*\n * comment\n */\ncase y:\n    break\n/*\n * comment\n */\ndefault:\n    break\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

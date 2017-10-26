@@ -998,7 +998,7 @@ extension FormatRules {
                              .endOfScope("*/") where !formatter.options.indentComments,
                              .error:
                             break
-                        case .endOfScope("case"):
+                        case .endOfScope("case"), .endOfScope("default"):
                             formatter.insertSpace(indent, at: i + 1)
                             // TODO: is this the best place to do this?
                             var index = i

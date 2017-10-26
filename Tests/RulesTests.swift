@@ -841,6 +841,64 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testAddSpaceAfterFuncEquals() {
+        let input = "func ==(lhs: Int, rhs: Int) -> Bool { return lhs === rhs }"
+        let output = "func == (lhs: Int, rhs: Int) -> Bool { return lhs === rhs }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSpaceAfterFuncEquals() {
+        let input = "func == (lhs: Int, rhs: Int) -> Bool { return lhs === rhs }"
+        let output = "func == (lhs: Int, rhs: Int) -> Bool { return lhs === rhs }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveSpaceAfterFuncEquals() {
+        let input = "func == (lhs: Int, rhs: Int) -> Bool { return lhs === rhs }"
+        let output = "func ==(lhs: Int, rhs: Int) -> Bool { return lhs === rhs }"
+        let options = FormatOptions(spaceAroundOperatorDeclarations: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoAddSpaceAfterFuncEquals() {
+        let input = "func ==(lhs: Int, rhs: Int) -> Bool { return lhs === rhs }"
+        let output = "func ==(lhs: Int, rhs: Int) -> Bool { return lhs === rhs }"
+        let options = FormatOptions(spaceAroundOperatorDeclarations: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testAddSpaceAfterOperatorEquals() {
+        let input = "operator =={}"
+        let output = "operator == {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSpaceAfterOperatorEquals() {
+        let input = "operator == {}"
+        let output = "operator == {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSpaceAfterOperatorEqualsWhenSpaceAroundOperatorDeclarationsFalse() {
+        let input = "operator == {}"
+        let output = "operator == {}"
+        let options = FormatOptions(spaceAroundOperatorDeclarations: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoAddSpaceAfterOperatorEqualsWithAllmanBrace() {
+        let input = "operator ==\n{}"
+        let output = "operator ==\n{}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+    }
+
     // MARK: spaceAroundComments
 
     func testSpaceAroundCommentInParens() {
@@ -1841,15 +1899,15 @@ class RulesTests: XCTestCase {
     }
 
     func testNoIndentAfterOperatorDeclaration() {
-        let input = "infix operator ?=\nfunc ?=(lhs _: Int, rhs _: Int) -> Bool {}"
-        let output = "infix operator ?=\nfunc ?=(lhs _: Int, rhs _: Int) -> Bool {}"
+        let input = "infix operator ?=\nfunc ?= (lhs _: Int, rhs _: Int) -> Bool {}"
+        let output = "infix operator ?=\nfunc ?= (lhs _: Int, rhs _: Int) -> Bool {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testNoIndentAfterChevronOperatorDeclaration() {
-        let input = "infix operator =<<\nfunc =<<<T>(lhs _: T, rhs _: T) -> T {}"
-        let output = "infix operator =<<\nfunc =<<<T>(lhs _: T, rhs _: T) -> T {}"
+        let input = "infix operator =<<\nfunc =<< <T>(lhs _: T, rhs _: T) -> T {}"
+        let output = "infix operator =<<\nfunc =<< <T>(lhs _: T, rhs _: T) -> T {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -2726,8 +2784,8 @@ class RulesTests: XCTestCase {
     }
 
     func testPrefixSpecifier() {
-        let input = "prefix public static func -(rhs: Foo) -> Foo"
-        let output = "public static prefix func -(rhs: Foo) -> Foo"
+        let input = "prefix public static func - (rhs: Foo) -> Foo"
+        let output = "public static prefix func - (rhs: Foo) -> Foo"
         XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -4621,8 +4679,8 @@ class RulesTests: XCTestCase {
     }
 
     func testOperatorArgumentsAreUnnamed() {
-        let input = "func ==(lhs: Int, rhs: Int) { return false }"
-        let output = "func ==(_: Int, _: Int) { return false }"
+        let input = "func == (lhs: Int, rhs: Int) { return false }"
+        let output = "func == (_: Int, _: Int) { return false }"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

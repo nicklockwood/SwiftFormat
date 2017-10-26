@@ -114,6 +114,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var linebreak: String
     public var allowInlineSemicolons: Bool
     public var spaceAroundRangeOperators: Bool
+    public var spaceAroundOperatorDeclarations: Bool
     public var useVoid: Bool
     public var trailingCommas: Bool
     public var indentComments: Bool
@@ -144,6 +145,7 @@ public struct FormatOptions: CustomStringConvertible {
                 linebreak: String = "\n",
                 allowInlineSemicolons: Bool = true,
                 spaceAroundRangeOperators: Bool = true,
+                spaceAroundOperatorDeclarations: Bool = true,
                 useVoid: Bool = true,
                 trailingCommas: Bool = true,
                 indentComments: Bool = true,
@@ -172,6 +174,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons
         self.spaceAroundRangeOperators = spaceAroundRangeOperators
+        self.spaceAroundOperatorDeclarations = spaceAroundOperatorDeclarations
         self.useVoid = useVoid
         self.trailingCommas = trailingCommas
         self.indentComments = indentComments

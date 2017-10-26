@@ -326,6 +326,16 @@ extension FormatRules {
     @objc public class func spaceAroundOperators(_ formatter: Formatter) {
         formatter.forEachToken { i, token in
             switch token {
+            case .operator(_, .none) where formatter.token(at: i + 1)?.isSpaceOrLinebreak == true:
+                if !formatter.options.spaceAroundOperatorDeclarations,
+                    formatter.next(.nonSpaceOrLinebreak, after: i) == .startOfScope("(") {
+                    formatter.removeToken(at: i + 1)
+                }
+            case .operator(_, .none):
+                if formatter.options.spaceAroundOperatorDeclarations ||
+                    formatter.next(.nonSpaceOrLinebreak, after: i) != .startOfScope("(") {
+                    formatter.insertSpace(" ", at: i + 1)
+                }
             case .operator("?", .postfix), .operator("!", .postfix):
                 if let prevToken = formatter.token(at: i - 1),
                     formatter.token(at: i + 1)?.isSpaceOrLinebreak == false,

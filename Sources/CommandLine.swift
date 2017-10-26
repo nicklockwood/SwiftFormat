@@ -110,6 +110,7 @@ func printHelp() {
     print("--insertlines      insert blank line after {. \"enabled\" (default) or \"disabled\"")
     print("--linebreaks       linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
     print("--octalgrouping    octal grouping,threshold or \"none\", \"ignore\". default: 4,8")
+    print("--operatorfunc     spacing for operator funcs. \"spaced\" (default) or \"nospace\"")
     print("--patternlet       let/var placement in patterns. \"hoist\" (default) or \"inline\"")
     print("--ranges           spacing for ranges. \"spaced\" (default) or \"nospace\"")
     print("--removelines      remove blank line before }. \"enabled\" (default) or \"disabled\"")
@@ -689,6 +690,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["semicolons"] = options.allowInlineSemicolons ? "inline" : "never"
             case "spaceAroundRangeOperators":
                 args["ranges"] = options.spaceAroundRangeOperators ? "spaced" : "nospace"
+            case "spaceAroundOperatorDeclarations":
+                args["operatorfunc"] = options.spaceAroundOperatorDeclarations ? "spaced" : "nospace"
             case "useVoid":
                 args["empty"] = options.useVoid ? "void" : "tuples"
             case "trailingCommas":
@@ -852,6 +855,16 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.spaceAroundRangeOperators = true
         case "nospace":
             options.spaceAroundRangeOperators = false
+        default:
+            throw FormatError.options("")
+        }
+    }
+    try processOption("operatorfunc", in: args, from: &arguments) {
+        switch $0.lowercased() {
+        case "space", "spaced", "spaces":
+            options.spaceAroundOperatorDeclarations = true
+        case "nospace":
+            options.spaceAroundOperatorDeclarations = false
         default:
             throw FormatError.options("")
         }
@@ -1085,6 +1098,7 @@ let formatArguments = [
     "insertlines",
     "linebreaks",
     "octalgrouping",
+    "operatorfunc",
     "ranges",
     "removelines",
     "semicolons",

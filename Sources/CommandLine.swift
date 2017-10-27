@@ -139,8 +139,7 @@ func printHelp() {
 
 func expandPath(_ path: String, in directory: String) -> URL {
     let path = NSString(string: path).expandingTildeInPath
-    let directoryURL = URL(fileURLWithPath: directory)
-    return URL(fileURLWithPath: path, relativeTo: directoryURL)
+    return URL(fileURLWithPath: directory + "/" + path)
 }
 
 func timeEvent(block: () throws -> Void) rethrows -> String {

@@ -30,6 +30,7 @@
 //
 
 import Foundation
+import SwiftFormat
 
 extension String {
     var inDefault: String { return "\u{001B}[39m\(self)" }

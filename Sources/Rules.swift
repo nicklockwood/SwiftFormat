@@ -850,6 +850,11 @@ extension FormatRules {
                 case "\"\"\"":
                     // Don't indent multiline string literals
                     break
+                case ":":
+                    indent += formatter.options.indent
+                    if formatter.options.indentCase {
+                        indent += formatter.options.indent
+                    }
                 case "#if":
                     switch formatter.options.ifdefIndent {
                     case .indent:
@@ -914,7 +919,10 @@ extension FormatRules {
                             if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
                                 nextToken.isEndOfScope && nextToken != .endOfScope("*/") {
                                 // Only reduce indent if line begins with a closing scope token
-                                let indent = indentStack.last ?? ""
+                                var indent = indentStack.last ?? ""
+                                if formatter.options.indentCase, [.endOfScope("case"), .endOfScope("default")].contains(token) {
+                                    indent += formatter.options.indent
+                                }
                                 i += formatter.insertSpace(indent, at: start)
                             }
                         }
@@ -1016,7 +1024,10 @@ extension FormatRules {
                                 let startIndex = formatter.index(of: .nonSpaceOrComment, before: index),
                                 formatter.tokens[startIndex].isLinebreak {
                                 // Set indent for comment immediately before case to match the case
-                                let indent = indentStack.count > 1 ? indentStack[indentStack.count - 2] : ""
+                                var indent = indentStack.count > 1 ? indentStack[indentStack.count - 2] : ""
+                                if formatter.options.indentCase {
+                                    indent += formatter.options.indent
+                                }
                                 formatter.insertSpace(indent, at: startIndex + 1)
                                 if case .endOfScope("*/") = prevToken,
                                     var index = formatter.index(of: .startOfScope("/*"), after: startIndex) {

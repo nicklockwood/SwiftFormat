@@ -374,7 +374,7 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
   }
 ```
 
-***indent*** - adjusts leading whitespace based on scope and line wrapping. Uses either tabs or spaces, depending on the `--indent` option. May also affects comments and `#if ...` statements, depending on the configuration of the `--comments` and `--ifdef` options:
+***indent*** - adjusts leading whitespace based on scope and line wrapping. Uses either tabs or spaces, depending on the `--indent` option. By default, `case` statements will be indented level with their containing `switch`, but this can be controlled with the `--indentcase` options. Also affects comments and `#if ...` statements, depending on the configuration of the `--comments` and `--ifdef` options:
 
 ```diff
   if x {
@@ -402,6 +402,18 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 +   bar,
 +   baz
 + ]
+```
+
+```diff
+  switch foo {
+-   case bar: break
+-   case baz: break
+  }
+
+  switch foo {
++ case bar: break
++ case baz: break
+  }
 ```
 
 ***linebreakAtEndOfFile*** - ensures that the last line of the file is empty.

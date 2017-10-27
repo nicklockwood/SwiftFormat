@@ -108,6 +108,7 @@ func printHelp() {
     print("--hexliteralcase   casing for hex literals. \"uppercase\" (default) or \"lowercase\"")
     print("--ifdef            #if indenting. \"indent\" (default), \"noindent\" or \"outdent\"")
     print("--indent           number of spaces to indent, or \"tab\" to use tabs")
+    print("--indentcase       indent cases inside a switch. \"true\" (default) or \"false\"")
     print("--insertlines      insert blank line after {. \"enabled\" (default) or \"disabled\"")
     print("--linebreaks       linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
     print("--octalgrouping    octal grouping,threshold or \"none\", \"ignore\". default: 4,8")
@@ -697,6 +698,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["empty"] = options.useVoid ? "void" : "tuples"
             case "trailingCommas":
                 args["commas"] = options.trailingCommas ? "always" : "inline"
+            case "indentCase":
+                args["indentcase"] = options.indentCase ? "true" : "false"
             case "indentComments":
                 args["comments"] = options.indentComments ? "indent" : "ignore"
             case "truncateBlankLines":
@@ -797,6 +800,16 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                 options.indent = String(repeating: " ", count: spaces)
                 break
             }
+            throw FormatError.options("")
+        }
+    }
+    try processOption("indentcase", in: args, from: &arguments) {
+        switch $0.lowercased() {
+        case "true":
+            options.indentCase = true
+        case "false":
+            options.indentCase = false
+        default:
             throw FormatError.options("")
         }
     }
@@ -1109,6 +1122,7 @@ let formatArguments = [
     "hexliteralcase",
     "ifdef",
     "indent",
+    "indentcase",
     "insertlines",
     "linebreaks",
     "octalgrouping",

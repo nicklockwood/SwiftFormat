@@ -1,5 +1,5 @@
 //
-//  Rules.swift
+//  Options.swift
 //  SwiftFormat
 //
 //  Created by Nick Lockwood on 21/10/2016.
@@ -116,6 +116,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var spaceAroundRangeOperators: Bool
     public var spaceAroundOperatorDeclarations: Bool
     public var useVoid: Bool
+    public var indentCase: Bool
     public var trailingCommas: Bool
     public var indentComments: Bool
     public var truncateBlankLines: Bool
@@ -148,6 +149,7 @@ public struct FormatOptions: CustomStringConvertible {
                 spaceAroundRangeOperators: Bool = true,
                 spaceAroundOperatorDeclarations: Bool = true,
                 useVoid: Bool = true,
+                indentCase: Bool = false,
                 trailingCommas: Bool = true,
                 indentComments: Bool = true,
                 truncateBlankLines: Bool = true,
@@ -178,6 +180,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.spaceAroundRangeOperators = spaceAroundRangeOperators
         self.spaceAroundOperatorDeclarations = spaceAroundOperatorDeclarations
         self.useVoid = useVoid
+        self.indentCase = indentCase
         self.trailingCommas = trailingCommas
         self.indentComments = indentComments
         self.truncateBlankLines = truncateBlankLines

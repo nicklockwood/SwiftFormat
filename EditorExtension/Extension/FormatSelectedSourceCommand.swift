@@ -73,7 +73,11 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
 
             return completionHandler(nil)
         } catch let error {
-            return completionHandler(error)
+            return completionHandler(NSError(
+                domain: "SwiftFormat",
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "\(error)"]
+            ))
         }
     }
 

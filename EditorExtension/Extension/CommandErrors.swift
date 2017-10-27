@@ -29,10 +29,19 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-enum FormatCommandError: Error {
+enum FormatCommandError: Error, CustomStringConvertible {
     case notSwiftLanguage
     case noSelection
     case invalidSelection
-    case invalidLineContent
-    case cannotRestoreSelection
+
+    var description: String {
+        switch self {
+        case .notSwiftLanguage:
+            return "Not a Swift source file"
+        case .noSelection:
+            return "No text selected"
+        case .invalidSelection:
+            return "Invalid selection"
+        }
+    }
 }

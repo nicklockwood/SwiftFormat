@@ -92,7 +92,7 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
         return rawValue
     }
 
-    public static func ==(lhs: Grouping, rhs: Grouping) -> Bool {
+    public static func == (lhs: Grouping, rhs: Grouping) -> Bool {
         switch (lhs, rhs) {
         case (.ignore, .ignore),
              (.none, .none):

@@ -867,7 +867,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. What versions of Swift are supported?*
 
-> A. The framework requires Swift 3, but it can format programs written in Swift 2.x or 3.x. Swift 2.x is no longer actively supported however, and newer rules may not work correctly with Swift 2.x. If you find that SwiftFormat breaks your 2.x codebase, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a subset of rules.
+> A. The framework compiles on Swift 3.x or 4.x, but it can format programs written in Swift 2.x, 3.x or 4.x. Swift 2.x is no longer actively supported however, and newer rules may not work correctly with Swift 2.x. If you find that SwiftFormat breaks your 2.x codebase, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a subset of rules.
 
 
 *Q. I don't like how SwiftFormat formatted my code*

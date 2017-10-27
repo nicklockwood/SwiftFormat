@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.30.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.30.0) (2017-10-27)
+
+- Space is now inserted between the operator name and opeening paren in an operator function declaration
+- Added `--operatorfunc` option to control whether operator should be followed by a space in a function declaration
+- Added `--elseposition` option to control whether `else`, `catch` & `while` should appear on same line as preceding `}`
+- Added `--indentcase` option to control whether `case` statements should be indented inside a `switch`
+- Comments immediately before a `default:` clause are now indented level with the `default` keyword
+- Fixed bug where backticks would be incorrectly removed when using ``Any`` as an identifier
+- Error messages are now displayed correctly in the Xcode editor extension
+- Added test coverage statistics using Slather and Coveralls
+
 ## [0.29.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.9) (2017-10-22)
 
 - Fixed critical bug where `hoistPatternLet` rule could corrupt tuples in a switch case clause

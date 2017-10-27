@@ -935,6 +935,9 @@ extension FormatRules {
                             } else {
                                 // Align indent with previous case value
                                 indent += "     "
+                                if formatter.options.indentCase {
+                                    indent += formatter.options.indent
+                                }
                             }
                             indentStack.append(indent)
                             indentCounts.append(1)

@@ -361,4 +361,18 @@ class OptionsTests: XCTestCase {
         let options = inferOptions(from: tokenize(input))
         XCTAssertTrue(options.elseOnNextLine)
     }
+
+    // MARK: indentCase
+
+    func testInferIndentCase() {
+        let input = "switch {\n    case foo: break\n}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.indentCase)
+    }
+
+    func testInferNoIndentCase() {
+        let input = "switch {\ncase foo: break\n}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.indentCase)
+    }
 }

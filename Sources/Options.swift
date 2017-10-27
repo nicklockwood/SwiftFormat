@@ -1239,5 +1239,33 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         return sameLine < nextLine
     }()
 
+    options.indentCase = {
+        var indent = 0, noindent = 0
+        formatter.forEach(.keyword("switch")) { i, _ in
+            var switchIndent = ""
+            if let token = formatter.token(at: i - 1), !token.isLinebreak {
+                guard case let .space(space) = token, formatter.token(at: i - 2)?.isLinebreak != false else {
+                    return
+                }
+                switchIndent = space
+            }
+            guard let openBraceIndex = formatter.index(of: .startOfScope("{"), after: i),
+                let caseIndex = formatter.index(of: .endOfScope("case"), after: openBraceIndex) ??
+                formatter.index(of: .endOfScope("default"), after: openBraceIndex),
+                let indentToken = formatter.token(at: caseIndex - 1) else {
+                return
+            }
+            switch indentToken {
+            case .linebreak, .space(switchIndent):
+                noindent += 1
+            case let .space(caseIndent) where caseIndent.hasPrefix(switchIndent):
+                indent += 1
+            default:
+                break
+            }
+        }
+        return indent > noindent
+    }()
+
     return options
 }

@@ -3519,6 +3519,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["specifiers"])), output + "\n")
     }
 
+    func testNoRemoveCodableNilInit() {
+        let input = "struct Foo: Codable, Bar {\n    enum CodingKeys: String, CodingKey {\n        case bar = \"_bar\"\n    }\n\n    var bar: Int?\n    var baz: String? = nil\n}"
+        let output = "struct Foo: Codable, Bar {\n    enum CodingKeys: String, CodingKey {\n        case bar = \"_bar\"\n    }\n\n    var bar: Int?\n    var baz: String? = nil\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantNilInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: redundantLet
 
     func testRemoveRedundantLet() {

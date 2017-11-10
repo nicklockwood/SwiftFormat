@@ -1646,6 +1646,22 @@ extension FormatRules {
                 index -= 1
             }
 
+            // Check this isn't a Codable
+            if let scopeIndex = formatter.index(of: .startOfScope("{"), before: i) {
+                var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: scopeIndex)
+                loop: while let index = prevIndex {
+                    switch formatter.tokens[index] {
+                    case .identifier("Codable"), .identifier("Decodable"):
+                        return // Can't safely remove the default value
+                    case .delimiter(":"), .keyword:
+                        break loop
+                    default:
+                        break
+                    }
+                    prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index)
+                }
+            }
+
             // Find the nil
             search(from: i)
         }

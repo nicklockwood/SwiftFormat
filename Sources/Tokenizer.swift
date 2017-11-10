@@ -957,7 +957,6 @@ public func tokenize(_ source: String) -> [Token] {
     var tokens: [Token] = []
     var characters = UnicodeScalarView(source.unicodeScalars)
     var closedGenericScopeIndexes: [Int] = []
-    var nestedSwitches = 0
 
     func processStringBody() {
         var string = ""
@@ -1327,44 +1326,11 @@ public func tokenize(_ source: String) -> [Token] {
         switch token {
         case let .keyword(string):
             // Track switch/case statements
-            let prevToken =
-                index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1).map { tokens[$0] }
-            if let prevToken = prevToken, case .operator(".", _) = prevToken {
+            if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1),
+                case .operator(".", _) = tokens[prevIndex] {
                 tokens[tokens.count - 1] = .identifier(string)
                 processToken()
                 return
-            }
-            if string == "switch" {
-                nestedSwitches += 1
-            } else if nestedSwitches > 0 {
-                switch string {
-                case "default":
-                    tokens[tokens.count - 1] = .endOfScope(string)
-                    processToken()
-                    return
-                case "case":
-                    if let scopeIndex = scopeIndexStack.last,
-                        let keywordIndex = index(of: .keyword, before: scopeIndex),
-                        case .keyword("enum") = tokens[keywordIndex] {
-                        break
-                    }
-                    if let prevToken = prevToken {
-                        switch prevToken {
-                        case .keyword("if"),
-                             .keyword("guard"),
-                             .keyword("while"),
-                             .keyword("for"),
-                             .delimiter(","):
-                            break
-                        default:
-                            tokens[tokens.count - 1] = .endOfScope(string)
-                            processToken()
-                            return
-                        }
-                    }
-                default:
-                    break
-                }
             }
             fallthrough
         case .identifier, .number:
@@ -1432,10 +1398,6 @@ public func tokenize(_ source: String) -> [Token] {
                     }
                 case .endOfScope("case"), .endOfScope("default"):
                     scopeIndexStack.append(tokens.count - 1)
-                case .endOfScope("}"):
-                    if scope == .startOfScope(":") {
-                        nestedSwitches -= 1
-                    }
                 case .endOfScope(")"):
                     guard let scope = scopeIndexStack.last.map({ tokens[$0] }) else {
                         break
@@ -1489,6 +1451,34 @@ public func tokenize(_ source: String) -> [Token] {
                 }
                 if case let .keyword(name) = tokens[prevPrevIndex] {
                     tokens[prevPrevIndex] = .identifier(name)
+                }
+            } else if case let .keyword(string) = token, [.startOfScope("{"), .startOfScope(":")].contains(scope) {
+                switch string {
+                case "default":
+                    tokens[tokens.count - 1] = .endOfScope(string)
+                    processToken()
+                    return
+                case "case":
+                    if let keywordIndex = index(of: .keyword, before: scopeIndex),
+                        case .keyword("enum") = tokens[keywordIndex] {
+                        break
+                    }
+                    if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1) {
+                        switch tokens[prevIndex] {
+                        case .keyword("if"),
+                             .keyword("guard"),
+                             .keyword("while"),
+                             .keyword("for"),
+                             .delimiter(","):
+                            break
+                        default:
+                            tokens[tokens.count - 1] = .endOfScope(string)
+                            processToken()
+                            return
+                        }
+                    }
+                default:
+                    break
                 }
             }
         }

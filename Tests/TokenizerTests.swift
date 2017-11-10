@@ -776,6 +776,46 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testKeywordsAsArgumentLabelNames2() {
+        let input = "foo(case: bar, default: baz)"
+        let output: [Token] = [
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("case"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("bar"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("default"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("baz"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testKeywordsAsArgumentLabelNames3() {
+        let input = "foo(switch: bar, case: baz)"
+        let output: [Token] = [
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("switch"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("bar"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("case"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("baz"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testKeywordAsInternalArgumentLabelName() {
         let input = "func foo(all in: Array)"
         let output: [Token] = [
@@ -2098,6 +2138,39 @@ class TokenizerTests: XCTestCase {
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSwitchCaseContainingDictionaryDefault() {
+        let input = "switch x {\ncase y: foo[\"z\", default: []]\n}"
+        let output: [Token] = [
+            .keyword("switch"),
+            .space(" "),
+            .identifier("x"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .endOfScope("case"),
+            .space(" "),
+            .identifier("y"),
+            .startOfScope(":"),
+            .space(" "),
+            .identifier("foo"),
+            .startOfScope("["),
+            .startOfScope("\""),
+            .stringBody("z"),
+            .endOfScope("\""),
+            .delimiter(","),
+            .space(" "),
+            .identifier("default"),
+            .delimiter(":"),
+            .space(" "),
+            .startOfScope("["),
+            .endOfScope("]"),
+            .endOfScope("]"),
             .linebreak("\n"),
             .endOfScope("}"),
         ]

@@ -1,8 +1,13 @@
 # Change Log
 
+## [0.30.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.30.1) (2017-11-10)
+
+- Fixed error when parsing a subscript with default value inside a `switch` statement
+- Nil default values are no longer removed inside `Codable` structs/classes, as this can break the implementation
+
 ## [0.30.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.30.0) (2017-10-27)
 
-- Space is now inserted between the operator name and opeening paren in an operator function declaration
+- Space is now inserted between the operator name and opening paren in an operator function declaration
 - Added `--operatorfunc` option to control whether operator should be followed by a space in a function declaration
 - Added `--elseposition` option to control whether `else`, `catch` & `while` should appear on same line as preceding `}`
 - Added `--indentcase` option to control whether `case` statements should be indented inside a `switch`

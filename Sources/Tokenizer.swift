@@ -1430,6 +1430,12 @@ public func tokenize(_ source: String) -> [Token] {
                         // Not a generic scope
                         convertOpeningChevronToSymbol(at: scopeIndex)
                     }
+                case .delimiter(":") where scopeIndexStack.count > 1 &&
+                    tokens[scopeIndexStack[scopeIndexStack.count - 2]] == .endOfScope("case"):
+                    // Not a generic scope
+                    convertOpeningChevronToSymbol(at: scopeIndex)
+                    processToken()
+                    return
                 case .keyword("where"):
                     break
                 case .endOfScope, .keyword:

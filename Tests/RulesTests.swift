@@ -1564,6 +1564,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testIndentEnumCaseBodyAfterWhereClause() {
+        let input = "switch foo {\ncase _ where baz < quux:\n    print(1)\n    print(2)\ndefault:\n    break\n}"
+        let output = "switch foo {\ncase _ where baz < quux:\n    print(1)\n    print(2)\ndefault:\n    break\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testIndentSwitchCaseCommentsCorrectly() {
         let input = "switch x {\n// comment\ncase y:\n// comment\nbreak\n// comment\ncase z:\nbreak\n}"
         let output = "switch x {\n// comment\ncase y:\n    // comment\n    break\n// comment\ncase z:\n    break\n}"

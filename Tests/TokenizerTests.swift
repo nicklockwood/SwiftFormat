@@ -2536,6 +2536,40 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testDefaultAfterWhereCondition() {
+        let input = "switch foo {\ncase _ where baz < quux:\nbreak\ndefault:\nbreak\n}"
+        let output: [Token] = [
+            .keyword("switch"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .endOfScope("case"),
+            .space(" "),
+            .identifier("_"),
+            .space(" "),
+            .keyword("where"),
+            .space(" "),
+            .identifier("baz"),
+            .space(" "),
+            .operator("<", .infix),
+            .space(" "),
+            .identifier("quux"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("default"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: dot prefix
 
     func testEnumValueInDictionaryLiteral() {

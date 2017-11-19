@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.30.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.30.2) (2017-11-19)
+
+- Fixed incorrect indenting of case statements for cases with `where` clauses containing `<` operator
+- Fixed bug where parens were incorrectly removed around closures in loop or branch conditions
+- Added compatibility workaround for `self` being incorrectly removed in tests that use the Nimble framework
+
 ## [0.30.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.30.1) (2017-11-10)
 
 - Fixed error when parsing a subscript with default value inside a `switch` statement

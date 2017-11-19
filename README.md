@@ -490,7 +490,7 @@ let foo: Int? = nil
 ```
 
 ```diff
-// doesn't affect non-nil initialzation
+// doesn't affect non-nil initialization
 var foo: Int? = 0
 ```
 
@@ -646,7 +646,7 @@ goto(fail)
 + Foo<Bar>()
 ```
 
-***spaceAroundOperators*** - contextually adjusts the space around infix operators. Also adds or removes the space between an oeprator function declaration and its arguments, depending on value of the `--operatorfunc` option.
+***spaceAroundOperators*** - contextually adjusts the space around infix operators. Also adds or removes the space between an operator function declaration and its arguments, depending on value of the `--operatorfunc` option.
 
 ```diff
 - foo . bar()

@@ -1513,27 +1513,28 @@ extension FormatRules {
                 }
             case .keyword, .endOfScope:
                 let string = token.string
-                if ["if", "while", "switch", "for", "in", "where", "guard", "let", "case"].contains(string),
+                guard ["if", "while", "switch", "for", "in", "where", "guard", "let", "case"].contains(string),
                     let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
-                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: closingIndex) != .endOfScope("}"),
-                    let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) {
-                    if nextToken != .startOfScope("{") &&
-                        nextToken != .delimiter(",") &&
-                        nextToken != .startOfScope(":") &&
-                        !(string == "for" && nextToken == .keyword("in")) &&
-                        !(string == "guard" && nextToken == .keyword("else")) {
-                        // TODO: this is confusing - refactor to move fallthrough to end of case
-                        fallthrough
-                    }
-                    if let commaIndex = formatter.index(of: .delimiter(","), after: i),
-                        commaIndex < closingIndex {
-                        // Might be a tuple, so we won't remove the parens
-                        // TODO: improve the logic here so we don't misidentify function calls as tuples
-                        break
-                    }
-                    removeParen(at: closingIndex)
-                    removeParen(at: i)
+                    formatter.index(of: .endOfScope("}"), before: closingIndex) == nil,
+                    let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) else {
+                    break
                 }
+                if nextToken != .startOfScope("{") &&
+                    nextToken != .delimiter(",") &&
+                    nextToken != .startOfScope(":") &&
+                    !(string == "for" && nextToken == .keyword("in")) &&
+                    !(string == "guard" && nextToken == .keyword("else")) {
+                    // TODO: this is confusing - refactor to move fallthrough to end of case
+                    fallthrough
+                }
+                if let commaIndex = formatter.index(of: .delimiter(","), after: i),
+                    commaIndex < closingIndex {
+                    // Might be a tuple, so we won't remove the parens
+                    // TODO: improve the logic here so we don't misidentify function calls as tuples
+                    break
+                }
+                removeParen(at: closingIndex)
+                removeParen(at: i)
             case .operator(_, .infix):
                 guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
                     formatter.next(.nonSpaceOrComment, after: i) == .startOfScope("{"),

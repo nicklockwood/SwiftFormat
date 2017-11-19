@@ -3076,13 +3076,6 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testIfClosureNotUnwrapped() {
-        let input = "if (foo.contains { bar }) {}"
-        let output = "if (foo.contains { bar }) {}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
     func testGuardParensRemoved() {
         let input = "guard (x == y) else { return }"
         let output = "guard x == y else { return }"
@@ -3330,6 +3323,20 @@ class RulesTests: XCTestCase {
     func testParensAroundClosureInCompoundExpressionRemoved() {
         let input = "if foo == ({ /* some code */ }), let bar = baz {}"
         let output = "if foo == { /* some code */ }, let bar = baz {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAroundClosure() {
+        let input = "if (foo { $0 }) {}"
+        let output = "if (foo { $0 }) {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAroundClosure2() {
+        let input = "if (foo.filter { $0 > 1 }.count > 0) {}"
+        let output = "if (foo.filter { $0 > 1 }.count > 0) {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

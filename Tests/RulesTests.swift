@@ -4405,6 +4405,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveSelfInExpectFunction() { // Special case to support the Nimble framework
+        let input = "class FooTests: XCTestCase {\n    let foo = 1\n    func testFoo() {\n        expect(self.foo) == 1\n    }\n}"
+        let output = "class FooTests: XCTestCase {\n    let foo = 1\n    func testFoo() {\n        expect(self.foo) == 1\n    }\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // removeSelf = false
 
     func testInsertSelf() {

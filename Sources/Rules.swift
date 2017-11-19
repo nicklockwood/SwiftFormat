@@ -2082,7 +2082,14 @@ extension FormatRules {
                     lastKeyword = ""
                 case let .keyword(name):
                     lastKeyword = name
-                case .startOfScope("("), .startOfScope("\""), .startOfScope("#if"):
+                case .startOfScope("("):
+                    // Special case to support autoclosure arguments in the Nimble framework
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("expect") {
+                        index = formatter.index(of: .endOfScope(")"), after: index) ?? index
+                        break
+                    }
+                    fallthrough
+                case .startOfScope("\""), .startOfScope("#if"):
                     scopeStack.append(token)
                 case .startOfScope("{") where lastKeyword == "catch":
                     lastKeyword = ""

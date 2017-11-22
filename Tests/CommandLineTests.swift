@@ -29,8 +29,8 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
 @testable import SwiftFormat
+import XCTest
 
 private var readme: String = {
     let directoryURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()

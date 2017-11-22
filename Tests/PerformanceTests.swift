@@ -6,8 +6,8 @@
 //  Copyright © 2016 Nick Lockwood. All rights reserved.
 //
 
-import XCTest
 import SwiftFormat
+import XCTest
 
 class PerformanceTests: XCTestCase {
 

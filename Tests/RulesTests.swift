@@ -29,8 +29,8 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
 import SwiftFormat
+import XCTest
 
 class RulesTests: XCTestCase {
 
@@ -5435,6 +5435,43 @@ class RulesTests: XCTestCase {
         let input = "[String.self].map(Foo.init(bar:))"
         let output = "[String.self].map(Foo.init(bar:))"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    // MARK: sortedImports
+
+    func testSortedImportsSimpleCase() {
+        let input = "import Foo\nimport Bar"
+        let output = "import Bar\nimport Foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testAlreadySortedImportsDoesNothing() {
+        let input = "import Bar\nimport Foo"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testPreprocessorSortedImports() {
+        let input = "#if os(iOS)\n    import Foo2\n    import Bar2\n#else\n    import Foo1\n    import Bar1\n#endif\nimport Foo3\nimport Bar3"
+        let output = "#if os(iOS)\n    import Bar2\n    import Foo2\n#else\n    import Bar1\n    import Foo1\n#endif\nimport Bar3\nimport Foo3"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testTestableSortedImports() {
+        let input = "@testable import Foo3\nimport Bar3"
+        let output = "import Bar3\n@testable import Foo3"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testCaseInsensitiveSortedImports() {
+        let input = "import Zlib\nimport lib"
+        let output = "import lib\nimport Zlib"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 }

@@ -2886,4 +2886,83 @@ extension FormatRules {
             formatter.removeTokens(inRange: dotIndex ... i)
         }
     }
+
+    /// Sort import statements
+    @objc public class func sortedImports(_ formatter: Formatter) {
+        struct Import {
+            var range: ClosedRange<Int>
+            var tokens: [Token]
+            var importStartIndex: Int
+
+            var moduleName: String? {
+                for token in tokens[importStartIndex ..< tokens.endIndex] {
+                    if case let .identifier(moduleName) = token {
+                        return moduleName
+                    }
+                }
+                return nil
+            }
+        }
+
+        func process(imports: [Import]) {
+            var imports = imports
+
+            imports.reversed().map { $0.range }.forEach(formatter.removeTokens(inRange:))
+
+            guard let firstIndex = imports.first?.range.lowerBound else {
+                return
+            }
+
+            imports.sort { (lhs, rhs) -> Bool in
+                guard let lhsModuleName = lhs.moduleName, let rhsModuleName = rhs.moduleName else { return true }
+                return lhsModuleName.caseInsensitiveCompare(rhsModuleName) == .orderedAscending
+            }
+
+            formatter.insertTokens(imports.flatMap { $0.tokens }, at: firstIndex)
+        }
+
+        var importsStack: [[Import]] = [[]]
+        var removeTrailingToken = false
+        formatter.forEachToken { i, token in
+
+            let shouldBeginScope = [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif")].contains(token)
+            let shouldEndScope = [.keyword("#else"), .keyword("#elseif"), .endOfScope("#endif")].contains(token)
+
+            if shouldEndScope, let imports = importsStack.popLast() {
+                process(imports: imports)
+            }
+
+            if shouldBeginScope {
+                importsStack.append([])
+            }
+
+            if token == .keyword("import") {
+                let importEndIndex: Int
+                if let index = formatter.index(of: .linebreak, after: i) {
+                    importEndIndex = index
+                } else { // Import is the last line. Insert a ghost line break that will later be removed
+                    formatter.insertToken(.linebreak("\n"), at: formatter.tokens.count)
+                    importEndIndex = formatter.tokens.count - 1
+                    removeTrailingToken = true
+                }
+
+                // Search for a line break (or beginning of file) backwards to include whitespace / @testable... in our Import structure
+                let beginIndex = (formatter.index(before: i, where: { (prev) -> Bool in
+                    prev.isLinebreak
+                }) ?? -1) + 1
+
+                let range: ClosedRange<Int> = beginIndex ... importEndIndex
+                let currentImport = Import(range: range, tokens: Array(formatter.tokens[range]), importStartIndex: i - beginIndex)
+                importsStack[importsStack.endIndex - 1].append(currentImport)
+            }
+        }
+
+        while let imports = importsStack.popLast() {
+            process(imports: imports)
+        }
+
+        if removeTrailingToken {
+            formatter.removeLastToken()
+        }
+    }
 }

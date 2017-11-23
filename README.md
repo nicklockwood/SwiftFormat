@@ -718,8 +718,8 @@ goto(fail)
 ***specifiers*** - normalizes the order for access specifiers, and other property/function/class/etc. specifiers:
 
 ```diff
-- lazy public weak private(set) var foo: UIView? foo: UIView?
-+ private(set) public lazy weak var
+- lazy public weak private(set) var foo: UIView?
++ private(set) public lazy weak var foo: UIView?
 ```
 
 ```diff

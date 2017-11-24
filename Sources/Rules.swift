@@ -46,7 +46,7 @@ public class FormatRules: NSObject {
             let selector: Selector = method_getName(methods[i])
             let name = String(describing: selector)
             if name.hasSuffix(":") {
-                rules[String(name.characters.dropLast())] = { FormatRules.perform(selector, with: $0) }
+                rules[String(name.dropLast())] = { FormatRules.perform(selector, with: $0) }
             }
         }
         return rules
@@ -99,8 +99,8 @@ extension FormatRules {
                  "init", "subscript":
                 return false
             default:
-                if let first = keyword.characters.first {
-                    return !"@#".characters.contains(first)
+                if let first = keyword.first {
+                    return !"@#".contains(first)
                 }
                 return true
             }
@@ -433,25 +433,24 @@ extension FormatRules {
         guard formatter.options.indentComments else { return }
         formatter.forEach(.startOfScope("//")) { i, _ in
             guard let nextToken = formatter.token(at: i + 1), case let .commentBody(string) = nextToken else { return }
-            guard case let characters = string.characters, let first = characters.first else { return }
-            if "/!:".characters.contains(first) {
-                let nextIndex = characters.index(after: characters.startIndex)
-                if nextIndex < characters.endIndex, case let next = characters[nextIndex],
-                    !" /t".characters.contains(next) {
-                    let string = String(string.characters.first!) + " " + String(string.characters.dropFirst())
+            guard let first = string.first else { return }
+            if "/!:".contains(first) {
+                let nextIndex = string.index(after: string.startIndex)
+                if nextIndex < string.endIndex, case let next = string[nextIndex], !" /t".contains(next) {
+                    let string = String(string.first!) + " " + String(string.dropFirst())
                     formatter.replaceToken(at: i + 1, with: .commentBody(string))
                 }
-            } else if !" /t".characters.contains(first), !string.hasPrefix("===") { // Special-case check for swift stdlib codebase
+            } else if !" /t".contains(first), !string.hasPrefix("===") { // Special-case check for swift stdlib codebase
                 formatter.insertToken(.space(" "), at: i + 1)
             }
         }
         formatter.forEach(.startOfScope("/*")) { i, _ in
             guard let nextToken = formatter.token(at: i + 1), case let .commentBody(string) = nextToken else { return }
-            if case let characters = string.characters, let first = characters.first, "*!:".characters.contains(first) {
-                let nextIndex = characters.index(after: characters.startIndex)
-                if nextIndex < characters.endIndex, case let next = characters[nextIndex],
-                    !" /t".characters.contains(next), !string.hasPrefix("**"), !string.hasPrefix("*/") {
-                    let string = String(string.characters.first!) + " " + String(string.characters.dropFirst())
+            if let first = string.first, "*!:".contains(first) {
+                let nextIndex = string.index(after: string.startIndex)
+                if nextIndex < string.endIndex, case let next = string[nextIndex],
+                    !" /t".contains(next), !string.hasPrefix("**"), !string.hasPrefix("*/") {
+                    let string = String(string.first!) + " " + String(string.dropFirst())
                     formatter.replaceToken(at: i + 1, with: .commentBody(string))
                 }
             } else if !string.hasPrefix("---") {
@@ -880,7 +879,7 @@ extension FormatRules {
                             if case let .space(string) = token {
                                 indent += string
                             } else {
-                                indent += String(repeating: " ", count: token.string.characters.count)
+                                indent += String(repeating: " ", count: token.string.count)
                             }
                         }
                         break
@@ -1851,7 +1850,7 @@ extension FormatRules {
     /// Remove redundant backticks around non-keywords, or in places where keywords don't need escaping
     @objc public class func redundantBackticks(_ formatter: Formatter) {
         formatter.forEach(.identifier) { i, token in
-            guard token.string.characters.first == "`" else { return }
+            guard token.string.first == "`" else { return }
             let unescaped = token.unescaped()
             if !unescaped.isSwiftKeyword {
                 switch unescaped {
@@ -2639,7 +2638,7 @@ extension FormatRules {
                         if case let .space(string) = token {
                             indent += string
                         } else {
-                            indent += String(repeating: " ", count: token.string.characters.count)
+                            indent += String(repeating: " ", count: token.string.count)
                         }
                     }
                     // Remove linebreak before closing paren
@@ -2879,7 +2878,7 @@ extension FormatRules {
             }), let closeParenIndex = formatter.index(of: .endOfScope(")"), after: openParenIndex),
                 formatter.last(.nonSpaceOrCommentOrLinebreak, before: closeParenIndex) != .delimiter(":"),
                 let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: dotIndex),
-                case let .identifier(name) = prevToken, let firstChar = name.characters.first,
+                case let .identifier(name) = prevToken, let firstChar = name.first,
                 firstChar != "$", String(firstChar).uppercased() == String(firstChar) else {
                 return
             }

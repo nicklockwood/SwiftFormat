@@ -1,6 +1,5 @@
 [![Travis](https://img.shields.io/travis/nicklockwood/SwiftFormat.svg)](https://travis-ci.org/nicklockwood/SwiftFormat)
 [![Coveralls](https://coveralls.io/repos/github/nicklockwood/SwiftFormat/badge.svg)](https://coveralls.io/github/nicklockwood/SwiftFormat)
-[![Swift 3.1](https://img.shields.io/badge/swift-3.1-yellow.svg?style=flat)](https://developer.apple.com/swift)
 [![Swift 3.2](https://img.shields.io/badge/swift-3.2-orange.svg?style=flat)](https://developer.apple.com/swift)
 [![Swift 4.0](https://img.shields.io/badge/swift-4.0-red.svg?style=flat)](https://developer.apple.com/swift)
 [![License](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
@@ -891,7 +890,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. What versions of Swift are supported?*
 
-> A. The framework compiles on Swift 3.x or 4.x, but it can format programs written in Swift 2.x, 3.x or 4.x. Swift 2.x is no longer actively supported however, and newer rules may not work correctly with Swift 2.x. If you find that SwiftFormat breaks your 2.x codebase, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a subset of rules.
+> A. The framework compiles on Swift 3.2 or 4.x and can format programs written in Swift 3.x or 4.x. Swift 2.x is no longer actively supported. If you all still using Swift 2.x, and find that SwiftFormat breaks your code, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a small subset of rules.
 
 
 *Q. I don't like how SwiftFormat formatted my code*
@@ -949,9 +948,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. Can I use the `SwiftFormat.framework` inside another app?*
 
-> A. I only created the framework to facilitate testing, so to be honest I've no idea if it will work in an app, but you're welcome to try. If you need to make adjustments to the public/private access modifiers or namespaces to get it working, open an issue on Github (or even better, a pull request).
-
-> The SwiftFormat framework is also available as a [CocoaPod](https://cocoapods.org/pods/SwiftFormat) for easier integration.
+> A. Yes, the SwiftFormat framework can be included in an app or test target, and used for many kinds of parsing and processing of Swift source code besides formatting. The SwiftFormat framework is available as a [CocoaPod](https://cocoapods.org/pods/SwiftFormat) for easy integration.
 
 
 Cache

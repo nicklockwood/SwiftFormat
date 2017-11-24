@@ -141,7 +141,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
             for url in files {
                 queue.async(group: group) {
                     let outputURL = outputURL.map {
-                        URL(fileURLWithPath: $0.path + url.path[inputURL.path.characters.endIndex ..< url.path.endIndex])
+                        URL(fileURLWithPath: $0.path + url.path[inputURL.path.endIndex ..< url.path.endIndex])
                     }
                     enumerate(inputURL: url, outputURL: outputURL, options: options, block: block)
                 }
@@ -182,7 +182,7 @@ public func offsetForToken(at index: Int, in tokens: [Token]) -> (line: Int, col
             line += 1
             column = 0
         } else {
-            column += token.string.characters.count
+            column += token.string.count
         }
     }
     return (line, column)

@@ -546,7 +546,7 @@ func processInput(_ inputURLs: [URL],
                     print("formatting \(inputURL.path)")
                 }
                 let output: String
-                if cache?[cacheKey] == cachePrefix + String(input.characters.count) {
+                if cache?[cacheKey] == cachePrefix + String(input.count) {
                     output = input
                     if verbose {
                         print("-- no changes", as: .success)
@@ -566,7 +566,7 @@ func processInput(_ inputURLs: [URL],
                     // No changes needed
                     return {
                         filesChecked += 1
-                        cache?[cacheKey] = cachePrefix + String(output.characters.count)
+                        cache?[cacheKey] = cachePrefix + String(output.count)
                     }
                 }
                 do {
@@ -574,7 +574,7 @@ func processInput(_ inputURLs: [URL],
                     return {
                         filesChecked += 1
                         filesWritten += 1
-                        cache?[cacheKey] = cachePrefix + String(output.characters.count)
+                        cache?[cacheKey] = cachePrefix + String(output.count)
                     }
                 } catch {
                     throw FormatError.writing("failed to write file \(outputURL.path), \(error)")
@@ -675,7 +675,7 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 if options.indent == "\t" {
                     args["indent"] = "tabs"
                 } else {
-                    args["indent"] = String(options.indent.characters.count)
+                    args["indent"] = String(options.indent.count)
                 }
             case "linebreak":
                 switch options.linebreak {

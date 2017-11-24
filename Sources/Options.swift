@@ -236,7 +236,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 if string.hasPrefix("\t") {
                     increment("\t")
                 } else {
-                    let length = string.characters.count
+                    let length = string.count
                     for i in [8, 4, 3, 2, 1] {
                         if length % i == 0 {
                             increment(String(repeating: " ", count: i))
@@ -368,7 +368,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 prevIndent = nil
             case .space:
                 if lastTokenWasLinebreak, nestedComments > 0 {
-                    let indent = token.string.characters.count
+                    let indent = token.string.count
                     if prevIndent != nil && abs(prevIndent! - indent) >= 2 {
                         shouldIndent = false
                         break
@@ -615,21 +615,19 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 return
             }
             // Strip prefix/suffix
-            let digits: String.CharacterView
+            let digits: String
             let prefix = "0x"
             switch type {
             case .integer:
-                digits = number.characters
+                digits = number
             case .binary, .octal:
-                digits = number.characters.suffix(from: prefix.endIndex)
+                digits = String(number[prefix.endIndex ..< number.endIndex])
             case .hex:
-                let endIndex =
-                    number.characters.index { [".", "p", "P"].contains($0) } ?? number.endIndex
-                digits = number.characters[prefix.endIndex ..< endIndex]
+                let endIndex = number.index { [".", "p", "P"].contains($0) } ?? number.endIndex
+                digits = String(number[prefix.endIndex ..< endIndex])
             case .decimal:
-                let endIndex =
-                    number.characters.index { [".", "e", "E"].contains($0) } ?? number.endIndex
-                digits = number.characters.prefix(upTo: endIndex)
+                let endIndex = number.index { [".", "e", "E"].contains($0) } ?? number.endIndex
+                digits = String(number[number.startIndex ..< endIndex])
             }
             // Get the group for this number
             var count = 0

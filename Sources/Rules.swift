@@ -801,6 +801,15 @@ extension FormatRules {
             return true
         }
 
+        func isCommentedCode(at index: Int) -> Bool {
+            if !scopeStack.isEmpty, formatter.token(at: index - 1)?.isSpace != true,
+                let nextToken = formatter.token(at: index + 1),
+                case let .space(space) = nextToken, space.hasPrefix(formatter.options.indent) {
+                return true
+            }
+            return false
+        }
+
         if formatter.options.fragment,
             let firstIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1),
             let indentToken = formatter.token(at: firstIndex - 1), case let .space(string) = indentToken {
@@ -916,7 +925,7 @@ extension FormatRules {
                             }
                             // Check if line on which scope ends should be unindented
                             let start = formatter.startOfLine(at: i)
-                            if formatter.options.indentComments ||
+                            if !isCommentedCode(at: start), formatter.options.indentComments ||
                                 formatter.next(.nonSpace, after: start - 1) != .startOfScope("/*"),
                                 let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
                                 nextToken.isEndOfScope && nextToken != .endOfScope("*/") {
@@ -1012,8 +1021,8 @@ extension FormatRules {
                         indentStack.append(indent)
                     }
                     // Apply indent
-                    if let nextToken = formatter.next(.nonSpace, after: i) {
-                        switch nextToken {
+                    if let nextTokenIndex = formatter.index(of: .nonSpace, after: i) {
+                        switch formatter.tokens[nextTokenIndex] {
                         case .linebreak where formatter.options.truncateBlankLines:
                             formatter.insertSpace("", at: i + 1)
                         case .error:
@@ -1041,6 +1050,12 @@ extension FormatRules {
                                 }
                                 index = startIndex
                             }
+                        case .startOfScope("//"):
+                            // Avoid indenting commented code
+                            if isCommentedCode(at: nextTokenIndex) {
+                                return
+                            }
+                            formatter.insertSpace(indent, at: i + 1)
                         case .startOfScope("/*"), .commentBody, .endOfScope("*/"):
                             if formatter.options.indentComments { fallthrough }
                         default:

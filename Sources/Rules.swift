@@ -5,28 +5,28 @@
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
 //
-//  Distributed under the permissive zlib license
+//  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
 //  https://github.com/nicklockwood/SwiftFormat
 //
-//  This software is provided 'as-is', without any express or implied
-//  warranty.  In no event will the authors be held liable for any damages
-//  arising from the use of this software.
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
 //
-//  Permission is granted to anyone to use this software for any purpose,
-//  including commercial applications, and to alter it and redistribute it
-//  freely, subject to the following restrictions:
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
 //
-//  1. The origin of this software must not be misrepresented; you must not
-//  claim that you wrote the original software. If you use this software
-//  in a product, an acknowledgment in the product documentation would be
-//  appreciated but is not required.
-//
-//  2. Altered source versions must be plainly marked as such, and must not be
-//  misrepresented as being the original software.
-//
-//  3. This notice may not be removed or altered from any source distribution.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 //
 
 import Foundation
@@ -679,82 +679,78 @@ extension FormatRules {
         var lineIndex = 0
 
         func tokenIsEndOfStatement(_ i: Int) -> Bool {
-            if let token = formatter.token(at: i) {
-                switch token {
-                case .endOfScope("case"), .endOfScope("default"):
+            guard let token = formatter.token(at: i) else { return true }
+            switch token {
+            case .endOfScope("case"), .endOfScope("default"):
+                return false
+            case let .keyword(string):
+                // TODO: handle in
+                // TODO: handle context-specific keywords
+                // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
+                // lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
+                // precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
+                switch string {
+                case "let", "func", "var", "if", "as", "import", "try", "guard", "case",
+                     "for", "init", "switch", "throw", "where", "subscript", "is",
+                     "while", "associatedtype", "inout":
                     return false
-                case let .keyword(string):
-                    // TODO: handle in
-                    // TODO: handle context-specific keywords
-                    // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
-                    // lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
-                    // precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
-                    switch string {
-                    case "let", "func", "var", "if", "as", "import", "try", "guard", "case",
-                         "for", "init", "switch", "throw", "where", "subscript", "is",
-                         "while", "associatedtype", "inout":
+                case "return":
+                    guard let nextToken =
+                        formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)
+                    else { return true }
+                    switch nextToken {
+                    case .keyword, .endOfScope("case"), .endOfScope("default"):
+                        return true
+                    default:
                         return false
-                    case "return":
-                        guard let nextToken =
-                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)
-                        else { return true }
-                        switch nextToken {
-                        case .keyword, .endOfScope("case"), .endOfScope("default"):
-                            return true
-                        default:
-                            return false
-                        }
+                    }
+                default:
+                    return true
+                }
+            case .delimiter(","):
+                // For arrays or argument lists, we already indent
+                return ["<", "[", "(", "case"].contains(scopeStack.last?.string ?? "")
+            case .delimiter(":"), .operator(_, .infix), .operator(_, .prefix):
+                return false
+            case .operator("?", .postfix), .operator("!", .postfix):
+                if let prevToken = formatter.token(at: i - 1) {
+                    switch prevToken {
+                    case .keyword("as"), .keyword("try"):
+                        return false
                     default:
                         return true
                     }
-                case .delimiter(","):
-                    // For arrays or argument lists, we already indent
-                    return ["<", "[", "(", "case"].contains(scopeStack.last?.string ?? "")
-                case .delimiter(":"), .operator(_, .infix), .operator(_, .prefix):
-                    return false
-                case .operator("?", .postfix), .operator("!", .postfix):
-                    if let prevToken = formatter.token(at: i - 1) {
-                        switch prevToken {
-                        case .keyword("as"), .keyword("try"):
-                            return false
-                        default:
-                            return true
-                        }
-                    }
-                    return true
-                default:
-                    return true
                 }
+                return true
+            default:
+                return true
             }
-            return true
         }
 
         func tokenIsStartOfStatement(_ i: Int) -> Bool {
-            if let token = formatter.token(at: i) {
-                switch token {
-                case let .keyword(string) where [ // TODO: handle "in"
-                    "where", "dynamicType", "rethrows", "throws",
-                ].contains(string):
-                    return false
-                case .keyword("as"), .keyword("in"):
-                    if scopeStack.last?.string == "case" {
-                        // For case statements, we already indent
-                        return true
-                    }
-                    return false
-                case .delimiter(","), .delimiter(":"):
-                    if let scope = scopeStack.last?.string, ["<", "[", "(", "case"].contains(scope) {
-                        // For arrays, dictionaries, cases, or argument lists, we already indent
-                        return true
-                    }
-                    return false
-                case .delimiter("->"), .operator(_, .infix), .operator(_, .postfix):
-                    return false
-                default:
+            guard let token = formatter.token(at: i) else { return true }
+            switch token {
+            case let .keyword(string) where [ // TODO: handle "in"
+                "where", "dynamicType", "rethrows", "throws",
+            ].contains(string):
+                return false
+            case .keyword("as"), .keyword("in"):
+                if scopeStack.last?.string == "case" {
+                    // For case statements, we already indent
                     return true
                 }
+                return false
+            case .delimiter(","), .delimiter(":"):
+                if let scope = scopeStack.last?.string, ["<", "[", "(", "case"].contains(scope) {
+                    // For arrays, dictionaries, cases, or argument lists, we already indent
+                    return true
+                }
+                return false
+            case .delimiter("->"), .operator(_, .infix), .operator(_, .postfix):
+                return false
+            default:
+                return true
             }
-            return true
         }
 
         func tokenIsStartOfClosure(_ i: Int) -> Bool {
@@ -1425,27 +1421,23 @@ extension FormatRules {
     /// Remove redundant parens around the arguments for loops, if statements, closures, etc.
     @objc public class func redundantParens(_ formatter: Formatter) {
         func tokenOutsideParenRequiresSpacing(at index: Int) -> Bool {
-            if let token = formatter.token(at: index) {
-                switch token {
-                case .identifier, .keyword, .number:
-                    return true
-                default:
-                    return false
-                }
+            guard let token = formatter.token(at: index) else { return false }
+            switch token {
+            case .identifier, .keyword, .number:
+                return true
+            default:
+                return false
             }
-            return false
         }
 
         func tokenInsideParenRequiresSpacing(at index: Int) -> Bool {
-            if let token = formatter.token(at: index) {
-                switch token {
-                case .operator, .startOfScope("{"), .endOfScope("}"):
-                    return true
-                default:
-                    return tokenOutsideParenRequiresSpacing(at: index)
-                }
+            guard let token = formatter.token(at: index) else { return false }
+            switch token {
+            case .operator, .startOfScope("{"), .endOfScope("}"):
+                return true
+            default:
+                return tokenOutsideParenRequiresSpacing(at: index)
             }
-            return false
         }
 
         func removeParen(at index: Int) {
@@ -2910,50 +2902,35 @@ extension FormatRules {
             var range: ClosedRange<Int>
             var tokens: [Token]
             var importStartIndex: Int
-
             var moduleName: String? {
-                for token in tokens[importStartIndex ..< tokens.endIndex] {
-                    if case let .identifier(moduleName) = token {
-                        return moduleName
-                    }
+                for case let .identifier(moduleName) in tokens[importStartIndex ..< tokens.endIndex] {
+                    return moduleName
                 }
                 return nil
             }
         }
-
-        func process(imports: [Import]) {
-            var imports = imports
-
+        func process(imports: [Import]?) {
+            guard var imports = imports else { return }
             imports.reversed().map { $0.range }.forEach(formatter.removeTokens(inRange:))
-
-            guard let firstIndex = imports.first?.range.lowerBound else {
-                return
-            }
-
-            imports.sort { (lhs, rhs) -> Bool in
-                guard let lhsModuleName = lhs.moduleName, let rhsModuleName = rhs.moduleName else { return true }
+            guard let firstIndex = imports.first?.range.lowerBound else { return }
+            imports.sort {
+                guard let lhsModuleName = $0.moduleName, let rhsModuleName = $1.moduleName else { return true }
                 return lhsModuleName.caseInsensitiveCompare(rhsModuleName) == .orderedAscending
             }
-
             formatter.insertTokens(imports.flatMap { $0.tokens }, at: firstIndex)
         }
-
-        var importsStack: [[Import]] = [[]]
+        var importsStack = [[Import]()]
         var removeTrailingToken = false
         formatter.forEachToken { i, token in
-
-            let shouldBeginScope = [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif")].contains(token)
-            let shouldEndScope = [.keyword("#else"), .keyword("#elseif"), .endOfScope("#endif")].contains(token)
-
-            if shouldEndScope, let imports = importsStack.popLast() {
-                process(imports: imports)
-            }
-
-            if shouldBeginScope {
+            switch token {
+            case .startOfScope("#if"):
                 importsStack.append([])
-            }
-
-            if token == .keyword("import") {
+            case .keyword("#else"), .keyword("#elseif"):
+                process(imports: importsStack.popLast())
+                importsStack.append([])
+            case .endOfScope("#endif"):
+                process(imports: importsStack.popLast())
+            case .keyword("import"):
                 let importEndIndex: Int
                 if let index = formatter.index(of: .linebreak, after: i) {
                     importEndIndex = index
@@ -2962,22 +2939,23 @@ extension FormatRules {
                     importEndIndex = formatter.tokens.count - 1
                     removeTrailingToken = true
                 }
-
-                // Search for a line break (or beginning of file) backwards to include whitespace / @testable... in our Import structure
-                let beginIndex = (formatter.index(before: i, where: { (prev) -> Bool in
-                    prev.isLinebreak
-                }) ?? -1) + 1
-
+                // Search for a line break (or beginning of file) backwards to include
+                // whitespace / @testable... in our Import structure
+                let beginIndex = (formatter.index(of: .linebreak, before: i) ?? -1) + 1
                 let range: ClosedRange<Int> = beginIndex ... importEndIndex
-                let currentImport = Import(range: range, tokens: Array(formatter.tokens[range]), importStartIndex: i - beginIndex)
+                let currentImport = Import(
+                    range: range,
+                    tokens: Array(formatter.tokens[range]),
+                    importStartIndex: i - beginIndex
+                )
                 importsStack[importsStack.endIndex - 1].append(currentImport)
+            default:
+                break
             }
         }
-
         while let imports = importsStack.popLast() {
             process(imports: imports)
         }
-
         if removeTrailingToken {
             formatter.removeLastToken()
         }

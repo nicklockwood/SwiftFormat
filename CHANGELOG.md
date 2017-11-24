@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.31.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.31.0) (2017-11-24)
+
+- Switched to a more conventional MIT license
+- Added `strongOutlets` rule that removes weak from `@IBOutlet` properties in accordance with Apple guidelines
+- Added `sortedImports` rule for sorting `import` statements alphabetically
+- Fixed warnings in Xcode 9.1 and dropped support for compiling framework with Swift 3.1
+- Fixed a bug where a double quote was incorrectly inserted into multiline strings
+- Fixed a bug where the `--comments ignore` option was ignored for comments inside `switch` statements
+- Code that has been temporarily commented out should no longer be re-indented
+
 ## [0.30.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.30.2) (2017-11-19)
 
 - Fixed incorrect indenting of case statements for cases with `where` clauses containing `<` operator

@@ -755,6 +755,13 @@ goto(fail)
 + private convenience init()
 ```
 
+***strongOutlets*** - removes the `weak` specifier from `@IBOutlet` properties, as per [Apple's recommendation](https://developer.apple.com/videos/play/wwdc2015/407/):
+
+```diff
+- @IBOutlet weak var label: UILabel!
++ @IBOutlet var label: UILabel!
+```
+
 ***trailingClosures*** - converts the last closure argument in a function call to trailing closure syntax where possible.
 
 ```diff

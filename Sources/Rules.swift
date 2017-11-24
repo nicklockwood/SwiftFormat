@@ -2964,4 +2964,19 @@ extension FormatRules {
             formatter.removeLastToken()
         }
     }
+
+    /// Strip unnecessary `weak` from @IBOutlet properties
+    @objc public class func strongOutlets(_ formatter: Formatter) {
+        formatter.forEach(.keyword("@IBOutlet")) { i, _ in
+            guard let varIndex = formatter.index(of: .keyword("var"), after: i) else { return }
+            for index in i ..< varIndex where formatter.tokens[index] == .identifier("weak") {
+                if formatter.tokens[index + 1].isSpace {
+                    formatter.removeToken(at: index + 1)
+                } else if formatter.tokens[index - 1].isSpace {
+                    formatter.removeToken(at: index - 1)
+                }
+                formatter.removeToken(at: index)
+            }
+        }
+    }
 }

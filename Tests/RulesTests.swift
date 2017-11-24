@@ -5481,4 +5481,40 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
+
+    // MARK: strongOutlets
+
+    func testRemoveWeakFromOutlet() {
+        let input = "@IBOutlet weak var label: UILabel!"
+        let output = "@IBOutlet var label: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongOutlets]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveWeakFromPrivateOutlet() {
+        let input = "@IBOutlet private weak var label: UILabel!"
+        let output = "@IBOutlet private var label: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongOutlets]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveWeakFromOutletOnSplitLine() {
+        let input = "@IBOutlet\nweak var label: UILabel!"
+        let output = "@IBOutlet\nvar label: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongOutlets]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveWeakFromNonOutlet() {
+        let input = "weak var label: UILabel!"
+        let output = "weak var label: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongOutlets]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveWeakFromNonOutletAfterOutlet() {
+        let input = "@IBOutlet weak var label1: UILabel!\nweak var label2: UILabel!"
+        let output = "@IBOutlet var label1: UILabel!\nweak var label2: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongOutlets]), output)
+    }
 }

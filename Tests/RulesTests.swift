@@ -2013,6 +2013,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testCommentIndentingDisabledInSwitch() {
+        let input = "func foo() {\n    switch bar {\n/** bar */\n    default: break\n    }\n}"
+        let output = "func foo() {\n    switch bar {\n/** bar */\n    default: break\n    }\n}"
+        let options = FormatOptions(indentComments: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // indent multiline strings
 
     func testSimpleMultilineString() {

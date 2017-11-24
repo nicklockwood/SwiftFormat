@@ -432,7 +432,8 @@ extension FormatRules {
     @objc public class func spaceInsideComments(_ formatter: Formatter) {
         guard formatter.options.indentComments else { return }
         formatter.forEach(.startOfScope("//")) { i, _ in
-            guard let nextToken = formatter.token(at: i + 1), case let .commentBody(string) = nextToken else { return }
+            guard let nextToken = formatter.token(at: i + 1),
+                case let .commentBody(string) = nextToken else { return }
             guard let first = string.first else { return }
             if "/!:".contains(first) {
                 let nextIndex = string.index(after: string.startIndex)
@@ -915,7 +916,9 @@ extension FormatRules {
                             }
                             // Check if line on which scope ends should be unindented
                             let start = formatter.startOfLine(at: i)
-                            if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
+                            if formatter.options.indentComments ||
+                                formatter.next(.nonSpace, after: start - 1) != .startOfScope("/*"),
+                                let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
                                 nextToken.isEndOfScope && nextToken != .endOfScope("*/") {
                                 // Only reduce indent if line begins with a closing scope token
                                 var indent = indentStack.last ?? ""
@@ -1013,12 +1016,10 @@ extension FormatRules {
                         switch nextToken {
                         case .linebreak where formatter.options.truncateBlankLines:
                             formatter.insertSpace("", at: i + 1)
-                        case .commentBody where !formatter.options.indentComments,
-                             .startOfScope("/*") where !formatter.options.indentComments,
-                             .endOfScope("*/") where !formatter.options.indentComments,
-                             .error:
+                        case .error:
                             break
                         case .endOfScope("case"), .endOfScope("default"):
+                            guard formatter.options.indentComments else { break }
                             formatter.insertSpace(indent, at: i + 1)
                             // TODO: is this the best place to do this?
                             var index = i
@@ -1040,6 +1041,8 @@ extension FormatRules {
                                 }
                                 index = startIndex
                             }
+                        case .startOfScope("/*"), .commentBody, .endOfScope("*/"):
+                            if formatter.options.indentComments { fallthrough }
                         default:
                             formatter.insertSpace(indent, at: i + 1)
                         }

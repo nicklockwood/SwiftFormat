@@ -1042,9 +1042,6 @@ public func tokenize(_ source: String) -> [Token] {
                 }
                 escaped = false
             case "\r", "\n":
-                if escaped {
-                    string.append("\"") // Escaping linebreaks is not permitted
-                }
                 if string != "" {
                     tokens.append(.stringBody(string))
                     string = ""

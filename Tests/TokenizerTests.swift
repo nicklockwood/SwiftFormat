@@ -314,6 +314,20 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testMultilineStringWithEscapedLinebreak() {
+        let input = "\"\"\"\n    hello \\\n    world\n\"\"\""
+        let output: [Token] = [
+            .startOfScope("\"\"\""),
+            .linebreak("\n"),
+            .stringBody("    hello \\"),
+            .linebreak("\n"),
+            .stringBody("    world"),
+            .linebreak("\n"),
+            .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Single-line comments
 
     func testSingleLineComment() {

@@ -13,7 +13,8 @@ class PerformanceTests: XCTestCase {
 
     static let files: [String] = {
         var files = [String]()
-        let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
+        let inputURL = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent().deletingLastPathComponent()
         _ = enumerateFiles(withInputURL: inputURL) { url, _ in
             return {
                 if let source = try? String(contentsOf: url) {

@@ -40,6 +40,50 @@ private var readme: String = {
 
 class CommandLineTests: XCTestCase {
 
+    // MARK: arg parser
+
+    func testParseSimpleArguments() {
+        let input = "hello world"
+        let output = ["", "hello", "world"]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseEscapedSpace() {
+        let input = "hello\\ world"
+        let output = ["", "hello world"]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseEscapedN() {
+        let input = "hello\\nworld"
+        let output = ["", "hellonworld"]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseQuoteArguments() {
+        let input = "\"hello world\""
+        let output = ["", "hello world"]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseEscapedQuote() {
+        let input = "hello \\\"world\\\""
+        let output = ["", "hello", "\"world\""]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseEscapedQuoteInString() {
+        let input = "\"hello \\\"world\\\"\""
+        let output = ["", "hello \"world\""]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseQuotedEscapedN() {
+        let input = "\"hello\\nworld\""
+        let output = ["", "hello\\nworld"]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
     // MARK: arg preprocessor
 
     func testPreprocessArguments() {
@@ -128,7 +172,7 @@ class CommandLineTests: XCTestCase {
                 return nil
             }
         }
-        processArguments([""])
+        processArguments([""], in: "")
     }
 
     // MARK: help

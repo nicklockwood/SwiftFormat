@@ -31,27 +31,41 @@
 
 import Foundation
 
-// MARK: Internal APIs used by CLI - included in framework for testing purposes
+/// Public interface for the SwiftFormat command-line functions
+public struct CLI {
 
-enum OutputType {
-    case info
-    case success
-    case error
-    case warning
-    case output
-}
+    /// Output type for printed content
+    public enum OutputType {
+        case info
+        case success
+        case error
+        case warning
+        case content
+    }
 
-struct CLI {
-    static var print: (String, OutputType) -> Void = { _, _ in
+    /// Output handler - override this to intercept output from the CLI
+    public static var print: (String, OutputType) -> Void = { _, _ in
         fatalError("No print hook set")
     }
 
-    static var readLine: () -> String? = {
-        fatalError("No readLine hook set")
+    /// Input handler - override this to inject input into the CLI
+    /// Injected lines should include the terminating newline character
+    public static var readLine: () -> String? = {
+        Swift.readLine(strippingNewline: false)
+    }
+
+    /// Run the CLI with the specified input arguments
+    public static func run(in directory: String, with args: [String] = CommandLine.arguments) {
+        processArguments(args, in: directory)
+    }
+
+    /// Run the CLI with the specified input string (this will be parsed into multiple arguments)
+    public static func run(in directory: String, with argumentString: String) {
+        run(in: directory, with: parseArguments(argumentString))
     }
 }
 
-private func print(_ message: String, as type: OutputType = .info) {
+private func print(_ message: String, as type: CLI.OutputType = .info) {
     CLI.print(message, type)
 }
 
@@ -125,9 +139,9 @@ func printHelp() {
     print("")
 }
 
-func expandPath(_ path: String) -> URL {
+func expandPath(_ path: String, in directory: String) -> URL {
     let path = NSString(string: path).expandingTildeInPath
-    let directoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+    let directoryURL = URL(fileURLWithPath: directory)
     return URL(fileURLWithPath: path, relativeTo: directoryURL)
 }
 
@@ -138,7 +152,44 @@ func timeEvent(block: () throws -> Void) rethrows -> String {
     return String(format: "%gs", time)
 }
 
-func processArguments(_ args: [String]) {
+func parseArguments(_ argumentString: String) -> [String] {
+    var arguments = [""] // Arguments always begin with script path
+    var characters = String.UnicodeScalarView.SubSequence(argumentString.unicodeScalars)
+    var string = ""
+    var escaped = false
+    var quoted = false
+    while let char = characters.popFirst() {
+        switch char {
+        case "\\" where !escaped:
+            escaped = true
+        case "\"" where !escaped && !quoted:
+            quoted = true
+        case "\"" where !escaped && quoted:
+            quoted = false
+            fallthrough
+        case " " where !escaped && !quoted:
+            if !string.isEmpty {
+                arguments.append(string)
+            }
+            string.removeAll()
+        case "\"" where escaped:
+            escaped = false
+            string.append("\"")
+        case _ where escaped && quoted:
+            string.append("\\")
+            fallthrough
+        default:
+            escaped = false
+            string.append(Character(char))
+        }
+    }
+    if !string.isEmpty {
+        arguments.append(string)
+    }
+    return arguments
+}
+
+func processArguments(_ args: [String], in directory: String) {
     var errors = [Error]()
     var verbose = false
     do {
@@ -209,7 +260,7 @@ func processArguments(_ args: [String]) {
         // Get input path(s)
         var inputURLs = [URL]()
         while let inputPath = args[String(inputURLs.count + 1)] {
-            inputURLs.append(expandPath(inputPath))
+            inputURLs.append(expandPath(inputPath, in: directory))
         }
 
         // Get path(s) that will be excluded
@@ -219,7 +270,7 @@ func processArguments(_ args: [String]) {
                 throw FormatError.options("--exclude option has no effect unless an input path is specified")
             }
             for path in arg.components(separatedBy: ",") {
-                excludedURLs.append(expandPath(path))
+                excludedURLs.append(expandPath(path, in: directory))
             }
         }
 
@@ -228,7 +279,7 @@ func processArguments(_ args: [String]) {
             verbose = true
             if !arg.isEmpty {
                 // verbose doesn't take an argument, so treat argument as another input path
-                inputURLs.append(expandPath(arg))
+                inputURLs.append(expandPath(arg, in: directory))
             }
             if inputURLs.isEmpty, args["output"] ?? "" != "" {
                 throw FormatError.options("--verbose option has no effect unless an output file is specified")
@@ -239,7 +290,7 @@ func processArguments(_ args: [String]) {
         if let arg = args["inferoptions"] {
             if !arg.isEmpty {
                 // inferoptions doesn't take an argument, so treat argument as another input path
-                inputURLs.append(expandPath(arg))
+                inputURLs.append(expandPath(arg, in: directory))
             }
             if inputURLs.count > 0 {
                 print("inferring swiftformat options from source file(s)...")
@@ -271,7 +322,7 @@ func processArguments(_ args: [String]) {
         }
 
         // Get output path
-        let outputURL = args["output"].map { expandPath($0) }
+        let outputURL = args["output"].map { expandPath($0, in: directory) }
         if outputURL != nil {
             if args["output"] == "" {
                 throw FormatError.options("--output argument expects a value")
@@ -314,7 +365,7 @@ func processArguments(_ args: [String]) {
                     }
                 }
             default:
-                cacheURL = expandPath(cache)
+                cacheURL = expandPath(cache, in: directory)
                 guard cacheURL != nil else {
                     throw FormatError.options("unsupported --cache value `\(cache)`")
                 }
@@ -364,7 +415,7 @@ func processArguments(_ args: [String]) {
                                 options: formatOptions,
                                 verbose: false
                             )
-                            print(output, as: .output)
+                            print(output, as: .content)
                         }
                     } catch {
                         fatalError = error

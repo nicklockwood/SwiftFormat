@@ -58,14 +58,9 @@ CLI.print = { message, type in
         print(message.inRed, to: &stderr)
     case .warning:
         print(message.inYellow, to: &stderr)
-    case .output:
+    case .content:
         print(message)
     }
 }
 
-CLI.readLine = {
-    readLine(strippingNewline: false)
-}
-
-// Pass in arguments
-processArguments(CommandLine.arguments)
+CLI.run(in: FileManager.default.currentDirectoryPath)

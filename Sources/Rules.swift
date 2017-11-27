@@ -1954,15 +1954,22 @@ extension FormatRules {
             } ?? true }())
             if formatter.options.removeSelf {
                 // Check if scope actually includes self before we waste a bunch of time
-                var containsSelf = false
-                for token in formatter.tokens[index ..< formatter.tokens.count] {
-                    if case .identifier("self") = token {
-                        containsSelf = true
+                var scopeCount = 0
+                loop: for i in index ..< formatter.tokens.count {
+                    switch formatter.tokens[i] {
+                    case .identifier("self"):
+                        break loop // Contains self
+                    case .startOfScope("{"):
+                        scopeCount += 1
+                    case .endOfScope("}"):
+                        if scopeCount == 0 {
+                            index = i + 1
+                            return // Does not contain self
+                        }
+                        scopeCount -= 1
+                    default:
                         break
                     }
-                }
-                if !containsSelf {
-                    return
                 }
             }
             // Gather members & local variables
@@ -2037,19 +2044,25 @@ extension FormatRules {
                 case .keyword("func"), .keyword("init"), .keyword("subscript"):
                     lastKeyword = ""
                     if classOrStatic {
-                        assert(isTypeRoot)
+                        if !isTypeRoot {
+                            return // error unless formatter.options.fragment = true
+                        }
                         processFunction(at: &index, localNames: localNames, members: classMembers)
                         classOrStatic = false
                     } else {
                         processFunction(at: &index, localNames: localNames, members: members)
                     }
+                    assert(formatter.token(at: index) != .endOfScope("}"))
+                    continue
                 case .keyword("static"):
                     classOrStatic = true
                 case .keyword("class"):
                     if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)?.isIdentifier == true {
                         fallthrough
                     }
-                    classOrStatic = true
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .delimiter(":") {
+                        classOrStatic = true
+                    }
                 case .keyword("extension"), .keyword("struct"), .keyword("enum"):
                     guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .keyword("import"),
                         let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
@@ -2229,7 +2242,7 @@ extension FormatRules {
             }
             if foundAccessors {
                 guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
-                index = endIndex
+                index = endIndex + 1
             } else {
                 index += 1
                 processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)

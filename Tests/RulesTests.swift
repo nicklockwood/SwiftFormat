@@ -1321,15 +1321,17 @@ class RulesTests: XCTestCase {
     func testNoBlanksInsideClassFunc() {
         let input = "class func foo {\n    if x {\n    }\n    if y {\n    }\n}"
         let output = "class func foo {\n    if x {\n    }\n    if y {\n    }\n}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesBetweenScopes]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesBetweenScopes], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testNoBlanksInsideClassVar() {
         let input = "class var foo: Int {\n    if x {\n    }\n    if y {\n    }\n}"
         let output = "class var foo: Int {\n    if x {\n    }\n    if y {\n    }\n}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesBetweenScopes]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesBetweenScopes], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testBlankLineBetweenCalledClosures() {
@@ -2837,8 +2839,9 @@ class RulesTests: XCTestCase {
     func testPrivateRequiredStaticFuncSpecifiers() {
         let input = "required static private func foo()"
         let output = "private required static func foo()"
-        XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.specifiers], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testPrivateConvenienceInit() {
@@ -2858,8 +2861,9 @@ class RulesTests: XCTestCase {
     func testPrefixSpecifier() {
         let input = "prefix public static func - (rhs: Foo) -> Foo"
         let output = "public static prefix func - (rhs: Foo) -> Foo"
-        XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.specifiers], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     // MARK: void
@@ -4433,6 +4437,12 @@ class RulesTests: XCTestCase {
         let output = "class FooTests: XCTestCase {\n    let foo = 1\n    func testFoo() {\n        expect(self.foo) == 1\n    }\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoMistakeProtocolClassSpecifierForClassFunction() {
+        let input = "protocol Foo: class {}\nfunc bar() {}"
+        XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf]))
+        XCTAssertNoThrow(try format(input, rules: FormatRules.default))
     }
 
     // removeSelf = false

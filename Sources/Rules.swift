@@ -1913,6 +1913,9 @@ extension FormatRules {
 
     /// Remove redundant self keyword
     @objc public class func redundantSelf(_ formatter: Formatter) {
+        var typeStack = [String]()
+        var membersByType = [String: Set<String>]()
+        var classMembersByType = [String: Set<String>]()
         func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
             while let token = formatter.token(at: index) {
                 switch token {
@@ -1932,7 +1935,7 @@ extension FormatRules {
                             }
                             index = endIndex
                             continue
-                        case .keyword, .startOfScope("{"), .startOfScope(":"):
+                        case .keyword, .startOfScope("{"), .endOfScope("}"), .startOfScope(":"):
                             return
                         case .delimiter(","):
                             index = nextIndex
@@ -1973,8 +1976,9 @@ extension FormatRules {
                 }
             }
             // Gather members & local variables
-            var members = members
-            var classMembers = Set<String>()
+            let type = (isTypeRoot && typeStack.count == 1) ? typeStack.first : nil
+            var members = type.flatMap { membersByType[$0] } ?? members
+            var classMembers = type.flatMap { classMembersByType[$0] } ?? Set<String>()
             var localNames = localNames
             if !isTypeRoot || !formatter.options.removeSelf {
                 var i = index
@@ -2033,6 +2037,10 @@ extension FormatRules {
                     i += 1
                 }
             }
+            if let type = type {
+                membersByType[type] = members
+                classMembersByType[type] = classMembers
+            }
             // Remove or add `self`
             var scopeStack = [Token]()
             var lastKeyword = ""
@@ -2066,8 +2074,14 @@ extension FormatRules {
                 case .keyword("extension"), .keyword("struct"), .keyword("enum"):
                     guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .keyword("import"),
                         let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
+                    guard let nameToken = formatter.next(.identifier, after: index),
+                        case let .identifier(name) = nameToken else {
+                        return // error
+                    }
                     index = scopeStart + 1
+                    typeStack.append(name)
                     processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: true)
+                    typeStack.removeLast()
                 case .keyword("var"), .keyword("let"):
                     index += 1
                     switch lastKeyword {

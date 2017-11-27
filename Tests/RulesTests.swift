@@ -4607,6 +4607,66 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testInsertSelfInExtension() {
+        let input = """
+        struct Foo {
+            var bar = 5
+        }
+
+        extension Foo {
+            func baz() {
+                bar = 6
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar = 5
+        }
+
+        extension Foo {
+            func baz() {
+                self.bar = 6
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testGlobalAfterTypeNotTreatedAsMember() {
+        let input = """
+        struct Foo {
+            var foo = 1
+        }
+
+        var bar = 5
+
+        extension Foo {
+            func baz() {
+                bar = 6
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            var foo = 1
+        }
+
+        var bar = 5
+
+        extension Foo {
+            func baz() {
+                bar = 6
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // MARK: unusedArguments
 
     // closures

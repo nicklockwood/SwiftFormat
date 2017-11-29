@@ -41,6 +41,32 @@ import Foundation
 /// transparently handles changes that affect the current token index.
 public class Formatter: NSObject {
     private var enumerationIndex = -1
+    private var disabledCount = 0
+
+    // Current rule, used for handling comment directives
+    var currentRule: String? {
+        didSet { disabledCount = 0 }
+    }
+
+    // Is current rule enabled
+    var isEnabled: Bool { return disabledCount <= 0 }
+
+    // Process a comment token (which may contain directives)
+    func processCommentBody(_ comment: String) {
+        guard let rule = currentRule, comment.hasPrefix("swiftformat:"),
+            let directive = ["disable", "enable"].first(where: { comment.hasPrefix("swiftformat:\($0)") }),
+            comment.range(of: "\\b\(rule)\\b", options: .regularExpression) != nil else {
+            return
+        }
+        switch directive {
+        case "disable":
+            disabledCount += 1
+        case "enable":
+            disabledCount -= 1
+        default:
+            preconditionFailure()
+        }
+    }
 
     /// The options that the formatter was initialized with
     public let options: FormatOptions
@@ -143,7 +169,13 @@ public class Formatter: NSObject {
         assert(enumerationIndex == -1, "forEachToken does not support re-entrancy")
         enumerationIndex = 0
         while enumerationIndex < tokens.count {
-            body(enumerationIndex, tokens[enumerationIndex]) // May mutate enumerationIndex
+            let token = tokens[enumerationIndex]
+            if case let .commentBody(comment) = token {
+                processCommentBody(comment)
+            }
+            if isEnabled {
+                body(enumerationIndex, token) // May mutate enumerationIndex
+            }
             enumerationIndex += 1
         }
         enumerationIndex = -1

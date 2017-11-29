@@ -204,7 +204,21 @@ You can disable rules individually using `--disable` followed by a list of one o
 
 To see exactly which rules were applied to a given file, you can use the `--verbose` command-line option to force SwiftFormat to print a more detailed log as it applies the formatting. **NOTE:** running in verbose mode is slower than the default mode.
 
-Here are all the rules that SwiftFormat currently applies, and the effect that they have:
+You can also enable/disable rules for specific files or code ranges by using `swiftformat:` directives in comments inside your Swift files. To temporarily disable one or more rules inside a source file, use:
+
+```swift
+// swiftformat:disable <rule1> [<rule2> [rule<3> ...]]
+```
+
+To enable the rule(s) again, use:
+
+```swift
+// swiftformat:enable <rule1> [<rule2> [rule<3> ...]]
+```
+
+**Note:** The `swiftformat:enable` directive only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.
+
+Here are all the rules that SwiftFormat currently applies, and the effects that they have:
 
 ***blankLinesAtEndOfScope*** - removes trailing blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
 

@@ -112,4 +112,40 @@ class FormatterTests: XCTestCase {
         let index = formatter.index(before: 6, where: { !$0.isSpaceOrComment })
         XCTAssertEqual(index, 0)
     }
+
+    func testFormatterDirectives() {
+        let input = """
+        // swiftformat:disable indent blankLinesBetweenScopes redundantSelf
+        class Foo {
+        let _foo = "foo"
+        func foo() {
+        print(self._foo)
+        }
+        }
+        // swiftformat:enable indent redundantSelf
+        class Bar {
+        let _bar = "bar"
+        func bar() {
+        print(_bar)
+        }
+        }
+        """
+        let output = """
+        // swiftformat:disable indent blankLinesBetweenScopes redundantSelf
+        class Foo {
+        let _foo = "foo"
+        func foo() {
+        print(self._foo)
+        }
+        }
+        // swiftformat:enable indent redundantSelf
+        class Bar {
+            let _bar = "bar"
+            func bar() {
+                print(_bar)
+            }
+        }
+        """
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
 }

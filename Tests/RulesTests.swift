@@ -1227,7 +1227,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testNpBlankLineBetweenPropertyAndFunction() {
+    func testNoBlankLineBetweenPropertyAndFunction() {
         let input = "var foo: Int\nfunc bar() {\n}"
         let output = "var foo: Int\nfunc bar() {\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesBetweenScopes]), output)
@@ -1241,7 +1241,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testBlankLineBeforeAtObjCOnLineBeforeProtocol() {
+    func testBlankLineBeforeAtObjcOnLineBeforeProtocol() {
         let input = "@objc\nprotocol Foo {\n}\n@objc\nprotocol Bar {\n}"
         let output = "@objc\nprotocol Foo {\n}\n\n@objc\nprotocol Bar {\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesBetweenScopes]), output)

@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.32.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.32.0) (2017-11-29)
+
+- Added `swiftformat:` comment directives for enabling/disabling rules inside a source file (see README for details)
+- Added `blankLinesAroundMark` rule, which inserts a blank line before and after a `// MARK:` comment
+- When using the `--self insert` option, `self` is now inserted automatically in more places than it could be before
+- Fixed some bugs in the `redundantSelf` rule that caused `self` not to be removed in some cases when it should
+- Exposed the command-line formatting functions as part of the public API when using the SwiftFormat framework
+
 ## [0.31.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.31.0) (2017-11-24)
 
 - Switched to a more conventional MIT license

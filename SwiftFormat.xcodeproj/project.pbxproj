@@ -713,6 +713,7 @@
 		015AF2C31DC6A538008F0A8C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_CODE_COVERAGE = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = Tests/Info.plist;
@@ -726,6 +727,7 @@
 		015AF2C41DC6A538008F0A8C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_CODE_COVERAGE = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = Tests/Info.plist;
@@ -869,6 +871,7 @@
 		01A0EABA1D5DB4D000A0A8E3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_CODE_COVERAGE = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
@@ -902,6 +905,7 @@
 		01A0EABD1D5DB4D000A0A8E3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_CODE_COVERAGE = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
@@ -915,6 +919,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CLANG_ENABLE_CODE_COVERAGE = NO;
 				PRODUCT_MODULE_NAME = "$(PRODUCT_NAME:c99extidentifier)Tool";
 				PRODUCT_NAME = swiftformat;
 				PROVISIONING_PROFILE = "";
@@ -925,6 +930,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CLANG_ENABLE_CODE_COVERAGE = NO;
 				PRODUCT_MODULE_NAME = "$(PRODUCT_NAME:c99extidentifier)Tool";
 				PRODUCT_NAME = swiftformat;
 				PROVISIONING_PROFILE = "";
@@ -937,6 +943,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_CODE_COVERAGE = NO;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CODE_SIGN_ENTITLEMENTS = EditorExtension/Application/SwiftFormatter.entitlements;
@@ -957,6 +964,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_CODE_COVERAGE = NO;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CODE_SIGN_ENTITLEMENTS = EditorExtension/Application/SwiftFormatter.entitlements;
@@ -974,6 +982,7 @@
 		90C4B6ED1DA4B059009EB000 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_CODE_COVERAGE = NO;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CODE_SIGN_ENTITLEMENTS = EditorExtension/Extension/SwiftFormatter.entitlements;
@@ -994,6 +1003,7 @@
 		90C4B6EE1DA4B059009EB000 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_CODE_COVERAGE = NO;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CODE_SIGN_ENTITLEMENTS = EditorExtension/Extension/SwiftFormatter.entitlements;

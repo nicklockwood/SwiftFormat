@@ -1364,6 +1364,65 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    // MARK: blankLinesAroundMark
+
+    func testInsertBlankLinesAroundMark() {
+        let input = """
+        let foo = "foo"
+        // MARK: bar
+        let bar = "bar"
+        """
+        let output = """
+        let foo = "foo"
+
+        // MARK: bar
+
+        let bar = "bar"
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAroundMark]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoInsertExtraBlankLinesAroundMark() {
+        let input = """
+        let foo = "foo"
+
+        // MARK: bar
+
+        let bar = "bar"
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAroundMark]), input)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), input + "\n")
+    }
+
+    func testInsertBlankLineAfterMarkAtStartOfFile() {
+        let input = """
+        // MARK: bar
+        let bar = "bar"
+        """
+        let output = """
+        // MARK: bar
+
+        let bar = "bar"
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAroundMark]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testInsertBlankLineBeforeMarkAtEndOfFile() {
+        let input = """
+        let foo = "foo"
+        // MARK: bar
+        """
+        let output = """
+        let foo = "foo"
+
+        // MARK: bar
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAroundMark]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: linebreakAtEndOfFile
 
     func testLinebreakAtEndOfFile() {

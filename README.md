@@ -271,6 +271,28 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
   var baz: Bool
   var quux: Int
 ```
+
+***blankLinesAroundMark*** - adds a blank line before and after each `MARK:` comment. This rule can be configured using the `--insertlines` option:
+
+```diff
+  func foo() {
+    // foo
+  }
+  // MARK: bar
+  func bar() {
+    // bar
+  }
+  
+  func foo() {
+    // foo
+  }
++
+  // MARK: bar
++
+  func bar() {
+    // bar
+  }
+```
                          
 ***braces*** - implements K&R (default) or Allman-style indentation, depending on the `--allman` option:
 

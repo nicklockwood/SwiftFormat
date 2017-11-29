@@ -672,6 +672,24 @@ extension FormatRules {
         }
     }
 
+    /// Adds a blank line around MARK: comments
+    @objc public class func blankLinesAroundMark(_ formatter: Formatter) {
+        guard formatter.options.insertBlankLines else { return }
+        formatter.forEachToken { i, token in
+            guard case let .commentBody(comment) = token, comment.hasPrefix("MARK:"),
+                let startIndex = formatter.index(of: .nonSpace, before: i),
+                formatter.tokens[startIndex] == .startOfScope("//") else { return }
+            if let nextIndex = formatter.index(of: .linebreak, after: i),
+                formatter.next(.nonSpace, after: nextIndex)?.isLinebreak == false {
+                formatter.insertToken(.linebreak(formatter.options.linebreak), at: nextIndex)
+            }
+            if let lastIndex = formatter.index(of: .linebreak, before: startIndex),
+                formatter.last(.nonSpace, before: lastIndex)?.isLinebreak == false {
+                formatter.insertToken(.linebreak(formatter.options.linebreak), at: lastIndex)
+            }
+        }
+    }
+
     /// Always end file with a linebreak, to avoid incompatibility with certain unix tools:
     /// http://stackoverflow.com/questions/2287967/why-is-it-recommended-to-have-empty-line-in-the-end-of-file
     @objc public class func linebreakAtEndOfFile(_ formatter: Formatter) {

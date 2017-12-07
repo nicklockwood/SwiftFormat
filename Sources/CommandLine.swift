@@ -194,7 +194,6 @@ func processArguments(_ args: [String], in directory: String) {
     var errors = [Error]()
     var verbose = false
     var dryrun = false
-    let exitCode: Int32
     do {
         // Get options
         let args = try preprocessArguments(args, commandLineArguments)
@@ -506,7 +505,6 @@ func processArguments(_ args: [String], in directory: String) {
         } else {
             print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)", as: .success)
         }
-        exitCode = filesFailed > 0 ? 1 : 0
     } catch {
         if !verbose {
             // Warnings would be redundant at this point
@@ -514,9 +512,7 @@ func processArguments(_ args: [String], in directory: String) {
         }
         // Fatal error
         print("error: \(error)", as: .error)
-        exitCode = 1
     }
-    exit(exitCode)
 }
 
 func inferOptions(from inputURLs: [URL], excluding excludedURLs: [URL]) -> (Int, FormatOptions, [Error]) {
@@ -640,9 +636,7 @@ func processInput(_ inputURLs: [URL],
                     output = try format(input, ruleNames: enabled, options: formatOptions, verbose: verbose)
                 }
                 if outputURL != inputURL, (try? String(contentsOf: outputURL)) != output {
-                    if dryrun {
-                        print("would have updated \(outputURL.path)", as: .info)
-                    } else {
+                    if !dryrun {
                         do {
                             try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(),
                                                                     withIntermediateDirectories: true,
@@ -659,15 +653,16 @@ func processInput(_ inputURLs: [URL],
                     }
                 }
                 if dryrun {
-                    if output != input {
-                        print("would have updated \(outputURL.path)", as: .info)
-                    }
+                    print("would have updated \(outputURL.path)", as: .info)
                     return {
                         filesChecked += 1
                         filesFailed += 1
                     }
                 } else {
                     do {
+                        if verbose {
+                            print("writing \(outputURL.path)", as: .info)
+                        }
                         try output.write(to: outputURL, atomically: true, encoding: .utf8)
                         return {
                             filesChecked += 1

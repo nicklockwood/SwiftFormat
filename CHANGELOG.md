@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.32.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.32.1) (2017-12-07)
+
+- Added `--dryrun` option, for testing SwiftFormat without making any file changes
+- Fixed Xcode plugin, which was not deployed correctly in the previous release
+- Fixed `spaceAroundOperators` rule not inserting space after a switch case or default clause colon
+
 ## [0.32.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.32.0) (2017-11-29)
 
 - Added `swiftformat:` comment directives for enabling/disabling rules inside a source file (see README for details)

@@ -97,7 +97,7 @@ func printHelp() {
     print("--conflictmarkers  merge conflict markers, either \"reject\" (default) or \"ignore\"")
     print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
     print("--verbose          display detailed formatting output and warnings/errors")
-    print("--dry              run in dry mode without actually changing any files")
+    print("--dryrun           run in \"dry\" mode (without actually changing any files)")
     print("")
     print("swiftformat has a number of rules that can be enabled or disabled. by default")
     print("most rules are enabled. use --rules to display all enabled/disabled rules:")
@@ -193,7 +193,7 @@ func parseArguments(_ argumentString: String) -> [String] {
 func processArguments(_ args: [String], in directory: String) {
     var errors = [Error]()
     var verbose = false
-    var dry = false
+    var dryrun = false
     let exitCode: Int32
     do {
         // Get options
@@ -279,10 +279,10 @@ func processArguments(_ args: [String], in directory: String) {
         }
 
         // Dry
-        if let arg = args["dry"] {
-            dry = true
+        if let arg = args["dryrun"] {
+            dryrun = true
             if !arg.isEmpty {
-                // dry doesn't take an argument, so treat argument as another input path
+                // dryrun doesn't take an argument, so treat argument as another input path
                 inputURLs.append(expandPath(arg, in: directory))
             }
         }
@@ -408,18 +408,27 @@ func processArguments(_ args: [String], in directory: String) {
                             print(commandLineArguments(for: options).map({ "--\($0.key) \($0.value)" }).joined(separator: " "))
                         } else if let outputURL = outputURL {
                             print("running swiftformat...")
+                            if dryrun {
+                                print("(dryrun mode - no files will be changed)", as: .warning)
+                            }
                             let output = try format(
                                 input,
                                 ruleNames: Array(rules),
                                 options: formatOptions,
                                 verbose: verbose
                             )
-                            do {
-                                try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
-                                print("swiftformat completed successfully", as: .success)
-                            } catch {
-                                throw FormatError.writing("failed to write file \(outputURL.path)")
+                            if (try? String(contentsOf: outputURL)) != output {
+                                if dryrun {
+                                    print("would have updated \(outputURL.path)", as: .info)
+                                } else {
+                                    do {
+                                        try output.write(to: outputURL, atomically: true, encoding: .utf8)
+                                    } catch {
+                                        throw FormatError.writing("failed to write file \(outputURL.path)")
+                                    }
+                                }
                             }
+                            print("swiftformat completed successfully", as: .success)
                         } else {
                             // Write to stdout
                             let output = try format(
@@ -454,6 +463,9 @@ func processArguments(_ args: [String], in directory: String) {
         }
 
         print("running swiftformat...")
+        if dryrun {
+            print("(dryrun mode - no files will be changed)", as: .warning)
+        }
 
         // Format the code
         var filesWritten = 0, filesFailed = 0, filesChecked = 0
@@ -467,7 +479,7 @@ func processArguments(_ args: [String], in directory: String) {
                 formatOptions: formatOptions,
                 fileOptions: fileOptions,
                 verbose: verbose,
-                dry: dry,
+                dryrun: dryrun,
                 cacheURL: cacheURL
             )
             errors += _errors
@@ -481,7 +493,7 @@ func processArguments(_ args: [String], in directory: String) {
                 }
                 let inputPaths = inputURLs.map({ $0.path }).joined(separator: ", ")
                 throw FormatError.options("no eligible files found at \(inputPaths)")
-            } else if !dry && !errors.isEmpty {
+            } else if !dryrun && !errors.isEmpty {
                 throw FormatError.options("failed to format any files")
             }
         }
@@ -489,7 +501,7 @@ func processArguments(_ args: [String], in directory: String) {
             print("")
         }
         printWarnings(errors)
-        if dry {
+        if dryrun {
             print("swiftformat completed. \(filesFailed)/\(filesChecked) files would have been updated in \(time)", as: .success)
         } else {
             print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)", as: .success)
@@ -573,7 +585,7 @@ func processInput(_ inputURLs: [URL],
                   formatOptions: FormatOptions,
                   fileOptions: FileOptions,
                   verbose: Bool,
-                  dry: Bool,
+                  dryrun: Bool,
                   cacheURL: URL?) -> (Int, Int, Int, [Error]) {
 
     // Filter rules
@@ -628,12 +640,16 @@ func processInput(_ inputURLs: [URL],
                     output = try format(input, ruleNames: enabled, options: formatOptions, verbose: verbose)
                 }
                 if outputURL != inputURL, (try? String(contentsOf: outputURL)) != output {
-                    do {
-                        try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(),
-                                                                withIntermediateDirectories: true,
-                                                                attributes: nil)
-                    } catch {
-                        throw FormatError.writing("failed to create directory at \(outputURL.path), \(error)")
+                    if dryrun {
+                        print("would have updated \(outputURL.path)", as: .info)
+                    } else {
+                        do {
+                            try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(),
+                                                                    withIntermediateDirectories: true,
+                                                                    attributes: nil)
+                        } catch {
+                            throw FormatError.writing("failed to create directory at \(outputURL.path), \(error)")
+                        }
                     }
                 } else if output == input {
                     // No changes needed
@@ -642,9 +658,9 @@ func processInput(_ inputURLs: [URL],
                         cache?[cacheKey] = cachePrefix + String(output.count)
                     }
                 }
-                if dry {
+                if dryrun {
                     if output != input {
-                        print("-- would have written \(outputURL.path)", as: .error)
+                        print("would have updated \(outputURL.path)", as: .info)
                     }
                     return {
                         filesChecked += 1
@@ -652,7 +668,7 @@ func processInput(_ inputURLs: [URL],
                     }
                 } else {
                     do {
-                        try output.write(to: outputURL, atomically: true, encoding: String.Encoding.utf8)
+                        try output.write(to: outputURL, atomically: true, encoding: .utf8)
                         return {
                             filesChecked += 1
                             filesFailed += 1
@@ -1235,7 +1251,7 @@ let commandLineArguments = [
     "conflictmarkers",
     "cache",
     "verbose",
-    "dry",
+    "dryrun",
     // Rules
     "disable",
     "enable",

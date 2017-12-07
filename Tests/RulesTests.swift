@@ -475,6 +475,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testSpaceAfterColonInSwitchCase() {
+        let input = "switch x { case .y:break }"
+        let output = "switch x { case .y: break }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testSpaceAfterColonInSwitchDefault() {
+        let input = "switch x { default:break }"
+        let output = "switch x { default: break }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testSpaceAfterComma() {
         let input = "let foo = [1,2,3]"
         let output = "let foo = [1, 2, 3]"

@@ -387,15 +387,13 @@ extension FormatRules {
                     break
                 }
                 fallthrough
-            case .operator(_, .postfix), .delimiter(","), .delimiter(";"):
-                if let nextToken = formatter.token(at: i + 1) {
-                    switch nextToken {
-                    case .space, .linebreak, .endOfScope:
-                        break
-                    default:
-                        // Ensure there is a space after the token
-                        formatter.insertToken(.space(" "), at: i + 1)
-                    }
+            case .operator(_, .postfix), .delimiter(","), .delimiter(";"), .startOfScope(":"):
+                switch formatter.token(at: i + 1) {
+                case nil, .space?, .linebreak?, .endOfScope?:
+                    break
+                default:
+                    // Ensure there is a space after the token
+                    formatter.insertToken(.space(" "), at: i + 1)
                 }
                 if formatter.token(at: i - 1)?.isSpace == true &&
                     formatter.token(at: i - 2)?.isLinebreak == false {

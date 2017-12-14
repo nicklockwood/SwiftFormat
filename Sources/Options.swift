@@ -40,6 +40,7 @@ public enum IndentMode: String {
 
 /// Wrap mode for arguments
 public enum WrapMode: String {
+    case preserving
     case beforeFirst = "beforefirst"
     case afterFirst = "afterfirst"
     case disabled

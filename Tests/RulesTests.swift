@@ -5764,10 +5764,58 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testAfterFirstPreserved() {
+        let input = "func foo(bar _: Int,\n         baz _: String) {\n}"
+        let output = input
+        let options = FormatOptions(wrapArguments: .preserving)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testAfterFirstPreservedIndentFixed() {
+        let input = "func foo(bar _: Int,\n baz _: String) {\n}"
+        let output = "func foo(bar _: Int,\n         baz _: String) {\n}"
+        let options = FormatOptions(wrapArguments: .preserving)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testAfterFirstPreservedNewlineRemoved() {
+        let input = "func foo(bar _: Int,\n         baz _: String\n) {\n}"
+        let output = "func foo(bar _: Int,\n         baz _: String) {\n}"
+        let options = FormatOptions(wrapArguments: .preserving)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     func testBeforeFirstConvertedToAfterFirst() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
         let output = "func foo(bar _: Int,\n         baz _: String) {\n}"
         let options = FormatOptions(wrapArguments: .afterFirst)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testBeforeFirstPreserved() {
+        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
+        let output = input
+        let options = FormatOptions(wrapArguments: .preserving)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testBeforeFirstPreservedIndentFixed() {
+        let input = "func foo(\n    bar _: Int,\n baz _: String\n) {\n}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
+        let options = FormatOptions(wrapArguments: .preserving)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testBeforeFirstPreservedNewlineAdded() {
+        let input = "func foo(\n    bar _: Int,\n    baz _: String) {\n}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
+        let options = FormatOptions(wrapArguments: .preserving)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }

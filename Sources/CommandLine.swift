@@ -558,7 +558,7 @@ func format(_ source: String,
             tokens = updatedTokens
         }
     } : nil
-    try applyRules(rules, to: &tokens, with: options, callback: callback)
+    tokens = try applyRules(rules, to: tokens, with: options, callback: callback)
 
     // Display info
     if verbose {

@@ -226,9 +226,11 @@ public func sourceCode(for tokens: [Token]) -> String {
 /// Apply specified rules to a token array with optional callback
 /// Useful for perfoming additional logic after each rule is applied
 public func applyRules(_ rules: [FormatRule],
-                       to tokens: inout [Token],
+                       to originalTokens: [Token],
                        with options: FormatOptions,
-                       callback: ((Int, [Token]) -> Void)? = nil) throws {
+                       callback: ((Int, [Token]) -> Void)? = nil) throws -> [Token] {
+    var tokens = originalTokens
+
     // Parse
     if let error = parsingError(for: tokens, options: options) {
         throw error
@@ -243,7 +245,7 @@ public func applyRules(_ rules: [FormatRule],
             callback?(i, formatter.tokens)
         }
         if tokens == formatter.tokens {
-            return
+            return tokens
         }
         tokens = formatter.tokens
         options.fileHeader = nil // Prevents infinite recursion
@@ -256,10 +258,7 @@ public func applyRules(_ rules: [FormatRule],
 public func format(_ tokens: [Token],
                    rules: [FormatRule] = FormatRules.default,
                    options: FormatOptions = FormatOptions()) throws -> [Token] {
-
-    var tokens = tokens
-    try applyRules(rules, to: &tokens, with: options)
-    return tokens
+    return try applyRules(rules, to: tokens, with: options)
 }
 
 /// Format code with specified rules and options

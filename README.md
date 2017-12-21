@@ -15,6 +15,7 @@ Table of Contents
     - [Xcode Source Editor Extension](#xcode-source-editor-extension)
     - [Xcode Build Phase](#xcode-build-phase)
     - [Git Pre-Commit Hook](#git-pre-commit-hook)
+    - [On CI using Danger](#on-ci-using-danger)
 - [Usage](#so-what-does-swiftformat-actually-do)
     - [Options](#options)
     - [Rules](#rules)
@@ -176,6 +177,22 @@ The pre-commit hook will now run whenever you run `git commit`. Running `git com
 
 **NOTE (2):** Unlike the Xcode build phase approach, git pre-commit hook won't be checked in to source control, and there's no way to guarantee that all users of the project are using the same version of SwiftFormat. For a collaborative project, you might want to consider a *post*-commit hook instead, which would run on your continuous integration server.
 
+On CI using Danger
+-------------------
+
+To setup SwiftFormat to be used by your continuous integration system using [Danger](http://danger.systems/ruby/), do the following:
+
+1. Follow the [`instructions`](http://danger.systems/guides/getting_started.html) to setup Danger.
+1. Add the [`danger-swiftformat`](https://github.com/garriguv/danger-ruby-swiftformat) plugin to your `Gemfile`.
+1. Add the following to your `Dangerfile`:
+
+```ruby
+swiftformat.binary_path = "/path/to/swiftformat" # optional
+swiftformat.additional_args = "--indent tab --self insert" # optional
+swiftformat.check_format(fail_on_error: true)
+```
+
+**NOTE:** It is recommended to add the `swiftformat` binary to your project directory.
 
 So what does SwiftFormat actually do?
 --------------------------------------

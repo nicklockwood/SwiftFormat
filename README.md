@@ -1,5 +1,8 @@
 [![Travis](https://img.shields.io/travis/nicklockwood/SwiftFormat.svg)](https://travis-ci.org/nicklockwood/SwiftFormat)
-[![License](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
+[![Coveralls](https://coveralls.io/repos/github/nicklockwood/SwiftFormat/badge.svg)](https://coveralls.io/github/nicklockwood/SwiftFormat)
+[![Swift 3.2](https://img.shields.io/badge/swift-3.2-orange.svg?style=flat)](https://developer.apple.com/swift)
+[![Swift 4.0](https://img.shields.io/badge/swift-4.0-red.svg?style=flat)](https://developer.apple.com/swift)
+[![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://opensource.org/licenses/MIT)
 [![Twitter](https://img.shields.io/badge/twitter-@nicklockwood-blue.svg)](http://twitter.com/nicklockwood)
 
 Table of Contents
@@ -12,6 +15,7 @@ Table of Contents
     - [Xcode Source Editor Extension](#xcode-source-editor-extension)
     - [Xcode Build Phase](#xcode-build-phase)
     - [Git Pre-Commit Hook](#git-pre-commit-hook)
+    - [On CI using Danger](#on-ci-using-danger)
 - [Usage](#so-what-does-swiftformat-actually-do)
     - [Options](#options)
     - [Rules](#rules)
@@ -143,7 +147,7 @@ To set up SwiftFormat as an Xcode build phase, do the following:
 
         "${SRCROOT}/path/to/swiftformat" "${SRCROOT}/path/to/your/swift/code/"
         
-	Both paths should be relative to the directory containing your Xcode project. If you are installing SwiftFormat as a Cocoapod, the swiftformat path will most likely be
+	Both paths should be relative to the directory containing your Xcode project. If you are installing SwiftFormat as a Cocoapod, the swiftformat path will be
 	
 	    ${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat .
 
@@ -160,7 +164,7 @@ Git pre-commit hook
 3. Add the following line in the pre-commit file (unlike the Xcode build phase approach, this uses your locally installed version of SwiftFormat, not a separate copy in your project repository)
 
         #!/bin/bash
-        git status --porcelain | grep -e '^ [AM] \(.*\).swift$' | cut -c 3- | while read line; do
+        git diff --staged --name-only | grep -e '\(.*\).swift$' | while read line; do
           swiftformat ${line};
           git add $line;
         done
@@ -173,6 +177,22 @@ The pre-commit hook will now run whenever you run `git commit`. Running `git com
 
 **NOTE (2):** Unlike the Xcode build phase approach, git pre-commit hook won't be checked in to source control, and there's no way to guarantee that all users of the project are using the same version of SwiftFormat. For a collaborative project, you might want to consider a *post*-commit hook instead, which would run on your continuous integration server.
 
+On CI using Danger
+-------------------
+
+To setup SwiftFormat to be used by your continuous integration system using [Danger](http://danger.systems/ruby/), do the following:
+
+1. Follow the [`instructions`](http://danger.systems/guides/getting_started.html) to setup Danger.
+1. Add the [`danger-swiftformat`](https://github.com/garriguv/danger-ruby-swiftformat) plugin to your `Gemfile`.
+1. Add the following to your `Dangerfile`:
+
+```ruby
+swiftformat.binary_path = "/path/to/swiftformat" # optional
+swiftformat.additional_args = "--indent tab --self insert" # optional
+swiftformat.check_format(fail_on_error: true)
+```
+
+**NOTE:** It is recommended to add the `swiftformat` binary to your project directory.
 
 So what does SwiftFormat actually do?
 --------------------------------------
@@ -201,7 +221,21 @@ You can disable rules individually using `--disable` followed by a list of one o
 
 To see exactly which rules were applied to a given file, you can use the `--verbose` command-line option to force SwiftFormat to print a more detailed log as it applies the formatting. **NOTE:** running in verbose mode is slower than the default mode.
 
-Here are all the rules that SwiftFormat currently applies, and the effect that they have:
+You can also enable/disable rules for specific files or code ranges by using `swiftformat:` directives in comments inside your Swift files. To temporarily disable one or more rules inside a source file, use:
+
+```swift
+// swiftformat:disable <rule1> [<rule2> [rule<3> ...]]
+```
+
+To enable the rule(s) again, use:
+
+```swift
+// swiftformat:enable <rule1> [<rule2> [rule<3> ...]]
+```
+
+**Note:** The `swiftformat:enable` directive only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.
+
+Here are all the rules that SwiftFormat currently applies, and the effects that they have:
 
 ***blankLinesAtEndOfScope*** - removes trailing blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
 
@@ -262,6 +296,28 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
   var baz: Bool
   var quux: Int
 ```
+
+***blankLinesAroundMark*** - adds a blank line before and after each `MARK:` comment. This rule can be configured using the `--insertlines` option:
+
+```diff
+  func foo() {
+    // foo
+  }
+  // MARK: bar
+  func bar() {
+    // bar
+  }
+  
+  func foo() {
+    // foo
+  }
++
+  // MARK: bar
++
+  func bar() {
+    // bar
+  }
+```
                          
 ***braces*** - implements K&R (default) or Allman-style indentation, depending on the `--allman` option:
 
@@ -307,7 +363,7 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 + let foo = 5
 ```
 
-***elseOnSameLine*** - controls whether an `else`, `catch` or `while` after a `}` appears on the same line:
+***elseOnSameLine*** - controls whether an `else`, `catch` or `while` keyword after a `}` appears on the same line, depending on the `--elseposition` option:
 
 ```diff
   if x {
@@ -378,7 +434,7 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
   }
 ```
 
-***indent*** - adjusts leading whitespace based on scope and line wrapping. Uses either tabs or spaces, depending on the `--indent` option. May also affects comments and `#if ...` statements, depending on the configuration of the `--comments` and `--ifdef` options:
+***indent*** - adjusts leading whitespace based on scope and line wrapping. Uses either tabs or spaces, depending on the `--indent` option. By default, `case` statements will be indented level with their containing `switch`, but this can be controlled with the `--indentcase` options. Also affects comments and `#if ...` statements, depending on the configuration of the `--comments` and `--ifdef` options:
 
 ```diff
   if x {
@@ -406,6 +462,18 @@ Here are all the rules that SwiftFormat currently applies, and the effect that t
 +   bar,
 +   baz
 + ]
+```
+
+```diff
+  switch foo {
+-   case bar: break
+-   case baz: break
+  }
+
+  switch foo {
++ case bar: break
++ case baz: break
+  }
 ```
 
 ***linebreakAtEndOfFile*** - ensures that the last line of the file is empty.
@@ -482,7 +550,7 @@ let foo: Int? = nil
 ```
 
 ```diff
-// doesn't affect non-nil initialzation
+// doesn't affect non-nil initialization
 var foo: Int? = 0
 ```
 
@@ -595,6 +663,30 @@ return;
 goto(fail)
 ```
 
+***sortedImports*** - rearranges import statements so that they are sorted:
+
+```diff
+- import Foo
+- import Bar
++ import Bar
++ import Foo
+```
+
+```diff
+- import B
+- import A
+- #if os(iOS)
+-   import Foo-iOS
+-   import Bar-iOS
+- #endif
++ import A
++ import B
++ #if os(iOS)
++   import Bar-iOS
++   import Foo-iOS
++ #endif
+```
+
 ***spaceAroundBraces*** - contextually adds or removes space around { }. For example:
 
 ```diff
@@ -638,7 +730,7 @@ goto(fail)
 + Foo<Bar>()
 ```
 
-***spaceAroundOperators*** - contextually adjusts the space around infix operators:
+***spaceAroundOperators*** - contextually adjusts the space around infix operators. Also adds or removes the space between an operator function declaration and its arguments, depending on value of the `--operatorfunc` option.
 
 ```diff
 - foo . bar()
@@ -648,6 +740,11 @@ goto(fail)
 ```diff
 - a+b+c
 + a + b + c
+```
+
+```diff
+- func ==(lhs: Int, rhs: Int) -> Bool
++ func == (lhs: Int, rhs: Int) -> Bool
 ```
 
 ***spaceAroundParens*** - contextually adjusts the space around ( ). For example:
@@ -705,8 +802,8 @@ goto(fail)
 ***specifiers*** - normalizes the order for access specifiers, and other property/function/class/etc. specifiers:
 
 ```diff
-- lazy public weak private(set) var foo: UIView? foo: UIView?
-+ private(set) public lazy weak var
+- lazy public weak private(set) var foo: UIView?
++ private(set) public lazy weak var foo: UIView?
 ```
 
 ```diff
@@ -717,6 +814,13 @@ goto(fail)
 ```diff
 - convenience private init() 
 + private convenience init()
+```
+
+***strongOutlets*** - removes the `weak` specifier from `@IBOutlet` properties, as per [Apple's recommendation](https://developer.apple.com/videos/play/wwdc2015/407/):
+
+```diff
+- @IBOutlet weak var label: UILabel!
++ @IBOutlet var label: UILabel!
 ```
 
 ***trailingClosures*** - converts the last closure argument in a function call to trailing closure syntax where possible.
@@ -854,7 +958,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. What versions of Swift are supported?*
 
-> A. The framework requires Swift 3, but it can format programs written in Swift 2.x or 3.x. Swift 2.x is no longer actively supported however, and newer rules may not work correctly with Swift 2.x. If you find that SwiftFormat breaks your 2.x codebase, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a subset of rules.
+> A. The framework compiles on Swift 3.2 or 4.x and can format programs written in Swift 3.x or 4.x. Swift 2.x is no longer actively supported. If you all still using Swift 2.x, and find that SwiftFormat breaks your code, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a small subset of rules.
 
 
 *Q. I don't like how SwiftFormat formatted my code*
@@ -912,9 +1016,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. Can I use the `SwiftFormat.framework` inside another app?*
 
-> A. I only created the framework to facilitate testing, so to be honest I've no idea if it will work in an app, but you're welcome to try. If you need to make adjustments to the public/private access modifiers or namespaces to get it working, open an issue on Github (or even better, a pull request).
-
-> The SwiftFormat framework is also available as a [CocoaPod](https://cocoapods.org/pods/SwiftFormat) for easier integration.
+> A. Yes, the SwiftFormat framework can be included in an app or test target, and used for many kinds of parsing and processing of Swift source code besides formatting. The SwiftFormat framework is available as a [CocoaPod](https://cocoapods.org/pods/SwiftFormat) for easy integration.
 
 
 Cache

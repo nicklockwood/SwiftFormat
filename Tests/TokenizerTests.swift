@@ -5,32 +5,32 @@
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
 //
-//  Distributed under the permissive zlib license
+//  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
 //  https://github.com/nicklockwood/SwiftFormat
 //
-//  This software is provided 'as-is', without any express or implied
-//  warranty.  In no event will the authors be held liable for any damages
-//  arising from the use of this software.
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
 //
-//  Permission is granted to anyone to use this software for any purpose,
-//  including commercial applications, and to alter it and redistribute it
-//  freely, subject to the following restrictions:
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
 //
-//  1. The origin of this software must not be misrepresented; you must not
-//  claim that you wrote the original software. If you use this software
-//  in a product, an acknowledgment in the product documentation would be
-//  appreciated but is not required.
-//
-//  2. Altered source versions must be plainly marked as such, and must not be
-//  misrepresented as being the original software.
-//
-//  3. This notice may not be removed or altered from any source distribution.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 //
 
-import XCTest
 import SwiftFormat
+import XCTest
 
 class TokenizerTests: XCTestCase {
 
@@ -308,6 +308,20 @@ class TokenizerTests: XCTestCase {
         let input = "\"\"\"\n\"\"\""
         let output: [Token] = [
             .startOfScope("\"\"\""),
+            .linebreak("\n"),
+            .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testMultilineStringWithEscapedLinebreak() {
+        let input = "\"\"\"\n    hello \\\n    world\n\"\"\""
+        let output: [Token] = [
+            .startOfScope("\"\"\""),
+            .linebreak("\n"),
+            .stringBody("    hello \\"),
+            .linebreak("\n"),
+            .stringBody("    world"),
             .linebreak("\n"),
             .endOfScope("\"\"\""),
         ]
@@ -768,6 +782,46 @@ class TokenizerTests: XCTestCase {
             .delimiter(","),
             .space(" "),
             .identifier("if"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("baz"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testKeywordsAsArgumentLabelNames2() {
+        let input = "foo(case: bar, default: baz)"
+        let output: [Token] = [
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("case"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("bar"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("default"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("baz"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testKeywordsAsArgumentLabelNames3() {
+        let input = "foo(switch: bar, case: baz)"
+        let output: [Token] = [
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("switch"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("bar"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("case"),
             .delimiter(":"),
             .space(" "),
             .identifier("baz"),
@@ -1746,13 +1800,50 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testInfixQuestionMarkChevronOperator() {
+    func testInfixEqualsOperatorWithSpace() {
+        let input = "operator == {}"
+        let output: [Token] = [
+            .keyword("operator"),
+            .space(" "),
+            .operator("==", .none),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInfixEqualsOperatorWithoutSpace() {
+        let input = "operator =={}"
+        let output: [Token] = [
+            .keyword("operator"),
+            .space(" "),
+            .operator("==", .none),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInfixQuestionMarkChevronOperatorWithSpace() {
         let input = "operator ?< {}"
         let output: [Token] = [
             .keyword("operator"),
             .space(" "),
             .operator("?<", .none),
             .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInfixQuestionMarkChevronOperatorWithoutSpace() {
+        let input = "operator ?<{}"
+        let output: [Token] = [
+            .keyword("operator"),
+            .space(" "),
+            .operator("?<", .none),
             .startOfScope("{"),
             .endOfScope("}"),
         ]
@@ -2061,6 +2152,39 @@ class TokenizerTests: XCTestCase {
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSwitchCaseContainingDictionaryDefault() {
+        let input = "switch x {\ncase y: foo[\"z\", default: []]\n}"
+        let output: [Token] = [
+            .keyword("switch"),
+            .space(" "),
+            .identifier("x"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .endOfScope("case"),
+            .space(" "),
+            .identifier("y"),
+            .startOfScope(":"),
+            .space(" "),
+            .identifier("foo"),
+            .startOfScope("["),
+            .startOfScope("\""),
+            .stringBody("z"),
+            .endOfScope("\""),
+            .delimiter(","),
+            .space(" "),
+            .identifier("default"),
+            .delimiter(":"),
+            .space(" "),
+            .startOfScope("["),
+            .endOfScope("]"),
+            .endOfScope("]"),
             .linebreak("\n"),
             .endOfScope("}"),
         ]
@@ -2426,6 +2550,40 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testDefaultAfterWhereCondition() {
+        let input = "switch foo {\ncase _ where baz < quux:\nbreak\ndefault:\nbreak\n}"
+        let output: [Token] = [
+            .keyword("switch"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .endOfScope("case"),
+            .space(" "),
+            .identifier("_"),
+            .space(" "),
+            .keyword("where"),
+            .space(" "),
+            .identifier("baz"),
+            .space(" "),
+            .operator("<", .infix),
+            .space(" "),
+            .identifier("quux"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("default"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: dot prefix
 
     func testEnumValueInDictionaryLiteral() {
@@ -2494,6 +2652,61 @@ class TokenizerTests: XCTestCase {
             .linebreak("\r\n"),
             .commentBody("bar"),
             .endOfScope("*/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    // MARK: keypaths
+
+    func testNamespacedKeyPath() {
+        let input = "let foo = \\Foo.bar"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("\\", .prefix),
+            .identifier("Foo"),
+            .operator(".", .infix),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAnonymousKeyPath() {
+        let input = "let foo = \\.bar"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("\\", .prefix),
+            .operator(".", .prefix),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAnonymousSubscriptKeyPath() {
+        let input = "let foo = \\.[0].bar"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("\\", .prefix),
+            .operator(".", .prefix),
+            .startOfScope("["),
+            .number("0", .integer),
+            .endOfScope("]"),
+            .operator(".", .infix),
+            .identifier("bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

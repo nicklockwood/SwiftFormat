@@ -1,5 +1,79 @@
 # Change Log
 
+## [0.32.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.32.1) (2017-12-07)
+
+- Added `--dryrun` option, for testing SwiftFormat without making any file changes
+- Fixed Xcode plugin, which was not deployed correctly in the previous release
+- Fixed `spaceAroundOperators` rule not inserting space after a switch case or default clause colon
+
+## [0.32.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.32.0) (2017-11-29)
+
+- Added `swiftformat:` comment directives for enabling/disabling rules inside a source file (see README for details)
+- Added `blankLinesAroundMark` rule, which inserts a blank line before and after a `// MARK:` comment
+- When using the `--self insert` option, `self` is now inserted automatically in more places than it could be before
+- Fixed some bugs in the `redundantSelf` rule that caused `self` not to be removed in some cases when it should
+- Exposed the command-line formatting functions as part of the public API when using the SwiftFormat framework
+
+## [0.31.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.31.0) (2017-11-24)
+
+- Switched to a more conventional MIT license
+- Added `strongOutlets` rule that removes weak from `@IBOutlet` properties in accordance with Apple guidelines
+- Added `sortedImports` rule for sorting `import` statements alphabetically
+- Fixed warnings in Xcode 9.1 and dropped support for compiling framework with Swift 3.1
+- Fixed a bug where a double quote was incorrectly inserted into multiline strings
+- Fixed a bug where the `--comments ignore` option was ignored for comments inside `switch` statements
+- Code that has been temporarily commented out should no longer be re-indented
+
+## [0.30.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.30.2) (2017-11-19)
+
+- Fixed incorrect indenting of case statements for cases with `where` clauses containing `<` operator
+- Fixed bug where parens were incorrectly removed around closures in loop or branch conditions
+- Added compatibility workaround for `self` being incorrectly removed in tests that use the Nimble framework
+
+## [0.30.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.30.1) (2017-11-10)
+
+- Fixed error when parsing a subscript with default value inside a `switch` statement
+- Nil default values are no longer removed inside `Codable` structs/classes, as this can break the implementation
+
+## [0.30.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.30.0) (2017-10-27)
+
+- Space is now inserted between the operator name and opening paren in an operator function declaration
+- Added `--operatorfunc` option to control whether operator should be followed by a space in a function declaration
+- Added `--elseposition` option to control whether `else`, `catch` & `while` should appear on same line as preceding `}`
+- Added `--indentcase` option to control whether `case` statements should be indented inside a `switch`
+- Comments immediately before a `default:` clause are now indented level with the `default` keyword
+- Fixed bug where backticks would be incorrectly removed when using ``Any`` as an identifier
+- Error messages are now displayed correctly in the Xcode editor extension
+- Added test coverage statistics using Slather and Coveralls
+
+## [0.29.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.9) (2017-10-22)
+
+- Fixed critical bug where `hoistPatternLet` rule could corrupt tuples in a switch case clause
+- Comments immediately before a case statement are now indented level with the case
+
+## [0.29.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.8) (2017-10-11)
+
+- Fixed bug where space was incorrectly removed around postfix/suffix range operators
+
+## [0.29.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.7) (2017-10-08)
+
+- Added support for Swift 4 keyPath syntax
+
+## [0.29.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.6) (2017-09-21)
+
+- Fixed bug in `hoistPatternLet` rule when formatting `case let` patterns with outer parens
+- The `redundantParens` rule now correctly removes the outer parens in the aforementioned case
+- Fixed performance regression introduced in 0.29.5
+
+## [0.29.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.5) (2017-09-04)
+
+- Fixed bounds crash when parsing an empty string literal at the end of a file
+- SwiftFormat now compiles without modification in Xcode 9 using Swift 3.2 or 4.0
+
+## [0.29.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.4) (2017-08-21)
+
+- Fixed a bug where `self` could be incorrectly inserted if local variable is declared inside an `#if` block
+
 ## [0.29.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.3) (2017-07-31)
 
 - Added support for Swift 4's multi-line string literal syntax

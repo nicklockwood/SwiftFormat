@@ -1,32 +1,32 @@
 //
-//  Rules.swift
+//  Options.swift
 //  SwiftFormat
 //
 //  Created by Nick Lockwood on 21/10/2016.
 //  Copyright 2016 Nick Lockwood
 //
-//  Distributed under the permissive zlib license
+//  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
 //  https://github.com/nicklockwood/SwiftFormat
 //
-//  This software is provided 'as-is', without any express or implied
-//  warranty.  In no event will the authors be held liable for any damages
-//  arising from the use of this software.
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
 //
-//  Permission is granted to anyone to use this software for any purpose,
-//  including commercial applications, and to alter it and redistribute it
-//  freely, subject to the following restrictions:
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
 //
-//  1. The origin of this software must not be misrepresented; you must not
-//  claim that you wrote the original software. If you use this software
-//  in a product, an acknowledgment in the product documentation would be
-//  appreciated but is not required.
-//
-//  2. Altered source versions must be plainly marked as such, and must not be
-//  misrepresented as being the original software.
-//
-//  3. This notice may not be removed or altered from any source distribution.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 //
 
 import Foundation
@@ -92,7 +92,7 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
         return rawValue
     }
 
-    public static func ==(lhs: Grouping, rhs: Grouping) -> Bool {
+    public static func == (lhs: Grouping, rhs: Grouping) -> Bool {
         switch (lhs, rhs) {
         case (.ignore, .ignore),
              (.none, .none):
@@ -114,7 +114,9 @@ public struct FormatOptions: CustomStringConvertible {
     public var linebreak: String
     public var allowInlineSemicolons: Bool
     public var spaceAroundRangeOperators: Bool
+    public var spaceAroundOperatorDeclarations: Bool
     public var useVoid: Bool
+    public var indentCase: Bool
     public var trailingCommas: Bool
     public var indentComments: Bool
     public var truncateBlankLines: Bool
@@ -133,6 +135,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var hexGrouping: Grouping
     public var hoistPatternLet: Bool
     public var stripUnusedArguments: ArgumentType
+    public var elseOnNextLine: Bool
     public var removeSelf: Bool
     public var experimentalRules: Bool
     public var fragment: Bool
@@ -144,7 +147,9 @@ public struct FormatOptions: CustomStringConvertible {
                 linebreak: String = "\n",
                 allowInlineSemicolons: Bool = true,
                 spaceAroundRangeOperators: Bool = true,
+                spaceAroundOperatorDeclarations: Bool = true,
                 useVoid: Bool = true,
+                indentCase: Bool = false,
                 trailingCommas: Bool = true,
                 indentComments: Bool = true,
                 truncateBlankLines: Bool = true,
@@ -163,6 +168,7 @@ public struct FormatOptions: CustomStringConvertible {
                 hexGrouping: Grouping = .group(4, 8),
                 hoistPatternLet: Bool = true,
                 stripUnusedArguments: ArgumentType = .all,
+                elseOnNextLine: Bool = false,
                 removeSelf: Bool = true,
                 experimentalRules: Bool = false,
                 fragment: Bool = false,
@@ -172,7 +178,9 @@ public struct FormatOptions: CustomStringConvertible {
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons
         self.spaceAroundRangeOperators = spaceAroundRangeOperators
+        self.spaceAroundOperatorDeclarations = spaceAroundOperatorDeclarations
         self.useVoid = useVoid
+        self.indentCase = indentCase
         self.trailingCommas = trailingCommas
         self.indentComments = indentComments
         self.truncateBlankLines = truncateBlankLines
@@ -191,6 +199,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.hexGrouping = hexGrouping
         self.hoistPatternLet = hoistPatternLet
         self.stripUnusedArguments = stripUnusedArguments
+        self.elseOnNextLine = elseOnNextLine
         self.removeSelf = removeSelf
         self.experimentalRules = experimentalRules
         self.fragment = fragment
@@ -227,7 +236,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 if string.hasPrefix("\t") {
                     increment("\t")
                 } else {
-                    let length = string.characters.count
+                    let length = string.count
                     for i in [8, 4, 3, 2, 1] {
                         if length % i == 0 {
                             increment(String(repeating: " ", count: i))
@@ -359,7 +368,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 prevIndent = nil
             case .space:
                 if lastTokenWasLinebreak, nestedComments > 0 {
-                    let indent = token.string.characters.count
+                    let indent = token.string.count
                     if prevIndent != nil && abs(prevIndent! - indent) >= 2 {
                         shouldIndent = false
                         break
@@ -561,7 +570,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 if string == string.lowercased() {
                     lowercase += 1
                 } else {
-                    let value = string.substring(from: prefix.endIndex)
+                    let value = string[prefix.endIndex ..< string.endIndex]
                     if value == value.uppercased() {
                         uppercase += 1
                     }
@@ -606,21 +615,19 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 return
             }
             // Strip prefix/suffix
-            let digits: String.CharacterView
+            let digits: String
             let prefix = "0x"
             switch type {
             case .integer:
-                digits = number.characters
+                digits = number
             case .binary, .octal:
-                digits = number.characters.suffix(from: prefix.endIndex)
+                digits = String(number[prefix.endIndex ..< number.endIndex])
             case .hex:
-                let endIndex =
-                    number.characters.index { [".", "p", "P"].contains($0) } ?? number.endIndex
-                digits = number.characters[prefix.endIndex ..< endIndex]
+                let endIndex = number.index { [".", "p", "P"].contains($0) } ?? number.endIndex
+                digits = String(number[prefix.endIndex ..< endIndex])
             case .decimal:
-                let endIndex =
-                    number.characters.index { [".", "e", "E"].contains($0) } ?? number.endIndex
-                digits = number.characters.prefix(upTo: endIndex)
+                let endIndex = number.index { [".", "e", "E"].contains($0) } ?? number.endIndex
+                digits = String(number[number.startIndex ..< endIndex])
             }
             // Get the group for this number
             var count = 0
@@ -1189,6 +1196,73 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         var index = 0
         processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false)
         return removed > unremoved // if both zero, should be false
+    }()
+
+    options.spaceAroundOperatorDeclarations = {
+        var space = 0, nospace = 0
+        formatter.forEach(.operator) { i, token in
+            guard case .operator(_, .none) = token,
+                formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .keyword("func"),
+                let token = formatter.token(at: i + 1) else {
+                return
+            }
+            if token.isSpaceOrLinebreak {
+                space += 1
+            } else {
+                nospace += 1
+            }
+        }
+        return nospace <= space
+    }()
+
+    options.elseOnNextLine = {
+        var sameLine = 0, nextLine = 0
+        formatter.forEach(.keyword) { i, token in
+            guard ["else", "catch", "while"].contains(token.string) else { return }
+            // Check for brace
+            guard let braceIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+                $0 == .endOfScope("}")
+            }) else { return }
+            // Check this isn't an inline block
+            guard let prevBraceIndex = formatter.index(of: .startOfScope("{"), before: braceIndex),
+                let prevLinebreakIndex = formatter.index(of: .linebreak, before: braceIndex),
+                prevLinebreakIndex > prevBraceIndex else { return }
+            // Check if wrapped
+            if let linebreakIndex = formatter.index(of: .linebreak, before: i), linebreakIndex > braceIndex {
+                nextLine += 1
+            } else {
+                sameLine += 1
+            }
+        }
+        return sameLine < nextLine
+    }()
+
+    options.indentCase = {
+        var indent = 0, noindent = 0
+        formatter.forEach(.keyword("switch")) { i, _ in
+            var switchIndent = ""
+            if let token = formatter.token(at: i - 1), !token.isLinebreak {
+                guard case let .space(space) = token, formatter.token(at: i - 2)?.isLinebreak != false else {
+                    return
+                }
+                switchIndent = space
+            }
+            guard let openBraceIndex = formatter.index(of: .startOfScope("{"), after: i),
+                let caseIndex = formatter.index(of: .endOfScope("case"), after: openBraceIndex) ??
+                formatter.index(of: .endOfScope("default"), after: openBraceIndex),
+                let indentToken = formatter.token(at: caseIndex - 1) else {
+                return
+            }
+            switch indentToken {
+            case .linebreak, .space(switchIndent):
+                noindent += 1
+            case let .space(caseIndent) where caseIndent.hasPrefix(switchIndent):
+                indent += 1
+            default:
+                break
+            }
+        }
+        return indent > noindent
     }()
 
     return options

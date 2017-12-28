@@ -5,34 +5,34 @@
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
 //
-//  Distributed under the permissive zlib license
+//  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
 //  https://github.com/nicklockwood/SwiftFormat
 //
-//  This software is provided 'as-is', without any express or implied
-//  warranty.  In no event will the authors be held liable for any damages
-//  arising from the use of this software.
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
 //
-//  Permission is granted to anyone to use this software for any purpose,
-//  including commercial applications, and to alter it and redistribute it
-//  freely, subject to the following restrictions:
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
 //
-//  1. The origin of this software must not be misrepresented; you must not
-//  claim that you wrote the original software. If you use this software
-//  in a product, an acknowledgment in the product documentation would be
-//  appreciated but is not required.
-//
-//  2. Altered source versions must be plainly marked as such, and must not be
-//  misrepresented as being the original software.
-//
-//  3. This notice may not be removed or altered from any source distribution.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 //
 
 import Foundation
 
 /// The current SwiftFormat version
-public let version = "0.29.3"
+public let version = "0.32.1"
 
 /// An enumeration of the types of error that may be thrown by SwiftFormat
 public enum FormatError: Error, CustomStringConvertible {
@@ -141,7 +141,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
             for url in files {
                 queue.async(group: group) {
                     let outputURL = outputURL.map {
-                        URL(fileURLWithPath: $0.path + url.path.substring(from: inputURL.path.characters.endIndex))
+                        URL(fileURLWithPath: $0.path + url.path[inputURL.path.endIndex ..< url.path.endIndex])
                     }
                     enumerate(inputURL: url, outputURL: outputURL, options: options, block: block)
                 }
@@ -182,7 +182,7 @@ public func offsetForToken(at index: Int, in tokens: [Token]) -> (line: Int, col
             line += 1
             column = 0
         } else {
-            column += token.string.characters.count
+            column += token.string.count
         }
     }
     return (line, column)
@@ -226,9 +226,11 @@ public func sourceCode(for tokens: [Token]) -> String {
 /// Apply specified rules to a token array with optional callback
 /// Useful for perfoming additional logic after each rule is applied
 public func applyRules(_ rules: [FormatRule],
-                       to tokens: inout [Token],
+                       to originalTokens: [Token],
                        with options: FormatOptions,
-                       callback: ((Int, [Token]) -> Void)? = nil) throws {
+                       callback: ((Int, [Token]) -> Void)? = nil) throws -> [Token] {
+    var tokens = originalTokens
+
     // Parse
     if let error = parsingError(for: tokens, options: options) {
         throw error
@@ -243,7 +245,7 @@ public func applyRules(_ rules: [FormatRule],
             callback?(i, formatter.tokens)
         }
         if tokens == formatter.tokens {
-            return
+            return tokens
         }
         tokens = formatter.tokens
         options.fileHeader = nil // Prevents infinite recursion
@@ -256,10 +258,7 @@ public func applyRules(_ rules: [FormatRule],
 public func format(_ tokens: [Token],
                    rules: [FormatRule] = FormatRules.default,
                    options: FormatOptions = FormatOptions()) throws -> [Token] {
-
-    var tokens = tokens
-    try applyRules(rules, to: &tokens, with: options)
-    return tokens
+    return try applyRules(rules, to: tokens, with: options)
 }
 
 /// Format code with specified rules and options

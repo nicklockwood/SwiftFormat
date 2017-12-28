@@ -1,16 +1,16 @@
 {
   "name": "SwiftFormat",
-  "version": "0.29.3",
+  "version": "0.32.1",
   "license": {
-    "type": "zlib",
-    "file": "LICENCE.md"
+    "type": "MIT",
+    "file": "LICENSE.md"
   },
   "summary": "Mac and iOS library for formatting Swift source code.",
   "homepage": "https://github.com/nicklockwood/SwiftFormat",
   "authors": "Nick Lockwood",
   "source": {
     "git": "https://github.com/nicklockwood/SwiftFormat.git",
-    "tag": "0.29.3"
+    "tag": "0.32.1"
   },
   "default_subspecs": "Core",
   "subspecs": [

@@ -1320,6 +1320,7 @@ extension FormatRules {
             "optional", "required",
             "convenience",
             "override",
+            "indirect",
             "lazy",
             "weak", "unowned",
             "static", "class",

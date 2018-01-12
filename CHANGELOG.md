@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.32.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.32.2) (2018-01-12)
+
+- Fixed bug with parsing spaces inside interpolated values in multiline string literals
+- Added instructions for using SwiftFormat on a CI server with Danger
+
 ## [0.32.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.32.1) (2017-12-07)
 
 - Added `--dryrun` option, for testing SwiftFormat without making any file changes

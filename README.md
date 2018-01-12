@@ -1037,7 +1037,7 @@ The header template is a string that you provide using the `--header` command-li
 
 For a single-line template: `--header "Copyright (c) 2017 Foobar Industries"`
 
-For a multiline comment, mark linebreaks with `\n`: `--header "First line\nSecond line"
+For a multiline comment, mark linebreaks with `\n`: `--header "First line\nSecond line"`
 
 You can optionally include Swift comment markup in the template if you wish: `--header "/*--- Header comment ---*/"`
 
@@ -1045,7 +1045,7 @@ If you do not include comment markup, each line in the template will be prepende
 
 Finally, it is common practice to include the current year in a comment header copyright notice. To do that, use the following syntax:
 
-    `--header "Copyright (c) {year} Foobar Industries"`
+    --header "Copyright (c) {year} Foobar Industries"
     
 And the `{year}` token will be automatically replaced by the current year whenever SwiftFormat is applied (**Note:** the year is determined from the locale and timezone of the machine running the script).
 

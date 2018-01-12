@@ -1007,7 +1007,7 @@ public func tokenize(_ source: String) -> [Token] {
                         }
                         // Fix up indents
                         for index in (scopeIndexStack.last! ..< tokens.count - 1).reversed() {
-                            if case let .space(indent) = tokens[index] {
+                            if case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak {
                                 guard offset.isEmpty || indent.hasPrefix(offset) else {
                                     tokens[index] = .error(indent) // Mismatched whitespace
                                     break

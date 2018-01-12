@@ -328,6 +328,30 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testMultilineStringStartingWithInterpolation() {
+        let input = "    \"\"\"\n    \\(String(describing: 1))\n    \"\"\""
+        let output: [Token] = [
+            .space("    "),
+            .startOfScope("\"\"\""),
+            .linebreak("\n"),
+            .space("    "),
+            .stringBody("\\"),
+            .startOfScope("("),
+            .identifier("String"),
+            .startOfScope("("),
+            .identifier("describing"),
+            .delimiter(":"),
+            .space(" "),
+            .number("1", .integer),
+            .endOfScope(")"),
+            .endOfScope(")"),
+            .linebreak("\n"),
+            .space("    "),
+            .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Single-line comments
 
     func testSingleLineComment() {

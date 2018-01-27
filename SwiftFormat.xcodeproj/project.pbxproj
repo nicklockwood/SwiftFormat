@@ -51,6 +51,10 @@
 		90C4B6EB1DA4B059009EB000 /* SwiftFormat.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		90F16AF81DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F16AF71DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift */; };
 		90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */; };
+		E4872111201D3B830014845E /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
+		E4872112201D3B860014845E /* Rules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */; };
+		E4872113201D3B890014845E /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
+		E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -483,6 +487,11 @@
 						DevelopmentTeam = 8VQKF583ED;
 						LastSwiftMigration = 0900;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.Mac = {
+								enabled = 1;
+							};
+						};
 					};
 					90C4B6DC1DA4B059009EB000 = {
 						CreatedOnToolsVersion = 8.1;
@@ -657,6 +666,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				90C4B6CF1DA4B04A009EB000 /* ViewController.swift in Sources */,
+				E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */,
+				E4872112201D3B860014845E /* Rules.swift in Sources */,
+				E4872113201D3B890014845E /* Formatter.swift in Sources */,
+				E4872111201D3B830014845E /* Options.swift in Sources */,
 				90C4B6CD1DA4B04A009EB000 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -165,7 +165,7 @@ extension RulesStore {
         save(rules)
     }
 
-    /// Will replace rhe rules with the param
+    /// Will replace the rules with the param
     private func save(_ rules: RulesRepresentation) {
         store.set(rules, forKey: rulesKey)
     }

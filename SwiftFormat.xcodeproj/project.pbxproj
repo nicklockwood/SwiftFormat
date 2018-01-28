@@ -256,19 +256,10 @@
 			name = Resources;
 			sourceTree = "<group>";
 		};
-		9016DEFE1DA50433008A4E36 /* Source */ = {
-			isa = PBXGroup;
-			children = (
-				90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */,
-				90C4B6CE1DA4B04A009EB000 /* ViewController.swift */,
-			);
-			name = Source;
-			sourceTree = "<group>";
-		};
 		90C4B6CB1DA4B04A009EB000 /* Application */ = {
 			isa = PBXGroup;
 			children = (
-				9016DEFE1DA50433008A4E36 /* Source */,
+				E4872117201D855C0014845E /* Source */,
 				9016DEFD1DA5042E008A4E36 /* Resources */,
 				90CB44D91DA4B56800F86C22 /* Supporting Files */,
 			);
@@ -329,6 +320,15 @@
 				90C4B6E61DA4B059009EB000 /* FormatSelectedSourceCommand.swift */,
 			);
 			name = Commands;
+			sourceTree = "<group>";
+		};
+		E4872117201D855C0014845E /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */,
+				90C4B6CE1DA4B04A009EB000 /* ViewController.swift */,
+			);
+			path = Source;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

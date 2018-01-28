@@ -59,6 +59,8 @@
 		E487211F201D92810014845E /* NSUserInterfaceItemIdentifier+extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = E487211E201D92810014845E /* NSUserInterfaceItemIdentifier+extension.swift */; };
 		E4872125201D980D0014845E /* RuleSelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872124201D980D0014845E /* RuleSelectionTableCellView.swift */; };
 		E4872127201D9E050014845E /* RuleSelectionTableCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = E4872126201D9E050014845E /* RuleSelectionTableCellView.xib */; };
+		E4872129201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
+		E487212A201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -141,6 +143,7 @@
 		E487211E201D92810014845E /* NSUserInterfaceItemIdentifier+extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSUserInterfaceItemIdentifier+extension.swift"; sourceTree = "<group>"; };
 		E4872124201D980D0014845E /* RuleSelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleSelectionTableCellView.swift; sourceTree = "<group>"; };
 		E4872126201D9E050014845E /* RuleSelectionTableCellView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RuleSelectionTableCellView.xib; sourceTree = "<group>"; };
+		E4872128201E3DD50014845E /* RulesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,13 +223,14 @@
 		01A0EAA61D5DB4CF00A0A8E3 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				01F17E811E25870700DCD359 /* CommandLine.swift */,
+				01B3987C1D763493009ADE61 /* Formatter.swift */,
+				01F3DF8B1DB9FD3F00454944 /* Options.swift */,
+				01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */,
+				E4872128201E3DD50014845E /* RulesStore.swift */,
 				01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */,
 				01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */,
-				01F17E811E25870700DCD359 /* CommandLine.swift */,
 				01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */,
-				01B3987C1D763493009ADE61 /* Formatter.swift */,
-				01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */,
-				01F3DF8B1DB9FD3F00454944 /* Options.swift */,
 				01A0EAA91D5DB4CF00A0A8E3 /* Info.plist */,
 			);
 			path = Sources;
@@ -685,6 +689,7 @@
 				E487211F201D92810014845E /* NSUserInterfaceItemIdentifier+extension.swift in Sources */,
 				E4872112201D3B860014845E /* Rules.swift in Sources */,
 				E4872113201D3B890014845E /* Formatter.swift in Sources */,
+				E4872129201E3DD50014845E /* RulesStore.swift in Sources */,
 				E4872111201D3B830014845E /* Options.swift in Sources */,
 				90C4B6CD1DA4B04A009EB000 /* AppDelegate.swift in Sources */,
 			);
@@ -699,6 +704,7 @@
 				90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */,
 				018541CF1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift in Sources */,
 				9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */,
+				E487212A201E3DD50014845E /* RulesStore.swift in Sources */,
 				01F3DF8E1DB9FD3F00454944 /* Options.swift in Sources */,
 				9028F7831DA4B435009FE5B4 /* SwiftFormat.swift in Sources */,
 				90C4B6E71DA4B059009EB000 /* FormatSelectedSourceCommand.swift in Sources */,

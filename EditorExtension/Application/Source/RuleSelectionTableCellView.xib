@@ -14,7 +14,7 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="oYi-2E-eO6">
-                    <rect key="frame" x="18" y="6" width="193" height="18"/>
+                    <rect key="frame" x="6" y="6" width="205" height="18"/>
                     <buttonCell key="cell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="ugI-Qq-CjV">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="systemSemibold" size="13"/>
@@ -25,7 +25,7 @@
                 <constraint firstItem="oYi-2E-eO6" firstAttribute="top" secondItem="eFY-XD-1Vu" secondAttribute="top" constant="8" id="Aja-cM-Mtp"/>
                 <constraint firstAttribute="trailing" secondItem="oYi-2E-eO6" secondAttribute="trailing" constant="20" symbolic="YES" id="SmB-De-5bV"/>
                 <constraint firstAttribute="bottom" secondItem="oYi-2E-eO6" secondAttribute="bottom" constant="8" id="fKG-Pa-NbN"/>
-                <constraint firstItem="oYi-2E-eO6" firstAttribute="leading" secondItem="eFY-XD-1Vu" secondAttribute="leading" constant="20" symbolic="YES" id="zDA-ZS-6Ar"/>
+                <constraint firstItem="oYi-2E-eO6" firstAttribute="leading" secondItem="eFY-XD-1Vu" secondAttribute="leading" constant="8" id="zDA-ZS-6Ar"/>
             </constraints>
             <connections>
                 <outlet property="button" destination="oYi-2E-eO6" id="Fpv-Tj-XBg"/>

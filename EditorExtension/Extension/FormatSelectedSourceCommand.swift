@@ -55,7 +55,14 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         let sourceToFormat = selectionRange.flatMap { invocation.buffer.lines[$0] as? String }.joined()
 
         do {
-            let formattedSource = try format(sourceToFormat, options: options)
+            let rules = FormatRules.all(named:
+                RulesStore()
+                    .rules
+                    .filter{ $0.isActive }
+                    .map { $0.name }
+            )
+
+            let formattedSource = try format(sourceToFormat, rules: rules, options: options)
             if formattedSource == sourceToFormat {
                 // No changes needed
                 return completionHandler(nil)

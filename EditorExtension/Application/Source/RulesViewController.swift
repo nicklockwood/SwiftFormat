@@ -34,13 +34,28 @@ import Cocoa
 /// Goal: Display Active & Inactive Rules and allow theire state modification
 class RulesViewController: NSViewController {
 
-    override var title: String? {
-        get {
-            return "Rules"
+    class RuleViewModel {
+        let name: String
+        var isEnable: Bool {
+            didSet {
+                enableDidChangeAction(isEnable)
+            }
         }
-        set {
-            super.title = title
+
+        private let enableDidChangeAction: (Bool) -> Void
+
+        init(name: String, isEnable: Bool, enableDidChangeAction: @escaping (Bool) -> Void) {
+            self.name = name
+            self.isEnable = isEnable
+            self.enableDidChangeAction = enableDidChangeAction
         }
+    }
+
+    var ruleViewModels = [RuleViewModel]()
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        title = "Rules"
     }
 
     @IBOutlet var tableView: NSTableView! {
@@ -50,37 +65,41 @@ class RulesViewController: NSViewController {
             let nib = NSNib(nibNamed: "RuleSelectionTableCellView", bundle: nil)
             tableView.register(nib, forIdentifier: "bob")
             tableView.usesAutomaticRowHeights = true
-            tableView.reloadData()
         }
     }
-
-    override func awakeFromNib() {
-        super.awakeFromNib()
-    }
-
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do view setup here.
+        let store = RulesStore()
+
+        ruleViewModels = store
+            .rules
+            .sorted()
+            .map { rule in
+                RulesViewController.RuleViewModel(name: rule.name,
+                                                  isEnable: rule.isActive,
+                                                  enableDidChangeAction: {
+                                                      var updatedRule = rule
+                                                      updatedRule.isActive = $0
+                                                      store.save(updatedRule)
+                })
+            }
     }
-    
 }
 
-//MARK: - Table View Data Source
+// MARK: - Table View Data Source
 extension RulesViewController: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
-        return 22
+        return ruleViewModels.count
     }
 
-
-    /* This method is required for the "Cell Based" TableView, and is optional for the "View Based" TableView. If implemented in the latter case, the value will be set to the view at a given row/column if the view responds to -setObjectValue: (such as NSControl and NSTableCellView). Note that NSTableCellView does not actually display the objectValue, and its value is to be used for bindings. See NSTableCellView.h for more information.
-     */
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? {
-        return row
+        return ruleViewModels[row]
     }
 }
 
-//MARK: - Table View Delegate
+// MARK: - Table View Delegate
 extension RulesViewController: NSTableViewDelegate {
 
     func tableView(_ tableView: NSTableView,
@@ -88,9 +107,6 @@ extension RulesViewController: NSTableViewDelegate {
                    row: Int) -> NSView? {
 
         let cell = tableView.makeView(withIdentifier: "bob", owner: nil) as? RuleSelectionTableCellView
-        cell?.button.title = "My title: \(row)"
         return cell
     }
 }
-
-

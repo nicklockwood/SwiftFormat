@@ -70,10 +70,22 @@ public class FormatRules: NSObject {
         return Array(byName.values)
     }
 
+    public static func all(named: [String]) -> [FormatRule] {
+        let byName = FormatRules.byName
+        let names = Set(named)
+        var result = [FormatRule]()
+        for (key, formatRule) in byName {
+            if names.contains(key) {
+                result.append(formatRule)
+            }
+        }
+        return result
+    }
+
     /// Rules that are disabled by default
     public static let disabledByDefault = ["trailingClosures"]
 
-    /// Default rules
+    /// Default active rules
     public static let `default` = all(except: disabledByDefault)
 }
 

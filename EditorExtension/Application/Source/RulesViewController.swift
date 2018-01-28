@@ -89,22 +89,24 @@ class RulesViewController: NSViewController {
 }
 
 // MARK: - Table View Data Source
+
 extension RulesViewController: NSTableViewDataSource {
-    func numberOfRows(in tableView: NSTableView) -> Int {
+    func numberOfRows(in _: NSTableView) -> Int {
         return ruleViewModels.count
     }
 
-    func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? {
+    func tableView(_: NSTableView, objectValueFor _: NSTableColumn?, row: Int) -> Any? {
         return ruleViewModels[row]
     }
 }
 
 // MARK: - Table View Delegate
+
 extension RulesViewController: NSTableViewDelegate {
 
     func tableView(_ tableView: NSTableView,
-                   viewFor tableColumn: NSTableColumn?,
-                   row: Int) -> NSView? {
+                   viewFor _: NSTableColumn?,
+                   row _: Int) -> NSView? {
 
         let cell = tableView.makeView(withIdentifier: "bob", owner: nil) as? RuleSelectionTableCellView
         return cell

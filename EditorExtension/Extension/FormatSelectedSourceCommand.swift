@@ -57,9 +57,9 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         do {
             let rules = FormatRules.all(named:
                 RulesStore()
-                    .rules
-                    .filter{ $0.isActive }
-                    .map { $0.name }
+                .rules
+                .filter { $0.isActive }
+                .map { $0.name }
             )
 
             let formattedSource = try format(sourceToFormat, rules: rules, options: options)

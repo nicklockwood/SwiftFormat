@@ -42,7 +42,7 @@ class RuleSelectionTableCellView: NSTableCellView {
     }
 
     private var font: NSFont!
-    private var titleAttributedStringAttribute: [NSAttributedStringKey : Any] {
+    private var titleAttributedStringAttribute: [NSAttributedStringKey: Any] {
         let paragraphStyle = NSMutableParagraphStyle()
         let spacing: CGFloat = 12.0
         paragraphStyle.firstLineHeadIndent = spacing
@@ -50,7 +50,7 @@ class RuleSelectionTableCellView: NSTableCellView {
 
         return [
             NSAttributedStringKey.paragraphStyle: paragraphStyle,
-            NSAttributedStringKey.font: button.font!
+            NSAttributedStringKey.font: button.font!,
         ]
     }
 

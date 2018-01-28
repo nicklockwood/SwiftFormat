@@ -49,7 +49,7 @@ struct Rule {
 }
 
 extension Rule: Comparable {
-    static func <(lhs: Rule, rhs: Rule) -> Bool {
+    static func < (lhs: Rule, rhs: Rule) -> Bool {
         if lhs.name == rhs.name {
             return lhs.isActive
         }
@@ -57,7 +57,7 @@ extension Rule: Comparable {
         return lhs.name < rhs.name
     }
 
-    static func ==(lhs: Rule, rhs: Rule) -> Bool {
+    static func == (lhs: Rule, rhs: Rule) -> Bool {
         return
             lhs.name == rhs.name &&
             lhs.isActive == rhs.isActive
@@ -93,8 +93,7 @@ struct RulesStore {
         var disabled = Set<String>()
         if rule.isActive {
             active.insert(rule.name)
-        }
-        else {
+        } else {
             disabled.insert(rule.name)
         }
         save(active: active, disabled: disabled)
@@ -102,14 +101,14 @@ struct RulesStore {
 }
 
 // MARK: - Business Rules
+
 extension RulesStore {
     private func setupDefaultValuesIfNeeded() {
 
         //  check if first time
         if store.value(forKey: rulesKey) == nil {
             resetRulesToDefaults()
-        }
-        else {
+        } else {
             addNewRulesIfNeeded()
         }
     }
@@ -143,6 +142,7 @@ extension RulesStore {
 }
 
 // MARK: - Store Interactions
+
 extension RulesStore {
     private func clear() {
         store.set(nil, forKey: rulesKey)

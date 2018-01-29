@@ -63,8 +63,12 @@ class RulesViewController: NSViewController {
             tableView.dataSource = self
             tableView.delegate = self
             let nib = NSNib(nibNamed: "RuleSelectionTableCellView", bundle: nil)
-            tableView.register(nib, forIdentifier: "bob")
-            tableView.usesAutomaticRowHeights = true
+            tableView.register(nib, forIdentifier: "RuleSelectionTableCellView")
+			if #available(OSX 10.13, *) {
+				tableView.usesAutomaticRowHeights = true
+			} else {
+				tableView.rowHeight = 30
+			}
         }
     }
 
@@ -108,7 +112,7 @@ extension RulesViewController: NSTableViewDelegate {
                    viewFor _: NSTableColumn?,
                    row _: Int) -> NSView? {
 
-        let cell = tableView.makeView(withIdentifier: "bob", owner: nil) as? RuleSelectionTableCellView
+        let cell = tableView.makeView(withIdentifier: "RuleSelectionTableCellView", owner: nil) as? RuleSelectionTableCellView
         return cell
     }
 }

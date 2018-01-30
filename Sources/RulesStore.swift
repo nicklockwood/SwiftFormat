@@ -45,13 +45,13 @@ extension UserDefaults {
 
 struct Rule {
     let name: String
-    var isActive: Bool
+    var isEnabled: Bool
 }
 
 extension Rule: Comparable {
     static func < (lhs: Rule, rhs: Rule) -> Bool {
         if lhs.name == rhs.name {
-            return lhs.isActive
+            return lhs.isEnabled
         }
 
         return lhs.name < rhs.name
@@ -60,13 +60,13 @@ extension Rule: Comparable {
     static func == (lhs: Rule, rhs: Rule) -> Bool {
         return
             lhs.name == rhs.name &&
-            lhs.isActive == rhs.isActive
+            lhs.isEnabled == rhs.isEnabled
     }
 }
 
 extension Rule {
     fileprivate init(_ ruleRep: (String, Bool)) {
-        self.init(name: ruleRep.0, isActive: ruleRep.1)
+        self.init(name: ruleRep.0, isEnabled: ruleRep.1)
     }
 }
 
@@ -91,7 +91,7 @@ struct RulesStore {
     func save(_ rule: Rule) {
         var active = Set<String>()
         var disabled = Set<String>()
-        if rule.isActive {
+        if rule.isEnabled {
             active.insert(rule.name)
         } else {
             disabled.insert(rule.name)

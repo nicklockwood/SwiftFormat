@@ -64,11 +64,11 @@ class RulesViewController: NSViewController {
             tableView.delegate = self
             let nib = NSNib(nibNamed: "RuleSelectionTableCellView", bundle: nil)
             tableView.register(nib, forIdentifier: "RuleSelectionTableCellView")
-			if #available(OSX 10.13, *) {
-				tableView.usesAutomaticRowHeights = true
-			} else {
-				tableView.rowHeight = 30
-			}
+            if #available(OSX 10.13, *) {
+                tableView.usesAutomaticRowHeights = true
+            } else {
+                tableView.rowHeight = 30
+            }
         }
     }
 

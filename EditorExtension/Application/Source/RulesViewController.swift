@@ -51,12 +51,6 @@ class RulesViewController: NSViewController {
         }
     }
 
-    var ruleViewModels = [RuleViewModel]()
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        title = "Rules"
-    }
 
     @IBOutlet var tableView: NSTableView! {
         didSet {

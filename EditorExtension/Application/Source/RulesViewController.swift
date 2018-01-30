@@ -82,10 +82,10 @@ class RulesViewController: NSViewController {
             .sorted()
             .map { rule in
                 RulesViewController.RuleViewModel(name: rule.name,
-                                                  isEnable: rule.isActive,
+                                                  isEnable: rule.isEnabled,
                                                   enableDidChangeAction: {
                                                       var updatedRule = rule
-                                                      updatedRule.isActive = $0
+                                                      updatedRule.isEnabled = $0
                                                       store.save(updatedRule)
                 })
             }

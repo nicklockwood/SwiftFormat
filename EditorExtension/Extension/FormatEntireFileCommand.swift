@@ -51,7 +51,7 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
             let rules = FormatRules.all(named:
                 RulesStore()
                 .rules
-                .filter { $0.isActive }
+                .filter { $0.isEnabled }
                 .map { $0.name }
             )
 

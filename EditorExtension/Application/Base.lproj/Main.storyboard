@@ -711,7 +711,7 @@
         <!--Rules View Controller-->
         <scene sceneID="v8f-un-92m">
             <objects>
-                <viewController storyboardIdentifier="RulesViewController_sid" id="9ZR-Qg-hHT" customClass="RulesViewController" customModule="SwiftFormat_for_Xcode" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="RulesViewController_sid" showSeguePresentationStyle="single" id="9ZR-Qg-hHT" customClass="RulesViewController" customModule="SwiftFormat_for_Xcode" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="iDF-FY-6tf">
                         <rect key="frame" x="0.0" y="0.0" width="450" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>

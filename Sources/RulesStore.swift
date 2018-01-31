@@ -76,10 +76,14 @@ struct RulesStore {
     private let rulesKey = "rules"
     private let store: UserDefaults
 
-    init(_ store: UserDefaults? = UserDefaults(suiteName: UserDefaults.groupDomain)) {
-        guard let store = store else {
+    private static var defaultStore: UserDefaults = {
+        guard let defaults = UserDefaults(suiteName: UserDefaults.groupDomain) else {
             fatalError("The UserDefaults Store is invalid")
         }
+        return defaults
+    }()
+
+    init(_ store: UserDefaults = RulesStore.defaultStore) {
         self.store = store
         setupDefaultValuesIfNeeded()
     }

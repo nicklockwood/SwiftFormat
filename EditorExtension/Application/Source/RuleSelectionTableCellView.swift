@@ -58,7 +58,7 @@ class RuleSelectionTableCellView: NSTableCellView {
         guard let model = objectValue as? RulesViewController.RuleViewModel else {
             return
         }
-        model.isEnable = sender.state == .on
+        model.isEnabled = sender.state == .on
     }
 
     override var objectValue: Any? {
@@ -69,7 +69,7 @@ class RuleSelectionTableCellView: NSTableCellView {
 
             button.attributedTitle = NSAttributedString(string: model.name,
                                                         attributes: titleAttributedStringAttribute)
-            button.state = model.isEnable ? .on : .off
+            button.state = model.isEnabled ? .on : .off
         }
     }
 }

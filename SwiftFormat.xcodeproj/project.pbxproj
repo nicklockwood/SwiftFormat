@@ -56,7 +56,6 @@
 		E4872113201D3B890014845E /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
 		E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
 		E487211D201D885A0014845E /* RulesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E487211C201D885A0014845E /* RulesViewController.swift */; };
-		E487211F201D92810014845E /* NSUserInterfaceItemIdentifier+extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = E487211E201D92810014845E /* NSUserInterfaceItemIdentifier+extension.swift */; };
 		E4872125201D980D0014845E /* RuleSelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872124201D980D0014845E /* RuleSelectionTableCellView.swift */; };
 		E4872127201D9E050014845E /* RuleSelectionTableCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = E4872126201D9E050014845E /* RuleSelectionTableCellView.xib */; };
 		E4872129201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
@@ -140,7 +139,6 @@
 		90F16AF71DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatEntireFileCommand.swift; sourceTree = "<group>"; };
 		90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandErrors.swift; sourceTree = "<group>"; };
 		E487211C201D885A0014845E /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
-		E487211E201D92810014845E /* NSUserInterfaceItemIdentifier+extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSUserInterfaceItemIdentifier+extension.swift"; sourceTree = "<group>"; };
 		E4872124201D980D0014845E /* RuleSelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleSelectionTableCellView.swift; sourceTree = "<group>"; };
 		E4872126201D9E050014845E /* RuleSelectionTableCellView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RuleSelectionTableCellView.xib; sourceTree = "<group>"; };
 		E4872128201E3DD50014845E /* RulesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesStore.swift; sourceTree = "<group>"; };
@@ -338,7 +336,6 @@
 			isa = PBXGroup;
 			children = (
 				90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */,
-				E487211E201D92810014845E /* NSUserInterfaceItemIdentifier+extension.swift */,
 				E487211C201D885A0014845E /* RulesViewController.swift */,
 				90C4B6CE1DA4B04A009EB000 /* ViewController.swift */,
 				E4872124201D980D0014845E /* RuleSelectionTableCellView.swift */,
@@ -686,7 +683,6 @@
 				E487211D201D885A0014845E /* RulesViewController.swift in Sources */,
 				90C4B6CF1DA4B04A009EB000 /* ViewController.swift in Sources */,
 				E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */,
-				E487211F201D92810014845E /* NSUserInterfaceItemIdentifier+extension.swift in Sources */,
 				E4872112201D3B860014845E /* Rules.swift in Sources */,
 				E4872113201D3B890014845E /* Formatter.swift in Sources */,
 				E4872129201E3DD50014845E /* RulesStore.swift in Sources */,

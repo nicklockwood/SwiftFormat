@@ -33,6 +33,13 @@ import Cocoa
 
 class RuleSelectionTableCellView: NSTableCellView {
 
+    static let defaultIdentifier = NSUserInterfaceItemIdentifier.ruleSelectionTableCellView
+
+    class func register(with tableView: NSTableView, forIdentifier identifier: NSUserInterfaceItemIdentifier = defaultIdentifier) {
+        let nib = NSNib(nibNamed: NSNib.Name("RuleSelectionTableCellView"), bundle: nil)
+        tableView.register(nib, forIdentifier: identifier)
+    }
+
     @IBOutlet var button: NSButton! {
         didSet {
             button.target = self
@@ -72,4 +79,8 @@ class RuleSelectionTableCellView: NSTableCellView {
             button.state = model.isEnabled ? .on : .off
         }
     }
+}
+
+extension NSUserInterfaceItemIdentifier {
+    static let ruleSelectionTableCellView = NSUserInterfaceItemIdentifier(rawValue: "RuleSelectionTableCellView")
 }

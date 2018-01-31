@@ -36,21 +36,22 @@ class RulesViewController: NSViewController {
 
     class RuleViewModel {
         let name: String
-        var isEnable: Bool {
+        var isEnabled: Bool {
             didSet {
-                enableDidChangeAction(isEnable)
+                enableDidChangeAction(isEnabled)
             }
         }
 
         private let enableDidChangeAction: (Bool) -> Void
 
-        init(name: String, isEnable: Bool, enableDidChangeAction: @escaping (Bool) -> Void) {
+        init(name: String, isEnabled: Bool, enableDidChangeAction: @escaping (Bool) -> Void) {
             self.name = name
-            self.isEnable = isEnable
+            self.isEnabled = isEnabled
             self.enableDidChangeAction = enableDidChangeAction
         }
     }
 
+    private var ruleViewModels = [RuleViewModel]()
 
     @IBOutlet var tableView: NSTableView! {
         didSet {
@@ -76,7 +77,7 @@ class RulesViewController: NSViewController {
             .sorted()
             .map { rule in
                 RulesViewController.RuleViewModel(name: rule.name,
-                                                  isEnable: rule.isEnabled,
+                                                  isEnabled: rule.isEnabled,
                                                   enableDidChangeAction: {
                                                       var updatedRule = rule
                                                       updatedRule.isEnabled = $0

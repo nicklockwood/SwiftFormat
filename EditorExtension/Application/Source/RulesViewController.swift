@@ -68,9 +68,8 @@ class RulesViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do view setup here.
-        let store = RulesStore()
 
+        let store = RulesStore()
         ruleViewModels = store
             .rules
             .sorted()

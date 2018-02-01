@@ -684,11 +684,12 @@
         <!--Tab View Controller-->
         <scene sceneID="y9y-mK-zv0">
             <objects>
-                <tabViewController selectedTabViewItemIndex="1" id="5TS-Xa-esv" sceneMemberID="viewController">
+                <tabViewController showSeguePresentationStyle="single" selectedTabViewItemIndex="0" id="5TS-Xa-esv" sceneMemberID="viewController">
                     <tabViewItems>
                         <tabViewItem id="oBI-0O-5Vf"/>
                         <tabViewItem identifier="" id="zOv-w8-921"/>
                     </tabViewItems>
+                    <viewControllerTransitionOptions key="transitionOptions" allowUserInteraction="YES"/>
                     <tabView key="tabView" type="noTabsNoBorder" id="EJQ-wo-I9k">
                         <rect key="frame" x="0.0" y="0.0" width="450" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -877,7 +878,7 @@ DQ
                                 </connections>
                             </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="OUH-Zg-5E6">
-                                <rect key="frame" x="18" y="134" width="154" height="17"/>
+                                <rect key="frame" x="18" y="134" width="349" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Selected Source" id="Hrg-QH-mw6">
                                     <font key="font" metaFont="systemMedium" size="13"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -885,7 +886,7 @@ DQ
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="0fv-q4-LYw">
-                                <rect key="frame" x="18" y="84" width="113" height="17"/>
+                                <rect key="frame" x="18" y="84" width="349" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Entire File" id="TzM-um-Cxx">
                                     <font key="font" metaFont="systemMedium" size="13"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -914,7 +915,9 @@ DQ
                             <constraint firstItem="qnt-Gk-VpH" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="8zH-8M-B3o"/>
                             <constraint firstItem="0fv-q4-LYw" firstAttribute="leading" secondItem="OUH-Zg-5E6" secondAttribute="leading" id="95j-tH-qIF"/>
                             <constraint firstItem="BT8-iH-xPF" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="9Zc-9a-gjc"/>
+                            <constraint firstItem="GQk-6A-jIk" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="AGL-OO-gG2"/>
                             <constraint firstItem="Zkf-d0-hNG" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="DFs-BK-idd"/>
+                            <constraint firstAttribute="trailing" secondItem="OUH-Zg-5E6" secondAttribute="trailing" constant="20" symbolic="YES" id="Jdx-KP-H8m"/>
                             <constraint firstAttribute="trailing" secondItem="Zkf-d0-hNG" secondAttribute="trailing" constant="20" symbolic="YES" id="OVl-wP-9Cu"/>
                             <constraint firstItem="Zkf-d0-hNG" firstAttribute="top" secondItem="aNJ-6N-CED" secondAttribute="bottom" constant="8" symbolic="YES" id="Ovr-gf-o9G"/>
                             <constraint firstItem="f7w-oN-I0u" firstAttribute="top" secondItem="0fv-q4-LYw" secondAttribute="bottom" constant="4" id="QHZ-cv-wXr"/>
@@ -928,6 +931,7 @@ DQ
                             <constraint firstItem="VVr-7o-9zD" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="a73-Fq-yGR"/>
                             <constraint firstItem="BT8-iH-xPF" firstAttribute="top" secondItem="VVr-7o-9zD" secondAttribute="bottom" constant="16" id="aRt-mU-3zD"/>
                             <constraint firstItem="OUH-Zg-5E6" firstAttribute="leading" secondItem="8zw-Wj-eDm" secondAttribute="leading" id="bFY-ee-qCG"/>
+                            <constraint firstAttribute="trailing" secondItem="0fv-q4-LYw" secondAttribute="trailing" constant="20" symbolic="YES" id="bcN-I5-jpe"/>
                             <constraint firstAttribute="trailing" secondItem="qnt-Gk-VpH" secondAttribute="trailing" constant="20" symbolic="YES" id="bxl-PW-1W3"/>
                             <constraint firstAttribute="trailing" secondItem="3tw-Xe-luV" secondAttribute="trailing" constant="20" symbolic="YES" id="cpR-hc-fUU"/>
                             <constraint firstAttribute="trailing" secondItem="BT8-iH-xPF" secondAttribute="trailing" constant="20" symbolic="YES" id="eTa-a5-FhC"/>

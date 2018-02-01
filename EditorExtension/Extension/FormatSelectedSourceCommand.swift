@@ -33,10 +33,8 @@ import Foundation
 import XcodeKit
 
 class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
-
     func perform(with invocation: XCSourceEditorCommandInvocation,
                  completionHandler: @escaping (Error?) -> Void) {
-
         guard ["public.swift-source", "com.apple.dt.playground"].contains(invocation.buffer.contentUTI) else {
             return completionHandler(FormatCommandError.notSwiftLanguage)
         }
@@ -98,7 +96,6 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
     /// - Returns: Source text range that should be usable with the passed modified text
     private func rangeForDifferences(in textRange: XCSourceTextRange,
                                      between _: String, and targetText: String) -> XCSourceTextRange {
-
         // Ensure that we're not greedy about end selections — this can cause empty lines to be removed
         let lineCountOfTarget = targetText.components(separatedBy: CharacterSet.newlines).count
         let finalLine = (textRange.end.column > 0) ? textRange.end.line : textRange.end.line - 1

@@ -34,7 +34,6 @@ import Foundation
 public typealias FormatRule = (Formatter) -> Void
 
 public class FormatRules: NSObject {
-
     private override init() {}
 
     /// A Dictionary of rules by name
@@ -90,7 +89,6 @@ public class FormatRules: NSObject {
 }
 
 extension FormatRules {
-
     /// Implement the following rules with respect to the spacing around parens:
     /// * There is no space between an opening paren and the preceding identifier,
     ///   unless the identifier is one of the specified keywords
@@ -100,7 +98,6 @@ extension FormatRules {
     /// * There is space between a closing paren and following opening brace
     /// * There is no space between a closing paren and following opening square bracket
     @objc public class func spaceAroundParens(_ formatter: Formatter) {
-
         func spaceAfter(_ keyword: String, index: Int) -> Bool {
             switch keyword {
             case "@autoclosure":
@@ -638,10 +635,9 @@ extension FormatRules {
                 }
                 index -= 1
             }
-            // TODO: check indexOfLastLineBreak > indexOfFirstLineBreak
-            if let indexOfFirstLineBreak = indexOfFirstLineBreak, let indexOfLastLineBreak = indexOfLastLineBreak,
+            if let indexOfFirstLineBreak = indexOfFirstLineBreak,
                 indexOfFirstLineBreak != indexOfLastLineBreak {
-                formatter.removeTokens(inRange: indexOfFirstLineBreak ..< indexOfLastLineBreak)
+                formatter.removeTokens(inRange: indexOfFirstLineBreak ..< indexOfLastLineBreak!)
                 return
             }
         }

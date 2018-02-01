@@ -33,7 +33,6 @@ import Foundation
 
 /// Public interface for the SwiftFormat command-line functions
 public struct CLI {
-
     /// Output type for printed content
     public enum OutputType {
         case info
@@ -538,7 +537,6 @@ func format(_ source: String,
             ruleNames: [String],
             options: FormatOptions,
             verbose: Bool) throws -> String {
-
     // Parse source
     let originalTokens = tokenize(source)
     var tokens = originalTokens
@@ -583,7 +581,6 @@ func processInput(_ inputURLs: [URL],
                   verbose: Bool,
                   dryrun: Bool,
                   cacheURL: URL?) -> (Int, Int, Int, [Error]) {
-
     // Filter rules
     var disabled = [String]()
     for name: String in FormatRules.byName.keys {

@@ -71,7 +71,6 @@ extension Rule {
 }
 
 struct RulesStore {
-
     private typealias RulesRepresentation = [String: Bool]
     private let rulesKey = "rules"
     private let store: UserDefaults
@@ -108,7 +107,6 @@ struct RulesStore {
 
 extension RulesStore {
     private func setupDefaultValuesIfNeeded() {
-
         //  check if first time
         if store.value(forKey: rulesKey) == nil {
             resetRulesToDefaults()

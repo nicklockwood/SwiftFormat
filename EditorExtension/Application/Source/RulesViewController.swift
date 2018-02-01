@@ -2,7 +2,7 @@
 //  RulesViewController.swift
 //  SwiftFormat for Xcode
 //
-//  Created by Vincent Bernier on 27-01-18.
+//  Created by Vincent Bernier on 27/01/18.
 //  Copyright 2018 Nick Lockwood
 //
 //  Distributed under the permissive MIT license
@@ -33,9 +33,7 @@ import Cocoa
 
 /// Goal: Display Active & Inactive Rules and allow their state to be modified
 final class RulesViewController: NSViewController {
-
     final class RuleViewModel {
-
         let name: String
 
         var isEnabled: Bool {
@@ -65,22 +63,21 @@ final class RulesViewController: NSViewController {
         ruleViewModels = store
             .rules
             .sorted()
-            .map { rule in
-                RulesViewController.RuleViewModel(name: rule.name,
-                                                  isEnabled: rule.isEnabled,
-                                                  enableDidChangeAction: {
-                                                      var updatedRule = rule
-                                                      updatedRule.isEnabled = $0
-                                                      store.save(updatedRule)
-                })
-            }
+            .map { rule in RuleViewModel(
+                name: rule.name,
+                isEnabled: rule.isEnabled,
+                enableDidChangeAction: {
+                    var updatedRule = rule
+                    updatedRule.isEnabled = $0
+                    store.save(updatedRule)
+                }
+            ) }
     }
 }
 
 // MARK: - Table View Data Source
 
 extension RulesViewController: NSTableViewDataSource {
-
     func numberOfRows(in _: NSTableView) -> Int {
         return ruleViewModels.count
     }
@@ -93,7 +90,6 @@ extension RulesViewController: NSTableViewDataSource {
 // MARK: - Table View Delegate
 
 extension RulesViewController: NSTableViewDelegate {
-
     func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row _: Int) -> NSView? {
         return tableView.makeView(withIdentifier: .ruleSelectionTableCellView, owner: self) as? RuleSelectionTableCellView
     }

@@ -10,7 +10,6 @@ import SwiftFormat
 import XCTest
 
 class PerformanceTests: XCTestCase {
-
     static let files: [String] = {
         var files = [String]()
         let inputURL = URL(fileURLWithPath: #file)

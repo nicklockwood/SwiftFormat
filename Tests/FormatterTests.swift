@@ -33,7 +33,6 @@ import SwiftFormat
 import XCTest
 
 class FormatterTests: XCTestCase {
-
     func testRemoveCurrentTokenWhileEnumerating() {
         let input: [Token] = [
             .identifier("foo"),

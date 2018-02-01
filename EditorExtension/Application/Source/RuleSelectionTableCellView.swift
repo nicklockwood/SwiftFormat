@@ -2,7 +2,7 @@
 //  RuleSelectionTableCellView.swift
 //  SwiftFormat for Xcode
 //
-//  Created by Vincent Bernier on 28-01-18.
+//  Created by Vincent Bernier on 28/01/18.
 //  Copyright © 2018 Nick Lockwood.
 //
 //  Distributed under the permissive MIT license
@@ -32,7 +32,6 @@
 import Cocoa
 
 final class RuleSelectionTableCellView: NSTableCellView {
-
     @IBOutlet var checkbox: NSButton!
 
     @IBAction func toggleRuleValue(_ sender: NSButton) {

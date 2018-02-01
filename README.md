@@ -1145,7 +1145,8 @@ Known issues
 Credits
 ------------
 
-* @tonyarnold - Xcode Source Editor Extension
+* @tonyarnold - Xcode source editor extension
+* @vinceburn - Xcode extension settings UI
 * @bourvill - Git pre-commit hook script
 * @palleas - Homebrew formula
 * @aliak00 - Several path-related CLI enhancements

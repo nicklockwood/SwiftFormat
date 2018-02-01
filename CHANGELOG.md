@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.33.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.0) (2018-02-01)
+
+- Added rules configuration UI to the Xcode Source Editor Extension (thanks @vinceburn and @tonyarnold!)
+- Added `blankLinesAtStartOfScope` rule for removing leading blank lines at the start of functions, classes, etc
+- Fixed indenting of blank lines within commented code blocks
+- Added CONTRIBUTING.md
+
 ## [0.32.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.32.2) (2018-01-12)
 
 - Fixed bug with parsing spaces inside interpolated values in multiline string literals

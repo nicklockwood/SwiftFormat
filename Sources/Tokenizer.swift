@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.32.2
+//  Version 0.33.0
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -51,7 +51,6 @@ private let swiftKeywords = Set([
 ])
 
 public extension String {
-
     /// Is this string a reserved keyword in Swift?
     var isSwiftKeyword: Bool {
         return swiftKeywords.contains(self)
@@ -553,7 +552,6 @@ private extension String.UnicodeScalarView.SubSequence {
 }
 
 private extension UnicodeScalarView {
-
     mutating func readCharacters(where matching: (UnicodeScalar) -> Bool) -> String? {
         var index = startIndex
         while index < endIndex {
@@ -608,7 +606,6 @@ private extension UnicodeScalarView {
 }
 
 private extension UnicodeScalarView {
-
     mutating func parseSpace() -> Token? {
         return readCharacters(where: { $0.isSpace }).map { .space($0) }
     }
@@ -644,7 +641,6 @@ private extension UnicodeScalarView {
     }
 
     mutating func parseOperator() -> Token? {
-
         func isHead(_ c: UnicodeScalar) -> Bool {
             if "./\\=­-+!*%&|^~?".unicodeScalars.contains(c) {
                 return true
@@ -732,7 +728,6 @@ private extension UnicodeScalarView {
     }
 
     mutating func parseIdentifier() -> Token? {
-
         func isHead(_ c: UnicodeScalar) -> Bool {
             switch c.value {
             case 0x41 ... 0x5A, // A-Z
@@ -836,7 +831,6 @@ private extension UnicodeScalarView {
     }
 
     mutating func parseNumber() -> Token? {
-
         func readNumber(where head: @escaping (UnicodeScalar) -> Bool) -> String? {
             return read(head: head, tail: { head($0) || $0 == "_" })
         }

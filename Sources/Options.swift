@@ -173,7 +173,6 @@ public struct FormatOptions: CustomStringConvertible {
                 experimentalRules: Bool = false,
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false) {
-
         self.indent = indent
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons

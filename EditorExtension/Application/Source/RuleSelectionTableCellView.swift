@@ -35,7 +35,7 @@ final class RuleSelectionTableCellView: NSTableCellView {
 
     @IBOutlet var checkbox: NSButton!
 
-    @IBAction func toggleCheckbox(_ sender: NSButton) {
+    @IBAction func toggleRuleValue(_ sender: NSButton) {
         guard let model = objectValue as? RulesViewController.RuleViewModel else {
             return
         }
@@ -45,12 +45,12 @@ final class RuleSelectionTableCellView: NSTableCellView {
 
     override var objectValue: Any? {
         didSet {
-            guard let model = objectValue as? RulesViewController.RuleViewModel else {
+            guard let ruleViewModel = objectValue as? RulesViewController.RuleViewModel else {
                 return
             }
 
-            checkbox.title = model.name
-            checkbox.state = model.isEnabled ? .on : .off
+            checkbox.title = ruleViewModel.name
+            checkbox.state = ruleViewModel.isEnabled ? .on : .off
         }
     }
 }

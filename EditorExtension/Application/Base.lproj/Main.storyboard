@@ -754,7 +754,7 @@
                                                                         <font key="font" metaFont="system"/>
                                                                     </buttonCell>
                                                                     <connections>
-                                                                        <action selector="toggleCheckbox:" target="CZN-za-xvO" id="c5D-jc-y5c"/>
+                                                                        <action selector="toggleRuleValue:" target="CZN-za-xvO" id="bUf-0g-ELc"/>
                                                                     </connections>
                                                                 </button>
                                                             </subviews>

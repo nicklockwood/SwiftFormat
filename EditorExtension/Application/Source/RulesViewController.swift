@@ -31,11 +31,13 @@
 
 import Cocoa
 
-/// Goal: Display Active & Inactive Rules and allow theire state modification
-class RulesViewController: NSViewController {
+/// Goal: Display Active & Inactive Rules and allow their state to be modified
+final class RulesViewController: NSViewController {
 
-    class RuleViewModel {
+    final class RuleViewModel {
+
         let name: String
+
         var isEnabled: Bool {
             didSet {
                 enableDidChangeAction(isEnabled)
@@ -44,7 +46,7 @@ class RulesViewController: NSViewController {
 
         private let enableDidChangeAction: (Bool) -> Void
 
-        init(name: String, isEnabled: Bool, enableDidChangeAction: @escaping (Bool) -> Void) {
+        required init(name: String, isEnabled: Bool, enableDidChangeAction: @escaping (Bool) -> Void) {
             self.name = name
             self.isEnabled = isEnabled
             self.enableDidChangeAction = enableDidChangeAction
@@ -53,24 +55,14 @@ class RulesViewController: NSViewController {
 
     private var ruleViewModels = [RuleViewModel]()
 
-    @IBOutlet var tableView: NSTableView! {
-        didSet {
-            tableView.dataSource = self
-            tableView.delegate = self
-            RuleSelectionTableCellView.register(with: tableView)
-            if #available(OSX 10.13, *) {
-                tableView.usesAutomaticRowHeights = true
-            } else {
-                tableView.rowHeight = 30
-            }
-        }
-    }
+    @IBOutlet var tableView: NSTableView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         let store = RulesStore()
-        ruleViewModels = store
+
+        self.ruleViewModels = store
             .rules
             .sorted()
             .map { rule in
@@ -88,6 +80,7 @@ class RulesViewController: NSViewController {
 // MARK: - Table View Data Source
 
 extension RulesViewController: NSTableViewDataSource {
+
     func numberOfRows(in _: NSTableView) -> Int {
         return ruleViewModels.count
     }
@@ -101,11 +94,7 @@ extension RulesViewController: NSTableViewDataSource {
 
 extension RulesViewController: NSTableViewDelegate {
 
-    func tableView(_ tableView: NSTableView,
-                   viewFor _: NSTableColumn?,
-                   row _: Int) -> NSView? {
-
-        let cell = tableView.makeView(withIdentifier: RuleSelectionTableCellView.defaultIdentifier, owner: nil) as? RuleSelectionTableCellView
-        return cell
+    func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row _: Int) -> NSView? {
+        return tableView.makeView(withIdentifier: .ruleSelectionTableCellView, owner: self) as? RuleSelectionTableCellView
     }
 }

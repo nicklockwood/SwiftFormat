@@ -57,7 +57,6 @@
 		E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
 		E487211D201D885A0014845E /* RulesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E487211C201D885A0014845E /* RulesViewController.swift */; };
 		E4872125201D980D0014845E /* RuleSelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872124201D980D0014845E /* RuleSelectionTableCellView.swift */; };
-		E4872127201D9E050014845E /* RuleSelectionTableCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = E4872126201D9E050014845E /* RuleSelectionTableCellView.xib */; };
 		E4872129201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
 		E487212A201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
 /* End PBXBuildFile section */
@@ -140,7 +139,6 @@
 		90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandErrors.swift; sourceTree = "<group>"; };
 		E487211C201D885A0014845E /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
 		E4872124201D980D0014845E /* RuleSelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleSelectionTableCellView.swift; sourceTree = "<group>"; };
-		E4872126201D9E050014845E /* RuleSelectionTableCellView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RuleSelectionTableCellView.xib; sourceTree = "<group>"; };
 		E4872128201E3DD50014845E /* RulesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -336,10 +334,9 @@
 			isa = PBXGroup;
 			children = (
 				90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */,
+				E4872124201D980D0014845E /* RuleSelectionTableCellView.swift */,
 				E487211C201D885A0014845E /* RulesViewController.swift */,
 				90C4B6CE1DA4B04A009EB000 /* ViewController.swift */,
-				E4872124201D980D0014845E /* RuleSelectionTableCellView.swift */,
-				E4872126201D9E050014845E /* RuleSelectionTableCellView.xib */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -564,7 +561,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				90C4B6D11DA4B04A009EB000 /* Assets.xcassets in Resources */,
-				E4872127201D9E050014845E /* RuleSelectionTableCellView.xib in Resources */,
 				90C4B6D41DA4B04A009EB000 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

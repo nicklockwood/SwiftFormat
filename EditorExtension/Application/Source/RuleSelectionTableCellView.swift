@@ -31,41 +31,16 @@
 
 import Cocoa
 
-class RuleSelectionTableCellView: NSTableCellView {
+final class RuleSelectionTableCellView: NSTableCellView {
 
-    static let defaultIdentifier = NSUserInterfaceItemIdentifier.ruleSelectionTableCellView
+    @IBOutlet var checkbox: NSButton!
 
-    class func register(with tableView: NSTableView, forIdentifier identifier: NSUserInterfaceItemIdentifier = defaultIdentifier) {
-        let nib = NSNib(nibNamed: NSNib.Name("RuleSelectionTableCellView"), bundle: nil)
-        tableView.register(nib, forIdentifier: identifier)
-    }
-
-    @IBOutlet var button: NSButton! {
-        didSet {
-            button.target = self
-            button.action = #selector(buttonAction(_:))
-            font = button.font!
-        }
-    }
-
-    private var font: NSFont!
-    private var titleAttributedStringAttribute: [NSAttributedStringKey: Any] {
-        let paragraphStyle = NSMutableParagraphStyle()
-        let spacing: CGFloat = 12.0
-        paragraphStyle.firstLineHeadIndent = spacing
-        paragraphStyle.headIndent = spacing
-
-        return [
-            NSAttributedStringKey.paragraphStyle: paragraphStyle,
-            NSAttributedStringKey.font: button.font!,
-        ]
-    }
-
-    @objc func buttonAction(_ sender: NSButton) {
+    @IBAction func toggleCheckbox(_ sender: NSButton) {
         guard let model = objectValue as? RulesViewController.RuleViewModel else {
             return
         }
-        model.isEnabled = sender.state == .on
+
+        model.isEnabled = (sender.state == .on)
     }
 
     override var objectValue: Any? {
@@ -74,9 +49,8 @@ class RuleSelectionTableCellView: NSTableCellView {
                 return
             }
 
-            button.attributedTitle = NSAttributedString(string: model.name,
-                                                        attributes: titleAttributedStringAttribute)
-            button.state = model.isEnabled ? .on : .off
+            checkbox.title = model.name
+            checkbox.state = model.isEnabled ? .on : .off
         }
     }
 }

@@ -32,7 +32,7 @@
 import Foundation
 
 extension UserDefaults {
-    static let groupDomain = "com.charcoaldesign.xcode-swift-formatter"
+    static let groupDomain = "com.charcoaldesign.SwiftFormat"
 
     /// Nuke for dev purposes
     func clearAll(in domainName: String) {

@@ -1202,6 +1202,36 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default, options: options), output)
     }
 
+    // MARK: blankLinesAtStartOfScope
+
+    func testBlankLinesRemovedAtStartOfFunction() {
+        let input = "func foo() {\n\n    // code\n}"
+        let output = "func foo() {\n    // code\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAtStartOfScope]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testBlankLinesRemovedAtStartOfParens() {
+        let input = "(\n\n    foo: Int\n)"
+        let output = "(\n    foo: Int\n)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAtStartOfScope]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testBlankLinesRemovedAtStartOfBrackets() {
+        let input = "[\n\n    foo,\n    bar,\n]"
+        let output = "[\n    foo,\n    bar,\n]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAtStartOfScope]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testBlankLinesNotRemovedBetweenElementsInsideBrackets() {
+        let input = "[foo,\n\n bar]"
+        let output = "[foo,\n\n bar]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAtStartOfScope]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["wrapArguments"])), output + "\n")
+    }
+
     // MARK: blankLinesAtEndOfScope
 
     func testBlankLinesRemovedAtEndOfFunction() {
@@ -1229,7 +1259,7 @@ class RulesTests: XCTestCase {
         let input = "if x {\n\n    // do something\n\n} else if y {\n\n    // do something else\n\n}"
         let output = "if x {\n\n    // do something\n\n} else if y {\n\n    // do something else\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAtEndOfScope]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["blankLinesAtStartOfScope"])), output + "\n")
     }
 
     // MARK: blankLinesBetweenScopes
@@ -1536,7 +1566,7 @@ class RulesTests: XCTestCase {
         let input = "{\n\n// foo\n}"
         let output = "{\n\n    // foo\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["blankLinesAtStartOfScope"])), output + "\n")
     }
 
     func testNestedBraces() {

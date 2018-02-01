@@ -581,12 +581,42 @@ extension FormatRules {
         }
     }
 
-    /// Remove blank lines immediately before a closing brace, bracket, paren or chevron,
+    /// Remove blank lines immediately after an opening brace, bracket, paren or chevron
+    @objc public class func blankLinesAtStartOfScope(_ formatter: Formatter) {
+        guard formatter.options.removeBlankLines else { return }
+        formatter.forEach(.startOfScope) { i, token in
+            guard ["{", "(", "[", "<"].contains(token.string),
+                let indexOfFirstLineBreak = formatter.index(of: .nonSpaceOrComment, after: i),
+                // If there is extra code on the same line, ignore it
+                formatter.tokens[indexOfFirstLineBreak].isLinebreak
+            else { return }
+            // Find next non-space token
+            var index = indexOfFirstLineBreak + 1
+            var indexOfLastLineBreak = indexOfFirstLineBreak
+            loop: while let token = formatter.token(at: index) {
+                switch token {
+                case .linebreak:
+                    indexOfLastLineBreak = index
+                case .space:
+                    break
+                default:
+                    break loop
+                }
+                index += 1
+            }
+            if indexOfFirstLineBreak != indexOfLastLineBreak {
+                formatter.removeTokens(inRange: indexOfFirstLineBreak ..< indexOfLastLineBreak)
+                return
+            }
+        }
+    }
+
+    /// Remove blank lines immediately before a closing brace, bracket, paren or chevron
     /// unless it's followed by more code on the same line (e.g. } else { )
     @objc public class func blankLinesAtEndOfScope(_ formatter: Formatter) {
         guard formatter.options.removeBlankLines else { return }
-        formatter.forEachToken { i, token in
-            guard [.endOfScope("}"), .endOfScope(")"), .endOfScope("]"), .endOfScope(">")].contains(token),
+        formatter.forEach(.endOfScope) { i, token in
+            guard ["}", ")", "]", ">"].contains(token.string),
                 // If there is extra code after the closing scope on the same line, ignore it
                 (formatter.next(.nonSpaceOrComment, after: i).map { $0.isLinebreak }) ?? true
             else { return }

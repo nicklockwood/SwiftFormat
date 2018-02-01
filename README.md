@@ -237,6 +237,34 @@ To enable the rule(s) again, use:
 
 Here are all the rules that SwiftFormat currently applies, and the effects that they have:
 
+***blankLinesAtStartOfScope*** - removes leading blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
+
+```diff
+  func foo() {
+-
+    // foo 
+  }
+
+  func foo() {
+    // foo
+  }
+```
+
+```diff
+  array = [
+-
+    foo,
+    bar,
+    baz, 
+  ]
+
+  array = [
+    foo,
+    bar,
+    baz,
+  ]
+```
+
 ***blankLinesAtEndOfScope*** - removes trailing blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
 
 ```diff

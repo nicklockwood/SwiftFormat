@@ -853,10 +853,15 @@ extension FormatRules {
         }
 
         func isCommentedCode(at index: Int) -> Bool {
-            if !scopeStack.isEmpty, formatter.token(at: index - 1)?.isSpace != true,
-                let nextToken = formatter.token(at: index + 1),
-                case let .space(space) = nextToken, space.hasPrefix(formatter.options.indent) {
-                return true
+            if !scopeStack.isEmpty, formatter.token(at: index - 1)?.isSpace != true {
+                switch formatter.token(at: index + 1) {
+                case nil, .linebreak?:
+                    return true
+                case let .space(space)? where space.hasPrefix(formatter.options.indent):
+                    return true
+                default:
+                    break
+                }
             }
             return false
         }

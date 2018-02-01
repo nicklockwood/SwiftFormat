@@ -2104,6 +2104,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testBlankCodeCommentBlockLinesNotIndented() {
+        let input = "func foo() {\n//\n}"
+        let output = "func foo() {\n//\n}"
+        let options = FormatOptions(indentComments: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // indent multiline strings
 
     func testSimpleMultilineString() {

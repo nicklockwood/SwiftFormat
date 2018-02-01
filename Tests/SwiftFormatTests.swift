@@ -68,7 +68,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 25)
+        XCTAssertEqual(files.count, 24)
     }
 
     func testInputFilesMatchOutputFilesForSameOutput() {
@@ -79,7 +79,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 25)
+        XCTAssertEqual(files.count, 24)
     }
 
     func testInputFileNotEnumeratedWhenExcluded() {
@@ -92,7 +92,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 18)
+        XCTAssertEqual(files.count, 17)
     }
 
     // MARK: format function

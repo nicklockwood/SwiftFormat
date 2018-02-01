@@ -62,7 +62,7 @@ final class RulesViewController: NSViewController {
 
         let store = RulesStore()
 
-        self.ruleViewModels = store
+        ruleViewModels = store
             .rules
             .sorted()
             .map { rule in

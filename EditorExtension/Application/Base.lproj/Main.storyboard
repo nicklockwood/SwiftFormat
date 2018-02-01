@@ -659,16 +659,17 @@
                 <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="SwiftFormat_for_Xcode" customModuleProvider="target"/>
                 <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="75" y="0.0"/>
+            <point key="canvasLocation" x="83" y="-108"/>
         </scene>
         <!--Window Controller-->
         <scene sceneID="R2V-B0-nI4">
             <objects>
                 <windowController showSeguePresentationStyle="single" id="B8D-0N-5wS" sceneMemberID="viewController">
                     <window key="window" title="SwiftFormat" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" animationBehavior="default" id="IQv-IB-iLA">
-                        <windowStyleMask key="styleMask" titled="YES" miniaturizable="YES"/>
-                        <rect key="contentRect" x="196" y="240" width="480" height="270"/>
+                        <windowStyleMask key="styleMask" titled="YES" miniaturizable="YES" resizable="YES"/>
+                        <rect key="contentRect" x="196" y="240" width="385" height="494"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
+                        <value key="minSize" type="size" width="385" height="494"/>
                         <connections>
                             <outlet property="delegate" destination="B8D-0N-5wS" id="OGr-my-iJQ"/>
                         </connections>
@@ -684,10 +685,10 @@
         <!--Tab View Controller-->
         <scene sceneID="y9y-mK-zv0">
             <objects>
-                <tabViewController showSeguePresentationStyle="single" selectedTabViewItemIndex="0" id="5TS-Xa-esv" sceneMemberID="viewController">
+                <tabViewController storyboardIdentifier="MainWindowTabViewController" showSeguePresentationStyle="single" selectedTabViewItemIndex="0" id="5TS-Xa-esv" sceneMemberID="viewController">
                     <tabViewItems>
-                        <tabViewItem id="oBI-0O-5Vf"/>
                         <tabViewItem identifier="" id="zOv-w8-921"/>
+                        <tabViewItem id="oBI-0O-5Vf"/>
                     </tabViewItems>
                     <viewControllerTransitionOptions key="transitionOptions" allowUserInteraction="YES"/>
                     <tabView key="tabView" type="noTabsNoBorder" id="EJQ-wo-I9k">
@@ -700,8 +701,8 @@
                     </tabView>
                     <connections>
                         <outlet property="tabView" destination="EJQ-wo-I9k" id="emU-zu-zzL"/>
-                        <segue destination="XfG-lQ-9wD" kind="relationship" relationship="tabItems" id="Ggh-0g-bjD"/>
                         <segue destination="9ZR-Qg-hHT" kind="relationship" relationship="tabItems" id="5FD-jy-t6f"/>
+                        <segue destination="XfG-lQ-9wD" kind="relationship" relationship="tabItems" id="Ggh-0g-bjD"/>
                     </connections>
                 </tabViewController>
                 <customObject id="gwc-tk-N4m" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
@@ -717,20 +718,20 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <scrollView autohidesScrollers="YES" horizontalLineScroll="23" horizontalPageScroll="10" verticalLineScroll="23" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="vVz-rA-tRS">
-                                <rect key="frame" x="20" y="20" width="410" height="260"/>
+                                <rect key="frame" x="0.0" y="0.0" width="450" height="300"/>
                                 <clipView key="contentView" id="1nY-Z5-cvR">
-                                    <rect key="frame" x="1" y="1" width="408" height="258"/>
+                                    <rect key="frame" x="1" y="1" width="448" height="298"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="20" rowSizeStyle="automatic" usesAutomaticRowHeights="YES" viewBased="YES" id="JTc-wy-tJT">
-                                            <rect key="frame" x="0.0" y="0.0" width="408" height="258"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="448" height="298"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="3"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             <tableViewGridLines key="gridStyleMask" dashed="YES"/>
                                             <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                             <tableColumns>
-                                                <tableColumn identifier="" editable="NO" width="405" minWidth="40" maxWidth="1000" id="jXL-aR-Mks">
+                                                <tableColumn identifier="" editable="NO" width="445" minWidth="40" maxWidth="1000" id="jXL-aR-Mks">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
                                                         <font key="font" metaFont="smallSystem"/>
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -743,11 +744,11 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView identifier="RuleSelectionTableCellView" id="CZN-za-xvO" customClass="RuleSelectionTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
-                                                            <rect key="frame" x="1" y="1" width="405" height="20"/>
+                                                            <rect key="frame" x="1" y="1" width="445" height="20"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <button verticalHuggingPriority="750" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Mfi-uR-j8t">
-                                                                    <rect key="frame" x="2" y="1" width="401" height="18"/>
+                                                                    <rect key="frame" x="2" y="1" width="441" height="18"/>
                                                                     <buttonCell key="cell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="aQA-fV-2dz">
                                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                                         <font key="font" metaFont="system"/>
@@ -788,10 +789,10 @@
                             </scrollView>
                         </subviews>
                         <constraints>
-                            <constraint firstItem="vVz-rA-tRS" firstAttribute="top" secondItem="iDF-FY-6tf" secondAttribute="top" constant="20" symbolic="YES" id="CLy-FB-e2X"/>
-                            <constraint firstItem="vVz-rA-tRS" firstAttribute="leading" secondItem="iDF-FY-6tf" secondAttribute="leading" constant="20" symbolic="YES" id="b3G-xy-WS8"/>
-                            <constraint firstAttribute="bottom" secondItem="vVz-rA-tRS" secondAttribute="bottom" constant="20" symbolic="YES" id="k1r-sg-eQJ"/>
-                            <constraint firstAttribute="trailing" secondItem="vVz-rA-tRS" secondAttribute="trailing" constant="20" symbolic="YES" id="pOR-wA-uLW"/>
+                            <constraint firstItem="vVz-rA-tRS" firstAttribute="top" secondItem="iDF-FY-6tf" secondAttribute="top" id="CLy-FB-e2X"/>
+                            <constraint firstItem="vVz-rA-tRS" firstAttribute="leading" secondItem="iDF-FY-6tf" secondAttribute="leading" id="b3G-xy-WS8"/>
+                            <constraint firstAttribute="bottom" secondItem="vVz-rA-tRS" secondAttribute="bottom" id="k1r-sg-eQJ"/>
+                            <constraint firstAttribute="trailing" secondItem="vVz-rA-tRS" secondAttribute="trailing" id="pOR-wA-uLW"/>
                         </constraints>
                     </view>
                     <connections>
@@ -800,12 +801,12 @@
                 </viewController>
                 <customObject id="i1Z-CA-hdr" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="885" y="826"/>
+            <point key="canvasLocation" x="-253" y="1169"/>
         </scene>
-        <!--SwiftFormat-->
+        <!--About-->
         <scene sceneID="hIz-AP-VOD">
             <objects>
-                <viewController title="SwiftFormat" storyboardIdentifier="ViewController" showSeguePresentationStyle="single" id="XfG-lQ-9wD" customClass="ViewController" customModule="SwiftFormat_for_Xcode" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="About" showSeguePresentationStyle="single" id="XfG-lQ-9wD" sceneMemberID="viewController">
                     <view key="view" wantsLayer="YES" id="m2S-Jp-Qdl">
                         <rect key="frame" x="0.0" y="0.0" width="385" height="494"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -864,19 +865,6 @@
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="GQk-6A-jIk">
-                                <rect key="frame" x="246" y="13" width="125" height="32"/>
-                                <buttonCell key="cell" type="push" title="Got it, thanks!" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Fk9-TQ-XqU">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                    <string key="keyEquivalent" base64-UTF8="YES">
-DQ
-</string>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="terminate:" target="rPt-NT-nkU" id="F5D-ZO-Sjd"/>
-                                </connections>
-                            </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="OUH-Zg-5E6">
                                 <rect key="frame" x="18" y="134" width="349" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Selected Source" id="Hrg-QH-mw6">
@@ -911,19 +899,17 @@ DQ
                             </textField>
                         </subviews>
                         <constraints>
-                            <constraint firstItem="GQk-6A-jIk" firstAttribute="top" secondItem="f7w-oN-I0u" secondAttribute="bottom" constant="22" id="20q-VB-ONO"/>
                             <constraint firstItem="qnt-Gk-VpH" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="8zH-8M-B3o"/>
                             <constraint firstItem="0fv-q4-LYw" firstAttribute="leading" secondItem="OUH-Zg-5E6" secondAttribute="leading" id="95j-tH-qIF"/>
                             <constraint firstItem="BT8-iH-xPF" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="9Zc-9a-gjc"/>
-                            <constraint firstItem="GQk-6A-jIk" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="AGL-OO-gG2"/>
                             <constraint firstItem="Zkf-d0-hNG" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="DFs-BK-idd"/>
+                            <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="f7w-oN-I0u" secondAttribute="bottom" constant="20" symbolic="YES" id="DvH-ox-lha"/>
                             <constraint firstAttribute="trailing" secondItem="OUH-Zg-5E6" secondAttribute="trailing" constant="20" symbolic="YES" id="Jdx-KP-H8m"/>
                             <constraint firstAttribute="trailing" secondItem="Zkf-d0-hNG" secondAttribute="trailing" constant="20" symbolic="YES" id="OVl-wP-9Cu"/>
                             <constraint firstItem="Zkf-d0-hNG" firstAttribute="top" secondItem="aNJ-6N-CED" secondAttribute="bottom" constant="8" symbolic="YES" id="Ovr-gf-o9G"/>
                             <constraint firstItem="f7w-oN-I0u" firstAttribute="top" secondItem="0fv-q4-LYw" secondAttribute="bottom" constant="4" id="QHZ-cv-wXr"/>
                             <constraint firstAttribute="trailing" secondItem="f7w-oN-I0u" secondAttribute="trailing" constant="20" symbolic="YES" id="SIM-AT-wfl"/>
                             <constraint firstItem="8zw-Wj-eDm" firstAttribute="top" secondItem="BT8-iH-xPF" secondAttribute="bottom" constant="8" symbolic="YES" id="USZ-YJ-6yu"/>
-                            <constraint firstAttribute="trailing" secondItem="GQk-6A-jIk" secondAttribute="trailing" constant="20" symbolic="YES" id="UV3-rs-moX"/>
                             <constraint firstItem="aNJ-6N-CED" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="Ugf-5c-ZCV"/>
                             <constraint firstItem="VVr-7o-9zD" firstAttribute="top" secondItem="qnt-Gk-VpH" secondAttribute="bottom" constant="8" symbolic="YES" id="Vri-n8-tf7"/>
                             <constraint firstItem="f7w-oN-I0u" firstAttribute="leading" secondItem="0fv-q4-LYw" secondAttribute="leading" id="XO9-q5-xqw"/>
@@ -939,7 +925,6 @@ DQ
                             <constraint firstAttribute="trailing" secondItem="aNJ-6N-CED" secondAttribute="trailing" constant="20" symbolic="YES" id="hI6-IH-RFc"/>
                             <constraint firstItem="3tw-Xe-luV" firstAttribute="top" secondItem="OUH-Zg-5E6" secondAttribute="bottom" constant="4" id="kH7-9c-TpL"/>
                             <constraint firstItem="8zw-Wj-eDm" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="l3G-Oo-SwJ"/>
-                            <constraint firstAttribute="bottom" secondItem="GQk-6A-jIk" secondAttribute="bottom" constant="20" symbolic="YES" id="nxu-8v-azg"/>
                             <constraint firstItem="3tw-Xe-luV" firstAttribute="leading" secondItem="OUH-Zg-5E6" secondAttribute="leading" id="s0U-Ud-Izp"/>
                             <constraint firstItem="qnt-Gk-VpH" firstAttribute="top" secondItem="Zkf-d0-hNG" secondAttribute="bottom" constant="16" id="tiH-6g-ALA"/>
                             <constraint firstItem="OUH-Zg-5E6" firstAttribute="top" secondItem="8zw-Wj-eDm" secondAttribute="bottom" constant="12" id="uWd-JY-Hhx"/>
@@ -950,7 +935,7 @@ DQ
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="76" y="1204"/>
+            <point key="canvasLocation" x="411" y="1266"/>
         </scene>
     </scenes>
 </document>

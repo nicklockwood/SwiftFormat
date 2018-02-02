@@ -79,18 +79,28 @@ final class RulesViewController: NSViewController {
 
 extension RulesViewController: NSTableViewDataSource {
     func numberOfRows(in _: NSTableView) -> Int {
-        return ruleViewModels.count
+        return ruleViewModels.count + 1
     }
 
     func tableView(_: NSTableView, objectValueFor _: NSTableColumn?, row: Int) -> Any? {
-        return ruleViewModels[row]
+        if row < ruleViewModels.count {
+            return ruleViewModels[row]
+        }
+
+        return nil
     }
 }
 
 // MARK: - Table View Delegate
 
 extension RulesViewController: NSTableViewDelegate {
-    func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row _: Int) -> NSView? {
-        return tableView.makeView(withIdentifier: .ruleSelectionTableCellView, owner: self) as? RuleSelectionTableCellView
+    func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
+        if row < ruleViewModels.count {
+            return tableView.makeView(withIdentifier: .ruleSelectionTableCellView, owner: self) as? RuleSelectionTableCellView
+        }
+        else {
+            return tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "OptionTestCell"), owner: self)
+        }
     }
 }
+

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="14087.3" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14087.3"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13771"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
         <capability name="system font weights other than Regular or Bold" minToolsVersion="7.0"/>
     </dependencies>
@@ -695,6 +695,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="450" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <font key="font" metaFont="message"/>
+                        <tabViewItems/>
                         <connections>
                             <outlet property="delegate" destination="5TS-Xa-esv" id="KjJ-hY-Icm"/>
                         </connections>
@@ -723,7 +724,7 @@
                                     <rect key="frame" x="1" y="1" width="448" height="298"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="20" rowSizeStyle="automatic" usesAutomaticRowHeights="YES" viewBased="YES" id="JTc-wy-tJT">
+                                        <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" selectionHighlightStyle="none" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="20" rowSizeStyle="automatic" usesAutomaticRowHeights="YES" viewBased="YES" id="JTc-wy-tJT">
                                             <rect key="frame" x="0.0" y="0.0" width="448" height="298"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="3"/>
@@ -767,6 +768,43 @@
                                                             <connections>
                                                                 <outlet property="checkbox" destination="Mfi-uR-j8t" id="XlW-qO-5oC"/>
                                                             </connections>
+                                                        </tableCellView>
+                                                        <tableCellView identifier="OptionTestCell" misplaced="YES" id="dEs-cv-NjX">
+                                                            <rect key="frame" x="1" y="24" width="445" height="17"/>
+                                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                            <subviews>
+                                                                <popUpButton horizontalHuggingPriority="500" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="b5T-rA-nFf">
+                                                                    <rect key="frame" x="364" y="5" width="76" height="26"/>
+                                                                    <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="dEM-6s-c8g" id="bbT-Or-tov">
+                                                                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                                                        <font key="font" metaFont="menu"/>
+                                                                        <menu key="menu" id="Mne-9R-Lhg">
+                                                                            <items>
+                                                                                <menuItem title="Item 1" state="on" id="dEM-6s-c8g"/>
+                                                                                <menuItem title="Item 2" id="IBc-yd-xCZ"/>
+                                                                                <menuItem title="Item 3" id="eUI-vj-YXe"/>
+                                                                            </items>
+                                                                        </menu>
+                                                                    </popUpButtonCell>
+                                                                </popUpButton>
+                                                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="0td-10-dND">
+                                                                    <rect key="frame" x="34" y="10" width="326" height="17"/>
+                                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Ceci est du Text" id="uWs-wY-RLn">
+                                                                        <font key="font" metaFont="system"/>
+                                                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                                    </textFieldCell>
+                                                                </textField>
+                                                            </subviews>
+                                                            <constraints>
+                                                                <constraint firstItem="0td-10-dND" firstAttribute="centerY" secondItem="dEs-cv-NjX" secondAttribute="centerY" id="5cO-7z-v67"/>
+                                                                <constraint firstAttribute="trailing" secondItem="b5T-rA-nFf" secondAttribute="trailing" constant="8" id="6PA-cG-cBe"/>
+                                                                <constraint firstItem="b5T-rA-nFf" firstAttribute="centerY" secondItem="dEs-cv-NjX" secondAttribute="centerY" id="9Rv-ad-L57"/>
+                                                                <constraint firstItem="b5T-rA-nFf" firstAttribute="top" secondItem="dEs-cv-NjX" secondAttribute="top" constant="8" id="TW1-Gv-Cv0"/>
+                                                                <constraint firstItem="0td-10-dND" firstAttribute="leading" secondItem="dEs-cv-NjX" secondAttribute="leading" constant="36" id="d45-FI-gb7"/>
+                                                                <constraint firstItem="b5T-rA-nFf" firstAttribute="leading" secondItem="0td-10-dND" secondAttribute="trailing" constant="8" id="o3k-XE-7mn"/>
+                                                                <constraint firstAttribute="bottom" secondItem="b5T-rA-nFf" secondAttribute="bottom" constant="8" id="wsX-jp-dxH"/>
+                                                            </constraints>
                                                         </tableCellView>
                                                     </prototypeCellViews>
                                                 </tableColumn>

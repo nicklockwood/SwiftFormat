@@ -33,45 +33,109 @@ import Cocoa
 
 /// Goal: Display Active & Inactive Rules and allow their state to be modified
 final class RulesViewController: NSViewController {
-    final class RuleViewModel {
-        let name: String
-
-        var isEnabled: Bool {
-            didSet {
-                enableDidChangeAction(isEnabled)
-            }
-        }
-
-        private let enableDidChangeAction: (Bool) -> Void
-
-        required init(name: String, isEnabled: Bool, enableDidChangeAction: @escaping (Bool) -> Void) {
-            self.name = name
-            self.isEnabled = isEnabled
-            self.enableDidChangeAction = enableDidChangeAction
-        }
-    }
-
-    private var ruleViewModels = [RuleViewModel]()
+    private var viewModels = [UserSelectionType]()
 
     @IBOutlet var tableView: NSTableView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupViewModels()
+        NotificationCenter.default.addObserver(self, selector: #selector(didLoadNewConfiguration(_:)), name: .ApplicationDidLoadNewConfiguration, object: nil)
+    }
 
+    @objc private func didLoadNewConfiguration(_: Notification) {
+        setupViewModels()
+        tableView?.reloadData()
+    }
+
+    fileprivate func setupViewModels() {
+        let allRules = buildRules()
+        let allOptions = buildOptions()
+
+        let ruleHeader = UserSelectionType.none(UserSelection(identifier: "rule header",
+                                                              title: "Rules",
+                                                              description: nil))
+        let optionHeader = UserSelectionType.none(UserSelection(identifier: "Option Header",
+                                                                title: "Options",
+                                                                description: nil))
+
+        viewModels = [ruleHeader] + allRules + [optionHeader] + allOptions
+    }
+
+    private func buildRules() -> [UserSelectionType] {
         let store = RulesStore()
-
-        ruleViewModels = store
+        let rules: [UserSelectionType] = store
             .rules
             .sorted()
-            .map { rule in RuleViewModel(
-                name: rule.name,
-                isEnabled: rule.isEnabled,
-                enableDidChangeAction: {
-                    var updatedRule = rule
-                    updatedRule.isEnabled = $0
-                    store.save(updatedRule)
+            .map { rule in
+                let d = UserSelectionBinary(identifier: rule.name,
+                                            title: rule.name,
+                                            description: nil,
+                                            selection: rule.isEnabled,
+                                            observer: {
+                                                var updatedRule = rule
+                                                updatedRule.isEnabled = $0
+                                                store.save(updatedRule)
+                })
+                return UserSelectionType.binary(d)
+            }
+
+        return rules
+    }
+
+    private func buildOptions() -> [UserSelectionType] {
+        let store = OptionsStore()
+        let result = store
+            .options
+            .sorted()
+            .map { option -> UserSelectionType in
+                let descriptor = option.descriptor
+                let selection = option.argumentValue
+                let saveOption: (String) -> Void = {
+                    var opt = option
+                    opt.argumentValue = $0
+                    store.save(opt)
                 }
-            ) }
+
+                switch descriptor.type {
+                case let .binary(t, f):
+                    let list = UserSelectionList(identifier: descriptor.id,
+                                                 title: descriptor.name,
+                                                 description: nil,
+                                                 selection: selection,
+                                                 options: [t[0], f[0]],
+                                                 observer: saveOption)
+                    return UserSelectionType.list(list)
+
+                case let .list(values):
+                    let list = UserSelectionList(identifier: descriptor.id,
+                                                 title: descriptor.name,
+                                                 description: nil,
+                                                 selection: selection,
+                                                 options: values,
+                                                 observer: saveOption)
+                    return UserSelectionType.list(list)
+
+                case let .freeText(validationStrategy: validation):
+                    let freeText = UserSelectionFreeText(identifier: descriptor.id,
+                                                         title: descriptor.name,
+                                                         description: nil,
+                                                         selection: selection,
+                                                         observer: { input in
+                                                             if validation(input) {
+                                                                 saveOption(input)
+                                                             }
+                                                         },
+                                                         validationStrategy: validation)
+                    return UserSelectionType.freeText(freeText)
+                }
+            }
+
+        return result
+    }
+
+    func model(forRow row: Int) -> UserSelectionType {
+        return viewModels[row]
     }
 }
 
@@ -79,18 +143,31 @@ final class RulesViewController: NSViewController {
 
 extension RulesViewController: NSTableViewDataSource {
     func numberOfRows(in _: NSTableView) -> Int {
-        return ruleViewModels.count
+        return viewModels.count
     }
 
     func tableView(_: NSTableView, objectValueFor _: NSTableColumn?, row: Int) -> Any? {
-        return ruleViewModels[row]
+        return model(forRow: row).associatedValue()
     }
 }
 
 // MARK: - Table View Delegate
 
 extension RulesViewController: NSTableViewDelegate {
-    func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row _: Int) -> NSView? {
-        return tableView.makeView(withIdentifier: .ruleSelectionTableCellView, owner: self) as? RuleSelectionTableCellView
+    func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
+        let model = self.model(forRow: row)
+        let id: NSUserInterfaceItemIdentifier
+        switch model {
+        case .none:
+            id = .headerTableCellView
+        case .binary:
+            id = .mainBinarySelectionTableCellView
+        case .list:
+            id = .listSelectionTableCellView
+        case .freeText:
+            id = .freeTextTableCellView
+        }
+
+        return tableView.makeView(withIdentifier: id, owner: self)
     }
 }

@@ -46,7 +46,7 @@ public enum WrapMode: String {
 }
 
 /// Argument type for stripping
-public enum ArgumentType: String {
+public enum ArgumentStrippingMode: String {
     case unnamedOnly = "unnamed-only"
     case closureOnly = "closure-only"
     case all = "always"
@@ -134,7 +134,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var octalGrouping: Grouping
     public var hexGrouping: Grouping
     public var hoistPatternLet: Bool
-    public var stripUnusedArguments: ArgumentType
+    public var stripUnusedArguments: ArgumentStrippingMode
     public var elseOnNextLine: Bool
     public var removeSelf: Bool
     public var experimentalRules: Bool
@@ -167,7 +167,7 @@ public struct FormatOptions: CustomStringConvertible {
                 octalGrouping: Grouping = .group(4, 8),
                 hexGrouping: Grouping = .group(4, 8),
                 hoistPatternLet: Bool = true,
-                stripUnusedArguments: ArgumentType = .all,
+                stripUnusedArguments: ArgumentStrippingMode = .all,
                 elseOnNextLine: Bool = false,
                 removeSelf: Bool = true,
                 experimentalRules: Bool = false,

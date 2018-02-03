@@ -718,13 +718,13 @@
                         <rect key="frame" x="0.0" y="0.0" width="450" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <scrollView autohidesScrollers="YES" horizontalLineScroll="23" horizontalPageScroll="10" verticalLineScroll="23" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="vVz-rA-tRS">
+                            <scrollView autohidesScrollers="YES" horizontalLineScroll="33" horizontalPageScroll="10" verticalLineScroll="33" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="vVz-rA-tRS">
                                 <rect key="frame" x="0.0" y="0.0" width="450" height="300"/>
                                 <clipView key="contentView" id="1nY-Z5-cvR">
                                     <rect key="frame" x="1" y="1" width="448" height="298"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" selectionHighlightStyle="none" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="20" rowSizeStyle="automatic" usesAutomaticRowHeights="YES" viewBased="YES" id="JTc-wy-tJT">
+                                        <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" selectionHighlightStyle="none" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="30" rowSizeStyle="automatic" usesAutomaticRowHeights="YES" viewBased="YES" id="JTc-wy-tJT">
                                             <rect key="frame" x="0.0" y="0.0" width="448" height="298"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="3"/>
@@ -744,12 +744,12 @@
                                                     </buttonCell>
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                                     <prototypeCellViews>
-                                                        <tableCellView identifier="RuleSelectionTableCellView" id="CZN-za-xvO" customClass="RuleSelectionTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
-                                                            <rect key="frame" x="1" y="1" width="445" height="20"/>
+                                                        <tableCellView identifier="MainBinarySelectionTableCellView" id="CZN-za-xvO" customClass="MainBinarySelectionTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
+                                                            <rect key="frame" x="1" y="1" width="445" height="26"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <button verticalHuggingPriority="750" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Mfi-uR-j8t">
-                                                                    <rect key="frame" x="2" y="1" width="441" height="18"/>
+                                                                    <rect key="frame" x="2" y="4" width="441" height="18"/>
                                                                     <buttonCell key="cell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="aQA-fV-2dz">
                                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                                         <font key="font" metaFont="system"/>
@@ -760,9 +760,9 @@
                                                                 </button>
                                                             </subviews>
                                                             <constraints>
-                                                                <constraint firstAttribute="bottom" secondItem="Mfi-uR-j8t" secondAttribute="bottom" constant="3" id="GBh-TB-eJ4"/>
+                                                                <constraint firstAttribute="bottom" secondItem="Mfi-uR-j8t" secondAttribute="bottom" constant="6" id="GBh-TB-eJ4"/>
                                                                 <constraint firstAttribute="trailing" secondItem="Mfi-uR-j8t" secondAttribute="trailing" constant="4" id="QqV-je-Yw8"/>
-                                                                <constraint firstItem="Mfi-uR-j8t" firstAttribute="top" secondItem="CZN-za-xvO" secondAttribute="top" constant="3" id="dnp-3H-HEA"/>
+                                                                <constraint firstItem="Mfi-uR-j8t" firstAttribute="top" secondItem="CZN-za-xvO" secondAttribute="top" constant="6" id="dnp-3H-HEA"/>
                                                                 <constraint firstItem="Mfi-uR-j8t" firstAttribute="leading" secondItem="CZN-za-xvO" secondAttribute="leading" constant="4" id="mF7-Yd-Nmg"/>
                                                             </constraints>
                                                             <connections>
@@ -770,7 +770,7 @@
                                                             </connections>
                                                         </tableCellView>
                                                         <tableCellView identifier="OptionTestCell" misplaced="YES" id="dEs-cv-NjX">
-                                                            <rect key="frame" x="1" y="24" width="445" height="17"/>
+                                                            <rect key="frame" x="1" y="30" width="445" height="30"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <popUpButton horizontalHuggingPriority="500" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="b5T-rA-nFf">

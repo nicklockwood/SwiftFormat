@@ -31,29 +31,29 @@
 
 import Cocoa
 
-final class RuleSelectionTableCellView: NSTableCellView {
+final class MainBinarySelectionTableCellView: NSTableCellView {
     @IBOutlet var checkbox: NSButton!
 
     @IBAction func toggleRuleValue(_ sender: NSButton) {
-        guard let model = objectValue as? RulesViewController.RuleViewModel else {
+        guard let binarySelection = objectValue as? UserSelectionBinary else {
             return
         }
 
-        model.isEnabled = (sender.state == .on)
+        binarySelection.selection = (sender.state == .on)
     }
 
     override var objectValue: Any? {
         didSet {
-            guard let ruleViewModel = objectValue as? RulesViewController.RuleViewModel else {
+            guard let binarySelection = objectValue as? UserSelectionBinary else {
                 return
             }
 
-            checkbox.title = ruleViewModel.name
-            checkbox.state = ruleViewModel.isEnabled ? .on : .off
+            checkbox.title = binarySelection.title ?? ""
+            checkbox.state = binarySelection.selection ? .on : .off
         }
     }
 }
 
 extension NSUserInterfaceItemIdentifier {
-    static let ruleSelectionTableCellView = NSUserInterfaceItemIdentifier(rawValue: "RuleSelectionTableCellView")
+    static let mainBinarySelectionTableCellView = NSUserInterfaceItemIdentifier(rawValue: "MainBinarySelectionTableCellView")
 }

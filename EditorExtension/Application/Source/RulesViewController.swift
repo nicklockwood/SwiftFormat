@@ -33,21 +33,19 @@ import Cocoa
 
 /// Goal: Display Active & Inactive Rules and allow their state to be modified
 final class RulesViewController: NSViewController {
-    final class RuleViewModel {
-        let name: String
 
-        var isEnabled: Bool {
-            didSet {
-                enableDidChangeAction(isEnabled)
-            }
+    final class RuleViewModel {
+        //  TODO: Find a better name for enum and cases
+        enum GroupPart {
+            case main
+            case sub
         }
 
-        private let enableDidChangeAction: (Bool) -> Void
-
-        required init(name: String, isEnabled: Bool, enableDidChangeAction: @escaping (Bool) -> Void) {
-            self.name = name
-            self.isEnabled = isEnabled
-            self.enableDidChangeAction = enableDidChangeAction
+        let selectionType: UserSelectionType
+        let grouping: GroupPart
+        init(selectionType: UserSelectionType, grouping: GroupPart = GroupPart.main) {
+            self.selectionType = selectionType
+            self.grouping = grouping
         }
     }
 
@@ -59,19 +57,35 @@ final class RulesViewController: NSViewController {
         super.viewDidLoad()
 
         let store = RulesStore()
-
         ruleViewModels = store
             .rules
             .sorted()
-            .map { rule in RuleViewModel(
-                name: rule.name,
-                isEnabled: rule.isEnabled,
-                enableDidChangeAction: {
-                    var updatedRule = rule
-                    updatedRule.isEnabled = $0
-                    store.save(updatedRule)
-                }
-            ) }
+            .map { rule in
+                let d = UserSelectionBinary(identifier: rule.name,
+                                            title: rule.name,
+                                            description: nil,
+                                            selection: rule.isEnabled,
+                                            observer: {
+                                                var updatedRule = rule
+                                                updatedRule.isEnabled = $0
+                                                store.save(updatedRule)
+                })
+                return UserSelectionType.binary(d)
+            }
+            .map { selectionType in
+                return RuleViewModel(selectionType: selectionType)
+        }
+
+        let optionSelecitonType = UserSelectionType.binary(UserSelectionBinary(identifier: "option test",
+                                                                               title: "option test",
+                                                                               description: nil,
+                                                                               selection: false,
+                                                                               observer: { print("new value == \($0)") }))
+        ruleViewModels.append(RuleViewModel(selectionType: optionSelecitonType, grouping: .sub))
+    }
+
+    func model(forRow row: Int) -> RuleViewModel {
+        return ruleViewModels[row]
     }
 }
 
@@ -79,26 +93,23 @@ final class RulesViewController: NSViewController {
 
 extension RulesViewController: NSTableViewDataSource {
     func numberOfRows(in _: NSTableView) -> Int {
-        return ruleViewModels.count + 1
+        return ruleViewModels.count
     }
 
     func tableView(_: NSTableView, objectValueFor _: NSTableColumn?, row: Int) -> Any? {
-        if row < ruleViewModels.count {
-            return ruleViewModels[row]
-        }
-
-        return nil
+        return model(forRow: row).selectionType.associatedValue()
     }
 }
 
 // MARK: - Table View Delegate
 
 extension RulesViewController: NSTableViewDelegate {
-    func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
-        if row < ruleViewModels.count {
-            return tableView.makeView(withIdentifier: .ruleSelectionTableCellView, owner: self) as? RuleSelectionTableCellView
-        }
-        else {
+    func tableView(_ tableView: NSTableView, viewFor column: NSTableColumn?, row: Int) -> NSView? {
+        let rule = model(forRow: row)
+        switch rule.grouping {
+        case .main:
+            return tableView.makeView(withIdentifier: .mainBinarySelectionTableCellView, owner: self) as? MainBinarySelectionTableCellView
+        case .sub:
             return tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "OptionTestCell"), owner: self)
         }
     }

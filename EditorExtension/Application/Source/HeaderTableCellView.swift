@@ -1,9 +1,9 @@
 //
-//  UserSelection.swift
+//  HeaderTableCellView.swift
 //  SwiftFormat for Xcode
 //
-//  Created by Vincent Bernier on 02-02-18.
-//  Copyright 2018 Nick Lockwood
+//  Created by Vincent Bernier on 03-02-18.
+//  Copyright © 2018 Nick Lockwood.
 //
 //  Distributed under the permissive MIT license
 //  Get the latest version from here:
@@ -29,47 +29,31 @@
 //  SOFTWARE.
 //
 
+import Cocoa
 
-import Foundation
+class HeaderTableCellView: NSTableCellView {
 
-enum UserSelectionType {
-    //  binary, list, freeText, none (for header), listOrFreeText
-    case none (UserSelection)
-    case binary (UserSelectionBinary)
+    @IBOutlet var title: NSTextField!
 
-    //  This shold be a Protocol Extension and have unit test
-    func associatedValue() -> Any? {
-        let enumMirror = Mirror(reflecting: self)
-        let enumAssociatedValue = enumMirror.children.first?.value
-        return enumAssociatedValue
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        wantsLayer = true
+        layer?.backgroundColor = NSColor(calibratedRed: 0.5, green: 0.5, blue: 0.5, alpha: 1.0).cgColor
     }
-}
 
-class UserSelection {
-    let identifier: String
-    let title: String?
-    let description: String?
-
-    init(identifier: String, title: String?, description: String?) {
-        self.identifier = identifier
-        self.title = title
-        self.description = description
-    }
-}
-
-final class UserSelectionBinary: UserSelection {
-    var selection: Bool {
+    override var objectValue: Any? {
         didSet {
-            selectionObserver?(selection)
+            guard let model = objectValue as? UserSelection,
+                let titleText = model.title else {
+                    title.stringValue = ""
+                    return
+            }
+
+            title.stringValue = titleText
         }
     }
-
-    private let selectionObserver: ((Bool) -> Void)?
-    init(identifier: String, title: String?, description: String?, selection: Bool, observer: ((Bool) -> Void)?) {
-        self.selection = selection
-        selectionObserver = observer
-        super.init(identifier: identifier, title: title, description: description)
-    }
 }
 
-
+extension NSUserInterfaceItemIdentifier {
+    static let headerTableCellView = NSUserInterfaceItemIdentifier(rawValue: "HeaderTableCellView")
+}

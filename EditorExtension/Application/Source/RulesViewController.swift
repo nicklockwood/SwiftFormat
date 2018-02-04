@@ -81,10 +81,14 @@ final class RulesViewController: NSViewController {
                                                                    description: nil,
                                                                    selection: false,
                                                                    observer: { print("useVoid -> new value == \($0)") }))
+        let wrapArguments = UserSelectionType.list(UserSelectionList(identifier: "wrapArguments",
+                                                                     title: "wrapArguments",
+                                                                     description: nil,
+                                                                     selection: "afterfirst",
+                                                                     options: ["beforefirst", "afterfirst", "disabled"],
+                                                                     observer: { print("wrapArguments -> new value == \($0)") }))
 
-        //  wrapArguments
-
-        return [useVoid]
+        return [useVoid, wrapArguments]
     }
 
     func model(forRow row: Int) -> UserSelectionType {
@@ -114,6 +118,8 @@ extension RulesViewController: NSTableViewDelegate {
             return tableView.makeView(withIdentifier: .headerTableCellView, owner: self)
         case .binary(_):
             return tableView.makeView(withIdentifier: .mainBinarySelectionTableCellView, owner: self)
+        case .list(_):
+            return tableView.makeView(withIdentifier: .listSelectionTableCellView, owner: self)
         }
     }
 }

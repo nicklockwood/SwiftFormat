@@ -36,6 +36,7 @@ enum UserSelectionType {
     //  binary, list, freeText, none (for header), listOrFreeText
     case none (UserSelection)
     case binary (UserSelectionBinary)
+    case list (UserSelectionList)
 
     //  This shold be a Protocol Extension and have unit test
     func associatedValue() -> Any? {
@@ -67,6 +68,23 @@ final class UserSelectionBinary: UserSelection {
     private let selectionObserver: ((Bool) -> Void)?
     init(identifier: String, title: String?, description: String?, selection: Bool, observer: ((Bool) -> Void)?) {
         self.selection = selection
+        selectionObserver = observer
+        super.init(identifier: identifier, title: title, description: description)
+    }
+}
+
+final class UserSelectionList: UserSelection {
+    var selection: String {
+        didSet {
+            selectionObserver?(selection)
+        }
+    }
+    let options: [String]
+
+    private let selectionObserver: ((String) -> Void)?
+    init(identifier: String, title: String?, description: String?, selection: String, options: [String], observer: ((String) -> Void)?) {
+        self.selection = selection
+        self.options = options
         selectionObserver = observer
         super.init(identifier: identifier, title: title, description: description)
     }

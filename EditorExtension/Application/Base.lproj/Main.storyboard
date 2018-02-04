@@ -792,7 +792,7 @@
                                                                 <outlet property="checkbox" destination="Mfi-uR-j8t" id="XlW-qO-5oC"/>
                                                             </connections>
                                                         </tableCellView>
-                                                        <tableCellView identifier="OptionTestCell" misplaced="YES" id="dEs-cv-NjX">
+                                                        <tableCellView identifier="ListSelectionTableCellView" misplaced="YES" id="dEs-cv-NjX" customClass="ListSelectionTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
                                                             <rect key="frame" x="1" y="50" width="445" height="30"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
@@ -809,9 +809,12 @@
                                                                             </items>
                                                                         </menu>
                                                                     </popUpButtonCell>
+                                                                    <connections>
+                                                                        <action selector="listSelectionChanged:" target="dEs-cv-NjX" id="sOE-c9-tOh"/>
+                                                                    </connections>
                                                                 </popUpButton>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="0td-10-dND">
-                                                                    <rect key="frame" x="34" y="10" width="326" height="17"/>
+                                                                    <rect key="frame" x="2" y="10" width="358" height="17"/>
                                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Ceci est du Text" id="uWs-wY-RLn">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -824,10 +827,14 @@
                                                                 <constraint firstAttribute="trailing" secondItem="b5T-rA-nFf" secondAttribute="trailing" constant="8" id="6PA-cG-cBe"/>
                                                                 <constraint firstItem="b5T-rA-nFf" firstAttribute="centerY" secondItem="dEs-cv-NjX" secondAttribute="centerY" id="9Rv-ad-L57"/>
                                                                 <constraint firstItem="b5T-rA-nFf" firstAttribute="top" secondItem="dEs-cv-NjX" secondAttribute="top" constant="8" id="TW1-Gv-Cv0"/>
-                                                                <constraint firstItem="0td-10-dND" firstAttribute="leading" secondItem="dEs-cv-NjX" secondAttribute="leading" constant="36" id="d45-FI-gb7"/>
+                                                                <constraint firstItem="0td-10-dND" firstAttribute="leading" secondItem="dEs-cv-NjX" secondAttribute="leading" constant="4" id="d45-FI-gb7"/>
                                                                 <constraint firstItem="b5T-rA-nFf" firstAttribute="leading" secondItem="0td-10-dND" secondAttribute="trailing" constant="8" id="o3k-XE-7mn"/>
                                                                 <constraint firstAttribute="bottom" secondItem="b5T-rA-nFf" secondAttribute="bottom" constant="8" id="wsX-jp-dxH"/>
                                                             </constraints>
+                                                            <connections>
+                                                                <outlet property="dropDown" destination="b5T-rA-nFf" id="X7Z-w3-jjj"/>
+                                                                <outlet property="title" destination="0td-10-dND" id="0R1-72-i41"/>
+                                                            </connections>
                                                         </tableCellView>
                                                     </prototypeCellViews>
                                                 </tableColumn>

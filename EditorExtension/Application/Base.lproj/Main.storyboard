@@ -744,8 +744,31 @@
                                                     </buttonCell>
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                                     <prototypeCellViews>
+                                                        <tableCellView identifier="HeaderTableCellView" misplaced="YES" id="LEg-Bc-YDw" customClass="HeaderTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
+                                                            <rect key="frame" x="1" y="1" width="445" height="17"/>
+                                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                            <subviews>
+                                                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="eQ4-cl-xwU">
+                                                                    <rect key="frame" x="2" y="6" width="441" height="17"/>
+                                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Label" id="ELA-ak-8hI">
+                                                                        <font key="font" metaFont="titleBar"/>
+                                                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                                    </textFieldCell>
+                                                                </textField>
+                                                            </subviews>
+                                                            <constraints>
+                                                                <constraint firstAttribute="bottom" secondItem="eQ4-cl-xwU" secondAttribute="bottom" constant="6" id="ITH-YG-Pvm"/>
+                                                                <constraint firstAttribute="trailing" secondItem="eQ4-cl-xwU" secondAttribute="trailing" constant="4" id="Nta-Ke-5e8"/>
+                                                                <constraint firstItem="eQ4-cl-xwU" firstAttribute="top" secondItem="LEg-Bc-YDw" secondAttribute="top" constant="6" id="RaG-hN-65G"/>
+                                                                <constraint firstItem="eQ4-cl-xwU" firstAttribute="leading" secondItem="LEg-Bc-YDw" secondAttribute="leading" constant="4" id="au9-oh-cxD"/>
+                                                            </constraints>
+                                                            <connections>
+                                                                <outlet property="title" destination="eQ4-cl-xwU" id="WNe-YM-pdi"/>
+                                                            </connections>
+                                                        </tableCellView>
                                                         <tableCellView identifier="MainBinarySelectionTableCellView" id="CZN-za-xvO" customClass="MainBinarySelectionTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
-                                                            <rect key="frame" x="1" y="1" width="445" height="26"/>
+                                                            <rect key="frame" x="1" y="21" width="445" height="26"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <button verticalHuggingPriority="750" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Mfi-uR-j8t">
@@ -770,7 +793,7 @@
                                                             </connections>
                                                         </tableCellView>
                                                         <tableCellView identifier="OptionTestCell" misplaced="YES" id="dEs-cv-NjX">
-                                                            <rect key="frame" x="1" y="30" width="445" height="30"/>
+                                                            <rect key="frame" x="1" y="50" width="445" height="30"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <popUpButton horizontalHuggingPriority="500" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="b5T-rA-nFf">

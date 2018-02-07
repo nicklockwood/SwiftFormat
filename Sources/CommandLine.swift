@@ -123,13 +123,11 @@ func printHelp() {
     print("--ifdef            #if indenting. \"indent\" (default), \"noindent\" or \"outdent\"")
     print("--indent           number of spaces to indent, or \"tab\" to use tabs")
     print("--indentcase       indent cases inside a switch. \"true\" or \"false\" (default)")
-    print("--insertlines      insert blank line after {. \"enabled\" (default) or \"disabled\"")
     print("--linebreaks       linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
     print("--octalgrouping    octal grouping,threshold or \"none\", \"ignore\". default: 4,8")
     print("--operatorfunc     spacing for operator funcs. \"spaced\" (default) or \"nospace\"")
     print("--patternlet       let/var placement in patterns. \"hoist\" (default) or \"inline\"")
     print("--ranges           spacing for ranges. \"spaced\" (default) or \"nospace\"")
-    print("--removelines      remove blank line before }. \"enabled\" (default) or \"disabled\"")
     print("--semicolons       allow semicolons. \"never\" or \"inline\" (default)")
     print("--self             use self for member variables. \"remove\" (default) or \"insert\"")
     print("--stripunusedargs  \"closure-only\", \"unnamed-only\" or \"always\" (default)")
@@ -1008,26 +1006,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("insertlines", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "enabled", "true":
-            options.insertBlankLines = true
-        case "disabled", "false":
-            options.insertBlankLines = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("removelines", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "enabled", "true":
-            options.removeBlankLines = true
-        case "disabled", "false":
-            options.removeBlankLines = false
-        default:
-            throw FormatError.options("")
-        }
-    }
     try processOption("header", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "strip":
@@ -1190,6 +1168,30 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
+    try processOption("insertlines", in: args, from: &arguments) {
+        switch $0.lowercased() {
+        case "enabled", "true":
+            print("`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` instead", as: .warning)
+            options.insertBlankLines = true
+        case "disabled", "false":
+            print("`--insertlines` option is deprecated. Use `--disable blankLinesBetweenScopes` or `--disbable blankLinesAroundMark` instead", as: .warning)
+            options.insertBlankLines = false
+        default:
+            throw FormatError.options("")
+        }
+    }
+    try processOption("removelines", in: args, from: &arguments) {
+        switch $0.lowercased() {
+        case "enabled", "true":
+            print("`--removelines` option is deprecated. Use `--enable blankLinesAtStartOfScope` or `--enable blankLinesAtEndOfScope` instead", as: .warning)
+            options.removeBlankLines = true
+        case "disabled", "false":
+            print("`--removelines` option is deprecated. Use `--disable blankLinesAtStartOfScope` or `--disable blankLinesAtEndOfScope` instead", as: .warning)
+            options.removeBlankLines = false
+        default:
+            throw FormatError.options("")
+        }
+    }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return options
 }
@@ -1232,6 +1234,8 @@ let formatArguments = [
 
 let deprecatedArguments = [
     "hexliterals",
+    "insertlines",
+    "removelines",
 ]
 
 let commandLineArguments = [

@@ -237,34 +237,6 @@ To enable the rule(s) again, use:
 
 Here are all the rules that SwiftFormat currently applies, and the effects that they have:
 
-***blankLinesAtStartOfScope*** - removes leading blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
-
-```diff
-  func foo() {
--
-    // foo 
-  }
-
-  func foo() {
-    // foo
-  }
-```
-
-```diff
-  array = [
--
-    foo,
-    bar,
-    baz, 
-  ]
-
-  array = [
-    foo,
-    bar,
-    baz,
-  ]
-```
-
 ***blankLinesAtEndOfScope*** - removes trailing blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
 
 ```diff
@@ -284,6 +256,34 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
     bar,
     baz,
 - 
+  ]
+
+  array = [
+    foo,
+    bar,
+    baz,
+  ]
+```
+
+***blankLinesAtStartOfScope*** - removes leading blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
+
+```diff
+  func foo() {
+-
+    // foo 
+  }
+
+  func foo() {
+    // foo
+  }
+```
+
+```diff
+  array = [
+-
+    foo,
+    bar,
+    baz, 
   ]
 
   array = [
@@ -381,6 +381,22 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
 ```diff
 - let     foo = 5
 + let foo = 5
+```
+
+***duplicateImports*** - removes duplicate import statements:
+
+```diff
+  import Foo
+  import Bar
+- import Foo
+```
+
+```diff
+  import B
+  #if os(iOS)
+    import A
+-   import B
+  #endif
 ```
 
 ***elseOnSameLine*** - controls whether an `else`, `catch` or `while` keyword after a `}` appears on the same line, depending on the `--elseposition` option:

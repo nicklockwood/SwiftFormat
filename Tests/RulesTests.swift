@@ -5679,6 +5679,28 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // MARK: duplicateImports
+
+    func testRemoveDuplicateImport() {
+        let input = "import Foundation\nimport Foundation"
+        let output = "import Foundation"
+        XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveDuplicateConditionalImport() {
+        let input = "#if os(iOS)\n    import Foo\n    import Foo\n#else\n    import Bar\n    import Bar\n#endif"
+        let output = "#if os(iOS)\n    import Foo\n#else\n    import Bar\n#endif"
+        XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveDuplicateConditionalAndUnconditionalImport() {
+        let input = "import Foo\n#if os(iOS)\n    import Foo\n    import Bar\n#else\n    import Bar\n    import Baz\n#endif\nimport Bar"
+        let output = "import Foo\n#if os(iOS)\n#else\n    import Baz\n#endif\nimport Bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
+    }
+
     // MARK: strongOutlets
 
     func testRemoveWeakFromOutlet() {

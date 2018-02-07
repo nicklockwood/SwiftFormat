@@ -836,6 +836,43 @@
                                                                 <outlet property="title" destination="0td-10-dND" id="0R1-72-i41"/>
                                                             </connections>
                                                         </tableCellView>
+                                                        <tableCellView identifier="FreeTextTableCellView" id="yYL-SS-B0s" customClass="FreeTextTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
+                                                            <rect key="frame" x="1" y="83" width="445" height="30"/>
+                                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                            <subviews>
+                                                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="xuL-Gp-CXj">
+                                                                    <rect key="frame" x="2" y="7" width="102" height="17"/>
+                                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Ceci est du Text" id="ZCP-mw-0Wv">
+                                                                        <font key="font" metaFont="system"/>
+                                                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                                    </textFieldCell>
+                                                                </textField>
+                                                                <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="r1N-kY-tn4">
+                                                                    <rect key="frame" x="110" y="4" width="327" height="22"/>
+                                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="NyT-Ww-ECF">
+                                                                        <font key="font" metaFont="system"/>
+                                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                                    </textFieldCell>
+                                                                    <connections>
+                                                                        <outlet property="delegate" destination="yYL-SS-B0s" id="ijr-N3-PV6"/>
+                                                                    </connections>
+                                                                </textField>
+                                                            </subviews>
+                                                            <constraints>
+                                                                <constraint firstItem="xuL-Gp-CXj" firstAttribute="leading" secondItem="yYL-SS-B0s" secondAttribute="leading" constant="4" id="1ZO-Wt-zDe"/>
+                                                                <constraint firstAttribute="bottom" secondItem="r1N-kY-tn4" secondAttribute="bottom" constant="4" id="5Ep-Pl-6iR"/>
+                                                                <constraint firstItem="r1N-kY-tn4" firstAttribute="top" secondItem="yYL-SS-B0s" secondAttribute="top" constant="4" id="JCc-s8-b6c"/>
+                                                                <constraint firstItem="xuL-Gp-CXj" firstAttribute="centerY" secondItem="yYL-SS-B0s" secondAttribute="centerY" id="N41-eW-KVK"/>
+                                                                <constraint firstAttribute="trailing" secondItem="r1N-kY-tn4" secondAttribute="trailing" constant="8" id="Scx-fg-CmF"/>
+                                                                <constraint firstItem="r1N-kY-tn4" firstAttribute="leading" secondItem="xuL-Gp-CXj" secondAttribute="trailing" constant="8" id="XAm-Gi-Vqa"/>
+                                                            </constraints>
+                                                            <connections>
+                                                                <outlet property="freeTextField" destination="r1N-kY-tn4" id="Gfq-qA-VFd"/>
+                                                                <outlet property="title" destination="xuL-Gp-CXj" id="hvc-AQ-Rrp"/>
+                                                            </connections>
+                                                        </tableCellView>
                                                     </prototypeCellViews>
                                                 </tableColumn>
                                             </tableColumns>

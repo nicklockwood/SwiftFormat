@@ -53,6 +53,7 @@
 		E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5BE2025761D00C1BEDE /* UserSelection.swift */; };
 		E41CB5C12026BA2000C1BEDE /* HeaderTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C02026BA1F00C1BEDE /* HeaderTableCellView.swift */; };
 		E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */; };
+		E41CB5C52027700100C1BEDE /* FreeTextTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */; };
 		E4872111201D3B830014845E /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
 		E4872112201D3B860014845E /* Rules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */; };
 		E4872113201D3B890014845E /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
@@ -141,6 +142,7 @@
 		E41CB5BE2025761D00C1BEDE /* UserSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSelection.swift; sourceTree = "<group>"; };
 		E41CB5C02026BA1F00C1BEDE /* HeaderTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderTableCellView.swift; sourceTree = "<group>"; };
 		E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionTableCellView.swift; sourceTree = "<group>"; };
+		E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeTextTableCellView.swift; sourceTree = "<group>"; };
 		E487211C201D885A0014845E /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
 		E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainBinarySelectionTableCellView.swift; sourceTree = "<group>"; };
 		E4872128201E3DD50014845E /* RulesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesStore.swift; sourceTree = "<group>"; };
@@ -338,6 +340,7 @@
 			isa = PBXGroup;
 			children = (
 				90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */,
+				E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */,
 				E41CB5C02026BA1F00C1BEDE /* HeaderTableCellView.swift */,
 				E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */,
 				E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */,
@@ -698,6 +701,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E41CB5C52027700100C1BEDE /* FreeTextTableCellView.swift in Sources */,
 				E4872125201D980D0014845E /* MainBinarySelectionTableCellView.swift in Sources */,
 				E487211D201D885A0014845E /* RulesViewController.swift in Sources */,
 				E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */,

@@ -1,8 +1,8 @@
 //
-//  ListSelectionTableCellView.swift
+//  FreeTextTableCellView.swift
 //  SwiftFormat for Xcode
 //
-//  Created by Vincent Bernier on 03-02-18.
+//  Created by Vincent Bernier on 04-02-18.
 //  Copyright © 2018 Nick Lockwood.
 //
 //  Distributed under the permissive MIT license
@@ -31,30 +31,41 @@
 
 import Cocoa
 
-class ListSelectionTableCellView: NSTableCellView {
+class FreeTextTableCellView: NSTableCellView {
     @IBOutlet var title: NSTextField!
-    @IBOutlet var dropDown: NSPopUpButton!
-    @IBAction func listSelectionChanged(_: NSPopUpButton) {
-        guard let model = objectValue as? UserSelectionList else {
-            return
-        }
-        model.selection = dropDown.selectedItem!.title
-    }
+    @IBOutlet var freeTextField: NSTextField!
 
     override var objectValue: Any? {
         didSet {
-            guard let model = objectValue as? UserSelectionList else {
+            guard let freeText = objectValue as? UserSelectionFreeText else {
                 return
             }
 
-            title.stringValue = model.title ?? ""
-            dropDown.removeAllItems()
-            dropDown.addItems(withTitles: model.options.map { $0 })
-            dropDown.selectItem(withTitle: model.selection)
+            title.stringValue = freeText.title ?? ""
+            freeTextField.stringValue = freeText.selection
+            updateErrorState()
         }
+    }
+
+    func updateErrorState() {
+        guard let freeText = objectValue as? UserSelectionFreeText else {
+            return
+        }
+        title.textColor = freeText.isValid ? NSColor.textColor : NSColor.red
+    }
+}
+
+extension FreeTextTableCellView: NSTextFieldDelegate {
+    override func controlTextDidChange(_ obj: Notification) {
+        guard let textView: NSTextView = obj.userInfo!["NSFieldEditor"] as? NSTextView,
+            let freeText = objectValue as? UserSelectionFreeText else {
+            return
+        }
+        freeText.selection = textView.string
+        updateErrorState()
     }
 }
 
 extension NSUserInterfaceItemIdentifier {
-    static let listSelectionTableCellView = NSUserInterfaceItemIdentifier(rawValue: "ListSelectionTableCellView")
+    static let freeTextTableCellView = NSUserInterfaceItemIdentifier(rawValue: "FreeTextTableCellView")
 }

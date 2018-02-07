@@ -29,14 +29,14 @@
 //  SOFTWARE.
 //
 
-
 import Foundation
 
 enum UserSelectionType {
     //  binary, list, freeText, none (for header), listOrFreeText
-    case none (UserSelection)
-    case binary (UserSelectionBinary)
-    case list (UserSelectionList)
+    case none(UserSelection)
+    case binary(UserSelectionBinary)
+    case list(UserSelectionList)
+    case freeText(UserSelectionFreeText)
 
     //  This shold be a Protocol Extension and have unit test
     func associatedValue() -> Any? {
@@ -79,6 +79,7 @@ final class UserSelectionList: UserSelection {
             selectionObserver?(selection)
         }
     }
+
     let options: [String]
 
     private let selectionObserver: ((String) -> Void)?
@@ -90,4 +91,33 @@ final class UserSelectionList: UserSelection {
     }
 }
 
+final class UserSelectionFreeText: UserSelection {
 
+    static let defaultValidationStrategy: (String) -> Bool = { String -> Bool in
+        return true
+    }
+
+    var selection: String {
+        didSet {
+            selectionObserver?(selection)
+        }
+    }
+    var isValid: Bool {
+        return validationStrategy(selection)
+    }
+
+    private let validationStrategy: (String) -> Bool
+    private let selectionObserver: ((String) -> Void)?
+    init(identifier: String,
+         title: String?,
+         description: String?,
+         selection: String,
+         observer: ((String) -> Void)? = nil,
+         validationStrategy: @escaping ((String) -> Bool) = UserSelectionFreeText.defaultValidationStrategy) {
+
+        self.selection = selection
+        selectionObserver = observer
+        self.validationStrategy = validationStrategy
+        super.init(identifier: identifier, title: title, description: description)
+    }
+}

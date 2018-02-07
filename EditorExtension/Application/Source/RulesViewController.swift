@@ -33,7 +33,6 @@ import Cocoa
 
 /// Goal: Display Active & Inactive Rules and allow their state to be modified
 final class RulesViewController: NSViewController {
-
     private var ruleViewModels = [UserSelectionType]()
 
     @IBOutlet var tableView: NSTableView!
@@ -70,7 +69,7 @@ final class RulesViewController: NSViewController {
                                                 store.save(updatedRule)
                 })
                 return UserSelectionType.binary(d)
-        }
+            }
 
         return rules
     }
@@ -88,7 +87,19 @@ final class RulesViewController: NSViewController {
                                                                      options: ["beforefirst", "afterfirst", "disabled"],
                                                                      observer: { print("wrapArguments -> new value == \($0)") }))
 
-        return [useVoid, wrapArguments]
+        let freeTextTest = UserSelectionType.freeText(UserSelectionFreeText(identifier: "freeTextTest",
+                                                                            title: "Test",
+                                                                            description: nil,
+                                                                            selection: "some text",
+                                                                            observer: {
+                                                                                //  should throttle the saving to not save at every key stroke
+                                                                                print("test new value == \($0)")
+                                                                            },
+                                                                            validationStrategy: { value in
+                                                                                return value == "bob"
+        }))
+
+        return [useVoid, wrapArguments, freeTextTest]
     }
 
     func model(forRow row: Int) -> UserSelectionType {
@@ -111,16 +122,20 @@ extension RulesViewController: NSTableViewDataSource {
 // MARK: - Table View Delegate
 
 extension RulesViewController: NSTableViewDelegate {
-    func tableView(_ tableView: NSTableView, viewFor column: NSTableColumn?, row: Int) -> NSView? {
+    func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
         let model = self.model(forRow: row)
+        let ID: NSUserInterfaceItemIdentifier
         switch model {
-        case .none(_):
-            return tableView.makeView(withIdentifier: .headerTableCellView, owner: self)
-        case .binary(_):
-            return tableView.makeView(withIdentifier: .mainBinarySelectionTableCellView, owner: self)
-        case .list(_):
-            return tableView.makeView(withIdentifier: .listSelectionTableCellView, owner: self)
+        case .none:
+            ID = .headerTableCellView
+        case .binary:
+            ID = .mainBinarySelectionTableCellView
+        case .list:
+            ID = .listSelectionTableCellView
+        case .freeText:
+            ID = .freeTextTableCellView
         }
+
+        return tableView.makeView(withIdentifier: ID, owner: self)
     }
 }
-

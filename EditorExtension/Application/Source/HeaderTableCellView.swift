@@ -32,7 +32,6 @@
 import Cocoa
 
 class HeaderTableCellView: NSTableCellView {
-
     @IBOutlet var title: NSTextField!
 
     override func awakeFromNib() {
@@ -45,8 +44,8 @@ class HeaderTableCellView: NSTableCellView {
         didSet {
             guard let model = objectValue as? UserSelection,
                 let titleText = model.title else {
-                    title.stringValue = ""
-                    return
+                title.stringValue = ""
+                return
             }
 
             title.stringValue = titleText

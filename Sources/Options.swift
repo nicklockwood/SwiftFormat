@@ -220,7 +220,7 @@ extension FormatOptions {
             case list([String])
         }
 
-        let id: String  //  argumentName & propertyName can change overtime, id should be timeless
+        let id: String //  argumentName & propertyName can change overtime, id should be timeless
         let argumentName: String
         let propertyName: String
         let name: String
@@ -229,57 +229,59 @@ extension FormatOptions {
         let toOptions: (String, inout FormatOptions) throws -> Void
         let fromOptions: (FormatOptions) -> String
     }
+}
 
-    static let useVoidDescriptor = Descriptor(id: "void-representation",
-                                              argumentName: "empty",
-                                              propertyName: "useVoid",
-                                              name: "empty",
-                                              type: .binary(true: ["void"], false: ["tuple", "tuples"]),
-                                              default: true,
-                                              toOptions: { input, options in
-                                                  switch input.lowercased() {
-                                                  case "void":
-                                                      options.useVoid = true
-                                                  case "tuple", "tuples":
-                                                      options.useVoid = false
-                                                  default:
-                                                      throw FormatError.options("")
-                                                  }
-                                              },
-                                              fromOptions: { options in
-                                                  options.useVoid ? "void" : "tuples"
+extension FormatOptions.Descriptor {
+    static let useVoid = FormatOptions.Descriptor(id: "void-representation",
+                                                  argumentName: "empty",
+                                                  propertyName: "useVoid",
+                                                  name: "empty",
+                                                  type: .binary(true: ["void"], false: ["tuple", "tuples"]),
+                                                  default: true,
+                                                  toOptions: { input, options in
+                                                      switch input.lowercased() {
+                                                      case "void":
+                                                          options.useVoid = true
+                                                      case "tuple", "tuples":
+                                                          options.useVoid = false
+                                                      default:
+                                                          throw FormatError.options("")
+                                                      }
+                                                  },
+                                                  fromOptions: { options in
+                                                      options.useVoid ? "void" : "tuples"
     })
-    static let lineBreakDescriptor = Descriptor(id: "linebreak-character",
-                                                argumentName: "linebreaks",
-                                                propertyName: "linebreak",
-                                                name: "linebreak",
-                                                type: .list(["cr", "lf", "crlf"]),
-                                                default: "lf",
-                                                toOptions: { input, options in
-                                                    switch input.lowercased() {
-                                                    case "cr":
-                                                        options.linebreak = "\r"
-                                                    case "lf":
-                                                        options.linebreak = "\n"
-                                                    case "crlf":
-                                                        options.linebreak = "\r\n"
-                                                    default:
-                                                        throw FormatError.options("")
-                                                    }
-                                                },
-                                                fromOptions: { options in
-                                                    let result: String
-                                                    switch options.linebreak {
-                                                    case "\r":
-                                                        result = "cr"
-                                                    case "\n":
-                                                        result = "lf"
-                                                    case "\r\n":
-                                                        result = "crlf"
-                                                    default:
-                                                        result = "lf"
-                                                    }
-                                                    return result
+    static let lineBreak = FormatOptions.Descriptor(id: "linebreak-character",
+                                                    argumentName: "linebreaks",
+                                                    propertyName: "linebreak",
+                                                    name: "linebreak",
+                                                    type: .list(["cr", "lf", "crlf"]),
+                                                    default: "lf",
+                                                    toOptions: { input, options in
+                                                        switch input.lowercased() {
+                                                        case "cr":
+                                                            options.linebreak = "\r"
+                                                        case "lf":
+                                                            options.linebreak = "\n"
+                                                        case "crlf":
+                                                            options.linebreak = "\r\n"
+                                                        default:
+                                                            throw FormatError.options("")
+                                                        }
+                                                    },
+                                                    fromOptions: { options in
+                                                        let result: String
+                                                        switch options.linebreak {
+                                                        case "\r":
+                                                            result = "cr"
+                                                        case "\n":
+                                                            result = "lf"
+                                                        case "\r\n":
+                                                            result = "crlf"
+                                                        default:
+                                                            result = "lf"
+                                                        }
+                                                        return result
     })
 }
 

@@ -75,7 +75,7 @@ final class RulesViewController: NSViewController {
     }
 
     private func buildOptions() -> [UserSelectionType] {
-        let options = [FormatOptions.lineBreakDescriptor, FormatOptions.useVoidDescriptor]
+        let options = [FormatOptions.Descriptor.lineBreak, FormatOptions.Descriptor.useVoid]
 
         let result = options.map { descriptor -> UserSelectionType in
 

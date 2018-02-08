@@ -220,6 +220,7 @@ extension FormatOptions {
             case list([String])
         }
 
+        let id: String  //  argumentName & propertyName can change overtime, id should be timeless
         let argumentName: String
         let propertyName: String
         let name: String
@@ -229,7 +230,8 @@ extension FormatOptions {
         let fromOptions: (FormatOptions) -> String
     }
 
-    static let useVoidDescriptor = Descriptor(argumentName: "empty",
+    static let useVoidDescriptor = Descriptor(id: "void-representation",
+                                              argumentName: "empty",
                                               propertyName: "useVoid",
                                               name: "empty",
                                               type: .binary(true: ["void"], false: ["tuple", "tuples"]),
@@ -247,7 +249,8 @@ extension FormatOptions {
                                               fromOptions: { options in
                                                   options.useVoid ? "void" : "tuples"
     })
-    static let lineBreakDescriptor = Descriptor(argumentName: "linebreaks",
+    static let lineBreakDescriptor = Descriptor(id: "linebreak-character",
+                                                argumentName: "linebreaks",
                                                 propertyName: "linebreak",
                                                 name: "linebreak",
                                                 type: .list(["cr", "lf", "crlf"]),

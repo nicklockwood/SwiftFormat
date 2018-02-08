@@ -767,16 +767,16 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 } else {
                     args["indent"] = String(options.indent.count)
                 }
-            case FormatOptions.lineBreakDescriptor.propertyName:
-                args[FormatOptions.lineBreakDescriptor.argumentName] = FormatOptions.lineBreakDescriptor.fromOptions(options)
+            case FormatOptions.Descriptor.lineBreak.propertyName:
+                args[FormatOptions.Descriptor.lineBreak.argumentName] = FormatOptions.Descriptor.lineBreak.fromOptions(options)
             case "allowInlineSemicolons":
                 args["semicolons"] = options.allowInlineSemicolons ? "inline" : "never"
             case "spaceAroundRangeOperators":
                 args["ranges"] = options.spaceAroundRangeOperators ? "spaced" : "nospace"
             case "spaceAroundOperatorDeclarations":
                 args["operatorfunc"] = options.spaceAroundOperatorDeclarations ? "spaced" : "nospace"
-            case FormatOptions.useVoidDescriptor.propertyName:
-                args[FormatOptions.useVoidDescriptor.argumentName] = FormatOptions.useVoidDescriptor.fromOptions(options)
+            case FormatOptions.Descriptor.useVoid.propertyName:
+                args[FormatOptions.Descriptor.useVoid.argumentName] = FormatOptions.Descriptor.useVoid.fromOptions(options)
             case "trailingCommas":
                 args["commas"] = options.trailingCommas ? "always" : "inline"
             case "indentCase":
@@ -892,8 +892,8 @@ func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
 func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     var options = FormatOptions()
     var arguments = Set(formatArguments)
-    
-    let optionsToProcess = [FormatOptions.lineBreakDescriptor, FormatOptions.useVoidDescriptor]
+
+    let optionsToProcess = [FormatOptions.Descriptor.lineBreak, FormatOptions.Descriptor.useVoid]
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
                           in: args,

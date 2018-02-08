@@ -777,8 +777,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["ranges"] = options.spaceAroundRangeOperators ? "spaced" : "nospace"
             case "spaceAroundOperatorDeclarations":
                 args["operatorfunc"] = options.spaceAroundOperatorDeclarations ? "spaced" : "nospace"
-            case "useVoid":
-                args["empty"] = options.useVoid ? "void" : "tuples"
+            case FormatOptions.useVoidDescriptor.propertyName:
+                args[FormatOptions.useVoidDescriptor.argumentName] = FormatOptions.useVoidDescriptor.fromOptions(options)
             case "trailingCommas":
                 args["commas"] = options.trailingCommas ? "always" : "inline"
             case "indentCase":
@@ -991,16 +991,11 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("empty", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "void":
-            options.useVoid = true
-        case "tuple", "tuples":
-            options.useVoid = false
-        default:
-            throw FormatError.options("")
-        }
-    }
+    try processOption(FormatOptions.useVoidDescriptor.argumentName,
+                      in: args,
+                      from: &arguments,
+                      to: &options,
+                      handler: FormatOptions.useVoidDescriptor.toOptions)
     try processOption("trimwhitespace", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "always":

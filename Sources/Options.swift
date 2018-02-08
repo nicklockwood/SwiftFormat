@@ -216,7 +216,7 @@ public struct FormatOptions: CustomStringConvertible {
 extension FormatOptions {
     struct Descriptor {
         enum FormatType {
-            case binary
+            case binary(true: [String], false: [String])
             case list([String])
         }
 
@@ -229,6 +229,24 @@ extension FormatOptions {
         let fromOptions: (FormatOptions) -> String
     }
 
+    static let useVoidDescriptor = Descriptor(argumentName: "empty",
+                                              propertyName: "useVoid",
+                                              name: "empty",
+                                              type: .binary(true: ["void"], false: ["tuple", "tuples"]),
+                                              default: true,
+                                              toOptions: { input, options in
+                                                  switch input.lowercased() {
+                                                  case "void":
+                                                      options.useVoid = true
+                                                  case "tuple", "tuples":
+                                                      options.useVoid = false
+                                                  default:
+                                                      throw FormatError.options("")
+                                                  }
+                                              },
+                                              fromOptions: { options in
+                                                  options.useVoid ? "void" : "tuples"
+    })
     static let lineBreakDescriptor = Descriptor(argumentName: "linebreaks",
                                                 propertyName: "linebreak",
                                                 name: "linebreak",

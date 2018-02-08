@@ -224,8 +224,8 @@ extension FormatOptions {
         let argumentName: String
         let propertyName: String
         let name: String
-        let type: FormatType
-        let `default`: String
+        let type: FormatType    //  rename this to `argumentType` to emphasis the fact that this relates to arguments ???
+        let `default`: String   //  rename this to `defaultArgument` to emphasis the fact that this relates to arguments ???
         let toOptions: (String, inout FormatOptions) throws -> Void
         let fromOptions: (FormatOptions) -> String
     }

@@ -771,17 +771,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 } else {
                     args["indent"] = String(options.indent.count)
                 }
-            case "linebreak":
-                switch options.linebreak {
-                case "\r":
-                    args["linebreaks"] = "cr"
-                case "\n":
-                    args["linebreaks"] = "lf"
-                case "\r\n":
-                    args["linebreaks"] = "crlf"
-                default:
-                    break
-                }
+            case FormatOptions.lineBreakDescriptor.propertyName:
+                args[FormatOptions.lineBreakDescriptor.argumentName] = FormatOptions.lineBreakDescriptor.fromOptions(options)
             case "allowInlineSemicolons":
                 args["semicolons"] = options.allowInlineSemicolons ? "inline" : "never"
             case "spaceAroundRangeOperators":
@@ -863,6 +854,26 @@ private func processOption(_ key: String, in args: [String: String],
         try handler(value)
     } catch {
         throw FormatError.options("unsupported --\(key) value: \(value)")
+    }
+}
+
+private func processOption(_ key: String,
+                           in args: [String: String],
+                           from: inout Set<String>,
+                           to options: inout FormatOptions,
+                           handler: (String, inout FormatOptions) throws -> Void) throws {
+    do {
+        try processOption(key,
+                          in: args,
+                          from: &from) {
+            do {
+                try handler($0, &options)
+            } catch let err {
+                throw err
+            }
+        }
+    } catch let err {
+        throw err
     }
 }
 
@@ -948,18 +959,11 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption("linebreaks", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "cr":
-            options.linebreak = "\r"
-        case "lf":
-            options.linebreak = "\n"
-        case "crlf":
-            options.linebreak = "\r\n"
-        default:
-            throw FormatError.options("")
-        }
-    }
+    try processOption(FormatOptions.lineBreakDescriptor.argumentName,
+                      in: args,
+                      from: &arguments,
+                      to: &options,
+                      handler: FormatOptions.lineBreakDescriptor.toOptions)
     try processOption("ranges", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "space", "spaced", "spaces":

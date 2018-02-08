@@ -893,6 +893,15 @@ func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
 func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     var options = FormatOptions()
     var arguments = Set(formatArguments)
+    
+    let optionsToProcess = [FormatOptions.lineBreakDescriptor, FormatOptions.useVoidDescriptor]
+    for opt in optionsToProcess {
+        try processOption(opt.argumentName,
+                          in: args,
+                          from: &arguments,
+                          to: &options,
+                          handler: opt.toOptions)
+    }
     try processOption("indent", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "tab", "tabs", "tabbed":
@@ -955,11 +964,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption(FormatOptions.lineBreakDescriptor.argumentName,
-                      in: args,
-                      from: &arguments,
-                      to: &options,
-                      handler: FormatOptions.lineBreakDescriptor.toOptions)
     try processOption("ranges", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "space", "spaced", "spaces":
@@ -990,11 +994,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             throw FormatError.options("")
         }
     }
-    try processOption(FormatOptions.useVoidDescriptor.argumentName,
-                      in: args,
-                      from: &arguments,
-                      to: &options,
-                      handler: FormatOptions.useVoidDescriptor.toOptions)
     try processOption("trimwhitespace", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "always":

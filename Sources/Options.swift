@@ -213,6 +213,55 @@ public struct FormatOptions: CustomStringConvertible {
     }
 }
 
+extension FormatOptions {
+    struct Descriptor {
+        enum FormatType {
+            case binary
+            case list([String])
+        }
+
+        let argumentName: String
+        let propertyName: String
+        let name: String
+        let type: FormatType
+        let `default`: Any
+        let toOptions: (String, inout FormatOptions) throws -> Void
+        let fromOptions: (FormatOptions) -> String
+    }
+
+    static let lineBreakDescriptor = Descriptor(argumentName: "linebreaks",
+                                                propertyName: "linebreak",
+                                                name: "linebreak",
+                                                type: .list(["cr", "lf", "crlf"]),
+                                                default: "lf",
+                                                toOptions: { input, options in
+                                                    switch input.lowercased() {
+                                                    case "cr":
+                                                        options.linebreak = "\r"
+                                                    case "lf":
+                                                        options.linebreak = "\n"
+                                                    case "crlf":
+                                                        options.linebreak = "\r\n"
+                                                    default:
+                                                        throw FormatError.options("")
+                                                    }
+                                                },
+                                                fromOptions: { options in
+                                                    let result: String
+                                                    switch options.linebreak {
+                                                    case "\r":
+                                                        result = "cr"
+                                                    case "\n":
+                                                        result = "lf"
+                                                    case "\r\n":
+                                                        result = "crlf"
+                                                    default:
+                                                        result = "lf"
+                                                    }
+                                                    return result
+    })
+}
+
 /// Infer default options by examining the existing source
 public func inferOptions(from tokens: [Token]) -> FormatOptions {
     let formatter = Formatter(tokens)

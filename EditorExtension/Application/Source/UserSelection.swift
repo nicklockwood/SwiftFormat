@@ -92,9 +92,8 @@ final class UserSelectionList: UserSelection {
 }
 
 final class UserSelectionFreeText: UserSelection {
-
-    static let defaultValidationStrategy: (String) -> Bool = { String -> Bool in
-        return true
+    static let defaultValidationStrategy: (String) -> Bool = { _ -> Bool in
+        true
     }
 
     var selection: String {
@@ -102,6 +101,7 @@ final class UserSelectionFreeText: UserSelection {
             selectionObserver?(selection)
         }
     }
+
     var isValid: Bool {
         return validationStrategy(selection)
     }
@@ -114,7 +114,6 @@ final class UserSelectionFreeText: UserSelection {
          selection: String,
          observer: ((String) -> Void)? = nil,
          validationStrategy: @escaping ((String) -> Bool) = UserSelectionFreeText.defaultValidationStrategy) {
-
         self.selection = selection
         selectionObserver = observer
         self.validationStrategy = validationStrategy

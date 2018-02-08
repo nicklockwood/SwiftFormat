@@ -225,7 +225,7 @@ extension FormatOptions {
         let propertyName: String
         let name: String
         let type: FormatType
-        let `default`: Any
+        let `default`: String
         let toOptions: (String, inout FormatOptions) throws -> Void
         let fromOptions: (FormatOptions) -> String
     }
@@ -237,7 +237,7 @@ extension FormatOptions.Descriptor {
                                                   propertyName: "useVoid",
                                                   name: "empty",
                                                   type: .binary(true: ["void"], false: ["tuple", "tuples"]),
-                                                  default: true,
+                                                  default: "void",
                                                   toOptions: { input, options in
                                                       switch input.lowercased() {
                                                       case "void":

@@ -75,17 +75,19 @@ final class RulesViewController: NSViewController {
     }
 
     private func buildOptions() -> [UserSelectionType] {
-        let options = [FormatOptions.lineBreakDescriptor]
+        let options = [FormatOptions.lineBreakDescriptor, FormatOptions.useVoidDescriptor]
 
         let result = options.map { descriptor -> UserSelectionType in
 
             switch descriptor.type {
-            case .binary:
-                return UserSelectionType.binary(UserSelectionBinary(identifier: "useVoid",
-                                                                    title: "useVoid",
-                                                                    description: nil,
-                                                                    selection: false,
-                                                                    observer: { print("useVoid -> new value == \($0)") }))
+            case let .binary(t, f):
+                let binary = UserSelectionBinary(identifier: descriptor.propertyName,
+                                                 title: descriptor.name,
+                                                 description: nil,
+                                                 selection: descriptor.default as! Bool,
+                                                 observer: { print("\(descriptor.name) new value == \($0 ? t[0] : f[0])")
+                })
+                return UserSelectionType.binary(binary)
 
             case let .list(values):
                 let list = UserSelectionList(identifier: descriptor.propertyName,
@@ -99,11 +101,6 @@ final class RulesViewController: NSViewController {
             }
         }
 
-        let useVoid = UserSelectionType.binary(UserSelectionBinary(identifier: "useVoid",
-                                                                   title: "useVoid",
-                                                                   description: nil,
-                                                                   selection: false,
-                                                                   observer: { print("useVoid -> new value == \($0)") }))
         let wrapArguments = UserSelectionType.list(UserSelectionList(identifier: "wrapArguments",
                                                                      title: "wrapArguments",
                                                                      description: nil,
@@ -123,7 +120,7 @@ final class RulesViewController: NSViewController {
                                                                                 value == "bob"
         }))
 
-        return result + [useVoid, wrapArguments, freeTextTest]
+        return result + [wrapArguments, freeTextTest]
     }
 
     func model(forRow row: Int) -> UserSelectionType {

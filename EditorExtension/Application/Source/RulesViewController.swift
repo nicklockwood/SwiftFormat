@@ -75,6 +75,30 @@ final class RulesViewController: NSViewController {
     }
 
     private func buildOptions() -> [UserSelectionType] {
+        let options = [FormatOptions.lineBreakDescriptor]
+
+        let result = options.map { descriptor -> UserSelectionType in
+
+            switch descriptor.type {
+            case .binary:
+                return UserSelectionType.binary(UserSelectionBinary(identifier: "useVoid",
+                                                                    title: "useVoid",
+                                                                    description: nil,
+                                                                    selection: false,
+                                                                    observer: { print("useVoid -> new value == \($0)") }))
+
+            case let .list(values):
+                let list = UserSelectionList(identifier: descriptor.propertyName,
+                                             title: descriptor.name,
+                                             description: nil,
+                                             selection: descriptor.default as! String,
+                                             options: values,
+                                             observer: { print("\(descriptor.name) new value == \($0)")
+                })
+                return UserSelectionType.list(list)
+            }
+        }
+
         let useVoid = UserSelectionType.binary(UserSelectionBinary(identifier: "useVoid",
                                                                    title: "useVoid",
                                                                    description: nil,
@@ -96,10 +120,10 @@ final class RulesViewController: NSViewController {
                                                                                 print("test new value == \($0)")
                                                                             },
                                                                             validationStrategy: { value in
-                                                                                return value == "bob"
+                                                                                value == "bob"
         }))
 
-        return [useVoid, wrapArguments, freeTextTest]
+        return result + [useVoid, wrapArguments, freeTextTest]
     }
 
     func model(forRow row: Int) -> UserSelectionType {

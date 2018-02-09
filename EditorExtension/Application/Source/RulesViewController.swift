@@ -84,7 +84,7 @@ final class RulesViewController: NSViewController {
                 let binary = UserSelectionBinary(identifier: descriptor.propertyName,
                                                  title: descriptor.name,
                                                  description: nil,
-                                                 selection: t.contains(descriptor.default),
+                                                 selection: t.contains(descriptor.defaultArgument),
                                                  observer: { print("\(descriptor.name) new value == \($0 ? t[0] : f[0])")
                 })
                 return UserSelectionType.binary(binary)
@@ -93,7 +93,7 @@ final class RulesViewController: NSViewController {
                 let list = UserSelectionList(identifier: descriptor.propertyName,
                                              title: descriptor.name,
                                              description: nil,
-                                             selection: descriptor.default as! String,
+                                             selection: descriptor.defaultArgument,
                                              options: values,
                                              observer: { print("\(descriptor.name) new value == \($0)")
                 })

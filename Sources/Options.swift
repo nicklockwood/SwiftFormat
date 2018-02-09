@@ -215,17 +215,18 @@ public struct FormatOptions: CustomStringConvertible {
 
 extension FormatOptions {
     struct Descriptor {
-        enum FormatType {
-            case binary(true: [String], false: [String])
+        enum ArgumentType {
+            case binary(true: [String], false: [String]) // index 0 should be the official value, while others are tolerable values
             case list([String])
+            //            case freeText(validationStrategy: (String) -> Bool)
         }
 
-        let id: String //  argumentName & propertyName can change overtime, id should be timeless
+        let id: String //  argumentName & propertyName can change overtime, `id` should be timeless
         let argumentName: String
         let propertyName: String
         let name: String
-        let type: FormatType    //  rename this to `argumentType` to emphasis the fact that this relates to arguments ???
-        let `default`: String   //  rename this to `defaultArgument` to emphasis the fact that this relates to arguments ???
+        let type: ArgumentType
+        let defaultArgument: String
         let toOptions: (String, inout FormatOptions) throws -> Void
         let fromOptions: (FormatOptions) -> String
     }
@@ -237,7 +238,7 @@ extension FormatOptions.Descriptor {
                                                   propertyName: "useVoid",
                                                   name: "empty",
                                                   type: .binary(true: ["void"], false: ["tuple", "tuples"]),
-                                                  default: "void",
+                                                  defaultArgument: "void",
                                                   toOptions: { input, options in
                                                       switch input.lowercased() {
                                                       case "void":
@@ -256,7 +257,7 @@ extension FormatOptions.Descriptor {
                                                     propertyName: "linebreak",
                                                     name: "linebreak",
                                                     type: .list(["cr", "lf", "crlf"]),
-                                                    default: "lf",
+                                                    defaultArgument: "lf",
                                                     toOptions: { input, options in
                                                         switch input.lowercased() {
                                                         case "cr":

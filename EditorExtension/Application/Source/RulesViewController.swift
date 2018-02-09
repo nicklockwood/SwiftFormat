@@ -75,7 +75,11 @@ final class RulesViewController: NSViewController {
     }
 
     private func buildOptions() -> [UserSelectionType] {
-        let options = [FormatOptions.Descriptor.lineBreak, FormatOptions.Descriptor.useVoid]
+        let options = [
+            FormatOptions.Descriptor.lineBreak,
+            FormatOptions.Descriptor.useVoid,
+            FormatOptions.Descriptor.decimalGrouping,
+        ]
 
         let result = options.map { descriptor -> UserSelectionType in
 
@@ -98,29 +102,19 @@ final class RulesViewController: NSViewController {
                                              observer: { print("\(descriptor.name) new value == \($0)")
                 })
                 return UserSelectionType.list(list)
+
+            case let .freeText(validationStrategy: validation):
+                let freeText = UserSelectionFreeText(identifier: descriptor.id,
+                                                     title: descriptor.name,
+                                                     description: nil,
+                                                     selection: descriptor.defaultArgument,
+                                                     observer: { print("\(descriptor.name) new value == \($0)") },
+                                                     validationStrategy: validation)
+                return UserSelectionType.freeText(freeText)
             }
         }
 
-        let wrapArguments = UserSelectionType.list(UserSelectionList(identifier: "wrapArguments",
-                                                                     title: "wrapArguments",
-                                                                     description: nil,
-                                                                     selection: "afterfirst",
-                                                                     options: ["beforefirst", "afterfirst", "disabled"],
-                                                                     observer: { print("wrapArguments -> new value == \($0)") }))
-
-        let freeTextTest = UserSelectionType.freeText(UserSelectionFreeText(identifier: "freeTextTest",
-                                                                            title: "Test",
-                                                                            description: nil,
-                                                                            selection: "some text",
-                                                                            observer: {
-                                                                                //  should throttle the saving to not save at every key stroke
-                                                                                print("test new value == \($0)")
-                                                                            },
-                                                                            validationStrategy: { value in
-                                                                                value == "bob"
-        }))
-
-        return result + [wrapArguments, freeTextTest]
+        return result
     }
 
     func model(forRow row: Int) -> UserSelectionType {

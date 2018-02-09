@@ -218,7 +218,7 @@ extension FormatOptions {
         enum ArgumentType {
             case binary(true: [String], false: [String]) // index 0 should be the official value, while others are tolerable values
             case list([String])
-            //            case freeText(validationStrategy: (String) -> Bool)
+            case freeText(validationStrategy: (String) -> Bool)
         }
 
         let id: String //  argumentName & propertyName can change overtime, `id` should be timeless
@@ -284,6 +284,20 @@ extension FormatOptions.Descriptor {
                                                         }
                                                         return result
     })
+
+    static let decimalGrouping = FormatOptions.Descriptor(id: "decimal-grouping",
+                                                          argumentName: "decimalgrouping",
+                                                          propertyName: "decimalGrouping",
+                                                          name: "decimalGrouping",
+                                                          type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
+                                                          defaultArgument: "3,6",
+                                                          toOptions: { input, options in
+                                                              guard let grouping = Grouping(rawValue: input.lowercased()) else {
+                                                                  throw FormatError.options("")
+                                                              }
+                                                              options.decimalGrouping = grouping
+                                                          },
+                                                          fromOptions: { $0.decimalGrouping.rawValue })
 }
 
 /// Infer default options by examining the existing source

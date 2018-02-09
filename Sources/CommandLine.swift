@@ -407,12 +407,10 @@ func processArguments(_ args: [String], in directory: String) {
                             if dryrun {
                                 print("(dryrun mode - no files will be changed)", as: .warning)
                             }
-                            let output = try format(
-                                input,
-                                ruleNames: Array(rules),
-                                options: formatOptions,
-                                verbose: verbose
-                            )
+                            let output = try format(input,
+                                                    ruleNames: Array(rules),
+                                                    options: formatOptions,
+                                                    verbose: verbose)
                             if (try? String(contentsOf: outputURL)) != output {
                                 if dryrun {
                                     print("would have updated \(outputURL.path)", as: .info)
@@ -427,12 +425,10 @@ func processArguments(_ args: [String], in directory: String) {
                             print("swiftformat completed successfully", as: .success)
                         } else {
                             // Write to stdout
-                            let output = try format(
-                                input,
-                                ruleNames: Array(rules),
-                                options: formatOptions,
-                                verbose: false
-                            )
+                            let output = try format(input,
+                                                    ruleNames: Array(rules),
+                                                    options: formatOptions,
+                                                    verbose: false)
                             print(output, as: .content)
                         }
                     } catch {
@@ -467,17 +463,15 @@ func processArguments(_ args: [String], in directory: String) {
         var filesWritten = 0, filesFailed = 0, filesChecked = 0
         let time = timeEvent {
             var _errors = [Error]()
-            (filesWritten, filesFailed, filesChecked, _errors) = processInput(
-                inputURLs,
-                excluding: excludedURLs,
-                andWriteToOutput: outputURL,
-                withRules: Array(rules),
-                formatOptions: formatOptions,
-                fileOptions: fileOptions,
-                verbose: verbose,
-                dryrun: dryrun,
-                cacheURL: cacheURL
-            )
+            (filesWritten, filesFailed, filesChecked, _errors) = processInput(inputURLs,
+                                                                              excluding: excludedURLs,
+                                                                              andWriteToOutput: outputURL,
+                                                                              withRules: Array(rules),
+                                                                              formatOptions: formatOptions,
+                                                                              fileOptions: fileOptions,
+                                                                              verbose: verbose,
+                                                                              dryrun: dryrun,
+                                                                              cacheURL: cacheURL)
             errors += _errors
         }
 
@@ -833,8 +827,10 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
     return args
 }
 
-private func processOption(_ key: String, in args: [String: String],
-                           from: inout Set<String>, handler: (String) throws -> Void) throws {
+private func processOption(_ key: String,
+                           in args: [String: String],
+                           from: inout Set<String>,
+                           handler: (String) throws -> Void) throws {
     precondition(commandLineArguments.contains(key))
     var arguments = from
     arguments.remove(key)

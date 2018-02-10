@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.33.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.1) (2018-02-10)
+
+- Fixed bug preventing host app rule configuration from being read by the Xcode extension
+- Added `duplicateImports` rule for removing duplicate import statements automatically
+- Deprecated `--insertlines`/`--removelines` options - enable or disable the specific rules instead
+- Fixed deprecation warnings in Swift 4.1 / Xcode 9.3
+
 ## [0.33.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.0) (2018-02-01)
 
 - Added rules configuration UI to the Xcode Source Editor Extension (thanks @vinceburn and @tonyarnold!)

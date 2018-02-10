@@ -1017,7 +1017,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             let header = $0.trimmingCharacters(in: .whitespacesAndNewlines)
             let isMultiline = header.hasPrefix("/*")
             var lines = header.components(separatedBy: "\\n")
-            lines = lines.flatMap {
+            lines = lines.map {
                 var line = $0
                 if !isMultiline, !line.hasPrefix("//") {
                     line = "//" + line

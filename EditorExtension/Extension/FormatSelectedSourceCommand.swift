@@ -50,7 +50,9 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
 
         // Grab the selected source to format using entire lines of text
         let selectionRange = selection.start.line ... min(selection.end.line, invocation.buffer.lines.count - 1)
-        let sourceToFormat = selectionRange.flatMap { invocation.buffer.lines[$0] as? String }.joined()
+        let sourceToFormat = selectionRange.flatMap {
+            (invocation.buffer.lines[$0] as? String).map { [$0] } ?? []
+        }.joined()
 
         do {
             let rules = FormatRules.all(named:

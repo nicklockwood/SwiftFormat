@@ -63,6 +63,10 @@
 		E4872125201D980D0014845E /* MainBinarySelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */; };
 		E4872129201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
 		E487212A201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
+		E4FABAD5202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
+		E4FABAD6202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
+		E4FABAD7202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
+		E4FABAD8202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -147,6 +151,7 @@
 		E487211C201D885A0014845E /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
 		E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainBinarySelectionTableCellView.swift; sourceTree = "<group>"; };
 		E4872128201E3DD50014845E /* RulesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesStore.swift; sourceTree = "<group>"; };
+		E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsDescriptor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -229,6 +234,7 @@
 				01F17E811E25870700DCD359 /* CommandLine.swift */,
 				01B3987C1D763493009ADE61 /* Formatter.swift */,
 				01F3DF8B1DB9FD3F00454944 /* Options.swift */,
+				E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */,
 				01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */,
 				E4872128201E3DD50014845E /* RulesStore.swift */,
 				01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */,
@@ -662,6 +668,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E4FABAD5202FEF060065716E /* OptionsDescriptor.swift in Sources */,
 				01A0EAC11D5DB4F700A0A8E3 /* Rules.swift in Sources */,
 				01A0EAC51D5DB54A00A0A8E3 /* SwiftFormat.swift in Sources */,
 				01B3987D1D763493009ADE61 /* Formatter.swift in Sources */,
@@ -693,6 +700,7 @@
 				01B3987F1D7634A0009ADE61 /* Formatter.swift in Sources */,
 				01A0EAD41D5DC08A00A0A8E3 /* SwiftFormat.swift in Sources */,
 				01F3DF8D1DB9FD3F00454944 /* Options.swift in Sources */,
+				E4FABAD6202FEF060065716E /* OptionsDescriptor.swift in Sources */,
 				01F17E831E25870700DCD359 /* CommandLine.swift in Sources */,
 				01A0EACD1D5DB5F500A0A8E3 /* main.swift in Sources */,
 			);
@@ -709,6 +717,7 @@
 				E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */,
 				E4872112201D3B860014845E /* Rules.swift in Sources */,
 				E4872113201D3B890014845E /* Formatter.swift in Sources */,
+				E4FABAD7202FEF060065716E /* OptionsDescriptor.swift in Sources */,
 				E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */,
 				E4872129201E3DD50014845E /* RulesStore.swift in Sources */,
 				E41CB5C12026BA2000C1BEDE /* HeaderTableCellView.swift in Sources */,
@@ -723,6 +732,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */,
+				E4FABAD8202FEF060065716E /* OptionsDescriptor.swift in Sources */,
 				9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */,
 				90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */,
 				018541CF1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift in Sources */,

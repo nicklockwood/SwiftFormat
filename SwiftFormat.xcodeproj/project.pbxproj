@@ -55,6 +55,8 @@
 		E41CB5C12026BA2000C1BEDE /* HeaderTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C02026BA1F00C1BEDE /* HeaderTableCellView.swift */; };
 		E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */; };
 		E41CB5C52027700100C1BEDE /* FreeTextTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */; };
+		E43EF47C202FF47C00E523BD /* OptionsDescriptorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E43EF47B202FF47C00E523BD /* OptionsDescriptorTest.swift */; };
+		E43EF47D202FF48B00E523BD /* OptionsDescriptorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E43EF47B202FF47C00E523BD /* OptionsDescriptorTest.swift */; };
 		E4872111201D3B830014845E /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
 		E4872112201D3B860014845E /* Rules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */; };
 		E4872113201D3B890014845E /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
@@ -148,6 +150,7 @@
 		E41CB5C02026BA1F00C1BEDE /* HeaderTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderTableCellView.swift; sourceTree = "<group>"; };
 		E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionTableCellView.swift; sourceTree = "<group>"; };
 		E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeTextTableCellView.swift; sourceTree = "<group>"; };
+		E43EF47B202FF47C00E523BD /* OptionsDescriptorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsDescriptorTest.swift; sourceTree = "<group>"; };
 		E487211C201D885A0014845E /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
 		E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainBinarySelectionTableCellView.swift; sourceTree = "<group>"; };
 		E4872128201E3DD50014845E /* RulesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesStore.swift; sourceTree = "<group>"; };
@@ -248,14 +251,15 @@
 		01A0EAB21D5DB4D000A0A8E3 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */,
+				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
 				01F17E841E258A4900DCD359 /* CommandLineTests.swift */,
-				018E82741D62E730008CA0F8 /* TokenizerTests.swift */,
 				01B3987A1D763424009ADE61 /* FormatterTests.swift */,
-				01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */,
+				E43EF47B202FF47C00E523BD /* OptionsDescriptorTest.swift */,
 				01F3DF8F1DBA003E00454944 /* OptionsTests.swift */,
 				015AF2C91DC6A58C008F0A8C /* PerformanceTests.swift */,
-				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
+				01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */,
+				0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */,
+				018E82741D62E730008CA0F8 /* TokenizerTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -643,6 +647,7 @@
 				012092841E2D9A72008B0520 /* SwiftFormatTests.swift in Sources */,
 				012092851E2D9A7B008B0520 /* OptionsTests.swift in Sources */,
 				015AF2CA1DC6A58C008F0A8C /* PerformanceTests.swift in Sources */,
+				E43EF47D202FF48B00E523BD /* OptionsDescriptorTest.swift in Sources */,
 				010BC9A21DCFDF1E003F4F11 /* TokenizerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -670,6 +675,7 @@
 				018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */,
 				01B3987B1D763424009ADE61 /* FormatterTests.swift in Sources */,
 				0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */,
+				E43EF47C202FF47C00E523BD /* OptionsDescriptorTest.swift in Sources */,
 				01F3DF901DBA003E00454944 /* OptionsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -65,6 +65,12 @@
 		E4872125201D980D0014845E /* MainBinarySelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */; };
 		E4872129201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
 		E487212A201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
+		E4E4D3C92033F17C000D7CB1 /* EnumAssociatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3C82033F17C000D7CB1 /* EnumAssociatable.swift */; };
+		E4E4D3CA2033F17C000D7CB1 /* EnumAssociatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3C82033F17C000D7CB1 /* EnumAssociatable.swift */; };
+		E4E4D3CB2033F17C000D7CB1 /* EnumAssociatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3C82033F17C000D7CB1 /* EnumAssociatable.swift */; };
+		E4E4D3CC2033F17C000D7CB1 /* EnumAssociatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3C82033F17C000D7CB1 /* EnumAssociatable.swift */; };
+		E4E4D3CE2033F1EF000D7CB1 /* EnumAssociatableTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3CD2033F1EF000D7CB1 /* EnumAssociatableTest.swift */; };
+		E4E4D3CF2033F1EF000D7CB1 /* EnumAssociatableTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3CD2033F1EF000D7CB1 /* EnumAssociatableTest.swift */; };
 		E4FABAD5202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
 		E4FABAD6202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
 		E4FABAD7202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
@@ -154,6 +160,8 @@
 		E487211C201D885A0014845E /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
 		E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainBinarySelectionTableCellView.swift; sourceTree = "<group>"; };
 		E4872128201E3DD50014845E /* RulesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesStore.swift; sourceTree = "<group>"; };
+		E4E4D3C82033F17C000D7CB1 /* EnumAssociatable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociatable.swift; sourceTree = "<group>"; };
+		E4E4D3CD2033F1EF000D7CB1 /* EnumAssociatableTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociatableTest.swift; sourceTree = "<group>"; };
 		E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsDescriptor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -235,7 +243,9 @@
 			isa = PBXGroup;
 			children = (
 				01F17E811E25870700DCD359 /* CommandLine.swift */,
+				E4E4D3C82033F17C000D7CB1 /* EnumAssociatable.swift */,
 				01B3987C1D763493009ADE61 /* Formatter.swift */,
+				01A0EAA91D5DB4CF00A0A8E3 /* Info.plist */,
 				01F3DF8B1DB9FD3F00454944 /* Options.swift */,
 				E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */,
 				01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */,
@@ -243,7 +253,6 @@
 				01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */,
 				01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */,
 				01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */,
-				01A0EAA91D5DB4CF00A0A8E3 /* Info.plist */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -251,9 +260,10 @@
 		01A0EAB21D5DB4D000A0A8E3 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
 				01F17E841E258A4900DCD359 /* CommandLineTests.swift */,
+				E4E4D3CD2033F1EF000D7CB1 /* EnumAssociatableTest.swift */,
 				01B3987A1D763424009ADE61 /* FormatterTests.swift */,
+				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
 				E43EF47B202FF47C00E523BD /* OptionsDescriptorTest.swift */,
 				01F3DF8F1DBA003E00454944 /* OptionsTests.swift */,
 				015AF2C91DC6A58C008F0A8C /* PerformanceTests.swift */,
@@ -664,6 +674,7 @@
 				012092841E2D9A72008B0520 /* SwiftFormatTests.swift in Sources */,
 				012092851E2D9A7B008B0520 /* OptionsTests.swift in Sources */,
 				015AF2CA1DC6A58C008F0A8C /* PerformanceTests.swift in Sources */,
+				E4E4D3CF2033F1EF000D7CB1 /* EnumAssociatableTest.swift in Sources */,
 				E43EF47D202FF48B00E523BD /* OptionsDescriptorTest.swift in Sources */,
 				010BC9A21DCFDF1E003F4F11 /* TokenizerTests.swift in Sources */,
 			);
@@ -674,6 +685,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E4FABAD5202FEF060065716E /* OptionsDescriptor.swift in Sources */,
+				E4E4D3C92033F17C000D7CB1 /* EnumAssociatable.swift in Sources */,
 				01A0EAC11D5DB4F700A0A8E3 /* Rules.swift in Sources */,
 				01A0EAC51D5DB54A00A0A8E3 /* SwiftFormat.swift in Sources */,
 				01B3987D1D763493009ADE61 /* Formatter.swift in Sources */,
@@ -692,6 +704,7 @@
 				018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */,
 				01B3987B1D763424009ADE61 /* FormatterTests.swift in Sources */,
 				0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */,
+				E4E4D3CE2033F1EF000D7CB1 /* EnumAssociatableTest.swift in Sources */,
 				E43EF47C202FF47C00E523BD /* OptionsDescriptorTest.swift in Sources */,
 				01F3DF901DBA003E00454944 /* OptionsTests.swift in Sources */,
 			);
@@ -705,6 +718,7 @@
 				01A0EAD61D5DC08A00A0A8E3 /* Tokenizer.swift in Sources */,
 				01B3987F1D7634A0009ADE61 /* Formatter.swift in Sources */,
 				01A0EAD41D5DC08A00A0A8E3 /* SwiftFormat.swift in Sources */,
+				E4E4D3CA2033F17C000D7CB1 /* EnumAssociatable.swift in Sources */,
 				01F3DF8D1DB9FD3F00454944 /* Options.swift in Sources */,
 				E4FABAD6202FEF060065716E /* OptionsDescriptor.swift in Sources */,
 				01F17E831E25870700DCD359 /* CommandLine.swift in Sources */,
@@ -723,6 +737,7 @@
 				E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */,
 				E4872112201D3B860014845E /* Rules.swift in Sources */,
 				E4872113201D3B890014845E /* Formatter.swift in Sources */,
+				E4E4D3CB2033F17C000D7CB1 /* EnumAssociatable.swift in Sources */,
 				E4FABAD7202FEF060065716E /* OptionsDescriptor.swift in Sources */,
 				E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */,
 				E4872129201E3DD50014845E /* RulesStore.swift in Sources */,
@@ -738,6 +753,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */,
+				E4E4D3CC2033F17C000D7CB1 /* EnumAssociatable.swift in Sources */,
 				E4FABAD8202FEF060065716E /* OptionsDescriptor.swift in Sources */,
 				9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */,
 				90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */,

@@ -31,19 +31,12 @@
 
 import Foundation
 
-enum UserSelectionType {
+enum UserSelectionType: EnumAssociatable {
     //  binary, list, freeText, none (for header), listOrFreeText
     case none(UserSelection)
     case binary(UserSelectionBinary)
     case list(UserSelectionList)
     case freeText(UserSelectionFreeText)
-
-    //  This shold be a Protocol Extension and have unit test
-    func associatedValue() -> Any? {
-        let enumMirror = Mirror(reflecting: self)
-        let enumAssociatedValue = enumMirror.children.first?.value
-        return enumAssociatedValue
-    }
 }
 
 class UserSelection {

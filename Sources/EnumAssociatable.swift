@@ -35,6 +35,11 @@ protocol EnumAssociatable {
     func associatedValue<T>() -> T?
 }
 
-
-
-
+extension EnumAssociatable {
+    func associatedValue<T>() -> T {
+        let enumMirror = Mirror(reflecting: self)
+        precondition(enumMirror.displayStyle == Mirror.DisplayStyle.enum, "Can only be apply to an Enum")
+        let enumAssociatedValue = enumMirror.children.first?.value
+        return enumAssociatedValue as! T
+    }
+}

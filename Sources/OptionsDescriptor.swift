@@ -33,7 +33,7 @@ import Foundation
 
 extension FormatOptions {
     struct Descriptor {
-        enum ArgumentType {
+        enum ArgumentType: EnumAssociatable {
             case binary(true: [String], false: [String]) // index 0 should be the official value, while others are tolerable values
             case list([String])
             case freeText(validationStrategy: (String) -> Bool)

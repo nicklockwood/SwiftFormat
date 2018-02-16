@@ -40,6 +40,9 @@ extension EnumAssociatable {
         let enumMirror = Mirror(reflecting: self)
         precondition(enumMirror.displayStyle == Mirror.DisplayStyle.enum, "Can only be apply to an Enum")
         let enumAssociatedValue = enumMirror.children.first?.value
-        return enumAssociatedValue as! T
+        let result = enumAssociatedValue as! T
+        let resultMirror = Mirror(reflecting: result)
+        precondition(!resultMirror.description.contains("->"), "Don't work when the associated value is a closure. The closure won't behave properly. Use a 'case' to retreive the value")
+        return result
     }
 }

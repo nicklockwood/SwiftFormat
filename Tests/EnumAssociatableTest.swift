@@ -20,6 +20,7 @@ extension EnumAssociatableTest {
         case string(String)
         case optionalString(String?)
         case intTuple(first: Int, second: Int?)
+        case closure((Bool) -> Bool) // this case don't work properly
     }
 
     func test_givenString_thenString() {
@@ -72,5 +73,12 @@ extension EnumAssociatableTest {
 //        //  precondition is not testable
 //        let sut = MyStruct(name: "name")
 //        let result: String = sut.associatedValue()
+//    }
+
+//    func test_givenClosure_then() {
+//        let sut = Sut.closure { return $0 == true }
+//        let result: (Bool) -> Bool = sut.associatedValue()
+//        XCTAssertTrue(result(true), "This will fail. Closure don't behave properly when retrieved this way")
+//        XCTAssertFalse(result(false))
 //    }
 }

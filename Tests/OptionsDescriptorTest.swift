@@ -65,6 +65,7 @@ extension OptionsDescriptorTest {
         var options = FormatOptions()
         options.useVoid = false
         let values: (true: [String], false: [String]) = sut.type.associatedValue()
+        //  TODO: Add test for lowecase()
         for t in values.true {
             options.useVoid = false
             try! sut.toOptions(t, &options)
@@ -76,9 +77,81 @@ extension OptionsDescriptorTest {
             XCTAssertEqual(options.useVoid, false, "false arguments values map to false")
         }
         XCTAssertThrowsError(try sut.toOptions("invalid", &options),
-                             "Throws a FormatError.options error") { err in
+                             "Invalid format Throws") { err in
             guard case FormatError.options = err else {
-                XCTAssertTrue(false)
+                XCTAssertTrue(false, "Throws a FormatError.options error")
+                return
+            }
+        }
+    }
+}
+
+// MARK: - linebreak-character
+
+extension OptionsDescriptorTest {
+    func test_linebreakChar_idenrifierProperties() {
+        let sut = FormatOptions.Descriptor.lineBreak
+
+        XCTAssertEqual(sut.id, "linebreak-character")
+        XCTAssertEqual(sut.name, "linebreak")
+        XCTAssertEqual(sut.argumentName, "linebreaks")
+        XCTAssertEqual(sut.propertyName, "linebreak")
+    }
+
+    func test_lineBreakChar_argumentValues() {
+        let sut = FormatOptions.Descriptor.lineBreak
+        let controlSet = Set(["cr", "lf", "crlf"])
+
+        let values: [String] = sut.type.associatedValue()
+
+        XCTAssertEqual(Set(values), controlSet)
+        XCTAssertEqual(sut.defaultArgument, "lf")
+        XCTAssertTrue(controlSet.contains(sut.defaultArgument))
+    }
+
+    func test_lineBreakChar_transformsFromOptions() {
+        let sut = FormatOptions.Descriptor.lineBreak
+        var options = FormatOptions()
+
+        let expectedMapping: [(optionValue: String, argumentValue: String)] = [
+            (optionValue: "\n", argumentValue: "lf"),
+            (optionValue: "\r", argumentValue: "cr"),
+            (optionValue: "\r\n", argumentValue: "crlf"),
+        ]
+
+        for item in expectedMapping {
+            options.linebreak = item.optionValue
+            XCTAssertEqual(sut.fromOptions(options), item.argumentValue)
+        }
+        options.linebreak = "invalid"
+        XCTAssertEqual(sut.fromOptions(options), sut.defaultArgument, "invalid input return the defautl value")
+    }
+
+    func test_lineBreakChar_tranformsFromArguments() {
+        let sut = FormatOptions.Descriptor.lineBreak
+        var options = FormatOptions()
+
+        let expectedMapping: [(optionValue: String, argumentValue: String)] = [
+            (optionValue: "\n", argumentValue: "lf"),
+            (optionValue: "\r", argumentValue: "cr"),
+            (optionValue: "\r\n", argumentValue: "crlf"),
+        ]
+
+        for item in expectedMapping {
+            try! sut.toOptions(item.argumentValue, &options)
+            XCTAssertEqual(options.linebreak, item.optionValue)
+        }
+        for item in expectedMapping {
+            let arg = item.argumentValue.uppercased()
+            try! sut.toOptions(arg, &options)
+            XCTAssertEqual(options.linebreak, item.optionValue)
+        }
+
+        //  TODO: Exact copy paste
+        XCTAssertThrowsError(try sut.toOptions("invalid", &options),
+                             "Invalid format Throws") { err in
+            guard case FormatError.options = err else {
+                XCTAssertTrue(false, "Throws a FormatError.options error")
                 return
             }
         }

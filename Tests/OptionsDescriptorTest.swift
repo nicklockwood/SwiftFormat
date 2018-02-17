@@ -10,6 +10,17 @@
 import XCTest
 
 class OptionsDescriptorTest: XCTestCase {
+    func validateSut(_ sut: FormatOptions.Descriptor,
+                     id: String,
+                     name: String,
+                     argumentName: String,
+                     propertyName: String,
+                     testName: String = #function) {
+        XCTAssertEqual(sut.id, id, "\(testName) : id is -> \(id)")
+        XCTAssertEqual(sut.name, name, "\(testName) : id is -> \(name)")
+        XCTAssertEqual(sut.argumentName, argumentName, "\(testName) : id is -> \(argumentName)")
+        XCTAssertEqual(sut.propertyName, propertyName, "\(testName) : id is -> \(propertyName)")
+    }
 }
 
 // MARK: - They all exists
@@ -30,11 +41,7 @@ extension OptionsDescriptorTest {
 extension OptionsDescriptorTest {
     func test_voidRepresentation_IdentifierProperties() {
         let sut = FormatOptions.Descriptor.useVoid
-
-        XCTAssertEqual(sut.id, "void-representation")
-        XCTAssertEqual(sut.name, "empty")
-        XCTAssertEqual(sut.argumentName, "empty")
-        XCTAssertEqual(sut.propertyName, "useVoid")
+        validateSut(sut, id: "void-representation", name: "empty", argumentName: "empty", propertyName: "useVoid")
     }
 
     func test_voidRepresentation_argumentValues() {
@@ -91,11 +98,7 @@ extension OptionsDescriptorTest {
 extension OptionsDescriptorTest {
     func test_linebreakChar_idenrifierProperties() {
         let sut = FormatOptions.Descriptor.lineBreak
-
-        XCTAssertEqual(sut.id, "linebreak-character")
-        XCTAssertEqual(sut.name, "linebreak")
-        XCTAssertEqual(sut.argumentName, "linebreaks")
-        XCTAssertEqual(sut.propertyName, "linebreak")
+        validateSut(sut, id: "linebreak-character", name: "linebreak", argumentName: "linebreaks", propertyName: "linebreak")
     }
 
     func test_lineBreakChar_argumentValues() {
@@ -163,11 +166,7 @@ extension OptionsDescriptorTest {
 extension OptionsDescriptorTest {
     func test_decimalGrouping_idenrifierProperties() {
         let sut = FormatOptions.Descriptor.decimalGrouping
-
-        XCTAssertEqual(sut.id, "decimal-grouping")
-        XCTAssertEqual(sut.name, "decimalGrouping")
-        XCTAssertEqual(sut.argumentName, "decimalgrouping")
-        XCTAssertEqual(sut.propertyName, "decimalGrouping")
+        validateSut(sut, id: "decimal-grouping", name: "decimalGrouping", argumentName: "decimalgrouping", propertyName: "decimalGrouping")
     }
 
     func test_decimalGrouping_argumentValues() {

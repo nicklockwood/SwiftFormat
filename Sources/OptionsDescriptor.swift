@@ -51,6 +51,26 @@ extension FormatOptions {
 }
 
 extension FormatOptions.Descriptor {
+    static let allowInlineSemicolons = FormatOptions.Descriptor(id: "allow-inline-semicolons",
+                                                                argumentName: "semicolons",
+                                                                propertyName: "allowInlineSemicolons",
+                                                                name: "allowInlineSemicolons",
+                                                                type: .binary(true: ["inline"], false: ["never", "false"]),
+                                                                defaultArgument: "inline",
+                                                                toOptions: { input, options in
+                                                                    switch input.lowercased() {
+                                                                    case "inline":
+                                                                        options.allowInlineSemicolons = true
+                                                                    case "never", "false":
+                                                                        options.allowInlineSemicolons = false
+                                                                    default:
+                                                                        throw FormatError.options("")
+                                                                    }
+                                                                },
+                                                                fromOptions: { options in
+                                                                    options.allowInlineSemicolons ? "inline" : "never"
+    })
+
     static let useVoid = FormatOptions.Descriptor(id: "void-representation",
                                                   argumentName: "empty",
                                                   propertyName: "useVoid",

@@ -92,51 +92,23 @@ extension OptionsDescriptorTest {
     }
 }
 
-// MARK: void-representation
+// MARK: -
 
 extension OptionsDescriptorTest {
-    func test_voidRepresentation_IdentifierProperties() {
+    func test_voidRepresentation() {
         let sut = FormatOptions.Descriptor.useVoid
         validateSut(sut, id: "void-representation", name: "empty", argumentName: "empty", propertyName: "useVoid")
-    }
-
-    func test_voidRepresentation_argumentValues() {
-        let sut = FormatOptions.Descriptor.useVoid
         validateArgumentsBinaryType(sut: sut, controlTrue: ["void"], controlFalse: ["tuple", "tuples"], default: true)
-    }
-
-    func test_voidRepresentation_transformsFromOptions() {
-        let sut = FormatOptions.Descriptor.useVoid
         validateFromOptionsBinaryType(sut: sut, keyPath: \FormatOptions.useVoid, mapping: ["tuples": false, "void": true])
-    }
-
-    func test_voidRepresentation_tranformsFromArguments() {
-        let sut = FormatOptions.Descriptor.useVoid
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.useVoid)
         validateSutThrowFormatErrorOptions(sut)
     }
-}
 
-// MARK: allowInlineSemicolons
-
-extension OptionsDescriptorTest {
-    func test_allowInlineSemicolons_IdentifierProperties() {
+    func test_allowInlineSemicolons() {
         let sut = FormatOptions.Descriptor.allowInlineSemicolons
         validateSut(sut, id: "allow-inline-semicolons", name: "allowInlineSemicolons", argumentName: "semicolons", propertyName: "allowInlineSemicolons")
-    }
-
-    func test_allowInlineSemicolons_argumentValues() {
-        let sut = FormatOptions.Descriptor.allowInlineSemicolons
         validateArgumentsBinaryType(sut: sut, controlTrue: ["inline"], controlFalse: ["never", "false"], default: true)
-    }
-
-    func test_allowInlineSemicolons_transformsFromOptions() {
-        let sut = FormatOptions.Descriptor.allowInlineSemicolons
         validateFromOptionsBinaryType(sut: sut, keyPath: \FormatOptions.allowInlineSemicolons, mapping: ["never": false, "inline": true])
-    }
-
-    func test_allowInlineSemicolons_tranformsFromArguments() {
-        let sut = FormatOptions.Descriptor.allowInlineSemicolons
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.allowInlineSemicolons)
         validateSutThrowFormatErrorOptions(sut)
     }

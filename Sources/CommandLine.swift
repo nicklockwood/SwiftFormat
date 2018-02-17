@@ -763,8 +763,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 }
             case FormatOptions.Descriptor.lineBreak.propertyName:
                 args[FormatOptions.Descriptor.lineBreak.argumentName] = FormatOptions.Descriptor.lineBreak.fromOptions(options)
-            case "allowInlineSemicolons":
-                args["semicolons"] = options.allowInlineSemicolons ? "inline" : "never"
+            case FormatOptions.Descriptor.allowInlineSemicolons.propertyName:
+                args[FormatOptions.Descriptor.allowInlineSemicolons.argumentName] = FormatOptions.Descriptor.allowInlineSemicolons.fromOptions(options)
             case "spaceAroundRangeOperators":
                 args["ranges"] = options.spaceAroundRangeOperators ? "spaced" : "nospace"
             case "spaceAroundOperatorDeclarations":
@@ -892,6 +892,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
 
     let optionsToProcess = [
         FormatOptions.Descriptor.lineBreak,
+        FormatOptions.Descriptor.allowInlineSemicolons,
         FormatOptions.Descriptor.useVoid,
         FormatOptions.Descriptor.decimalGrouping,
     ]
@@ -930,16 +931,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.allmanBraces = true
         case "false", "disabled":
             options.allmanBraces = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("semicolons", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "inline":
-            options.allowInlineSemicolons = true
-        case "never", "false":
-            options.allowInlineSemicolons = false
         default:
             throw FormatError.options("")
         }

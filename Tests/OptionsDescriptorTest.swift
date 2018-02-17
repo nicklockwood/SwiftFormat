@@ -21,6 +21,17 @@ class OptionsDescriptorTest: XCTestCase {
         XCTAssertEqual(sut.argumentName, argumentName, "\(testName) : id is -> \(argumentName)")
         XCTAssertEqual(sut.propertyName, propertyName, "\(testName) : id is -> \(propertyName)")
     }
+
+    func validateSutThrowFormatErrorOptions(_ sut: FormatOptions.Descriptor, invalidArguments _: String = "invalid", testName: String = #function) {
+        var options = FormatOptions()
+        XCTAssertThrowsError(try sut.toOptions("invalid", &options),
+                             "\(testName): Invalid format Throws") { err in
+            guard case FormatError.options = err else {
+                XCTAssertTrue(false, "\(testName): Throws a FormatError.options error")
+                return
+            }
+        }
+    }
 }
 
 // MARK: - They all exists
@@ -83,13 +94,7 @@ extension OptionsDescriptorTest {
             try! sut.toOptions(f, &options)
             XCTAssertEqual(options.useVoid, false, "false arguments values map to false")
         }
-        XCTAssertThrowsError(try sut.toOptions("invalid", &options),
-                             "Invalid format Throws") { err in
-            guard case FormatError.options = err else {
-                XCTAssertTrue(false, "Throws a FormatError.options error")
-                return
-            }
-        }
+        validateSutThrowFormatErrorOptions(sut)
     }
 }
 
@@ -150,14 +155,7 @@ extension OptionsDescriptorTest {
             XCTAssertEqual(options.linebreak, item.optionValue)
         }
 
-        //  TODO: Exact copy paste
-        XCTAssertThrowsError(try sut.toOptions("invalid", &options),
-                             "Invalid format Throws") { err in
-            guard case FormatError.options = err else {
-                XCTAssertTrue(false, "Throws a FormatError.options error")
-                return
-            }
-        }
+        validateSutThrowFormatErrorOptions(sut)
     }
 }
 
@@ -229,13 +227,6 @@ extension OptionsDescriptorTest {
             XCTAssertEqual(options.decimalGrouping, $0.optionValue)
         }
 
-        //  TODO: Exact copy paste
-        XCTAssertThrowsError(try sut.toOptions("invalid", &options),
-                             "Invalid format Throws") { err in
-            guard case FormatError.options = err else {
-                XCTAssertTrue(false, "Throws a FormatError.options error")
-                return
-            }
-        }
+        validateSutThrowFormatErrorOptions(sut)
     }
 }

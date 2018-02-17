@@ -157,3 +157,86 @@ extension OptionsDescriptorTest {
         }
     }
 }
+
+// MARK: - decimal-grouping
+
+extension OptionsDescriptorTest {
+    func test_decimalGrouping_idenrifierProperties() {
+        let sut = FormatOptions.Descriptor.decimalGrouping
+
+        XCTAssertEqual(sut.id, "decimal-grouping")
+        XCTAssertEqual(sut.name, "decimalGrouping")
+        XCTAssertEqual(sut.argumentName, "decimalgrouping")
+        XCTAssertEqual(sut.propertyName, "decimalGrouping")
+    }
+
+    func test_decimalGrouping_argumentValues() {
+        let sut = FormatOptions.Descriptor.decimalGrouping
+        guard case let FormatOptions.Descriptor.ArgumentType.freeText(validator) = sut.type else {
+            XCTAssert(false)
+            return
+        }
+
+        let expectedMapping: [(input: String, isValid: Bool)] = [
+            (input: "3,4", isValid: true),
+            (input: " 3 , 5 ", isValid: true),
+            (input: "ignore", isValid: true),
+            (input: "none", isValid: true),
+            (input: "4", isValid: true),
+            (input: "foo", isValid: false),
+            (input: "4,5 6 7", isValid: false),
+            (input: "", isValid: false),
+            (input: " ", isValid: false),
+        ]
+
+        XCTAssertEqual(sut.defaultArgument, "3,6")
+        expectedMapping.forEach {
+            XCTAssert(validator($0.input) == $0.isValid, "\($0.input) isValid: \($0.isValid)")
+        }
+    }
+
+    func test_decimalGrouping_transformsFromOptions() {
+        let sut = FormatOptions.Descriptor.decimalGrouping
+        var options = FormatOptions()
+        let expectedMapping: [(optionValue: Grouping, argumentValue: String)] = [
+            (optionValue: Grouping.ignore, argumentValue: "ignore"),
+            (optionValue: Grouping.none, argumentValue: "none"),
+            (optionValue: Grouping.group(4, 5), argumentValue: "4,5"),
+        ]
+
+        expectedMapping.forEach {
+            options.decimalGrouping = $0.optionValue
+            XCTAssertEqual(sut.fromOptions(options), $0.argumentValue, "option: \($0.optionValue) map to argumentValue: \($0.argumentValue)")
+        }
+    }
+
+    func test_decimalGrouping_tranformsFromArguments() {
+        let sut = FormatOptions.Descriptor.decimalGrouping
+        var options = FormatOptions()
+
+        let expectedMapping: [(optionValue: Grouping, argumentValue: String)] = [
+            (optionValue: Grouping.ignore, argumentValue: "ignore"),
+            (optionValue: Grouping.none, argumentValue: "none"),
+            (optionValue: Grouping.group(4, 5), argumentValue: "4,5"),
+        ]
+
+        options.decimalGrouping = Grouping.group(99, 99)
+        expectedMapping.forEach {
+            try! sut.toOptions($0.argumentValue, &options)
+            XCTAssertEqual(options.decimalGrouping, $0.optionValue)
+        }
+        expectedMapping.forEach {
+            try! sut.toOptions($0.argumentValue.uppercased(), &options)
+            XCTAssertEqual(options.decimalGrouping, $0.optionValue)
+        }
+
+        //  TODO: Exact copy paste
+        XCTAssertThrowsError(try sut.toOptions("invalid", &options),
+                             "Invalid format Throws") { err in
+            guard case FormatError.options = err else {
+                XCTAssertTrue(false, "Throws a FormatError.options error")
+                return
+            }
+        }
+    }
+}

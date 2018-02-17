@@ -114,6 +114,71 @@ extension OptionsDescriptorTest {
     }
 }
 
+// MARK: - List Options
+
+// MARK: - if-def-indent-mode
+
+extension OptionsDescriptorTest {
+    func test_ifdefIndent_idenrifierProperties() {
+        let sut = FormatOptions.Descriptor.ifdefIndent
+        validateSut(sut, id: "if-def-indent-mode", name: "ifdefIndent", argumentName: "ifdef", propertyName: "ifdefIndent")
+    }
+
+    func test_ifdefIndent_argumentValues() {
+        let sut = FormatOptions.Descriptor.ifdefIndent
+        let controlSet = Set(["indent", "noindent", "outdent"])
+
+        let values: [String] = sut.type.associatedValue()
+
+        XCTAssertEqual(Set(values), controlSet)
+        XCTAssertEqual(sut.defaultArgument, "indent")
+        XCTAssertTrue(controlSet.contains(sut.defaultArgument))
+    }
+
+    func test_ifdefIndent_transformsFromOptions() {
+        let sut = FormatOptions.Descriptor.ifdefIndent
+        var options = FormatOptions()
+
+        let expectedMapping: [(optionValue: IndentMode, argumentValue: String)] = [
+            (optionValue: IndentMode.indent, argumentValue: "indent"),
+            (optionValue: IndentMode.noIndent, argumentValue: "noindent"),
+            (optionValue: IndentMode.outdent, argumentValue: "outdent"),
+        ]
+
+        for item in expectedMapping {
+            options.ifdefIndent = item.optionValue
+            XCTAssertEqual(sut.fromOptions(options), item.argumentValue)
+        }
+
+        //  IMPOSSIBLE to have an invalid case
+//        options.ifdefIndent = "invalid"
+//        XCTAssertEqual(sut.fromOptions(options), sut.defaultArgument, "invalid input return the defautl value")
+    }
+
+    func test_ifdefIndent_tranformsFromArguments() {
+        let sut = FormatOptions.Descriptor.ifdefIndent
+        var options = FormatOptions()
+
+        let expectedMapping: [(optionValue: IndentMode, argumentValue: String)] = [
+            (optionValue: IndentMode.indent, argumentValue: "indent"),
+            (optionValue: IndentMode.noIndent, argumentValue: "noindent"),
+            (optionValue: IndentMode.outdent, argumentValue: "outdent"),
+        ]
+
+        for item in expectedMapping {
+            try! sut.toOptions(item.argumentValue, &options)
+            XCTAssertEqual(options.ifdefIndent, item.optionValue)
+        }
+        for item in expectedMapping {
+            let arg = item.argumentValue.uppercased()
+            try! sut.toOptions(arg, &options)
+            XCTAssertEqual(options.ifdefIndent, item.optionValue)
+        }
+
+        validateSutThrowFormatErrorOptions(sut)
+    }
+}
+
 // MARK: - linebreak-character
 
 extension OptionsDescriptorTest {
@@ -174,6 +239,8 @@ extension OptionsDescriptorTest {
         validateSutThrowFormatErrorOptions(sut)
     }
 }
+
+// MARK: - Free Text Options
 
 // MARK: - decimal-grouping
 

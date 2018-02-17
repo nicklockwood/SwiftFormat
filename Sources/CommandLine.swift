@@ -787,8 +787,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["allman"] = options.allmanBraces ? "true" : "false"
             case "fileHeader":
                 args["header"] = options.fileHeader.map { $0.isEmpty ? "strip" : $0 } ?? "ignore"
-            case "ifdefIndent":
-                args["ifdef"] = options.ifdefIndent.rawValue
+            case FormatOptions.Descriptor.ifdefIndent.propertyName:
+                args[FormatOptions.Descriptor.ifdefIndent.argumentName] = FormatOptions.Descriptor.ifdefIndent.fromOptions(options)
             case "wrapArguments":
                 args["wraparguments"] = options.wrapArguments.rawValue
             case "wrapElements":
@@ -893,6 +893,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.lineBreak,
         FormatOptions.Descriptor.allowInlineSemicolons,
         FormatOptions.Descriptor.useVoid,
+        FormatOptions.Descriptor.ifdefIndent,
         FormatOptions.Descriptor.decimalGrouping,
     ]
     for opt in optionsToProcess {
@@ -1022,13 +1023,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                 lines.removeLast()
             }
             options.fileHeader = lines.joined(separator: "\n")
-        }
-    }
-    try processOption("ifdef", in: args, from: &arguments) {
-        if let mode = IndentMode(rawValue: $0.lowercased()) {
-            options.ifdefIndent = mode
-        } else {
-            throw FormatError.options("")
         }
     }
     try processOption("wraparguments", in: args, from: &arguments) {

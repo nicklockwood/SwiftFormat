@@ -122,7 +122,22 @@ extension FormatOptions.Descriptor {
                                                         }
                                                         return result
     })
-
+    static let ifdefIndent = FormatOptions.Descriptor(id: "if-def-indent-mode",
+                                                      argumentName: "ifdef",
+                                                      propertyName: "ifdefIndent",
+                                                      name: "ifdefIndent",
+                                                      type: .list(["indent", "noindent", "outdent"]),
+                                                      defaultArgument: "indent",
+                                                      toOptions: { input, options in
+                                                          if let mode = IndentMode(rawValue: input.lowercased()) {
+                                                              options.ifdefIndent = mode
+                                                          } else {
+                                                              throw FormatError.options("")
+                                                          }
+                                                      },
+                                                      fromOptions: { options in
+                                                          options.ifdefIndent.rawValue
+    })
     static let decimalGrouping = FormatOptions.Descriptor(id: "decimal-grouping",
                                                           argumentName: "decimalgrouping",
                                                           propertyName: "decimalGrouping",

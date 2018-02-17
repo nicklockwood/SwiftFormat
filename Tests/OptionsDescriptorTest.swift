@@ -22,9 +22,9 @@ class OptionsDescriptorTest: XCTestCase {
         XCTAssertEqual(sut.propertyName, propertyName, "\(testName) : id is -> \(propertyName)")
     }
 
-    func validateSutThrowFormatErrorOptions(_ sut: FormatOptions.Descriptor, invalidArguments _: String = "invalid", testName: String = #function) {
+    func validateSutThrowFormatErrorOptions(_ sut: FormatOptions.Descriptor, invalidArguments: String = "invalid", testName: String = #function) {
         var options = FormatOptions()
-        XCTAssertThrowsError(try sut.toOptions("invalid", &options),
+        XCTAssertThrowsError(try sut.toOptions(invalidArguments, &options),
                              "\(testName): Invalid format Throws") { err in
             guard case FormatError.options = err else {
                 XCTAssertTrue(false, "\(testName): Throws a FormatError.options error")
@@ -116,126 +116,71 @@ extension OptionsDescriptorTest {
 
 // MARK: - List Options
 
-// MARK: - if-def-indent-mode
-
 extension OptionsDescriptorTest {
-    func test_ifdefIndent_idenrifierProperties() {
-        let sut = FormatOptions.Descriptor.ifdefIndent
-        validateSut(sut, id: "if-def-indent-mode", name: "ifdefIndent", argumentName: "ifdef", propertyName: "ifdefIndent")
-    }
-
-    func test_ifdefIndent_argumentValues() {
-        let sut = FormatOptions.Descriptor.ifdefIndent
-        let controlSet = Set(["indent", "noindent", "outdent"])
-
+    func validateArgumentsListType(sut: FormatOptions.Descriptor, validArguments: Set<String>, default: String, functionName: String = #function) {
         let values: [String] = sut.type.associatedValue()
 
-        XCTAssertEqual(Set(values), controlSet)
-        XCTAssertEqual(sut.defaultArgument, "indent")
-        XCTAssertTrue(controlSet.contains(sut.defaultArgument))
+        XCTAssertEqual(Set(values), validArguments, "\(functionName): All valid arguments are accounted for")
+        XCTAssertEqual(sut.defaultArgument, `default`, "\(functionName): Default argument is \(`default`)")
+        XCTAssertTrue(validArguments.contains(sut.defaultArgument), "\(functionName): Default argument is part of the valide arguments")
     }
 
-    func test_ifdefIndent_transformsFromOptions() {
-        let sut = FormatOptions.Descriptor.ifdefIndent
+    func validateFromOptionsListType<T>(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, T>, expectedMapping: [(optionValue: T, argumentValue: String)], invalid: T?, testName: String = #function) {
         var options = FormatOptions()
-
-        let expectedMapping: [(optionValue: IndentMode, argumentValue: String)] = [
-            (optionValue: IndentMode.indent, argumentValue: "indent"),
-            (optionValue: IndentMode.noIndent, argumentValue: "noindent"),
-            (optionValue: IndentMode.outdent, argumentValue: "outdent"),
-        ]
-
         for item in expectedMapping {
-            options.ifdefIndent = item.optionValue
-            XCTAssertEqual(sut.fromOptions(options), item.argumentValue)
+            options[keyPath: keyPath] = item.optionValue
+            XCTAssertEqual(sut.fromOptions(options), item.argumentValue, "\(testName): Option is transform to argument")
         }
 
-        //  IMPOSSIBLE to have an invalid case
-//        options.ifdefIndent = "invalid"
-//        XCTAssertEqual(sut.fromOptions(options), sut.defaultArgument, "invalid input return the defautl value")
+        if let invalid = invalid {
+            options[keyPath: keyPath] = invalid
+            XCTAssertEqual(sut.fromOptions(options), sut.defaultArgument, "invalid input return the defautl value")
+        }
     }
 
-    func test_ifdefIndent_tranformsFromArguments() {
-        let sut = FormatOptions.Descriptor.ifdefIndent
+    func validateFromArgumentsListType<T: Equatable>(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, T>, expectedMapping: [(optionValue: T, argumentValue: String)], testName: String = #function) {
         var options = FormatOptions()
-
-        let expectedMapping: [(optionValue: IndentMode, argumentValue: String)] = [
-            (optionValue: IndentMode.indent, argumentValue: "indent"),
-            (optionValue: IndentMode.noIndent, argumentValue: "noindent"),
-            (optionValue: IndentMode.outdent, argumentValue: "outdent"),
-        ]
 
         for item in expectedMapping {
             try! sut.toOptions(item.argumentValue, &options)
-            XCTAssertEqual(options.ifdefIndent, item.optionValue)
+            XCTAssertEqual(options[keyPath: keyPath], item.optionValue, "\(testName): argument: \(item.argumentValue) transform to options Value: \(item.optionValue)")
+            try! sut.toOptions(item.argumentValue.uppercased(), &options)
+            XCTAssertEqual(options[keyPath: keyPath], item.optionValue, "\(testName): uppercased argument: \(item.argumentValue) transform to options Value: \(item.optionValue)")
+            try! sut.toOptions(item.argumentValue.capitalized, &options)
+            XCTAssertEqual(options[keyPath: keyPath], item.optionValue, "\(testName): capitalized argument: \(item.argumentValue) transform to options Value: \(item.optionValue)")
         }
-        for item in expectedMapping {
-            let arg = item.argumentValue.uppercased()
-            try! sut.toOptions(arg, &options)
-            XCTAssertEqual(options.ifdefIndent, item.optionValue)
-        }
-
-        validateSutThrowFormatErrorOptions(sut)
     }
 }
 
-// MARK: - linebreak-character
+// MARK: -
 
 extension OptionsDescriptorTest {
-    func test_linebreakChar_idenrifierProperties() {
+    func test_ifdefIndent() {
+        let sut = FormatOptions.Descriptor.ifdefIndent
+        let expectedMapping: [(optionValue: IndentMode, argumentValue: String)] = [
+            (optionValue: IndentMode.indent, argumentValue: "indent"),
+            (optionValue: IndentMode.noIndent, argumentValue: "noindent"),
+            (optionValue: IndentMode.outdent, argumentValue: "outdent"),
+        ]
+
+        validateSut(sut, id: "if-def-indent-mode", name: "ifdefIndent", argumentName: "ifdef", propertyName: "ifdefIndent")
+        validateArgumentsListType(sut: sut, validArguments: ["indent", "noindent", "outdent"], default: "indent")
+        validateFromOptionsListType(sut: sut, keyPath: \FormatOptions.ifdefIndent, expectedMapping: expectedMapping, invalid: nil)
+        validateFromArgumentsListType(sut: sut, keyPath: \FormatOptions.ifdefIndent, expectedMapping: expectedMapping)
+        validateSutThrowFormatErrorOptions(sut)
+    }
+
+    func test_linebreakChar() {
         let sut = FormatOptions.Descriptor.lineBreak
+        let expectedMapping: [(optionValue: String, argumentValue: String)] = [
+            (optionValue: "\n", argumentValue: "lf"),
+            (optionValue: "\r", argumentValue: "cr"),
+            (optionValue: "\r\n", argumentValue: "crlf"),
+        ]
         validateSut(sut, id: "linebreak-character", name: "linebreak", argumentName: "linebreaks", propertyName: "linebreak")
-    }
-
-    func test_lineBreakChar_argumentValues() {
-        let sut = FormatOptions.Descriptor.lineBreak
-        let controlSet = Set(["cr", "lf", "crlf"])
-
-        let values: [String] = sut.type.associatedValue()
-
-        XCTAssertEqual(Set(values), controlSet)
-        XCTAssertEqual(sut.defaultArgument, "lf")
-        XCTAssertTrue(controlSet.contains(sut.defaultArgument))
-    }
-
-    func test_lineBreakChar_transformsFromOptions() {
-        let sut = FormatOptions.Descriptor.lineBreak
-        var options = FormatOptions()
-
-        let expectedMapping: [(optionValue: String, argumentValue: String)] = [
-            (optionValue: "\n", argumentValue: "lf"),
-            (optionValue: "\r", argumentValue: "cr"),
-            (optionValue: "\r\n", argumentValue: "crlf"),
-        ]
-
-        for item in expectedMapping {
-            options.linebreak = item.optionValue
-            XCTAssertEqual(sut.fromOptions(options), item.argumentValue)
-        }
-        options.linebreak = "invalid"
-        XCTAssertEqual(sut.fromOptions(options), sut.defaultArgument, "invalid input return the defautl value")
-    }
-
-    func test_lineBreakChar_tranformsFromArguments() {
-        let sut = FormatOptions.Descriptor.lineBreak
-        var options = FormatOptions()
-
-        let expectedMapping: [(optionValue: String, argumentValue: String)] = [
-            (optionValue: "\n", argumentValue: "lf"),
-            (optionValue: "\r", argumentValue: "cr"),
-            (optionValue: "\r\n", argumentValue: "crlf"),
-        ]
-
-        for item in expectedMapping {
-            try! sut.toOptions(item.argumentValue, &options)
-            XCTAssertEqual(options.linebreak, item.optionValue)
-        }
-        for item in expectedMapping {
-            let arg = item.argumentValue.uppercased()
-            try! sut.toOptions(arg, &options)
-            XCTAssertEqual(options.linebreak, item.optionValue)
-        }
-
+        validateArgumentsListType(sut: sut, validArguments: ["cr", "lf", "crlf"], default: "lf")
+        validateFromOptionsListType(sut: sut, keyPath: \FormatOptions.linebreak, expectedMapping: expectedMapping, invalid: "invalid")
+        validateFromArgumentsListType(sut: sut, keyPath: \FormatOptions.linebreak, expectedMapping: expectedMapping)
         validateSutThrowFormatErrorOptions(sut)
     }
 }

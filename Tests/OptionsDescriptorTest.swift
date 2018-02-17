@@ -47,7 +47,52 @@ extension OptionsDescriptorTest {
 //    XCTAssertTrue(allArguments.contains(sut.argumentName), "Argument Name exist in declared format and file arguments")
 }
 
-// MARK: - void-representation
+// MARK: - Binary Options
+
+extension OptionsDescriptorTest {
+    func validateArgumentsBinaryType(sut: FormatOptions.Descriptor, controlTrue: [String], controlFalse: [String], default: Bool, testName: String = #function) {
+        let values: (true: [String], false: [String]) = sut.type.associatedValue()
+
+        let defaultControl = `default` ? controlTrue : controlFalse
+        XCTAssertTrue(defaultControl.contains(sut.defaultArgument), "\(testName): Default argument map to \(`default`)")
+
+        XCTAssertEqual(values.true[0], controlTrue[0], "\(testName): First item is prefered parameter name")
+        XCTAssertEqual(values.false[0], controlFalse[0], "\(testName): First item is prefered parameter name")
+        XCTAssertEqual(Set(values.true), Set(controlTrue), "\(testName): All possible true value have representation")
+        XCTAssertEqual(Set(values.false), Set(controlFalse), "\(testName): All possible false value have representation")
+    }
+
+    func validateFromOptionsBinaryType(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, Bool>, mapping: [String: Bool], functionName: String = #function) {
+        var options = FormatOptions()
+        for (argument, propertyValue) in mapping {
+            options[keyPath: keyPath] = propertyValue
+            XCTAssertEqual(sut.fromOptions(options), argument, "\(functionName): propertye value \(propertyValue) map to \(argument)")
+        }
+    }
+
+    func validateFromArgumentsBinaryType(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, Bool>, functionName: String = #function) {
+        var options = FormatOptions()
+
+        let values: (true: [String], false: [String]) = sut.type.associatedValue()
+        let mappings: [(String, Bool)] = values.true.map { ($0, true) } + values.false.map { ($0, false) }
+
+        mappings.forEach {
+            options[keyPath: keyPath] = !$0.1
+            try! sut.toOptions($0.0, &options)
+            XCTAssertEqual(options[keyPath: keyPath], $0.1, "\(functionName): argument: \($0.0) transform to options Value: \($0.1)")
+
+            options[keyPath: keyPath] = !$0.1
+            try! sut.toOptions($0.0.uppercased(), &options)
+            XCTAssertEqual(options[keyPath: keyPath], $0.1, "\(functionName): uppercased argument: \($0.0) transform to options Value: \($0.1)")
+
+            options[keyPath: keyPath] = !$0.1
+            try! sut.toOptions($0.0.capitalized, &options)
+            XCTAssertEqual(options[keyPath: keyPath], $0.1, "\(functionName): capitalized argument: \($0.0) transform to options Value: \($0.1)")
+        }
+    }
+}
+
+// MARK: void-representation
 
 extension OptionsDescriptorTest {
     func test_voidRepresentation_IdentifierProperties() {
@@ -57,43 +102,42 @@ extension OptionsDescriptorTest {
 
     func test_voidRepresentation_argumentValues() {
         let sut = FormatOptions.Descriptor.useVoid
-        let controlTrue = ["void"]
-        let controlFalse = ["tuple", "tuples"]
-
-        let values: (true: [String], false: [String]) = sut.type.associatedValue()
-
-        XCTAssertEqual(values.true[0], controlTrue[0], "First item is prefered parameter name")
-        XCTAssertEqual(values.false[0], controlFalse[0], "First item is prefered parameter name")
-        XCTAssertTrue(controlTrue.contains(sut.defaultArgument), "Default argument map to True")
-        XCTAssertEqual(Set(values.true), Set(controlTrue), "All possible true value have representation")
-        XCTAssertEqual(Set(values.false), Set(controlFalse), "All possible false value have representation")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["void"], controlFalse: ["tuple", "tuples"], default: true)
     }
 
     func test_voidRepresentation_transformsFromOptions() {
         let sut = FormatOptions.Descriptor.useVoid
-        var options = FormatOptions()
-        options.useVoid = false
-        XCTAssertEqual(sut.fromOptions(options), "tuples")
-        options.useVoid = true
-        XCTAssertEqual(sut.fromOptions(options), "void")
+        validateFromOptionsBinaryType(sut: sut, keyPath: \FormatOptions.useVoid, mapping: ["tuples": false, "void": true])
     }
 
     func test_voidRepresentation_tranformsFromArguments() {
         let sut = FormatOptions.Descriptor.useVoid
-        var options = FormatOptions()
-        options.useVoid = false
-        let values: (true: [String], false: [String]) = sut.type.associatedValue()
-        //  TODO: Add test for lowecase()
-        for t in values.true {
-            options.useVoid = false
-            try! sut.toOptions(t, &options)
-            XCTAssertEqual(options.useVoid, true, "true arguments values map to true")
-        }
-        for f in values.false {
-            options.useVoid = true
-            try! sut.toOptions(f, &options)
-            XCTAssertEqual(options.useVoid, false, "false arguments values map to false")
-        }
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.useVoid)
+        validateSutThrowFormatErrorOptions(sut)
+    }
+}
+
+// MARK: allowInlineSemicolons
+
+extension OptionsDescriptorTest {
+    func test_allowInlineSemicolons_IdentifierProperties() {
+        let sut = FormatOptions.Descriptor.allowInlineSemicolons
+        validateSut(sut, id: "allow-inline-semicolons", name: "allowInlineSemicolons", argumentName: "semicolons", propertyName: "allowInlineSemicolons")
+    }
+
+    func test_allowInlineSemicolons_argumentValues() {
+        let sut = FormatOptions.Descriptor.allowInlineSemicolons
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["inline"], controlFalse: ["never", "false"], default: true)
+    }
+
+    func test_allowInlineSemicolons_transformsFromOptions() {
+        let sut = FormatOptions.Descriptor.allowInlineSemicolons
+        validateFromOptionsBinaryType(sut: sut, keyPath: \FormatOptions.allowInlineSemicolons, mapping: ["never": false, "inline": true])
+    }
+
+    func test_allowInlineSemicolons_tranformsFromArguments() {
+        let sut = FormatOptions.Descriptor.allowInlineSemicolons
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.allowInlineSemicolons)
         validateSutThrowFormatErrorOptions(sut)
     }
 }

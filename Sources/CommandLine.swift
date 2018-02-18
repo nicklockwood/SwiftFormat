@@ -761,8 +761,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.lineBreak.argumentName] = FormatOptions.Descriptor.lineBreak.fromOptions(options)
             case FormatOptions.Descriptor.allowInlineSemicolons.propertyName:
                 args[FormatOptions.Descriptor.allowInlineSemicolons.argumentName] = FormatOptions.Descriptor.allowInlineSemicolons.fromOptions(options)
-            case "spaceAroundRangeOperators":
-                args["ranges"] = options.spaceAroundRangeOperators ? "spaced" : "nospace"
+            case FormatOptions.Descriptor.spaceAroundRangeOperators.propertyName:
+                args[FormatOptions.Descriptor.spaceAroundRangeOperators.argumentName] = FormatOptions.Descriptor.spaceAroundRangeOperators.fromOptions(options)
             case "spaceAroundOperatorDeclarations":
                 args["operatorfunc"] = options.spaceAroundOperatorDeclarations ? "spaced" : "nospace"
             case FormatOptions.Descriptor.useVoid.propertyName:
@@ -890,6 +890,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.indentation,
         FormatOptions.Descriptor.lineBreak,
         FormatOptions.Descriptor.allowInlineSemicolons,
+        FormatOptions.Descriptor.spaceAroundRangeOperators,
         FormatOptions.Descriptor.useVoid,
         FormatOptions.Descriptor.ifdefIndent,
         FormatOptions.Descriptor.decimalGrouping,
@@ -937,16 +938,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.indentComments = true
         case "ignore":
             options.indentComments = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("ranges", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "space", "spaced", "spaces":
-            options.spaceAroundRangeOperators = true
-        case "nospace":
-            options.spaceAroundRangeOperators = false
         default:
             throw FormatError.options("")
         }

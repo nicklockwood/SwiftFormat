@@ -88,45 +88,6 @@ extension FormatOptions.Descriptor {
                                                           }
                                                           return String(options.indent.count)
     })
-    static let allowInlineSemicolons = FormatOptions.Descriptor(id: "allow-inline-semicolons",
-                                                                argumentName: "semicolons",
-                                                                propertyName: "allowInlineSemicolons",
-                                                                name: "allowInlineSemicolons",
-                                                                type: .binary(true: ["inline"], false: ["never", "false"]),
-                                                                defaultArgument: "inline",
-                                                                toOptions: { input, options in
-                                                                    switch input.lowercased() {
-                                                                    case "inline":
-                                                                        options.allowInlineSemicolons = true
-                                                                    case "never", "false":
-                                                                        options.allowInlineSemicolons = false
-                                                                    default:
-                                                                        throw FormatError.options("")
-                                                                    }
-                                                                },
-                                                                fromOptions: { options in
-                                                                    options.allowInlineSemicolons ? "inline" : "never"
-    })
-
-    static let useVoid = FormatOptions.Descriptor(id: "void-representation",
-                                                  argumentName: "empty",
-                                                  propertyName: "useVoid",
-                                                  name: "empty",
-                                                  type: .binary(true: ["void"], false: ["tuple", "tuples"]),
-                                                  defaultArgument: "void",
-                                                  toOptions: { input, options in
-                                                      switch input.lowercased() {
-                                                      case "void":
-                                                          options.useVoid = true
-                                                      case "tuple", "tuples":
-                                                          options.useVoid = false
-                                                      default:
-                                                          throw FormatError.options("")
-                                                      }
-                                                  },
-                                                  fromOptions: { options in
-                                                      options.useVoid ? "void" : "tuples"
-    })
     static let lineBreak = FormatOptions.Descriptor(id: "linebreak-character",
                                                     argumentName: "linebreaks",
                                                     propertyName: "linebreak",
@@ -158,6 +119,64 @@ extension FormatOptions.Descriptor {
                                                             result = "lf"
                                                         }
                                                         return result
+    })
+    static let allowInlineSemicolons = FormatOptions.Descriptor(id: "allow-inline-semicolons",
+                                                                argumentName: "semicolons",
+                                                                propertyName: "allowInlineSemicolons",
+                                                                name: "allowInlineSemicolons",
+                                                                type: .binary(true: ["inline"], false: ["never", "false"]),
+                                                                defaultArgument: "inline",
+                                                                toOptions: { input, options in
+                                                                    switch input.lowercased() {
+                                                                    case "inline":
+                                                                        options.allowInlineSemicolons = true
+                                                                    case "never", "false":
+                                                                        options.allowInlineSemicolons = false
+                                                                    default:
+                                                                        throw FormatError.options("")
+                                                                    }
+                                                                },
+                                                                fromOptions: { options in
+                                                                    options.allowInlineSemicolons ? "inline" : "never"
+    })
+    static let spaceAroundRangeOperators = FormatOptions.Descriptor(id: "space-around-range-operators",
+                                                                    argumentName: "ranges",
+                                                                    propertyName: "spaceAroundRangeOperators",
+                                                                    name: "spaceAroundRangeOperators",
+                                                                    type: .binary(true: ["space", "spaced", "spaces"], false: ["nospace"]),
+                                                                    defaultArgument: "space",
+                                                                    toOptions: { input, options in
+                                                                        switch input.lowercased() {
+                                                                        case "space", "spaced", "spaces":
+                                                                            options.spaceAroundRangeOperators = true
+                                                                        case "nospace":
+                                                                            options.spaceAroundRangeOperators = false
+                                                                        default:
+                                                                            throw FormatError.options("")
+                                                                        }
+                                                                    },
+                                                                    fromOptions: { options in
+                                                                        options.spaceAroundRangeOperators ? "spaced" : "nospace"
+    })
+
+    static let useVoid = FormatOptions.Descriptor(id: "void-representation",
+                                                  argumentName: "empty",
+                                                  propertyName: "useVoid",
+                                                  name: "empty",
+                                                  type: .binary(true: ["void"], false: ["tuple", "tuples"]),
+                                                  defaultArgument: "void",
+                                                  toOptions: { input, options in
+                                                      switch input.lowercased() {
+                                                      case "void":
+                                                          options.useVoid = true
+                                                      case "tuple", "tuples":
+                                                          options.useVoid = false
+                                                      default:
+                                                          throw FormatError.options("")
+                                                      }
+                                                  },
+                                                  fromOptions: { options in
+                                                      options.useVoid ? "void" : "tuples"
     })
     static let ifdefIndent = FormatOptions.Descriptor(id: "if-def-indent-mode",
                                                       argumentName: "ifdef",

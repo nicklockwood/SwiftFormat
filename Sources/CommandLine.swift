@@ -773,8 +773,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.indentCase.argumentName] = FormatOptions.Descriptor.indentCase.fromOptions(options)
             case FormatOptions.Descriptor.indentComments.propertyName:
                 args[FormatOptions.Descriptor.indentComments.argumentName] = FormatOptions.Descriptor.indentComments.fromOptions(options)
-            case "truncateBlankLines":
-                args["trimwhitespace"] = options.truncateBlankLines ? "always" : "nonblank-lines"
+            case FormatOptions.Descriptor.truncateBlankLines.propertyName:
+                args[FormatOptions.Descriptor.truncateBlankLines.argumentName] = FormatOptions.Descriptor.truncateBlankLines.fromOptions(options)
             case "allmanBraces":
                 args["allman"] = options.allmanBraces ? "true" : "false"
             case "fileHeader":
@@ -896,6 +896,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.indentCase,
         FormatOptions.Descriptor.trailingCommas,
         FormatOptions.Descriptor.indentComments,
+        FormatOptions.Descriptor.truncateBlankLines,
         FormatOptions.Descriptor.ifdefIndent,
         FormatOptions.Descriptor.decimalGrouping,
     ]
@@ -922,17 +923,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.elseOnNextLine = true
         case "sameline", "same-line":
             options.elseOnNextLine = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("trimwhitespace", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "always":
-            options.truncateBlankLines = true
-        case "nonblank-lines", "nonblank", "non-blank-lines", "non-blank",
-             "nonempty-lines", "nonempty", "non-empty-lines", "non-empty":
-            options.truncateBlankLines = false
         default:
             throw FormatError.options("")
         }

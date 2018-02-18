@@ -245,6 +245,25 @@ extension FormatOptions.Descriptor {
                                                          fromOptions: { options in
                                                              options.indentComments ? "indent" : "ignore"
     })
+    static let truncateBlankLines = FormatOptions.Descriptor(id: "truncate-blank-lines",
+                                                             argumentName: "trimwhitespace",
+                                                             propertyName: "truncateBlankLines",
+                                                             name: "truncateBlankLines",
+                                                             type: .binary(true: ["always"], false: ["nonblank-lines", "nonblank", "non-blank-lines", "non-blank", "nonempty-lines", "nonempty", "non-empty-lines", "non-empty"]),
+                                                             defaultArgument: "always",
+                                                             toOptions: { input, options in
+                                                                 switch input.lowercased() {
+                                                                 case "always":
+                                                                     options.truncateBlankLines = true
+                                                                 case "nonblank-lines", "nonblank", "non-blank-lines", "non-blank", "nonempty-lines", "nonempty", "non-empty-lines", "non-empty":
+                                                                     options.truncateBlankLines = false
+                                                                 default:
+                                                                     throw FormatError.options("")
+                                                                 }
+                                                             },
+                                                             fromOptions: { options in
+                                                                 options.truncateBlankLines ? "always" : "nonblank-lines"
+    })
     static let ifdefIndent = FormatOptions.Descriptor(id: "if-def-indent-mode",
                                                       argumentName: "ifdef",
                                                       propertyName: "ifdefIndent",

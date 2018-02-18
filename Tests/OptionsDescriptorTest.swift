@@ -213,6 +213,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.indentComments)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_truncateBlankLines() {
+        let sut = FormatOptions.Descriptor.truncateBlankLines
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "always"),
+            (optionValue: false, argumentValue: "nonblank-lines"),
+        ]
+        validateSut(sut, id: "truncate-blank-lines", name: "truncateBlankLines", argumentName: "trimwhitespace", propertyName: "truncateBlankLines")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["always"], controlFalse: ["nonblank-lines", "nonblank", "non-blank-lines", "non-blank", "nonempty-lines", "nonempty", "non-empty-lines", "non-empty"], default: true)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.truncateBlankLines, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.truncateBlankLines)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

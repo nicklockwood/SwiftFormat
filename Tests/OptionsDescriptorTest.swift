@@ -148,6 +148,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.allowInlineSemicolons)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_spaceAroundRangeOperators() {
+        let sut = FormatOptions.Descriptor.spaceAroundRangeOperators
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "spaced"),
+            (optionValue: false, argumentValue: "nospace"),
+        ]
+        validateSut(sut, id: "space-around-range-operators", name: "spaceAroundRangeOperators", argumentName: "ranges", propertyName: "spaceAroundRangeOperators")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["space", "spaced", "spaces"], controlFalse: ["nospace"], default: true)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.spaceAroundRangeOperators, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.spaceAroundRangeOperators)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

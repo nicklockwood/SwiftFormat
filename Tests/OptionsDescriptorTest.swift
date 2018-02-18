@@ -228,6 +228,32 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.truncateBlankLines)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_insertBlankLines() {
+        let sut = FormatOptions.Descriptor.insertBlankLines
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "enabled"),
+            (optionValue: false, argumentValue: "disabled"),
+        ]
+        validateSut(sut, id: "insert-blank-lines", name: "insertBlankLines", argumentName: "insertlines", propertyName: "insertBlankLines")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: true)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.insertBlankLines, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.insertBlankLines)
+        validateSutThrowFormatErrorOptions(sut)
+    }
+
+    func test_removeBlankLines() {
+        let sut = FormatOptions.Descriptor.removeBlankLines
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "enabled"),
+            (optionValue: false, argumentValue: "disabled"),
+        ]
+        validateSut(sut, id: "remove-blank-lines", name: "removeBlankLines", argumentName: "removelines", propertyName: "removeBlankLines")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: true)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.removeBlankLines, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.removeBlankLines)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

@@ -51,6 +51,14 @@ extension FormatOptions {
 }
 
 extension FormatOptions.Descriptor {
+    static let tmpTemplate = FormatOptions.Descriptor(id: "",
+                                                      argumentName: "",
+                                                      propertyName: "",
+                                                      name: "",
+                                                      type: .freeText(validationStrategy: { _ in true }),
+                                                      defaultArgument: "",
+                                                      toOptions: { _, _ in },
+                                                      fromOptions: { _ in "" })
     static let indentation = FormatOptions.Descriptor(id: "indentation",
                                                       argumentName: "indent",
                                                       propertyName: "indent",

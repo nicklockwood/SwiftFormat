@@ -158,6 +158,25 @@ extension FormatOptions.Descriptor {
                                                                     fromOptions: { options in
                                                                         options.spaceAroundRangeOperators ? "spaced" : "nospace"
     })
+    static let spaceAroundOperatorDeclarations = FormatOptions.Descriptor(id: "space-around-operator-declarations",
+                                                                          argumentName: "operatorfunc",
+                                                                          propertyName: "spaceAroundOperatorDeclarations",
+                                                                          name: "spaceAroundOperatorDeclarations",
+                                                                          type: .binary(true: ["space", "spaced", "spaces"], false: ["nospace"]),
+                                                                          defaultArgument: "space",
+                                                                          toOptions: { input, options in
+                                                                              switch input.lowercased() {
+                                                                              case "space", "spaced", "spaces":
+                                                                                  options.spaceAroundOperatorDeclarations = true
+                                                                              case "nospace":
+                                                                                  options.spaceAroundOperatorDeclarations = false
+                                                                              default:
+                                                                                  throw FormatError.options("")
+                                                                              }
+                                                                          },
+                                                                          fromOptions: { options in
+                                                                              options.spaceAroundOperatorDeclarations ? "spaced" : "nospace"
+    })
 
     static let useVoid = FormatOptions.Descriptor(id: "void-representation",
                                                   argumentName: "empty",

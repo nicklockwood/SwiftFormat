@@ -24,7 +24,9 @@ class OptionsDescriptorTest: XCTestCase {
         XCTAssertEqual(sut.propertyName, propertyName, "\(testName) : id is -> \(propertyName)")
     }
 
-    func validateSutThrowFormatErrorOptions(_ sut: FormatOptions.Descriptor, invalidArguments: String = "invalid", testName: String = #function) {
+    func validateSutThrowFormatErrorOptions(_ sut: FormatOptions.Descriptor,
+                                            invalidArguments: String = "invalid",
+                                            testName: String = #function) {
         var options = FormatOptions()
         XCTAssertThrowsError(try sut.toOptions(invalidArguments, &options),
                              "\(testName): Invalid format Throws") { err in
@@ -52,7 +54,11 @@ extension OptionsDescriptorTest {
 // MARK: - Binary Options
 
 extension OptionsDescriptorTest {
-    func validateArgumentsBinaryType(sut: FormatOptions.Descriptor, controlTrue: [String], controlFalse: [String], default: Bool, testName: String = #function) {
+    func validateArgumentsBinaryType(sut: FormatOptions.Descriptor,
+                                     controlTrue: [String],
+                                     controlFalse: [String],
+                                     default: Bool,
+                                     testName: String = #function) {
         let values: (true: [String], false: [String]) = sut.type.associatedValue()
 
         let defaultControl = `default` ? controlTrue : controlFalse
@@ -64,7 +70,10 @@ extension OptionsDescriptorTest {
         XCTAssertEqual(Set(values.false), Set(controlFalse), "\(testName): All possible false value have representation")
     }
 
-    func validateFromOptionsBinaryType(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, Bool>, mapping: [String: Bool], functionName: String = #function) {
+    func validateFromOptionsBinaryType(sut: FormatOptions.Descriptor,
+                                       keyPath: WritableKeyPath<FormatOptions, Bool>,
+                                       mapping: [String: Bool],
+                                       functionName: String = #function) {
         var options = FormatOptions()
         for (argument, propertyValue) in mapping {
             options[keyPath: keyPath] = propertyValue
@@ -72,7 +81,9 @@ extension OptionsDescriptorTest {
         }
     }
 
-    func validateFromArgumentsBinaryType(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, Bool>, functionName: String = #function) {
+    func validateFromArgumentsBinaryType(sut: FormatOptions.Descriptor,
+                                         keyPath: WritableKeyPath<FormatOptions, Bool>,
+                                         functionName: String = #function) {
         var options = FormatOptions()
 
         let values: (true: [String], false: [String]) = sut.type.associatedValue()
@@ -119,7 +130,10 @@ extension OptionsDescriptorTest {
 // MARK: - List Options
 
 extension OptionsDescriptorTest {
-    func validateArgumentsListType(sut: FormatOptions.Descriptor, validArguments: Set<String>, default: String, functionName: String = #function) {
+    func validateArgumentsListType(sut: FormatOptions.Descriptor,
+                                   validArguments: Set<String>,
+                                   default: String,
+                                   functionName: String = #function) {
         let values: [String] = sut.type.associatedValue()
 
         XCTAssertEqual(Set(values), validArguments, "\(functionName): All valid arguments are accounted for")
@@ -127,7 +141,11 @@ extension OptionsDescriptorTest {
         XCTAssertTrue(validArguments.contains(sut.defaultArgument), "\(functionName): Default argument is part of the valide arguments")
     }
 
-    func validateFromOptionsListType<T>(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, T>, expectedMapping: [OptionArgumentMapping<T>], invalid: T?, testName: String = #function) {
+    func validateFromOptionsListType<T>(sut: FormatOptions.Descriptor,
+                                        keyPath: WritableKeyPath<FormatOptions, T>,
+                                        expectedMapping: [OptionArgumentMapping<T>],
+                                        invalid: T?,
+                                        testName: String = #function) {
         var options = FormatOptions()
         for item in expectedMapping {
             options[keyPath: keyPath] = item.optionValue
@@ -140,7 +158,10 @@ extension OptionsDescriptorTest {
         }
     }
 
-    func validateFromArgumentsListType<T: Equatable>(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, T>, expectedMapping: [OptionArgumentMapping<T>], testName: String = #function) {
+    func validateFromArgumentsListType<T: Equatable>(sut: FormatOptions.Descriptor,
+                                                     keyPath: WritableKeyPath<FormatOptions, T>,
+                                                     expectedMapping: [OptionArgumentMapping<T>],
+                                                     testName: String = #function) {
         var options = FormatOptions()
 
         for item in expectedMapping {
@@ -192,7 +213,10 @@ extension OptionsDescriptorTest {
 extension OptionsDescriptorTest {
     typealias FreeTextValidationExpectation = (input: String, isValid: Bool)
 
-    func validateArgumentsFreeTextType(sut: FormatOptions.Descriptor, expectations: [FreeTextValidationExpectation], default: String, testName: String = #function) {
+    func validateArgumentsFreeTextType(sut: FormatOptions.Descriptor,
+                                       expectations: [FreeTextValidationExpectation],
+                                       default: String,
+                                       testName: String = #function) {
         guard case let FormatOptions.Descriptor.ArgumentType.freeText(validator) = sut.type else {
             XCTAssert(false)
             return
@@ -231,7 +255,7 @@ extension OptionsDescriptorTest {
     }
 }
 
-// MARK: - 
+// MARK: -
 
 extension OptionsDescriptorTest {
     func test_decimalGrouping() {

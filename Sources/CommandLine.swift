@@ -769,8 +769,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.useVoid.argumentName] = FormatOptions.Descriptor.useVoid.fromOptions(options)
             case "trailingCommas":
                 args["commas"] = options.trailingCommas ? "always" : "inline"
-            case "indentCase":
-                args["indentcase"] = options.indentCase ? "true" : "false"
+            case FormatOptions.Descriptor.indentCase.propertyName:
+                args[FormatOptions.Descriptor.indentCase.argumentName] = FormatOptions.Descriptor.indentCase.fromOptions(options)
             case "indentComments":
                 args["comments"] = options.indentComments ? "indent" : "ignore"
             case "truncateBlankLines":
@@ -892,6 +892,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.spaceAroundRangeOperators,
         FormatOptions.Descriptor.spaceAroundOperatorDeclarations,
         FormatOptions.Descriptor.useVoid,
+        FormatOptions.Descriptor.indentCase,
         FormatOptions.Descriptor.ifdefIndent,
         FormatOptions.Descriptor.decimalGrouping,
     ]
@@ -901,16 +902,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           from: &arguments,
                           to: &options,
                           handler: opt.toOptions)
-    }
-    try processOption("indentcase", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "true":
-            options.indentCase = true
-        case "false":
-            options.indentCase = false
-        default:
-            throw FormatError.options("")
-        }
     }
     try processOption("allman", in: args, from: &arguments) {
         switch $0.lowercased() {

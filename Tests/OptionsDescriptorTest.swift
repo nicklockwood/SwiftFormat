@@ -52,6 +52,24 @@ class OptionsDescriptorTest: XCTestCase {
         }
     }
 
+    func validateFromOptionalArguments<T: Equatable>(sut: FormatOptions.Descriptor,
+                                                     keyPath: WritableKeyPath<FormatOptions, T?>,
+                                                     expectations: [OptionArgumentMapping<T?>],
+                                                     testCaseVariation: Bool = true,
+                                                     testName: String = #function) {
+        var options = FormatOptions()
+        expectations.forEach {
+            try! sut.toOptions($0.argumentValue, &options)
+            XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
+            if testCaseVariation {
+                try! sut.toOptions($0.argumentValue.uppercased(), &options)
+                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument Uppercased \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
+                try! sut.toOptions($0.argumentValue.capitalized, &options)
+                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument capitalized \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
+            }
+        }
+    }
+
     /// Validate From FormatOptions to Argument String
     ///
     /// - Parameters:
@@ -331,7 +349,7 @@ extension OptionsDescriptorTest {
             return
         }
 
-        XCTAssertEqual(sut.defaultArgument, `default`)
+        XCTAssertEqual(sut.defaultArgument, `default`, "\(testName): Default Argument value is: \(`default`)")
         expectations.forEach {
             XCTAssert(validator($0.input) == $0.isValid, "\(testName): \($0.input) isValid: \($0.isValid)")
         }
@@ -409,5 +427,42 @@ extension OptionsDescriptorTest {
         validateFromOptions(sut: sut, keyPath: \FormatOptions.indent, expectations: fromOptionExpectations)
         validateFromArguments(sut: sut, keyPath: \FormatOptions.indent, expectations: fromArgumentExpectations)
         validateSutThrowFormatErrorOptions(sut)
+    }
+
+    func test_fileHeader() {
+        let sut = FormatOptions.Descriptor.fileHeader
+        let validations: [FreeTextValidationExpectation] = [
+            (input: "tab", isValid: true),
+            (input: "", isValid: true),
+            (input: "// Bob \n\n// {year}\n", isValid: true),
+            (input: "/*\n\n\n*/", isValid: true),
+            (input: "\n\n\n", isValid: true),
+        ]
+        let fromOptionExpectations: [OptionArgumentMapping<String?>] = [
+            (optionValue: "", argumentValue: "strip"),
+            (optionValue: "// Header", argumentValue: "// Header"),
+            (optionValue: nil, argumentValue: "ignore"),
+            (optionValue: "/*\n\n\n*/", argumentValue: "/*\n\n\n*/"),
+        ]
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy"
+        let thisYear = formatter.string(from: Date())
+        let fromArgumentExpectations: [OptionArgumentMapping<String?>] = [
+            (optionValue: "", argumentValue: "strip"),
+            (optionValue: "// Header", argumentValue: "// Header"),
+            (optionValue: nil, argumentValue: "ignore"),
+            (optionValue: "//\(thisYear)", argumentValue: "{year}"),
+            (optionValue: "/*\n\n\n*/", argumentValue: "/*\\n\\n\\n*/"),
+            (optionValue: "//\n//\n//\n//\n//", argumentValue: "\\n\\n\\n\\n"),
+            (optionValue: "//\n//\n//a\n//\n//", argumentValue: "\\n\\na\\n\\n"),
+            (optionValue: "//\n//a\n//\n//a\n//", argumentValue: "\\na\\n\\na\\n"),
+            (optionValue: "//a\n//", argumentValue: "a\\n"),
+            (optionValue: "//a\n//b", argumentValue: "//a\\n//b"),
+        ]
+
+        validateSut(sut, id: "file-header", name: "fileHeader", argumentName: "header", propertyName: "fileHeader")
+        validateArgumentsFreeTextType(sut: sut, expectations: validations, default: "ignore")
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.fileHeader, expectations: fromOptionExpectations)
+        validateFromOptionalArguments(sut: sut, keyPath: \FormatOptions.fileHeader, expectations: fromArgumentExpectations, testCaseVariation: false)
     }
 }

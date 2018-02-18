@@ -781,8 +781,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.truncateBlankLines.argumentName] = FormatOptions.Descriptor.truncateBlankLines.fromOptions(options)
             case FormatOptions.Descriptor.allmanBraces.propertyName:
                 args[FormatOptions.Descriptor.allmanBraces.argumentName] = FormatOptions.Descriptor.allmanBraces.fromOptions(options)
-            case "fileHeader":
-                args["header"] = options.fileHeader.map { $0.isEmpty ? "strip" : $0 } ?? "ignore"
+            case FormatOptions.Descriptor.fileHeader.propertyName:
+                args[FormatOptions.Descriptor.fileHeader.argumentName] = FormatOptions.Descriptor.fileHeader.fromOptions(options)
             case FormatOptions.Descriptor.ifdefIndent.propertyName:
                 args[FormatOptions.Descriptor.ifdefIndent.argumentName] = FormatOptions.Descriptor.ifdefIndent.fromOptions(options)
             case "wrapArguments":
@@ -909,6 +909,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.insertBlankLines, // FIXME: DEPRECATED
         FormatOptions.Descriptor.removeBlankLines, // FIXME: DEPRECATED
         FormatOptions.Descriptor.allmanBraces,
+        FormatOptions.Descriptor.fileHeader,
         FormatOptions.Descriptor.ifdefIndent,
         FormatOptions.Descriptor.decimalGrouping,
     ]
@@ -927,35 +928,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.elseOnNextLine = false
         default:
             throw FormatError.options("")
-        }
-    }
-    try processOption("header", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "strip":
-            options.fileHeader = ""
-        case "ignore":
-            options.fileHeader = nil
-        default:
-            // Normalize the header
-            let header = $0.trimmingCharacters(in: .whitespacesAndNewlines)
-            let isMultiline = header.hasPrefix("/*")
-            var lines = header.components(separatedBy: "\\n")
-            lines = lines.map {
-                var line = $0
-                if !isMultiline, !line.hasPrefix("//") {
-                    line = "//" + line
-                }
-                if let range = line.range(of: "{year}") {
-                    let formatter = DateFormatter()
-                    formatter.dateFormat = "yyyy"
-                    line.replaceSubrange(range, with: formatter.string(from: Date()))
-                }
-                return line
-            }
-            while lines.last?.isEmpty == true {
-                lines.removeLast()
-            }
-            options.fileHeader = lines.joined(separator: "\n")
         }
     }
     try processOption("wraparguments", in: args, from: &arguments) {

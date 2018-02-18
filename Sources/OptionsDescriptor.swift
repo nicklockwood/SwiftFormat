@@ -51,6 +51,35 @@ extension FormatOptions {
 }
 
 extension FormatOptions.Descriptor {
+    static let indentation = FormatOptions.Descriptor(id: "indentation",
+                                                      argumentName: "indent",
+                                                      propertyName: "indent",
+                                                      name: "indent",
+                                                      type: .freeText(validationStrategy: { input in
+                                                          let validText = Set<String>(arrayLiteral: "tab", "tabs", "tabbed")
+                                                          var result = validText.contains(input.lowercased())
+                                                          result = result || Int(input.trimmingCharacters(in: .whitespaces)) != nil
+                                                          return result
+                                                      }),
+                                                      defaultArgument: "4",
+                                                      toOptions: { input, options in
+                                                          switch input.lowercased() {
+                                                          case "tab", "tabs", "tabbed":
+                                                              options.indent = "\t"
+                                                          default:
+                                                              if let spaces = Int(input) {
+                                                                  options.indent = String(repeating: " ", count: spaces)
+                                                                  break
+                                                              }
+                                                              throw FormatError.options("")
+                                                          }
+                                                      },
+                                                      fromOptions: { options in
+                                                          if options.indent == "\t" {
+                                                              return "tabs"
+                                                          }
+                                                          return String(options.indent.count)
+    })
     static let allowInlineSemicolons = FormatOptions.Descriptor(id: "allow-inline-semicolons",
                                                                 argumentName: "semicolons",
                                                                 propertyName: "allowInlineSemicolons",

@@ -254,6 +254,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.removeBlankLines)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_allmanBraces() {
+        let sut = FormatOptions.Descriptor.allmanBraces
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "true"),
+            (optionValue: false, argumentValue: "false"),
+        ]
+        validateSut(sut, id: "allman-braces", name: "allmanBraces", argumentName: "allman", propertyName: "allmanBraces")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["true", "enabled"], controlFalse: ["false", "disabled"], default: false)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.allmanBraces, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.allmanBraces)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

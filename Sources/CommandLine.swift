@@ -763,8 +763,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.allowInlineSemicolons.argumentName] = FormatOptions.Descriptor.allowInlineSemicolons.fromOptions(options)
             case FormatOptions.Descriptor.spaceAroundRangeOperators.propertyName:
                 args[FormatOptions.Descriptor.spaceAroundRangeOperators.argumentName] = FormatOptions.Descriptor.spaceAroundRangeOperators.fromOptions(options)
-            case "spaceAroundOperatorDeclarations":
-                args["operatorfunc"] = options.spaceAroundOperatorDeclarations ? "spaced" : "nospace"
+            case FormatOptions.Descriptor.spaceAroundOperatorDeclarations.propertyName:
+                args[FormatOptions.Descriptor.spaceAroundOperatorDeclarations.argumentName] = FormatOptions.Descriptor.spaceAroundOperatorDeclarations.fromOptions(options)
             case FormatOptions.Descriptor.useVoid.propertyName:
                 args[FormatOptions.Descriptor.useVoid.argumentName] = FormatOptions.Descriptor.useVoid.fromOptions(options)
             case "trailingCommas":
@@ -890,6 +890,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.lineBreak,
         FormatOptions.Descriptor.allowInlineSemicolons,
         FormatOptions.Descriptor.spaceAroundRangeOperators,
+        FormatOptions.Descriptor.spaceAroundOperatorDeclarations,
         FormatOptions.Descriptor.useVoid,
         FormatOptions.Descriptor.ifdefIndent,
         FormatOptions.Descriptor.decimalGrouping,
@@ -937,16 +938,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.indentComments = true
         case "ignore":
             options.indentComments = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("operatorfunc", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "space", "spaced", "spaces":
-            options.spaceAroundOperatorDeclarations = true
-        case "nospace":
-            options.spaceAroundOperatorDeclarations = false
         default:
             throw FormatError.options("")
         }

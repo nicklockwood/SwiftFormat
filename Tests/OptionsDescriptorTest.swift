@@ -161,6 +161,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.spaceAroundRangeOperators)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_spaceAroundOperatorDeclarations() {
+        let sut = FormatOptions.Descriptor.spaceAroundOperatorDeclarations
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "spaced"),
+            (optionValue: false, argumentValue: "nospace"),
+        ]
+        validateSut(sut, id: "space-around-operator-declarations", name: "spaceAroundOperatorDeclarations", argumentName: "operatorfunc", propertyName: "spaceAroundOperatorDeclarations")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["space", "spaced", "spaces"], controlFalse: ["nospace"], default: true)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.spaceAroundOperatorDeclarations, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.spaceAroundOperatorDeclarations)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

@@ -89,6 +89,8 @@ extension OptionsDescriptorTest {
 //    let allOptions = allOptionsPropertyName()
 //    XCTAssertTrue(allOptions.contains(sut.propertyName), "Property Name exist on FormatOptions")
 //    XCTAssertTrue(allArguments.contains(sut.argumentName), "Argument Name exist in declared format and file arguments")
+
+//    Need to have 2 collections : Active & Deprecated... will need to have a way to provide Deprecation Messages
 }
 
 // MARK: - Binary Options

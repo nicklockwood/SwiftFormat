@@ -187,6 +187,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.indentCase)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_trailingCommas() {
+        let sut = FormatOptions.Descriptor.trailingCommas
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "always"),
+            (optionValue: false, argumentValue: "inline"),
+        ]
+        validateSut(sut, id: "trailing-commas", name: "trailingCommas", argumentName: "commas", propertyName: "trailingCommas")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["always", "true"], controlFalse: ["inline", "false"], default: true)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.trailingCommas, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.trailingCommas)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

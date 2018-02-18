@@ -207,6 +207,25 @@ extension FormatOptions.Descriptor {
                                                      fromOptions: { options in
                                                          options.indentCase ? "true" : "false"
     })
+    static let trailingCommas = FormatOptions.Descriptor(id: "trailing-commas",
+                                                         argumentName: "commas",
+                                                         propertyName: "trailingCommas",
+                                                         name: "trailingCommas",
+                                                         type: .binary(true: ["always", "true"], false: ["inline", "false"]),
+                                                         defaultArgument: "always",
+                                                         toOptions: { input, options in
+                                                             switch input.lowercased() {
+                                                             case "always", "true":
+                                                                 options.trailingCommas = true
+                                                             case "inline", "false":
+                                                                 options.trailingCommas = false
+                                                             default:
+                                                                 throw FormatError.options("")
+                                                             }
+                                                         },
+                                                         fromOptions: { options in
+                                                             options.trailingCommas ? "always" : "inline"
+    })
     static let ifdefIndent = FormatOptions.Descriptor(id: "if-def-indent-mode",
                                                       argumentName: "ifdef",
                                                       propertyName: "ifdefIndent",

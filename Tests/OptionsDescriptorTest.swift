@@ -200,6 +200,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.trailingCommas)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_indentComments() {
+        let sut = FormatOptions.Descriptor.indentComments
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "indent"),
+            (optionValue: false, argumentValue: "ignore"),
+        ]
+        validateSut(sut, id: "indent-comments", name: "indentComments", argumentName: "comments", propertyName: "indentComments")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["indent", "indented"], controlFalse: ["ignore"], default: true)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.indentComments, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.indentComments)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

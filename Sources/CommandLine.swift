@@ -779,8 +779,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.insertBlankLines.argumentName] = FormatOptions.Descriptor.insertBlankLines.fromOptions(options)
             case FormatOptions.Descriptor.removeBlankLines.propertyName:
                 args[FormatOptions.Descriptor.removeBlankLines.argumentName] = FormatOptions.Descriptor.removeBlankLines.fromOptions(options)
-            case "allmanBraces":
-                args["allman"] = options.allmanBraces ? "true" : "false"
+            case FormatOptions.Descriptor.allmanBraces.propertyName:
+                args[FormatOptions.Descriptor.allmanBraces.argumentName] = FormatOptions.Descriptor.allmanBraces.fromOptions(options)
             case "fileHeader":
                 args["header"] = options.fileHeader.map { $0.isEmpty ? "strip" : $0 } ?? "ignore"
             case FormatOptions.Descriptor.ifdefIndent.propertyName:
@@ -898,6 +898,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.truncateBlankLines,
         FormatOptions.Descriptor.insertBlankLines, // FIXME: DEPRECATED
         FormatOptions.Descriptor.removeBlankLines, // FIXME: DEPRECATED
+        FormatOptions.Descriptor.allmanBraces,
         FormatOptions.Descriptor.ifdefIndent,
         FormatOptions.Descriptor.decimalGrouping,
     ]
@@ -907,16 +908,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           from: &arguments,
                           to: &options,
                           handler: opt.toOptions)
-    }
-    try processOption("allman", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "true", "enabled":
-            options.allmanBraces = true
-        case "false", "disabled":
-            options.allmanBraces = false
-        default:
-            throw FormatError.options("")
-        }
     }
     try processOption("elseposition", in: args, from: &arguments) {
         switch $0.lowercased() {

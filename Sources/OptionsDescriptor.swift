@@ -327,6 +327,44 @@ extension FormatOptions.Descriptor {
                                                        fromOptions: { options in
                                                            options.allmanBraces ? "true" : "false"
     })
+    static let fileHeader = FormatOptions.Descriptor(id: "file-header",
+                                                     argumentName: "header",
+                                                     propertyName: "fileHeader",
+                                                     name: "fileHeader",
+                                                     type: .freeText(validationStrategy: { _ in true }),
+                                                     defaultArgument: "ignore",
+                                                     toOptions: { input, options in
+                                                         switch input.lowercased() {
+                                                         case "strip":
+                                                             options.fileHeader = ""
+                                                         case "ignore":
+                                                             options.fileHeader = nil
+                                                         default:
+                                                             // Normalize the header
+                                                             let header = input.trimmingCharacters(in: .whitespacesAndNewlines)
+                                                             let isMultiline = header.hasPrefix("/*")
+                                                             var lines = header.components(separatedBy: "\\n")
+                                                             lines = lines.map {
+                                                                 var line = $0
+                                                                 if !isMultiline, !line.hasPrefix("//") {
+                                                                     line = "//" + line
+                                                                 }
+                                                                 if let range = line.range(of: "{year}") {
+                                                                     let formatter = DateFormatter()
+                                                                     formatter.dateFormat = "yyyy"
+                                                                     line.replaceSubrange(range, with: formatter.string(from: Date()))
+                                                                 }
+                                                                 return line
+                                                             }
+                                                             while lines.last?.isEmpty == true {
+                                                                 lines.removeLast()
+                                                             }
+                                                             options.fileHeader = lines.joined(separator: "\n")
+                                                         }
+                                                     },
+                                                     fromOptions: { options in
+                                                         options.fileHeader.map { $0.isEmpty ? "strip" : $0 } ?? "ignore"
+    })
     static let ifdefIndent = FormatOptions.Descriptor(id: "if-def-indent-mode",
                                                       argumentName: "ifdef",
                                                       propertyName: "ifdefIndent",

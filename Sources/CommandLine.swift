@@ -759,12 +759,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
     for child in Mirror(reflecting: options).children {
         if let label = child.label {
             switch label {
-            case "indent":
-                if options.indent == "\t" {
-                    args["indent"] = "tabs"
-                } else {
-                    args["indent"] = String(options.indent.count)
-                }
+            case FormatOptions.Descriptor.indentation.propertyName:
+                args[FormatOptions.Descriptor.indentation.argumentName] = FormatOptions.Descriptor.indentation.fromOptions(options)
             case FormatOptions.Descriptor.lineBreak.propertyName:
                 args[FormatOptions.Descriptor.lineBreak.argumentName] = FormatOptions.Descriptor.lineBreak.fromOptions(options)
             case FormatOptions.Descriptor.allowInlineSemicolons.propertyName:
@@ -895,6 +891,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     var arguments = Set(formatArguments)
 
     let optionsToProcess = [
+        FormatOptions.Descriptor.indentation,
         FormatOptions.Descriptor.lineBreak,
         FormatOptions.Descriptor.allowInlineSemicolons,
         FormatOptions.Descriptor.useVoid,
@@ -907,18 +904,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           from: &arguments,
                           to: &options,
                           handler: opt.toOptions)
-    }
-    try processOption("indent", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "tab", "tabs", "tabbed":
-            options.indent = "\t"
-        default:
-            if let spaces = Int($0) {
-                options.indent = String(repeating: " ", count: spaces)
-                break
-            }
-            throw FormatError.options("")
-        }
     }
     try processOption("indentcase", in: args, from: &arguments) {
         switch $0.lowercased() {

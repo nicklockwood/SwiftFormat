@@ -258,3 +258,82 @@ extension OptionsDescriptorTest {
         validateSutThrowFormatErrorOptions(sut)
     }
 }
+
+// MARK: - indentation
+
+extension OptionsDescriptorTest {
+    func test_indentaiton_identifierProperties() {
+        let sut = FormatOptions.Descriptor.indentation
+        validateSut(sut, id: "indentation", name: "indent", argumentName: "indent", propertyName: "indent")
+    }
+
+    func test_indentation_argumentValues() {
+        let sut = FormatOptions.Descriptor.indentation
+        guard case let FormatOptions.Descriptor.ArgumentType.freeText(validator) = sut.type else {
+            XCTAssert(false)
+            return
+        }
+
+        let expectedMapping: [(input: String, isValid: Bool)] = [
+            (input: "tab", isValid: true),
+            (input: "tabbed", isValid: true),
+            (input: "tabs", isValid: true),
+            (input: "tAb", isValid: true),
+            (input: "TabbeD", isValid: true),
+            (input: "TABS", isValid: true),
+            (input: "2", isValid: true),
+            (input: "4", isValid: true),
+            (input: " 4", isValid: true),
+            (input: "4 ", isValid: true),
+            (input: "foo", isValid: false),
+            (input: "4,5 6 7", isValid: false),
+            (input: "", isValid: false),
+            (input: " ", isValid: false),
+        ]
+
+        XCTAssertEqual(sut.defaultArgument, "4")
+        expectedMapping.forEach {
+            XCTAssert(validator($0.input) == $0.isValid, "\($0.input) isValid: \($0.isValid)")
+        }
+    }
+
+    func test_indentation_transformsFromOptions() {
+        let sut = FormatOptions.Descriptor.indentation
+        var options = FormatOptions()
+
+        let expectedMapping: [(optionValue: String, argumentValue: String)] = [
+            (optionValue: "\t", argumentValue: "tabs"),
+            (optionValue: " ", argumentValue: "1"),
+            (optionValue: "1234", argumentValue: "4"),
+        ]
+        expectedMapping.forEach {
+            options.indent = $0.optionValue
+            XCTAssertEqual(sut.fromOptions(options), $0.argumentValue, "option: \($0.optionValue) map to argumentValue: \($0.argumentValue)")
+        }
+    }
+
+    func test_indentation_tranformsFromArguments() {
+        let sut = FormatOptions.Descriptor.indentation
+        var options = FormatOptions()
+
+        let expectedMapping: [(optionValue: String, argumentValue: String)] = [
+            (optionValue: "\t", argumentValue: "tabs"),
+            (optionValue: "\t", argumentValue: "tab"),
+            (optionValue: "\t", argumentValue: "tabbed"),
+            (optionValue: "\t", argumentValue: "tabs"),
+            (optionValue: " ", argumentValue: "1"),
+            (optionValue: "    ", argumentValue: "4"),
+        ]
+
+        expectedMapping.forEach {
+            try! sut.toOptions($0.argumentValue, &options)
+            XCTAssertEqual(options.indent, $0.optionValue, "Argument \($0.argumentValue) map to option \($0.optionValue)")
+            try! sut.toOptions($0.argumentValue.uppercased(), &options)
+            XCTAssertEqual(options.indent, $0.optionValue, "Argument Uppercased \($0.argumentValue) map to option \($0.optionValue)")
+            try! sut.toOptions($0.argumentValue.capitalized, &options)
+            XCTAssertEqual(options.indent, $0.optionValue, "Argument capitalized \($0.argumentValue) map to option \($0.optionValue)")
+        }
+
+        validateSutThrowFormatErrorOptions(sut)
+    }
+}

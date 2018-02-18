@@ -10,6 +10,8 @@
 import XCTest
 
 class OptionsDescriptorTest: XCTestCase {
+    typealias OptionArgumentMapping<OPT> = (optionValue: OPT, argumentValue: String)
+
     func validateSut(_ sut: FormatOptions.Descriptor,
                      id: String,
                      name: String,
@@ -125,7 +127,7 @@ extension OptionsDescriptorTest {
         XCTAssertTrue(validArguments.contains(sut.defaultArgument), "\(functionName): Default argument is part of the valide arguments")
     }
 
-    func validateFromOptionsListType<T>(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, T>, expectedMapping: [(optionValue: T, argumentValue: String)], invalid: T?, testName: String = #function) {
+    func validateFromOptionsListType<T>(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, T>, expectedMapping: [OptionArgumentMapping<T>], invalid: T?, testName: String = #function) {
         var options = FormatOptions()
         for item in expectedMapping {
             options[keyPath: keyPath] = item.optionValue
@@ -138,7 +140,7 @@ extension OptionsDescriptorTest {
         }
     }
 
-    func validateFromArgumentsListType<T: Equatable>(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, T>, expectedMapping: [(optionValue: T, argumentValue: String)], testName: String = #function) {
+    func validateFromArgumentsListType<T: Equatable>(sut: FormatOptions.Descriptor, keyPath: WritableKeyPath<FormatOptions, T>, expectedMapping: [OptionArgumentMapping<T>], testName: String = #function) {
         var options = FormatOptions()
 
         for item in expectedMapping {
@@ -157,7 +159,7 @@ extension OptionsDescriptorTest {
 extension OptionsDescriptorTest {
     func test_ifdefIndent() {
         let sut = FormatOptions.Descriptor.ifdefIndent
-        let expectedMapping: [(optionValue: IndentMode, argumentValue: String)] = [
+        let expectedMapping: [OptionArgumentMapping<IndentMode>] = [
             (optionValue: IndentMode.indent, argumentValue: "indent"),
             (optionValue: IndentMode.noIndent, argumentValue: "noindent"),
             (optionValue: IndentMode.outdent, argumentValue: "outdent"),
@@ -172,7 +174,7 @@ extension OptionsDescriptorTest {
 
     func test_linebreakChar() {
         let sut = FormatOptions.Descriptor.lineBreak
-        let expectedMapping: [(optionValue: String, argumentValue: String)] = [
+        let expectedMapping: [OptionArgumentMapping<String>] = [
             (optionValue: "\n", argumentValue: "lf"),
             (optionValue: "\r", argumentValue: "cr"),
             (optionValue: "\r\n", argumentValue: "crlf"),
@@ -187,22 +189,54 @@ extension OptionsDescriptorTest {
 
 // MARK: - Free Text Options
 
-// MARK: - decimal-grouping
-
 extension OptionsDescriptorTest {
-    func test_decimalGrouping_idenrifierProperties() {
-        let sut = FormatOptions.Descriptor.decimalGrouping
-        validateSut(sut, id: "decimal-grouping", name: "decimalGrouping", argumentName: "decimalgrouping", propertyName: "decimalGrouping")
-    }
+    typealias FreeTextValidationExpectation = (input: String, isValid: Bool)
 
-    func test_decimalGrouping_argumentValues() {
-        let sut = FormatOptions.Descriptor.decimalGrouping
+    func validateArgumentsFreeTextType(sut: FormatOptions.Descriptor, expectations: [FreeTextValidationExpectation], default: String, testName: String = #function) {
         guard case let FormatOptions.Descriptor.ArgumentType.freeText(validator) = sut.type else {
             XCTAssert(false)
             return
         }
 
-        let expectedMapping: [(input: String, isValid: Bool)] = [
+        XCTAssertEqual(sut.defaultArgument, `default`)
+        expectations.forEach {
+            XCTAssert(validator($0.input) == $0.isValid, "\(testName): \($0.input) isValid: \($0.isValid)")
+        }
+    }
+
+    func validateFromOptionsFreeTextType<T>(sut: FormatOptions.Descriptor,
+                                            keyPath: WritableKeyPath<FormatOptions, T>,
+                                            expectations: [OptionArgumentMapping<T>],
+                                            testName: String = #function) {
+        var options = FormatOptions()
+        expectations.forEach {
+            options[keyPath: keyPath] = $0.optionValue
+            XCTAssertEqual(sut.fromOptions(options), $0.argumentValue, "\(testName): option: \($0.optionValue) map to argumentValue: \($0.argumentValue)")
+        }
+    }
+
+    func validateFromArgumentsFreeTextType<T: Equatable>(sut: FormatOptions.Descriptor,
+                                                         keyPath: WritableKeyPath<FormatOptions, T>,
+                                                         expectations: [OptionArgumentMapping<T>],
+                                                         testName: String = #function) {
+        var options = FormatOptions()
+        expectations.forEach {
+            try! sut.toOptions($0.argumentValue, &options)
+            XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument \($0.argumentValue) map to option \($0.optionValue)")
+            try! sut.toOptions($0.argumentValue.uppercased(), &options)
+            XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument Uppercased \($0.argumentValue) map to option \($0.optionValue)")
+            try! sut.toOptions($0.argumentValue.capitalized, &options)
+            XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument capitalized \($0.argumentValue) map to option \($0.optionValue)")
+        }
+    }
+}
+
+// MARK: - 
+
+extension OptionsDescriptorTest {
+    func test_decimalGrouping() {
+        let sut = FormatOptions.Descriptor.decimalGrouping
+        let expectations: [FreeTextValidationExpectation] = [
             (input: "3,4", isValid: true),
             (input: " 3 , 5 ", isValid: true),
             (input: "ignore", isValid: true),
@@ -213,68 +247,27 @@ extension OptionsDescriptorTest {
             (input: "", isValid: false),
             (input: " ", isValid: false),
         ]
-
-        XCTAssertEqual(sut.defaultArgument, "3,6")
-        expectedMapping.forEach {
-            XCTAssert(validator($0.input) == $0.isValid, "\($0.input) isValid: \($0.isValid)")
-        }
-    }
-
-    func test_decimalGrouping_transformsFromOptions() {
-        let sut = FormatOptions.Descriptor.decimalGrouping
-        var options = FormatOptions()
-        let expectedMapping: [(optionValue: Grouping, argumentValue: String)] = [
+        let fromOptionExpectations: [OptionArgumentMapping<Grouping>] = [
+            (optionValue: Grouping.ignore, argumentValue: "ignore"),
+            (optionValue: Grouping.none, argumentValue: "none"),
+            (optionValue: Grouping.group(4, 5), argumentValue: "4,5"),
+        ]
+        let fromArgumentExpectations: [OptionArgumentMapping<Grouping>] = [
             (optionValue: Grouping.ignore, argumentValue: "ignore"),
             (optionValue: Grouping.none, argumentValue: "none"),
             (optionValue: Grouping.group(4, 5), argumentValue: "4,5"),
         ]
 
-        expectedMapping.forEach {
-            options.decimalGrouping = $0.optionValue
-            XCTAssertEqual(sut.fromOptions(options), $0.argumentValue, "option: \($0.optionValue) map to argumentValue: \($0.argumentValue)")
-        }
-    }
-
-    func test_decimalGrouping_tranformsFromArguments() {
-        let sut = FormatOptions.Descriptor.decimalGrouping
-        var options = FormatOptions()
-
-        let expectedMapping: [(optionValue: Grouping, argumentValue: String)] = [
-            (optionValue: Grouping.ignore, argumentValue: "ignore"),
-            (optionValue: Grouping.none, argumentValue: "none"),
-            (optionValue: Grouping.group(4, 5), argumentValue: "4,5"),
-        ]
-
-        options.decimalGrouping = Grouping.group(99, 99)
-        expectedMapping.forEach {
-            try! sut.toOptions($0.argumentValue, &options)
-            XCTAssertEqual(options.decimalGrouping, $0.optionValue)
-        }
-        expectedMapping.forEach {
-            try! sut.toOptions($0.argumentValue.uppercased(), &options)
-            XCTAssertEqual(options.decimalGrouping, $0.optionValue)
-        }
-
+        validateSut(sut, id: "decimal-grouping", name: "decimalGrouping", argumentName: "decimalgrouping", propertyName: "decimalGrouping")
+        validateArgumentsFreeTextType(sut: sut, expectations: expectations, default: "3,6")
+        validateFromOptionsFreeTextType(sut: sut, keyPath: \FormatOptions.decimalGrouping, expectations: fromOptionExpectations)
+        validateFromArgumentsFreeTextType(sut: sut, keyPath: \FormatOptions.decimalGrouping, expectations: fromArgumentExpectations)
         validateSutThrowFormatErrorOptions(sut)
     }
-}
 
-// MARK: - indentation
-
-extension OptionsDescriptorTest {
-    func test_indentaiton_identifierProperties() {
+    func test_indentation() {
         let sut = FormatOptions.Descriptor.indentation
-        validateSut(sut, id: "indentation", name: "indent", argumentName: "indent", propertyName: "indent")
-    }
-
-    func test_indentation_argumentValues() {
-        let sut = FormatOptions.Descriptor.indentation
-        guard case let FormatOptions.Descriptor.ArgumentType.freeText(validator) = sut.type else {
-            XCTAssert(false)
-            return
-        }
-
-        let expectedMapping: [(input: String, isValid: Bool)] = [
+        let validations: [FreeTextValidationExpectation] = [
             (input: "tab", isValid: true),
             (input: "tabbed", isValid: true),
             (input: "tabs", isValid: true),
@@ -290,33 +283,12 @@ extension OptionsDescriptorTest {
             (input: "", isValid: false),
             (input: " ", isValid: false),
         ]
-
-        XCTAssertEqual(sut.defaultArgument, "4")
-        expectedMapping.forEach {
-            XCTAssert(validator($0.input) == $0.isValid, "\($0.input) isValid: \($0.isValid)")
-        }
-    }
-
-    func test_indentation_transformsFromOptions() {
-        let sut = FormatOptions.Descriptor.indentation
-        var options = FormatOptions()
-
-        let expectedMapping: [(optionValue: String, argumentValue: String)] = [
+        let fromOptionExpectations: [OptionArgumentMapping<String>] = [
             (optionValue: "\t", argumentValue: "tabs"),
             (optionValue: " ", argumentValue: "1"),
             (optionValue: "1234", argumentValue: "4"),
         ]
-        expectedMapping.forEach {
-            options.indent = $0.optionValue
-            XCTAssertEqual(sut.fromOptions(options), $0.argumentValue, "option: \($0.optionValue) map to argumentValue: \($0.argumentValue)")
-        }
-    }
-
-    func test_indentation_tranformsFromArguments() {
-        let sut = FormatOptions.Descriptor.indentation
-        var options = FormatOptions()
-
-        let expectedMapping: [(optionValue: String, argumentValue: String)] = [
+        let fromArgumentExpectations: [OptionArgumentMapping<String>] = [
             (optionValue: "\t", argumentValue: "tabs"),
             (optionValue: "\t", argumentValue: "tab"),
             (optionValue: "\t", argumentValue: "tabbed"),
@@ -325,15 +297,10 @@ extension OptionsDescriptorTest {
             (optionValue: "    ", argumentValue: "4"),
         ]
 
-        expectedMapping.forEach {
-            try! sut.toOptions($0.argumentValue, &options)
-            XCTAssertEqual(options.indent, $0.optionValue, "Argument \($0.argumentValue) map to option \($0.optionValue)")
-            try! sut.toOptions($0.argumentValue.uppercased(), &options)
-            XCTAssertEqual(options.indent, $0.optionValue, "Argument Uppercased \($0.argumentValue) map to option \($0.optionValue)")
-            try! sut.toOptions($0.argumentValue.capitalized, &options)
-            XCTAssertEqual(options.indent, $0.optionValue, "Argument capitalized \($0.argumentValue) map to option \($0.optionValue)")
-        }
-
+        validateSut(sut, id: "indentation", name: "indent", argumentName: "indent", propertyName: "indent")
+        validateArgumentsFreeTextType(sut: sut, expectations: validations, default: "4")
+        validateFromOptionsFreeTextType(sut: sut, keyPath: \FormatOptions.indent, expectations: fromOptionExpectations)
+        validateFromArgumentsFreeTextType(sut: sut, keyPath: \FormatOptions.indent, expectations: fromArgumentExpectations)
         validateSutThrowFormatErrorOptions(sut)
     }
 }

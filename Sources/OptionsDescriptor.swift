@@ -308,6 +308,25 @@ extension FormatOptions.Descriptor {
                                                            fromOptions: { options in
                                                                options.removeBlankLines ? "enabled" : "disabled"
     })
+    static let allmanBraces = FormatOptions.Descriptor(id: "allman-braces",
+                                                       argumentName: "allman",
+                                                       propertyName: "allmanBraces",
+                                                       name: "allmanBraces",
+                                                       type: .binary(true: ["true", "enabled"], false: ["false", "disabled"]),
+                                                       defaultArgument: "false",
+                                                       toOptions: { input, options in
+                                                           switch input.lowercased() {
+                                                           case "true", "enabled":
+                                                               options.allmanBraces = true
+                                                           case "false", "disabled":
+                                                               options.allmanBraces = false
+                                                           default:
+                                                               throw FormatError.options("")
+                                                           }
+                                                       },
+                                                       fromOptions: { options in
+                                                           options.allmanBraces ? "true" : "false"
+    })
     static let ifdefIndent = FormatOptions.Descriptor(id: "if-def-indent-mode",
                                                       argumentName: "ifdef",
                                                       propertyName: "ifdefIndent",

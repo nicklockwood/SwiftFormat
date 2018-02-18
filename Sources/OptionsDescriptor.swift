@@ -226,6 +226,25 @@ extension FormatOptions.Descriptor {
                                                          fromOptions: { options in
                                                              options.trailingCommas ? "always" : "inline"
     })
+    static let indentComments = FormatOptions.Descriptor(id: "indent-comments",
+                                                         argumentName: "comments",
+                                                         propertyName: "indentComments",
+                                                         name: "indentComments",
+                                                         type: .binary(true: ["indent", "indented"], false: ["ignore"]),
+                                                         defaultArgument: "indent",
+                                                         toOptions: { input, options in
+                                                             switch input.lowercased() {
+                                                             case "indent", "indented":
+                                                                 options.indentComments = true
+                                                             case "ignore":
+                                                                 options.indentComments = false
+                                                             default:
+                                                                 throw FormatError.options("")
+                                                             }
+                                                         },
+                                                         fromOptions: { options in
+                                                             options.indentComments ? "indent" : "ignore"
+    })
     static let ifdefIndent = FormatOptions.Descriptor(id: "if-def-indent-mode",
                                                       argumentName: "ifdef",
                                                       propertyName: "ifdefIndent",

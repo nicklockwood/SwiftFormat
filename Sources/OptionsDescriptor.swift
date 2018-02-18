@@ -51,14 +51,6 @@ extension FormatOptions {
 }
 
 extension FormatOptions.Descriptor {
-    static let tmpTemplate = FormatOptions.Descriptor(id: "",
-                                                      argumentName: "",
-                                                      propertyName: "",
-                                                      name: "",
-                                                      type: .freeText(validationStrategy: { _ in true }),
-                                                      defaultArgument: "",
-                                                      toOptions: { _, _ in },
-                                                      fromOptions: { _ in "" })
     static let indentation = FormatOptions.Descriptor(id: "indentation",
                                                       argumentName: "indent",
                                                       propertyName: "indent",
@@ -177,7 +169,6 @@ extension FormatOptions.Descriptor {
                                                                           fromOptions: { options in
                                                                               options.spaceAroundOperatorDeclarations ? "spaced" : "nospace"
     })
-
     static let useVoid = FormatOptions.Descriptor(id: "void-representation",
                                                   argumentName: "empty",
                                                   propertyName: "useVoid",
@@ -196,6 +187,25 @@ extension FormatOptions.Descriptor {
                                                   },
                                                   fromOptions: { options in
                                                       options.useVoid ? "void" : "tuples"
+    })
+    static let indentCase = FormatOptions.Descriptor(id: "indent-case",
+                                                     argumentName: "indentcase",
+                                                     propertyName: "indentCase",
+                                                     name: "indentCase",
+                                                     type: .binary(true: ["true"], false: ["false"]),
+                                                     defaultArgument: "false",
+                                                     toOptions: { input, options in
+                                                         switch input.lowercased() {
+                                                         case "true":
+                                                             options.indentCase = true
+                                                         case "false":
+                                                             options.indentCase = false
+                                                         default:
+                                                             throw FormatError.options("")
+                                                         }
+                                                     },
+                                                     fromOptions: { options in
+                                                         options.indentCase ? "true" : "false"
     })
     static let ifdefIndent = FormatOptions.Descriptor(id: "if-def-indent-mode",
                                                       argumentName: "ifdef",

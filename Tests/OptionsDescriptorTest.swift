@@ -174,6 +174,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.spaceAroundOperatorDeclarations)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_indentCase() {
+        let sut = FormatOptions.Descriptor.indentCase
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "true"),
+            (optionValue: false, argumentValue: "false"),
+        ]
+        validateSut(sut, id: "indent-case", name: "indentCase", argumentName: "indentcase", propertyName: "indentCase")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["true"], controlFalse: ["false"], default: false)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.indentCase, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.indentCase)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

@@ -413,6 +413,25 @@ extension FormatOptions.Descriptor {
                                                        fromOptions: { options in
                                                            options.wrapElements.rawValue
     })
+    static let hexLiteralCase = FormatOptions.Descriptor(id: "hex-literal-case",
+                                                         argumentName: "hexliteralcase",
+                                                         propertyName: "uppercaseHex",
+                                                         name: "hexLiteralCase",
+                                                         type: .binary(true: ["uppercase", "upper"], false: ["lowercase", "lower"]),
+                                                         defaultArgument: "uppercase",
+                                                         toOptions: { input, options in
+                                                             switch input.lowercased() {
+                                                             case "uppercase", "upper":
+                                                                 options.uppercaseHex = true
+                                                             case "lowercase", "lower":
+                                                                 options.uppercaseHex = false
+                                                             default:
+                                                                 throw FormatError.options("")
+                                                             }
+                                                         },
+                                                         fromOptions: { options in
+                                                             options.uppercaseHex ? "uppercase" : "lowercase"
+    })
     static let decimalGrouping = FormatOptions.Descriptor(id: "decimal-grouping",
                                                           argumentName: "decimalgrouping",
                                                           propertyName: "decimalGrouping",

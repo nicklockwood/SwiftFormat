@@ -785,8 +785,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.wrapArguments.argumentName] = FormatOptions.Descriptor.wrapArguments.fromOptions(options)
             case FormatOptions.Descriptor.wrapElements.propertyName:
                 args[FormatOptions.Descriptor.wrapElements.argumentName] = FormatOptions.Descriptor.wrapElements.fromOptions(options)
-            case "uppercaseHex":
-                args["hexliteralcase"] = options.uppercaseHex ? "uppercase" : "lowercase"
+            case FormatOptions.Descriptor.hexLiteralCase.propertyName:
+                args[FormatOptions.Descriptor.hexLiteralCase.argumentName] = FormatOptions.Descriptor.hexLiteralCase.fromOptions(options)
             case "uppercaseExponent":
                 args["exponentcase"] = options.uppercaseExponent ? "uppercase" : "lowercase"
             case FormatOptions.Descriptor.decimalGrouping.propertyName:
@@ -908,6 +908,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.fileHeader,
         FormatOptions.Descriptor.wrapArguments,
         FormatOptions.Descriptor.wrapElements,
+        FormatOptions.Descriptor.hexLiteralCase,
         FormatOptions.Descriptor.ifdefIndent,
         FormatOptions.Descriptor.decimalGrouping,
     ]
@@ -924,16 +925,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.elseOnNextLine = true
         case "sameline", "same-line":
             options.elseOnNextLine = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("hexliteralcase", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "uppercase", "upper":
-            options.uppercaseHex = true
-        case "lowercase", "lower":
-            options.uppercaseHex = false
         default:
             throw FormatError.options("")
         }

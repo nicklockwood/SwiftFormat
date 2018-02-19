@@ -298,6 +298,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.uppercaseHex)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_exponentCase() {
+        let sut = FormatOptions.Descriptor.exponentCase
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "uppercase"),
+            (optionValue: false, argumentValue: "lowercase"),
+        ]
+        validateSut(sut, id: "exponent-case", name: "exponentCase", argumentName: "exponentcase", propertyName: "uppercaseExponent")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"], default: false)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.uppercaseExponent, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.uppercaseExponent)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

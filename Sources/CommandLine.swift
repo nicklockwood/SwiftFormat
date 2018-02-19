@@ -787,8 +787,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.wrapElements.argumentName] = FormatOptions.Descriptor.wrapElements.fromOptions(options)
             case FormatOptions.Descriptor.hexLiteralCase.propertyName:
                 args[FormatOptions.Descriptor.hexLiteralCase.argumentName] = FormatOptions.Descriptor.hexLiteralCase.fromOptions(options)
-            case "uppercaseExponent":
-                args["exponentcase"] = options.uppercaseExponent ? "uppercase" : "lowercase"
+            case FormatOptions.Descriptor.exponentCase.propertyName:
+                args[FormatOptions.Descriptor.exponentCase.argumentName] = FormatOptions.Descriptor.exponentCase.fromOptions(options)
             case FormatOptions.Descriptor.decimalGrouping.propertyName:
                 args[FormatOptions.Descriptor.decimalGrouping.argumentName] = FormatOptions.Descriptor.decimalGrouping.fromOptions(options)
             case "binaryGrouping":
@@ -904,10 +904,11 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.truncateBlankLines,
         FormatOptions.Descriptor.allmanBraces,
         FormatOptions.Descriptor.fileHeader,
+        FormatOptions.Descriptor.ifdefIndent,
         FormatOptions.Descriptor.wrapArguments,
         FormatOptions.Descriptor.wrapElements,
         FormatOptions.Descriptor.hexLiteralCase,
-        FormatOptions.Descriptor.ifdefIndent,
+        FormatOptions.Descriptor.exponentCase,
         FormatOptions.Descriptor.decimalGrouping,
     ]
     for opt in optionsToProcess {
@@ -945,16 +946,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.elseOnNextLine = true
         case "sameline", "same-line":
             options.elseOnNextLine = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("exponentcase", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "uppercase", "upper":
-            options.uppercaseExponent = true
-        case "lowercase", "lower":
-            options.uppercaseExponent = false
         default:
             throw FormatError.options("")
         }

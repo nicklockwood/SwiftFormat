@@ -795,8 +795,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.exponentCase.argumentName] = FormatOptions.Descriptor.exponentCase.fromOptions(options)
             case FormatOptions.Descriptor.decimalGrouping.propertyName:
                 args[FormatOptions.Descriptor.decimalGrouping.argumentName] = FormatOptions.Descriptor.decimalGrouping.fromOptions(options)
-            case "binaryGrouping":
-                args["binarygrouping"] = options.binaryGrouping.rawValue
+            case FormatOptions.Descriptor.binaryGrouping.propertyName:
+                args[FormatOptions.Descriptor.binaryGrouping.argumentName] = FormatOptions.Descriptor.binaryGrouping.fromOptions(options)
             case "octalGrouping":
                 args["octalgrouping"] = options.octalGrouping.rawValue
             case "hexGrouping":
@@ -914,6 +914,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.hexLiteralCase,
         FormatOptions.Descriptor.exponentCase,
         FormatOptions.Descriptor.decimalGrouping,
+        FormatOptions.Descriptor.binaryGrouping,
     ]
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
@@ -953,12 +954,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         default:
             throw FormatError.options("")
         }
-    }
-    try processOption("binarygrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.binaryGrouping = grouping
     }
     try processOption("octalgrouping", in: args, from: &arguments) {
         guard let grouping = Grouping(rawValue: $0.lowercased()) else {

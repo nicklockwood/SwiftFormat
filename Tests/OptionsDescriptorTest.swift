@@ -408,13 +408,15 @@ extension OptionsDescriptorTest {
             XCTAssert(validator($0.input) == $0.isValid, "\(testName): \($0.input) isValid: \($0.isValid)")
         }
     }
-}
 
-// MARK: -
-
-extension OptionsDescriptorTest {
-    func test_decimalGrouping() {
-        let sut = FormatOptions.Descriptor.decimalGrouping
+    func validateGroupingSut(_ sut: FormatOptions.Descriptor,
+                             id: String,
+                             name: String,
+                             argumentName: String,
+                             propertyName: String,
+                             default: String,
+                             keyPath: WritableKeyPath<FormatOptions, Grouping>,
+                             testName: String = #function) {
         let expectations: [FreeTextValidationExpectation] = [
             (input: "3,4", isValid: true),
             (input: " 3 , 5 ", isValid: true),
@@ -437,11 +439,35 @@ extension OptionsDescriptorTest {
             (optionValue: Grouping.group(4, 5), argumentValue: "4,5"),
         ]
 
-        validateSut(sut, id: "decimal-grouping", name: "decimalGrouping", argumentName: "decimalgrouping", propertyName: "decimalGrouping")
-        validateArgumentsFreeTextType(sut: sut, expectations: expectations, default: "3,6")
-        validateFromOptions(sut: sut, keyPath: \FormatOptions.decimalGrouping, expectations: fromOptionExpectations)
-        validateFromArguments(sut: sut, keyPath: \FormatOptions.decimalGrouping, expectations: fromArgumentExpectations)
-        validateSutThrowFormatErrorOptions(sut)
+        validateSut(sut, id: id, name: name, argumentName: argumentName, propertyName: propertyName, testName: testName)
+        validateArgumentsFreeTextType(sut: sut, expectations: expectations, default: `default`, testName: testName)
+        validateFromOptions(sut: sut, keyPath: keyPath, expectations: fromOptionExpectations, testName: testName)
+        validateFromArguments(sut: sut, keyPath: keyPath, expectations: fromArgumentExpectations, testName: testName)
+        validateSutThrowFormatErrorOptions(sut, testName: testName)
+    }
+}
+
+// MARK: -
+
+extension OptionsDescriptorTest {
+    func test_decimalGrouping() {
+        validateGroupingSut(FormatOptions.Descriptor.decimalGrouping,
+                            id: "decimal-grouping",
+                            name: "decimalGrouping",
+                            argumentName: "decimalgrouping",
+                            propertyName: "decimalGrouping",
+                            default: "3,6",
+                            keyPath: \FormatOptions.decimalGrouping)
+    }
+
+    func test_binaryGrouping() {
+        validateGroupingSut(FormatOptions.Descriptor.binaryGrouping,
+                            id: "binary-grouping",
+                            name: "binaryGrouping",
+                            argumentName: "binarygrouping",
+                            propertyName: "binaryGrouping",
+                            default: "4,8",
+                            keyPath: \FormatOptions.binaryGrouping)
     }
 
     func test_indentation() {

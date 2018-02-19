@@ -785,10 +785,10 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.fileHeader.argumentName] = FormatOptions.Descriptor.fileHeader.fromOptions(options)
             case FormatOptions.Descriptor.ifdefIndent.propertyName:
                 args[FormatOptions.Descriptor.ifdefIndent.argumentName] = FormatOptions.Descriptor.ifdefIndent.fromOptions(options)
-            case "wrapArguments":
-                args["wraparguments"] = options.wrapArguments.rawValue
-            case "wrapElements":
-                args["wrapelements"] = options.wrapElements.rawValue
+            case FormatOptions.Descriptor.wrapArguments.propertyName:
+                args[FormatOptions.Descriptor.wrapArguments.argumentName] = FormatOptions.Descriptor.wrapArguments.fromOptions(options)
+            case FormatOptions.Descriptor.wrapElements.propertyName:
+                args[FormatOptions.Descriptor.wrapElements.argumentName] = FormatOptions.Descriptor.wrapElements.fromOptions(options)
             case "uppercaseHex":
                 args["hexliteralcase"] = options.uppercaseHex ? "uppercase" : "lowercase"
             case "uppercaseExponent":
@@ -910,6 +910,8 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.removeBlankLines, // FIXME: DEPRECATED
         FormatOptions.Descriptor.allmanBraces,
         FormatOptions.Descriptor.fileHeader,
+        FormatOptions.Descriptor.wrapArguments,
+        FormatOptions.Descriptor.wrapElements,
         FormatOptions.Descriptor.ifdefIndent,
         FormatOptions.Descriptor.decimalGrouping,
     ]
@@ -927,20 +929,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         case "sameline", "same-line":
             options.elseOnNextLine = false
         default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("wraparguments", in: args, from: &arguments) {
-        if let mode = WrapMode(rawValue: $0.lowercased()) {
-            options.wrapArguments = mode
-        } else {
-            throw FormatError.options("")
-        }
-    }
-    try processOption("wrapelements", in: args, from: &arguments) {
-        if let mode = WrapMode(rawValue: $0.lowercased()) {
-            options.wrapElements = mode
-        } else {
             throw FormatError.options("")
         }
     }

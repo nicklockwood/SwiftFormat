@@ -902,8 +902,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.trailingCommas,
         FormatOptions.Descriptor.indentComments,
         FormatOptions.Descriptor.truncateBlankLines,
-        FormatOptions.Descriptor.insertBlankLines, // FIXME: DEPRECATED
-        FormatOptions.Descriptor.removeBlankLines, // FIXME: DEPRECATED
         FormatOptions.Descriptor.allmanBraces,
         FormatOptions.Descriptor.fileHeader,
         FormatOptions.Descriptor.wrapArguments,
@@ -919,6 +917,28 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           to: &options,
                           handler: opt.toOptions)
     }
+
+    let deprecatedOptionsToProcess = [
+        FormatOptions.Descriptor.insertBlankLines,
+        FormatOptions.Descriptor.removeBlankLines,
+    ]
+    for opt in deprecatedOptionsToProcess {
+        let deprecationHandler: (String, inout FormatOptions) throws -> Void = { string, options in
+            //  FIXME: Have the deprecation Message Stored somewhere
+            print("DEPRECATION MESSAGE for the OPTION.", as: .warning)
+            do {
+                try opt.toOptions(string, &options)
+            } catch let err {
+                throw err
+            }
+        }
+        try processOption(opt.argumentName,
+                          in: args,
+                          from: &arguments,
+                          to: &options,
+                          handler: deprecationHandler)
+    }
+
     try processOption("elseposition", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "nextline", "next-line":

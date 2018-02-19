@@ -381,6 +381,38 @@ extension FormatOptions.Descriptor {
                                                       fromOptions: { options in
                                                           options.ifdefIndent.rawValue
     })
+    static let wrapArguments = FormatOptions.Descriptor(id: "wrap-arguments",
+                                                        argumentName: "wraparguments",
+                                                        propertyName: "wrapArguments",
+                                                        name: "wrapArguments",
+                                                        type: .list(["beforefirst", "afterfirst", "disabled"]),
+                                                        defaultArgument: "disabled",
+                                                        toOptions: { input, options in
+                                                            if let mode = WrapMode(rawValue: input.lowercased()) {
+                                                                options.wrapArguments = mode
+                                                            } else {
+                                                                throw FormatError.options("")
+                                                            }
+                                                        },
+                                                        fromOptions: { options in
+                                                            options.wrapArguments.rawValue
+    })
+    static let wrapElements = FormatOptions.Descriptor(id: "wrap-elements",
+                                                       argumentName: "wrapelements",
+                                                       propertyName: "wrapElements",
+                                                       name: "wrapElements",
+                                                       type: .list(["beforefirst", "afterfirst", "disabled"]),
+                                                       defaultArgument: "beforefirst",
+                                                       toOptions: { input, options in
+                                                           if let mode = WrapMode(rawValue: input.lowercased()) {
+                                                               options.wrapElements = mode
+                                                           } else {
+                                                               throw FormatError.options("")
+                                                           }
+                                                       },
+                                                       fromOptions: { options in
+                                                           options.wrapElements.rawValue
+    })
     static let decimalGrouping = FormatOptions.Descriptor(id: "decimal-grouping",
                                                           argumentName: "decimalgrouping",
                                                           propertyName: "decimalGrouping",

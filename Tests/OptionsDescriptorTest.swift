@@ -285,6 +285,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.allmanBraces)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_hexLiteralCase() {
+        let sut = FormatOptions.Descriptor.hexLiteralCase
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "uppercase"),
+            (optionValue: false, argumentValue: "lowercase"),
+        ]
+        validateSut(sut, id: "hex-literal-case", name: "hexLiteralCase", argumentName: "hexliteralcase", propertyName: "uppercaseHex")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"], default: true)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.uppercaseHex, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.uppercaseHex)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

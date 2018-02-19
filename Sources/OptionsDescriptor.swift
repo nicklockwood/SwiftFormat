@@ -463,5 +463,22 @@ extension FormatOptions.Descriptor {
                                                               }
                                                               options.decimalGrouping = grouping
                                                           },
-                                                          fromOptions: { $0.decimalGrouping.rawValue })
+                                                          fromOptions: { options in
+                                                              options.decimalGrouping.rawValue
+    })
+    static let binaryGrouping = FormatOptions.Descriptor(id: "binary-grouping",
+                                                         argumentName: "binarygrouping",
+                                                         propertyName: "binaryGrouping",
+                                                         name: "binaryGrouping",
+                                                         type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
+                                                         defaultArgument: "4,8",
+                                                         toOptions: { input, options in
+                                                             guard let grouping = Grouping(rawValue: input.lowercased()) else {
+                                                                 throw FormatError.options("")
+                                                             }
+                                                             options.binaryGrouping = grouping
+                                                         },
+                                                         fromOptions: { options in
+                                                             options.binaryGrouping.rawValue
+    })
 }

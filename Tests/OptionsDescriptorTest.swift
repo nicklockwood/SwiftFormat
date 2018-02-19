@@ -333,6 +333,34 @@ extension OptionsDescriptorTest {
         validateFromArguments(sut: sut, keyPath: \FormatOptions.linebreak, expectations: expectedMapping)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_wrapArguments() {
+        let sut = FormatOptions.Descriptor.wrapArguments
+        let expectedMapping: [OptionArgumentMapping<WrapMode>] = [
+            (optionValue: .beforeFirst, argumentValue: "beforefirst"),
+            (optionValue: .afterFirst, argumentValue: "afterfirst"),
+            (optionValue: .disabled, argumentValue: "disabled"),
+        ]
+        validateSut(sut, id: "wrap-arguments", name: "wrapArguments", argumentName: "wraparguments", propertyName: "wrapArguments")
+        validateArgumentsListType(sut: sut, validArguments: ["beforefirst", "afterfirst", "disabled"], default: "disabled")
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.wrapArguments, expectations: expectedMapping)
+        validateFromArguments(sut: sut, keyPath: \FormatOptions.wrapArguments, expectations: expectedMapping)
+        validateSutThrowFormatErrorOptions(sut)
+    }
+
+    func test_wrapElements() {
+        let sut = FormatOptions.Descriptor.wrapElements
+        let expectedMapping: [OptionArgumentMapping<WrapMode>] = [
+            (optionValue: .beforeFirst, argumentValue: "beforefirst"),
+            (optionValue: .afterFirst, argumentValue: "afterfirst"),
+            (optionValue: .disabled, argumentValue: "disabled"),
+        ]
+        validateSut(sut, id: "wrap-elements", name: "wrapElements", argumentName: "wrapelements", propertyName: "wrapElements")
+        validateArgumentsListType(sut: sut, validArguments: ["beforefirst", "afterfirst", "disabled"], default: "beforefirst")
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.wrapElements, expectations: expectedMapping)
+        validateFromArguments(sut: sut, keyPath: \FormatOptions.wrapElements, expectations: expectedMapping)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - Free Text Options

@@ -337,6 +337,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.elseOnNextLine)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_removeSelf() {
+        let sut = FormatOptions.Descriptor.removeSelf
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "remove"),
+            (optionValue: false, argumentValue: "insert"),
+        ]
+        validateSut(sut, id: "remove-self", name: "removeSelf", argumentName: "self", propertyName: "removeSelf")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["remove"], controlFalse: ["insert"], default: true)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.removeSelf, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.removeSelf)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

@@ -564,4 +564,23 @@ extension FormatOptions.Descriptor {
                                                        fromOptions: { options in
                                                            options.elseOnNextLine ? "next-line" : "same-line"
     })
+    static let removeSelf = FormatOptions.Descriptor(id: "remove-self",
+                                                     argumentName: "self",
+                                                     propertyName: "removeSelf",
+                                                     name: "removeSelf",
+                                                     type: .binary(true: ["remove"], false: ["insert"]),
+                                                     defaultArgument: "remove",
+                                                     toOptions: { input, options in
+                                                         switch input.lowercased() {
+                                                         case "remove":
+                                                             options.removeSelf = true
+                                                         case "insert":
+                                                             options.removeSelf = false
+                                                         default:
+                                                             throw FormatError.options("")
+                                                         }
+                                                     },
+                                                     fromOptions: { options in
+                                                         options.removeSelf ? "remove" : "insert"
+    })
 }

@@ -530,4 +530,19 @@ extension FormatOptions.Descriptor {
                                                               fromOptions: { options in
                                                                   options.hoistPatternLet ? "hoist" : "inline"
     })
+    static let stripUnusedArguments = FormatOptions.Descriptor(id: "strip-unused-arguments",
+                                                               argumentName: "stripunusedargs",
+                                                               propertyName: "stripUnusedArguments",
+                                                               name: "stripUnusedArguments",
+                                                               type: .list(["unnamed-only", "closure-only", "always"]),
+                                                               defaultArgument: "always",
+                                                               toOptions: { input, options in
+                                                                   guard let type = ArgumentStrippingMode(rawValue: input.lowercased()) else {
+                                                                       throw FormatError.options("")
+                                                                   }
+                                                                   options.stripUnusedArguments = type
+                                                               },
+                                                               fromOptions: { options in
+                                                                   options.stripUnusedArguments.rawValue
+    })
 }

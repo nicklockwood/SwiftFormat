@@ -400,6 +400,20 @@ extension OptionsDescriptorTest {
         validateFromArguments(sut: sut, keyPath: \FormatOptions.wrapElements, expectations: expectedMapping)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_stripUnusedArguments() {
+        let sut = FormatOptions.Descriptor.stripUnusedArguments
+        let expectedMapping: [OptionArgumentMapping<ArgumentStrippingMode>] = [
+            (optionValue: .unnamedOnly, argumentValue: "unnamed-only"),
+            (optionValue: .closureOnly, argumentValue: "closure-only"),
+            (optionValue: .all, argumentValue: "always"),
+        ]
+        validateSut(sut, id: "strip-unused-arguments", name: "stripUnusedArguments", argumentName: "stripunusedargs", propertyName: "stripUnusedArguments")
+        validateArgumentsListType(sut: sut, validArguments: ["unnamed-only", "closure-only", "always"], default: "always")
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.stripUnusedArguments, expectations: expectedMapping)
+        validateFromArguments(sut: sut, keyPath: \FormatOptions.stripUnusedArguments, expectations: expectedMapping)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - Free Text Options

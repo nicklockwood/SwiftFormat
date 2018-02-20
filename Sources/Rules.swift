@@ -2952,6 +2952,10 @@ extension FormatRules {
         if let startIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1) {
             switch formatter.tokens[startIndex] {
             case .startOfScope("//"):
+                if case let .commentBody(body)? = formatter.next(.nonSpace, after: startIndex) {
+                    formatter.processCommentBody(body)
+                    if !formatter.isEnabled { return }
+                }
                 var lastIndex = startIndex
                 while let index = formatter.index(of: .linebreak, after: lastIndex) {
                     if let nextToken = formatter.token(at: index + 1), nextToken != .startOfScope("//") {
@@ -2968,6 +2972,10 @@ extension FormatRules {
                     lastIndex = index
                 }
             case .startOfScope("/*"):
+                if case let .commentBody(body)? = formatter.next(.nonSpace, after: startIndex) {
+                    formatter.processCommentBody(body)
+                    if !formatter.isEnabled { return }
+                }
                 while let endIndex = formatter.index(of: .endOfScope("*/"), after: startIndex) {
                     formatter.removeTokens(inRange: 0 ... endIndex)
                     if let linebreakIndex = formatter.index(of: .linebreak, after: -1) {

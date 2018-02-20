@@ -583,4 +583,23 @@ extension FormatOptions.Descriptor {
                                                      fromOptions: { options in
                                                          options.removeSelf ? "remove" : "insert"
     })
+    static let experimentalRules = FormatOptions.Descriptor(id: "experimental-rules",
+                                                            argumentName: "experimental",
+                                                            propertyName: "experimentalRules",
+                                                            name: "experimentalRules",
+                                                            type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
+                                                            defaultArgument: "disabled",
+                                                            toOptions: { input, options in
+                                                                switch input.lowercased() {
+                                                                case "enabled", "true":
+                                                                    options.experimentalRules = true
+                                                                case "disabled", "false":
+                                                                    options.experimentalRules = false
+                                                                default:
+                                                                    throw FormatError.options("")
+                                                                }
+                                                            },
+                                                            fromOptions: { options in
+                                                                options.experimentalRules ? "enabled" : "disabled"
+    })
 }

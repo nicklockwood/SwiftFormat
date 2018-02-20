@@ -803,10 +803,10 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.hexGrouping.argumentName] = FormatOptions.Descriptor.hexGrouping.fromOptions(options)
             case FormatOptions.Descriptor.letPatternPlacement.propertyName:
                 args[FormatOptions.Descriptor.letPatternPlacement.argumentName] = FormatOptions.Descriptor.letPatternPlacement.fromOptions(options)
-            case "elseOnNextLine":
-                args["elseposition"] = options.elseOnNextLine ? "next-line" : "same-line"
             case FormatOptions.Descriptor.stripUnusedArguments.propertyName:
                 args[FormatOptions.Descriptor.stripUnusedArguments.argumentName] = FormatOptions.Descriptor.stripUnusedArguments.fromOptions(options)
+            case FormatOptions.Descriptor.elsePosition.propertyName:
+                args[FormatOptions.Descriptor.elsePosition.argumentName] = FormatOptions.Descriptor.elsePosition.fromOptions(options)
             case "removeSelf":
                 args["self"] = options.removeSelf ? "remove" : "insert"
             case "experimentalRules":
@@ -919,6 +919,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.hexGrouping,
         FormatOptions.Descriptor.letPatternPlacement,
         FormatOptions.Descriptor.stripUnusedArguments,
+        FormatOptions.Descriptor.elsePosition,
     ]
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
@@ -949,16 +950,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           handler: deprecationHandler)
     }
 
-    try processOption("elseposition", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "nextline", "next-line":
-            options.elseOnNextLine = true
-        case "sameline", "same-line":
-            options.elseOnNextLine = false
-        default:
-            throw FormatError.options("")
-        }
-    }
     try processOption("self", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "remove":

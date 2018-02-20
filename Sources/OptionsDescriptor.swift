@@ -545,4 +545,23 @@ extension FormatOptions.Descriptor {
                                                                fromOptions: { options in
                                                                    options.stripUnusedArguments.rawValue
     })
+    static let elsePosition = FormatOptions.Descriptor(id: "else-position",
+                                                       argumentName: "elseposition",
+                                                       propertyName: "elseOnNextLine",
+                                                       name: "elsePosition",
+                                                       type: .binary(true: ["next-line", "nextline"], false: ["same-line", "sameline"]),
+                                                       defaultArgument: "same-line",
+                                                       toOptions: { input, options in
+                                                           switch input.lowercased() {
+                                                           case "nextline", "next-line":
+                                                               options.elseOnNextLine = true
+                                                           case "sameline", "same-line":
+                                                               options.elseOnNextLine = false
+                                                           default:
+                                                               throw FormatError.options("")
+                                                           }
+                                                       },
+                                                       fromOptions: { options in
+                                                           options.elseOnNextLine ? "next-line" : "same-line"
+    })
 }

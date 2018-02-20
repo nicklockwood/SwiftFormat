@@ -511,4 +511,23 @@ extension FormatOptions.Descriptor {
                                                       fromOptions: { options in
                                                           options.hexGrouping.rawValue
     })
+    static let letPatternPlacement = FormatOptions.Descriptor(id: "let-pattern-placement",
+                                                              argumentName: "patternlet",
+                                                              propertyName: "hoistPatternLet",
+                                                              name: "patternLet",
+                                                              type: .binary(true: ["hoist"], false: ["inline"]),
+                                                              defaultArgument: "hoist",
+                                                              toOptions: { input, options in
+                                                                  switch input.lowercased() {
+                                                                  case "hoist":
+                                                                      options.hoistPatternLet = true
+                                                                  case "inline":
+                                                                      options.hoistPatternLet = false
+                                                                  default:
+                                                                      throw FormatError.options("")
+                                                                  }
+                                                              },
+                                                              fromOptions: { options in
+                                                                  options.hoistPatternLet ? "hoist" : "inline"
+    })
 }

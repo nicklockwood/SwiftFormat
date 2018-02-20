@@ -797,12 +797,12 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.decimalGrouping.argumentName] = FormatOptions.Descriptor.decimalGrouping.fromOptions(options)
             case FormatOptions.Descriptor.binaryGrouping.propertyName:
                 args[FormatOptions.Descriptor.binaryGrouping.argumentName] = FormatOptions.Descriptor.binaryGrouping.fromOptions(options)
-            case "hoistPatternLet":
-                args["patternlet"] = options.hoistPatternLet ? "hoist" : "inline"
             case FormatOptions.Descriptor.octalGrouping.propertyName:
                 args[FormatOptions.Descriptor.octalGrouping.argumentName] = FormatOptions.Descriptor.octalGrouping.fromOptions(options)
             case FormatOptions.Descriptor.hexGrouping.propertyName:
                 args[FormatOptions.Descriptor.hexGrouping.argumentName] = FormatOptions.Descriptor.hexGrouping.fromOptions(options)
+            case FormatOptions.Descriptor.letPatternPlacement.propertyName:
+                args[FormatOptions.Descriptor.letPatternPlacement.argumentName] = FormatOptions.Descriptor.letPatternPlacement.fromOptions(options)
             case "stripUnusedArguments":
                 args["stripunusedargs"] = options.stripUnusedArguments.rawValue
             case "elseOnNextLine":
@@ -917,6 +917,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.binaryGrouping,
         FormatOptions.Descriptor.octalGrouping,
         FormatOptions.Descriptor.hexGrouping,
+        FormatOptions.Descriptor.letPatternPlacement,
     ]
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
@@ -953,16 +954,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.elseOnNextLine = true
         case "sameline", "same-line":
             options.elseOnNextLine = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("patternlet", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "hoist":
-            options.hoistPatternLet = true
-        case "inline":
-            options.hoistPatternLet = false
         default:
             throw FormatError.options("")
         }

@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.33.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.2) (2018-02-20)
+
+- The `fileHeader` rule can now be disabled in an individual file by prefixing header with `// swiftformat: disable fileHeader`
+- Fixed a bug in the `specifiers` rule that could mangle code if the previous line ended with certain identifiers
+- Fixed typo in `--insertlines` deprecation warning message
+
 ## [0.33.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.1) (2018-02-10)
 
 - Fixed bug preventing host app rule configuration from being read by the Xcode extension

@@ -809,8 +809,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.elsePosition.argumentName] = FormatOptions.Descriptor.elsePosition.fromOptions(options)
             case FormatOptions.Descriptor.removeSelf.propertyName:
                 args[FormatOptions.Descriptor.removeSelf.argumentName] = FormatOptions.Descriptor.removeSelf.fromOptions(options)
-            case "experimentalRules":
-                args["experimental"] = options.experimentalRules ? "enabled" : nil
+            case FormatOptions.Descriptor.experimentalRules.propertyName:
+                args[FormatOptions.Descriptor.experimentalRules.argumentName] = FormatOptions.Descriptor.experimentalRules.fromOptions(options)
             case "fragment":
                 args["fragment"] = options.fragment ? "true" : nil
             case "ignoreConflictMarkers":
@@ -921,6 +921,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.stripUnusedArguments,
         FormatOptions.Descriptor.elsePosition,
         FormatOptions.Descriptor.removeSelf,
+        FormatOptions.Descriptor.experimentalRules,
     ]
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
@@ -967,16 +968,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             options.fragment = true
         case "false", "disabled":
             options.fragment = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("experimental", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "enabled", "true":
-            options.experimentalRules = true
-        case "disabled", "false":
-            options.experimentalRules = false
         default:
             throw FormatError.options("")
         }

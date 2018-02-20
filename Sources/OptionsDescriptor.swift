@@ -481,4 +481,34 @@ extension FormatOptions.Descriptor {
                                                          fromOptions: { options in
                                                              options.binaryGrouping.rawValue
     })
+    static let octalGrouping = FormatOptions.Descriptor(id: "octal-grouping",
+                                                        argumentName: "octalgrouping",
+                                                        propertyName: "octalGrouping",
+                                                        name: "octalGrouping",
+                                                        type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
+                                                        defaultArgument: "4,8",
+                                                        toOptions: { input, options in
+                                                            guard let grouping = Grouping(rawValue: input.lowercased()) else {
+                                                                throw FormatError.options("")
+                                                            }
+                                                            options.octalGrouping = grouping
+                                                        },
+                                                        fromOptions: { options in
+                                                            options.octalGrouping.rawValue
+    })
+    static let hexGrouping = FormatOptions.Descriptor(id: "hex-grouping",
+                                                      argumentName: "hexgrouping",
+                                                      propertyName: "hexGrouping",
+                                                      name: "hexGrouping",
+                                                      type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
+                                                      defaultArgument: "4,8",
+                                                      toOptions: { input, options in
+                                                          guard let grouping = Grouping(rawValue: input.lowercased()) else {
+                                                              throw FormatError.options("")
+                                                          }
+                                                          options.hexGrouping = grouping
+                                                      },
+                                                      fromOptions: { options in
+                                                          options.hexGrouping.rawValue
+    })
 }

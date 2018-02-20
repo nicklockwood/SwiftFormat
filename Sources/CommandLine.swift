@@ -807,8 +807,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.stripUnusedArguments.argumentName] = FormatOptions.Descriptor.stripUnusedArguments.fromOptions(options)
             case FormatOptions.Descriptor.elsePosition.propertyName:
                 args[FormatOptions.Descriptor.elsePosition.argumentName] = FormatOptions.Descriptor.elsePosition.fromOptions(options)
-            case "removeSelf":
-                args["self"] = options.removeSelf ? "remove" : "insert"
+            case FormatOptions.Descriptor.removeSelf.propertyName:
+                args[FormatOptions.Descriptor.removeSelf.argumentName] = FormatOptions.Descriptor.removeSelf.fromOptions(options)
             case "experimentalRules":
                 args["experimental"] = options.experimentalRules ? "enabled" : nil
             case "fragment":
@@ -910,6 +910,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.letPatternPlacement,
         FormatOptions.Descriptor.stripUnusedArguments,
         FormatOptions.Descriptor.elsePosition,
+        FormatOptions.Descriptor.removeSelf,
     ]
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
@@ -940,16 +941,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           handler: deprecationHandler)
     }
 
-    try processOption("self", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "remove":
-            options.removeSelf = true
-        case "insert":
-            options.removeSelf = false
-        default:
-            throw FormatError.options("")
-        }
-    }
     try processOption("fragment", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "true", "enabled":

@@ -350,6 +350,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.removeSelf)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_experimentalRules() {
+        let sut = FormatOptions.Descriptor.experimentalRules
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "enabled"),
+            (optionValue: false, argumentValue: "disabled"),
+        ]
+        validateSut(sut, id: "experimental-rules", name: "experimentalRules", argumentName: "experimental", propertyName: "experimentalRules")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: false)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.experimentalRules, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.experimentalRules)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

@@ -470,6 +470,26 @@ extension OptionsDescriptorTest {
                             keyPath: \FormatOptions.binaryGrouping)
     }
 
+    func test_octalGrouping() {
+        validateGroupingSut(FormatOptions.Descriptor.octalGrouping,
+                            id: "octal-grouping",
+                            name: "octalGrouping",
+                            argumentName: "octalgrouping",
+                            propertyName: "octalGrouping",
+                            default: "4,8",
+                            keyPath: \FormatOptions.octalGrouping)
+    }
+
+    func test_hexGrouping() {
+        validateGroupingSut(FormatOptions.Descriptor.hexGrouping,
+                            id: "hex-grouping",
+                            name: "hexGrouping",
+                            argumentName: "hexgrouping",
+                            propertyName: "hexGrouping",
+                            default: "4,8",
+                            keyPath: \FormatOptions.hexGrouping)
+    }
+
     func test_indentation() {
         let sut = FormatOptions.Descriptor.indentation
         let validations: [FreeTextValidationExpectation] = [

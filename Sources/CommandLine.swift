@@ -793,12 +793,12 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.decimalGrouping.argumentName] = FormatOptions.Descriptor.decimalGrouping.fromOptions(options)
             case FormatOptions.Descriptor.binaryGrouping.propertyName:
                 args[FormatOptions.Descriptor.binaryGrouping.argumentName] = FormatOptions.Descriptor.binaryGrouping.fromOptions(options)
-            case "octalGrouping":
-                args["octalgrouping"] = options.octalGrouping.rawValue
-            case "hexGrouping":
-                args["hexgrouping"] = options.hexGrouping.rawValue
             case "hoistPatternLet":
                 args["patternlet"] = options.hoistPatternLet ? "hoist" : "inline"
+            case FormatOptions.Descriptor.octalGrouping.propertyName:
+                args[FormatOptions.Descriptor.octalGrouping.argumentName] = FormatOptions.Descriptor.octalGrouping.fromOptions(options)
+            case FormatOptions.Descriptor.hexGrouping.propertyName:
+                args[FormatOptions.Descriptor.hexGrouping.argumentName] = FormatOptions.Descriptor.hexGrouping.fromOptions(options)
             case "stripUnusedArguments":
                 args["stripunusedargs"] = options.stripUnusedArguments.rawValue
             case "elseOnNextLine":
@@ -911,6 +911,8 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.exponentCase,
         FormatOptions.Descriptor.decimalGrouping,
         FormatOptions.Descriptor.binaryGrouping,
+        FormatOptions.Descriptor.octalGrouping,
+        FormatOptions.Descriptor.hexGrouping,
     ]
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
@@ -950,18 +952,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         default:
             throw FormatError.options("")
         }
-    }
-    try processOption("octalgrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.octalGrouping = grouping
-    }
-    try processOption("hexgrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.hexGrouping = grouping
     }
     try processOption("patternlet", in: args, from: &arguments) {
         switch $0.lowercased() {

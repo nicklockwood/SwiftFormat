@@ -311,6 +311,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.uppercaseExponent)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_letPatternPlacement() {
+        let sut = FormatOptions.Descriptor.letPatternPlacement
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "hoist"),
+            (optionValue: false, argumentValue: "inline"),
+        ]
+        validateSut(sut, id: "let-pattern-placement", name: "patternLet", argumentName: "patternlet", propertyName: "hoistPatternLet")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["hoist"], controlFalse: ["inline"], default: true)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.hoistPatternLet, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.hoistPatternLet)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

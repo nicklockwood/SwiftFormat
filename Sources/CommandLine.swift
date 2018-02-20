@@ -803,10 +803,10 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.hexGrouping.argumentName] = FormatOptions.Descriptor.hexGrouping.fromOptions(options)
             case FormatOptions.Descriptor.letPatternPlacement.propertyName:
                 args[FormatOptions.Descriptor.letPatternPlacement.argumentName] = FormatOptions.Descriptor.letPatternPlacement.fromOptions(options)
-            case "stripUnusedArguments":
-                args["stripunusedargs"] = options.stripUnusedArguments.rawValue
             case "elseOnNextLine":
                 args["elseposition"] = options.elseOnNextLine ? "next-line" : "same-line"
+            case FormatOptions.Descriptor.stripUnusedArguments.propertyName:
+                args[FormatOptions.Descriptor.stripUnusedArguments.argumentName] = FormatOptions.Descriptor.stripUnusedArguments.fromOptions(options)
             case "removeSelf":
                 args["self"] = options.removeSelf ? "remove" : "insert"
             case "experimentalRules":
@@ -908,6 +908,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.octalGrouping,
         FormatOptions.Descriptor.hexGrouping,
         FormatOptions.Descriptor.letPatternPlacement,
+        FormatOptions.Descriptor.stripUnusedArguments,
     ]
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
@@ -977,12 +978,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         default:
             throw FormatError.options("")
         }
-    }
-    try processOption("stripunusedargs", in: args, from: &arguments) {
-        guard let type = ArgumentType(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.stripUnusedArguments = type
     }
     try processOption("experimental", in: args, from: &arguments) {
         switch $0.lowercased() {

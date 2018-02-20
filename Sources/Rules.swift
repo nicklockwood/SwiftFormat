@@ -1371,11 +1371,8 @@ extension FormatRules {
             "prefix", "postfix",
         ]
         let validSpecifiers = Set(order)
-        formatter.forEachToken { i, token in
-            guard case let .keyword(string) = token else {
-                return
-            }
-            switch string {
+        formatter.forEach(.keyword) { i, token in
+            switch token.string {
             case "let", "func", "var", "class", "extension", "init", "enum",
                  "struct", "typealias", "subscript", "associatedtype", "protocol":
                 break
@@ -1383,42 +1380,43 @@ extension FormatRules {
                 return
             }
             var specifiers = [String: [Token]]()
-            var index = i - 1
-            var specifierIndex = i
-            loop: while let token = formatter.token(at: index) {
-                switch token {
+            var lastSpecifier: (String, [Token])?
+            var lastIndex = i
+            var previousIndex = lastIndex
+            loop: while let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: lastIndex) {
+                switch formatter.tokens[index] {
                 case let .keyword(string), let .identifier(string):
                     if !validSpecifiers.contains(string) {
                         break loop
                     }
-                    specifiers[string] = [Token](formatter.tokens[index ..< specifierIndex])
-                    specifierIndex = index
+                    lastSpecifier.map { specifiers[$0.0] = $0.1 }
+                    lastSpecifier = (string, [Token](formatter.tokens[index ..< lastIndex]))
+                    previousIndex = lastIndex
+                    lastIndex = index
                 case .endOfScope(")"):
-                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("set") {
-                        // Skip tokens for entire private(set) expression
-                        while let token = formatter.token(at: index) {
-                            if case let .keyword(string) = token,
-                                ["private", "fileprivate", "public", "internal"].contains(string) {
-                                specifiers[string + "(set)"] = [Token](formatter.tokens[index ..< specifierIndex])
-                                specifierIndex = index
-                                break
-                            }
-                            index -= 1
-                        }
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("set"),
+                        let openParenIndex = formatter.index(of: .startOfScope("("), before: index),
+                        let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: openParenIndex),
+                        case let .keyword(string)? = formatter.token(at: index),
+                        ["private", "fileprivate", "public", "internal"].contains(string) {
+                        lastSpecifier.map { specifiers[$0.0] = $0.1 }
+                        lastSpecifier = (string + "(set)", [Token](formatter.tokens[index ..< lastIndex]))
+                        previousIndex = lastIndex
+                        lastIndex = index
+                    } else {
+                        break loop
                     }
-                case .linebreak,
-                     .space,
-                     .commentBody,
-                     .startOfScope("//"),
-                     .startOfScope("/*"),
-                     .endOfScope("*/"):
-                    break
+                case .operator(_, .prefix), .operator(_, .infix):
+                    // Last specifier was invalid
+                    lastSpecifier = nil
+                    lastIndex = previousIndex
+                    fallthrough
                 default:
                     // Not a specifier
                     break loop
                 }
-                index -= 1
             }
+            lastSpecifier.map { specifiers[$0.0] = $0.1 }
             guard specifiers.count > 0 else { return }
             var sortedSpecifiers = [Token]()
             for specifier in order {
@@ -1426,7 +1424,7 @@ extension FormatRules {
                     sortedSpecifiers += tokens
                 }
             }
-            formatter.replaceTokens(inRange: specifierIndex ..< i, with: sortedSpecifiers)
+            formatter.replaceTokens(inRange: lastIndex ..< i, with: sortedSpecifiers)
         }
     }
 

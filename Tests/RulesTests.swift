@@ -2977,6 +2977,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testNoConfusePostfixIdentifierWithKeyword() {
+        let input = "var foo = .postfix\noverride init() {}"
+        let output = "var foo = .postfix\noverride init() {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoConfusePostfixIdentifierWithKeyword2() {
+        let input = "var foo = postfix\noverride init() {}"
+        let output = "var foo = postfix\noverride init() {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: void
 
     func testEmptyParensReturnValueConvertedToVoid() {

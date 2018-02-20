@@ -1174,7 +1174,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             print("`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` instead", as: .warning)
             options.insertBlankLines = true
         case "disabled", "false":
-            print("`--insertlines` option is deprecated. Use `--disable blankLinesBetweenScopes` or `--disbable blankLinesAroundMark` instead", as: .warning)
+            print("`--insertlines` option is deprecated. Use `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead", as: .warning)
             options.insertBlankLines = false
         default:
             throw FormatError.options("")

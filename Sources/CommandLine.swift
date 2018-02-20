@@ -812,9 +812,9 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
             case FormatOptions.Descriptor.experimentalRules.propertyName:
                 args[FormatOptions.Descriptor.experimentalRules.argumentName] = FormatOptions.Descriptor.experimentalRules.fromOptions(options)
             case "fragment":
-                args["fragment"] = options.fragment ? "true" : nil
+                args["fragment"] = options.fragment ? "true" : "false"
             case "ignoreConflictMarkers":
-                args["conflictmarkers"] = options.ignoreConflictMarkers ? "ignore" : nil
+                args["conflictmarkers"] = options.ignoreConflictMarkers ? "ignore" : "reject"
             default:
                 assertionFailure("Unknown option: \(label)")
             }

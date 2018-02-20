@@ -324,6 +324,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.hoistPatternLet)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_elsePosition() {
+        let sut = FormatOptions.Descriptor.elsePosition
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "next-line"),
+            (optionValue: false, argumentValue: "same-line"),
+        ]
+        validateSut(sut, id: "else-position", name: "elsePosition", argumentName: "elseposition", propertyName: "elseOnNextLine")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["next-line", "nextline"], controlFalse: ["same-line", "sameline"], default: false)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.elseOnNextLine, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.elseOnNextLine)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

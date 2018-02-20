@@ -960,9 +960,9 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     }
     try processOption("conflictmarkers", in: args, from: &arguments) {
         switch $0.lowercased() {
-        case "true", "enabled":
+        case "ignore", "true", "enabled":
             options.fragment = true
-        case "false", "disabled":
+        case "reject", "false", "disabled":
             options.fragment = false
         default:
             throw FormatError.options("")

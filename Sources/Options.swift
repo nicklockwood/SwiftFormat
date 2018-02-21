@@ -423,10 +423,6 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         return truncated >= untruncated
     }()
 
-    // We can't infer these yet, so default them to false
-    options.insertBlankLines = false
-    options.removeBlankLines = false
-
     options.allmanBraces = {
         var allman = 0, knr = 0
         formatter.forEach(.startOfScope("{")) { i, _ in

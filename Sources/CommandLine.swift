@@ -794,10 +794,6 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["comments"] = options.indentComments ? "indent" : "ignore"
             case "truncateBlankLines":
                 args["trimwhitespace"] = options.truncateBlankLines ? "always" : "nonblank-lines"
-            case "insertBlankLines":
-                args["insertlines"] = options.insertBlankLines ? "enabled" : "disabled"
-            case "removeBlankLines":
-                args["removelines"] = options.removeBlankLines ? "enabled" : "disabled"
             case "allmanBraces":
                 args["allman"] = options.allmanBraces ? "true" : "false"
             case "fileHeader":
@@ -834,10 +830,15 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args["fragment"] = options.fragment ? "true" : nil
             case "ignoreConflictMarkers":
                 args["conflictmarkers"] = options.ignoreConflictMarkers ? "ignore" : nil
+            case "insertBlankLines", "removeBlankLines":
+                break // Deprecated
             default:
                 assertionFailure("Unknown option: \(label)")
             }
         }
+    }
+    for arg in deprecatedArguments {
+        args[arg] = nil
     }
     return args
 }

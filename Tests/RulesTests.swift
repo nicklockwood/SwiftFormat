@@ -3393,6 +3393,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testParensRemovedBeforeTrailingClosureInsideHashIf() {
+        let input = "#if baz\n    let foo = bar() { /* some code */ }\n#endif"
+        let output = "#if baz\n    let foo = bar { /* some code */ }\n#endif"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testParensNotRemovedBeforeVarBody() {
         let input = "var foo = bar() { didSet {} }"
         let output = "var foo = bar() { didSet {} }"
@@ -3410,6 +3417,20 @@ class RulesTests: XCTestCase {
     func testParensNotRemovedBeforeIfBody() {
         let input = "if let foo = bar() { /* some code */ }"
         let output = "if let foo = bar() { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedBeforeIfBody2() {
+        let input = "if try foo as Bar && baz() { /* some code */ }"
+        let output = "if try foo as Bar && baz() { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedBeforeIfBody3() {
+        let input = "if #selector(foo(_:)) && bar() { /* some code */ }"
+        let output = "if #selector(foo(_:)) && bar() { /* some code */ }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

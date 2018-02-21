@@ -2977,6 +2977,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testNoConfusePostfixIdentifierWithKeyword() {
+        let input = "var foo = .postfix\noverride init() {}"
+        let output = "var foo = .postfix\noverride init() {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoConfusePostfixIdentifierWithKeyword2() {
+        let input = "var foo = postfix\noverride init() {}"
+        let output = "var foo = postfix\noverride init() {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: void
 
     func testEmptyParensReturnValueConvertedToVoid() {
@@ -5577,6 +5591,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testNoStripHeaderIfRuleDisabled() {
+        let input = "// swiftformat:disable fileHeader\n// test\n// swiftformat:enable fileHeader\n\nfunc foo() {}"
+        let output = "// swiftformat:disable fileHeader\n// test\n// swiftformat:enable fileHeader\n\nfunc foo() {}"
+        let options = FormatOptions(fileHeader: "")
+        XCTAssertEqual(try format(input, rules: [FormatRules.byName["fileHeader"]!], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // MARK: redundantInit
 
     func testRemoveRedundantInit() {
@@ -5677,6 +5699,28 @@ class RulesTests: XCTestCase {
         let output = "import lib\nimport Zlib"
         XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    // MARK: duplicateImports
+
+    func testRemoveDuplicateImport() {
+        let input = "import Foundation\nimport Foundation"
+        let output = "import Foundation"
+        XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveDuplicateConditionalImport() {
+        let input = "#if os(iOS)\n    import Foo\n    import Foo\n#else\n    import Bar\n    import Bar\n#endif"
+        let output = "#if os(iOS)\n    import Foo\n#else\n    import Bar\n#endif"
+        XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveDuplicateConditionalAndUnconditionalImport() {
+        let input = "import Foo\n#if os(iOS)\n    import Foo\n    import Bar\n#else\n    import Bar\n    import Baz\n#endif\nimport Bar"
+        let output = "import Foo\n#if os(iOS)\n#else\n    import Baz\n#endif\nimport Bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
     }
 
     // MARK: strongOutlets

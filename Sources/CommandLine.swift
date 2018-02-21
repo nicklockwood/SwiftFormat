@@ -123,13 +123,11 @@ func printHelp() {
     print("--ifdef            #if indenting. \"indent\" (default), \"noindent\" or \"outdent\"")
     print("--indent           number of spaces to indent, or \"tab\" to use tabs")
     print("--indentcase       indent cases inside a switch. \"true\" or \"false\" (default)")
-    print("--insertlines      insert blank line after {. \"enabled\" (default) or \"disabled\"")
     print("--linebreaks       linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
     print("--octalgrouping    octal grouping,threshold or \"none\", \"ignore\". default: 4,8")
     print("--operatorfunc     spacing for operator funcs. \"spaced\" (default) or \"nospace\"")
     print("--patternlet       let/var placement in patterns. \"hoist\" (default) or \"inline\"")
     print("--ranges           spacing for ranges. \"spaced\" (default) or \"nospace\"")
-    print("--removelines      remove blank line before }. \"enabled\" (default) or \"disabled\"")
     print("--semicolons       allow semicolons. \"never\" or \"inline\" (default)")
     print("--self             use self for member variables. \"remove\" (default) or \"insert\"")
     print("--stripunusedargs  \"closure-only\", \"unnamed-only\" or \"always\" (default)")
@@ -757,70 +755,66 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
     for child in Mirror(reflecting: options).children {
         if let label = child.label {
             switch label {
-            case "indent":
-                if options.indent == "\t" {
-                    args["indent"] = "tabs"
-                } else {
-                    args["indent"] = String(options.indent.count)
-                }
+            case FormatOptions.Descriptor.indentation.propertyName:
+                args[FormatOptions.Descriptor.indentation.argumentName] = FormatOptions.Descriptor.indentation.fromOptions(options)
             case FormatOptions.Descriptor.lineBreak.propertyName:
                 args[FormatOptions.Descriptor.lineBreak.argumentName] = FormatOptions.Descriptor.lineBreak.fromOptions(options)
-            case "allowInlineSemicolons":
-                args["semicolons"] = options.allowInlineSemicolons ? "inline" : "never"
-            case "spaceAroundRangeOperators":
-                args["ranges"] = options.spaceAroundRangeOperators ? "spaced" : "nospace"
-            case "spaceAroundOperatorDeclarations":
-                args["operatorfunc"] = options.spaceAroundOperatorDeclarations ? "spaced" : "nospace"
+            case FormatOptions.Descriptor.allowInlineSemicolons.propertyName:
+                args[FormatOptions.Descriptor.allowInlineSemicolons.argumentName] = FormatOptions.Descriptor.allowInlineSemicolons.fromOptions(options)
+            case FormatOptions.Descriptor.spaceAroundRangeOperators.propertyName:
+                args[FormatOptions.Descriptor.spaceAroundRangeOperators.argumentName] = FormatOptions.Descriptor.spaceAroundRangeOperators.fromOptions(options)
+            case FormatOptions.Descriptor.spaceAroundOperatorDeclarations.propertyName:
+                args[FormatOptions.Descriptor.spaceAroundOperatorDeclarations.argumentName] = FormatOptions.Descriptor.spaceAroundOperatorDeclarations.fromOptions(options)
             case FormatOptions.Descriptor.useVoid.propertyName:
                 args[FormatOptions.Descriptor.useVoid.argumentName] = FormatOptions.Descriptor.useVoid.fromOptions(options)
-            case "trailingCommas":
-                args["commas"] = options.trailingCommas ? "always" : "inline"
-            case "indentCase":
-                args["indentcase"] = options.indentCase ? "true" : "false"
-            case "indentComments":
-                args["comments"] = options.indentComments ? "indent" : "ignore"
-            case "truncateBlankLines":
-                args["trimwhitespace"] = options.truncateBlankLines ? "always" : "nonblank-lines"
-            case "insertBlankLines":
-                args["insertlines"] = options.insertBlankLines ? "enabled" : "disabled"
-            case "removeBlankLines":
-                args["removelines"] = options.removeBlankLines ? "enabled" : "disabled"
-            case "allmanBraces":
-                args["allman"] = options.allmanBraces ? "true" : "false"
-            case "fileHeader":
-                args["header"] = options.fileHeader.map { $0.isEmpty ? "strip" : $0 } ?? "ignore"
-            case "ifdefIndent":
-                args["ifdef"] = options.ifdefIndent.rawValue
-            case "wrapArguments":
-                args["wraparguments"] = options.wrapArguments.rawValue
-            case "wrapElements":
-                args["wrapelements"] = options.wrapElements.rawValue
-            case "uppercaseHex":
-                args["hexliteralcase"] = options.uppercaseHex ? "uppercase" : "lowercase"
-            case "uppercaseExponent":
-                args["exponentcase"] = options.uppercaseExponent ? "uppercase" : "lowercase"
+            case FormatOptions.Descriptor.trailingCommas.propertyName:
+                args[FormatOptions.Descriptor.trailingCommas.argumentName] = FormatOptions.Descriptor.trailingCommas.fromOptions(options)
+            case FormatOptions.Descriptor.indentCase.propertyName:
+                args[FormatOptions.Descriptor.indentCase.argumentName] = FormatOptions.Descriptor.indentCase.fromOptions(options)
+            case FormatOptions.Descriptor.indentComments.propertyName:
+                args[FormatOptions.Descriptor.indentComments.argumentName] = FormatOptions.Descriptor.indentComments.fromOptions(options)
+            case FormatOptions.Descriptor.truncateBlankLines.propertyName:
+                args[FormatOptions.Descriptor.truncateBlankLines.argumentName] = FormatOptions.Descriptor.truncateBlankLines.fromOptions(options)
+            case FormatOptions.Descriptor.insertBlankLines.propertyName:
+                args[FormatOptions.Descriptor.insertBlankLines.argumentName] = FormatOptions.Descriptor.insertBlankLines.fromOptions(options)
+            case FormatOptions.Descriptor.removeBlankLines.propertyName:
+                args[FormatOptions.Descriptor.removeBlankLines.argumentName] = FormatOptions.Descriptor.removeBlankLines.fromOptions(options)
+            case FormatOptions.Descriptor.allmanBraces.propertyName:
+                args[FormatOptions.Descriptor.allmanBraces.argumentName] = FormatOptions.Descriptor.allmanBraces.fromOptions(options)
+            case FormatOptions.Descriptor.fileHeader.propertyName:
+                args[FormatOptions.Descriptor.fileHeader.argumentName] = FormatOptions.Descriptor.fileHeader.fromOptions(options)
+            case FormatOptions.Descriptor.ifdefIndent.propertyName:
+                args[FormatOptions.Descriptor.ifdefIndent.argumentName] = FormatOptions.Descriptor.ifdefIndent.fromOptions(options)
+            case FormatOptions.Descriptor.wrapArguments.propertyName:
+                args[FormatOptions.Descriptor.wrapArguments.argumentName] = FormatOptions.Descriptor.wrapArguments.fromOptions(options)
+            case FormatOptions.Descriptor.wrapElements.propertyName:
+                args[FormatOptions.Descriptor.wrapElements.argumentName] = FormatOptions.Descriptor.wrapElements.fromOptions(options)
+            case FormatOptions.Descriptor.hexLiteralCase.propertyName:
+                args[FormatOptions.Descriptor.hexLiteralCase.argumentName] = FormatOptions.Descriptor.hexLiteralCase.fromOptions(options)
+            case FormatOptions.Descriptor.exponentCase.propertyName:
+                args[FormatOptions.Descriptor.exponentCase.argumentName] = FormatOptions.Descriptor.exponentCase.fromOptions(options)
             case FormatOptions.Descriptor.decimalGrouping.propertyName:
                 args[FormatOptions.Descriptor.decimalGrouping.argumentName] = FormatOptions.Descriptor.decimalGrouping.fromOptions(options)
-            case "binaryGrouping":
-                args["binarygrouping"] = options.binaryGrouping.rawValue
-            case "octalGrouping":
-                args["octalgrouping"] = options.octalGrouping.rawValue
-            case "hexGrouping":
-                args["hexgrouping"] = options.hexGrouping.rawValue
-            case "hoistPatternLet":
-                args["patternlet"] = options.hoistPatternLet ? "hoist" : "inline"
-            case "stripUnusedArguments":
-                args["stripunusedargs"] = options.stripUnusedArguments.rawValue
-            case "elseOnNextLine":
-                args["elseposition"] = options.elseOnNextLine ? "next-line" : "same-line"
-            case "removeSelf":
-                args["self"] = options.removeSelf ? "remove" : "insert"
-            case "experimentalRules":
-                args["experimental"] = options.experimentalRules ? "enabled" : nil
+            case FormatOptions.Descriptor.binaryGrouping.propertyName:
+                args[FormatOptions.Descriptor.binaryGrouping.argumentName] = FormatOptions.Descriptor.binaryGrouping.fromOptions(options)
+            case FormatOptions.Descriptor.octalGrouping.propertyName:
+                args[FormatOptions.Descriptor.octalGrouping.argumentName] = FormatOptions.Descriptor.octalGrouping.fromOptions(options)
+            case FormatOptions.Descriptor.hexGrouping.propertyName:
+                args[FormatOptions.Descriptor.hexGrouping.argumentName] = FormatOptions.Descriptor.hexGrouping.fromOptions(options)
+            case FormatOptions.Descriptor.letPatternPlacement.propertyName:
+                args[FormatOptions.Descriptor.letPatternPlacement.argumentName] = FormatOptions.Descriptor.letPatternPlacement.fromOptions(options)
+            case FormatOptions.Descriptor.stripUnusedArguments.propertyName:
+                args[FormatOptions.Descriptor.stripUnusedArguments.argumentName] = FormatOptions.Descriptor.stripUnusedArguments.fromOptions(options)
+            case FormatOptions.Descriptor.elsePosition.propertyName:
+                args[FormatOptions.Descriptor.elsePosition.argumentName] = FormatOptions.Descriptor.elsePosition.fromOptions(options)
+            case FormatOptions.Descriptor.removeSelf.propertyName:
+                args[FormatOptions.Descriptor.removeSelf.argumentName] = FormatOptions.Descriptor.removeSelf.fromOptions(options)
+            case FormatOptions.Descriptor.experimentalRules.propertyName:
+                args[FormatOptions.Descriptor.experimentalRules.argumentName] = FormatOptions.Descriptor.experimentalRules.fromOptions(options)
             case "fragment":
-                args["fragment"] = options.fragment ? "true" : nil
+                args["fragment"] = options.fragment ? "true" : "false"
             case "ignoreConflictMarkers":
-                args["conflictmarkers"] = options.ignoreConflictMarkers ? "ignore" : nil
+                args["conflictmarkers"] = options.ignoreConflictMarkers ? "ignore" : "reject"
             default:
                 assertionFailure("Unknown option: \(label)")
             }
@@ -892,9 +886,32 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     var arguments = Set(formatArguments)
 
     let optionsToProcess = [
+        FormatOptions.Descriptor.indentation,
         FormatOptions.Descriptor.lineBreak,
+        FormatOptions.Descriptor.allowInlineSemicolons,
+        FormatOptions.Descriptor.spaceAroundRangeOperators,
+        FormatOptions.Descriptor.spaceAroundOperatorDeclarations,
         FormatOptions.Descriptor.useVoid,
+        FormatOptions.Descriptor.indentCase,
+        FormatOptions.Descriptor.trailingCommas,
+        FormatOptions.Descriptor.indentComments,
+        FormatOptions.Descriptor.truncateBlankLines,
+        FormatOptions.Descriptor.allmanBraces,
+        FormatOptions.Descriptor.fileHeader,
+        FormatOptions.Descriptor.ifdefIndent,
+        FormatOptions.Descriptor.wrapArguments,
+        FormatOptions.Descriptor.wrapElements,
+        FormatOptions.Descriptor.hexLiteralCase,
+        FormatOptions.Descriptor.exponentCase,
         FormatOptions.Descriptor.decimalGrouping,
+        FormatOptions.Descriptor.binaryGrouping,
+        FormatOptions.Descriptor.octalGrouping,
+        FormatOptions.Descriptor.hexGrouping,
+        FormatOptions.Descriptor.letPatternPlacement,
+        FormatOptions.Descriptor.stripUnusedArguments,
+        FormatOptions.Descriptor.elsePosition,
+        FormatOptions.Descriptor.removeSelf,
+        FormatOptions.Descriptor.experimentalRules,
     ]
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
@@ -903,237 +920,28 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           to: &options,
                           handler: opt.toOptions)
     }
-    try processOption("indent", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "tab", "tabs", "tabbed":
-            options.indent = "\t"
-        default:
-            if let spaces = Int($0) {
-                options.indent = String(repeating: " ", count: spaces)
-                break
+
+    let deprecatedOptionsToProcess = [
+        FormatOptions.Descriptor.insertBlankLines,
+        FormatOptions.Descriptor.removeBlankLines,
+    ]
+    for opt in deprecatedOptionsToProcess {
+        let deprecationHandler: (String, inout FormatOptions) throws -> Void = { string, options in
+            //  FIXME: Have the deprecation Message Stored somewhere
+            print("DEPRECATION MESSAGE for the OPTION.", as: .warning)
+            do {
+                try opt.toOptions(string, &options)
+            } catch let err {
+                throw err
             }
-            throw FormatError.options("")
         }
+        try processOption(opt.argumentName,
+                          in: args,
+                          from: &arguments,
+                          to: &options,
+                          handler: deprecationHandler)
     }
-    try processOption("indentcase", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "true":
-            options.indentCase = true
-        case "false":
-            options.indentCase = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("allman", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "true", "enabled":
-            options.allmanBraces = true
-        case "false", "disabled":
-            options.allmanBraces = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("semicolons", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "inline":
-            options.allowInlineSemicolons = true
-        case "never", "false":
-            options.allowInlineSemicolons = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("commas", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "always", "true":
-            options.trailingCommas = true
-        case "inline", "false":
-            options.trailingCommas = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("comments", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "indent", "indented":
-            options.indentComments = true
-        case "ignore":
-            options.indentComments = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("ranges", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "space", "spaced", "spaces":
-            options.spaceAroundRangeOperators = true
-        case "nospace":
-            options.spaceAroundRangeOperators = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("operatorfunc", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "space", "spaced", "spaces":
-            options.spaceAroundOperatorDeclarations = true
-        case "nospace":
-            options.spaceAroundOperatorDeclarations = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("elseposition", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "nextline", "next-line":
-            options.elseOnNextLine = true
-        case "sameline", "same-line":
-            options.elseOnNextLine = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("trimwhitespace", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "always":
-            options.truncateBlankLines = true
-        case "nonblank-lines", "nonblank", "non-blank-lines", "non-blank",
-             "nonempty-lines", "nonempty", "non-empty-lines", "non-empty":
-            options.truncateBlankLines = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("insertlines", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "enabled", "true":
-            options.insertBlankLines = true
-        case "disabled", "false":
-            options.insertBlankLines = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("removelines", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "enabled", "true":
-            options.removeBlankLines = true
-        case "disabled", "false":
-            options.removeBlankLines = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("header", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "strip":
-            options.fileHeader = ""
-        case "ignore":
-            options.fileHeader = nil
-        default:
-            // Normalize the header
-            let header = $0.trimmingCharacters(in: .whitespacesAndNewlines)
-            let isMultiline = header.hasPrefix("/*")
-            var lines = header.components(separatedBy: "\\n")
-            lines = lines.flatMap {
-                var line = $0
-                if !isMultiline, !line.hasPrefix("//") {
-                    line = "//" + line
-                }
-                if let range = line.range(of: "{year}") {
-                    let formatter = DateFormatter()
-                    formatter.dateFormat = "yyyy"
-                    line.replaceSubrange(range, with: formatter.string(from: Date()))
-                }
-                return line
-            }
-            while lines.last?.isEmpty == true {
-                lines.removeLast()
-            }
-            options.fileHeader = lines.joined(separator: "\n")
-        }
-    }
-    try processOption("ifdef", in: args, from: &arguments) {
-        if let mode = IndentMode(rawValue: $0.lowercased()) {
-            options.ifdefIndent = mode
-        } else {
-            throw FormatError.options("")
-        }
-    }
-    try processOption("wraparguments", in: args, from: &arguments) {
-        if let mode = WrapMode(rawValue: $0.lowercased()) {
-            options.wrapArguments = mode
-        } else {
-            throw FormatError.options("")
-        }
-    }
-    try processOption("wrapelements", in: args, from: &arguments) {
-        if let mode = WrapMode(rawValue: $0.lowercased()) {
-            options.wrapElements = mode
-        } else {
-            throw FormatError.options("")
-        }
-    }
-    try processOption("hexliteralcase", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "uppercase", "upper":
-            options.uppercaseHex = true
-        case "lowercase", "lower":
-            options.uppercaseHex = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("exponentcase", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "uppercase", "upper":
-            options.uppercaseExponent = true
-        case "lowercase", "lower":
-            options.uppercaseExponent = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("binarygrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.binaryGrouping = grouping
-    }
-    try processOption("octalgrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.octalGrouping = grouping
-    }
-    try processOption("hexgrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.hexGrouping = grouping
-    }
-    try processOption("patternlet", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "hoist":
-            options.hoistPatternLet = true
-        case "inline":
-            options.hoistPatternLet = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("self", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "remove":
-            options.removeSelf = true
-        case "insert":
-            options.removeSelf = false
-        default:
-            throw FormatError.options("")
-        }
-    }
+
     try processOption("fragment", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "true", "enabled":
@@ -1146,26 +954,10 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     }
     try processOption("conflictmarkers", in: args, from: &arguments) {
         switch $0.lowercased() {
-        case "true", "enabled":
+        case "ignore", "true", "enabled":
             options.fragment = true
-        case "false", "disabled":
+        case "reject", "false", "disabled":
             options.fragment = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("stripunusedargs", in: args, from: &arguments) {
-        guard let type = ArgumentType(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.stripUnusedArguments = type
-    }
-    try processOption("experimental", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "enabled", "true":
-            options.experimentalRules = true
-        case "disabled", "false":
-            options.experimentalRules = false
         default:
             throw FormatError.options("")
         }
@@ -1224,6 +1016,8 @@ let formatArguments = [
 
 let deprecatedArguments = [
     "hexliterals",
+    "insertlines",
+    "removelines",
 ]
 
 let commandLineArguments = [

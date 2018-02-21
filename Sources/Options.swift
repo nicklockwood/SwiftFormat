@@ -46,7 +46,7 @@ public enum WrapMode: String {
 }
 
 /// Argument type for stripping
-public enum ArgumentType: String {
+public enum ArgumentStrippingMode: String {
     case unnamedOnly = "unnamed-only"
     case closureOnly = "closure-only"
     case all = "always"
@@ -134,7 +134,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var octalGrouping: Grouping
     public var hexGrouping: Grouping
     public var hoistPatternLet: Bool
-    public var stripUnusedArguments: ArgumentType
+    public var stripUnusedArguments: ArgumentStrippingMode
     public var elseOnNextLine: Bool
     public var removeSelf: Bool
     public var experimentalRules: Bool
@@ -167,7 +167,7 @@ public struct FormatOptions: CustomStringConvertible {
                 octalGrouping: Grouping = .group(4, 8),
                 hexGrouping: Grouping = .group(4, 8),
                 hoistPatternLet: Bool = true,
-                stripUnusedArguments: ArgumentType = .all,
+                stripUnusedArguments: ArgumentStrippingMode = .all,
                 elseOnNextLine: Bool = false,
                 removeSelf: Bool = true,
                 experimentalRules: Bool = false,
@@ -211,93 +211,6 @@ public struct FormatOptions: CustomStringConvertible {
             "\($0.value);".addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? ""
         }).joined()
     }
-}
-
-extension FormatOptions {
-    struct Descriptor {
-        enum ArgumentType {
-            case binary(true: [String], false: [String]) // index 0 should be the official value, while others are tolerable values
-            case list([String])
-            case freeText(validationStrategy: (String) -> Bool)
-        }
-
-        let id: String //  argumentName & propertyName can change overtime, `id` should be timeless
-        let argumentName: String
-        let propertyName: String
-        let name: String
-        let type: ArgumentType
-        let defaultArgument: String
-        let toOptions: (String, inout FormatOptions) throws -> Void
-        let fromOptions: (FormatOptions) -> String
-    }
-}
-
-extension FormatOptions.Descriptor {
-    static let useVoid = FormatOptions.Descriptor(id: "void-representation",
-                                                  argumentName: "empty",
-                                                  propertyName: "useVoid",
-                                                  name: "empty",
-                                                  type: .binary(true: ["void"], false: ["tuple", "tuples"]),
-                                                  defaultArgument: "void",
-                                                  toOptions: { input, options in
-                                                      switch input.lowercased() {
-                                                      case "void":
-                                                          options.useVoid = true
-                                                      case "tuple", "tuples":
-                                                          options.useVoid = false
-                                                      default:
-                                                          throw FormatError.options("")
-                                                      }
-                                                  },
-                                                  fromOptions: { options in
-                                                      options.useVoid ? "void" : "tuples"
-    })
-    static let lineBreak = FormatOptions.Descriptor(id: "linebreak-character",
-                                                    argumentName: "linebreaks",
-                                                    propertyName: "linebreak",
-                                                    name: "linebreak",
-                                                    type: .list(["cr", "lf", "crlf"]),
-                                                    defaultArgument: "lf",
-                                                    toOptions: { input, options in
-                                                        switch input.lowercased() {
-                                                        case "cr":
-                                                            options.linebreak = "\r"
-                                                        case "lf":
-                                                            options.linebreak = "\n"
-                                                        case "crlf":
-                                                            options.linebreak = "\r\n"
-                                                        default:
-                                                            throw FormatError.options("")
-                                                        }
-                                                    },
-                                                    fromOptions: { options in
-                                                        let result: String
-                                                        switch options.linebreak {
-                                                        case "\r":
-                                                            result = "cr"
-                                                        case "\n":
-                                                            result = "lf"
-                                                        case "\r\n":
-                                                            result = "crlf"
-                                                        default:
-                                                            result = "lf"
-                                                        }
-                                                        return result
-    })
-
-    static let decimalGrouping = FormatOptions.Descriptor(id: "decimal-grouping",
-                                                          argumentName: "decimalgrouping",
-                                                          propertyName: "decimalGrouping",
-                                                          name: "decimalGrouping",
-                                                          type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
-                                                          defaultArgument: "3,6",
-                                                          toOptions: { input, options in
-                                                              guard let grouping = Grouping(rawValue: input.lowercased()) else {
-                                                                  throw FormatError.options("")
-                                                              }
-                                                              options.decimalGrouping = grouping
-                                                          },
-                                                          fromOptions: { $0.decimalGrouping.rawValue })
 }
 
 /// Infer default options by examining the existing source

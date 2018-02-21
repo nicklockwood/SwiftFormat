@@ -3228,6 +3228,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testsTupleNotUnwrapped() {
+        let input = "tuple = (1, 2)"
+        let output = "tuple = (1, 2)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testsTupleOfClosuresNotUnwrapped() {
+        let input = "tuple = ({}, {})"
+        let output = "tuple = ({}, {})"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testSwitchTupleNotUnwrapped() {
         let input = "switch (x, y) {}"
         let output = "switch (x, y) {}"

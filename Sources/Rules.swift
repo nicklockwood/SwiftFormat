@@ -1631,8 +1631,9 @@ extension FormatRules {
                 removeParen(at: i)
             case .operator(_, .infix):
                 guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
-                    formatter.next(.nonSpaceOrComment, after: i) == .startOfScope("{"),
-                    formatter.last(.nonSpaceOrComment, before: closingIndex) == .endOfScope("}") else {
+                    let nextIndex = formatter.index(of: .nonSpaceOrComment, after: i, if: { $0 == .startOfScope("{") }),
+                    let lastIndex = formatter.index(of: .endOfScope("}"), after: nextIndex),
+                    formatter.index(of: .nonSpaceOrComment, before: closingIndex) == lastIndex else {
                     fallthrough
                 }
                 removeParen(at: closingIndex)

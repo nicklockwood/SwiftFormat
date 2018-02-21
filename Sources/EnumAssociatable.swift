@@ -1,8 +1,8 @@
 //
-//  RuleSelectionTableCellView.swift
-//  SwiftFormat for Xcode
+//  EnumAssociatable.swift
+//  SwiftFormat
 //
-//  Created by Vincent Bernier on 28/01/18.
+//  Created by Vincent Bernier on 13-02-18.
 //  Copyright © 2018 Nick Lockwood.
 //
 //  Distributed under the permissive MIT license
@@ -29,31 +29,20 @@
 //  SOFTWARE.
 //
 
-import Cocoa
+import Foundation
 
-final class RuleSelectionTableCellView: NSTableCellView {
-    @IBOutlet var checkbox: NSButton!
-
-    @IBAction func toggleRuleValue(_ sender: NSButton) {
-        guard let model = objectValue as? RulesViewController.RuleViewModel else {
-            return
-        }
-
-        model.isEnabled = (sender.state == .on)
-    }
-
-    override var objectValue: Any? {
-        didSet {
-            guard let ruleViewModel = objectValue as? RulesViewController.RuleViewModel else {
-                return
-            }
-
-            checkbox.title = ruleViewModel.name
-            checkbox.state = ruleViewModel.isEnabled ? .on : .off
-        }
-    }
+protocol EnumAssociatable {
+    func associatedValue<T>() -> T?
 }
 
-extension NSUserInterfaceItemIdentifier {
-    static let ruleSelectionTableCellView = NSUserInterfaceItemIdentifier(rawValue: "RuleSelectionTableCellView")
+extension EnumAssociatable {
+    func associatedValue<T>() -> T {
+        let enumMirror = Mirror(reflecting: self)
+        precondition(enumMirror.displayStyle == Mirror.DisplayStyle.enum, "Can only be apply to an Enum")
+        let enumAssociatedValue = enumMirror.children.first?.value
+        let result = enumAssociatedValue as! T
+        let resultMirror = Mirror(reflecting: result)
+        precondition(!resultMirror.description.contains("->"), "Don't work when the associated value is a closure. The closure won't behave properly. Use a 'case' to retreive the value")
+        return result
+    }
 }

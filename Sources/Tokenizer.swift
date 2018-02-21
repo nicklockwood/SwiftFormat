@@ -77,6 +77,7 @@ public enum TokenType {
     case endOfScope
     case keyword
     case identifier
+    case attribute
     case `operator`
     case unwrapOperator
     case rangeOperator
@@ -236,6 +237,8 @@ public enum Token: Equatable {
             return isIdentifier
         case .identifierOrKeyword:
             return isIdentifierOrKeyword
+        case .attribute:
+            return isAttribute
         case .operator:
             return isOperator
         case .unwrapOperator:
@@ -306,6 +309,7 @@ public enum Token: Equatable {
         return match(with: token) != .none
     }
 
+    public var isAttribute: Bool { return isKeyword && string.hasPrefix("@") }
     public var isOperator: Bool { return hasType(of: .operator("", .none)) }
     public var isUnwrapOperator: Bool { return isOperator("?") || isOperator("!") }
     public var isRangeOperator: Bool { return isOperator("...") || isOperator("..<") }

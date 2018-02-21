@@ -5708,6 +5708,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testSortedImportsOnSameLine() {
+        let input = "import Foo; import Bar\nimport Baz"
+        let output = "import Bar\nimport Baz\nimport Foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testSortedImportsWithSemicolonAndCommentOnSameLine() {
+        let input = "import Foo; // foobar\nimport Bar\nimport Baz"
+        let output = "import Bar\nimport Baz\nimport Foo; // foobar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["semicolons"])), output + "\n")
+    }
+
+    func testSortedImportEnum() {
+        let input = "import enum Foo.baz\nimport Foo.bar"
+        let output = "import Foo.bar\nimport enum Foo.baz"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testAlreadySortedImportsDoesNothing() {
         let input = "import Bar\nimport Foo"
         let output = input
@@ -5725,6 +5746,13 @@ class RulesTests: XCTestCase {
     func testTestableSortedImports() {
         let input = "@testable import Foo3\nimport Bar3"
         let output = "import Bar3\n@testable import Foo3"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testTestableImportsWithTestableOnPreviousLine() {
+        let input = "@testable\nimport Foo3\nimport Bar3"
+        let output = "import Bar3\n@testable\nimport Foo3"
         XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -5755,6 +5783,12 @@ class RulesTests: XCTestCase {
     func testRemoveDuplicateConditionalAndUnconditionalImport() {
         let input = "import Foo\n#if os(iOS)\n    import Foo\n    import Bar\n#else\n    import Bar\n    import Baz\n#endif\nimport Bar"
         let output = "import Foo\n#if os(iOS)\n#else\n    import Baz\n#endif\nimport Bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
+    }
+
+    func testNoRemoveOverlappingImports() {
+        let input = "import MyModule\nimport MyModule.Private"
+        let output = "import MyModule\nimport MyModule.Private"
         XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
     }
 

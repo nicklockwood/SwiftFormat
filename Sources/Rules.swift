@@ -113,10 +113,7 @@ extension FormatRules {
                  "init", "subscript":
                 return false
             default:
-                if let first = keyword.first {
-                    return !"@#".contains(first)
-                }
-                return true
+                return keyword.first.map { !"@#".contains($0) } ?? true
             }
         }
 
@@ -136,7 +133,7 @@ extension FormatRules {
             assert(formatter.tokens[i] == .endOfScope(")"))
             guard let openParenIndex = formatter.index(of: .startOfScope("("), before: i),
                 let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: openParenIndex),
-                case let .keyword(string) = prevToken, string.hasPrefix("@") else { return false }
+                prevToken.isAttribute else { return false }
             return true
         }
 
@@ -2435,7 +2432,7 @@ extension FormatRules {
                 while index > start {
                     let token = formatter.tokens[index]
                     switch token {
-                    case let .keyword(name) where !name.hasPrefix("@") && !name.hasPrefix("#") && name != "inout":
+                    case let .keyword(name) where !token.isAttribute && !name.hasPrefix("#") && name != "inout":
                         return
                     case .endOfScope("}"), .startOfScope("{"):
                         return

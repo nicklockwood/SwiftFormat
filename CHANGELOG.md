@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.33.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.3) (2018-02-21)
+
+- Fixed a bug in the `duplicateImports` rule that caused imports of specific types from the same module to be incorrectly stripped
+- Fixed bugs with how the `duplicateImports` and `sortedImports` rules handle imports separated by semicolons or spanning multiple lines 
+- Fixed a bug with `redundantParens` rule incorrectly removing parens around tuples whose first and last elements were closures
+- Fixed a bug where the `redundantParens` rule incorrectly removed parens inside compound expressions
+
 ## [0.33.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.2) (2018-02-20)
 
 - The `fileHeader` rule can now be disabled in an individual file by prefixing header with `// swiftformat: disable fileHeader`

@@ -264,50 +264,6 @@ extension FormatOptions.Descriptor {
                                                              fromOptions: { options in
                                                                  options.truncateBlankLines ? "always" : "nonblank-lines"
     })
-    static let insertBlankLines = FormatOptions.Descriptor(id: "insert-blank-lines",
-                                                           argumentName: "insertlines",
-                                                           propertyName: "insertBlankLines",
-                                                           name: "insertBlankLines",
-                                                           type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
-                                                           defaultArgument: "enabled",
-                                                           toOptions: { input, options in
-                                                               switch input.lowercased() {
-                                                               case "enabled", "true":
-                                                                   //  FIXME: Need a way to Define DEPRECATION and DEPRECATION's Messages
-//                                                                print("`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` instead", as: .warning)
-                                                                   options.insertBlankLines = true
-                                                               case "disabled", "false":
-//                                                                 print("`--insertlines` option is deprecated. Use `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead", as: .warning)
-                                                                   options.insertBlankLines = false
-                                                               default:
-                                                                   throw FormatError.options("")
-                                                               }
-                                                           },
-                                                           fromOptions: { options in
-                                                               options.insertBlankLines ? "enabled" : "disabled"
-    })
-    static let removeBlankLines = FormatOptions.Descriptor(id: "remove-blank-lines",
-                                                           argumentName: "removelines",
-                                                           propertyName: "removeBlankLines",
-                                                           name: "removeBlankLines",
-                                                           type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
-                                                           defaultArgument: "enabled",
-                                                           toOptions: { input, options in
-                                                               switch input.lowercased() {
-                                                               case "enabled", "true":
-                                                                   //  FIXME: Need a way to Define DEPRECATION and DEPRECATION's Messages
-//                                                                print("`--removelines` option is deprecated. Use `--enable blankLinesAtStartOfScope` or `--enable blankLinesAtEndOfScope` instead", as: .warning)
-                                                                   options.removeBlankLines = true
-                                                               case "disabled", "false":
-//                                                                print("`--removelines` option is deprecated. Use `--disable blankLinesAtStartOfScope` or `--disable blankLinesAtEndOfScope` instead", as: .warning)
-                                                                   options.removeBlankLines = false
-                                                               default:
-                                                                   throw FormatError.options("")
-                                                               }
-                                                           },
-                                                           fromOptions: { options in
-                                                               options.removeBlankLines ? "enabled" : "disabled"
-    })
     static let allmanBraces = FormatOptions.Descriptor(id: "allman-braces",
                                                        argumentName: "allman",
                                                        propertyName: "allmanBraces",
@@ -639,5 +595,70 @@ extension FormatOptions.Descriptor {
                                                                 },
                                                                 fromOptions: { options in
                                                                     options.ignoreConflictMarkers ? "ignore" : "reject"
+    })
+    static let insertBlankLines = FormatOptions.Descriptor(id: "insert-blank-lines",
+                                                           argumentName: "insertlines",
+                                                           propertyName: "insertBlankLines",
+                                                           name: "insertBlankLines",
+                                                           type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
+                                                           defaultArgument: "enabled",
+                                                           toOptions: { input, options in
+                                                               switch input.lowercased() {
+                                                               case "enabled", "true":
+                                                                   //  FIXME: Need a way to Define DEPRECATION and DEPRECATION's Messages
+                                                                   //                                                                print("`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` instead", as: .warning)
+                                                                   options.insertBlankLines = true
+                                                               case "disabled", "false":
+                                                                   //                                                                 print("`--insertlines` option is deprecated. Use `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead", as: .warning)
+                                                                   options.insertBlankLines = false
+                                                               default:
+                                                                   throw FormatError.options("")
+                                                               }
+                                                           },
+                                                           fromOptions: { options in
+                                                               options.insertBlankLines ? "enabled" : "disabled"
+    })
+    static let removeBlankLines = FormatOptions.Descriptor(id: "remove-blank-lines",
+                                                           argumentName: "removelines",
+                                                           propertyName: "removeBlankLines",
+                                                           name: "removeBlankLines",
+                                                           type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
+                                                           defaultArgument: "enabled",
+                                                           toOptions: { input, options in
+                                                               switch input.lowercased() {
+                                                               case "enabled", "true":
+                                                                   //  FIXME: Need a way to Define DEPRECATION and DEPRECATION's Messages
+                                                                   //                                                                print("`--removelines` option is deprecated. Use `--enable blankLinesAtStartOfScope` or `--enable blankLinesAtEndOfScope` instead", as: .warning)
+                                                                   options.removeBlankLines = true
+                                                               case "disabled", "false":
+                                                                   //                                                                print("`--removelines` option is deprecated. Use `--disable blankLinesAtStartOfScope` or `--disable blankLinesAtEndOfScope` instead", as: .warning)
+                                                                   options.removeBlankLines = false
+                                                               default:
+                                                                   throw FormatError.options("")
+                                                               }
+                                                           },
+                                                           fromOptions: { options in
+                                                               options.removeBlankLines ? "enabled" : "disabled"
+    })
+    static let hexliterals_deprecated = FormatOptions.Descriptor(id: "hex-literal-deprecated",
+                                                                 argumentName: "hexliterals",
+                                                                 propertyName: "hexliterals",
+                                                                 name: "hexliterals_deprecated",
+                                                                 type: .binary(true: ["uppercase", "upper"], false: ["lowercase", "lower"]),
+                                                                 defaultArgument: "uppercase",
+                                                                 toOptions: { input, options in
+                                                                     //  FIXME: print("`--hexliterals` option is deprecated. Use `--hexliteralcase` instead", as: .warning)
+
+                                                                     switch input.lowercased() {
+                                                                     case "uppercase", "upper":
+                                                                         options.uppercaseHex = true
+                                                                     case "lowercase", "lower":
+                                                                         options.uppercaseHex = false
+                                                                     default:
+                                                                         throw FormatError.options("")
+                                                                     }
+                                                                 },
+                                                                 fromOptions: { options in
+                                                                     options.uppercaseHex ? "uppercase" : "lowercase"
     })
 }

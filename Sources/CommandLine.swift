@@ -811,13 +811,9 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.fragment.argumentName] = FormatOptions.Descriptor.fragment.fromOptions(options)
             case FormatOptions.Descriptor.ignoreConflictMarkers.propertyName:
                 args[FormatOptions.Descriptor.ignoreConflictMarkers.argumentName] = FormatOptions.Descriptor.ignoreConflictMarkers.fromOptions(options)
-            case "insertBlankLines", "removeBlankLines":
+            case FormatOptions.Descriptor.insertBlankLines.propertyName,
+                 FormatOptions.Descriptor.removeBlankLines.propertyName:
                 break // Deprecated
-            //  FIXME:
-            //                case FormatOptions.Descriptor.insertBlankLines.propertyName:
-            //                args[FormatOptions.Descriptor.insertBlankLines.argumentName] = FormatOptions.Descriptor.insertBlankLines.fromOptions(options)
-            //                case FormatOptions.Descriptor.removeBlankLines.propertyName:
-            //                args[FormatOptions.Descriptor.removeBlankLines.argumentName] = FormatOptions.Descriptor.removeBlankLines.fromOptions(options)
             default:
                 assertionFailure("Unknown option: \(label)")
             }

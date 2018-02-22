@@ -602,4 +602,23 @@ extension FormatOptions.Descriptor {
                                                             fromOptions: { options in
                                                                 options.experimentalRules ? "enabled" : "disabled"
     })
+    static let fragment = FormatOptions.Descriptor(id: "fragment",
+                                                   argumentName: "fragment",
+                                                   propertyName: "fragment",
+                                                   name: "fragment",
+                                                   type: .binary(true: ["true", "enabled"], false: ["false", "disabled"]),
+                                                   defaultArgument: "false",
+                                                   toOptions: { input, options in
+                                                       switch input.lowercased() {
+                                                       case "true", "enabled":
+                                                           options.fragment = true
+                                                       case "false", "disabled":
+                                                           options.fragment = false
+                                                       default:
+                                                           throw FormatError.options("")
+                                                       }
+                                                   },
+                                                   fromOptions: { options in
+                                                       options.fragment ? "true" : "false"
+    })
 }

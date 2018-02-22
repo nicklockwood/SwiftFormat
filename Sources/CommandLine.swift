@@ -936,6 +936,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     let deprecatedOptionsToProcess = [
         FormatOptions.Descriptor.insertBlankLines,
         FormatOptions.Descriptor.removeBlankLines,
+        FormatOptions.Descriptor.hexliterals_deprecated,
     ]
     for opt in deprecatedOptionsToProcess {
         let deprecationHandler: (String, inout FormatOptions) throws -> Void = { string, options in
@@ -954,18 +955,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           handler: deprecationHandler)
     }
 
-    // Deprecated
-    try processOption("hexliterals", in: args, from: &arguments) {
-        print("`--hexliterals` option is deprecated. Use `--hexliteralcase` instead", as: .warning)
-        switch $0.lowercased() {
-        case "uppercase", "upper":
-            options.uppercaseHex = true
-        case "lowercase", "lower":
-            options.uppercaseHex = false
-        default:
-            throw FormatError.options("")
-        }
-    }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return options
 }

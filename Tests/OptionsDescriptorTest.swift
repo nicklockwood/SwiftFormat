@@ -389,6 +389,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.ignoreConflictMarkers)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_hexliterals_deprecated() {
+        let sut = FormatOptions.Descriptor.hexliterals_deprecated
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "uppercase"),
+            (optionValue: false, argumentValue: "lowercase"),
+        ]
+        validateSut(sut, id: "hex-literal-deprecated", name: "hexliterals_deprecated", argumentName: "hexliterals", propertyName: "hexliterals")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"], default: true)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.uppercaseHex, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.uppercaseHex)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

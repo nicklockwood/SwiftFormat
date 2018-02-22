@@ -76,43 +76,71 @@ final class RulesViewController: NSViewController {
 
     private func buildOptions() -> [UserSelectionType] {
         let options = [
+            FormatOptions.Descriptor.indentation,
             FormatOptions.Descriptor.lineBreak,
+            FormatOptions.Descriptor.allowInlineSemicolons,
+            FormatOptions.Descriptor.spaceAroundRangeOperators,
+            FormatOptions.Descriptor.spaceAroundOperatorDeclarations,
             FormatOptions.Descriptor.useVoid,
+            FormatOptions.Descriptor.indentCase,
+            FormatOptions.Descriptor.trailingCommas,
+            FormatOptions.Descriptor.indentComments,
+            FormatOptions.Descriptor.truncateBlankLines,
+            FormatOptions.Descriptor.allmanBraces,
+            FormatOptions.Descriptor.fileHeader,
+            FormatOptions.Descriptor.ifdefIndent,
+            FormatOptions.Descriptor.wrapArguments,
+            FormatOptions.Descriptor.wrapElements,
+            FormatOptions.Descriptor.hexLiteralCase,
+            FormatOptions.Descriptor.exponentCase,
             FormatOptions.Descriptor.decimalGrouping,
+            FormatOptions.Descriptor.binaryGrouping,
+            FormatOptions.Descriptor.octalGrouping,
+            FormatOptions.Descriptor.hexGrouping,
+            FormatOptions.Descriptor.letPatternPlacement,
+            FormatOptions.Descriptor.stripUnusedArguments,
+            FormatOptions.Descriptor.elsePosition,
+            FormatOptions.Descriptor.removeSelf,
+            FormatOptions.Descriptor.experimentalRules,
+            FormatOptions.Descriptor.fragment,
+            FormatOptions.Descriptor.ignoreConflictMarkers,
         ]
 
-        let result = options.map { descriptor -> UserSelectionType in
+        let result = options
+            .sorted { $0.name < $1.name }
+            .map { descriptor -> UserSelectionType in
 
-            switch descriptor.type {
-            case let .binary(t, f):
-                let binary = UserSelectionBinary(identifier: descriptor.propertyName,
+                switch descriptor.type {
+                case let .binary(t, f):
+                    let list = UserSelectionList(identifier: descriptor.id,
                                                  title: descriptor.name,
                                                  description: nil,
-                                                 selection: t.contains(descriptor.defaultArgument),
-                                                 observer: { print("\(descriptor.name) new value == \($0 ? t[0] : f[0])")
-                })
-                return UserSelectionType.binary(binary)
+                                                 selection: descriptor.defaultArgument,
+                                                 options: [t[0], f[0]],
+                                                 observer: { print("\(descriptor.name) new value == \($0)")
+                    })
+                    return UserSelectionType.list(list)
 
-            case let .list(values):
-                let list = UserSelectionList(identifier: descriptor.propertyName,
-                                             title: descriptor.name,
-                                             description: nil,
-                                             selection: descriptor.defaultArgument,
-                                             options: values,
-                                             observer: { print("\(descriptor.name) new value == \($0)")
-                })
-                return UserSelectionType.list(list)
+                case let .list(values):
+                    let list = UserSelectionList(identifier: descriptor.id,
+                                                 title: descriptor.name,
+                                                 description: nil,
+                                                 selection: descriptor.defaultArgument,
+                                                 options: values,
+                                                 observer: { print("\(descriptor.name) new value == \($0)")
+                    })
+                    return UserSelectionType.list(list)
 
-            case let .freeText(validationStrategy: validation):
-                let freeText = UserSelectionFreeText(identifier: descriptor.id,
-                                                     title: descriptor.name,
-                                                     description: nil,
-                                                     selection: descriptor.defaultArgument,
-                                                     observer: { print("\(descriptor.name) new value == \($0)") },
-                                                     validationStrategy: validation)
-                return UserSelectionType.freeText(freeText)
+                case let .freeText(validationStrategy: validation):
+                    let freeText = UserSelectionFreeText(identifier: descriptor.id,
+                                                         title: descriptor.name,
+                                                         description: nil,
+                                                         selection: descriptor.defaultArgument,
+                                                         observer: { print("\(descriptor.name) new value == \($0)") },
+                                                         validationStrategy: validation)
+                    return UserSelectionType.freeText(freeText)
+                }
             }
-        }
 
         return result
     }

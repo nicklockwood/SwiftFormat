@@ -887,36 +887,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     var options = FormatOptions()
     var arguments = Set(formatArguments)
 
-    let optionsToProcess = [
-        FormatOptions.Descriptor.indentation,
-        FormatOptions.Descriptor.lineBreak,
-        FormatOptions.Descriptor.allowInlineSemicolons,
-        FormatOptions.Descriptor.spaceAroundRangeOperators,
-        FormatOptions.Descriptor.spaceAroundOperatorDeclarations,
-        FormatOptions.Descriptor.useVoid,
-        FormatOptions.Descriptor.indentCase,
-        FormatOptions.Descriptor.trailingCommas,
-        FormatOptions.Descriptor.indentComments,
-        FormatOptions.Descriptor.truncateBlankLines,
-        FormatOptions.Descriptor.allmanBraces,
-        FormatOptions.Descriptor.fileHeader,
-        FormatOptions.Descriptor.ifdefIndent,
-        FormatOptions.Descriptor.wrapArguments,
-        FormatOptions.Descriptor.wrapElements,
-        FormatOptions.Descriptor.hexLiteralCase,
-        FormatOptions.Descriptor.exponentCase,
-        FormatOptions.Descriptor.decimalGrouping,
-        FormatOptions.Descriptor.binaryGrouping,
-        FormatOptions.Descriptor.octalGrouping,
-        FormatOptions.Descriptor.hexGrouping,
-        FormatOptions.Descriptor.letPatternPlacement,
-        FormatOptions.Descriptor.stripUnusedArguments,
-        FormatOptions.Descriptor.elsePosition,
-        FormatOptions.Descriptor.removeSelf,
-        FormatOptions.Descriptor.experimentalRules,
-        FormatOptions.Descriptor.fragment,
-        FormatOptions.Descriptor.ignoreConflictMarkers,
-    ]
+    let optionsToProcess = FormatOptions.Descriptor.formats + FormatOptions.Descriptor.files
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
                           in: args,
@@ -925,11 +896,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           handler: opt.toOptions)
     }
 
-    let deprecatedOptionsToProcess = [
-        FormatOptions.Descriptor.insertBlankLines,
-        FormatOptions.Descriptor.removeBlankLines,
-        FormatOptions.Descriptor.hexliterals_deprecated,
-    ]
+    let deprecatedOptionsToProcess = FormatOptions.Descriptor.deprecated
     for opt in deprecatedOptionsToProcess {
         let deprecationHandler: (String, inout FormatOptions) throws -> Void = { string, options in
             //  FIXME: Have the deprecation Message Stored somewhere

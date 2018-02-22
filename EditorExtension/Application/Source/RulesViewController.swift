@@ -75,38 +75,7 @@ final class RulesViewController: NSViewController {
     }
 
     private func buildOptions() -> [UserSelectionType] {
-        let options = [
-            FormatOptions.Descriptor.indentation,
-            FormatOptions.Descriptor.lineBreak,
-            FormatOptions.Descriptor.allowInlineSemicolons,
-            FormatOptions.Descriptor.spaceAroundRangeOperators,
-            FormatOptions.Descriptor.spaceAroundOperatorDeclarations,
-            FormatOptions.Descriptor.useVoid,
-            FormatOptions.Descriptor.indentCase,
-            FormatOptions.Descriptor.trailingCommas,
-            FormatOptions.Descriptor.indentComments,
-            FormatOptions.Descriptor.truncateBlankLines,
-            FormatOptions.Descriptor.allmanBraces,
-            FormatOptions.Descriptor.fileHeader,
-            FormatOptions.Descriptor.ifdefIndent,
-            FormatOptions.Descriptor.wrapArguments,
-            FormatOptions.Descriptor.wrapElements,
-            FormatOptions.Descriptor.hexLiteralCase,
-            FormatOptions.Descriptor.exponentCase,
-            FormatOptions.Descriptor.decimalGrouping,
-            FormatOptions.Descriptor.binaryGrouping,
-            FormatOptions.Descriptor.octalGrouping,
-            FormatOptions.Descriptor.hexGrouping,
-            FormatOptions.Descriptor.letPatternPlacement,
-            FormatOptions.Descriptor.stripUnusedArguments,
-            FormatOptions.Descriptor.elsePosition,
-            FormatOptions.Descriptor.removeSelf,
-            FormatOptions.Descriptor.experimentalRules,
-            FormatOptions.Descriptor.fragment,
-            FormatOptions.Descriptor.ignoreConflictMarkers,
-        ]
-
-        let result = options
+        let result = FormatOptions.Descriptor.formats
             .sorted { $0.name < $1.name }
             .map { descriptor -> UserSelectionType in
 

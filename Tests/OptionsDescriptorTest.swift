@@ -376,6 +376,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.fragment)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_ignoreConflictMarkers() {
+        let sut = FormatOptions.Descriptor.ignoreConflictMarkers
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "ignore"),
+            (optionValue: false, argumentValue: "reject"),
+        ]
+        validateSut(sut, id: "ignore-conflict-markers", name: "ignoreConflictMarkers", argumentName: "conflictmarkers", propertyName: "ignoreConflictMarkers")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["ignore", "true", "enabled"], controlFalse: ["reject", "false", "disabled"], default: false)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.ignoreConflictMarkers, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.ignoreConflictMarkers)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

@@ -621,4 +621,23 @@ extension FormatOptions.Descriptor {
                                                    fromOptions: { options in
                                                        options.fragment ? "true" : "false"
     })
+    static let ignoreConflictMarkers = FormatOptions.Descriptor(id: "ignore-conflict-markers",
+                                                                argumentName: "conflictmarkers",
+                                                                propertyName: "ignoreConflictMarkers",
+                                                                name: "ignoreConflictMarkers",
+                                                                type: .binary(true: ["ignore", "true", "enabled"], false: ["reject", "false", "disabled"]),
+                                                                defaultArgument: "reject",
+                                                                toOptions: { input, options in
+                                                                    switch input.lowercased() {
+                                                                    case "ignore", "true", "enabled":
+                                                                        options.ignoreConflictMarkers = true
+                                                                    case "reject", "false", "disabled":
+                                                                        options.ignoreConflictMarkers = false
+                                                                    default:
+                                                                        throw FormatError.options("")
+                                                                    }
+                                                                },
+                                                                fromOptions: { options in
+                                                                    options.ignoreConflictMarkers ? "ignore" : "reject"
+    })
 }

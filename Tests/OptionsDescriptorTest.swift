@@ -103,12 +103,21 @@ extension OptionsDescriptorTest {
         return Mirror(reflecting: FormatOptions()).children.flatMap { $0.label }
     }
 
-//    let allArguments = Set(formatArguments + fileArguments)
-//    let allOptions = allOptionsPropertyName()
-//    XCTAssertTrue(allOptions.contains(sut.propertyName), "Property Name exist on FormatOptions")
-//    XCTAssertTrue(allArguments.contains(sut.argumentName), "Argument Name exist in declared format and file arguments")
+    func test_allPropertyHaveADescriptor() {
+        let allProperties = Set(allOptionsPropertyName())
+        let allDescriptorWithProperty = FormatOptions.Descriptor.deprecatedWithProperty + FormatOptions.Descriptor.formats + FormatOptions.Descriptor.files
+        let allDescriptorProperty = Set(allDescriptorWithProperty.map { $0.propertyName })
 
-//    Need to have 2 collections : Active & Deprecated... will need to have a way to provide Deprecation Messages
+        XCTAssertEqual(allDescriptorWithProperty.count, allProperties.count, "Property and descriptor have equal count")
+        XCTAssertEqual(allDescriptorProperty, allProperties, "Each property have a descriptor with the same property name")
+    }
+
+    func test_deprecatedPropertyList() {
+        let deprecated = FormatOptions.Descriptor.deprecated
+        let controlArgumentNames = Set(["insertlines", "removelines", "hexliterals"])
+        let sutArgumentNames = Set(deprecated.map { $0.argumentName })
+        XCTAssertEqual(sutArgumentNames, controlArgumentNames, "All deprecated name are represented by a descriptor")
+    }
 }
 
 // MARK: - Binary Options

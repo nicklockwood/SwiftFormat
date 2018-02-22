@@ -51,6 +51,40 @@ extension FormatOptions {
 }
 
 extension FormatOptions.Descriptor {
+    static let formats = [
+        FormatOptions.Descriptor.indentation,
+        FormatOptions.Descriptor.lineBreak,
+        FormatOptions.Descriptor.allowInlineSemicolons,
+        FormatOptions.Descriptor.spaceAroundRangeOperators,
+        FormatOptions.Descriptor.spaceAroundOperatorDeclarations,
+        FormatOptions.Descriptor.useVoid,
+        FormatOptions.Descriptor.indentCase,
+        FormatOptions.Descriptor.trailingCommas,
+        FormatOptions.Descriptor.indentComments,
+        FormatOptions.Descriptor.truncateBlankLines,
+        FormatOptions.Descriptor.allmanBraces,
+        FormatOptions.Descriptor.fileHeader,
+        FormatOptions.Descriptor.ifdefIndent,
+        FormatOptions.Descriptor.wrapArguments,
+        FormatOptions.Descriptor.wrapElements,
+        FormatOptions.Descriptor.hexLiteralCase,
+        FormatOptions.Descriptor.exponentCase,
+        FormatOptions.Descriptor.decimalGrouping,
+        FormatOptions.Descriptor.binaryGrouping,
+        FormatOptions.Descriptor.octalGrouping,
+        FormatOptions.Descriptor.hexGrouping,
+        FormatOptions.Descriptor.letPatternPlacement,
+        FormatOptions.Descriptor.stripUnusedArguments,
+        FormatOptions.Descriptor.elsePosition,
+        FormatOptions.Descriptor.removeSelf,
+        FormatOptions.Descriptor.experimentalRules,
+    ]
+
+    static let files = [
+        FormatOptions.Descriptor.fragment,
+        FormatOptions.Descriptor.ignoreConflictMarkers,
+    ]
+
     static let indentation = FormatOptions.Descriptor(id: "indentation",
                                                       argumentName: "indent",
                                                       propertyName: "indent",
@@ -596,6 +630,22 @@ extension FormatOptions.Descriptor {
                                                                 fromOptions: { options in
                                                                     options.ignoreConflictMarkers ? "ignore" : "reject"
     })
+}
+
+// MARK: - DEPRECATED
+
+extension FormatOptions.Descriptor {
+    static let deprecatedWithProperty = [
+        insertBlankLines,
+        removeBlankLines,
+    ]
+
+    static let deprecatedWithoutProperty = [
+        hexliterals_deprecated,
+    ]
+
+    static let deprecated = deprecatedWithProperty + deprecatedWithoutProperty
+
     static let insertBlankLines = FormatOptions.Descriptor(id: "insert-blank-lines",
                                                            argumentName: "insertlines",
                                                            propertyName: "insertBlankLines",

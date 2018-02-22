@@ -807,8 +807,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.removeSelf.argumentName] = FormatOptions.Descriptor.removeSelf.fromOptions(options)
             case FormatOptions.Descriptor.experimentalRules.propertyName:
                 args[FormatOptions.Descriptor.experimentalRules.argumentName] = FormatOptions.Descriptor.experimentalRules.fromOptions(options)
-            case "fragment":
-                args["fragment"] = options.fragment ? "true" : "false"
+            case FormatOptions.Descriptor.fragment.propertyName:
+                args[FormatOptions.Descriptor.fragment.argumentName] = FormatOptions.Descriptor.fragment.fromOptions(options)
             case "ignoreConflictMarkers":
                 args["conflictmarkers"] = options.ignoreConflictMarkers ? "ignore" : "reject"
             case "insertBlankLines", "removeBlankLines":
@@ -918,6 +918,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.elsePosition,
         FormatOptions.Descriptor.removeSelf,
         FormatOptions.Descriptor.experimentalRules,
+        FormatOptions.Descriptor.fragment,
     ]
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
@@ -948,16 +949,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           handler: deprecationHandler)
     }
 
-    try processOption("fragment", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "true", "enabled":
-            options.fragment = true
-        case "false", "disabled":
-            options.fragment = false
-        default:
-            throw FormatError.options("")
-        }
-    }
     try processOption("conflictmarkers", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "ignore", "true", "enabled":

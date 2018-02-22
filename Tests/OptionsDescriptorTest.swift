@@ -363,6 +363,19 @@ extension OptionsDescriptorTest {
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.experimentalRules)
         validateSutThrowFormatErrorOptions(sut)
     }
+
+    func test_fragment() {
+        let sut = FormatOptions.Descriptor.fragment
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "true"),
+            (optionValue: false, argumentValue: "false"),
+        ]
+        validateSut(sut, id: "fragment", name: "fragment", argumentName: "fragment", propertyName: "fragment")
+        validateArgumentsBinaryType(sut: sut, controlTrue: ["true", "enabled"], controlFalse: ["false", "disabled"], default: false)
+        validateFromOptions(sut: sut, keyPath: \FormatOptions.fragment, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.fragment)
+        validateSutThrowFormatErrorOptions(sut)
+    }
 }
 
 // MARK: - List Options

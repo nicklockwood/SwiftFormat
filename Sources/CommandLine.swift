@@ -809,8 +809,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
                 args[FormatOptions.Descriptor.experimentalRules.argumentName] = FormatOptions.Descriptor.experimentalRules.fromOptions(options)
             case FormatOptions.Descriptor.fragment.propertyName:
                 args[FormatOptions.Descriptor.fragment.argumentName] = FormatOptions.Descriptor.fragment.fromOptions(options)
-            case "ignoreConflictMarkers":
-                args["conflictmarkers"] = options.ignoreConflictMarkers ? "ignore" : "reject"
+            case FormatOptions.Descriptor.ignoreConflictMarkers.propertyName:
+                args[FormatOptions.Descriptor.ignoreConflictMarkers.argumentName] = FormatOptions.Descriptor.ignoreConflictMarkers.fromOptions(options)
             case "insertBlankLines", "removeBlankLines":
                 break // Deprecated
             //  FIXME:
@@ -919,6 +919,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
         FormatOptions.Descriptor.removeSelf,
         FormatOptions.Descriptor.experimentalRules,
         FormatOptions.Descriptor.fragment,
+        FormatOptions.Descriptor.ignoreConflictMarkers,
     ]
     for opt in optionsToProcess {
         try processOption(opt.argumentName,
@@ -949,16 +950,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           handler: deprecationHandler)
     }
 
-    try processOption("conflictmarkers", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "ignore", "true", "enabled":
-            options.fragment = true
-        case "reject", "false", "disabled":
-            options.fragment = false
-        default:
-            throw FormatError.options("")
-        }
-    }
     // Deprecated
     try processOption("hexliterals", in: args, from: &arguments) {
         print("`--hexliterals` option is deprecated. Use `--hexliteralcase` instead", as: .warning)

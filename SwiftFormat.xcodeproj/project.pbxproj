@@ -65,6 +65,8 @@
 		E4872125201D980D0014845E /* MainBinarySelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */; };
 		E4872129201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
 		E487212A201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
+		E4962DE0203F3CD500A02013 /* OptionsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4962DDF203F3CD500A02013 /* OptionsStore.swift */; };
+		E4962DE1203F3CD500A02013 /* OptionsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4962DDF203F3CD500A02013 /* OptionsStore.swift */; };
 		E4E4D3C92033F17C000D7CB1 /* EnumAssociatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3C82033F17C000D7CB1 /* EnumAssociatable.swift */; };
 		E4E4D3CA2033F17C000D7CB1 /* EnumAssociatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3C82033F17C000D7CB1 /* EnumAssociatable.swift */; };
 		E4E4D3CB2033F17C000D7CB1 /* EnumAssociatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3C82033F17C000D7CB1 /* EnumAssociatable.swift */; };
@@ -160,6 +162,7 @@
 		E487211C201D885A0014845E /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
 		E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainBinarySelectionTableCellView.swift; sourceTree = "<group>"; };
 		E4872128201E3DD50014845E /* RulesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesStore.swift; sourceTree = "<group>"; };
+		E4962DDF203F3CD500A02013 /* OptionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsStore.swift; sourceTree = "<group>"; };
 		E4E4D3C82033F17C000D7CB1 /* EnumAssociatable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociatable.swift; sourceTree = "<group>"; };
 		E4E4D3CD2033F1EF000D7CB1 /* EnumAssociatableTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociatableTest.swift; sourceTree = "<group>"; };
 		E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsDescriptor.swift; sourceTree = "<group>"; };
@@ -250,6 +253,7 @@
 				E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */,
 				01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */,
 				E4872128201E3DD50014845E /* RulesStore.swift */,
+				E4962DDF203F3CD500A02013 /* OptionsStore.swift */,
 				01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */,
 				01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */,
 				01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */,
@@ -736,6 +740,7 @@
 				E487211D201D885A0014845E /* RulesViewController.swift in Sources */,
 				E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */,
 				E4872112201D3B860014845E /* Rules.swift in Sources */,
+				E4962DE0203F3CD500A02013 /* OptionsStore.swift in Sources */,
 				E4872113201D3B890014845E /* Formatter.swift in Sources */,
 				E4E4D3CB2033F17C000D7CB1 /* EnumAssociatable.swift in Sources */,
 				E4FABAD7202FEF060065716E /* OptionsDescriptor.swift in Sources */,
@@ -758,6 +763,7 @@
 				9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */,
 				90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */,
 				018541CF1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift in Sources */,
+				E4962DE1203F3CD500A02013 /* OptionsStore.swift in Sources */,
 				9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */,
 				E487212A201E3DD50014845E /* RulesStore.swift in Sources */,
 				01F3DF8E1DB9FD3F00454944 /* Options.swift in Sources */,

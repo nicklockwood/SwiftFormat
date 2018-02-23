@@ -47,12 +47,11 @@ extension SavedOption: Comparable {
 
     static func == (lhs: SavedOption, rhs: SavedOption) -> Bool {
         return lhs.descriptor.id == rhs.descriptor.id &&
-        lhs.descriptor.name == rhs.descriptor.name
+            lhs.descriptor.name == rhs.descriptor.name
     }
 }
 
 extension SavedOption {
-
     private static let mapping: [String: FormatOptions.Descriptor] = {
         let options = FormatOptions.Descriptor.formats + FormatOptions.Descriptor.files + FormatOptions.Descriptor.deprecated
         var dic = [String: FormatOptions.Descriptor]()
@@ -106,7 +105,6 @@ struct OptionsStore {
 // MARK: - Business Rules
 
 extension OptionsStore {
-
     private func setupDefaultValuesIfNeeded() {
         if store.value(forKey: optionsKey) == nil {
             resetOptionsToDefaults()
@@ -159,6 +157,7 @@ extension OptionsStore {
     private func save(_ option: OptionRepresentation) {
         save([option])
     }
+
     /// Save the provided rules
     /// Will only override the options in the params
     private func save(_ options: [OptionRepresentation]) {

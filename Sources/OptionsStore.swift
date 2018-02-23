@@ -87,6 +87,13 @@ struct OptionsStore {
         setupDefaultValuesIfNeeded()
     }
 
+    var formatOptions: FormatOptions {
+        let allOptions = options
+        var formatOptions = FormatOptions()
+        allOptions.forEach { try! $0.descriptor.toOptions($0.argumentValue, &formatOptions) }
+        return formatOptions
+    }
+
     var options: [SavedOption] {
         return load().map(SavedOption.init)
     }

@@ -44,8 +44,7 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         }
 
         // Inspect the whole file to infer the format options
-        var options = inferOptions(from: tokenize(invocation.buffer.completeBuffer))
-        options.indent = indentationString(for: invocation.buffer)
+        var options = OptionsStore().formatOptions
         options.fragment = true
 
         // Grab the selected source to format using entire lines of text

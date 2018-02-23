@@ -71,7 +71,9 @@ extension Rule {
 }
 
 struct RulesStore {
-    private typealias RulesRepresentation = [String: Bool]
+    private typealias RuleName = String
+    private typealias RuleIsEnabled = Bool
+    private typealias RulesRepresentation = [RuleName: RuleIsEnabled]
     private let rulesKey = "rules"
     private let store: UserDefaults
 

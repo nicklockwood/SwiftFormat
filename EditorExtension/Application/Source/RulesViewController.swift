@@ -116,7 +116,7 @@ final class RulesViewController: NSViewController {
                                                          validationStrategy: validation)
                     return UserSelectionType.freeText(freeText)
                 }
-        }
+            }
 
         return result
     }

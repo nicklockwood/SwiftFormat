@@ -82,7 +82,7 @@ final class RulesViewController: NSViewController {
             .map { option -> UserSelectionType in
                 let descriptor = option.descriptor
                 let selection = option.argumentValue
-                let observer: (String) -> Void = {
+                let saveOption: (String) -> Void = {
                     var opt = option
                     opt.argumentValue = $0
                     store.save(opt)
@@ -95,7 +95,7 @@ final class RulesViewController: NSViewController {
                                                  description: nil,
                                                  selection: selection,
                                                  options: [t[0], f[0]],
-                                                 observer: observer)
+                                                 observer: saveOption)
                     return UserSelectionType.list(list)
 
                 case let .list(values):
@@ -104,7 +104,7 @@ final class RulesViewController: NSViewController {
                                                  description: nil,
                                                  selection: selection,
                                                  options: values,
-                                                 observer: observer)
+                                                 observer: saveOption)
                     return UserSelectionType.list(list)
 
                 case let .freeText(validationStrategy: validation):
@@ -112,7 +112,11 @@ final class RulesViewController: NSViewController {
                                                          title: descriptor.name,
                                                          description: nil,
                                                          selection: selection,
-                                                         observer: observer,
+                                                         observer: { input in
+                                                             if validation(input) {
+                                                                 saveOption(input)
+                                                             }
+                                                         },
                                                          validationStrategy: validation)
                     return UserSelectionType.freeText(freeText)
                 }

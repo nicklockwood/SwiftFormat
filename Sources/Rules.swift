@@ -3141,8 +3141,18 @@ private extension FormatRules {
                     var startIndex = formatter.index(before: i, where: {
                         !$0.isAttribute && !$0.isSpaceOrCommentOrLinebreak
                     }) ?? 0
+                    // Don't include header comment
+                    if var referenceIndex = formatter.index(of: .keyword, after: startIndex - 1) {
+                        while let index = formatter.index(of: .linebreak, before: referenceIndex), index > startIndex {
+                            if formatter.last(.nonSpace, before: index)?.isLinebreak ?? true {
+                                startIndex = index
+                                break
+                            }
+                            referenceIndex = index
+                        }
+                    }
                     switch formatter.tokens[startIndex] {
-                    case .keyword("import"):
+                    case .keyword("import"), .startOfScope("//"), .startOfScope("/*"):
                         break
                     case let token where token.isAttribute:
                         break

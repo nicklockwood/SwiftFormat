@@ -5708,6 +5708,34 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testSortedImportsKeepsPreviousCommentWithImport() {
+        let input = "import Foo\n// important comment\n// (very important)\nimport Bar"
+        let output = "// important comment\n// (very important)\nimport Bar\nimport Foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testSortedImportsKeepsPreviousCommentWithImport2() {
+        let input = "// important comment\n// (very important)\nimport Foo\nimport Bar"
+        let output = "import Bar\n// important comment\n// (very important)\nimport Foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testSortedImportsDoesntMoveHeaderComment() {
+        let input = "// header comment\n\nimport Foo\nimport Bar"
+        let output = "// header comment\n\nimport Bar\nimport Foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testSortedImportsDoesntMoveHeaderCommentFollowedByImportComment() {
+        let input = "// header comment\n\n// important comment\nimport Foo\nimport Bar"
+        let output = "// header comment\n\nimport Bar\n// important comment\nimport Foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testSortedImportsOnSameLine() {
         let input = "import Foo; import Bar\nimport Baz"
         let output = "import Bar\nimport Baz\nimport Foo"

@@ -2448,13 +2448,12 @@ extension FormatRules {
                         argNames.removeSubrange(count ..< argNames.count)
                         nameIndexPairs.removeSubrange(count ..< nameIndexPairs.count)
                     case .identifier:
-                        let name = token.unescaped()
                         if argCountStack.count < 3,
                             let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index), [
                                 .delimiter(","), .startOfScope("("), .startOfScope("{"), .endOfScope("]"),
-                            ].contains(prevToken),
-                            let scopeStart = formatter.index(of: .startOfScope, before: index),
+                            ].contains(prevToken), let scopeStart = formatter.index(of: .startOfScope, before: index),
                             ![.startOfScope("["), .startOfScope("<")].contains(formatter.tokens[scopeStart]) {
+                            let name = token.unescaped()
                             if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
                                 let nextToken = formatter.token(at: nextIndex), case .identifier = nextToken {
                                 let internalName = nextToken.unescaped()
@@ -2477,7 +2476,7 @@ extension FormatRules {
                 return
             }
             removeUsed(from: &argNames, with: &nameIndexPairs, in: i + 1 ..< bodyEndIndex)
-            for pair in nameIndexPairs.reversed() {
+            for pair in nameIndexPairs {
                 if case .identifier("_") = formatter.tokens[pair.0], pair.0 != pair.1 {
                     formatter.removeToken(at: pair.1)
                     if formatter.tokens[pair.1 - 1] == .space(" ") {

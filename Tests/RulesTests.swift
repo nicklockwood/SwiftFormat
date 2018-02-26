@@ -4894,16 +4894,16 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testUnusedUnnamedClosureArgument() {
-        let input = "{ (_ foo: Int) in }"
-        let output = "{ (_: Int) in }"
+    func testUnusedUnnamedClosureArguments() {
+        let input = "{ (_ foo: Int, _ bar: Int) in }"
+        let output = "{ (_: Int, _: Int) in }"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testUnusedInoutClosureArgumentIsNotMangled() {
-        let input = "{ (foo: inout Foo) in }"
-        let output = "{ (_: inout Foo) in }"
+    func testUnusedInoutClosureArgumentsNotMangled() {
+        let input = "{ (foo: inout Foo, bar: inout Bar) in }"
+        let output = "{ (_: inout Foo, _: inout Bar) in }"
         XCTAssertEqual(try format(input, rules: [FormatRules.unusedArguments]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

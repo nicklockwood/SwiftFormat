@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.33.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.4) (2018-02-26)
+
+- Fixed a bug in the `unusedArguments` rule that could caused type names to get mangled in closure argument lists
+- Fixed bug in `sortedImports` that could cause import statement to be moved above the file header comment
+
 ## [0.33.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.3) (2018-02-21)
 
 - Fixed a bug in the `duplicateImports` rule that caused imports of specific types from the same module to be incorrectly stripped

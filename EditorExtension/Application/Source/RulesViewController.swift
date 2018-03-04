@@ -33,7 +33,7 @@ import Cocoa
 
 /// Goal: Display Active & Inactive Rules and allow their state to be modified
 final class RulesViewController: NSViewController {
-    private var ruleViewModels = [UserSelectionType]()
+    private var viewModels = [UserSelectionType]()
 
     @IBOutlet var tableView: NSTableView!
 
@@ -50,7 +50,7 @@ final class RulesViewController: NSViewController {
                                                                 title: "Options",
                                                                 description: nil))
 
-        ruleViewModels = [ruleHeader] + allRules + [optionHeader] + allOptions
+        viewModels = [ruleHeader] + allRules + [optionHeader] + allOptions
     }
 
     private func buildRules() -> [UserSelectionType] {
@@ -126,7 +126,7 @@ final class RulesViewController: NSViewController {
     }
 
     func model(forRow row: Int) -> UserSelectionType {
-        return ruleViewModels[row]
+        return viewModels[row]
     }
 }
 
@@ -134,7 +134,7 @@ final class RulesViewController: NSViewController {
 
 extension RulesViewController: NSTableViewDataSource {
     func numberOfRows(in _: NSTableView) -> Int {
-        return ruleViewModels.count
+        return viewModels.count
     }
 
     func tableView(_: NSTableView, objectValueFor _: NSTableColumn?, row: Int) -> Any? {

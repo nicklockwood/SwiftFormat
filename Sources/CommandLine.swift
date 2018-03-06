@@ -903,14 +903,15 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     let deprecatedOptionsToProcess = FormatOptions.Descriptor.deprecated
     for opt in deprecatedOptionsToProcess {
         let deprecationHandler: (String, inout FormatOptions) throws -> Void = { string, options in
-            //  FIXME: Have the deprecation Message Stored somewhere
-            print("DEPRECATION MESSAGE for the OPTION.", as: .warning)
+            let message: String = FormatOptions.Descriptor.deprecatedMessage[opt.id] ?? "Deprecated option \(opt.argumentName), print help for more information"
+            print(message, as: .warning)
             do {
                 try opt.toOptions(string, &options)
             } catch let err {
                 throw err
             }
         }
+
         try processOption(opt.argumentName,
                           in: args,
                           from: &arguments,

@@ -643,8 +643,13 @@ extension FormatOptions.Descriptor {
     static let deprecatedWithoutProperty = [
         hexliterals_deprecated,
     ]
-
     static let deprecated = deprecatedWithProperty + deprecatedWithoutProperty
+
+    static let deprecatedMessage = [
+        insertBlankLines.id: "`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` or `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead.",
+        removeBlankLines.id: "`--removelines` option is deprecated. Use `--enable blankLinesAtStartOfScope` or `--enable blankLinesAtEndOfScope` or `--disable blankLinesAtStartOfScope` or `--disable blankLinesAtEndOfScope` instead",
+        hexliterals_deprecated.id: "`--hexliterals` option is deprecated. Use `--hexliteralcase` instead",
+    ]
 
     static let insertBlankLines = FormatOptions.Descriptor(id: "insert-blank-lines",
                                                            argumentName: "insertlines",
@@ -655,11 +660,8 @@ extension FormatOptions.Descriptor {
                                                            toOptions: { input, options in
                                                                switch input.lowercased() {
                                                                case "enabled", "true":
-                                                                   //  FIXME: Need a way to Define DEPRECATION and DEPRECATION's Messages
-                                                                   //                                                                print("`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` instead", as: .warning)
                                                                    options.insertBlankLines = true
                                                                case "disabled", "false":
-                                                                   //                                                                 print("`--insertlines` option is deprecated. Use `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead", as: .warning)
                                                                    options.insertBlankLines = false
                                                                default:
                                                                    throw FormatError.options("")
@@ -677,11 +679,8 @@ extension FormatOptions.Descriptor {
                                                            toOptions: { input, options in
                                                                switch input.lowercased() {
                                                                case "enabled", "true":
-                                                                   //  FIXME: Need a way to Define DEPRECATION and DEPRECATION's Messages
-                                                                   //                                                                print("`--removelines` option is deprecated. Use `--enable blankLinesAtStartOfScope` or `--enable blankLinesAtEndOfScope` instead", as: .warning)
                                                                    options.removeBlankLines = true
                                                                case "disabled", "false":
-                                                                   //                                                                print("`--removelines` option is deprecated. Use `--disable blankLinesAtStartOfScope` or `--disable blankLinesAtEndOfScope` instead", as: .warning)
                                                                    options.removeBlankLines = false
                                                                default:
                                                                    throw FormatError.options("")

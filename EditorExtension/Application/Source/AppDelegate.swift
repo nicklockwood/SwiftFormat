@@ -86,7 +86,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         dialog.showsResizeIndicator = true
         dialog.allowedFileTypes = [SwiftFormatXcodeConfiguration.fileExtension]
         dialog.allowsMultipleSelection = false
-        print(NSImage.imageTypes)
 
         dialog.beginSheetModal(for: window) { response in
             guard response == .OK, let url = dialog.url else {

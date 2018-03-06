@@ -39,7 +39,16 @@ final class RulesViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupViewModels()
+        NotificationCenter.default.addObserver(self, selector: #selector(didLoadNewConfiguration(_:)), name: .ApplicationDidLoadNewConfiguration, object: nil)
+    }
 
+    @objc private func didLoadNewConfiguration(_: Notification) {
+        setupViewModels()
+        tableView?.reloadData()
+    }
+
+    fileprivate func setupViewModels() {
         let allRules = buildRules()
         let allOptions = buildOptions()
 

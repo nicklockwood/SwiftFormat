@@ -43,7 +43,7 @@ extension UserDefaults {
     }
 }
 
-struct Rule {
+struct Rule: Codable {
     let name: String
     var isEnabled: Bool
 }
@@ -94,14 +94,36 @@ struct RulesStore {
     }
 
     func save(_ rule: Rule) {
+        save([rule])
+    }
+
+    func save(_ rules: [Rule]) {
         var active = Set<String>()
         var disabled = Set<String>()
-        if rule.isEnabled {
-            active.insert(rule.name)
-        } else {
-            disabled.insert(rule.name)
+
+        for rule in rules {
+            if rule.isEnabled {
+                active.insert(rule.name)
+            } else {
+                disabled.insert(rule.name)
+            }
         }
         save(active: active, disabled: disabled)
+    }
+
+    func restore(_ rules: [Rule]) {
+        clear()
+        save(rules)
+        addNewRulesIfNeeded()
+    }
+
+    func resetRulesToDefaults() {
+        let allRuleNames = Set(FormatRules.byName.keys)
+        let disabledRules = Set(FormatRules.disabledByDefault)
+        let activeRules = allRuleNames.subtracting(disabledRules)
+
+        clear()
+        save(active: activeRules, disabled: disabledRules)
     }
 }
 
@@ -115,15 +137,6 @@ extension RulesStore {
         } else {
             addNewRulesIfNeeded()
         }
-    }
-
-    private func resetRulesToDefaults() {
-        let allRuleNames = Set(FormatRules.byName.keys)
-        let disabledRules = Set(FormatRules.disabledByDefault)
-        let activeRules = allRuleNames.subtracting(disabledRules)
-
-        clear()
-        save(active: activeRules, disabled: disabledRules)
     }
 
     private func addNewRulesIfNeeded() {

@@ -36,6 +36,27 @@ struct SavedOption {
     let descriptor: FormatOptions.Descriptor
 }
 
+extension SavedOption: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case argumentValue
+        case descriptorID
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let value = try container.decode(String.self, forKey: .argumentValue)
+        let descriptorID = try container.decode(String.self, forKey: .descriptorID)
+
+        self.init(((id: descriptorID, arg: value)))
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(argumentValue, forKey: .argumentValue)
+        try container.encode(descriptor.id, forKey: .descriptorID)
+    }
+}
+
 extension SavedOption: Comparable {
     static func < (lhs: SavedOption, rhs: SavedOption) -> Bool {
         if lhs == rhs {
@@ -100,6 +121,23 @@ struct OptionsStore {
     func save(_ option: SavedOption) {
         save((id: option.descriptor.id, arg: option.argumentValue))
     }
+
+    func save(_ options: [SavedOption]) {
+        let optRepresentations = options.map { (id: $0.descriptor.id, arg: $0.argumentValue) }
+        save(optRepresentations)
+    }
+
+    func restore(_ options: [SavedOption]) {
+        clear()
+        save(options)
+        addNewOptonsIfNeeded()
+    }
+
+    func resetOptionsToDefaults() {
+        let options = FormatOptions.Descriptor.formats.map { (id: $0.id, arg: $0.defaultArgument) }
+        clear()
+        save(options)
+    }
 }
 
 // MARK: - Business Rules
@@ -111,12 +149,6 @@ extension OptionsStore {
         } else {
             addNewOptonsIfNeeded()
         }
-    }
-
-    private func resetOptionsToDefaults() {
-        let options = FormatOptions.Descriptor.formats.map { (id: $0.id, arg: $0.defaultArgument) }
-        clear()
-        save(options)
     }
 
     private func addNewOptonsIfNeeded() {

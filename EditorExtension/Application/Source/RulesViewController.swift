@@ -156,18 +156,18 @@ extension RulesViewController: NSTableViewDataSource {
 extension RulesViewController: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
         let model = self.model(forRow: row)
-        let ID: NSUserInterfaceItemIdentifier
+        let id: NSUserInterfaceItemIdentifier
         switch model {
         case .none:
-            ID = .headerTableCellView
+            id = .headerTableCellView
         case .binary:
-            ID = .mainBinarySelectionTableCellView
+            id = .mainBinarySelectionTableCellView
         case .list:
-            ID = .listSelectionTableCellView
+            id = .listSelectionTableCellView
         case .freeText:
-            ID = .freeTextTableCellView
+            id = .freeTextTableCellView
         }
 
-        return tableView.makeView(withIdentifier: ID, owner: self)
+        return tableView.makeView(withIdentifier: id, owner: self)
     }
 }

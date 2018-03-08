@@ -31,57 +31,6 @@
 
 import Cocoa
 
-struct SwiftFormatFile: Codable {
-    private struct Version: Codable {
-        let version: Int
-    }
-
-    static let `extension` = "sfxx" //  TODO: Define the official extension
-
-    private let version: Int
-    let rules: [Rule]
-    let options: [SavedOption]
-
-    init(rules: [Rule], options: [SavedOption]) {
-        self.init(version: 1, rules: rules, options: options)
-    }
-
-    private init(version: Int, rules: [Rule], options: [SavedOption]) {
-        self.version = version
-        self.rules = rules
-        self.options = options
-    }
-
-    func encoded() throws -> Data {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
-        let dataToWrite: Data
-        do {
-            dataToWrite = try encoder.encode(self)
-        } catch let error {
-            throw FormatError.writing("Problem while encoding configuration data. [\(error)]")
-        }
-
-        return dataToWrite
-    }
-
-    static func decoded(_ data: Data) throws -> SwiftFormatFile {
-        let decoder = JSONDecoder()
-        let result: SwiftFormatFile
-        do {
-            let version = try decoder.decode(Version.self, from: data)
-            if version.version != 1 {
-                throw FormatError.parsing("Unsupported version number: \(version.version)")
-            }
-            result = try decoder.decode(SwiftFormatFile.self, from: data)
-        } catch let error {
-            throw FormatError.parsing("Problem while decoding data. [\(error)]")
-        }
-
-        return result
-    }
-}
-
 extension NSNotification.Name {
     static let ApplicationDidLoadNewConfiguration = NSNotification.Name("ApplicationDidLoadNewConfiguration")
 }

@@ -35,8 +35,8 @@ struct Version: Codable {
     let version: Int
 }
 
-struct SwiftFormatXcodeConfiguration: Codable {
-    static let fileExtension = "sfxx" //  TODO: Define the official extension
+struct SwiftFormatFile: Codable {
+    static let `extension` = "sfxx" //  TODO: Define the official extension
 
     let version: Int
     let rules: [Rule]
@@ -69,7 +69,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let dialog = NSOpenPanel()
         dialog.title = "Choose a configuration file"
         dialog.showsResizeIndicator = true
-        dialog.allowedFileTypes = [SwiftFormatXcodeConfiguration.fileExtension]
+        dialog.allowedFileTypes = [SwiftFormatFile.extension]
         dialog.allowsMultipleSelection = false
 
         dialog.beginSheetModal(for: window) { response in
@@ -91,7 +91,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 if version.version != 1 {
                     throw FormatError.parsing("Unsupported version number: \(version.version)")
                 }
-                let configuration = try decoder.decode(SwiftFormatXcodeConfiguration.self, from: data)
+                let configuration = try decoder.decode(SwiftFormatFile.self, from: data)
                 RulesStore().restore(configuration.rules)
                 OptionsStore().restore(configuration.options)
 
@@ -110,9 +110,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let conf = SwiftFormatXcodeConfiguration(version: 1,
-                                                 rules: RulesStore().rules,
-                                                 options: OptionsStore().options)
+        let conf = SwiftFormatFile(version: 1,
+                                   rules: RulesStore().rules,
+                                   options: OptionsStore().options)
 
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
@@ -126,7 +126,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let dialog = NSSavePanel()
         dialog.title = "Export Configuration"
-        dialog.nameFieldStringValue = "name.\(SwiftFormatXcodeConfiguration.fileExtension)"
+        dialog.nameFieldStringValue = "name.\(SwiftFormatFile.extension)"
         dialog.beginSheetModal(for: window) { response in
             guard response == .OK, let url = dialog.url else {
                 return

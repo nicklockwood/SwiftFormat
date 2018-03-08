@@ -43,21 +43,6 @@ struct SwiftFormatXcodeConfiguration: Codable {
     let options: [SavedOption]
 }
 
-enum XcodeConfigurationError: Error, CustomStringConvertible, EnumAssociatable {
-    case writing(String)
-    case reading(String)
-    case parsing(String)
-
-    var description: String {
-        let message: String = associatedValue()
-        return message
-    }
-
-    var localizedDescription: String {
-        return description
-    }
-}
-
 extension NSNotification.Name {
     static let ApplicationDidLoadNewConfiguration = NSNotification.Name("ApplicationDidLoadNewConfiguration")
 }
@@ -96,7 +81,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 data = try Data(contentsOf: url)
             } catch let error {
-                self.showError(XcodeConfigurationError.reading("Problem while reading the file \(url). [\(error)]"))
+                self.showError(FormatError.reading("Problem while reading the file \(url). [\(error)]"))
                 return
             }
 
@@ -104,17 +89,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 let version = try decoder.decode(Version.self, from: data)
                 if version.version != 1 {
-                    throw XcodeConfigurationError.parsing("Unsupported version number: \(version.version)")
+                    throw FormatError.parsing("Unsupported version number: \(version.version)")
                 }
                 let configuration = try decoder.decode(SwiftFormatXcodeConfiguration.self, from: data)
                 RulesStore().restore(configuration.rules)
                 OptionsStore().restore(configuration.options)
 
                 NotificationCenter.default.post(name: .ApplicationDidLoadNewConfiguration, object: nil)
-            } catch let error as XcodeConfigurationError {
+            } catch let error as FormatError {
                 self.showError(error)
             } catch let error {
-                self.showError(XcodeConfigurationError.parsing("Problem while decoding file: \(url). [\(error)]"))
+                self.showError(FormatError.parsing("Problem while decoding file: \(url). [\(error)]"))
             }
         }
     }
@@ -135,7 +120,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         do {
             dataToWrite = try encoder.encode(conf)
         } catch let error {
-            self.showError(XcodeConfigurationError.writing("Problem while encoding configuration data. [\(error)]"))
+            self.showError(FormatError.writing("Problem while encoding configuration data. [\(error)]"))
             return
         }
 
@@ -149,7 +134,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 try dataToWrite.write(to: url)
             } catch let error {
-                self.showError(XcodeConfigurationError.writing("Problem while writing configuration to url: \(url). [\(error)]"))
+                self.showError(FormatError.writing("Problem while writing configuration to url: \(url). [\(error)]"))
             }
         }
     }

@@ -31,16 +31,55 @@
 
 import Cocoa
 
-struct Version: Codable {
-    let version: Int
-}
-
 struct SwiftFormatFile: Codable {
+    private struct Version: Codable {
+        let version: Int
+    }
+
     static let `extension` = "sfxx" //  TODO: Define the official extension
 
-    let version: Int
+    private let version: Int
     let rules: [Rule]
     let options: [SavedOption]
+
+    init(rules: [Rule], options: [SavedOption]) {
+        self.init(version: 1, rules: rules, options: options)
+    }
+
+    private init(version: Int, rules: [Rule], options: [SavedOption]) {
+        self.version = version
+        self.rules = rules
+        self.options = options
+    }
+
+    func encoded() throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        let dataToWrite: Data
+        do {
+            dataToWrite = try encoder.encode(self)
+        } catch let error {
+            throw FormatError.writing("Problem while encoding configuration data. [\(error)]")
+        }
+
+        return dataToWrite
+    }
+
+    static func decoded(_ data: Data) throws -> SwiftFormatFile {
+        let decoder = JSONDecoder()
+        let result: SwiftFormatFile
+        do {
+            let version = try decoder.decode(Version.self, from: data)
+            if version.version != 1 {
+                throw FormatError.parsing("Unsupported version number: \(version.version)")
+            }
+            result = try decoder.decode(SwiftFormatFile.self, from: data)
+        } catch let error {
+            throw FormatError.parsing("Problem while decoding data. [\(error)]")
+        }
+
+        return result
+    }
 }
 
 extension NSNotification.Name {
@@ -85,21 +124,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
 
-            let decoder = JSONDecoder()
             do {
-                let version = try decoder.decode(Version.self, from: data)
-                if version.version != 1 {
-                    throw FormatError.parsing("Unsupported version number: \(version.version)")
-                }
-                let configuration = try decoder.decode(SwiftFormatFile.self, from: data)
+                let configuration = try SwiftFormatFile.decoded(data)
                 RulesStore().restore(configuration.rules)
                 OptionsStore().restore(configuration.options)
 
                 NotificationCenter.default.post(name: .ApplicationDidLoadNewConfiguration, object: nil)
-            } catch let error as FormatError {
-                self.showError(error)
             } catch let error {
-                self.showError(FormatError.parsing("Problem while decoding file: \(url). [\(error)]"))
+                self.showError(error)
             }
         }
     }
@@ -110,17 +142,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let conf = SwiftFormatFile(version: 1,
-                                   rules: RulesStore().rules,
-                                   options: OptionsStore().options)
-
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
+        let formatFile = SwiftFormatFile(rules: RulesStore().rules,
+                                         options: OptionsStore().options)
         let dataToWrite: Data
         do {
-            dataToWrite = try encoder.encode(conf)
+            dataToWrite = try formatFile.encoded()
         } catch let error {
-            self.showError(FormatError.writing("Problem while encoding configuration data. [\(error)]"))
+            self.showError(error)
             return
         }
 

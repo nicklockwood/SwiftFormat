@@ -31,10 +31,6 @@
 
 import Cocoa
 
-extension NSNotification.Name {
-    static let ApplicationDidLoadNewConfiguration = NSNotification.Name("ApplicationDidLoadNewConfiguration")
-}
-
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow? {
@@ -126,4 +122,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.alertStyle = .critical
         alert.beginSheetModal(for: window)
     }
+}
+
+extension NSNotification.Name {
+    static let ApplicationDidLoadNewConfiguration = NSNotification.Name("ApplicationDidLoadNewConfiguration")
 }

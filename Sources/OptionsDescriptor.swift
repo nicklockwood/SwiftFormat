@@ -85,10 +85,10 @@ extension FormatOptions.Descriptor {
         FormatOptions.Descriptor.ignoreConflictMarkers,
     ]
 
-    static let indentation = FormatOptions.Descriptor(id: "indentation",
+    static let indentation = FormatOptions.Descriptor(id: "indent",
                                                       argumentName: "indent",
                                                       propertyName: "indent",
-                                                      name: "indent",
+                                                      name: "Indent",
                                                       type: .freeText(validationStrategy: { input in
                                                           let validText = Set<String>(arrayLiteral: "tab", "tabs", "tabbed")
                                                           var result = validText.contains(input.lowercased())
@@ -114,10 +114,10 @@ extension FormatOptions.Descriptor {
                                                           }
                                                           return String(options.indent.count)
     })
-    static let lineBreak = FormatOptions.Descriptor(id: "linebreak-character",
+    static let lineBreak = FormatOptions.Descriptor(id: "linebreaks",
                                                     argumentName: "linebreaks",
                                                     propertyName: "linebreak",
-                                                    name: "linebreak",
+                                                    name: "Linebreaks Character",
                                                     type: .list(["cr", "lf", "crlf"]),
                                                     defaultArgument: "lf",
                                                     toOptions: { input, options in
@@ -146,10 +146,10 @@ extension FormatOptions.Descriptor {
                                                         }
                                                         return result
     })
-    static let allowInlineSemicolons = FormatOptions.Descriptor(id: "allow-inline-semicolons",
+    static let allowInlineSemicolons = FormatOptions.Descriptor(id: "semicolons",
                                                                 argumentName: "semicolons",
                                                                 propertyName: "allowInlineSemicolons",
-                                                                name: "allowInlineSemicolons",
+                                                                name: "Semicolons",
                                                                 type: .binary(true: ["inline"], false: ["never", "false"]),
                                                                 defaultArgument: "inline",
                                                                 toOptions: { input, options in
@@ -165,10 +165,10 @@ extension FormatOptions.Descriptor {
                                                                 fromOptions: { options in
                                                                     options.allowInlineSemicolons ? "inline" : "never"
     })
-    static let spaceAroundRangeOperators = FormatOptions.Descriptor(id: "space-around-range-operators",
+    static let spaceAroundRangeOperators = FormatOptions.Descriptor(id: "ranges",
                                                                     argumentName: "ranges",
                                                                     propertyName: "spaceAroundRangeOperators",
-                                                                    name: "spaceAroundRangeOperators",
+                                                                    name: "Ranges",
                                                                     type: .binary(true: ["space", "spaced", "spaces"], false: ["nospace"]),
                                                                     defaultArgument: "space",
                                                                     toOptions: { input, options in
@@ -184,10 +184,10 @@ extension FormatOptions.Descriptor {
                                                                     fromOptions: { options in
                                                                         options.spaceAroundRangeOperators ? "spaced" : "nospace"
     })
-    static let spaceAroundOperatorDeclarations = FormatOptions.Descriptor(id: "space-around-operator-declarations",
+    static let spaceAroundOperatorDeclarations = FormatOptions.Descriptor(id: "operator-func",
                                                                           argumentName: "operatorfunc",
                                                                           propertyName: "spaceAroundOperatorDeclarations",
-                                                                          name: "spaceAroundOperatorDeclarations",
+                                                                          name: "Operator Func",
                                                                           type: .binary(true: ["space", "spaced", "spaces"], false: ["nospace"]),
                                                                           defaultArgument: "space",
                                                                           toOptions: { input, options in
@@ -203,10 +203,10 @@ extension FormatOptions.Descriptor {
                                                                           fromOptions: { options in
                                                                               options.spaceAroundOperatorDeclarations ? "spaced" : "nospace"
     })
-    static let useVoid = FormatOptions.Descriptor(id: "void-representation",
+    static let useVoid = FormatOptions.Descriptor(id: "empty",
                                                   argumentName: "empty",
                                                   propertyName: "useVoid",
-                                                  name: "empty",
+                                                  name: "Empty",
                                                   type: .binary(true: ["void"], false: ["tuple", "tuples"]),
                                                   defaultArgument: "void",
                                                   toOptions: { input, options in
@@ -225,7 +225,7 @@ extension FormatOptions.Descriptor {
     static let indentCase = FormatOptions.Descriptor(id: "indent-case",
                                                      argumentName: "indentcase",
                                                      propertyName: "indentCase",
-                                                     name: "indentCase",
+                                                     name: "Indent Case",
                                                      type: .binary(true: ["true"], false: ["false"]),
                                                      defaultArgument: "false",
                                                      toOptions: { input, options in
@@ -241,10 +241,10 @@ extension FormatOptions.Descriptor {
                                                      fromOptions: { options in
                                                          options.indentCase ? "true" : "false"
     })
-    static let trailingCommas = FormatOptions.Descriptor(id: "trailing-commas",
+    static let trailingCommas = FormatOptions.Descriptor(id: "commas",
                                                          argumentName: "commas",
                                                          propertyName: "trailingCommas",
-                                                         name: "trailingCommas",
+                                                         name: "Commas",
                                                          type: .binary(true: ["always", "true"], false: ["inline", "false"]),
                                                          defaultArgument: "always",
                                                          toOptions: { input, options in
@@ -260,10 +260,10 @@ extension FormatOptions.Descriptor {
                                                          fromOptions: { options in
                                                              options.trailingCommas ? "always" : "inline"
     })
-    static let indentComments = FormatOptions.Descriptor(id: "indent-comments",
+    static let indentComments = FormatOptions.Descriptor(id: "comments",
                                                          argumentName: "comments",
                                                          propertyName: "indentComments",
-                                                         name: "indentComments",
+                                                         name: "Comments",
                                                          type: .binary(true: ["indent", "indented"], false: ["ignore"]),
                                                          defaultArgument: "indent",
                                                          toOptions: { input, options in
@@ -279,10 +279,10 @@ extension FormatOptions.Descriptor {
                                                          fromOptions: { options in
                                                              options.indentComments ? "indent" : "ignore"
     })
-    static let truncateBlankLines = FormatOptions.Descriptor(id: "truncate-blank-lines",
+    static let truncateBlankLines = FormatOptions.Descriptor(id: "trim-white-space",
                                                              argumentName: "trimwhitespace",
                                                              propertyName: "truncateBlankLines",
-                                                             name: "truncateBlankLines",
+                                                             name: "Trim White Space",
                                                              type: .binary(true: ["always"], false: ["nonblank-lines", "nonblank", "non-blank-lines", "non-blank", "nonempty-lines", "nonempty", "non-empty-lines", "non-empty"]),
                                                              defaultArgument: "always",
                                                              toOptions: { input, options in
@@ -298,10 +298,10 @@ extension FormatOptions.Descriptor {
                                                              fromOptions: { options in
                                                                  options.truncateBlankLines ? "always" : "nonblank-lines"
     })
-    static let allmanBraces = FormatOptions.Descriptor(id: "allman-braces",
+    static let allmanBraces = FormatOptions.Descriptor(id: "allman",
                                                        argumentName: "allman",
                                                        propertyName: "allmanBraces",
-                                                       name: "allmanBraces",
+                                                       name: "Allman Braces",
                                                        type: .binary(true: ["true", "enabled"], false: ["false", "disabled"]),
                                                        defaultArgument: "false",
                                                        toOptions: { input, options in
@@ -317,10 +317,10 @@ extension FormatOptions.Descriptor {
                                                        fromOptions: { options in
                                                            options.allmanBraces ? "true" : "false"
     })
-    static let fileHeader = FormatOptions.Descriptor(id: "file-header",
+    static let fileHeader = FormatOptions.Descriptor(id: "header",
                                                      argumentName: "header",
                                                      propertyName: "fileHeader",
-                                                     name: "fileHeader",
+                                                     name: "Header",
                                                      type: .freeText(validationStrategy: { _ in true }),
                                                      defaultArgument: "ignore",
                                                      toOptions: { input, options in
@@ -355,10 +355,10 @@ extension FormatOptions.Descriptor {
                                                      fromOptions: { options in
                                                          options.fileHeader.map { $0.isEmpty ? "strip" : $0 } ?? "ignore"
     })
-    static let ifdefIndent = FormatOptions.Descriptor(id: "if-def-indent-mode",
+    static let ifdefIndent = FormatOptions.Descriptor(id: "ifdef",
                                                       argumentName: "ifdef",
                                                       propertyName: "ifdefIndent",
-                                                      name: "ifdefIndent",
+                                                      name: "ifdef Indent",
                                                       type: .list(["indent", "noindent", "outdent"]),
                                                       defaultArgument: "indent",
                                                       toOptions: { input, options in
@@ -374,7 +374,7 @@ extension FormatOptions.Descriptor {
     static let wrapArguments = FormatOptions.Descriptor(id: "wrap-arguments",
                                                         argumentName: "wraparguments",
                                                         propertyName: "wrapArguments",
-                                                        name: "wrapArguments",
+                                                        name: "Wrap Arguments",
                                                         type: .list(["beforefirst", "afterfirst", "disabled"]),
                                                         defaultArgument: "disabled",
                                                         toOptions: { input, options in
@@ -390,7 +390,7 @@ extension FormatOptions.Descriptor {
     static let wrapElements = FormatOptions.Descriptor(id: "wrap-elements",
                                                        argumentName: "wrapelements",
                                                        propertyName: "wrapElements",
-                                                       name: "wrapElements",
+                                                       name: "Wrap Elements",
                                                        type: .list(["beforefirst", "afterfirst", "disabled"]),
                                                        defaultArgument: "beforefirst",
                                                        toOptions: { input, options in
@@ -406,7 +406,7 @@ extension FormatOptions.Descriptor {
     static let hexLiteralCase = FormatOptions.Descriptor(id: "hex-literal-case",
                                                          argumentName: "hexliteralcase",
                                                          propertyName: "uppercaseHex",
-                                                         name: "hexLiteralCase",
+                                                         name: "Hex Literal Case",
                                                          type: .binary(true: ["uppercase", "upper"], false: ["lowercase", "lower"]),
                                                          defaultArgument: "uppercase",
                                                          toOptions: { input, options in
@@ -425,7 +425,7 @@ extension FormatOptions.Descriptor {
     static let exponentCase = FormatOptions.Descriptor(id: "exponent-case",
                                                        argumentName: "exponentcase",
                                                        propertyName: "uppercaseExponent",
-                                                       name: "exponentCase",
+                                                       name: "Exponent Case",
                                                        type: .binary(true: ["uppercase", "upper"], false: ["lowercase", "lower"]),
                                                        defaultArgument: "lowercase",
                                                        toOptions: { input, options in
@@ -444,7 +444,7 @@ extension FormatOptions.Descriptor {
     static let decimalGrouping = FormatOptions.Descriptor(id: "decimal-grouping",
                                                           argumentName: "decimalgrouping",
                                                           propertyName: "decimalGrouping",
-                                                          name: "decimalGrouping",
+                                                          name: "Decimal Grouping",
                                                           type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
                                                           defaultArgument: "3,6",
                                                           toOptions: { input, options in
@@ -459,7 +459,7 @@ extension FormatOptions.Descriptor {
     static let binaryGrouping = FormatOptions.Descriptor(id: "binary-grouping",
                                                          argumentName: "binarygrouping",
                                                          propertyName: "binaryGrouping",
-                                                         name: "binaryGrouping",
+                                                         name: "Binary Grouping",
                                                          type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
                                                          defaultArgument: "4,8",
                                                          toOptions: { input, options in
@@ -474,7 +474,7 @@ extension FormatOptions.Descriptor {
     static let octalGrouping = FormatOptions.Descriptor(id: "octal-grouping",
                                                         argumentName: "octalgrouping",
                                                         propertyName: "octalGrouping",
-                                                        name: "octalGrouping",
+                                                        name: "Octal Grouping",
                                                         type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
                                                         defaultArgument: "4,8",
                                                         toOptions: { input, options in
@@ -489,7 +489,7 @@ extension FormatOptions.Descriptor {
     static let hexGrouping = FormatOptions.Descriptor(id: "hex-grouping",
                                                       argumentName: "hexgrouping",
                                                       propertyName: "hexGrouping",
-                                                      name: "hexGrouping",
+                                                      name: "Hex Grouping",
                                                       type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
                                                       defaultArgument: "4,8",
                                                       toOptions: { input, options in
@@ -501,10 +501,10 @@ extension FormatOptions.Descriptor {
                                                       fromOptions: { options in
                                                           options.hexGrouping.rawValue
     })
-    static let letPatternPlacement = FormatOptions.Descriptor(id: "let-pattern-placement",
+    static let letPatternPlacement = FormatOptions.Descriptor(id: "pattern-let",
                                                               argumentName: "patternlet",
                                                               propertyName: "hoistPatternLet",
-                                                              name: "patternLet",
+                                                              name: "Pattern Let",
                                                               type: .binary(true: ["hoist"], false: ["inline"]),
                                                               defaultArgument: "hoist",
                                                               toOptions: { input, options in
@@ -520,10 +520,10 @@ extension FormatOptions.Descriptor {
                                                               fromOptions: { options in
                                                                   options.hoistPatternLet ? "hoist" : "inline"
     })
-    static let stripUnusedArguments = FormatOptions.Descriptor(id: "strip-unused-arguments",
+    static let stripUnusedArguments = FormatOptions.Descriptor(id: "strip-unused-args",
                                                                argumentName: "stripunusedargs",
                                                                propertyName: "stripUnusedArguments",
-                                                               name: "stripUnusedArguments",
+                                                               name: "Strip Unused Arguments",
                                                                type: .list(["unnamed-only", "closure-only", "always"]),
                                                                defaultArgument: "always",
                                                                toOptions: { input, options in
@@ -538,7 +538,7 @@ extension FormatOptions.Descriptor {
     static let elsePosition = FormatOptions.Descriptor(id: "else-position",
                                                        argumentName: "elseposition",
                                                        propertyName: "elseOnNextLine",
-                                                       name: "elsePosition",
+                                                       name: "Else Position",
                                                        type: .binary(true: ["next-line", "nextline"], false: ["same-line", "sameline"]),
                                                        defaultArgument: "same-line",
                                                        toOptions: { input, options in
@@ -554,10 +554,10 @@ extension FormatOptions.Descriptor {
                                                        fromOptions: { options in
                                                            options.elseOnNextLine ? "next-line" : "same-line"
     })
-    static let removeSelf = FormatOptions.Descriptor(id: "remove-self",
+    static let removeSelf = FormatOptions.Descriptor(id: "self",
                                                      argumentName: "self",
                                                      propertyName: "removeSelf",
-                                                     name: "removeSelf",
+                                                     name: "Self",
                                                      type: .binary(true: ["remove"], false: ["insert"]),
                                                      defaultArgument: "remove",
                                                      toOptions: { input, options in
@@ -573,10 +573,10 @@ extension FormatOptions.Descriptor {
                                                      fromOptions: { options in
                                                          options.removeSelf ? "remove" : "insert"
     })
-    static let experimentalRules = FormatOptions.Descriptor(id: "experimental-rules",
+    static let experimentalRules = FormatOptions.Descriptor(id: "experimental",
                                                             argumentName: "experimental",
                                                             propertyName: "experimentalRules",
-                                                            name: "experimentalRules",
+                                                            name: "Experimental Rules",
                                                             type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
                                                             defaultArgument: "disabled",
                                                             toOptions: { input, options in
@@ -595,7 +595,7 @@ extension FormatOptions.Descriptor {
     static let fragment = FormatOptions.Descriptor(id: "fragment",
                                                    argumentName: "fragment",
                                                    propertyName: "fragment",
-                                                   name: "fragment",
+                                                   name: "Fragment",
                                                    type: .binary(true: ["true", "enabled"], false: ["false", "disabled"]),
                                                    defaultArgument: "false",
                                                    toOptions: { input, options in
@@ -611,10 +611,10 @@ extension FormatOptions.Descriptor {
                                                    fromOptions: { options in
                                                        options.fragment ? "true" : "false"
     })
-    static let ignoreConflictMarkers = FormatOptions.Descriptor(id: "ignore-conflict-markers",
+    static let ignoreConflictMarkers = FormatOptions.Descriptor(id: "conflict-markers",
                                                                 argumentName: "conflictmarkers",
                                                                 propertyName: "ignoreConflictMarkers",
-                                                                name: "ignoreConflictMarkers",
+                                                                name: "Conflict Markers",
                                                                 type: .binary(true: ["ignore", "true", "enabled"], false: ["reject", "false", "disabled"]),
                                                                 defaultArgument: "reject",
                                                                 toOptions: { input, options in
@@ -651,10 +651,10 @@ extension FormatOptions.Descriptor {
         hexliterals_deprecated.id: "`--hexliterals` option is deprecated. Use `--hexliteralcase` instead",
     ]
 
-    static let insertBlankLines = FormatOptions.Descriptor(id: "insert-blank-lines",
+    static let insertBlankLines = FormatOptions.Descriptor(id: "insert-lines",
                                                            argumentName: "insertlines",
                                                            propertyName: "insertBlankLines",
-                                                           name: "insertBlankLines",
+                                                           name: "Insert Lines",
                                                            type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
                                                            defaultArgument: "enabled",
                                                            toOptions: { input, options in
@@ -670,10 +670,10 @@ extension FormatOptions.Descriptor {
                                                            fromOptions: { options in
                                                                options.insertBlankLines ? "enabled" : "disabled"
     })
-    static let removeBlankLines = FormatOptions.Descriptor(id: "remove-blank-lines",
+    static let removeBlankLines = FormatOptions.Descriptor(id: "remove-lines",
                                                            argumentName: "removelines",
                                                            propertyName: "removeBlankLines",
-                                                           name: "removeBlankLines",
+                                                           name: "Remove Lines",
                                                            type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
                                                            defaultArgument: "enabled",
                                                            toOptions: { input, options in
@@ -689,7 +689,7 @@ extension FormatOptions.Descriptor {
                                                            fromOptions: { options in
                                                                options.removeBlankLines ? "enabled" : "disabled"
     })
-    static let hexliterals_deprecated = FormatOptions.Descriptor(id: "hex-literal-deprecated",
+    static let hexliterals_deprecated = FormatOptions.Descriptor(id: "hex-literals-deprecated",
                                                                  argumentName: "hexliterals",
                                                                  propertyName: "hexliterals",
                                                                  name: "hexliterals_deprecated",

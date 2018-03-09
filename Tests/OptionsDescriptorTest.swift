@@ -19,9 +19,9 @@ class OptionsDescriptorTest: XCTestCase {
                      propertyName: String,
                      testName: String = #function) {
         XCTAssertEqual(sut.id, id, "\(testName) : id is -> \(id)")
-        XCTAssertEqual(sut.name, name, "\(testName) : id is -> \(name)")
-        XCTAssertEqual(sut.argumentName, argumentName, "\(testName) : id is -> \(argumentName)")
-        XCTAssertEqual(sut.propertyName, propertyName, "\(testName) : id is -> \(propertyName)")
+        XCTAssertEqual(sut.name, name, "\(testName) : Name is -> \(name)")
+        XCTAssertEqual(sut.argumentName, argumentName, "\(testName) : argumentName is -> \(argumentName)")
+        XCTAssertEqual(sut.propertyName, propertyName, "\(testName) : propertyName is -> \(propertyName)")
     }
 
     func validateSutThrowFormatErrorOptions(_ sut: FormatOptions.Descriptor,

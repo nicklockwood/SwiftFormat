@@ -785,10 +785,10 @@ extension FormatRules {
                 default:
                     return true
                 }
-            case .delimiter(","):
+            case .delimiter(","), .delimiter(":"):
                 // For arrays or argument lists, we already indent
                 return ["<", "[", "(", "case"].contains(scopeStack.last?.string ?? "")
-            case .delimiter(":"), .operator(_, .infix), .operator(_, .prefix):
+            case .operator(_, .infix), .operator(_, .prefix):
                 return false
             case .operator("?", .postfix), .operator("!", .postfix):
                 if let prevToken = formatter.token(at: i - 1) {

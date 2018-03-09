@@ -158,7 +158,7 @@ extension OptionsDescriptorTest {
             (optionValue: false, argumentValue: "tuples"),
             (optionValue: true, argumentValue: "void"),
         ]
-        validateSut(sut, id: "void-representation", name: "empty", argumentName: "empty", propertyName: "useVoid")
+        validateSut(sut, id: "empty", name: "Empty", argumentName: "empty", propertyName: "useVoid")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["void"], controlFalse: ["tuple", "tuples"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.useVoid, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.useVoid)
@@ -171,7 +171,7 @@ extension OptionsDescriptorTest {
             (optionValue: false, argumentValue: "never"),
             (optionValue: true, argumentValue: "inline"),
         ]
-        validateSut(sut, id: "allow-inline-semicolons", name: "allowInlineSemicolons", argumentName: "semicolons", propertyName: "allowInlineSemicolons")
+        validateSut(sut, id: "semicolons", name: "Semicolons", argumentName: "semicolons", propertyName: "allowInlineSemicolons")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["inline"], controlFalse: ["never", "false"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.allowInlineSemicolons, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.allowInlineSemicolons)
@@ -184,7 +184,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "spaced"),
             (optionValue: false, argumentValue: "nospace"),
         ]
-        validateSut(sut, id: "space-around-range-operators", name: "spaceAroundRangeOperators", argumentName: "ranges", propertyName: "spaceAroundRangeOperators")
+        validateSut(sut, id: "ranges", name: "Ranges", argumentName: "ranges", propertyName: "spaceAroundRangeOperators")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["space", "spaced", "spaces"], controlFalse: ["nospace"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.spaceAroundRangeOperators, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.spaceAroundRangeOperators)
@@ -197,7 +197,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "spaced"),
             (optionValue: false, argumentValue: "nospace"),
         ]
-        validateSut(sut, id: "space-around-operator-declarations", name: "spaceAroundOperatorDeclarations", argumentName: "operatorfunc", propertyName: "spaceAroundOperatorDeclarations")
+        validateSut(sut, id: "operator-func", name: "Operator Func", argumentName: "operatorfunc", propertyName: "spaceAroundOperatorDeclarations")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["space", "spaced", "spaces"], controlFalse: ["nospace"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.spaceAroundOperatorDeclarations, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.spaceAroundOperatorDeclarations)
@@ -210,7 +210,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "true"),
             (optionValue: false, argumentValue: "false"),
         ]
-        validateSut(sut, id: "indent-case", name: "indentCase", argumentName: "indentcase", propertyName: "indentCase")
+        validateSut(sut, id: "indent-case", name: "Indent Case", argumentName: "indentcase", propertyName: "indentCase")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["true"], controlFalse: ["false"], default: false)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.indentCase, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.indentCase)
@@ -223,7 +223,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "always"),
             (optionValue: false, argumentValue: "inline"),
         ]
-        validateSut(sut, id: "trailing-commas", name: "trailingCommas", argumentName: "commas", propertyName: "trailingCommas")
+        validateSut(sut, id: "commas", name: "Commas", argumentName: "commas", propertyName: "trailingCommas")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["always", "true"], controlFalse: ["inline", "false"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.trailingCommas, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.trailingCommas)
@@ -236,7 +236,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "indent"),
             (optionValue: false, argumentValue: "ignore"),
         ]
-        validateSut(sut, id: "indent-comments", name: "indentComments", argumentName: "comments", propertyName: "indentComments")
+        validateSut(sut, id: "comments", name: "Comments", argumentName: "comments", propertyName: "indentComments")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["indent", "indented"], controlFalse: ["ignore"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.indentComments, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.indentComments)
@@ -249,7 +249,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "always"),
             (optionValue: false, argumentValue: "nonblank-lines"),
         ]
-        validateSut(sut, id: "truncate-blank-lines", name: "truncateBlankLines", argumentName: "trimwhitespace", propertyName: "truncateBlankLines")
+        validateSut(sut, id: "trim-white-space", name: "Trim White Space", argumentName: "trimwhitespace", propertyName: "truncateBlankLines")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["always"], controlFalse: ["nonblank-lines", "nonblank", "non-blank-lines", "non-blank", "nonempty-lines", "nonempty", "non-empty-lines", "non-empty"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.truncateBlankLines, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.truncateBlankLines)
@@ -262,7 +262,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "enabled"),
             (optionValue: false, argumentValue: "disabled"),
         ]
-        validateSut(sut, id: "insert-blank-lines", name: "insertBlankLines", argumentName: "insertlines", propertyName: "insertBlankLines")
+        validateSut(sut, id: "insert-lines", name: "Insert Lines", argumentName: "insertlines", propertyName: "insertBlankLines")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.insertBlankLines, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.insertBlankLines)
@@ -275,7 +275,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "enabled"),
             (optionValue: false, argumentValue: "disabled"),
         ]
-        validateSut(sut, id: "remove-blank-lines", name: "removeBlankLines", argumentName: "removelines", propertyName: "removeBlankLines")
+        validateSut(sut, id: "remove-lines", name: "Remove Lines", argumentName: "removelines", propertyName: "removeBlankLines")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.removeBlankLines, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.removeBlankLines)
@@ -288,7 +288,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "true"),
             (optionValue: false, argumentValue: "false"),
         ]
-        validateSut(sut, id: "allman-braces", name: "allmanBraces", argumentName: "allman", propertyName: "allmanBraces")
+        validateSut(sut, id: "allman", name: "Allman Braces", argumentName: "allman", propertyName: "allmanBraces")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["true", "enabled"], controlFalse: ["false", "disabled"], default: false)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.allmanBraces, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.allmanBraces)
@@ -301,7 +301,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "uppercase"),
             (optionValue: false, argumentValue: "lowercase"),
         ]
-        validateSut(sut, id: "hex-literal-case", name: "hexLiteralCase", argumentName: "hexliteralcase", propertyName: "uppercaseHex")
+        validateSut(sut, id: "hex-literal-case", name: "Hex Literal Case", argumentName: "hexliteralcase", propertyName: "uppercaseHex")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.uppercaseHex, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.uppercaseHex)
@@ -314,7 +314,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "uppercase"),
             (optionValue: false, argumentValue: "lowercase"),
         ]
-        validateSut(sut, id: "exponent-case", name: "exponentCase", argumentName: "exponentcase", propertyName: "uppercaseExponent")
+        validateSut(sut, id: "exponent-case", name: "Exponent Case", argumentName: "exponentcase", propertyName: "uppercaseExponent")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"], default: false)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.uppercaseExponent, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.uppercaseExponent)
@@ -327,7 +327,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "hoist"),
             (optionValue: false, argumentValue: "inline"),
         ]
-        validateSut(sut, id: "let-pattern-placement", name: "patternLet", argumentName: "patternlet", propertyName: "hoistPatternLet")
+        validateSut(sut, id: "pattern-let", name: "Pattern Let", argumentName: "patternlet", propertyName: "hoistPatternLet")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["hoist"], controlFalse: ["inline"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.hoistPatternLet, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.hoistPatternLet)
@@ -340,7 +340,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "next-line"),
             (optionValue: false, argumentValue: "same-line"),
         ]
-        validateSut(sut, id: "else-position", name: "elsePosition", argumentName: "elseposition", propertyName: "elseOnNextLine")
+        validateSut(sut, id: "else-position", name: "Else Position", argumentName: "elseposition", propertyName: "elseOnNextLine")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["next-line", "nextline"], controlFalse: ["same-line", "sameline"], default: false)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.elseOnNextLine, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.elseOnNextLine)
@@ -353,7 +353,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "remove"),
             (optionValue: false, argumentValue: "insert"),
         ]
-        validateSut(sut, id: "remove-self", name: "removeSelf", argumentName: "self", propertyName: "removeSelf")
+        validateSut(sut, id: "self", name: "Self", argumentName: "self", propertyName: "removeSelf")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["remove"], controlFalse: ["insert"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.removeSelf, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.removeSelf)
@@ -366,7 +366,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "enabled"),
             (optionValue: false, argumentValue: "disabled"),
         ]
-        validateSut(sut, id: "experimental-rules", name: "experimentalRules", argumentName: "experimental", propertyName: "experimentalRules")
+        validateSut(sut, id: "experimental", name: "Experimental Rules", argumentName: "experimental", propertyName: "experimentalRules")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: false)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.experimentalRules, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.experimentalRules)
@@ -379,7 +379,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "true"),
             (optionValue: false, argumentValue: "false"),
         ]
-        validateSut(sut, id: "fragment", name: "fragment", argumentName: "fragment", propertyName: "fragment")
+        validateSut(sut, id: "fragment", name: "Fragment", argumentName: "fragment", propertyName: "fragment")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["true", "enabled"], controlFalse: ["false", "disabled"], default: false)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.fragment, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.fragment)
@@ -392,7 +392,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "ignore"),
             (optionValue: false, argumentValue: "reject"),
         ]
-        validateSut(sut, id: "ignore-conflict-markers", name: "ignoreConflictMarkers", argumentName: "conflictmarkers", propertyName: "ignoreConflictMarkers")
+        validateSut(sut, id: "conflict-markers", name: "Conflict Markers", argumentName: "conflictmarkers", propertyName: "ignoreConflictMarkers")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["ignore", "true", "enabled"], controlFalse: ["reject", "false", "disabled"], default: false)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.ignoreConflictMarkers, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.ignoreConflictMarkers)
@@ -405,7 +405,7 @@ extension OptionsDescriptorTest {
             (optionValue: true, argumentValue: "uppercase"),
             (optionValue: false, argumentValue: "lowercase"),
         ]
-        validateSut(sut, id: "hex-literal-deprecated", name: "hexliterals_deprecated", argumentName: "hexliterals", propertyName: "hexliterals")
+        validateSut(sut, id: "hex-literals-deprecated", name: "hexliterals_deprecated", argumentName: "hexliterals", propertyName: "hexliterals")
         validateArgumentsBinaryType(sut: sut, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"], default: true)
         validateFromOptions(sut: sut, keyPath: \FormatOptions.uppercaseHex, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(sut: sut, keyPath: \FormatOptions.uppercaseHex)
@@ -439,7 +439,7 @@ extension OptionsDescriptorTest {
             (optionValue: IndentMode.outdent, argumentValue: "outdent"),
         ]
 
-        validateSut(sut, id: "if-def-indent-mode", name: "ifdefIndent", argumentName: "ifdef", propertyName: "ifdefIndent")
+        validateSut(sut, id: "ifdef", name: "ifdef Indent", argumentName: "ifdef", propertyName: "ifdefIndent")
         validateArgumentsListType(sut: sut, validArguments: ["indent", "noindent", "outdent"], default: "indent")
         validateFromOptions(sut: sut, keyPath: \FormatOptions.ifdefIndent, expectations: expectedMapping)
         validateFromArguments(sut: sut, keyPath: \FormatOptions.ifdefIndent, expectations: expectedMapping)
@@ -453,7 +453,7 @@ extension OptionsDescriptorTest {
             (optionValue: "\r", argumentValue: "cr"),
             (optionValue: "\r\n", argumentValue: "crlf"),
         ]
-        validateSut(sut, id: "linebreak-character", name: "linebreak", argumentName: "linebreaks", propertyName: "linebreak")
+        validateSut(sut, id: "linebreaks", name: "Linebreaks Character", argumentName: "linebreaks", propertyName: "linebreak")
         validateArgumentsListType(sut: sut, validArguments: ["cr", "lf", "crlf"], default: "lf")
         validateFromOptions(sut: sut, keyPath: \FormatOptions.linebreak, expectations: expectedMapping, invalid: "invalid")
         validateFromArguments(sut: sut, keyPath: \FormatOptions.linebreak, expectations: expectedMapping)
@@ -467,7 +467,7 @@ extension OptionsDescriptorTest {
             (optionValue: .afterFirst, argumentValue: "afterfirst"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
-        validateSut(sut, id: "wrap-arguments", name: "wrapArguments", argumentName: "wraparguments", propertyName: "wrapArguments")
+        validateSut(sut, id: "wrap-arguments", name: "Wrap Arguments", argumentName: "wraparguments", propertyName: "wrapArguments")
         validateArgumentsListType(sut: sut, validArguments: ["beforefirst", "afterfirst", "disabled"], default: "disabled")
         validateFromOptions(sut: sut, keyPath: \FormatOptions.wrapArguments, expectations: expectedMapping)
         validateFromArguments(sut: sut, keyPath: \FormatOptions.wrapArguments, expectations: expectedMapping)
@@ -481,7 +481,7 @@ extension OptionsDescriptorTest {
             (optionValue: .afterFirst, argumentValue: "afterfirst"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
-        validateSut(sut, id: "wrap-elements", name: "wrapElements", argumentName: "wrapelements", propertyName: "wrapElements")
+        validateSut(sut, id: "wrap-elements", name: "Wrap Elements", argumentName: "wrapelements", propertyName: "wrapElements")
         validateArgumentsListType(sut: sut, validArguments: ["beforefirst", "afterfirst", "disabled"], default: "beforefirst")
         validateFromOptions(sut: sut, keyPath: \FormatOptions.wrapElements, expectations: expectedMapping)
         validateFromArguments(sut: sut, keyPath: \FormatOptions.wrapElements, expectations: expectedMapping)
@@ -495,7 +495,7 @@ extension OptionsDescriptorTest {
             (optionValue: .closureOnly, argumentValue: "closure-only"),
             (optionValue: .all, argumentValue: "always"),
         ]
-        validateSut(sut, id: "strip-unused-arguments", name: "stripUnusedArguments", argumentName: "stripunusedargs", propertyName: "stripUnusedArguments")
+        validateSut(sut, id: "strip-unused-args", name: "Strip Unused Arguments", argumentName: "stripunusedargs", propertyName: "stripUnusedArguments")
         validateArgumentsListType(sut: sut, validArguments: ["unnamed-only", "closure-only", "always"], default: "always")
         validateFromOptions(sut: sut, keyPath: \FormatOptions.stripUnusedArguments, expectations: expectedMapping)
         validateFromArguments(sut: sut, keyPath: \FormatOptions.stripUnusedArguments, expectations: expectedMapping)
@@ -567,7 +567,7 @@ extension OptionsDescriptorTest {
     func test_decimalGrouping() {
         validateGroupingSut(FormatOptions.Descriptor.decimalGrouping,
                             id: "decimal-grouping",
-                            name: "decimalGrouping",
+                            name: "Decimal Grouping",
                             argumentName: "decimalgrouping",
                             propertyName: "decimalGrouping",
                             default: "3,6",
@@ -577,7 +577,7 @@ extension OptionsDescriptorTest {
     func test_binaryGrouping() {
         validateGroupingSut(FormatOptions.Descriptor.binaryGrouping,
                             id: "binary-grouping",
-                            name: "binaryGrouping",
+                            name: "Binary Grouping",
                             argumentName: "binarygrouping",
                             propertyName: "binaryGrouping",
                             default: "4,8",
@@ -587,7 +587,7 @@ extension OptionsDescriptorTest {
     func test_octalGrouping() {
         validateGroupingSut(FormatOptions.Descriptor.octalGrouping,
                             id: "octal-grouping",
-                            name: "octalGrouping",
+                            name: "Octal Grouping",
                             argumentName: "octalgrouping",
                             propertyName: "octalGrouping",
                             default: "4,8",
@@ -597,7 +597,7 @@ extension OptionsDescriptorTest {
     func test_hexGrouping() {
         validateGroupingSut(FormatOptions.Descriptor.hexGrouping,
                             id: "hex-grouping",
-                            name: "hexGrouping",
+                            name: "Hex Grouping",
                             argumentName: "hexgrouping",
                             propertyName: "hexGrouping",
                             default: "4,8",
@@ -636,7 +636,7 @@ extension OptionsDescriptorTest {
             (optionValue: "    ", argumentValue: "4"),
         ]
 
-        validateSut(sut, id: "indentation", name: "indent", argumentName: "indent", propertyName: "indent")
+        validateSut(sut, id: "indent", name: "Indent", argumentName: "indent", propertyName: "indent")
         validateArgumentsFreeTextType(sut: sut, expectations: validations, default: "4")
         validateFromOptions(sut: sut, keyPath: \FormatOptions.indent, expectations: fromOptionExpectations)
         validateFromArguments(sut: sut, keyPath: \FormatOptions.indent, expectations: fromArgumentExpectations)
@@ -674,7 +674,7 @@ extension OptionsDescriptorTest {
             (optionValue: "//a\n//b", argumentValue: "//a\\n//b"),
         ]
 
-        validateSut(sut, id: "file-header", name: "fileHeader", argumentName: "header", propertyName: "fileHeader")
+        validateSut(sut, id: "header", name: "Header", argumentName: "header", propertyName: "fileHeader")
         validateArgumentsFreeTextType(sut: sut, expectations: validations, default: "ignore")
         validateFromOptions(sut: sut, keyPath: \FormatOptions.fileHeader, expectations: fromOptionExpectations)
         validateFromOptionalArguments(sut: sut, keyPath: \FormatOptions.fileHeader, expectations: fromArgumentExpectations, testCaseVariation: false)

@@ -82,6 +82,7 @@ extension SavedOption {
 
     fileprivate init(_ rep: OptionsStore.OptionRepresentation) {
         argumentValue = rep.arg
+        //  FIXME, No force unwrap here, throw instead
         descriptor = SavedOption.mapping[rep.id]!
     }
 }

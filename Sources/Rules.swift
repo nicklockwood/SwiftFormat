@@ -3077,37 +3077,39 @@ private extension FormatRules {
                 item.name == $0.name
             })
         }
-        func process(imports: [Import]?) {
-            guard var imports = imports else { return }
-            if sort {
-                guard let from = imports.first?.range.lowerBound,
-                    let to = imports.last?.range.upperBound else { return }
-                formatter.replaceTokens(inRange: from ... to, with: imports.sorted(by: {
-                    $0.name.caseInsensitiveCompare($1.name) == .orderedAscending
-                }).flatMap { $0.tokens })
-            } else {
-                for (index, item) in imports.enumerated().reversed() {
-                    if isDuplicated(item, in: imports) {
-                        formatter.removeTokens(inRange: item.range)
-                        imports.remove(at: index)
+        func process(imports: [[Import]]?) {
+            guard let imports = imports else { return }
+            for var imports in imports.reversed() {
+                if sort {
+                    guard let from = imports.first?.range.lowerBound,
+                        let to = imports.last?.range.upperBound else { continue }
+                    formatter.replaceTokens(inRange: from ... to, with: imports.sorted(by: {
+                        $0.name.caseInsensitiveCompare($1.name) == .orderedAscending
+                    }).flatMap { $0.tokens })
+                } else {
+                    for (index, item) in imports.enumerated().reversed() {
+                        if isDuplicated(item, in: imports) {
+                            formatter.removeTokens(inRange: item.range)
+                            imports.remove(at: index)
+                        }
                     }
                 }
             }
         }
-        var importsStack = [[Import]()]
+        var importsStack = [[[Import]()]]
         var removeTrailingToken = false
         func enumerateImports() {
             formatter.forEachToken { i, token in
                 switch token {
                 case .startOfScope("#if"):
-                    importsStack.append([])
+                    importsStack.append([[]])
                 case .keyword("#else"), .keyword("#elseif"):
                     process(imports: importsStack.popLast())
-                    importsStack.append([])
+                    importsStack.append([[]])
                 case .endOfScope("#endif"):
                     process(imports: importsStack.popLast())
                 case .keyword("import"):
-                    if let last = importsStack.last?.last, last.range.contains(i) {
+                    if let last = importsStack.last?.last?.last, last.range.contains(i) {
                         return // This import is inside the previous Import
                     }
                     guard let nameIndex = formatter.index(of: .identifier, after: i) else {
@@ -3169,9 +3171,18 @@ private extension FormatRules {
                         range: range,
                         tokens: Array(formatter.tokens[range])
                     )
-                    importsStack[importsStack.endIndex - 1].append(currentImport)
-                default:
+                    let lastIndex = importsStack.last!.endIndex
+                    importsStack[importsStack.endIndex - 1][lastIndex - 1].append(currentImport)
+                case .space, .linebreak, .identifier, .delimiter(";"), .operator(".", _),
+                     _ where token.isAttribute || token.isComment:
                     break
+                case let .keyword(string) where
+                    ["class", "struct", "enum", "protocol", "var", "func"].contains(string):
+                    break
+                default:
+                    if !importsStack.last!.isEmpty {
+                        importsStack[importsStack.endIndex - 1].append([])
+                    }
                 }
             }
             // Safety precaution
@@ -3186,7 +3197,7 @@ private extension FormatRules {
         process(imports: importsStack.first)
         // Second pass (dedupe only)
         if !sort {
-            unconditionalImports = importsStack.first ?? []
+            unconditionalImports = importsStack.first?.flatMap { $0 } ?? []
             enumerateImports()
         }
         if removeTrailingToken {

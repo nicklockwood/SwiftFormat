@@ -5799,6 +5799,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoDeleteCodeBetweenImports() {
+        let input = "import Foo\nfunc bar() {}\nimport Bar"
+        let output = "import Foo\nfunc bar() {}\nimport Bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoDeleteCodeBetweenImports2() {
+        let input = "import Foo\nimport Bar\nfoo = bar\nimport Bar"
+        let output = "import Bar\nimport Foo\nfoo = bar\nimport Bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testSortContiguousImports() {
+        let input = "import Foo\nimport Bar\nfunc bar() {}\nimport Quux\nimport Baz"
+        let output = "import Bar\nimport Foo\nfunc bar() {}\nimport Baz\nimport Quux"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: duplicateImports
 
     func testRemoveDuplicateImport() {

@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.33.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.5) (2018-03-16)
+
+- Fixed critical bug in `sortedImports` where code between blocks of import statements could be removed
+- Fixed bug where wrapped arguments could be double-indented under some circumstances
+
 ## [0.33.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.4) (2018-02-26)
 
 - Fixed a bug in the `unusedArguments` rule that could caused type names to get mangled in closure argument lists

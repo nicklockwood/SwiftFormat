@@ -81,9 +81,12 @@ extension SavedOption {
     }()
 
     fileprivate init(_ rep: OptionsStore.OptionRepresentation) {
+        guard let descriptor = SavedOption.mapping[rep.id] else {
+            fatalError("Input 'Option ID' don't match known OptionDescriptor.id")
+        }
+        
         argumentValue = rep.arg
-        //  FIXME, No force unwrap here, throw instead
-        descriptor = SavedOption.mapping[rep.id]!
+        self.descriptor = descriptor
     }
 }
 

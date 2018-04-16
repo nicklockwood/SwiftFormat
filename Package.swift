@@ -5,6 +5,10 @@ let package = Package(
     name: "SwiftFormat",
     products: [
         .executable(name: "swiftFormat", targets: ["CommandLineTool"]),
+        .library(
+            name: "SwiftFormatCore",
+            targets: ["SwiftFormat"]
+        ),
     ],
     targets: [
         .target(name: "CommandLineTool", dependencies: ["SwiftFormat"], path: "CommandLineTool"),

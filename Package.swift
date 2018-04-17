@@ -6,7 +6,7 @@ let package = Package(
     products: [
         .executable(name: "swiftFormat", targets: ["CommandLineTool"]),
         .library(
-            name: "SwiftFormatCore",
+            name: "SwiftFormat",
             targets: ["SwiftFormat"]
         ),
     ],

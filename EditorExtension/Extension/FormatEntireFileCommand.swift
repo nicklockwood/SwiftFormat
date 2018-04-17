@@ -49,9 +49,9 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
         do {
             let rules = FormatRules.all(named:
                 RulesStore()
-                .rules
-                .filter { $0.isEnabled }
-                .map { $0.name }
+                    .rules
+                    .filter { $0.isEnabled }
+                    .map { $0.name }
             )
 
             let output = try format(tokens, rules: rules, options: options)

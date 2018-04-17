@@ -461,6 +461,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testSpaceBetweenOptionalTryAndDot() {
+        let input = "let foo: Int = try? .init()"
+        let output = "let foo: Int = try? .init()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testSpaceBetweenForceTryAndDot() {
+        let input = "let foo: Int = try! .init()"
+        let output = "let foo: Int = try! .init()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testSpaceBetweenOptionalAndDefaultValueInFunction() {
         let input = "func foo(bar _: String?=nil) {}"
         let output = "func foo(bar _: String? = nil) {}"

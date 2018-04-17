@@ -31,7 +31,7 @@
 
 import Foundation
 #if SWIFT_PACKAGE
-import SwiftFormat
+    import SwiftFormat
 #endif
 
 extension String {

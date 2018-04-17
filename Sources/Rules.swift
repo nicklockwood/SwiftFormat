@@ -359,8 +359,13 @@ extension FormatRules {
                 }
                 if type == .infix {
                     if formatter.token(at: i - 1)?.isSpace == true,
-                        formatter.last(.nonSpace, before: i)?.isLvalue == true {
-                        formatter.removeToken(at: i - 1)
+                        let lastTokenIndex = formatter.index(of: .nonSpace, before: i),
+                        formatter.tokens[lastTokenIndex].isLvalue {
+                        if ["!", "?"].contains(formatter.tokens[lastTokenIndex].string),
+                            let prevToken = formatter.last(.nonSpace, before: lastTokenIndex),
+                            [.keyword("try"), .keyword("as")].contains(prevToken) {} else {
+                            formatter.removeToken(at: i - 1)
+                        }
                     }
                 } else if formatter.token(at: i - 1)?.isSpace == true {
                     if formatter.last(.nonSpace, before: i) == nil {

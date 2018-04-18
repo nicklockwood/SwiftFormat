@@ -413,7 +413,8 @@
 			buildPhases = (
 				01A0EAC61D5DB5F500A0A8E3 /* Sources */,
 				01A0EAC71D5DB5F500A0A8E3 /* Frameworks */,
-				017AEBB31D6F27D500764325 /* ShellScript */,
+				017AEBB31D6F27D500764325 /* Copy Binary */,
+				0111360720872D83000FF63D /* Format Code */,
 			);
 			buildRules = (
 			);
@@ -432,7 +433,7 @@
 				90C4B6C71DA4B04A009EB000 /* Frameworks */,
 				90C4B6C81DA4B04A009EB000 /* Resources */,
 				90C4B6EF1DA4B059009EB000 /* Embed App Extensions */,
-				01AC942B1DB5464F0008BDFF /* ShellScript */,
+				01AC942B1DB5464F0008BDFF /* Copy App */,
 			);
 			buildRules = (
 			);
@@ -572,6 +573,20 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		0111360720872D83000FF63D /* Format Code */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Format Code";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/CommandLineTool/swiftformat\" \"${SRCROOT}\" --experimental enabled --cache ignore";
+		};
 		0142F06D1D72B4A6007D66CC /* Format Code */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -586,26 +601,28 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/CommandLineTool/swiftformat\" \"${SRCROOT}\" --experimental enabled --cache ignore";
 		};
-		017AEBB31D6F27D500764325 /* ShellScript */ = {
+		017AEBB31D6F27D500764325 /* Copy Binary */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 12;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "Copy Binary";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "cp ${BUILT_PRODUCTS_DIR}/swiftformat CommandLineTool/";
 		};
-		01AC942B1DB5464F0008BDFF /* ShellScript */ = {
+		01AC942B1DB5464F0008BDFF /* Copy App */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "Copy App";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -866,7 +883,6 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
-				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Off;
 				SWIFT_VERSION = 4.0;
@@ -962,7 +978,6 @@
 				PRODUCT_MODULE_NAME = "$(PRODUCT_NAME:c99extidentifier)Tool";
 				PRODUCT_NAME = swiftformat;
 				PROVISIONING_PROFILE = "";
-				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 			};
 			name = Release;

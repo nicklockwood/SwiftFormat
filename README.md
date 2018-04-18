@@ -60,14 +60,22 @@ Command-line tool
 
 **Installation:**
 
-The simplest way to install the `swiftformat` command-line tool is via [Homebrew](http://brew.sh/). If you already have Homebrew installed, just type
+You can install the `swiftformat` command-line tool using [Homebrew](http://brew.sh/). Assuming you already have Homebrew installed, just type:
 
     > brew update
     > brew install swiftformat
 
-Then you're done. If you are installing SwiftFormat into your project directory, you can also use [CocoaPods](https://cocoapods.org/) - see the Xcode build phase instructions below for details.
+Alternatively, you can install the tool using [Mint](https://github.com/yonaskolb/Mint) as follows:
 
-Alternatively, to build the command-line app yourself:
+    > mint install nicklockwood/SwiftFormat swiftformat
+    
+And then run it using:
+
+    > mint run swiftformat
+
+If you are installing SwiftFormat into your project directory, you can use [CocoaPods](https://cocoapods.org/) to automatically install the swiftformat binary along with your other pods - see the Xcode build phase instructions below for details.
+
+If you would prefer not to use a package manager, you can build the command-line app manually:
 
 1. open `SwiftFormat.xcodeproj` and build the `SwiftFormat (Application)` scheme.
 
@@ -1166,6 +1174,7 @@ Credits
 * @bourvill - Git pre-commit hook script
 * @palleas - Homebrew formula
 * @aliak00 - Several path-related CLI enhancements
+* @yonaskolb - Swift Package Manager integration
 * @nicklockwood - Everything else
 
 ([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

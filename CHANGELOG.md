@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.33.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.6) (2018-04-18)
+
+- Fixed a bug where a space could be incorrectly removed after a `try?` or `as?` operator
+- Both the SwiftFormat command line tool and framework can now be built using Swift Package Manager
+- Added .pre-commit-hook.yaml file for checking that formatter has been applied when committing
+- The SwiftFormat command line tool can now be installed using Mint (see README for details) 
+
 ## [0.33.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.5) (2018-03-16)
 
 - Fixed critical bug in `sortedImports` where code between blocks of import statements could be removed

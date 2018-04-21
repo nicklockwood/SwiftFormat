@@ -53,7 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let dialog = NSOpenPanel()
         dialog.title = "Choose a configuration file"
         dialog.showsResizeIndicator = true
-        dialog.allowedFileTypes = [SwiftFormatFile.extension]
+        dialog.allowedFileTypes = [swiftFormatFileExtension]
         dialog.allowsMultipleSelection = false
 
         dialog.beginSheetModal(for: window) { response in
@@ -70,7 +70,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             do {
-                let configuration = try SwiftFormatFile.decoded(data)
+                let configuration = try SwiftFormatCLIArgumentsFile.decoded(data)
                 RulesStore().restore(configuration.rules)
                 OptionsStore().restore(configuration.options)
 
@@ -87,8 +87,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let formatFile = SwiftFormatFile(rules: RulesStore().rules,
-                                         options: OptionsStore().options)
+        let formatFile = SwiftFormatCLIArgumentsFile(rules: RulesStore().rules,
+                                                     options: OptionsStore().options)
         let dataToWrite: Data
         do {
             dataToWrite = try formatFile.encoded()
@@ -99,7 +99,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let dialog = NSSavePanel()
         dialog.title = "Export Configuration"
-        dialog.nameFieldStringValue = "name.\(SwiftFormatFile.extension)"
+        dialog.nameFieldStringValue = "name.\(swiftFormatFileExtension)"
         dialog.beginSheetModal(for: window) { response in
             guard response == .OK, let url = dialog.url else {
                 return

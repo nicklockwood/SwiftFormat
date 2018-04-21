@@ -74,6 +74,7 @@
 		E4E4D3CC2033F17C000D7CB1 /* EnumAssociatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3C82033F17C000D7CB1 /* EnumAssociatable.swift */; };
 		E4E4D3CE2033F1EF000D7CB1 /* EnumAssociatableTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3CD2033F1EF000D7CB1 /* EnumAssociatableTest.swift */; };
 		E4E4D3CF2033F1EF000D7CB1 /* EnumAssociatableTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3CD2033F1EF000D7CB1 /* EnumAssociatableTest.swift */; };
+		E4F25BCC2082514400E12F98 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E811E25870700DCD359 /* CommandLine.swift */; };
 		E4FABAD5202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
 		E4FABAD6202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
 		E4FABAD7202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
@@ -735,6 +736,7 @@
 				E41CB5C12026BA2000C1BEDE /* HeaderTableCellView.swift in Sources */,
 				E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */,
 				E4872111201D3B830014845E /* Options.swift in Sources */,
+				E4F25BCC2082514400E12F98 /* CommandLine.swift in Sources */,
 				90C4B6CD1DA4B04A009EB000 /* AppDelegate.swift in Sources */,
 				E492DDF920516DA500E7E61A /* SwiftFormatFile.swift in Sources */,
 			);

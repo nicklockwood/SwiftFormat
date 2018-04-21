@@ -85,6 +85,8 @@ extension FormatOptions.Descriptor {
         FormatOptions.Descriptor.ignoreConflictMarkers,
     ]
 
+    static let all = formats + files + deprecated
+
     static let indentation = FormatOptions.Descriptor(id: "indent",
                                                       argumentName: "indent",
                                                       propertyName: "indent",

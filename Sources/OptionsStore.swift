@@ -84,7 +84,7 @@ extension SavedOption {
         guard let descriptor = SavedOption.mapping[rep.id] else {
             fatalError("Input 'Option ID' don't match known OptionDescriptor.id")
         }
-        
+
         argumentValue = rep.arg
         self.descriptor = descriptor
     }

@@ -97,6 +97,7 @@ func printHelp() {
     print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
     print("--verbose          display detailed formatting output and warnings/errors")
     print("--dryrun           run in \"dry\" mode (without actually changing any files)")
+    print("--no-ansi          show output without ANSI codes")
     print("")
     print("swiftformat has a number of rules that can be enabled or disabled. by default")
     print("most rules are enabled. use --rules to display all enabled/disabled rules:")
@@ -278,6 +279,26 @@ func processArguments(_ args: [String], in directory: String) {
             dryrun = true
             if !arg.isEmpty {
                 // dryrun doesn't take an argument, so treat argument as another input path
+                inputURLs.append(expandPath(arg, in: directory))
+            }
+        }
+
+        // No ANSI
+        if let arg = args["no-ansi"] {
+            // Override the CLI output handler to remove the color escape codes
+            var stderr = FileHandle.standardError
+            var stdout = FileHandle.standardOutput
+            CLI.print = { message, type in
+                switch type {
+                case .error, .warning:
+                    print(message, to: &stderr)
+                default:
+                    print(message, to: &stdout)
+                }
+            }
+
+            if !arg.isEmpty {
+                // no-ansi doesn't take an argument, so treat argument as another input path
                 inputURLs.append(expandPath(arg, in: directory))
             }
         }
@@ -1248,6 +1269,7 @@ let commandLineArguments = [
     "cache",
     "verbose",
     "dryrun",
+    "no-ansi",
     // Rules
     "disable",
     "enable",

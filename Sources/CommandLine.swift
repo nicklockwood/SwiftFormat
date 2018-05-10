@@ -138,8 +138,13 @@ func printHelp() {
 }
 
 func expandPath(_ path: String, in directory: String) -> URL {
-    let path = NSString(string: path).expandingTildeInPath
-    return URL(fileURLWithPath: directory + "/" + path)
+    if path.starts(with: "/") {
+        return URL(fileURLWithPath: path)
+    }
+    if path.starts(with: "~") {
+        return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
+    }
+    return URL(fileURLWithPath: directory).appendingPathComponent(path)
 }
 
 func timeEvent(block: () throws -> Void) rethrows -> String {

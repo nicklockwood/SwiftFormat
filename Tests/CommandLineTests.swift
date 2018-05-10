@@ -176,6 +176,29 @@ class CommandLineTests: XCTestCase {
         processArguments([""], in: "")
     }
 
+    // MARK: input paths
+
+    func testExpandPathWithRelativePath() {
+        XCTAssertEqual(
+            expandPath("relpath/to/file.swift", in: "/dir").path,
+            "/dir/relpath/to/file.swift"
+        )
+    }
+
+    func testExpandPathWithFullPath() {
+        XCTAssertEqual(
+            expandPath("/full/path/to/file.swift", in: "/dir").path,
+            "/full/path/to/file.swift"
+        )
+    }
+
+    func testExpandPathWithUserPath() {
+        XCTAssertEqual(
+            expandPath("~/file.swift", in: "/dir").path,
+            NSString(string: "~/file.swift").expandingTildeInPath
+        )
+    }
+
     // MARK: help
 
     func testHelpLineLength() {

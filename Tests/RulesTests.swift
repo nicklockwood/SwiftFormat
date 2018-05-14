@@ -5655,9 +5655,9 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testNoStripOfHeaderDocWithNewlineBeforeCode() {
-        let input = "///Header doc\n\nclass Foo {}"
-        let output = "///Header doc\n\nclass Foo {}"
+    func testNoStripHeaderDocWithNewlineBeforeCode() {
+        let input = "/// Header doc\n\nclass Foo {}"
+        let output = "/// Header doc\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "")
         XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

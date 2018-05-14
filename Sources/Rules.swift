@@ -2959,7 +2959,9 @@ extension FormatRules {
             case .startOfScope("//"):
                 if case let .commentBody(body)? = formatter.next(.nonSpace, after: startIndex) {
                     formatter.processCommentBody(body)
-                    if !formatter.isEnabled { return }
+                    if !formatter.isEnabled || (body.hasPrefix("/") && !body.hasPrefix("//")) {
+                        return
+                    }
                 }
                 var lastIndex = startIndex
                 while let index = formatter.index(of: .linebreak, after: lastIndex) {
@@ -2979,7 +2981,9 @@ extension FormatRules {
             case .startOfScope("/*"):
                 if case let .commentBody(body)? = formatter.next(.nonSpace, after: startIndex) {
                     formatter.processCommentBody(body)
-                    if !formatter.isEnabled { return }
+                    if !formatter.isEnabled || (body.hasPrefix("*") && !body.hasPrefix("**")) {
+                        return
+                    }
                 }
                 while let endIndex = formatter.index(of: .endOfScope("*/"), after: startIndex) {
                     formatter.removeTokens(inRange: 0 ... endIndex)

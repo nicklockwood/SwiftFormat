@@ -362,7 +362,7 @@ class RulesTests: XCTestCase {
     func testSpaceInsideWrappedArray() {
         let input = "[ foo,\n bar ]"
         let output = "[foo,\n bar]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceInsideBrackets]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -370,7 +370,7 @@ class RulesTests: XCTestCase {
     func testSpaceBeforeCommentInsideWrappedArray() {
         let input = "[ // foo\n    bar,\n]"
         let output = "[ // foo\n    bar,\n]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceInsideBrackets]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -1847,7 +1847,7 @@ class RulesTests: XCTestCase {
     func testWrappedLineBeforeCommaInsideArray() {
         let input = "[\nfoo\n, bar,\n]"
         let output = "[\n    foo\n    , bar,\n]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -1855,7 +1855,7 @@ class RulesTests: XCTestCase {
     func testWrappedLineAfterCommaInsideInlineArray() {
         let input = "[foo,\nbar]"
         let output = "[foo,\n bar]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -1863,7 +1863,7 @@ class RulesTests: XCTestCase {
     func testWrappedLineBeforeCommaInsideInlineArray() {
         let input = "[foo\n, bar]"
         let output = "[foo\n , bar]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -2144,7 +2144,7 @@ class RulesTests: XCTestCase {
     func testIndentEnumDictionaryKeysAndValues() {
         let input = "[\n.foo:\n.bar,\n.baz:\n.quux,\n]"
         let output = "[\n    .foo:\n    .bar,\n    .baz:\n    .quux,\n]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -2830,7 +2830,7 @@ class RulesTests: XCTestCase {
     func testCommaNotAddedInsideEmptyDictionaryLiteral() {
         let input = "foo = [:\n]"
         let output = "foo = [:\n]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingCommas], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -5850,12 +5850,12 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output)
     }
 
-    // MARK: wrapElements
+    // MARK: wrapCollections
 
     func testNoDoubleSpaceAddedToWrappedArray() {
         let input = "[ foo,\n    bar ]"
         let output = "[\n    foo,\n    bar\n]"
-        let options = FormatOptions(trailingCommas: false, wrapElements: .beforeFirst)
+        let options = FormatOptions(trailingCommas: false, wrapCollections: .beforeFirst)
         let rules = [FormatRules.wrapArguments, FormatRules.spaceInsideBrackets]
         XCTAssertEqual(try format(input, rules: rules, options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -5864,7 +5864,7 @@ class RulesTests: XCTestCase {
     func testTrailingCommasAddedToWrappedArray() {
         let input = "[foo,\n    bar]"
         let output = "[\n    foo,\n    bar,\n]"
-        let options = FormatOptions(trailingCommas: true, wrapElements: .beforeFirst)
+        let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
         let rules = [FormatRules.wrapArguments, FormatRules.trailingCommas]
         XCTAssertEqual(try format(input, rules: rules, options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -5873,7 +5873,7 @@ class RulesTests: XCTestCase {
     func testSpaceAroundEnumValuesInArray() {
         let input = "[\n    .foo,\n    .bar, .baz,\n]"
         let output = "[\n    .foo,\n    .bar, .baz,\n]"
-        let options = FormatOptions(wrapElements: .beforeFirst)
+        let options = FormatOptions(wrapCollections: .beforeFirst)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -5881,7 +5881,7 @@ class RulesTests: XCTestCase {
     func testTrailingCommaRemovedInWrappedArray() {
         let input = "[\n    .foo,\n    .bar,\n    .baz,\n]"
         let output = "[.foo,\n .bar,\n .baz]"
-        let options = FormatOptions(wrapElements: .afterFirst)
+        let options = FormatOptions(wrapCollections: .afterFirst)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -5889,7 +5889,7 @@ class RulesTests: XCTestCase {
     func testNoRemoveLinebreakAfterCommentInElements() {
         let input = "[a, // comment\n]"
         let output = "[a] // comment\n"
-        let options = FormatOptions(wrapElements: .afterFirst)
+        let options = FormatOptions(wrapCollections: .afterFirst)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output)
     }

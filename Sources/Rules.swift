@@ -2929,7 +2929,7 @@ extension FormatRules {
             }
         }
         wrapArguments(for: "(", "<", mode: formatter.options.wrapArguments, allowGrouping: false)
-        wrapArguments(for: "[", mode: formatter.options.wrapElements, allowGrouping: true)
+        wrapArguments(for: "[", mode: formatter.options.wrapCollections, allowGrouping: true)
     }
 
     /// Normalize the use of void in closure arguments and return values

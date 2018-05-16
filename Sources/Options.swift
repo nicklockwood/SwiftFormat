@@ -126,7 +126,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var fileHeader: String?
     public var ifdefIndent: IndentMode
     public var wrapArguments: WrapMode
-    public var wrapElements: WrapMode
+    public var wrapCollections: WrapMode
     public var uppercaseHex: Bool
     public var uppercaseExponent: Bool
     public var decimalGrouping: Grouping
@@ -159,7 +159,7 @@ public struct FormatOptions: CustomStringConvertible {
                 fileHeader: String? = nil,
                 ifdefIndent: IndentMode = .indent,
                 wrapArguments: WrapMode = .disabled,
-                wrapElements: WrapMode = .beforeFirst,
+                wrapCollections: WrapMode = .beforeFirst,
                 uppercaseHex: Bool = true,
                 uppercaseExponent: Bool = false,
                 decimalGrouping: Grouping = .group(3, 6),
@@ -189,7 +189,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.fileHeader = fileHeader
         self.ifdefIndent = ifdefIndent
         self.wrapArguments = wrapArguments
-        self.wrapElements = wrapElements
+        self.wrapCollections = wrapCollections
         self.uppercaseHex = uppercaseHex
         self.uppercaseExponent = uppercaseExponent
         self.decimalGrouping = decimalGrouping
@@ -557,7 +557,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         }
     }
     options.wrapArguments = wrapMode(for: "(", "<", allowGrouping: false)
-    options.wrapElements = wrapMode(for: "[", allowGrouping: true)
+    options.wrapCollections = wrapMode(for: "[", allowGrouping: true)
 
     options.uppercaseHex = {
         let prefix = "0x"

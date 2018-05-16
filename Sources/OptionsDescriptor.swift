@@ -66,7 +66,7 @@ extension FormatOptions.Descriptor {
         .fileHeader,
         .ifdefIndent,
         .wrapArguments,
-        .wrapElements,
+        .wrapCollections,
         .hexLiteralCase,
         .exponentCase,
         .decimalGrouping,
@@ -389,21 +389,21 @@ extension FormatOptions.Descriptor {
                                                         fromOptions: { options in
                                                             options.wrapArguments.rawValue
     })
-    static let wrapElements = FormatOptions.Descriptor(id: "wrap-elements",
-                                                       argumentName: "wrapelements",
-                                                       propertyName: "wrapElements",
-                                                       name: "Wrap Elements",
-                                                       type: .list(["beforefirst", "afterfirst", "disabled"]),
-                                                       defaultArgument: "beforefirst",
-                                                       toOptions: { input, options in
-                                                           if let mode = WrapMode(rawValue: input.lowercased()) {
-                                                               options.wrapElements = mode
-                                                           } else {
-                                                               throw FormatError.options("")
-                                                           }
-                                                       },
-                                                       fromOptions: { options in
-                                                           options.wrapElements.rawValue
+    static let wrapCollections = FormatOptions.Descriptor(id: "wrap-collections",
+                                                          argumentName: "wrapcollections",
+                                                          propertyName: "wrapCollections",
+                                                          name: "Wrap Collections",
+                                                          type: .list(["beforefirst", "afterfirst", "disabled"]),
+                                                          defaultArgument: "beforefirst",
+                                                          toOptions: { input, options in
+                                                              if let mode = WrapMode(rawValue: input.lowercased()) {
+                                                                  options.wrapCollections = mode
+                                                              } else {
+                                                                  throw FormatError.options("")
+                                                              }
+                                                          },
+                                                          fromOptions: { options in
+                                                              options.wrapCollections.rawValue
     })
     static let hexLiteralCase = FormatOptions.Descriptor(id: "hex-literal-case",
                                                          argumentName: "hexliteralcase",
@@ -643,14 +643,16 @@ extension FormatOptions.Descriptor {
     ]
 
     static let deprecatedWithoutProperty = [
-        hexliterals_deprecated,
+        hexLiterals,
+        wrapElements,
     ]
     static let deprecated = deprecatedWithProperty + deprecatedWithoutProperty
 
     static let deprecatedMessage = [
         insertBlankLines.id: "`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` or `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead.",
         removeBlankLines.id: "`--removelines` option is deprecated. Use `--enable blankLinesAtStartOfScope` or `--enable blankLinesAtEndOfScope` or `--disable blankLinesAtStartOfScope` or `--disable blankLinesAtEndOfScope` instead",
-        hexliterals_deprecated.id: "`--hexliterals` option is deprecated. Use `--hexliteralcase` instead",
+        hexLiterals.id: "`--hexliterals` option is deprecated. Use `--hexliteralcase` instead",
+        wrapElements.id: "`--wrapelements` option is deprecated. Use `--wrapcollections` instead",
     ]
 
     static let insertBlankLines = FormatOptions.Descriptor(id: "insert-lines",
@@ -691,25 +693,39 @@ extension FormatOptions.Descriptor {
                                                            fromOptions: { options in
                                                                options.removeBlankLines ? "enabled" : "disabled"
     })
-    static let hexliterals_deprecated = FormatOptions.Descriptor(id: "hex-literals-deprecated",
-                                                                 argumentName: "hexliterals",
-                                                                 propertyName: "hexliterals",
-                                                                 name: "hexliterals_deprecated",
-                                                                 type: .binary(true: ["uppercase", "upper"], false: ["lowercase", "lower"]),
-                                                                 defaultArgument: "uppercase",
-                                                                 toOptions: { input, options in
-                                                                     //  FIXME: print("`--hexliterals` option is deprecated. Use `--hexliteralcase` instead", as: .warning)
-
-                                                                     switch input.lowercased() {
-                                                                     case "uppercase", "upper":
-                                                                         options.uppercaseHex = true
-                                                                     case "lowercase", "lower":
-                                                                         options.uppercaseHex = false
-                                                                     default:
-                                                                         throw FormatError.options("")
-                                                                     }
-                                                                 },
-                                                                 fromOptions: { options in
-                                                                     options.uppercaseHex ? "uppercase" : "lowercase"
+    static let hexLiterals = FormatOptions.Descriptor(id: "hex-literals",
+                                                      argumentName: "hexliterals",
+                                                      propertyName: "hexLiteralCase",
+                                                      name: "hexliterals",
+                                                      type: .binary(true: ["uppercase", "upper"], false: ["lowercase", "lower"]),
+                                                      defaultArgument: "uppercase",
+                                                      toOptions: { input, options in
+                                                          switch input.lowercased() {
+                                                          case "uppercase", "upper":
+                                                              options.uppercaseHex = true
+                                                          case "lowercase", "lower":
+                                                              options.uppercaseHex = false
+                                                          default:
+                                                              throw FormatError.options("")
+                                                          }
+                                                      },
+                                                      fromOptions: { options in
+                                                          options.uppercaseHex ? "uppercase" : "lowercase"
+    })
+    static let wrapElements = FormatOptions.Descriptor(id: "wrap-elements",
+                                                       argumentName: "wrapelements",
+                                                       propertyName: "wrapCollections",
+                                                       name: "Wrap Elements",
+                                                       type: .list(["beforefirst", "afterfirst", "disabled"]),
+                                                       defaultArgument: "beforefirst",
+                                                       toOptions: { input, options in
+                                                           if let mode = WrapMode(rawValue: input.lowercased()) {
+                                                               options.wrapCollections = mode
+                                                           } else {
+                                                               throw FormatError.options("")
+                                                           }
+                                                       },
+                                                       fromOptions: { options in
+                                                           options.wrapCollections.rawValue
     })
 }

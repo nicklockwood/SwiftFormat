@@ -199,7 +199,7 @@ class OptionsDescriptorTests: XCTestCase {
 
     func testDeprecatedPropertyList() {
         let deprecated = FormatOptions.Descriptor.deprecated
-        let controlArgumentNames = Set(["insertlines", "removelines", "hexliterals"])
+        let controlArgumentNames = Set(["insertlines", "removelines", "hexliterals", "wrapelements"])
         let sutArgumentNames = Set(deprecated.map { $0.argumentName })
         XCTAssertEqual(sutArgumentNames, controlArgumentNames, "All deprecated name are represented by a descriptor")
     }
@@ -307,32 +307,6 @@ class OptionsDescriptorTests: XCTestCase {
         validateArgumentsBinaryType(descriptor, controlTrue: ["always"], controlFalse: ["nonblank-lines", "nonblank", "non-blank-lines", "non-blank", "nonempty-lines", "nonempty", "non-empty-lines", "non-empty"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.truncateBlankLines, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.truncateBlankLines)
-        validateDescriptorThrowsOptionsError(descriptor)
-    }
-
-    func testInsertBlankLines() {
-        let descriptor = FormatOptions.Descriptor.insertBlankLines
-        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
-            (optionValue: true, argumentValue: "enabled"),
-            (optionValue: false, argumentValue: "disabled"),
-        ]
-        validateDescriptor(descriptor, id: "insert-lines", name: "Insert Lines", argumentName: "insertlines", propertyName: "insertBlankLines")
-        validateArgumentsBinaryType(descriptor, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: true)
-        validateFromOptions(descriptor, keyPath: \FormatOptions.insertBlankLines, expectations: fromOptionsExpectation)
-        validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.insertBlankLines)
-        validateDescriptorThrowsOptionsError(descriptor)
-    }
-
-    func testRemoveBlankLines() {
-        let descriptor = FormatOptions.Descriptor.removeBlankLines
-        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
-            (optionValue: true, argumentValue: "enabled"),
-            (optionValue: false, argumentValue: "disabled"),
-        ]
-        validateDescriptor(descriptor, id: "remove-lines", name: "Remove Lines", argumentName: "removelines", propertyName: "removeBlankLines")
-        validateArgumentsBinaryType(descriptor, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: true)
-        validateFromOptions(descriptor, keyPath: \FormatOptions.removeBlankLines, expectations: fromOptionsExpectation)
-        validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.removeBlankLines)
         validateDescriptorThrowsOptionsError(descriptor)
     }
 
@@ -453,19 +427,6 @@ class OptionsDescriptorTests: XCTestCase {
         validateDescriptorThrowsOptionsError(descriptor)
     }
 
-    func testHexliterals_deprecated() {
-        let descriptor = FormatOptions.Descriptor.hexliterals_deprecated
-        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
-            (optionValue: true, argumentValue: "uppercase"),
-            (optionValue: false, argumentValue: "lowercase"),
-        ]
-        validateDescriptor(descriptor, id: "hex-literals-deprecated", name: "hexliterals_deprecated", argumentName: "hexliterals", propertyName: "hexliterals")
-        validateArgumentsBinaryType(descriptor, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"], default: true)
-        validateFromOptions(descriptor, keyPath: \FormatOptions.uppercaseHex, expectations: fromOptionsExpectation)
-        validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.uppercaseHex)
-        validateDescriptorThrowsOptionsError(descriptor)
-    }
-
     func testIfdefIndent() {
         let descriptor = FormatOptions.Descriptor.ifdefIndent
         let expectedMapping: [OptionArgumentMapping<IndentMode>] = [
@@ -509,17 +470,17 @@ class OptionsDescriptorTests: XCTestCase {
         validateDescriptorThrowsOptionsError(descriptor)
     }
 
-    func testWrapElements() {
-        let descriptor = FormatOptions.Descriptor.wrapElements
+    func testWrapCollections() {
+        let descriptor = FormatOptions.Descriptor.wrapCollections
         let expectedMapping: [OptionArgumentMapping<WrapMode>] = [
             (optionValue: .beforeFirst, argumentValue: "beforefirst"),
             (optionValue: .afterFirst, argumentValue: "afterfirst"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
-        validateDescriptor(descriptor, id: "wrap-elements", name: "Wrap Elements", argumentName: "wrapelements", propertyName: "wrapElements")
+        validateDescriptor(descriptor, id: "wrap-collections", name: "Wrap Collections", argumentName: "wrapcollections", propertyName: "wrapCollections")
         validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "disabled"], default: "beforefirst")
-        validateFromOptions(descriptor, keyPath: \FormatOptions.wrapElements, expectations: expectedMapping)
-        validateFromArguments(descriptor, keyPath: \FormatOptions.wrapElements, expectations: expectedMapping)
+        validateFromOptions(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
         validateDescriptorThrowsOptionsError(descriptor)
     }
 
@@ -651,5 +612,60 @@ class OptionsDescriptorTests: XCTestCase {
         validateArgumentsFreeTextType(descriptor, expectations: validations, default: "ignore")
         validateFromOptions(descriptor, keyPath: \FormatOptions.fileHeader, expectations: fromOptionExpectations)
         validateFromOptionalArguments(descriptor, keyPath: \FormatOptions.fileHeader, expectations: fromArgumentExpectations, testCaseVariation: false)
+    }
+
+    // MARK: Deprecated
+
+    func testInsertBlankLines() {
+        let descriptor = FormatOptions.Descriptor.insertBlankLines
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "enabled"),
+            (optionValue: false, argumentValue: "disabled"),
+        ]
+        validateDescriptor(descriptor, id: "insert-lines", name: "Insert Lines", argumentName: "insertlines", propertyName: "insertBlankLines")
+        validateArgumentsBinaryType(descriptor, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: true)
+        validateFromOptions(descriptor, keyPath: \FormatOptions.insertBlankLines, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.insertBlankLines)
+        validateDescriptorThrowsOptionsError(descriptor)
+    }
+
+    func testRemoveBlankLines() {
+        let descriptor = FormatOptions.Descriptor.removeBlankLines
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "enabled"),
+            (optionValue: false, argumentValue: "disabled"),
+        ]
+        validateDescriptor(descriptor, id: "remove-lines", name: "Remove Lines", argumentName: "removelines", propertyName: "removeBlankLines")
+        validateArgumentsBinaryType(descriptor, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: true)
+        validateFromOptions(descriptor, keyPath: \FormatOptions.removeBlankLines, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.removeBlankLines)
+        validateDescriptorThrowsOptionsError(descriptor)
+    }
+
+    func testHexliterals() {
+        let descriptor = FormatOptions.Descriptor.hexLiterals
+        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
+            (optionValue: true, argumentValue: "uppercase"),
+            (optionValue: false, argumentValue: "lowercase"),
+        ]
+        validateDescriptor(descriptor, id: "hex-literals", name: "hexliterals", argumentName: "hexliterals", propertyName: "hexLiteralCase")
+        validateArgumentsBinaryType(descriptor, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"], default: true)
+        validateFromOptions(descriptor, keyPath: \FormatOptions.uppercaseHex, expectations: fromOptionsExpectation)
+        validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.uppercaseHex)
+        validateDescriptorThrowsOptionsError(descriptor)
+    }
+
+    func testWrapElements() {
+        let descriptor = FormatOptions.Descriptor.wrapElements
+        let expectedMapping: [OptionArgumentMapping<WrapMode>] = [
+            (optionValue: .beforeFirst, argumentValue: "beforefirst"),
+            (optionValue: .afterFirst, argumentValue: "afterfirst"),
+            (optionValue: .disabled, argumentValue: "disabled"),
+        ]
+        validateDescriptor(descriptor, id: "wrap-elements", name: "Wrap Elements", argumentName: "wrapelements", propertyName: "wrapCollections")
+        validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "disabled"], default: "beforefirst")
+        validateFromOptions(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
+        validateDescriptorThrowsOptionsError(descriptor)
     }
 }

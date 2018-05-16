@@ -141,7 +141,7 @@ func printHelp() {
     print("--stripunusedargs  \"closure-only\", \"unnamed-only\" or \"always\" (default)")
     print("--trimwhitespace   trim trailing space. \"always\" (default) or \"nonblank-lines\"")
     print("--wraparguments    wrap function args. \"beforefirst\", \"afterfirst\", \"disabled\"")
-    print("--wrapelements     wrap array/dict. \"beforefirst\", \"afterfirst\", \"disabled\"")
+    print("--wrapcollections  wrap array/dict. \"beforefirst\", \"afterfirst\", \"disabled\"")
     print("")
 }
 
@@ -813,8 +813,8 @@ func commandLineArguments(for options: FormatOptions) -> [String: String] {
             args[FormatOptions.Descriptor.ifdefIndent.argumentName] = FormatOptions.Descriptor.ifdefIndent.fromOptions(options)
         case FormatOptions.Descriptor.wrapArguments.propertyName:
             args[FormatOptions.Descriptor.wrapArguments.argumentName] = FormatOptions.Descriptor.wrapArguments.fromOptions(options)
-        case FormatOptions.Descriptor.wrapElements.propertyName:
-            args[FormatOptions.Descriptor.wrapElements.argumentName] = FormatOptions.Descriptor.wrapElements.fromOptions(options)
+        case FormatOptions.Descriptor.wrapCollections.propertyName:
+            args[FormatOptions.Descriptor.wrapCollections.argumentName] = FormatOptions.Descriptor.wrapCollections.fromOptions(options)
         case FormatOptions.Descriptor.hexLiteralCase.propertyName:
             args[FormatOptions.Descriptor.hexLiteralCase.argumentName] = FormatOptions.Descriptor.hexLiteralCase.fromOptions(options)
         case FormatOptions.Descriptor.exponentCase.propertyName:
@@ -943,7 +943,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
                           to: &options,
                           handler: deprecationHandler)
     }
-
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return options
 }
@@ -979,7 +978,7 @@ let formatArguments = [
     "stripunusedargs",
     "trimwhitespace",
     "wraparguments",
-    "wrapelements",
+    "wrapcollections",
     "patternlet",
     "self",
 ]
@@ -988,6 +987,7 @@ let deprecatedArguments = [
     "hexliterals",
     "insertlines",
     "removelines",
+    "wrapelements",
 ]
 
 let commandLineArguments = [

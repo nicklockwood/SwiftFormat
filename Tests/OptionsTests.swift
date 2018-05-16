@@ -154,20 +154,20 @@ class OptionsTests: XCTestCase {
         XCTAssertEqual(options.wrapArguments, output)
     }
 
-    // MARK: wrapElements
+    // MARK: wrapCollections
 
     func testInferWrapElementsAfterFirstArgument() {
         let input = "[foo: 1,\n    bar: 2, baz: 3]"
         let output = WrapMode.afterFirst
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.wrapElements, output)
+        XCTAssertEqual(options.wrapCollections, output)
     }
 
     func testInferWrapElementsAfterSecondArgument() {
         let input = "[foo, bar,\n]"
         let output = WrapMode.afterFirst
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.wrapElements, output)
+        XCTAssertEqual(options.wrapCollections, output)
     }
 
     // MARK: uppercaseHex

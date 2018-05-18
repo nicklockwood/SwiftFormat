@@ -138,10 +138,10 @@ func printHelp() {
 }
 
 func expandPath(_ path: String, in directory: String) -> URL {
-    if path.starts(with: "/") {
+    if path.hasPrefix("/") {
         return URL(fileURLWithPath: path)
     }
-    if path.starts(with: "~") {
+    if path.hasPrefix("~") {
         return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
     }
     return URL(fileURLWithPath: directory).appendingPathComponent(path)

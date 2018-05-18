@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.33.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.7) (2018-05-18)
+
+- Fixed an issue where headerdoc comments could be stripped by `fileHeader` rule
+- Fixed a bug with handling absolute paths
+
 ## [0.33.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.6) (2018-04-18)
 
 - Fixed a bug where a space could be incorrectly removed after a `try?` or `as?` operator

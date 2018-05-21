@@ -581,7 +581,7 @@ extension FormatRules {
     }
 
     /// Remove blank lines immediately after an opening brace, bracket, paren or chevron
-    @objc public class func blankLinesAtStartOfScope(_ formatter: Formatter) {
+    @objc public class func removeBlankLinesAtStartOfScope(_ formatter: Formatter) {
         guard formatter.options.removeBlankLines else { return }
         formatter.forEach(.startOfScope) { i, token in
             guard ["{", "(", "[", "<"].contains(token.string),
@@ -612,7 +612,7 @@ extension FormatRules {
 
     /// Remove blank lines immediately before a closing brace, bracket, paren or chevron
     /// unless it's followed by more code on the same line (e.g. } else { )
-    @objc public class func blankLinesAtEndOfScope(_ formatter: Formatter) {
+    @objc public class func removeBlankLinesAtEndOfScope(_ formatter: Formatter) {
         guard formatter.options.removeBlankLines else { return }
         formatter.forEach(.endOfScope) { i, token in
             guard ["}", ")", "]", ">"].contains(token.string),
@@ -646,7 +646,7 @@ extension FormatRules {
     }
 
     /// Adds a blank line immediately after a closing brace, unless followed by another closing brace
-    @objc public class func blankLinesBetweenScopes(_ formatter: Formatter) {
+    @objc public class func insertBlankLinesBetweenScopes(_ formatter: Formatter) {
         guard formatter.options.insertBlankLines else { return }
         var spaceableScopeStack = [true]
         var isSpaceableScopeType = false
@@ -711,7 +711,7 @@ extension FormatRules {
     }
 
     /// Adds a blank line around MARK: comments
-    @objc public class func blankLinesAroundMark(_ formatter: Formatter) {
+    @objc public class func insertBlankLinesAroundMark(_ formatter: Formatter) {
         guard formatter.options.insertBlankLines else { return }
         formatter.forEachToken { i, token in
             guard case let .commentBody(comment) = token, comment.hasPrefix("MARK:"),

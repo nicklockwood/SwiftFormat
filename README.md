@@ -244,108 +244,6 @@ To enable the rule(s) again, use:
 **Note:** The `swiftformat:enable` directive only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.
 
 Here are all the rules that SwiftFormat currently applies, and the effects that they have:
-
-***blankLinesAtEndOfScope*** - removes trailing blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
-
-```diff
-  func foo() {
-    // foo
-- 
-  }
-
-  func foo() {
-    // foo
-  }
-```
-
-```diff
-  array = [
-    foo,
-    bar,
-    baz,
-- 
-  ]
-
-  array = [
-    foo,
-    bar,
-    baz,
-  ]
-```
-
-***blankLinesAtStartOfScope*** - removes leading blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
-
-```diff
-  func foo() {
--
-    // foo 
-  }
-
-  func foo() {
-    // foo
-  }
-```
-
-```diff
-  array = [
--
-    foo,
-    bar,
-    baz, 
-  ]
-
-  array = [
-    foo,
-    bar,
-    baz,
-  ]
-```
-
-***blankLinesBetweenScopes*** - adds a blank line before each class, struct, enum, extension, protocol or function. This rule can be configured using the `--insertlines` option:
-
-```diff
-  func foo() {
-    // foo
-  }
-  func bar() {
-    // bar
-  }
-  var baz: Bool
-  var quux: Int
-
-  func foo() {
-    // foo
-  }
-+ 
-  func bar() {
-    // bar
-  }
-+ 
-  var baz: Bool
-  var quux: Int
-```
-
-***blankLinesAroundMark*** - adds a blank line before and after each `MARK:` comment. This rule can be configured using the `--insertlines` option:
-
-```diff
-  func foo() {
-    // foo
-  }
-  // MARK: bar
-  func bar() {
-    // bar
-  }
-  
-  func foo() {
-    // foo
-  }
-+
-  // MARK: bar
-+
-  func bar() {
-    // bar
-  }
-```
                          
 ***braces*** - implements K&R (default) or Allman-style indentation, depending on the `--allman` option:
 
@@ -520,6 +418,52 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
   }
 ```
 
+***insertBlankLinesAroundMark*** - adds a blank line before and after each `MARK:` comment:
+
+```diff
+  func foo() {
+    // foo
+  }
+  // MARK: bar
+  func bar() {
+    // bar
+  }
+  
+  func foo() {
+    // foo
+  }
++
+  // MARK: bar
++
+  func bar() {
+    // bar
+  }
+```
+
+***insertBlankLinesBetweenScopes*** - adds a blank line before each class, struct, enum, extension, protocol or function:
+
+```diff
+  func foo() {
+    // foo
+  }
+  func bar() {
+    // bar
+  }
+  var baz: Bool
+  var quux: Int
+
+  func foo() {
+    // foo
+  }
++ 
+  func bar() {
+    // bar
+  }
++ 
+  var baz: Bool
+  var quux: Int
+```
+
 ***linebreakAtEndOfFile*** - ensures that the last line of the file is empty.
        
 ***linebreaks*** - normalizes all linebreaks to use the same character, as specified in options (either CR, LF or CRLF, depending on the `--linebreaks` option).
@@ -688,6 +632,62 @@ var foo: Int? = 0
 + String("text")
 ```
     
+***removeBlankLinesAtEndOfScope*** - removes trailing blank lines from inside braces, brackets, parens or chevrons:
+
+```diff
+  func foo() {
+    // foo
+- 
+  }
+
+  func foo() {
+    // foo
+  }
+```
+
+```diff
+  array = [
+    foo,
+    bar,
+    baz,
+- 
+  ]
+
+  array = [
+    foo,
+    bar,
+    baz,
+  ]
+```
+
+***removeBlankLinesAtStartOfScope*** - removes leading blank lines from inside braces, brackets, parens or chevrons:
+
+```diff
+  func foo() {
+-
+    // foo 
+  }
+
+  func foo() {
+    // foo
+  }
+```
+
+```diff
+  array = [
+-
+    foo,
+    bar,
+    baz, 
+  ]
+
+  array = [
+    foo,
+    bar,
+    baz,
+  ]
+```
+ 
 ***semicolons*** - removes semicolons at the end of lines and optionally (depending on the `--semicolons` option) replaces inline semicolons with a linebreak:
 
 ```diff

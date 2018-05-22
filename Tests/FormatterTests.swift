@@ -114,7 +114,7 @@ class FormatterTests: XCTestCase {
 
     func testFormatterDirectives() {
         let input = """
-        // swiftformat:disable indent blankLinesBetweenScopes redundantSelf
+        // swiftformat:disable indent insertBlankLinesBetweenScopes redundantSelf
         class Foo {
         let _foo = "foo"
         func foo() {
@@ -130,7 +130,7 @@ class FormatterTests: XCTestCase {
         }
         """
         let output = """
-        // swiftformat:disable indent blankLinesBetweenScopes redundantSelf
+        // swiftformat:disable indent insertBlankLinesBetweenScopes redundantSelf
         class Foo {
         let _foo = "foo"
         func foo() {

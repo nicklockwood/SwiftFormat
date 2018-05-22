@@ -1176,10 +1176,10 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     try processOption("insertlines", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "enabled", "true":
-            print("`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` instead", as: .warning)
+            print("`--insertlines` option is deprecated. Use `--enable insertBlankLinesBetweenScopes` or `--enable insertBlankLinesAroundMark` instead", as: .warning)
             options.insertBlankLines = true
         case "disabled", "false":
-            print("`--insertlines` option is deprecated. Use `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead", as: .warning)
+            print("`--insertlines` option is deprecated. Use `--disable insertBlankLinesBetweenScopes` or `--disable insertBlankLinesAroundMark` instead", as: .warning)
             options.insertBlankLines = false
         default:
             throw FormatError.options("")
@@ -1188,10 +1188,10 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     try processOption("removelines", in: args, from: &arguments) {
         switch $0.lowercased() {
         case "enabled", "true":
-            print("`--removelines` option is deprecated. Use `--enable blankLinesAtStartOfScope` or `--enable blankLinesAtEndOfScope` instead", as: .warning)
+            print("`--removelines` option is deprecated. Use `--enable removeBlankLinesAtStartOfScope` or `--enable removeBlankLinesAtEndOfScope` instead", as: .warning)
             options.removeBlankLines = true
         case "disabled", "false":
-            print("`--removelines` option is deprecated. Use `--disable blankLinesAtStartOfScope` or `--disable blankLinesAtEndOfScope` instead", as: .warning)
+            print("`--removelines` option is deprecated. Use `--disable removeBlankLinesAtStartOfScope` or `--disable removeBlankLinesAtEndOfScope` instead", as: .warning)
             options.removeBlankLines = false
         default:
             throw FormatError.options("")

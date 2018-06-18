@@ -145,6 +145,7 @@ class RulesTests: XCTestCase {
         let input = "#available (iOS 9.0, *)"
         let output = "#available(iOS 9.0, *)"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundParens]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundParens, FormatRules.spaceAroundOperators]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 

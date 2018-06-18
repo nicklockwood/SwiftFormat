@@ -3175,7 +3175,7 @@ private extension FormatRules {
                             startIndex += 1
                         }
                     }
-                    let range = ClosedRange(startIndex ... endIndex)
+                    let range: ClosedRange = startIndex ... endIndex
                     let currentImport = Import(
                         range: range,
                         tokens: Array(formatter.tokens[range])

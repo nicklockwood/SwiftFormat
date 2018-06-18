@@ -3769,6 +3769,7 @@ class RulesTests: XCTestCase {
         let input = "if case .foo(let _) = bar {}"
         let output = "if case .foo(_) = bar {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantLet]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet, FormatRules.redundantLet]), output)
         let rules = FormatRules.all(except: ["redundantPattern"])
         XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
@@ -3777,6 +3778,7 @@ class RulesTests: XCTestCase {
         let input = "if case .foo(var _, var /* unused */ _) = bar {}"
         let output = "if case .foo(_, /* unused */ _) = bar {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantLet]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet, FormatRules.redundantLet]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
@@ -5214,6 +5216,14 @@ class RulesTests: XCTestCase {
         let output = "import Foo\nswitch (foo, bar) {\ncase (let .baz(quux), bar): break\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoHoistLetWithEmptArg() {
+        let input = "if .foo(let _) = bar {}"
+        let output = "if .foo(let _) = bar {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        let rules = FormatRules.all(except: ["redundantLet", "redundantPattern"])
+        XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
     // hoist = false

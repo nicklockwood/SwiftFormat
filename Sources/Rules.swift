@@ -2595,7 +2595,7 @@ extension FormatRules {
                     break
                 }
             }
-            return (identifierFound && !keywordFound) || indices.isEmpty ? nil : indices
+            return !identifierFound || !keywordFound || indices.isEmpty ? nil : indices
         }
 
         formatter.forEach(.startOfScope("(")) { i, _ in

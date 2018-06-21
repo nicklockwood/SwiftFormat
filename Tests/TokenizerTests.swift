@@ -1962,6 +1962,24 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testGenericsWithInfixOperator() {
+        let input = "Foo<Bar> || Foo<Baz>"
+        let output: [Token] = [
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .identifier("Bar"),
+            .endOfScope(">"),
+            .space(" "),
+            .operator("||", .infix),
+            .space(" "),
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .identifier("Baz"),
+            .endOfScope(">"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testIfLessThanIfGreaterThan() {
         let input = "if x < 0 {}\nif y > (0) {}"
         let output: [Token] = [

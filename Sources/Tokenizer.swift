@@ -1347,17 +1347,8 @@ public func tokenize(_ source: String) -> [Token] {
                 case .endOfScope(">") = tokens[prevIndex] {
                 // Fix up misidentified generic that is actually a pair of operators
                 switch token {
-                case let .operator(string, _) where ["->", "?", "!", ".", "..."].contains(string):
-                    break
-                case .operator("=", _):
-                    if prevIndex == tokens.count - 2 {
-                        // TODO: this isn't the way swiftc disambiguates this case, so it won't
-                        // always work correctly. But in practice, it will be correct most of
-                        // the time, and when it's wrong, it should still result in code that
-                        // compiles correctly, even if it's mis-formatted
-                        fallthrough
-                    }
-                case .operator, .identifier, .number, .startOfScope("\""), .startOfScope("\"\"\""):
+                case .operator("=", _) where prevIndex == tokens.count - 2,
+                     .identifier, .number, .startOfScope("\""), .startOfScope("\"\"\""):
                     convertClosingChevronToSymbol(at: prevIndex, andOpeningChevron: true)
                     processToken()
                     return

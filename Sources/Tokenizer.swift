@@ -1445,33 +1445,52 @@ public func tokenize(_ source: String) -> [Token] {
                 if case let .keyword(name) = tokens[prevPrevIndex] {
                     tokens[prevPrevIndex] = .identifier(name)
                 }
-            } else if case let .keyword(string) = token, [.startOfScope("{"), .startOfScope(":")].contains(scope) {
-                switch string {
-                case "default":
-                    tokens[tokens.count - 1] = .endOfScope(string)
-                    processToken()
-                    return
-                case "case":
-                    if let keywordIndex = index(of: .keyword, before: scopeIndex),
-                        case .keyword("enum") = tokens[keywordIndex] {
+            } else if case let .keyword(string) = token {
+                var scope = scope
+                var scopeStackIndex = scopeIndexStack.count - 1
+                while scopeStackIndex > 0, scope == .startOfScope("#if") {
+                    scopeStackIndex -= 1
+                    scope = tokens[scopeIndexStack[scopeStackIndex]]
+                }
+                if [.startOfScope("{"), .startOfScope(":")].contains(scope) {
+                    switch string {
+                    case "default":
+                        tokens[tokens.count - 1] = .endOfScope(string)
+                        processToken()
+                        return
+                    case "case":
+                        if let keywordIndex = index(of: .keyword, before: scopeIndex),
+                            case .keyword("enum") = tokens[keywordIndex] {
+                            break
+                        }
+                        if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1) {
+                            switch tokens[prevIndex] {
+                            case .keyword("if"),
+                                 .keyword("guard"),
+                                 .keyword("while"),
+                                 .keyword("for"),
+                                 .delimiter(","):
+                                break
+                            default:
+                                tokens[tokens.count - 1] = .endOfScope(string)
+                                processToken()
+                                return
+                            }
+                        }
+                    default:
                         break
                     }
-                    if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1) {
-                        switch tokens[prevIndex] {
-                        case .keyword("if"),
-                             .keyword("guard"),
-                             .keyword("while"),
-                             .keyword("for"),
-                             .delimiter(","):
-                            break
-                        default:
-                            tokens[tokens.count - 1] = .endOfScope(string)
-                            processToken()
-                            return
-                        }
+                }
+            } else if scope == .startOfScope(":") {
+                if [.keyword("#else"), .keyword("#elseif")].contains(token) {
+                    scopeIndexStack.removeLast()
+                    return
+                } else if .endOfScope("#endif") == token {
+                    scopeIndexStack.removeLast()
+                    if let index = scopeIndexStack.last, tokens[index] == .startOfScope("#if") {
+                        scopeIndexStack.removeLast()
                     }
-                default:
-                    break
+                    return
                 }
             }
         }
@@ -1496,6 +1515,11 @@ public func tokenize(_ source: String) -> [Token] {
             convertClosingChevronToSymbol(at: tokens.count - 1, andOpeningChevron: false)
             return
         case let .endOfScope(string):
+            if ["case", "default"].contains(string), let scopeIndex = scopeIndexStack.last,
+                tokens[scopeIndex] == .startOfScope("#if") {
+                scopeIndexStack.append(tokens.count - 1)
+                return
+            }
             // Previous scope wasn't closed correctly
             tokens[tokens.count - 1] = .error(string)
             return

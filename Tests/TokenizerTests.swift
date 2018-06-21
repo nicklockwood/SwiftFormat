@@ -2608,6 +2608,106 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testSwitchWithConditionalCase() {
+        let input = "switch foo {\ncase bar:\nbreak\n#if baz\ndefault:\nbreak\n#endif\n}"
+        let output: [Token] = [
+            .keyword("switch"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .endOfScope("case"),
+            .space(" "),
+            .identifier("bar"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .startOfScope("#if"),
+            .space(" "),
+            .identifier("baz"),
+            .linebreak("\n"),
+            .endOfScope("default"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("#endif"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSwitchWithConditionalCase2() {
+        let input = "switch foo {\n#if baz\ndefault:\nbreak\n#else\ncase bar:\nbreak\n#endif\n}"
+        let output: [Token] = [
+            .keyword("switch"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .startOfScope("#if"),
+            .space(" "),
+            .identifier("baz"),
+            .linebreak("\n"),
+            .endOfScope("default"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .keyword("#else"),
+            .linebreak("\n"),
+            .endOfScope("case"),
+            .space(" "),
+            .identifier("bar"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("#endif"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSwitchWithConditionalCase3() {
+        let input = "switch foo {\n#if baz\ncase foo:\nbreak\n#endif\ncase bar:\nbreak\n}"
+        let output: [Token] = [
+            .keyword("switch"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .startOfScope("#if"),
+            .space(" "),
+            .identifier("baz"),
+            .linebreak("\n"),
+            .endOfScope("case"),
+            .space(" "),
+            .identifier("foo"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("#endif"),
+            .linebreak("\n"),
+            .endOfScope("case"),
+            .space(" "),
+            .identifier("bar"),
+            .startOfScope(":"),
+            .linebreak("\n"),
+            .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: dot prefix
 
     func testEnumValueInDictionaryLiteral() {

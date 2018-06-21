@@ -2071,9 +2071,11 @@ extension FormatRules {
             }
         }
         func processBody(at index: inout Int, localNames: Set<String>, members: Set<String>, isTypeRoot: Bool) {
-            assert({ formatter.currentScope(at: index).map {
-                [.startOfScope("{"), .startOfScope(":")].contains($0)
-            } ?? true }())
+            let currentScope = formatter.currentScope(at: index)
+            let isWhereClause = index > 0 && formatter.tokens[index - 1] == .keyword("where")
+            assert(isWhereClause || currentScope.map { token -> Bool in
+                [.startOfScope("{"), .startOfScope(":")].contains(token)
+            } ?? true)
             if formatter.options.removeSelf {
                 // Check if scope actually includes self before we waste a bunch of time
                 var scopeCount = 0
@@ -2233,6 +2235,21 @@ extension FormatRules {
                         lastKeyword = token.string
                     }
                     classOrStatic = false
+                case .keyword("where") where lastKeyword == "in":
+                    lastKeyword = ""
+                    var localNames = localNames
+                    guard let keywordIndex = formatter.index(of: .keyword, before: index),
+                        let prevKeywordIndex = formatter.index(of: .keyword, before: keywordIndex),
+                        let prevKeywordToken = formatter.token(at: prevKeywordIndex),
+                        case .keyword("for") = prevKeywordToken else { return }
+                    for token in formatter.tokens[prevKeywordIndex + 1 ..< keywordIndex] {
+                        if case let .identifier(name) = token, name != "_" {
+                            localNames.insert(token.unescaped())
+                        }
+                    }
+                    index += 1
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    continue
                 case .keyword("while") where lastKeyword == "repeat":
                     lastKeyword = ""
                 case let .keyword(name):
@@ -2296,6 +2313,8 @@ extension FormatRules {
                     }
                     processAccessors(["get", "set", "willSet", "didSet"], at: &index, localNames: localNames, members: members)
                     continue
+                case .startOfScope("{") where isWhereClause:
+                    return
                 case .startOfScope("//"):
                     if let bodyIndex = formatter.index(of: .nonSpace, after: index),
                         case let .commentBody(comment) = formatter.tokens[bodyIndex] {

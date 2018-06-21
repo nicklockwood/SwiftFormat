@@ -4937,19 +4937,45 @@ class RulesTests: XCTestCase {
             }
         }
         """
-        let output = """
-        struct Foo {
-            var foo = 1
-        }
+        let output = input
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
 
-        var bar = 5
-
-        extension Foo {
-            func baz() {
-                bar = 6
+    func testForWhereVarNotTreatedAsMember() {
+        let input = """
+        class Foo {
+            var bar: Bar
+            var bazziestBar: Bar? {
+                for bar in self where bar.baz {
+                    return bar
+                }
+                return nil
             }
         }
         """
+        let output = input
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSwitchCaseWhereVarNotTreatedAsMember() {
+        let input = """
+        class Foo {
+            var bar: Bar
+            var bazziestBar: Bar? {
+                switch x {
+                case let bar where bar.baz:
+                    return bar
+                default:
+                    return nil
+                }
+            }
+        }
+        """
+        let output = input
         let options = FormatOptions(removeSelf: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

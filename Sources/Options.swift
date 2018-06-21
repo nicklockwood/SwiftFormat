@@ -846,6 +846,9 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
     options.removeSelf = {
         var removed = 0, unremoved = 0
 
+        var typeStack = [String]()
+        var membersByType = [String: Set<String>]()
+        var classMembersByType = [String: Set<String>]()
         func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
             while let token = formatter.token(at: index) {
                 switch token {
@@ -865,7 +868,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                             }
                             index = endIndex
                             continue
-                        case .keyword, .startOfScope("{"), .startOfScope(":"):
+                        case .keyword, .startOfScope("{"), .endOfScope("}"), .startOfScope(":"):
                             return
                         case .delimiter(","):
                             index = nextIndex
@@ -882,14 +885,17 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
             }
         }
         func processBody(at index: inout Int, localNames: Set<String>, members: Set<String>, isTypeRoot: Bool) {
-            assert({ formatter.currentScope(at: index).map {
-                [.startOfScope("{"), .startOfScope(":")].contains($0)
-            } ?? true }())
+            let currentScope = formatter.currentScope(at: index)
+            let isWhereClause = index > 0 && formatter.tokens[index - 1] == .keyword("where")
+            assert(isWhereClause || currentScope.map { token -> Bool in
+                [.startOfScope("{"), .startOfScope(":")].contains(token)
+            } ?? true)
             // Gather members & local variables
-            var members = members
-            var classMembers = Set<String>()
+            let type = (isTypeRoot && typeStack.count == 1) ? typeStack.first : nil
+            var members = type.flatMap { membersByType[$0] } ?? members
+            var classMembers = type.flatMap { classMembersByType[$0] } ?? Set<String>()
             var localNames = localNames
-            do {
+            if !isTypeRoot {
                 var i = index
                 var classOrStatic = false
                 outer: while let token = formatter.token(at: i) {
@@ -946,7 +952,11 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     i += 1
                 }
             }
-            // Detect self
+            if let type = type {
+                membersByType[type] = members
+                classMembersByType[type] = classMembers
+            }
+            // Remove or add `self`
             var scopeStack = [Token]()
             var lastKeyword = ""
             var classOrStatic = false
@@ -957,24 +967,36 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 case .keyword("func"), .keyword("init"), .keyword("subscript"):
                     lastKeyword = ""
                     if classOrStatic {
-                        assert(isTypeRoot)
+                        if !isTypeRoot {
+                            return // error unless formatter.options.fragment = true
+                        }
                         processFunction(at: &index, localNames: localNames, members: classMembers)
                         classOrStatic = false
                     } else {
                         processFunction(at: &index, localNames: localNames, members: members)
                     }
+                    assert(formatter.token(at: index) != .endOfScope("}"))
+                    continue
                 case .keyword("static"):
                     classOrStatic = true
                 case .keyword("class"):
                     if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)?.isIdentifier == true {
                         fallthrough
                     }
-                    classOrStatic = true
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .delimiter(":") {
+                        classOrStatic = true
+                    }
                 case .keyword("extension"), .keyword("struct"), .keyword("enum"):
                     guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .keyword("import"),
                         let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
+                    guard let nameToken = formatter.next(.identifier, after: index),
+                        case let .identifier(name) = nameToken else {
+                        return // error
+                    }
                     index = scopeStart + 1
+                    typeStack.append(name)
                     processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: true)
+                    typeStack.removeLast()
                 case .keyword("var"), .keyword("let"):
                     index += 1
                     switch lastKeyword {
@@ -1007,11 +1029,33 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                         lastKeyword = token.string
                     }
                     classOrStatic = false
+                case .keyword("where") where lastKeyword == "in":
+                    lastKeyword = ""
+                    var localNames = localNames
+                    guard let keywordIndex = formatter.index(of: .keyword, before: index),
+                        let prevKeywordIndex = formatter.index(of: .keyword, before: keywordIndex),
+                        let prevKeywordToken = formatter.token(at: prevKeywordIndex),
+                        case .keyword("for") = prevKeywordToken else { return }
+                    for token in formatter.tokens[prevKeywordIndex + 1 ..< keywordIndex] {
+                        if case let .identifier(name) = token, name != "_" {
+                            localNames.insert(token.unescaped())
+                        }
+                    }
+                    index += 1
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    continue
                 case .keyword("while") where lastKeyword == "repeat":
                     lastKeyword = ""
                 case let .keyword(name):
                     lastKeyword = name
                 case .startOfScope("("):
+                    // Special case to support autoclosure arguments in the Nimble framework
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("expect") {
+                        index = formatter.index(of: .endOfScope(")"), after: index) ?? index
+                        break
+                    }
+                    fallthrough
+                case .startOfScope("\""), .startOfScope("#if"):
                     scopeStack.append(token)
                 case .startOfScope("{") where lastKeyword == "catch":
                     lastKeyword = ""
@@ -1063,6 +1107,14 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     }
                     processAccessors(["get", "set", "willSet", "didSet"], at: &index, localNames: localNames, members: members)
                     continue
+                case .startOfScope("{") where isWhereClause:
+                    return
+                case .startOfScope("//"):
+                    if let bodyIndex = formatter.index(of: .nonSpace, after: index),
+                        case let .commentBody(comment) = formatter.tokens[bodyIndex] {
+                        formatter.processCommentBody(comment)
+                    }
+                    fallthrough
                 case .startOfScope:
                     index = (formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)) + 1
                     continue
@@ -1070,11 +1122,19 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
                         let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
                             $0 == .operator(".", .infix)
-                        }), let token = formatter.next(.nonSpaceOrLinebreak, after: dotIndex), token.isIdentifier {
+                        }), formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {
+                            $0.isIdentifier && !localNames.contains($0.unescaped())
+                        }) != nil {
                         let name = token.unescaped()
                         if !localNames.contains(name) {
                             unremoved += 1
                         }
+                    }
+                case .identifier("type"): // Special case for type(of:)
+                    guard let parenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
+                        $0 == .startOfScope("(")
+                    }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: parenIndex) == .identifier("of") else {
+                        fallthrough
                     }
                 case .identifier where !isTypeRoot:
                     let name = token.unescaped()
@@ -1132,7 +1192,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
             }
             if foundAccessors {
                 guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
-                index = endIndex
+                index = endIndex + 1
             } else {
                 index += 1
                 processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)

@@ -913,6 +913,19 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                         }
                         i = nextIndex
                         continue
+                    case .keyword("switch"):
+                        guard let nextIndex = formatter.index(of: .startOfScope("{"), after: i),
+                            var endIndex = formatter.index(of: .endOfScope, after: nextIndex) else {
+                            return // error
+                        }
+                        while formatter.tokens[endIndex] != .endOfScope("}") {
+                            guard let nextIndex = formatter.index(of: .startOfScope(":"), after: endIndex),
+                                let _endIndex = formatter.index(of: .endOfScope, after: nextIndex) else {
+                                return // error
+                            }
+                            endIndex = _endIndex
+                        }
+                        i = endIndex
                     case .keyword("var"), .keyword("let"):
                         i += 1
                         if isTypeRoot {
@@ -940,11 +953,12 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                         }
                     case .startOfScope("("), .endOfScope(")"):
                         break
+                    case .startOfScope(":"):
+                        break
                     case .startOfScope:
                         classOrStatic = false
                         i = formatter.endOfScope(at: i) ?? (formatter.tokens.count - 1)
-                    case .endOfScope("}"):
-                        i += 1
+                    case .endOfScope("}"), .endOfScope("case"), .endOfScope("default"):
                         break outer
                     default:
                         break
@@ -968,7 +982,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     lastKeyword = ""
                     if classOrStatic {
                         if !isTypeRoot {
-                            return // error unless formatter.options.fragment = true
+                            return // error
                         }
                         processFunction(at: &index, localNames: localNames, members: classMembers)
                         classOrStatic = false
@@ -1085,8 +1099,29 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                         processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
                     }
                     continue
-                case .startOfScope(":"),
-                     .startOfScope("{") where ["for", "where", "if", "else", "while", "do", "switch"].contains(lastKeyword):
+                case .startOfScope("{") where isWhereClause:
+                    return
+                case .startOfScope("{") where lastKeyword == "switch":
+                    lastKeyword = ""
+                    guard let i = formatter.index(of: .endOfScope, after: index) else {
+                        return
+                    }
+                    switch formatter.tokens[i] {
+                    case .endOfScope("case"), .endOfScope("default"):
+                        index = i + 1
+                        let localNames = localNames
+                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                        break
+                    case .endOfScope("}"):
+                        index = i
+                    default:
+                        break
+                    }
+                case .startOfScope(":"):
+                    break
+                case .endOfScope("case"), .endOfScope("default"):
+                    return
+                case .startOfScope("{") where ["for", "where", "if", "else", "while", "do"].contains(lastKeyword):
                     lastKeyword = ""
                     fallthrough
                 case .startOfScope("{") where lastKeyword == "repeat":
@@ -1107,8 +1142,6 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     }
                     processAccessors(["get", "set", "willSet", "didSet"], at: &index, localNames: localNames, members: members)
                     continue
-                case .startOfScope("{") where isWhereClause:
-                    return
                 case .startOfScope("//"):
                     if let bodyIndex = formatter.index(of: .nonSpace, after: index),
                         case let .commentBody(comment) = formatter.tokens[bodyIndex] {

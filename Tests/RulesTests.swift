@@ -4733,6 +4733,58 @@ class RulesTests: XCTestCase {
         XCTAssertNoThrow(try format(input, rules: FormatRules.default))
     }
 
+    func testSelfRemovedFromSwitchCaseWhere() {
+        let input = """
+        class Foo {
+            var bar: Bar
+            var bazziestBar: Bar? {
+                switch x {
+                case let foo where self.bar.baz:
+                    return self.bar
+                default:
+                    return nil
+                }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Bar
+            var bazziestBar: Bar? {
+                switch x {
+                case let foo where bar.baz:
+                    return bar
+                default:
+                    return nil
+                }
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSwitchCaseWhereMemberNotTreatedAsVar() {
+        let input = """
+        class Foo {
+            var bar: Bar
+            var bazziestBar: Bar? {
+                switch x {
+                case let bar where self.bar.baz:
+                    return self.bar
+                default:
+                    return nil
+                }
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // removeSelf = false
 
     func testInsertSelf() {
@@ -4976,6 +5028,102 @@ class RulesTests: XCTestCase {
         }
         """
         let output = input
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSwitchCaseVarDoesntLeak() {
+        let input = """
+        class Foo {
+            var bar: Bar
+            var bazziestBar: Bar? {
+                switch x {
+                case let bar:
+                    return bar
+                default:
+                    return bar
+                }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Bar
+            var bazziestBar: Bar? {
+                switch x {
+                case let bar:
+                    return bar
+                default:
+                    return self.bar
+                }
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSelfInsertedInSwitchCaseLet() {
+        let input = """
+        class Foo {
+            var bar: Bar
+            var bazziestBar: Bar? {
+                switch x {
+                case let foo:
+                    return bar
+                default:
+                    return bar
+                }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Bar
+            var bazziestBar: Bar? {
+                switch x {
+                case let foo:
+                    return self.bar
+                default:
+                    return self.bar
+                }
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSelfInsertedInSwitchCaseWhere() {
+        let input = """
+        class Foo {
+            var bar: Bar
+            var bazziestBar: Bar? {
+                switch x {
+                case let foo where bar.baz:
+                    return bar
+                default:
+                    return bar
+                }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Bar
+            var bazziestBar: Bar? {
+                switch x {
+                case let foo where self.bar.baz:
+                    return self.bar
+                default:
+                    return self.bar
+                }
+            }
+        }
+        """
         let options = FormatOptions(removeSelf: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

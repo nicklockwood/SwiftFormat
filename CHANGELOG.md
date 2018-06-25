@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.33.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.8) (2018-06-25)
+
+- Fixed issue where `self` could be incorrectly inserted inside a `where` clause
+- Fixed a bug where generics could be misidentified as greater-than / less-than operators
+- Fixed formatting of `#if` blocks around case statements
+- The `hoistPatternLet` rule no longer hoists the `let or `var` when there are no named variables
+- Fixed nondeterministic behavior when applying spacing rules
+- Fixed warning when compiling with Xcode 10 beta
+
 ## [0.33.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.7) (2018-05-18)
 
 - Fixed an issue where headerdoc comments could be stripped by `fileHeader` rule

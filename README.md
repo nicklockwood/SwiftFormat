@@ -159,6 +159,15 @@ To set up SwiftFormat as an Xcode build phase, do the following:
 	
 	    "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat"
 
+Alternatively, you can reference a locally installed copy add a new "Run Script Phase" with:
+```bash
+  if which swiftformat >/dev/null; then
+    swiftformat .
+  else
+    echo "warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat"
+  fi
+```
+
     **NOTE:** Adding this script will slightly increase your build time, and will make changes to your source files as you work on them, which can have annoying side-effects such as clearing the undo buffer. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 
 

@@ -2312,16 +2312,18 @@ extension FormatRules {
                     guard let i = formatter.index(of: .endOfScope, after: index) else {
                         return
                     }
-                    switch formatter.tokens[i] {
-                    case .endOfScope("case"), .endOfScope("default"):
-                        index = i + 1
-                        let localNames = localNames
-                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
-                        break
-                    case .endOfScope("}"):
-                        index = i
-                    default:
-                        break
+                    index = i
+                    loop: while let token = formatter.token(at: index) {
+                        index += 1
+                        switch token {
+                        case .endOfScope("case"), .endOfScope("default"):
+                            let localNames = localNames
+                            processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                        case .endOfScope("}"):
+                            break loop
+                        default:
+                            break
+                        }
                     }
                 case .startOfScope(":"):
                     break

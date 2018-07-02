@@ -4772,6 +4772,36 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testSwitchCaseLetVarRecognized() {
+        let input = """
+        switch foo {
+        case .bar:
+            baz = nil
+        case let baz:
+            self.baz = baz
+        }
+        """
+        let output = input
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSwitchCaseHoistedLetVarRecognized() {
+        let input = """
+        switch foo {
+        case .bar:
+            baz = nil
+        case let .foo(baz):
+            self.baz = baz
+        }
+        """
+        let output = input
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     func testSwitchCaseWhereMemberNotTreatedAsVar() {
         let input = """
         class Foo {

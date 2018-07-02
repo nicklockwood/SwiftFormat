@@ -928,6 +928,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
     }
 
+    func testNoAddSpaceAroundOperatorInsideParens() {
+        let input = "(!=)"
+        let output = "(!=)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: spaceAroundComments
 
     func testSpaceAroundCommentInParens() {

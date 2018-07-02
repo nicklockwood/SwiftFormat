@@ -1174,9 +1174,9 @@ public func tokenize(_ source: String) -> [Token] {
 
     func isUnwrapOperator(at index: Int) -> Bool {
         let token = tokens[index]
-        if case let .operator(string, _) = token, ["?", "!"].contains(string) &&
-            index > 0 && !tokens[index - 1].isSpaceOrLinebreak {
-            return true
+        if case let .operator(string, _) = token, ["?", "!"].contains(string), index > 0 {
+            let token = tokens[index - 1]
+            return !token.isSpaceOrLinebreak && !token.isStartOfScope
         }
         return false
     }
@@ -1256,10 +1256,12 @@ public func tokenize(_ source: String) -> [Token] {
                     scopeIndexStack.append(i) // TODO: should we be doing this here?
                 }
                 type = .infix
-                break
+            } else if !prevToken.isStartOfScope {
+                type = .postfix
+            } else {
+                type = .none
             }
-            type = .postfix
-        case "!" where !prevToken.isSpaceOrCommentOrLinebreak:
+        case "!" where !prevToken.isSpaceOrCommentOrLinebreak && !prevToken.isStartOfScope:
             type = .postfix
         default:
             guard let nextNonSpaceToken =

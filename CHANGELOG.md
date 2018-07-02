@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.33.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.9) (2018-07-01)
+
+- Fixed incorrect formatting of `!=` operator when used as a function reference
+- Fixed some additional cases where `self` was not inserted or removed correctly
+
 ## [0.33.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.8) (2018-06-25)
 
 - Fixed issue where `self` could be incorrectly inserted inside a `where` clause

@@ -585,7 +585,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/CommandLineTool/swiftformat\" \"${SRCROOT}\" --experimental enabled --cache ignore";
+			shellScript = "\"${SRCROOT}/format.sh\"";
 		};
 		0142F06D1D72B4A6007D66CC /* Format Code */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -599,7 +599,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/CommandLineTool/swiftformat\" \"${SRCROOT}\" --experimental enabled --cache ignore";
+			shellScript = "\"${SRCROOT}/format.sh\"";
 		};
 		017AEBB31D6F27D500764325 /* Copy Binary */ = {
 			isa = PBXShellScriptBuildPhase;

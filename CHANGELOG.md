@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.33.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.10) (2018-07-03)
+
+- Fixed a bug where `sortedImports` rule could strip code between `import` statements
+- Fixed a case where `self` was removed incorrectly inside a switch case condition
+
 ## [0.33.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.9) (2018-07-01)
 
 - Fixed incorrect formatting of `!=` operator when used as a function reference

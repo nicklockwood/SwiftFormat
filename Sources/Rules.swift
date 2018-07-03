@@ -3115,12 +3115,37 @@ extension FormatRules {
 
     /// Sort import statements
     @objc public class func sortedImports(_ formatter: Formatter) {
-        processImports(formatter, sort: true)
+        var importStack = parseImports(formatter)
+        while let importRanges = importStack.popLast() {
+            guard importRanges.count > 1 else { continue }
+            let range: Range = importRanges.first!.1.lowerBound ..< importRanges.last!.1.upperBound
+            let sortedRanges = importRanges.sorted { $0.0 < $1.0 }
+            var insertedLinebreak = false
+            var sortedTokens = sortedRanges.flatMap { inputRange -> [Token] in
+                var tokens = Array(formatter.tokens[inputRange.1])
+                if tokens.first?.isLinebreak == false {
+                    insertedLinebreak = true
+                    tokens.insert(Token.linebreak(formatter.options.linebreak), at: tokens.startIndex)
+                }
+                return tokens
+            }
+            if insertedLinebreak {
+                sortedTokens.removeFirst()
+            }
+            formatter.replaceTokens(inRange: range, with: sortedTokens)
+        }
     }
 
     /// Remove duplicate import statements
     @objc public class func duplicateImports(_ formatter: Formatter) {
-        processImports(formatter, sort: false)
+        var importStack = parseImports(formatter)
+        while var importRanges = importStack.popLast() {
+            while let range = importRanges.popLast() {
+                if importRanges.contains(where: { $0.0 == range.0 }) {
+                    formatter.removeTokens(inRange: range.1)
+                }
+            }
+        }
     }
 
     /// Strip unnecessary `weak` from @IBOutlet properties
@@ -3141,161 +3166,87 @@ extension FormatRules {
 
 private extension FormatRules {
     // Shared import rules implementation
-    @nonobjc static func processImports(_ formatter: Formatter, sort: Bool) {
-        struct Import {
-            var range: ClosedRange<Int>
-            var tokens: [Token]
-            var name: String {
-                var name = ""
-                for token in tokens {
-                    switch token {
-                    case let .identifier(string):
-                        name += string
+    static func parseImports(_ formatter: Formatter) -> [[(String, Range<Int>)]] {
+        var importStack = [[(String, Range<Int>)]]()
+        var importRanges = [(String, Range<Int>)]()
+        formatter.forEach(.keyword("import")) { i, _ in
+
+            func pushStack() {
+                importStack.append(importRanges)
+                importRanges.removeAll()
+            }
+
+            // Get start of line
+            var startIndex = formatter.index(of: .linebreak, before: i) ?? 0
+            // Check for attributes
+            var previousKeywordIndex = formatter.index(of: .keyword, before: i)
+            while let previousIndex = previousKeywordIndex {
+                if formatter.tokens[previousIndex].isAttribute {
+                    if previousIndex < startIndex {
+                        startIndex = formatter.index(of: .linebreak, before: previousIndex) ?? 0
+                    }
+                    previousKeywordIndex = formatter.index(of: .keyword, before: previousIndex)
+                } else if previousIndex >= startIndex {
+                    // Can't handle another keyword on same line as import
+                    return
+                } else {
+                    break
+                }
+            }
+            // Gather comments
+            var prevIndex = formatter.index(of: .linebreak, before: startIndex) ?? 0
+            while startIndex > 0,
+                formatter.next(.nonSpace, after: prevIndex)?.isComment == true,
+                formatter.next(.nonSpaceOrComment, after: prevIndex)?.isLinebreak == true {
+                startIndex = prevIndex
+                prevIndex = formatter.index(of: .linebreak, before: startIndex) ?? 0
+            }
+            // Get end of line
+            let endIndex = formatter.index(of: .linebreak, after: i) ?? formatter.tokens.count
+            // Get name
+            if let firstPartIndex = formatter.index(of: .identifier, after: i) {
+                var name = formatter.tokens[firstPartIndex].string
+                var partIndex = firstPartIndex
+                loop: while let nextPartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: partIndex) {
+                    switch formatter.tokens[nextPartIndex] {
                     case .operator(".", .infix):
                         name += "."
+                    case let .identifier(string):
+                        name += string
                     default:
-                        break
+                        break loop
                     }
+                    partIndex = nextPartIndex
                 }
-                return name
+                importRanges.append((name.lowercased(), startIndex ..< endIndex as Range))
+            } else {
+                // Error
+                pushStack()
+                return
             }
-        }
-        var unconditionalImports = [Import]()
-        func isDuplicated(_ item: Import, in imports: [Import]) -> Bool {
-            if unconditionalImports.isEmpty {
-                return imports.contains(where: {
-                    item.name == $0.name && item.range.lowerBound != $0.range.lowerBound
-                })
+            if formatter.next(.spaceOrCommentOrLinebreak, after: endIndex)?.isLinebreak == true {
+                // Blank line after - consider this the end of a block
+                pushStack()
+                return
             }
-            return unconditionalImports.contains(where: {
-                item.name == $0.name
-            })
-        }
-        func process(imports: [[Import]]?) {
-            guard let imports = imports else { return }
-            for var imports in imports.reversed() {
-                if sort {
-                    guard let from = imports.first?.range.lowerBound,
-                        let to = imports.last?.range.upperBound else { continue }
-                    formatter.replaceTokens(inRange: from ... to, with: imports.sorted(by: {
-                        $0.name.caseInsensitiveCompare($1.name) == .orderedAscending
-                    }).flatMap { $0.tokens })
-                } else {
-                    for (index, item) in imports.enumerated().reversed() {
-                        if isDuplicated(item, in: imports) {
-                            formatter.removeTokens(inRange: item.range)
-                            imports.remove(at: index)
-                        }
+            if var nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex) {
+                while formatter.tokens[nextTokenIndex].isAttribute {
+                    guard let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: nextTokenIndex) else {
+                        // End of imports
+                        pushStack()
+                        return
                     }
+                    nextTokenIndex = nextIndex
+                }
+                if formatter.tokens[nextTokenIndex] != .keyword("import") {
+                    // End of imports
+                    pushStack()
+                    return
                 }
             }
         }
-        var importsStack = [[[Import]()]]
-        var removeTrailingToken = false
-        func enumerateImports() {
-            formatter.forEachToken { i, token in
-                switch token {
-                case .startOfScope("#if"):
-                    importsStack.append([[]])
-                case .keyword("#else"), .keyword("#elseif"):
-                    process(imports: importsStack.popLast())
-                    importsStack.append([[]])
-                case .endOfScope("#endif"):
-                    process(imports: importsStack.popLast())
-                case .keyword("import"):
-                    if let last = importsStack.last?.last?.last, last.range.contains(i) {
-                        return // This import is inside the previous Import
-                    }
-                    guard let nameIndex = formatter.index(of: .identifier, after: i) else {
-                        return // Import doesn't include a name - probably an error
-                    }
-                    let endIndex: Int
-                    if let index = formatter.index(of: .delimiter(";"), after: nameIndex),
-                        formatter.index(of: .linebreak, after: nameIndex) ?? formatter.tokens.count > index {
-                        if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: index) {
-                            if formatter.tokens[nextIndex].isLinebreak {
-                                // No need to replace semicolon since it's the last code on that line
-                                endIndex = nextIndex
-                            } else {
-                                // Replace semicolon with a linebreak
-                                formatter.insertSpace(formatter.indentForLine(at: index), at: index + 1)
-                                formatter.replaceToken(at: index, with: .linebreak(formatter.options.linebreak))
-                                endIndex = index
-                            }
-                        } else {
-                            endIndex = formatter.tokens.count
-                        }
-                    } else {
-                        endIndex = formatter.index(of: .linebreak, after: nameIndex) ?? formatter.tokens.count
-                    }
-                    if endIndex == formatter.tokens.count {
-                        // Import is the last line. Insert linebreak that will later be removed
-                        formatter.insertToken(.linebreak(formatter.options.linebreak), at: endIndex)
-                        removeTrailingToken = true
-                    }
-                    // Include associated metadata
-                    var startIndex = formatter.index(before: i, where: {
-                        !$0.isAttribute && !$0.isSpaceOrCommentOrLinebreak
-                    }) ?? 0
-                    // Don't include header comment
-                    if var referenceIndex = formatter.index(of: .keyword, after: startIndex - 1) {
-                        while let index = formatter.index(of: .linebreak, before: referenceIndex), index > startIndex {
-                            if formatter.last(.nonSpace, before: index)?.isLinebreak ?? true {
-                                startIndex = index
-                                break
-                            }
-                            referenceIndex = index
-                        }
-                    }
-                    switch formatter.tokens[startIndex] {
-                    case .keyword("import"), .startOfScope("//"), .startOfScope("/*"):
-                        break
-                    case let token where token.isAttribute:
-                        break
-                    case .linebreak:
-                        startIndex += 1
-                    default:
-                        startIndex = formatter.index(of: .nonSpaceOrComment, after: startIndex) ?? i
-                        if formatter.tokens[startIndex].isLinebreak {
-                            startIndex += 1
-                        }
-                    }
-                    let range: ClosedRange = startIndex ... endIndex
-                    let currentImport = Import(
-                        range: range,
-                        tokens: Array(formatter.tokens[range])
-                    )
-                    let lastIndex = importsStack.last!.endIndex
-                    importsStack[importsStack.endIndex - 1][lastIndex - 1].append(currentImport)
-                case .space, .linebreak, .identifier, .delimiter(";"), .operator(".", _),
-                     _ where token.isAttribute || token.isComment:
-                    break
-                case let .keyword(string) where
-                    ["class", "struct", "enum", "protocol", "var", "func"].contains(string):
-                    break
-                default:
-                    if !importsStack.last!.isEmpty {
-                        importsStack[importsStack.endIndex - 1].append([])
-                    }
-                }
-            }
-            // Safety precaution
-            if removeTrailingToken {
-                assert(formatter.tokens.last?.isLinebreak == true)
-                removeTrailingToken = formatter.tokens.last?.isLinebreak == true
-            }
-        }
-        // First pass
-        enumerateImports()
-        assert(importsStack.count == 1)
-        process(imports: importsStack.first)
-        // Second pass (dedupe only)
-        if !sort {
-            unconditionalImports = importsStack.first?.flatMap { $0 } ?? []
-            enumerateImports()
-        }
-        if removeTrailingToken {
-            formatter.removeLastToken()
-        }
+        // End of imports
+        importStack.append(importRanges)
+        return importStack
     }
 }

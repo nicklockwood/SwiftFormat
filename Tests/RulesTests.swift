@@ -6093,7 +6093,7 @@ class RulesTests: XCTestCase {
 
     func testSortedImportsOnSameLine() {
         let input = "import Foo; import Bar\nimport Baz"
-        let output = "import Bar\nimport Baz\nimport Foo"
+        let output = "import Baz\nimport Foo; import Bar"
         XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -6161,6 +6161,23 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoDeleteCodeBetweenImports3() {
+        let input = """
+        import Z
+
+        // one
+
+        #if FLAG
+            print("hi")
+        #endif
+
+        import A
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testSortContiguousImports() {
         let input = "import Foo\nimport Bar\nfunc bar() {}\nimport Quux\nimport Baz"
         let output = "import Bar\nimport Foo\nfunc bar() {}\nimport Baz\nimport Quux"
@@ -6182,12 +6199,6 @@ class RulesTests: XCTestCase {
         let output = "#if os(iOS)\n    import Foo\n#else\n    import Bar\n#endif"
         XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testRemoveDuplicateConditionalAndUnconditionalImport() {
-        let input = "import Foo\n#if os(iOS)\n    import Foo\n    import Bar\n#else\n    import Bar\n    import Baz\n#endif\nimport Bar"
-        let output = "import Foo\n#if os(iOS)\n#else\n    import Baz\n#endif\nimport Bar"
-        XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
     }
 
     func testNoRemoveOverlappingImports() {

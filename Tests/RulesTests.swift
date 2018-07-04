@@ -270,6 +270,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testSpaceBeforeTupleIndexArgument() {
+        let input = "foo.1 (true)"
+        let output = "foo.1(true)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: spaceInsideParens
 
     func testSpaceInsideParens() {
@@ -326,6 +333,13 @@ class RulesTests: XCTestCase {
     func testKeywordAsIdentifierBracketSpacing() {
         let input = "if foo.is[String]"
         let output = "if foo.is[String]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundBrackets]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testSpaceBeforeTupleIndexSubscript() {
+        let input = "foo.1 [2]"
+        let output = "foo.1[2]"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundBrackets]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

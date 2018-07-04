@@ -152,7 +152,7 @@ extension FormatRules {
                     switch token {
                     case let .keyword(string) where !spaceAfter(string, index: i - 2):
                         fallthrough
-                    case .identifier:
+                    case .identifier, .number:
                         fallthrough
                     case .endOfScope("}"), .endOfScope(">"),
                          .endOfScope("]") where !isCaptureList(at: i - 2),
@@ -215,7 +215,7 @@ extension FormatRules {
             case .space:
                 if let token = formatter.token(at: i - 2) {
                     switch token {
-                    case .identifier, .endOfScope("]"), .endOfScope("}"), .endOfScope(")"):
+                    case .identifier, .number, .endOfScope("]"), .endOfScope("}"), .endOfScope(")"):
                         formatter.removeToken(at: i - 1)
                     default:
                         break

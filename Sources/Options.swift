@@ -895,7 +895,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
             var members = type.flatMap { membersByType[$0] } ?? members
             var classMembers = type.flatMap { classMembersByType[$0] } ?? Set<String>()
             var localNames = localNames
-            if !isTypeRoot {
+            do {
                 var i = index
                 var classOrStatic = false
                 outer: while let token = formatter.token(at: i) {
@@ -1286,7 +1286,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         }
         var index = 0
         processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false)
-        return removed > unremoved // if both zero, should be false
+        return removed >= unremoved // if both zero or equal, should be true
     }()
 
     options.spaceAroundOperatorDeclarations = {

@@ -328,6 +328,53 @@ class OptionsTests: XCTestCase {
         XCTAssertFalse(options.hoistPatternLet)
     }
 
+    // MARK: removeSelf
+
+    func testInferInsertSelf() {
+        let input = """
+        struct Foo {
+            var foo: Int
+            var bar: Int
+            func baz() {
+                self.foo()
+                self.bar()
+            }
+        }
+        """
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.removeSelf)
+    }
+
+    func testInferRemoveSelf() {
+        let input = """
+        struct Foo {
+            var foo: Int
+            var bar: Int
+            func baz() {
+                foo()
+                bar()
+            }
+        }
+        """
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.removeSelf)
+    }
+
+    func testInferRemoveSelf2() {
+        let input = """
+        struct Foo {
+            var foo: Int
+            var bar: Int
+            func baz() {
+                self.foo()
+                bar()
+            }
+        }
+        """
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.removeSelf)
+    }
+
     // MARK: spaceAroundOperatorDeclarations
 
     func testInferSpaceAfterOperatorFunc() {

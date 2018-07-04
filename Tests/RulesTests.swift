@@ -3668,6 +3668,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // after indexed tuple
+
+    func testParensNotRemovedAfterTupleIndex() {
+        let input = "foo.1()"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAfterTupleIndex2() {
+        let input = "foo.1(true)"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: trailingClosures
 
     func testClosureArgumentMadeTrailing() {

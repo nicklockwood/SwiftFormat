@@ -1596,7 +1596,7 @@ extension FormatRules {
                 }
             case .stringBody, .operator("?", .postfix), .operator("!", .postfix):
                 break
-            case .identifier: // TODO: are trailing closures allowed in other cases?
+            case .identifier, .number: // TODO: are trailing closures allowed in other cases?
                 // Parens before closure
                 if let closingIndex = formatter.index(of: .nonSpace, after: i, if: { $0 == .endOfScope(")") }),
                     let openingIndex = formatter.index(

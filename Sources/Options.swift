@@ -1113,6 +1113,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                         case .endOfScope("case"), .endOfScope("default"):
                             let localNames = localNames
                             processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                            index -= 1
                         case .endOfScope("}"):
                             break loop
                         default:

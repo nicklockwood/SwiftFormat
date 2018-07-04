@@ -4822,6 +4822,25 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testSelfNotRemovedInClosureAfterSwitch() {
+        let input = """
+        switch x {
+        default:
+            break
+        }
+        let foo = { y in
+            switch y {
+            default:
+                self.bar()
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // removeSelf = false
 
     func testInsertSelf() {

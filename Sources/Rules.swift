@@ -2083,9 +2083,9 @@ extension FormatRules {
                     switch formatter.tokens[i] {
                     case .identifier("self"):
                         break loop // Contains self
-                    case .startOfScope("{"):
+                    case .startOfScope("{"), .startOfScope(":"):
                         scopeCount += 1
-                    case .endOfScope("}"):
+                    case .endOfScope("}"), .endOfScope("case"), .endOfScope("default"):
                         if scopeCount == 0 {
                             index = i + 1
                             return // Does not contain self
@@ -2319,6 +2319,7 @@ extension FormatRules {
                         case .endOfScope("case"), .endOfScope("default"):
                             let localNames = localNames
                             processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                            index -= 1
                         case .endOfScope("}"):
                             break loop
                         default:

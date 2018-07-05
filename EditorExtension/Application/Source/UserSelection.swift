@@ -31,7 +31,7 @@
 
 import Foundation
 
-enum UserSelectionType: EnumAssociatable {
+enum UserSelectionType: EnumAssociable {
     //  binary, list, freeText, none (for header), listOrFreeText
     case none(UserSelection)
     case binary(UserSelectionBinary)

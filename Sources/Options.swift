@@ -205,6 +205,11 @@ public struct FormatOptions: CustomStringConvertible {
         self.ignoreConflictMarkers = ignoreConflictMarkers
     }
 
+    public var allOptions: [String: Any] {
+        let pairs = Mirror(reflecting: self).children.compactMap { ($0!, $1) }
+        return Dictionary(pairs, uniquingKeysWith: { $1 })
+    }
+
     public var description: String {
         let allowedCharacters = CharacterSet.newlines.inverted
         return Mirror(reflecting: self).children.map({

@@ -46,7 +46,6 @@ extension SavedOption: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let value = try container.decode(String.self, forKey: .argumentValue)
         let descriptorID = try container.decode(String.self, forKey: .descriptorID)
-
         self.init((id: descriptorID, arg: value))
     }
 
@@ -62,7 +61,6 @@ extension SavedOption: Comparable {
         if lhs == rhs {
             return lhs.argumentValue < rhs.argumentValue
         }
-
         return lhs.descriptor.name < rhs.descriptor.name
     }
 
@@ -75,16 +73,15 @@ extension SavedOption: Comparable {
 extension SavedOption {
     private static let mapping: [String: FormatOptions.Descriptor] = {
         let options = FormatOptions.Descriptor.formats + FormatOptions.Descriptor.files + FormatOptions.Descriptor.deprecated
-        var dic = [String: FormatOptions.Descriptor]()
-        options.forEach { dic[$0.id] = $0 }
-        return dic
+        var optionsDict = [String: FormatOptions.Descriptor]()
+        options.forEach { optionsDict[$0.id] = $0 }
+        return optionsDict
     }()
 
     fileprivate init(_ rep: OptionsStore.OptionRepresentation) {
         guard let descriptor = SavedOption.mapping[rep.id] else {
             fatalError("Input 'Option ID' don't match known OptionDescriptor.id")
         }
-
         argumentValue = rep.arg
         self.descriptor = descriptor
     }

@@ -31,7 +31,7 @@
 
 import Foundation
 
-let swiftFormatFileExtension = "sfxx"
+let swiftFormatFileExtension = "swiftformat"
 
 struct SwiftFormatFile: Codable {
     private struct Version: Codable {

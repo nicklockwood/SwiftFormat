@@ -33,13 +33,13 @@ import Foundation
 
 extension FormatOptions {
     struct Descriptor {
-        enum ArgumentType: EnumAssociatable {
+        enum ArgumentType: EnumAssociable {
             case binary(true: [String], false: [String]) // index 0 should be the official value, while others are tolerable values
             case list([String])
             case freeText(validationStrategy: (String) -> Bool)
         }
 
-        let id: String //  argumentName & propertyName can change overtime, `id` should be timeless
+        let id: String // argumentName & propertyName can change but `id` should be timeless
         let argumentName: String
         let propertyName: String
         let name: String
@@ -51,38 +51,38 @@ extension FormatOptions {
 }
 
 extension FormatOptions.Descriptor {
-    static let formats = [
-        FormatOptions.Descriptor.indentation,
-        FormatOptions.Descriptor.lineBreak,
-        FormatOptions.Descriptor.allowInlineSemicolons,
-        FormatOptions.Descriptor.spaceAroundRangeOperators,
-        FormatOptions.Descriptor.spaceAroundOperatorDeclarations,
-        FormatOptions.Descriptor.useVoid,
-        FormatOptions.Descriptor.indentCase,
-        FormatOptions.Descriptor.trailingCommas,
-        FormatOptions.Descriptor.indentComments,
-        FormatOptions.Descriptor.truncateBlankLines,
-        FormatOptions.Descriptor.allmanBraces,
-        FormatOptions.Descriptor.fileHeader,
-        FormatOptions.Descriptor.ifdefIndent,
-        FormatOptions.Descriptor.wrapArguments,
-        FormatOptions.Descriptor.wrapElements,
-        FormatOptions.Descriptor.hexLiteralCase,
-        FormatOptions.Descriptor.exponentCase,
-        FormatOptions.Descriptor.decimalGrouping,
-        FormatOptions.Descriptor.binaryGrouping,
-        FormatOptions.Descriptor.octalGrouping,
-        FormatOptions.Descriptor.hexGrouping,
-        FormatOptions.Descriptor.letPatternPlacement,
-        FormatOptions.Descriptor.stripUnusedArguments,
-        FormatOptions.Descriptor.elsePosition,
-        FormatOptions.Descriptor.removeSelf,
-        FormatOptions.Descriptor.experimentalRules,
+    static let formats: [FormatOptions.Descriptor] = [
+        .indentation,
+        .lineBreak,
+        .allowInlineSemicolons,
+        .spaceAroundRangeOperators,
+        .spaceAroundOperatorDeclarations,
+        .useVoid,
+        .indentCase,
+        .trailingCommas,
+        .indentComments,
+        .truncateBlankLines,
+        .allmanBraces,
+        .fileHeader,
+        .ifdefIndent,
+        .wrapArguments,
+        .wrapElements,
+        .hexLiteralCase,
+        .exponentCase,
+        .decimalGrouping,
+        .binaryGrouping,
+        .octalGrouping,
+        .hexGrouping,
+        .letPatternPlacement,
+        .stripUnusedArguments,
+        .elsePosition,
+        .removeSelf,
+        .experimentalRules,
     ]
 
-    static let files = [
-        FormatOptions.Descriptor.fragment,
-        FormatOptions.Descriptor.ignoreConflictMarkers,
+    static let files: [FormatOptions.Descriptor] = [
+        .fragment,
+        .ignoreConflictMarkers,
     ]
 
     static let all = formats + files + deprecated

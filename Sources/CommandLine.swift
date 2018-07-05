@@ -54,13 +54,13 @@ public struct CLI {
     }
 
     /// Run the CLI with the specified input arguments
-    public static func run(in directory: String, with args: [String] = CommandLine.arguments) {
-        processArguments(args, in: directory)
+    public static func run(in directory: String, with args: [String] = CommandLine.arguments) -> ExitCode {
+        return processArguments(args, in: directory)
     }
 
     /// Run the CLI with the specified input string (this will be parsed into multiple arguments)
-    public static func run(in directory: String, with argumentString: String) {
-        run(in: directory, with: parseArguments(argumentString))
+    public static func run(in directory: String, with argumentString: String) -> ExitCode {
+        return run(in: directory, with: parseArguments(argumentString))
     }
 }
 
@@ -72,6 +72,12 @@ func printWarnings(_ errors: [Error]) {
     for error in errors {
         print("warning: \(error)", as: .warning)
     }
+}
+
+// Represents the exit codes to the command line. See `man sysexits` for more information.
+public enum ExitCode: Int32 {
+    case ok = 0             // EX_OK
+    case error = 70         // EX_SOFTWARE
 }
 
 func printHelp() {
@@ -191,7 +197,7 @@ func parseArguments(_ argumentString: String) -> [String] {
     return arguments
 }
 
-func processArguments(_ args: [String], in directory: String) {
+func processArguments(_ args: [String], in directory: String) -> ExitCode {
     var errors = [Error]()
     var verbose = false
     var dryrun = false
@@ -204,13 +210,13 @@ func processArguments(_ args: [String], in directory: String) {
         // Show help if requested specifically or if no arguments are passed
         if args["help"] != nil {
             printHelp()
-            return
+            return .ok
         }
 
         // Version
         if args["version"] != nil {
             print("swiftformat, version \(version)")
-            return
+            return .ok
         }
 
         // Rules
@@ -242,7 +248,7 @@ func processArguments(_ args: [String], in directory: String) {
                     print(" \(name)\(disabled)")
                 }
                 print("")
-                return
+                return .ok
             }
             var whitelist = Set<String>()
             for name in names {
@@ -330,7 +336,7 @@ func processArguments(_ args: [String], in directory: String) {
                 print("")
                 print(commandLineArguments(for: options).map({ "--\($0.key) \($0.value)" }).joined(separator: " "))
                 print("")
-                return
+                return .ok
             }
         }
 
@@ -459,7 +465,7 @@ func processArguments(_ args: [String], in directory: String) {
             } else {
                 printHelp()
             }
-            return
+            return .ok
         }
 
         print("running swiftformat...")
@@ -506,6 +512,7 @@ func processArguments(_ args: [String], in directory: String) {
         } else {
             print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)", as: .success)
         }
+        return .ok
     } catch {
         if !verbose {
             // Warnings would be redundant at this point
@@ -513,6 +520,7 @@ func processArguments(_ args: [String], in directory: String) {
         }
         // Fatal error
         print("error: \(error)", as: .error)
+        return .error
     }
 }
 

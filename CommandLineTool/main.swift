@@ -66,4 +66,4 @@ CLI.print = { message, type in
     }
 }
 
-CLI.run(in: FileManager.default.currentDirectoryPath)
+exit(CLI.run(in: FileManager.default.currentDirectoryPath).rawValue)

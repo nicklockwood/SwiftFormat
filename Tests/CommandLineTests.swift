@@ -173,7 +173,7 @@ class CommandLineTests: XCTestCase {
                 return nil
             }
         }
-        processArguments([""], in: "")
+        _ = processArguments([""], in: "")
     }
 
     // MARK: input paths

@@ -6,8 +6,8 @@
 //  Copyright © 2016 Nick Lockwood. All rights reserved.
 //
 
-import XCTest
 import SwiftFormat
+import XCTest
 
 class OptionsTests: XCTestCase {
 
@@ -326,5 +326,100 @@ class OptionsTests: XCTestCase {
         let input = "if case .foo(let bar, let baz) = quux {}"
         let options = inferOptions(from: tokenize(input))
         XCTAssertFalse(options.hoistPatternLet)
+    }
+
+    // MARK: removeSelf
+
+    func testInferInsertSelf() {
+        let input = """
+        struct Foo {
+            var foo: Int
+            var bar: Int
+            func baz() {
+                self.foo()
+                self.bar()
+            }
+        }
+        """
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.removeSelf)
+    }
+
+    func testInferRemoveSelf() {
+        let input = """
+        struct Foo {
+            var foo: Int
+            var bar: Int
+            func baz() {
+                foo()
+                bar()
+            }
+        }
+        """
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.removeSelf)
+    }
+
+    func testInferRemoveSelf2() {
+        let input = """
+        struct Foo {
+            var foo: Int
+            var bar: Int
+            func baz() {
+                self.foo()
+                bar()
+            }
+        }
+        """
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.removeSelf)
+    }
+
+    // MARK: spaceAroundOperatorDeclarations
+
+    func testInferSpaceAfterOperatorFunc() {
+        let input = "func == (lhs: Int, rhs: Int) -> Bool {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.spaceAroundOperatorDeclarations)
+    }
+
+    func testInferNoSpaceAfterOperatorFunc() {
+        let input = "func ==(lhs: Int, rhs: Int) -> Bool {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.spaceAroundOperatorDeclarations)
+    }
+
+    // MARK: elseOnNextLine
+
+    func testInferElseOnNextLine() {
+        let input = "if foo {\n}\nelse {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.elseOnNextLine)
+    }
+
+    func testInferElseOnSameLine() {
+        let input = "if foo {\n} else {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.elseOnNextLine)
+    }
+
+    func testIgnoreInlineIfElse() {
+        let input = "if foo {} else {}\nif foo {\n}\nelse {}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.elseOnNextLine)
+    }
+
+    // MARK: indentCase
+
+    func testInferIndentCase() {
+        let input = "switch {\n    case foo: break\n}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.indentCase)
+    }
+
+    func testInferNoIndentCase() {
+        let input = "switch {\ncase foo: break\n}"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.indentCase)
     }
 }

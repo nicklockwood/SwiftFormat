@@ -6,14 +6,14 @@
 //  Copyright © 2016 Nick Lockwood. All rights reserved.
 //
 
-import XCTest
 import SwiftFormat
+import XCTest
 
 class PerformanceTests: XCTestCase {
-
     static let files: [String] = {
         var files = [String]()
-        let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
+        let inputURL = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent().deletingLastPathComponent()
         _ = enumerateFiles(withInputURL: inputURL) { url, _ in
             return {
                 if let source = try? String(contentsOf: url) {
@@ -26,14 +26,12 @@ class PerformanceTests: XCTestCase {
 
     func testTokenizing() {
         let files = PerformanceTests.files
-        var tokens = [[Token]]()
+        var tokens = [Token]()
         measure {
-            tokens = files.map { tokenize($0) }
+            tokens = files.flatMap { tokenize($0) }
         }
-        for tokens in tokens {
-            if let token = tokens.last, case let .error(msg) = token {
-                XCTFail("error: \(msg)")
-            }
+        for case let .error(msg) in tokens {
+            XCTFail("error: \(msg)")
         }
     }
 
@@ -42,6 +40,38 @@ class PerformanceTests: XCTestCase {
         let tokens = files.map { tokenize($0) }
         measure {
             _ = tokens.map { try! format($0, rules: FormatRules.default) }
+        }
+    }
+
+    func testWorstCaseFormatting() {
+        let files = PerformanceTests.files
+        let tokens = files.map { tokenize($0) }
+        let options = FormatOptions(
+            linebreak: "\r\n",
+            spaceAroundRangeOperators: false,
+            spaceAroundOperatorDeclarations: false,
+            useVoid: false,
+            indentCase: true,
+            trailingCommas: false,
+            indentComments: false,
+            truncateBlankLines: false,
+            allmanBraces: true,
+            ifdefIndent: .outdent,
+            wrapArguments: .beforeFirst,
+            wrapElements: .afterFirst,
+            uppercaseHex: false,
+            uppercaseExponent: true,
+            decimalGrouping: .group(1, 1),
+            binaryGrouping: .group(1, 1),
+            octalGrouping: .group(1, 1),
+            hexGrouping: .group(1, 1),
+            hoistPatternLet: false,
+            elseOnNextLine: true,
+            removeSelf: false,
+            experimentalRules: true
+        )
+        measure {
+            _ = tokens.map { try! format($0, rules: FormatRules.default, options: options) }
         }
     }
 
@@ -61,6 +91,15 @@ class PerformanceTests: XCTestCase {
         }
     }
 
+    func testWorstCaseIndent() {
+        let files = PerformanceTests.files
+        let tokens = files.map { tokenize($0) }
+        let options = FormatOptions(indent: "\t", allmanBraces: true)
+        measure {
+            _ = tokens.map { try! format($0, rules: [FormatRules.indent], options: options) }
+        }
+    }
+
     func testRedundantSelf() {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
@@ -69,11 +108,36 @@ class PerformanceTests: XCTestCase {
         }
     }
 
+    func testWorstCaseRedundantSelf() {
+        let files = PerformanceTests.files
+        let tokens = files.map { tokenize($0) }
+        let options = FormatOptions(removeSelf: false)
+        measure {
+            _ = tokens.map { try! format($0, rules: [FormatRules.redundantSelf], options: options) }
+        }
+    }
+
     func testNumberFormatting() {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
             _ = tokens.map { try! format($0, rules: [FormatRules.numberFormatting]) }
+        }
+    }
+
+    func testWorstCaseNumberFormatting() {
+        let files = PerformanceTests.files
+        let tokens = files.map { tokenize($0) }
+        let options = FormatOptions(
+            uppercaseHex: false,
+            uppercaseExponent: true,
+            decimalGrouping: .group(1, 1),
+            binaryGrouping: .group(1, 1),
+            octalGrouping: .group(1, 1),
+            hexGrouping: .group(1, 1)
+        )
+        measure {
+            _ = tokens.map { try! format($0, rules: [FormatRules.numberFormatting], options: options) }
         }
     }
 }

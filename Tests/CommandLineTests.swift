@@ -5,32 +5,32 @@
 //  Created by Nick Lockwood on 10/01/2017.
 //  Copyright 2017 Nick Lockwood
 //
-//  Distributed under the permissive zlib license
+//  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
 //  https://github.com/nicklockwood/SwiftFormat
 //
-//  This software is provided 'as-is', without any express or implied
-//  warranty.  In no event will the authors be held liable for any damages
-//  arising from the use of this software.
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
 //
-//  Permission is granted to anyone to use this software for any purpose,
-//  including commercial applications, and to alter it and redistribute it
-//  freely, subject to the following restrictions:
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
 //
-//  1. The origin of this software must not be misrepresented; you must not
-//  claim that you wrote the original software. If you use this software
-//  in a product, an acknowledgment in the product documentation would be
-//  appreciated but is not required.
-//
-//  2. Altered source versions must be plainly marked as such, and must not be
-//  misrepresented as being the original software.
-//
-//  3. This notice may not be removed or altered from any source distribution.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 //
 
-import XCTest
 @testable import SwiftFormat
+import XCTest
 
 private var readme: String = {
     let directoryURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
@@ -39,6 +39,50 @@ private var readme: String = {
 }()
 
 class CommandLineTests: XCTestCase {
+
+    // MARK: arg parser
+
+    func testParseSimpleArguments() {
+        let input = "hello world"
+        let output = ["", "hello", "world"]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseEscapedSpace() {
+        let input = "hello\\ world"
+        let output = ["", "hello world"]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseEscapedN() {
+        let input = "hello\\nworld"
+        let output = ["", "hellonworld"]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseQuoteArguments() {
+        let input = "\"hello world\""
+        let output = ["", "hello world"]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseEscapedQuote() {
+        let input = "hello \\\"world\\\""
+        let output = ["", "hello", "\"world\""]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseEscapedQuoteInString() {
+        let input = "\"hello \\\"world\\\"\""
+        let output = ["", "hello \"world\""]
+        XCTAssertEqual(parseArguments(input), output)
+    }
+
+    func testParseQuotedEscapedN() {
+        let input = "\"hello\\nworld\""
+        let output = ["", "hello\\nworld"]
+        XCTAssertEqual(parseArguments(input), output)
+    }
 
     // MARK: arg preprocessor
 
@@ -73,7 +117,7 @@ class CommandLineTests: XCTestCase {
 
     func testCommandLineArgumentsAreCorrect() {
         let options = FormatOptions()
-        let output = ["indent": "4", "allman": "false", "wraparguments": "disabled", "removelines": "enabled", "wrapelements": "beforefirst", "exponentcase": "lowercase", "stripunusedargs": "always", "self": "remove", "header": "ignore", "insertlines": "enabled", "binarygrouping": "4,8", "empty": "void", "ranges": "spaced", "trimwhitespace": "always", "hexliteralcase": "uppercase", "linebreaks": "lf", "decimalgrouping": "3,6", "commas": "always", "comments": "indent", "ifdef": "indent", "octalgrouping": "4,8", "hexgrouping": "4,8", "patternlet": "hoist", "semicolons": "inline"]
+        let output = ["allman": "false", "wraparguments": "disabled", "wrapelements": "beforefirst", "self": "remove", "header": "ignore", "binarygrouping": "4,8", "octalgrouping": "4,8", "patternlet": "hoist", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "commas": "always", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "stripunusedargs": "always"]
         XCTAssertEqual(commandLineArguments(for: options), output)
     }
 
@@ -83,9 +127,10 @@ class CommandLineTests: XCTestCase {
         CLI.print = { _, _ in }
         for key in formatArguments {
             guard let value = commandLineArguments(for: FormatOptions())[key] else {
-                XCTFail(key)
+                XCTAssert(deprecatedArguments.contains(key))
                 continue
             }
+            XCTAssert(!deprecatedArguments.contains(key))
             do {
                 _ = try formatOptionsFor([key: value])
             } catch {
@@ -128,14 +173,37 @@ class CommandLineTests: XCTestCase {
                 return nil
             }
         }
-        processArguments([""])
+        processArguments([""], in: "")
+    }
+
+    // MARK: input paths
+
+    func testExpandPathWithRelativePath() {
+        XCTAssertEqual(
+            expandPath("relpath/to/file.swift", in: "/dir").path,
+            "/dir/relpath/to/file.swift"
+        )
+    }
+
+    func testExpandPathWithFullPath() {
+        XCTAssertEqual(
+            expandPath("/full/path/to/file.swift", in: "/dir").path,
+            "/full/path/to/file.swift"
+        )
+    }
+
+    func testExpandPathWithUserPath() {
+        XCTAssertEqual(
+            expandPath("~/file.swift", in: "/dir").path,
+            NSString(string: "~/file.swift").expandingTildeInPath
+        )
     }
 
     // MARK: help
 
     func testHelpLineLength() {
         CLI.print = { message, _ in
-            XCTAssertLessThanOrEqual(message.characters.count, 80, message)
+            XCTAssertLessThanOrEqual(message.count, 80, message)
         }
         printHelp()
     }
@@ -143,7 +211,7 @@ class CommandLineTests: XCTestCase {
     func testHelpOptionsImplemented() {
         CLI.print = { message, _ in
             if message.hasPrefix("--") {
-                let name = message.substring(from: "--".endIndex).components(separatedBy: " ")[0]
+                let name = String(message["--".endIndex ..< message.endIndex]).components(separatedBy: " ")[0]
                 XCTAssertTrue(commandLineArguments.contains(name), name)
             }
         }
@@ -155,7 +223,7 @@ class CommandLineTests: XCTestCase {
         deprecatedArguments.forEach { arguments.remove($0) }
         CLI.print = { message, _ in
             if message.hasPrefix("--") {
-                let name = message.substring(from: "--".endIndex).components(separatedBy: " ")[0]
+                let name = String(message["--".endIndex ..< message.endIndex]).components(separatedBy: " ")[0]
                 arguments.remove(name)
             }
         }
@@ -167,7 +235,7 @@ class CommandLineTests: XCTestCase {
 
     func testAllRulesInReadme() {
         for ruleName in FormatRules.byName.keys {
-            XCTAssertTrue(readme.contains("*\(ruleName)* - "), ruleName)
+            XCTAssertTrue(readme.contains("***\(ruleName)*** - "), ruleName)
         }
     }
 
@@ -177,7 +245,7 @@ class CommandLineTests: XCTestCase {
         while let match = readme.range(of: "\\*[a-zA-Z]+\\* - ", options: .regularExpression, range: range, locale: nil) {
             let lower = readme.index(after: match.lowerBound)
             let upper = readme.index(match.upperBound, offsetBy: -4)
-            let ruleName = readme[lower ..< upper]
+            let ruleName: String = String(readme[lower ..< upper])
             XCTAssertTrue(ruleNames.contains(ruleName), ruleName)
             range = match.upperBound ..< range.upperBound
         }
@@ -197,7 +265,7 @@ class CommandLineTests: XCTestCase {
         while let match = readme.range(of: "`--[a-zA-Z]+`", options: .regularExpression, range: range, locale: nil) {
             let lower = readme.index(match.lowerBound, offsetBy: 3)
             let upper = readme.index(before: match.upperBound)
-            let argument = readme[lower ..< upper]
+            let argument: String = String(readme[lower ..< upper])
             XCTAssertTrue(arguments.contains(argument), argument)
             range = match.upperBound ..< range.upperBound
         }

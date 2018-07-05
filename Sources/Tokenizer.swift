@@ -2,31 +2,33 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
+//  Version 0.33.11
+//
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
 //
-//  Distributed under the permissive zlib license
+//  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
 //  https://github.com/nicklockwood/SwiftFormat
 //
-//  This software is provided 'as-is', without any express or implied
-//  warranty.  In no event will the authors be held liable for any damages
-//  arising from the use of this software.
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
 //
-//  Permission is granted to anyone to use this software for any purpose,
-//  including commercial applications, and to alter it and redistribute it
-//  freely, subject to the following restrictions:
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
 //
-//  1. The origin of this software must not be misrepresented; you must not
-//  claim that you wrote the original software. If you use this software
-//  in a product, an acknowledgment in the product documentation would be
-//  appreciated but is not required.
-//
-//  2. Altered source versions must be plainly marked as such, and must not be
-//  misrepresented as being the original software.
-//
-//  3. This notice may not be removed or altered from any source distribution.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 //
 
 import Foundation
@@ -34,7 +36,7 @@ import Foundation
 // https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/LexicalStructure.html
 
 // Used to speed up matching
-// Note: Self, self, super, nil, true and false have been omitted deliberately, as they
+// Note: Any, Self, self, super, nil, true and false have been omitted deliberately, as they
 // behave like identifiers. So too have context-specific keywords such as the following:
 // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
 // lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
@@ -45,11 +47,10 @@ private let swiftKeywords = Set([
     "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
     "throw", "typealias", "where", "break", "deinit", "subscript", "lazy", "is",
     "while", "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
-    "default", "protocol", "defer", /* Self, self, super, nil, true, false */
+    "default", "protocol", "defer", /* Any, Self, self, super, nil, true, false */
 ])
 
 public extension String {
-
     /// Is this string a reserved keyword in Swift?
     var isSwiftKeyword: Bool {
         return swiftKeywords.contains(self)
@@ -58,7 +59,7 @@ public extension String {
     /// Is this string a keyword in some contexts?
     var isContextualKeyword: Bool {
         switch self {
-        case "super", "self", "nil", "true", "false",
+        case "Any", "super", "self", "nil", "true", "false",
              "Self", "get", "set", "willSet", "didSet":
             return true
         default:
@@ -82,6 +83,7 @@ public enum TokenType {
     case endOfScope
     case keyword
     case identifier
+    case attribute
     case `operator`
     case unwrapOperator
     case rangeOperator
@@ -156,11 +158,11 @@ public enum Token: Equatable {
     public func unescaped() -> String {
         switch self {
         case .stringBody:
-            var input = string.unicodeScalars
+            var input = UnicodeScalarView(string.unicodeScalars)
             var output = String.UnicodeScalarView()
-            while let c = input.readCharacter() {
+            while let c = input.popFirst() {
                 if c == "\\" {
-                    if let c = input.readCharacter() {
+                    if let c = input.popFirst() {
                         switch c {
                         case "\0":
                             output.append("\0")
@@ -204,9 +206,10 @@ public enum Token: Equatable {
         case .number(_, .integer), .number(_, .decimal):
             return string.replacingOccurrences(of: "_", with: "")
         case .number(_, .binary), .number(_, .octal), .number(_, .hex):
-            var characters = string.unicodeScalars
-            guard characters.count > 2, characters.removeFirst() == "0",
-                "oxb".unicodeScalars.contains(characters.removeFirst()) else {
+            var characters = UnicodeScalarView(string.unicodeScalars)
+            guard characters.read("0"), characters.readCharacter(where: {
+                "oxb".unicodeScalars.contains($0)
+            }) != nil else {
                 return string.replacingOccurrences(of: "_", with: "")
             }
             return String(characters).replacingOccurrences(of: "_", with: "")
@@ -240,6 +243,8 @@ public enum Token: Equatable {
             return isIdentifier
         case .identifierOrKeyword:
             return isIdentifierOrKeyword
+        case .attribute:
+            return isAttribute
         case .operator:
             return isOperator
         case .unwrapOperator:
@@ -310,6 +315,7 @@ public enum Token: Equatable {
         return match(with: token) != .none
     }
 
+    public var isAttribute: Bool { return isKeyword && string.hasPrefix("@") }
     public var isOperator: Bool { return hasType(of: .operator("", .none)) }
     public var isUnwrapOperator: Bool { return isOperator("?") || isOperator("!") }
     public var isRangeOperator: Bool { return isOperator("...") || isOperator("..<") }
@@ -380,6 +386,8 @@ public enum Token: Equatable {
                 return closing == "#endif"
             case "\"":
                 return closing == "\""
+            case "\"\"\"":
+                return closing == "\"\"\""
             default:
                 return false
             }
@@ -408,7 +416,7 @@ public enum Token: Equatable {
         case .identifier, .number, .operator(_, .postfix),
              .endOfScope(")"), .endOfScope("]"),
              .endOfScope("}"), .endOfScope(">"),
-             .endOfScope("\""):
+             .endOfScope("\""), .endOfScope("\"\"\""):
             return true
         default:
             return false
@@ -422,15 +430,15 @@ public enum Token: Equatable {
         case .operator(_, .infix), .operator(_, .postfix):
             return false
         case .identifier, .number, .operator,
-             .startOfScope("("), .startOfScope("["),
-             .startOfScope("{"), .startOfScope("\""):
+             .startOfScope("("), .startOfScope("["), .startOfScope("{"),
+             .startOfScope("\""), .startOfScope("\"\"\""):
             return true
         default:
             return false
         }
     }
 
-    public static func ==(lhs: Token, rhs: Token) -> Bool {
+    public static func == (lhs: Token, rhs: Token) -> Bool {
         return lhs.match(with: rhs) == .exact
     }
 }
@@ -441,8 +449,119 @@ extension UnicodeScalar {
     var isSpace: Bool { return self == " " || self == "\t" || value == 0x0B }
 }
 
-private extension String.UnicodeScalarView {
+// Workaround for horribly slow String.UnicodeScalarView.Subsequence perf
 
+private struct UnicodeScalarView {
+    public typealias Index = String.UnicodeScalarView.Index
+
+    private let characters: String.UnicodeScalarView
+    public private(set) var startIndex: Index
+    public private(set) var endIndex: Index
+
+    public init(_ unicodeScalars: String.UnicodeScalarView) {
+        characters = unicodeScalars
+        startIndex = characters.startIndex
+        endIndex = characters.endIndex
+    }
+
+    public init(_ unicodeScalars: String.UnicodeScalarView.SubSequence) {
+        self.init(String.UnicodeScalarView(unicodeScalars))
+    }
+
+    public init(_ string: String) {
+        self.init(string.unicodeScalars)
+    }
+
+    public var first: UnicodeScalar? {
+        return isEmpty ? nil : characters[startIndex]
+    }
+
+    @available(*, deprecated, message: "Really hurts performance - use a different approach")
+    public var count: Int {
+        return characters.distance(from: startIndex, to: endIndex)
+    }
+
+    public var isEmpty: Bool {
+        return startIndex >= endIndex
+    }
+
+    public subscript(_ index: Index) -> UnicodeScalar {
+        return characters[index]
+    }
+
+    public func index(after index: Index) -> Index {
+        return characters.index(after: index)
+    }
+
+    public func prefix(upTo index: Index) -> UnicodeScalarView {
+        var view = UnicodeScalarView(characters)
+        view.startIndex = startIndex
+        view.endIndex = index
+        return view
+    }
+
+    public func suffix(from index: Index) -> UnicodeScalarView {
+        var view = UnicodeScalarView(characters)
+        view.startIndex = index
+        view.endIndex = endIndex
+        return view
+    }
+
+    public func dropFirst() -> UnicodeScalarView {
+        var view = UnicodeScalarView(characters)
+        view.startIndex = characters.index(after: startIndex)
+        view.endIndex = endIndex
+        return view
+    }
+
+    public mutating func popFirst() -> UnicodeScalar? {
+        if isEmpty {
+            return nil
+        }
+        let char = characters[startIndex]
+        startIndex = characters.index(after: startIndex)
+        return char
+    }
+
+    /// Will crash if n > remaining char count
+    public mutating func removeFirst(_ n: Int) {
+        startIndex = characters.index(startIndex, offsetBy: n)
+    }
+
+    /// Will crash if collection is empty
+    @discardableResult
+    public mutating func removeFirst() -> UnicodeScalar {
+        let oldIndex = startIndex
+        startIndex = characters.index(after: startIndex)
+        return characters[oldIndex]
+    }
+
+    /// Returns the remaining characters
+    fileprivate var unicodeScalars: String.UnicodeScalarView.SubSequence {
+        return characters[startIndex ..< endIndex]
+    }
+}
+
+private typealias _UnicodeScalarView = UnicodeScalarView
+private extension String {
+    init(_ unicodeScalarView: _UnicodeScalarView) {
+        self.init(unicodeScalarView.unicodeScalars)
+    }
+}
+
+private extension String.UnicodeScalarView {
+    init(_ unicodeScalarView: _UnicodeScalarView) {
+        self.init(unicodeScalarView.unicodeScalars)
+    }
+}
+
+private extension String.UnicodeScalarView.SubSequence {
+    init(_ unicodeScalarView: _UnicodeScalarView) {
+        self.init(unicodeScalarView.unicodeScalars)
+    }
+}
+
+private extension UnicodeScalarView {
     mutating func readCharacters(where matching: (UnicodeScalar) -> Bool) -> String? {
         var index = startIndex
         while index < endIndex {
@@ -475,7 +594,7 @@ private extension String.UnicodeScalarView {
         return nil
     }
 
-    mutating func readCharacter(where matching: (UnicodeScalar) -> Bool = { _ in true }) -> UnicodeScalar? {
+    mutating func readCharacter(where matching: (UnicodeScalar) -> Bool) -> UnicodeScalar? {
         if let c = first, matching(c) {
             self = dropFirst()
             return c
@@ -496,8 +615,7 @@ private extension String.UnicodeScalarView {
     }
 }
 
-private extension String.UnicodeScalarView {
-
+private extension UnicodeScalarView {
     mutating func parseSpace() -> Token? {
         return readCharacters(where: { $0.isSpace }).map { .space($0) }
     }
@@ -517,7 +635,15 @@ private extension String.UnicodeScalarView {
     }
 
     mutating func parseStartOfScope() -> Token? {
-        return readCharacter(where: { "<([{\"".unicodeScalars.contains($0) }).map { .startOfScope(String($0)) }
+        if read("\"") {
+            let nextIndex = index(after: startIndex)
+            if nextIndex < endIndex, first == "\"", self[nextIndex] == "\"" {
+                removeFirst(2)
+                return .startOfScope("\"\"\"")
+            }
+            return .startOfScope("\"")
+        }
+        return readCharacter(where: { "<([{".unicodeScalars.contains($0) }).map { .startOfScope(String($0)) }
     }
 
     mutating func parseEndOfScope() -> Token? {
@@ -525,9 +651,8 @@ private extension String.UnicodeScalarView {
     }
 
     mutating func parseOperator() -> Token? {
-
         func isHead(_ c: UnicodeScalar) -> Bool {
-            if "./=­-+!*%&|^~?".unicodeScalars.contains(c) {
+            if "./\\=­-+!*%&|^~?".unicodeScalars.contains(c) {
                 return true
             }
             switch c.value {
@@ -613,7 +738,6 @@ private extension String.UnicodeScalarView {
     }
 
     mutating func parseIdentifier() -> Token? {
-
         func isHead(_ c: UnicodeScalar) -> Bool {
             switch c.value {
             case 0x41 ... 0x5A, // A-Z
@@ -717,7 +841,6 @@ private extension String.UnicodeScalarView {
     }
 
     mutating func parseNumber() -> Token? {
-
         func readNumber(where head: @escaping (UnicodeScalar) -> Bool) -> String? {
             return read(head: head, tail: { head($0) || $0 == "_" })
         }
@@ -828,14 +951,13 @@ private extension String.UnicodeScalarView {
 public func tokenize(_ source: String) -> [Token] {
     var scopeIndexStack: [Int] = []
     var tokens: [Token] = []
-    var characters = source.unicodeScalars
+    var characters = UnicodeScalarView(source.unicodeScalars)
     var closedGenericScopeIndexes: [Int] = []
-    var nestedSwitches = 0
 
     func processStringBody() {
         var string = ""
         var escaped = false
-        while let c = characters.readCharacter() {
+        while let c = characters.popFirst() {
             switch c {
             case "\\":
                 escaped = !escaped
@@ -869,6 +991,85 @@ public func tokenize(_ source: String) -> [Token] {
         }
     }
 
+    func processMultilineStringBody() {
+        var string = ""
+        var escaped = false
+        while let c = characters.popFirst() {
+            switch c {
+            case "\\":
+                escaped = !escaped
+            case "\"":
+                let nextIndex = characters.index(after: characters.startIndex)
+                if nextIndex < characters.endIndex, !escaped, tokens[scopeIndexStack.last!] == .startOfScope("\"\"\""), characters.first == "\"", characters[nextIndex] == "\"" {
+                    characters.removeFirst(2)
+                    if string != "" {
+                        tokens.append(.error(string)) // Not permitted by the spec
+                    } else {
+                        var offset = ""
+                        if case let .space(_offset) = tokens.last! {
+                            offset = _offset
+                        }
+                        // Fix up indents
+                        for index in (scopeIndexStack.last! ..< tokens.count - 1).reversed() {
+                            if case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak {
+                                guard offset.isEmpty || indent.hasPrefix(offset) else {
+                                    tokens[index] = .error(indent) // Mismatched whitespace
+                                    break
+                                }
+                                let remainder: String = String(indent[offset.endIndex ..< indent.endIndex])
+                                if case let .stringBody(body) = tokens[index + 1] {
+                                    tokens[index + 1] = .stringBody(remainder + body)
+                                } else {
+                                    tokens.insert(.stringBody(remainder), at: index + 1)
+                                }
+                                if offset.isEmpty {
+                                    tokens.remove(at: index)
+                                } else {
+                                    tokens[index] = .space(offset)
+                                }
+                            }
+                        }
+                    }
+                    tokens.append(.endOfScope("\"\"\""))
+                    scopeIndexStack.removeLast()
+                    return
+                }
+                escaped = false
+            case "(":
+                if escaped {
+                    if string != "" {
+                        tokens.append(.stringBody(string))
+                    }
+                    scopeIndexStack.append(tokens.count)
+                    tokens.append(.startOfScope("("))
+                    return
+                }
+                escaped = false
+            case "\r", "\n":
+                if string != "" {
+                    tokens.append(.stringBody(string))
+                    string = ""
+                }
+                if c == "\r", characters.read("\n") {
+                    tokens.append(.linebreak("\r\n"))
+                } else {
+                    tokens.append(.linebreak(String(c)))
+                }
+                if let space = characters.parseSpace() {
+                    tokens.append(space)
+                }
+                escaped = false
+                continue
+            default:
+                escaped = false
+            }
+            string.append(Character(c))
+        }
+        if string != "" {
+            tokens.append(.stringBody(string))
+        }
+    }
+
     var comment = ""
     var space = ""
 
@@ -884,7 +1085,7 @@ public func tokenize(_ source: String) -> [Token] {
     }
 
     func processCommentBody() {
-        while let c = characters.readCharacter() {
+        while let c = characters.popFirst() {
             switch c {
             case "/":
                 if characters.read("*") {
@@ -979,9 +1180,9 @@ public func tokenize(_ source: String) -> [Token] {
 
     func isUnwrapOperator(at index: Int) -> Bool {
         let token = tokens[index]
-        if case let .operator(string, _) = token, ["?", "!"].contains(string) &&
-            index > 0 && !tokens[index - 1].isSpaceOrLinebreak {
-            return true
+        if case let .operator(string, _) = token, ["?", "!"].contains(string), index > 0 {
+            let token = tokens[index - 1]
+            return !token.isSpaceOrLinebreak && !token.isStartOfScope
         }
         return false
     }
@@ -1039,6 +1240,13 @@ public func tokenize(_ source: String) -> [Token] {
             }
             return
         }
+        switch prevNonSpaceToken {
+        case .keyword("func"), .keyword("operator"):
+            tokens[i] = .operator(string, .none)
+            return
+        default:
+            break
+        }
         let prevToken: Token = tokens[i - 1]
         let type: OperatorType
         switch string {
@@ -1054,10 +1262,12 @@ public func tokenize(_ source: String) -> [Token] {
                     scopeIndexStack.append(i) // TODO: should we be doing this here?
                 }
                 type = .infix
-                break
+            } else if !prevToken.isStartOfScope {
+                type = .postfix
+            } else {
+                type = .none
             }
-            type = .postfix
-        case "!" where !prevToken.isSpaceOrCommentOrLinebreak:
+        case "!" where !prevToken.isSpaceOrCommentOrLinebreak && !prevToken.isStartOfScope:
             type = .postfix
         default:
             guard let nextNonSpaceToken =
@@ -1111,44 +1321,11 @@ public func tokenize(_ source: String) -> [Token] {
         switch token {
         case let .keyword(string):
             // Track switch/case statements
-            let prevToken =
-                index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1).map { tokens[$0] }
-            if let prevToken = prevToken, case .operator(".", _) = prevToken {
+            if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1),
+                case .operator(".", _) = tokens[prevIndex] {
                 tokens[tokens.count - 1] = .identifier(string)
                 processToken()
                 return
-            }
-            if string == "switch" {
-                nestedSwitches += 1
-            } else if nestedSwitches > 0 {
-                switch string {
-                case "default":
-                    tokens[tokens.count - 1] = .endOfScope(string)
-                    processToken()
-                    return
-                case "case":
-                    if let scopeIndex = scopeIndexStack.last,
-                        let keywordIndex = index(of: .keyword, before: scopeIndex),
-                        case .keyword("enum") = tokens[keywordIndex] {
-                        break
-                    }
-                    if let prevToken = prevToken {
-                        switch prevToken {
-                        case .keyword("if"),
-                             .keyword("guard"),
-                             .keyword("while"),
-                             .keyword("for"),
-                             .delimiter(","):
-                            break
-                        default:
-                            tokens[tokens.count - 1] = .endOfScope(string)
-                            processToken()
-                            return
-                        }
-                    }
-                default:
-                    break
-                }
             }
             fallthrough
         case .identifier, .number:
@@ -1178,17 +1355,8 @@ public func tokenize(_ source: String) -> [Token] {
                 case .endOfScope(">") = tokens[prevIndex] {
                 // Fix up misidentified generic that is actually a pair of operators
                 switch token {
-                case let .operator(string, _) where ["->", "?", "!", ".", "..."].contains(string):
-                    break
-                case .operator("=", _):
-                    if prevIndex == tokens.count - 2 {
-                        // TODO: this isn't the way swiftc disambiguates this case, so it won't
-                        // always work correctly. But in practice, it will be correct most of
-                        // the time, and when it's wrong, it should still result in code that
-                        // compiles correctly, even if it's mis-formatted
-                        fallthrough
-                    }
-                case .operator, .identifier, .number, .startOfScope("\""):
+                case .operator("=", _) where prevIndex == tokens.count - 2,
+                     .identifier, .number, .startOfScope("\""), .startOfScope("\"\"\""):
                     convertClosingChevronToSymbol(at: prevIndex, andOpeningChevron: true)
                     processToken()
                     return
@@ -1216,13 +1384,14 @@ public func tokenize(_ source: String) -> [Token] {
                     }
                 case .endOfScope("case"), .endOfScope("default"):
                     scopeIndexStack.append(tokens.count - 1)
-                case .endOfScope("}"):
-                    if scope == .startOfScope(":") {
-                        nestedSwitches -= 1
-                    }
                 case .endOfScope(")"):
-                    if scopeIndexStack.last.map({ tokens[$0] }) == .startOfScope("\"") {
+                    guard let scope = scopeIndexStack.last.map({ tokens[$0] }) else {
+                        break
+                    }
+                    if scope == .startOfScope("\"") {
                         processStringBody()
+                    } else if scope == .startOfScope("\"\"\"") {
+                        processMultilineStringBody()
                     }
                 default:
                     break
@@ -1247,8 +1416,16 @@ public func tokenize(_ source: String) -> [Token] {
                         // Not a generic scope
                         convertOpeningChevronToSymbol(at: scopeIndex)
                     }
-                case .endOfScope:
-                    // If we encountered a closing scope token that wasn't >
+                case .delimiter(":") where scopeIndexStack.count > 1 &&
+                    tokens[scopeIndexStack[scopeIndexStack.count - 2]] == .endOfScope("case"):
+                    // Not a generic scope
+                    convertOpeningChevronToSymbol(at: scopeIndex)
+                    processToken()
+                    return
+                case .keyword("where"):
+                    break
+                case .endOfScope, .keyword:
+                    // If we encountered a keyword, or closing scope token that wasn't >
                     // then the opening < must have been an operator after all
                     convertOpeningChevronToSymbol(at: scopeIndex)
                     processToken()
@@ -1267,6 +1444,53 @@ public func tokenize(_ source: String) -> [Token] {
                 if case let .keyword(name) = tokens[prevPrevIndex] {
                     tokens[prevPrevIndex] = .identifier(name)
                 }
+            } else if case let .keyword(string) = token {
+                var scope = scope
+                var scopeStackIndex = scopeIndexStack.count - 1
+                while scopeStackIndex > 0, scope == .startOfScope("#if") {
+                    scopeStackIndex -= 1
+                    scope = tokens[scopeIndexStack[scopeStackIndex]]
+                }
+                if [.startOfScope("{"), .startOfScope(":")].contains(scope) {
+                    switch string {
+                    case "default":
+                        tokens[tokens.count - 1] = .endOfScope(string)
+                        processToken()
+                        return
+                    case "case":
+                        if let keywordIndex = index(of: .keyword, before: scopeIndex),
+                            case .keyword("enum") = tokens[keywordIndex] {
+                            break
+                        }
+                        if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1) {
+                            switch tokens[prevIndex] {
+                            case .keyword("if"),
+                                 .keyword("guard"),
+                                 .keyword("while"),
+                                 .keyword("for"),
+                                 .delimiter(","):
+                                break
+                            default:
+                                tokens[tokens.count - 1] = .endOfScope(string)
+                                processToken()
+                                return
+                            }
+                        }
+                    default:
+                        break
+                    }
+                }
+            } else if scope == .startOfScope(":") {
+                if [.keyword("#else"), .keyword("#elseif")].contains(token) {
+                    scopeIndexStack.removeLast()
+                    return
+                } else if .endOfScope("#endif") == token {
+                    scopeIndexStack.removeLast()
+                    if let index = scopeIndexStack.last, tokens[index] == .startOfScope("#if") {
+                        scopeIndexStack.removeLast()
+                    }
+                    return
+                }
             }
         }
         // Either there's no scope, or token didn't close it
@@ -1276,6 +1500,8 @@ public func tokenize(_ source: String) -> [Token] {
             switch string {
             case "\"":
                 processStringBody()
+            case "\"\"\"":
+                processMultilineStringBody()
             case "/*":
                 processCommentBody()
             case "//":
@@ -1288,6 +1514,11 @@ public func tokenize(_ source: String) -> [Token] {
             convertClosingChevronToSymbol(at: tokens.count - 1, andOpeningChevron: false)
             return
         case let .endOfScope(string):
+            if ["case", "default"].contains(string), let scopeIndex = scopeIndexStack.last,
+                tokens[scopeIndex] == .startOfScope("#if") {
+                scopeIndexStack.append(tokens.count - 1)
+                return
+            }
             // Previous scope wasn't closed correctly
             tokens[tokens.count - 1] = .error(string)
             return

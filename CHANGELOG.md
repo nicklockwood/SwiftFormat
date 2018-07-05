@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.33.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.11) (2018-07-05)
+
+- Fixed a bug where `--inferoptions` would always set `--self` to "insert" (this also affected the Xcode extension)
+- Fixed bug with `redundantSelf` when parsing nested switch statements
+- Fixed a bug in the `redundantParens` rule that incorrectly removed parens after an indexed tuple (e.g. `foo.1(bar)`)
+- Spaces are now correctly removed around parens or square brackets after an indexed tuple
+
 ## [0.33.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.10) (2018-07-03)
 
 - Fixed a bug where `sortedImports` rule could strip code between `import` statements

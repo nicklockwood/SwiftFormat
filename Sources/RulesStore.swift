@@ -36,9 +36,8 @@ extension UserDefaults {
 
     /// Nuke for dev purposes
     func clearAll(in domainName: String) {
-        guard let entries = persistentDomain(forName: domainName) else { return }
-        for (key, _) in entries {
-            set(nil, forKey: key)
+        persistentDomain(forName: domainName)?.forEach {
+            removeObject(forKey: $0.key)
         }
     }
 }
@@ -178,7 +177,6 @@ extension RulesStore {
         var rules = load()
         active.forEach { rules[$0] = true }
         disabled.forEach { rules[$0] = false }
-
         save(rules)
     }
 

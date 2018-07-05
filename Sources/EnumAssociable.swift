@@ -1,5 +1,5 @@
 //
-//  EnumAssociatable.swift
+//  EnumAssociable.swift
 //  SwiftFormat
 //
 //  Created by Vincent Bernier on 13-02-18.
@@ -31,18 +31,37 @@
 
 import Foundation
 
-protocol EnumAssociatable {
-    func associatedValue<T>() -> T?
+protocol EnumAssociable {}
+
+extension EnumAssociable {
+    private var _associatedValue: Any? {
+        let mirror = Mirror(reflecting: self)
+        precondition(mirror.displayStyle == Mirror.DisplayStyle.enum, "Can only be apply to an Enum")
+        let optionalValue = mirror.children.first?.value
+        if let value = optionalValue {
+            let description = "\(value)"
+            precondition(!description.contains("->") && !description.contains("(Function)"),
+                         "Doesn't work when associated value is a closure")
+        }
+        return optionalValue
+    }
+
+    func associatedValue<T: _Optional>() -> T {
+        guard let value = _associatedValue else {
+            return T._none
+        }
+        return value as! T
+    }
+
+    func associatedValue<T>() -> T {
+        return _associatedValue as! T
+    }
 }
 
-extension EnumAssociatable {
-    func associatedValue<T>() -> T {
-        let enumMirror = Mirror(reflecting: self)
-        precondition(enumMirror.displayStyle == Mirror.DisplayStyle.enum, "Can only be apply to an Enum")
-        let enumAssociatedValue = enumMirror.children.first?.value
-        let result = enumAssociatedValue as! T
-        let resultMirror = Mirror(reflecting: result)
-        precondition(!resultMirror.description.contains("->"), "Don't work when the associated value is a closure. The closure won't behave properly. Use a 'case' to retreive the value")
-        return result
-    }
+protocol _Optional {
+    static var _none: Self { get }
+}
+
+extension Optional: _Optional {
+    static var _none: Optional { return none }
 }

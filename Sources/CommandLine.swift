@@ -756,71 +756,69 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
 
 func commandLineArguments(for options: FormatOptions) -> [String: String] {
     var args = [String: String]()
-    for child in Mirror(reflecting: options).children {
-        if let label = child.label {
-            switch label {
-            case FormatOptions.Descriptor.indentation.propertyName:
-                args[FormatOptions.Descriptor.indentation.argumentName] = FormatOptions.Descriptor.indentation.fromOptions(options)
-            case FormatOptions.Descriptor.lineBreak.propertyName:
-                args[FormatOptions.Descriptor.lineBreak.argumentName] = FormatOptions.Descriptor.lineBreak.fromOptions(options)
-            case FormatOptions.Descriptor.allowInlineSemicolons.propertyName:
-                args[FormatOptions.Descriptor.allowInlineSemicolons.argumentName] = FormatOptions.Descriptor.allowInlineSemicolons.fromOptions(options)
-            case FormatOptions.Descriptor.spaceAroundRangeOperators.propertyName:
-                args[FormatOptions.Descriptor.spaceAroundRangeOperators.argumentName] = FormatOptions.Descriptor.spaceAroundRangeOperators.fromOptions(options)
-            case FormatOptions.Descriptor.spaceAroundOperatorDeclarations.propertyName:
-                args[FormatOptions.Descriptor.spaceAroundOperatorDeclarations.argumentName] = FormatOptions.Descriptor.spaceAroundOperatorDeclarations.fromOptions(options)
-            case FormatOptions.Descriptor.useVoid.propertyName:
-                args[FormatOptions.Descriptor.useVoid.argumentName] = FormatOptions.Descriptor.useVoid.fromOptions(options)
-            case FormatOptions.Descriptor.trailingCommas.propertyName:
-                args[FormatOptions.Descriptor.trailingCommas.argumentName] = FormatOptions.Descriptor.trailingCommas.fromOptions(options)
-            case FormatOptions.Descriptor.indentCase.propertyName:
-                args[FormatOptions.Descriptor.indentCase.argumentName] = FormatOptions.Descriptor.indentCase.fromOptions(options)
-            case FormatOptions.Descriptor.indentComments.propertyName:
-                args[FormatOptions.Descriptor.indentComments.argumentName] = FormatOptions.Descriptor.indentComments.fromOptions(options)
-            case FormatOptions.Descriptor.truncateBlankLines.propertyName:
-                args[FormatOptions.Descriptor.truncateBlankLines.argumentName] = FormatOptions.Descriptor.truncateBlankLines.fromOptions(options)
-            case FormatOptions.Descriptor.allmanBraces.propertyName:
-                args[FormatOptions.Descriptor.allmanBraces.argumentName] = FormatOptions.Descriptor.allmanBraces.fromOptions(options)
-            case FormatOptions.Descriptor.fileHeader.propertyName:
-                args[FormatOptions.Descriptor.fileHeader.argumentName] = FormatOptions.Descriptor.fileHeader.fromOptions(options)
-            case FormatOptions.Descriptor.ifdefIndent.propertyName:
-                args[FormatOptions.Descriptor.ifdefIndent.argumentName] = FormatOptions.Descriptor.ifdefIndent.fromOptions(options)
-            case FormatOptions.Descriptor.wrapArguments.propertyName:
-                args[FormatOptions.Descriptor.wrapArguments.argumentName] = FormatOptions.Descriptor.wrapArguments.fromOptions(options)
-            case FormatOptions.Descriptor.wrapElements.propertyName:
-                args[FormatOptions.Descriptor.wrapElements.argumentName] = FormatOptions.Descriptor.wrapElements.fromOptions(options)
-            case FormatOptions.Descriptor.hexLiteralCase.propertyName:
-                args[FormatOptions.Descriptor.hexLiteralCase.argumentName] = FormatOptions.Descriptor.hexLiteralCase.fromOptions(options)
-            case FormatOptions.Descriptor.exponentCase.propertyName:
-                args[FormatOptions.Descriptor.exponentCase.argumentName] = FormatOptions.Descriptor.exponentCase.fromOptions(options)
-            case FormatOptions.Descriptor.decimalGrouping.propertyName:
-                args[FormatOptions.Descriptor.decimalGrouping.argumentName] = FormatOptions.Descriptor.decimalGrouping.fromOptions(options)
-            case FormatOptions.Descriptor.binaryGrouping.propertyName:
-                args[FormatOptions.Descriptor.binaryGrouping.argumentName] = FormatOptions.Descriptor.binaryGrouping.fromOptions(options)
-            case FormatOptions.Descriptor.octalGrouping.propertyName:
-                args[FormatOptions.Descriptor.octalGrouping.argumentName] = FormatOptions.Descriptor.octalGrouping.fromOptions(options)
-            case FormatOptions.Descriptor.hexGrouping.propertyName:
-                args[FormatOptions.Descriptor.hexGrouping.argumentName] = FormatOptions.Descriptor.hexGrouping.fromOptions(options)
-            case FormatOptions.Descriptor.letPatternPlacement.propertyName:
-                args[FormatOptions.Descriptor.letPatternPlacement.argumentName] = FormatOptions.Descriptor.letPatternPlacement.fromOptions(options)
-            case FormatOptions.Descriptor.stripUnusedArguments.propertyName:
-                args[FormatOptions.Descriptor.stripUnusedArguments.argumentName] = FormatOptions.Descriptor.stripUnusedArguments.fromOptions(options)
-            case FormatOptions.Descriptor.elsePosition.propertyName:
-                args[FormatOptions.Descriptor.elsePosition.argumentName] = FormatOptions.Descriptor.elsePosition.fromOptions(options)
-            case FormatOptions.Descriptor.removeSelf.propertyName:
-                args[FormatOptions.Descriptor.removeSelf.argumentName] = FormatOptions.Descriptor.removeSelf.fromOptions(options)
-            case FormatOptions.Descriptor.experimentalRules.propertyName:
-                args[FormatOptions.Descriptor.experimentalRules.argumentName] = FormatOptions.Descriptor.experimentalRules.fromOptions(options)
-            case FormatOptions.Descriptor.fragment.propertyName:
-                args[FormatOptions.Descriptor.fragment.argumentName] = FormatOptions.Descriptor.fragment.fromOptions(options)
-            case FormatOptions.Descriptor.ignoreConflictMarkers.propertyName:
-                args[FormatOptions.Descriptor.ignoreConflictMarkers.argumentName] = FormatOptions.Descriptor.ignoreConflictMarkers.fromOptions(options)
-            case FormatOptions.Descriptor.insertBlankLines.propertyName,
-                 FormatOptions.Descriptor.removeBlankLines.propertyName:
-                break // Deprecated
-            default:
-                assertionFailure("Unknown option: \(label)")
-            }
+    for key in options.allOptions.keys {
+        switch key {
+        case FormatOptions.Descriptor.indentation.propertyName:
+            args[FormatOptions.Descriptor.indentation.argumentName] = FormatOptions.Descriptor.indentation.fromOptions(options)
+        case FormatOptions.Descriptor.lineBreak.propertyName:
+            args[FormatOptions.Descriptor.lineBreak.argumentName] = FormatOptions.Descriptor.lineBreak.fromOptions(options)
+        case FormatOptions.Descriptor.allowInlineSemicolons.propertyName:
+            args[FormatOptions.Descriptor.allowInlineSemicolons.argumentName] = FormatOptions.Descriptor.allowInlineSemicolons.fromOptions(options)
+        case FormatOptions.Descriptor.spaceAroundRangeOperators.propertyName:
+            args[FormatOptions.Descriptor.spaceAroundRangeOperators.argumentName] = FormatOptions.Descriptor.spaceAroundRangeOperators.fromOptions(options)
+        case FormatOptions.Descriptor.spaceAroundOperatorDeclarations.propertyName:
+            args[FormatOptions.Descriptor.spaceAroundOperatorDeclarations.argumentName] = FormatOptions.Descriptor.spaceAroundOperatorDeclarations.fromOptions(options)
+        case FormatOptions.Descriptor.useVoid.propertyName:
+            args[FormatOptions.Descriptor.useVoid.argumentName] = FormatOptions.Descriptor.useVoid.fromOptions(options)
+        case FormatOptions.Descriptor.trailingCommas.propertyName:
+            args[FormatOptions.Descriptor.trailingCommas.argumentName] = FormatOptions.Descriptor.trailingCommas.fromOptions(options)
+        case FormatOptions.Descriptor.indentCase.propertyName:
+            args[FormatOptions.Descriptor.indentCase.argumentName] = FormatOptions.Descriptor.indentCase.fromOptions(options)
+        case FormatOptions.Descriptor.indentComments.propertyName:
+            args[FormatOptions.Descriptor.indentComments.argumentName] = FormatOptions.Descriptor.indentComments.fromOptions(options)
+        case FormatOptions.Descriptor.truncateBlankLines.propertyName:
+            args[FormatOptions.Descriptor.truncateBlankLines.argumentName] = FormatOptions.Descriptor.truncateBlankLines.fromOptions(options)
+        case FormatOptions.Descriptor.allmanBraces.propertyName:
+            args[FormatOptions.Descriptor.allmanBraces.argumentName] = FormatOptions.Descriptor.allmanBraces.fromOptions(options)
+        case FormatOptions.Descriptor.fileHeader.propertyName:
+            args[FormatOptions.Descriptor.fileHeader.argumentName] = FormatOptions.Descriptor.fileHeader.fromOptions(options)
+        case FormatOptions.Descriptor.ifdefIndent.propertyName:
+            args[FormatOptions.Descriptor.ifdefIndent.argumentName] = FormatOptions.Descriptor.ifdefIndent.fromOptions(options)
+        case FormatOptions.Descriptor.wrapArguments.propertyName:
+            args[FormatOptions.Descriptor.wrapArguments.argumentName] = FormatOptions.Descriptor.wrapArguments.fromOptions(options)
+        case FormatOptions.Descriptor.wrapElements.propertyName:
+            args[FormatOptions.Descriptor.wrapElements.argumentName] = FormatOptions.Descriptor.wrapElements.fromOptions(options)
+        case FormatOptions.Descriptor.hexLiteralCase.propertyName:
+            args[FormatOptions.Descriptor.hexLiteralCase.argumentName] = FormatOptions.Descriptor.hexLiteralCase.fromOptions(options)
+        case FormatOptions.Descriptor.exponentCase.propertyName:
+            args[FormatOptions.Descriptor.exponentCase.argumentName] = FormatOptions.Descriptor.exponentCase.fromOptions(options)
+        case FormatOptions.Descriptor.decimalGrouping.propertyName:
+            args[FormatOptions.Descriptor.decimalGrouping.argumentName] = FormatOptions.Descriptor.decimalGrouping.fromOptions(options)
+        case FormatOptions.Descriptor.binaryGrouping.propertyName:
+            args[FormatOptions.Descriptor.binaryGrouping.argumentName] = FormatOptions.Descriptor.binaryGrouping.fromOptions(options)
+        case FormatOptions.Descriptor.octalGrouping.propertyName:
+            args[FormatOptions.Descriptor.octalGrouping.argumentName] = FormatOptions.Descriptor.octalGrouping.fromOptions(options)
+        case FormatOptions.Descriptor.hexGrouping.propertyName:
+            args[FormatOptions.Descriptor.hexGrouping.argumentName] = FormatOptions.Descriptor.hexGrouping.fromOptions(options)
+        case FormatOptions.Descriptor.letPatternPlacement.propertyName:
+            args[FormatOptions.Descriptor.letPatternPlacement.argumentName] = FormatOptions.Descriptor.letPatternPlacement.fromOptions(options)
+        case FormatOptions.Descriptor.stripUnusedArguments.propertyName:
+            args[FormatOptions.Descriptor.stripUnusedArguments.argumentName] = FormatOptions.Descriptor.stripUnusedArguments.fromOptions(options)
+        case FormatOptions.Descriptor.elsePosition.propertyName:
+            args[FormatOptions.Descriptor.elsePosition.argumentName] = FormatOptions.Descriptor.elsePosition.fromOptions(options)
+        case FormatOptions.Descriptor.removeSelf.propertyName:
+            args[FormatOptions.Descriptor.removeSelf.argumentName] = FormatOptions.Descriptor.removeSelf.fromOptions(options)
+        case FormatOptions.Descriptor.experimentalRules.propertyName:
+            args[FormatOptions.Descriptor.experimentalRules.argumentName] = FormatOptions.Descriptor.experimentalRules.fromOptions(options)
+        case FormatOptions.Descriptor.fragment.propertyName:
+            args[FormatOptions.Descriptor.fragment.argumentName] = FormatOptions.Descriptor.fragment.fromOptions(options)
+        case FormatOptions.Descriptor.ignoreConflictMarkers.propertyName:
+            args[FormatOptions.Descriptor.ignoreConflictMarkers.argumentName] = FormatOptions.Descriptor.ignoreConflictMarkers.fromOptions(options)
+        case FormatOptions.Descriptor.insertBlankLines.propertyName,
+             FormatOptions.Descriptor.removeBlankLines.propertyName:
+            break // Deprecated
+        default:
+            assertionFailure("Unknown option: \(key)")
         }
     }
     for arg in deprecatedArguments {

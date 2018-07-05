@@ -76,8 +76,9 @@ func printWarnings(_ errors: [Error]) {
 
 // Represents the exit codes to the command line. See `man sysexits` for more information.
 public enum ExitCode: Int32 {
-    case ok = 0             // EX_OK
-    case error = 70         // EX_SOFTWARE
+    case ok = 0 // EX_OK
+    case lintFailure = 1
+    case error = 70 // EX_SOFTWARE
 }
 
 func printHelp() {
@@ -103,6 +104,7 @@ func printHelp() {
     print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
     print("--verbose          display detailed formatting output and warnings/errors")
     print("--dryrun           run in \"dry\" mode (without actually changing any files)")
+    print("--lint             returns non-zero exit code if files would be changed")
     print("")
     print("swiftformat has a number of rules that can be enabled or disabled. by default")
     print("most rules are enabled. use --rules to display all enabled/disabled rules:")
@@ -201,6 +203,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
     var errors = [Error]()
     var verbose = false
     var dryrun = false
+    var lint = false
     do {
         // Get options
         let args = try preprocessArguments(args, commandLineArguments)
@@ -289,6 +292,16 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             dryrun = true
             if !arg.isEmpty {
                 // dryrun doesn't take an argument, so treat argument as another input path
+                inputURLs.append(expandPath(arg, in: directory))
+            }
+        }
+
+        // Lint
+        if let arg = args["lint"] {
+            dryrun = true
+            lint = true
+            if !arg.isEmpty {
+                // lint doesn't take an argument, so treat argument as another input path
                 inputURLs.append(expandPath(arg, in: directory))
             }
         }
@@ -508,7 +521,13 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
         printWarnings(errors)
         if dryrun {
-            print("swiftformat completed. \(filesFailed)/\(filesChecked) files would have been updated in \(time)", as: .success)
+            let result = "swiftformat completed. \(filesFailed)/\(filesChecked) files would have been updated in \(time)"
+            if lint && filesFailed > 0 {
+                print(result, as: .error)
+                return .lintFailure
+            } else {
+                print(result, as: .success)
+            }
         } else {
             print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)", as: .success)
         }
@@ -1256,6 +1275,7 @@ let commandLineArguments = [
     "cache",
     "verbose",
     "dryrun",
+    "lint",
     // Rules
     "disable",
     "enable",

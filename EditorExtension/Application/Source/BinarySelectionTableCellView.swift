@@ -31,14 +31,13 @@
 
 import Cocoa
 
-final class MainBinarySelectionTableCellView: NSTableCellView {
+final class BinarySelectionTableCellView: NSTableCellView {
     @IBOutlet var checkbox: NSButton!
 
     @IBAction func toggleRuleValue(_ sender: NSButton) {
         guard let binarySelection = objectValue as? UserSelectionBinary else {
             return
         }
-
         binarySelection.selection = (sender.state == .on)
     }
 
@@ -47,7 +46,6 @@ final class MainBinarySelectionTableCellView: NSTableCellView {
             guard let binarySelection = objectValue as? UserSelectionBinary else {
                 return
             }
-
             checkbox.title = binarySelection.title ?? ""
             checkbox.state = binarySelection.selection ? .on : .off
         }
@@ -55,5 +53,5 @@ final class MainBinarySelectionTableCellView: NSTableCellView {
 }
 
 extension NSUserInterfaceItemIdentifier {
-    static let mainBinarySelectionTableCellView = NSUserInterfaceItemIdentifier(rawValue: "MainBinarySelectionTableCellView")
+    static let binarySelectionTableCellView = NSUserInterfaceItemIdentifier(rawValue: "BinarySelectionTableCellView")
 }

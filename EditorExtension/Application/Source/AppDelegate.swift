@@ -41,7 +41,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBAction func resetToDefault(_: NSMenuItem) {
         RulesStore().resetRulesToDefaults()
         OptionsStore().resetOptionsToDefaults()
-        NotificationCenter.default.post(name: .ApplicationDidLoadNewConfiguration, object: nil)
+        NotificationCenter.default.post(name: .applicationDidLoadNewConfiguration, object: nil)
     }
 
     @objc
@@ -74,7 +74,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 RulesStore().restore(configuration.rules)
                 OptionsStore().restore(configuration.options)
 
-                NotificationCenter.default.post(name: .ApplicationDidLoadNewConfiguration, object: nil)
+                NotificationCenter.default.post(name: .applicationDidLoadNewConfiguration, object: nil)
             } catch let error {
                 self.showError(error)
             }
@@ -125,5 +125,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 extension NSNotification.Name {
-    static let ApplicationDidLoadNewConfiguration = NSNotification.Name("ApplicationDidLoadNewConfiguration")
+    static let applicationDidLoadNewConfiguration = NSNotification.Name("ApplicationDidLoadNewConfiguration")
 }

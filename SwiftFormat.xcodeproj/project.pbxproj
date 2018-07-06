@@ -30,6 +30,7 @@
 		01B3987B1D763424009ADE61 /* FormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987A1D763424009ADE61 /* FormatterTests.swift */; };
 		01B3987D1D763493009ADE61 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
 		01B3987F1D7634A0009ADE61 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
+		01E5E0D620EE8C35009E8A4D /* OptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E5E0D420EE8BBC009E8A4D /* OptionsViewController.swift */; };
 		01F17E821E25870700DCD359 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E811E25870700DCD359 /* CommandLine.swift */; };
 		01F17E831E25870700DCD359 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E811E25870700DCD359 /* CommandLine.swift */; };
 		01F17E851E258A4900DCD359 /* CommandLineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E841E258A4900DCD359 /* CommandLineTests.swift */; };
@@ -52,7 +53,6 @@
 		90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */; };
 		E4083191202C049200CAF11D /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
 		E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5BE2025761D00C1BEDE /* UserSelection.swift */; };
-		E41CB5C12026BA2000C1BEDE /* HeaderTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C02026BA1F00C1BEDE /* HeaderTableCellView.swift */; };
 		E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */; };
 		E41CB5C52027700100C1BEDE /* FreeTextTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */; };
 		E43EF47C202FF47C00E523BD /* OptionsDescriptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E43EF47B202FF47C00E523BD /* OptionsDescriptorTests.swift */; };
@@ -62,7 +62,7 @@
 		E4872113201D3B890014845E /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
 		E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
 		E487211D201D885A0014845E /* RulesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E487211C201D885A0014845E /* RulesViewController.swift */; };
-		E4872125201D980D0014845E /* MainBinarySelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */; };
+		E4872125201D980D0014845E /* BinarySelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872124201D980D0014845E /* BinarySelectionTableCellView.swift */; };
 		E4872129201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
 		E487212A201E3DD50014845E /* RulesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4872128201E3DD50014845E /* RulesStore.swift */; };
 		E492DDF920516DA500E7E61A /* SwiftFormatFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = E492DDF820516DA500E7E61A /* SwiftFormatFile.swift */; };
@@ -138,6 +138,7 @@
 		01A0EACC1D5DB5F500A0A8E3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		01B3987A1D763424009ADE61 /* FormatterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatterTests.swift; sourceTree = "<group>"; };
 		01B3987C1D763493009ADE61 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
+		01E5E0D420EE8BBC009E8A4D /* OptionsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsViewController.swift; sourceTree = "<group>"; };
 		01F17E811E25870700DCD359 /* CommandLine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandLine.swift; sourceTree = "<group>"; };
 		01F17E841E258A4900DCD359 /* CommandLineTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandLineTests.swift; sourceTree = "<group>"; };
 		01F3DF8B1DB9FD3F00454944 /* Options.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Options.swift; sourceTree = "<group>"; };
@@ -157,12 +158,11 @@
 		90F16AF71DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatEntireFileCommand.swift; sourceTree = "<group>"; };
 		90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandErrors.swift; sourceTree = "<group>"; };
 		E41CB5BE2025761D00C1BEDE /* UserSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSelection.swift; sourceTree = "<group>"; };
-		E41CB5C02026BA1F00C1BEDE /* HeaderTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderTableCellView.swift; sourceTree = "<group>"; };
 		E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionTableCellView.swift; sourceTree = "<group>"; };
 		E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeTextTableCellView.swift; sourceTree = "<group>"; };
 		E43EF47B202FF47C00E523BD /* OptionsDescriptorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsDescriptorTests.swift; sourceTree = "<group>"; };
 		E487211C201D885A0014845E /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
-		E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainBinarySelectionTableCellView.swift; sourceTree = "<group>"; };
+		E4872124201D980D0014845E /* BinarySelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinarySelectionTableCellView.swift; sourceTree = "<group>"; };
 		E4872128201E3DD50014845E /* RulesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesStore.swift; sourceTree = "<group>"; };
 		E492DDF820516DA500E7E61A /* SwiftFormatFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftFormatFile.swift; sourceTree = "<group>"; };
 		E4962DDF203F3CD500A02013 /* OptionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsStore.swift; sourceTree = "<group>"; };
@@ -370,10 +370,10 @@
 			children = (
 				90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */,
 				E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */,
-				E41CB5C02026BA1F00C1BEDE /* HeaderTableCellView.swift */,
 				E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */,
-				E4872124201D980D0014845E /* MainBinarySelectionTableCellView.swift */,
+				E4872124201D980D0014845E /* BinarySelectionTableCellView.swift */,
 				E487211C201D885A0014845E /* RulesViewController.swift */,
+				01E5E0D420EE8BBC009E8A4D /* OptionsViewController.swift */,
 				E41CB5BE2025761D00C1BEDE /* UserSelection.swift */,
 			);
 			path = Source;
@@ -740,7 +740,7 @@
 			files = (
 				E4083191202C049200CAF11D /* SwiftFormat.swift in Sources */,
 				E41CB5C52027700100C1BEDE /* FreeTextTableCellView.swift in Sources */,
-				E4872125201D980D0014845E /* MainBinarySelectionTableCellView.swift in Sources */,
+				E4872125201D980D0014845E /* BinarySelectionTableCellView.swift in Sources */,
 				E487211D201D885A0014845E /* RulesViewController.swift in Sources */,
 				E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */,
 				E4872112201D3B860014845E /* Rules.swift in Sources */,
@@ -750,7 +750,7 @@
 				E4FABAD7202FEF060065716E /* OptionsDescriptor.swift in Sources */,
 				E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */,
 				E4872129201E3DD50014845E /* RulesStore.swift in Sources */,
-				E41CB5C12026BA2000C1BEDE /* HeaderTableCellView.swift in Sources */,
+				01E5E0D620EE8C35009E8A4D /* OptionsViewController.swift in Sources */,
 				E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */,
 				E4872111201D3B830014845E /* Options.swift in Sources */,
 				E4F25BCC2082514400E12F98 /* CommandLine.swift in Sources */,

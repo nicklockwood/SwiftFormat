@@ -46,7 +46,6 @@ class ListSelectionTableCellView: NSTableCellView {
             guard let model = objectValue as? UserSelectionList else {
                 return
             }
-
             title.stringValue = model.title ?? ""
             dropDown.removeAllItems()
             dropDown.addItems(withTitles: model.options.map { $0 })

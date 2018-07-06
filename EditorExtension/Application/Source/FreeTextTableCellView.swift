@@ -40,7 +40,6 @@ class FreeTextTableCellView: NSTableCellView {
             guard let freeText = objectValue as? UserSelectionFreeText else {
                 return
             }
-
             title.stringValue = freeText.title ?? ""
             freeTextField.stringValue = freeText.selection
             updateErrorState()

@@ -1574,8 +1574,31 @@ extension FormatRules {
             formatter.removeToken(at: index)
         }
 
+        func nestedParens(in range: ClosedRange<Int>) -> ClosedRange<Int>? {
+            guard let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: range.lowerBound, if: {
+                $0 == .startOfScope("(")
+            }), let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound, if: {
+                $0 == .endOfScope(")")
+            }) else {
+                return nil
+            }
+            return startIndex ... endIndex
+        }
+
         formatter.forEach(.startOfScope("(")) { i, _ in
             let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
+            guard var closingIndex = formatter.index(of: .endOfScope(")"), after: i) else {
+                return
+            }
+            var innerParens = nestedParens(in: i ... closingIndex)
+            while let range = innerParens, nestedParens(in: range) != nil {
+                // TODO: this could be a lot more efficient if we kept track of the
+                // removed token indices instead of recalculating paren positions every time
+                removeParen(at: range.upperBound)
+                removeParen(at: range.lowerBound)
+                closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
+                innerParens = nestedParens(in: i ... closingIndex)
+            }
             let token = formatter.token(at: previousIndex) ?? .space("")
             switch token {
             case .endOfScope("]"):
@@ -1584,8 +1607,7 @@ extension FormatRules {
                     fallthrough
                 }
             case .startOfScope("{"):
-                if let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
-                    formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) == .keyword("in"),
+                if formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) == .keyword("in"),
                     formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex {
                     if let labelIndex = formatter.index(of: .delimiter(":"), after: i),
                         labelIndex < closingIndex {
@@ -1598,7 +1620,7 @@ extension FormatRules {
                 break
             case .identifier, .number: // TODO: are trailing closures allowed in other cases?
                 // Parens before closure
-                if let closingIndex = formatter.index(of: .nonSpace, after: i, if: { $0 == .endOfScope(")") }),
+                if closingIndex == formatter.index(of: .nonSpace, after: i),
                     let openingIndex = formatter.index(
                         of: .nonSpaceOrCommentOrLinebreak, after: closingIndex, if: { $0 == .startOfScope("{") }
                     ), formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousIndex) != .keyword("func") {
@@ -1641,7 +1663,6 @@ extension FormatRules {
             case .keyword, .endOfScope:
                 let string = token.string
                 guard ["if", "while", "switch", "for", "in", "where", "guard", "let", "case"].contains(string),
-                    let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
                     formatter.index(of: .endOfScope("}"), before: closingIndex) == nil,
                     let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) else {
                     break
@@ -1662,19 +1683,25 @@ extension FormatRules {
                 }
                 removeParen(at: closingIndex)
                 removeParen(at: i)
-            case .operator(_, .infix):
-                guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i),
-                    let nextIndex = formatter.index(of: .nonSpaceOrComment, after: i, if: { $0 == .startOfScope("{") }),
-                    let lastIndex = formatter.index(of: .endOfScope("}"), after: nextIndex),
-                    formatter.index(of: .nonSpaceOrComment, before: closingIndex) == lastIndex else {
-                    fallthrough
+            case .delimiter(":"), .operator("=", .infix):
+                if let range = innerParens {
+                    removeParen(at: range.upperBound)
+                    removeParen(at: range.lowerBound)
+                    closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
+                    innerParens = nil
                 }
-                removeParen(at: closingIndex)
-                removeParen(at: i)
+                fallthrough
+            case .operator(_, .infix):
+                if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: i, if: { $0 == .startOfScope("{") }),
+                    let lastIndex = formatter.index(of: .endOfScope("}"), after: nextIndex),
+                    formatter.index(of: .nonSpaceOrComment, before: closingIndex) == lastIndex {
+                    removeParen(at: closingIndex)
+                    removeParen(at: i)
+                }
+                fallthrough
             default:
                 if let nextTokenIndex = formatter.index(of: .nonSpace, after: i),
-                    let closingIndex = formatter.index(of: .nonSpace, after: nextTokenIndex, if: {
-                        $0 == .endOfScope(")") }) {
+                    closingIndex == formatter.index(of: .nonSpace, after: nextTokenIndex) {
                     if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex),
                         [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
                         return

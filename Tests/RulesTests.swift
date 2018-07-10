@@ -3494,6 +3494,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testParensRemovedAroundFunctionArgument() {
+        let input = "foo(bar: (5))"
+        let output = "foo(bar: 5)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // around closure arguments
 
     func testSingleClosureArgumentUnwrapped() {
@@ -3682,6 +3689,43 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // around tuples
+
+    func testParensRemovedAroundTuple() {
+        let input = "let foo = ((bar: Int, baz: String))"
+        let output = "let foo = (bar: Int, baz: String)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAroundTupleFunctionArgument() {
+        let input = "let foo = bar((bar: Int, baz: String))"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAroundTupleFunctionArgumentAfterSubscript() {
+        let input = "bar[5]((bar: Int, baz: String))"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNestedParensRemovedAroundTupleFunctionArgument() {
+        let input = "let foo = bar(((bar: Int, baz: String)))"
+        let output = "let foo = bar((bar: Int, baz: String))"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNestedParensRemovedAroundTupleFunctionArgument2() {
+        let input = "let foo = bar(foo: ((bar: Int, baz: String)))"
+        let output = "let foo = bar(foo: (bar: Int, baz: String))"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // after indexed tuple
 
     func testParensNotRemovedAfterTupleIndex() {
@@ -3694,6 +3738,20 @@ class RulesTests: XCTestCase {
     func testParensNotRemovedAfterTupleIndex2() {
         let input = "foo.1(true)"
         let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAfterTupleIndex3() {
+        let input = "foo.1((bar: Int, baz: String))"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNestedParensRemovedAfterTupleIndex3() {
+        let input = "foo.1(((bar: Int, baz: String)))"
+        let output = "foo.1((bar: Int, baz: String))"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

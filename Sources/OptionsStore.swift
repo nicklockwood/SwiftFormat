@@ -52,7 +52,7 @@ extension SavedOption: Codable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(argumentValue, forKey: .argumentValue)
-        try container.encode(descriptor.id, forKey: .descriptorID)
+        try container.encode(descriptor.argumentName, forKey: .descriptorID)
     }
 }
 
@@ -65,7 +65,7 @@ extension SavedOption: Comparable {
     }
 
     static func == (lhs: SavedOption, rhs: SavedOption) -> Bool {
-        return lhs.descriptor.id == rhs.descriptor.id &&
+        return lhs.descriptor.argumentName == rhs.descriptor.argumentName &&
             lhs.descriptor.name == rhs.descriptor.name
     }
 }
@@ -74,7 +74,7 @@ extension SavedOption {
     private static let mapping: [String: FormatOptions.Descriptor] = {
         let options = FormatOptions.Descriptor.formats + FormatOptions.Descriptor.files + FormatOptions.Descriptor.deprecated
         var optionsDict = [String: FormatOptions.Descriptor]()
-        options.forEach { optionsDict[$0.id] = $0 }
+        options.forEach { optionsDict[$0.argumentName] = $0 }
         return optionsDict
     }()
 
@@ -105,7 +105,7 @@ struct OptionsStore {
 
     init(_ store: UserDefaults = OptionsStore.defaultStore) {
         self.store = store
-        setupDefaultValuesIfNeeded()
+        setUpDefaultValuesIfNeeded()
     }
 
     var formatOptions: FormatOptions {
@@ -120,22 +120,22 @@ struct OptionsStore {
     }
 
     func save(_ option: SavedOption) {
-        save((id: option.descriptor.id, arg: option.argumentValue))
+        save((id: option.descriptor.argumentName, arg: option.argumentValue))
     }
 
     func save(_ options: [SavedOption]) {
-        let optRepresentations = options.map { (id: $0.descriptor.id, arg: $0.argumentValue) }
+        let optRepresentations = options.map { (id: $0.descriptor.argumentName, arg: $0.argumentValue) }
         save(optRepresentations)
     }
 
     func restore(_ options: [SavedOption]) {
         clear()
         save(options)
-        addNewOptonsIfNeeded()
+        addNewOptionsIfNeeded()
     }
 
     func resetOptionsToDefaults() {
-        let options = FormatOptions.Descriptor.formats.map { (id: $0.id, arg: $0.defaultArgument) }
+        let options = FormatOptions.Descriptor.formats.map { (id: $0.argumentName, arg: $0.defaultArgument) }
         clear()
         save(options)
     }
@@ -144,28 +144,28 @@ struct OptionsStore {
 // MARK: - Business Rules
 
 extension OptionsStore {
-    private func setupDefaultValuesIfNeeded() {
+    private func setUpDefaultValuesIfNeeded() {
         if store.value(forKey: optionsKey) == nil {
             resetOptionsToDefaults()
         } else {
-            addNewOptonsIfNeeded()
+            addNewOptionsIfNeeded()
         }
     }
 
-    private func addNewOptonsIfNeeded() {
-        let allDescriptor = FormatOptions.Descriptor.formats
+    private func addNewOptionsIfNeeded() {
+        let allDescriptors = FormatOptions.Descriptor.formats
         var options = load()
-        var idsToRemove = Set<String>(options.keys)
+        var idsToRemove = Set(options.keys)
 
-        for descriptor in allDescriptor {
-            if idsToRemove.remove(descriptor.id) == nil {
-                //  new option
-                options[descriptor.id] = descriptor.defaultArgument
+        for descriptor in allDescriptors {
+            if idsToRemove.remove(descriptor.argumentName) == nil {
+                // New option
+                options[descriptor.argumentName] = descriptor.defaultArgument
             }
         }
 
         for id in idsToRemove {
-            //  obsolete options to remove
+            // Obsolete option to remove
             options[id] = nil
         }
 

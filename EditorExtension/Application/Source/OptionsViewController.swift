@@ -64,7 +64,7 @@ final class OptionsViewController: NSViewController {
                 switch descriptor.type {
                 case let .binary(t, f):
                     let list = UserSelectionList(
-                        identifier: descriptor.id,
+                        identifier: descriptor.argumentName,
                         title: descriptor.name,
                         description: nil,
                         selection: selection,
@@ -75,7 +75,7 @@ final class OptionsViewController: NSViewController {
 
                 case let .list(values):
                     let list = UserSelectionList(
-                        identifier: descriptor.id,
+                        identifier: descriptor.argumentName,
                         title: descriptor.name,
                         description: nil,
                         selection: selection,
@@ -86,7 +86,7 @@ final class OptionsViewController: NSViewController {
 
                 case let .freeText(validationStrategy: validation):
                     let freeText = UserSelectionFreeText(
-                        identifier: descriptor.id,
+                        identifier: descriptor.argumentName,
                         title: descriptor.name,
                         description: nil,
                         selection: selection,

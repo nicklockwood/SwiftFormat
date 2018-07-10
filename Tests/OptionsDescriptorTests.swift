@@ -13,12 +13,10 @@ class OptionsDescriptorTests: XCTestCase {
     private typealias OptionArgumentMapping<T> = (optionValue: T, argumentValue: String)
 
     private func validateDescriptor(_ descriptor: FormatOptions.Descriptor,
-                                    id: String,
                                     name: String,
                                     argumentName: String,
                                     propertyName: String,
                                     testName: String = #function) {
-        XCTAssertEqual(descriptor.id, id, "\(testName) : id is -> \(id)")
         XCTAssertEqual(descriptor.name, name, "\(testName) : Name is -> \(name)")
         XCTAssertEqual(descriptor.argumentName, argumentName, "\(testName) : argumentName is -> \(argumentName)")
         XCTAssertEqual(descriptor.propertyName, propertyName, "\(testName) : propertyName is -> \(propertyName)")
@@ -149,7 +147,6 @@ class OptionsDescriptorTests: XCTestCase {
     }
 
     private func validateGroupingDescriptor(_ descriptor: FormatOptions.Descriptor,
-                                            id: String,
                                             name: String,
                                             argumentName: String,
                                             propertyName: String,
@@ -178,7 +175,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: Grouping.group(4, 5), argumentValue: "4,5"),
         ]
 
-        validateDescriptor(descriptor, id: id, name: name, argumentName: argumentName, propertyName: propertyName, testName: testName)
+        validateDescriptor(descriptor, name: name, argumentName: argumentName, propertyName: propertyName, testName: testName)
         validateArgumentsFreeTextType(descriptor, expectations: expectations, default: `default`, testName: testName)
         validateFromOptions(descriptor, keyPath: keyPath, expectations: fromOptionExpectations, testName: testName)
         validateFromArguments(descriptor, keyPath: keyPath, expectations: fromArgumentExpectations, testName: testName)
@@ -212,7 +209,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: false, argumentValue: "tuples"),
             (optionValue: true, argumentValue: "void"),
         ]
-        validateDescriptor(descriptor, id: "empty", name: "Empty", argumentName: "empty", propertyName: "useVoid")
+        validateDescriptor(descriptor, name: "Empty", argumentName: "empty", propertyName: "useVoid")
         validateArgumentsBinaryType(descriptor, controlTrue: ["void"], controlFalse: ["tuple", "tuples"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.useVoid, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.useVoid)
@@ -225,7 +222,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: false, argumentValue: "never"),
             (optionValue: true, argumentValue: "inline"),
         ]
-        validateDescriptor(descriptor, id: "semicolons", name: "Semicolons", argumentName: "semicolons", propertyName: "allowInlineSemicolons")
+        validateDescriptor(descriptor, name: "Semicolons", argumentName: "semicolons", propertyName: "allowInlineSemicolons")
         validateArgumentsBinaryType(descriptor, controlTrue: ["inline"], controlFalse: ["never", "false"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.allowInlineSemicolons, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.allowInlineSemicolons)
@@ -238,7 +235,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "spaced"),
             (optionValue: false, argumentValue: "nospace"),
         ]
-        validateDescriptor(descriptor, id: "ranges", name: "Ranges", argumentName: "ranges", propertyName: "spaceAroundRangeOperators")
+        validateDescriptor(descriptor, name: "Ranges", argumentName: "ranges", propertyName: "spaceAroundRangeOperators")
         validateArgumentsBinaryType(descriptor, controlTrue: ["space", "spaced", "spaces"], controlFalse: ["nospace"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.spaceAroundRangeOperators, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.spaceAroundRangeOperators)
@@ -251,7 +248,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "spaced"),
             (optionValue: false, argumentValue: "nospace"),
         ]
-        validateDescriptor(descriptor, id: "operator-func", name: "Operator Func", argumentName: "operatorfunc", propertyName: "spaceAroundOperatorDeclarations")
+        validateDescriptor(descriptor, name: "Operator Func", argumentName: "operatorfunc", propertyName: "spaceAroundOperatorDeclarations")
         validateArgumentsBinaryType(descriptor, controlTrue: ["space", "spaced", "spaces"], controlFalse: ["nospace"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.spaceAroundOperatorDeclarations, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.spaceAroundOperatorDeclarations)
@@ -264,7 +261,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "true"),
             (optionValue: false, argumentValue: "false"),
         ]
-        validateDescriptor(descriptor, id: "indent-case", name: "Indent Case", argumentName: "indentcase", propertyName: "indentCase")
+        validateDescriptor(descriptor, name: "Indent Case", argumentName: "indentcase", propertyName: "indentCase")
         validateArgumentsBinaryType(descriptor, controlTrue: ["true"], controlFalse: ["false"], default: false)
         validateFromOptions(descriptor, keyPath: \FormatOptions.indentCase, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.indentCase)
@@ -277,7 +274,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "always"),
             (optionValue: false, argumentValue: "inline"),
         ]
-        validateDescriptor(descriptor, id: "commas", name: "Commas", argumentName: "commas", propertyName: "trailingCommas")
+        validateDescriptor(descriptor, name: "Commas", argumentName: "commas", propertyName: "trailingCommas")
         validateArgumentsBinaryType(descriptor, controlTrue: ["always", "true"], controlFalse: ["inline", "false"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.trailingCommas, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.trailingCommas)
@@ -290,7 +287,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "indent"),
             (optionValue: false, argumentValue: "ignore"),
         ]
-        validateDescriptor(descriptor, id: "comments", name: "Comments", argumentName: "comments", propertyName: "indentComments")
+        validateDescriptor(descriptor, name: "Comments", argumentName: "comments", propertyName: "indentComments")
         validateArgumentsBinaryType(descriptor, controlTrue: ["indent", "indented"], controlFalse: ["ignore"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.indentComments, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.indentComments)
@@ -303,7 +300,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "always"),
             (optionValue: false, argumentValue: "nonblank-lines"),
         ]
-        validateDescriptor(descriptor, id: "trim-white-space", name: "Trim White Space", argumentName: "trimwhitespace", propertyName: "truncateBlankLines")
+        validateDescriptor(descriptor, name: "Trim White Space", argumentName: "trimwhitespace", propertyName: "truncateBlankLines")
         validateArgumentsBinaryType(descriptor, controlTrue: ["always"], controlFalse: ["nonblank-lines", "nonblank", "non-blank-lines", "non-blank", "nonempty-lines", "nonempty", "non-empty-lines", "non-empty"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.truncateBlankLines, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.truncateBlankLines)
@@ -316,7 +313,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "true"),
             (optionValue: false, argumentValue: "false"),
         ]
-        validateDescriptor(descriptor, id: "allman", name: "Allman Braces", argumentName: "allman", propertyName: "allmanBraces")
+        validateDescriptor(descriptor, name: "Allman Braces", argumentName: "allman", propertyName: "allmanBraces")
         validateArgumentsBinaryType(descriptor, controlTrue: ["true", "enabled"], controlFalse: ["false", "disabled"], default: false)
         validateFromOptions(descriptor, keyPath: \FormatOptions.allmanBraces, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.allmanBraces)
@@ -329,7 +326,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "uppercase"),
             (optionValue: false, argumentValue: "lowercase"),
         ]
-        validateDescriptor(descriptor, id: "hex-literal-case", name: "Hex Literal Case", argumentName: "hexliteralcase", propertyName: "uppercaseHex")
+        validateDescriptor(descriptor, name: "Hex Literal Case", argumentName: "hexliteralcase", propertyName: "uppercaseHex")
         validateArgumentsBinaryType(descriptor, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.uppercaseHex, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.uppercaseHex)
@@ -342,7 +339,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "uppercase"),
             (optionValue: false, argumentValue: "lowercase"),
         ]
-        validateDescriptor(descriptor, id: "exponent-case", name: "Exponent Case", argumentName: "exponentcase", propertyName: "uppercaseExponent")
+        validateDescriptor(descriptor, name: "Exponent Case", argumentName: "exponentcase", propertyName: "uppercaseExponent")
         validateArgumentsBinaryType(descriptor, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"], default: false)
         validateFromOptions(descriptor, keyPath: \FormatOptions.uppercaseExponent, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.uppercaseExponent)
@@ -355,7 +352,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "hoist"),
             (optionValue: false, argumentValue: "inline"),
         ]
-        validateDescriptor(descriptor, id: "pattern-let", name: "Pattern Let", argumentName: "patternlet", propertyName: "hoistPatternLet")
+        validateDescriptor(descriptor, name: "Pattern Let", argumentName: "patternlet", propertyName: "hoistPatternLet")
         validateArgumentsBinaryType(descriptor, controlTrue: ["hoist"], controlFalse: ["inline"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.hoistPatternLet, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.hoistPatternLet)
@@ -368,7 +365,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "next-line"),
             (optionValue: false, argumentValue: "same-line"),
         ]
-        validateDescriptor(descriptor, id: "else-position", name: "Else Position", argumentName: "elseposition", propertyName: "elseOnNextLine")
+        validateDescriptor(descriptor, name: "Else Position", argumentName: "elseposition", propertyName: "elseOnNextLine")
         validateArgumentsBinaryType(descriptor, controlTrue: ["next-line", "nextline"], controlFalse: ["same-line", "sameline"], default: false)
         validateFromOptions(descriptor, keyPath: \FormatOptions.elseOnNextLine, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.elseOnNextLine)
@@ -381,7 +378,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "remove"),
             (optionValue: false, argumentValue: "insert"),
         ]
-        validateDescriptor(descriptor, id: "self", name: "Self", argumentName: "self", propertyName: "removeSelf")
+        validateDescriptor(descriptor, name: "Self", argumentName: "self", propertyName: "removeSelf")
         validateArgumentsBinaryType(descriptor, controlTrue: ["remove"], controlFalse: ["insert"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.removeSelf, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.removeSelf)
@@ -394,7 +391,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "enabled"),
             (optionValue: false, argumentValue: "disabled"),
         ]
-        validateDescriptor(descriptor, id: "experimental", name: "Experimental Rules", argumentName: "experimental", propertyName: "experimentalRules")
+        validateDescriptor(descriptor, name: "Experimental Rules", argumentName: "experimental", propertyName: "experimentalRules")
         validateArgumentsBinaryType(descriptor, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: false)
         validateFromOptions(descriptor, keyPath: \FormatOptions.experimentalRules, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.experimentalRules)
@@ -407,7 +404,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "true"),
             (optionValue: false, argumentValue: "false"),
         ]
-        validateDescriptor(descriptor, id: "fragment", name: "Fragment", argumentName: "fragment", propertyName: "fragment")
+        validateDescriptor(descriptor, name: "Fragment", argumentName: "fragment", propertyName: "fragment")
         validateArgumentsBinaryType(descriptor, controlTrue: ["true", "enabled"], controlFalse: ["false", "disabled"], default: false)
         validateFromOptions(descriptor, keyPath: \FormatOptions.fragment, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.fragment)
@@ -420,7 +417,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "ignore"),
             (optionValue: false, argumentValue: "reject"),
         ]
-        validateDescriptor(descriptor, id: "conflict-markers", name: "Conflict Markers", argumentName: "conflictmarkers", propertyName: "ignoreConflictMarkers")
+        validateDescriptor(descriptor, name: "Conflict Markers", argumentName: "conflictmarkers", propertyName: "ignoreConflictMarkers")
         validateArgumentsBinaryType(descriptor, controlTrue: ["ignore", "true", "enabled"], controlFalse: ["reject", "false", "disabled"], default: false)
         validateFromOptions(descriptor, keyPath: \FormatOptions.ignoreConflictMarkers, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.ignoreConflictMarkers)
@@ -435,7 +432,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: IndentMode.outdent, argumentValue: "outdent"),
         ]
 
-        validateDescriptor(descriptor, id: "ifdef", name: "ifdef Indent", argumentName: "ifdef", propertyName: "ifdefIndent")
+        validateDescriptor(descriptor, name: "Ifdef Indent", argumentName: "ifdef", propertyName: "ifdefIndent")
         validateArgumentsListType(descriptor, validArguments: ["indent", "noindent", "outdent"], default: "indent")
         validateFromOptions(descriptor, keyPath: \FormatOptions.ifdefIndent, expectations: expectedMapping)
         validateFromArguments(descriptor, keyPath: \FormatOptions.ifdefIndent, expectations: expectedMapping)
@@ -449,7 +446,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: "\r", argumentValue: "cr"),
             (optionValue: "\r\n", argumentValue: "crlf"),
         ]
-        validateDescriptor(descriptor, id: "linebreaks", name: "Linebreaks Character", argumentName: "linebreaks", propertyName: "linebreak")
+        validateDescriptor(descriptor, name: "Linebreaks Character", argumentName: "linebreaks", propertyName: "linebreak")
         validateArgumentsListType(descriptor, validArguments: ["cr", "lf", "crlf"], default: "lf")
         validateFromOptions(descriptor, keyPath: \FormatOptions.linebreak, expectations: expectedMapping, invalid: "invalid")
         validateFromArguments(descriptor, keyPath: \FormatOptions.linebreak, expectations: expectedMapping)
@@ -463,7 +460,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: .afterFirst, argumentValue: "afterfirst"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
-        validateDescriptor(descriptor, id: "wrap-arguments", name: "Wrap Arguments", argumentName: "wraparguments", propertyName: "wrapArguments")
+        validateDescriptor(descriptor, name: "Wrap Arguments", argumentName: "wraparguments", propertyName: "wrapArguments")
         validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "disabled"], default: "disabled")
         validateFromOptions(descriptor, keyPath: \FormatOptions.wrapArguments, expectations: expectedMapping)
         validateFromArguments(descriptor, keyPath: \FormatOptions.wrapArguments, expectations: expectedMapping)
@@ -477,7 +474,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: .afterFirst, argumentValue: "afterfirst"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
-        validateDescriptor(descriptor, id: "wrap-collections", name: "Wrap Collections", argumentName: "wrapcollections", propertyName: "wrapCollections")
+        validateDescriptor(descriptor, name: "Wrap Collections", argumentName: "wrapcollections", propertyName: "wrapCollections")
         validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "disabled"], default: "beforefirst")
         validateFromOptions(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
         validateFromArguments(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
@@ -491,7 +488,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: .closureOnly, argumentValue: "closure-only"),
             (optionValue: .all, argumentValue: "always"),
         ]
-        validateDescriptor(descriptor, id: "strip-unused-args", name: "Strip Unused Arguments", argumentName: "stripunusedargs", propertyName: "stripUnusedArguments")
+        validateDescriptor(descriptor, name: "Strip Unused Arguments", argumentName: "stripunusedargs", propertyName: "stripUnusedArguments")
         validateArgumentsListType(descriptor, validArguments: ["unnamed-only", "closure-only", "always"], default: "always")
         validateFromOptions(descriptor, keyPath: \FormatOptions.stripUnusedArguments, expectations: expectedMapping)
         validateFromArguments(descriptor, keyPath: \FormatOptions.stripUnusedArguments, expectations: expectedMapping)
@@ -500,7 +497,6 @@ class OptionsDescriptorTests: XCTestCase {
 
     func testDecimalGrouping() {
         validateGroupingDescriptor(.decimalGrouping,
-                                   id: "decimal-grouping",
                                    name: "Decimal Grouping",
                                    argumentName: "decimalgrouping",
                                    propertyName: "decimalGrouping",
@@ -510,7 +506,6 @@ class OptionsDescriptorTests: XCTestCase {
 
     func testBinaryGrouping() {
         validateGroupingDescriptor(.binaryGrouping,
-                                   id: "binary-grouping",
                                    name: "Binary Grouping",
                                    argumentName: "binarygrouping",
                                    propertyName: "binaryGrouping",
@@ -520,7 +515,6 @@ class OptionsDescriptorTests: XCTestCase {
 
     func testOctalGrouping() {
         validateGroupingDescriptor(.octalGrouping,
-                                   id: "octal-grouping",
                                    name: "Octal Grouping",
                                    argumentName: "octalgrouping",
                                    propertyName: "octalGrouping",
@@ -530,7 +524,6 @@ class OptionsDescriptorTests: XCTestCase {
 
     func testHexGrouping() {
         validateGroupingDescriptor(.hexGrouping,
-                                   id: "hex-grouping",
                                    name: "Hex Grouping",
                                    argumentName: "hexgrouping",
                                    propertyName: "hexGrouping",
@@ -570,7 +563,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: "    ", argumentValue: "4"),
         ]
 
-        validateDescriptor(descriptor, id: "indent", name: "Indent", argumentName: "indent", propertyName: "indent")
+        validateDescriptor(descriptor, name: "Indent", argumentName: "indent", propertyName: "indent")
         validateArgumentsFreeTextType(descriptor, expectations: validations, default: "4")
         validateFromOptions(descriptor, keyPath: \FormatOptions.indent, expectations: fromOptionExpectations)
         validateFromArguments(descriptor, keyPath: \FormatOptions.indent, expectations: fromArgumentExpectations)
@@ -608,7 +601,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: "//a\n//b", argumentValue: "//a\\n//b"),
         ]
 
-        validateDescriptor(descriptor, id: "header", name: "Header", argumentName: "header", propertyName: "fileHeader")
+        validateDescriptor(descriptor, name: "Header", argumentName: "header", propertyName: "fileHeader")
         validateArgumentsFreeTextType(descriptor, expectations: validations, default: "ignore")
         validateFromOptions(descriptor, keyPath: \FormatOptions.fileHeader, expectations: fromOptionExpectations)
         validateFromOptionalArguments(descriptor, keyPath: \FormatOptions.fileHeader, expectations: fromArgumentExpectations, testCaseVariation: false)
@@ -622,7 +615,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "enabled"),
             (optionValue: false, argumentValue: "disabled"),
         ]
-        validateDescriptor(descriptor, id: "insert-lines", name: "Insert Lines", argumentName: "insertlines", propertyName: "insertBlankLines")
+        validateDescriptor(descriptor, name: "Insert Lines", argumentName: "insertlines", propertyName: "insertBlankLines")
         validateArgumentsBinaryType(descriptor, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.insertBlankLines, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.insertBlankLines)
@@ -635,7 +628,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "enabled"),
             (optionValue: false, argumentValue: "disabled"),
         ]
-        validateDescriptor(descriptor, id: "remove-lines", name: "Remove Lines", argumentName: "removelines", propertyName: "removeBlankLines")
+        validateDescriptor(descriptor, name: "Remove Lines", argumentName: "removelines", propertyName: "removeBlankLines")
         validateArgumentsBinaryType(descriptor, controlTrue: ["enabled", "true"], controlFalse: ["disabled", "false"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.removeBlankLines, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.removeBlankLines)
@@ -648,7 +641,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "uppercase"),
             (optionValue: false, argumentValue: "lowercase"),
         ]
-        validateDescriptor(descriptor, id: "hex-literals", name: "hexliterals", argumentName: "hexliterals", propertyName: "hexLiteralCase")
+        validateDescriptor(descriptor, name: "hexliterals", argumentName: "hexliterals", propertyName: "hexLiteralCase")
         validateArgumentsBinaryType(descriptor, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"], default: true)
         validateFromOptions(descriptor, keyPath: \FormatOptions.uppercaseHex, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.uppercaseHex)
@@ -662,7 +655,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: .afterFirst, argumentValue: "afterfirst"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
-        validateDescriptor(descriptor, id: "wrap-elements", name: "Wrap Elements", argumentName: "wrapelements", propertyName: "wrapCollections")
+        validateDescriptor(descriptor, name: "Wrap Elements", argumentName: "wrapelements", propertyName: "wrapCollections")
         validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "disabled"], default: "beforefirst")
         validateFromOptions(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
         validateFromArguments(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)

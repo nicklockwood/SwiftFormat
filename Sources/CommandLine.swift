@@ -76,9 +76,9 @@ func printWarnings(_ errors: [Error]) {
 
 // Represents the exit codes to the command line. See `man sysexits` for more information.
 public enum ExitCode: Int32 {
-    case ok = 0             // EX_OK
+    case ok = 0 // EX_OK
     case lintFailure = 1
-    case error = 70         // EX_SOFTWARE
+    case error = 70 // EX_SOFTWARE
 }
 
 func printHelp() {
@@ -104,7 +104,7 @@ func printHelp() {
     print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
     print("--verbose          display detailed formatting output and warnings/errors")
     print("--dryrun           run in \"dry\" mode (without actually changing any files)")
-    print("--lint             same as \"--dryrun\" but returns non-zero exit code if files would be changed")
+    print("--lint             returns non-zero exit code if files would be changed")
     print("")
     print("swiftformat has a number of rules that can be enabled or disabled. by default")
     print("most rules are enabled. use --rules to display all enabled/disabled rules:")

@@ -449,10 +449,11 @@ class OptionsDescriptorTests: XCTestCase {
         let expectedMapping: [OptionArgumentMapping<WrapMode>] = [
             (optionValue: .beforeFirst, argumentValue: "beforefirst"),
             (optionValue: .afterFirst, argumentValue: "afterfirst"),
+            (optionValue: .preserve, argumentValue: "preserve"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
         validateDescriptor(descriptor, name: "Wrap Arguments", argumentName: "wraparguments", propertyName: "wrapArguments")
-        validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "disabled"])
+        validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "preserve", "disabled"])
         validateFromOptions(descriptor, keyPath: \FormatOptions.wrapArguments, expectations: expectedMapping)
         validateFromArguments(descriptor, keyPath: \FormatOptions.wrapArguments, expectations: expectedMapping)
         validateDescriptorThrowsOptionsError(descriptor)
@@ -463,10 +464,11 @@ class OptionsDescriptorTests: XCTestCase {
         let expectedMapping: [OptionArgumentMapping<WrapMode>] = [
             (optionValue: .beforeFirst, argumentValue: "beforefirst"),
             (optionValue: .afterFirst, argumentValue: "afterfirst"),
+            (optionValue: .preserve, argumentValue: "preserve"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
         validateDescriptor(descriptor, name: "Wrap Collections", argumentName: "wrapcollections", propertyName: "wrapCollections")
-        validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "disabled"])
+        validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "preserve", "disabled"])
         validateFromOptions(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
         validateFromArguments(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
         validateDescriptorThrowsOptionsError(descriptor)
@@ -640,10 +642,11 @@ class OptionsDescriptorTests: XCTestCase {
         let expectedMapping: [OptionArgumentMapping<WrapMode>] = [
             (optionValue: .beforeFirst, argumentValue: "beforefirst"),
             (optionValue: .afterFirst, argumentValue: "afterfirst"),
+            (optionValue: .preserve, argumentValue: "preserve"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
         validateDescriptor(descriptor, name: "Wrap Elements", argumentName: "wrapelements", propertyName: "wrapCollections")
-        validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "disabled"])
+        validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "preserve", "disabled"])
         validateFromOptions(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
         validateFromArguments(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
         validateDescriptorThrowsOptionsError(descriptor)

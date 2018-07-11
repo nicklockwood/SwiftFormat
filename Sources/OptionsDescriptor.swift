@@ -352,7 +352,7 @@ extension FormatOptions.Descriptor {
     static let wrapArguments = FormatOptions.Descriptor(argumentName: "wraparguments",
                                                         propertyName: "wrapArguments",
                                                         name: "Wrap Arguments",
-                                                        type: .list(["beforefirst", "afterfirst", "disabled"]),
+                                                        type: .list(["beforefirst", "afterfirst", "preserve", "disabled"]),
                                                         toOptions: { input, options in
                                                             if let mode = WrapMode(rawValue: input.lowercased()) {
                                                                 options.wrapArguments = mode
@@ -366,7 +366,7 @@ extension FormatOptions.Descriptor {
     static let wrapCollections = FormatOptions.Descriptor(argumentName: "wrapcollections",
                                                           propertyName: "wrapCollections",
                                                           name: "Wrap Collections",
-                                                          type: .list(["beforefirst", "afterfirst", "disabled"]),
+                                                          type: .list(["beforefirst", "afterfirst", "preserve", "disabled"]),
                                                           toOptions: { input, options in
                                                               if let mode = WrapMode(rawValue: input.lowercased()) {
                                                                   options.wrapCollections = mode
@@ -655,7 +655,7 @@ extension FormatOptions.Descriptor {
     static let wrapElements = FormatOptions.Descriptor(argumentName: "wrapelements",
                                                        propertyName: "wrapCollections",
                                                        name: "Wrap Elements",
-                                                       type: .list(["beforefirst", "afterfirst", "disabled"]),
+                                                       type: .list(["beforefirst", "afterfirst", "preserve", "disabled"]),
                                                        toOptions: { input, options in
                                                            if let mode = WrapMode(rawValue: input.lowercased()) {
                                                                options.wrapCollections = mode

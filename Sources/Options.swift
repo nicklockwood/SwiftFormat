@@ -40,9 +40,9 @@ public enum IndentMode: String {
 
 /// Wrap mode for arguments
 public enum WrapMode: String {
-    case preserving
     case beforeFirst = "beforefirst"
     case afterFirst = "afterfirst"
+    case preserve
     case disabled
 }
 
@@ -161,8 +161,8 @@ public struct FormatOptions: CustomStringConvertible {
                 allmanBraces: Bool = false,
                 fileHeader: String? = nil,
                 ifdefIndent: IndentMode = .indent,
-                wrapArguments: WrapMode = .disabled,
-                wrapCollections: WrapMode = .beforeFirst,
+                wrapArguments: WrapMode = .preserve,
+                wrapCollections: WrapMode = .preserve,
                 uppercaseHex: Bool = true,
                 uppercaseExponent: Bool = false,
                 decimalGrouping: Grouping = .group(3, 6),

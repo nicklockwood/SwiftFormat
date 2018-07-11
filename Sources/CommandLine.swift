@@ -140,8 +140,8 @@ func printHelp() {
     print("--self             use self for member variables. \"remove\" (default) or \"insert\"")
     print("--stripunusedargs  \"closure-only\", \"unnamed-only\" or \"always\" (default)")
     print("--trimwhitespace   trim trailing space. \"always\" (default) or \"nonblank-lines\"")
-    print("--wraparguments    wrap function args. \"beforefirst\", \"afterfirst\", \"disabled\"")
-    print("--wrapcollections  wrap array/dict. \"beforefirst\", \"afterfirst\", \"disabled\"")
+    print("--wraparguments    wrap function args. \"beforefirst\", \"afterfirst\", \"preserve\"")
+    print("--wrapcollections  wrap array/dict. \"beforefirst\", \"afterfirst\", \"preserve\"")
     print("")
 }
 

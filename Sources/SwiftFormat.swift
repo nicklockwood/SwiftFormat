@@ -254,13 +254,13 @@ public func applyRules(_ rules: [FormatRule],
 /// Returns the formatted token array, and the number of edits made
 public func format(_ tokens: [Token],
                    rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = FormatOptions()) throws -> [Token] {
+                   options: FormatOptions = .default) throws -> [Token] {
     return try applyRules(rules, to: tokens, with: options)
 }
 
 /// Format code with specified rules and options
 public func format(_ source: String,
                    rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = FormatOptions()) throws -> String {
+                   options: FormatOptions = .default) throws -> String {
     return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
 }

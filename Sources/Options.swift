@@ -140,6 +140,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var experimentalRules: Bool
     public var fragment: Bool
 
+    public static let `default` = FormatOptions()
+
     // Doesn't really belong here, but hard to put elsewhere
     public var ignoreConflictMarkers: Bool
 
@@ -221,7 +223,7 @@ public struct FormatOptions: CustomStringConvertible {
 /// Infer default options by examining the existing source
 public func inferOptions(from tokens: [Token]) -> FormatOptions {
     let formatter = Formatter(tokens)
-    var options = FormatOptions()
+    var options = FormatOptions.default
 
     options.indent = {
         var indents = [(indent: String, count: Int)]()

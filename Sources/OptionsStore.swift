@@ -110,7 +110,7 @@ struct OptionsStore {
 
     var formatOptions: FormatOptions {
         let allOptions = options
-        var formatOptions = FormatOptions()
+        var formatOptions = FormatOptions.default
         allOptions.forEach { try! $0.descriptor.toOptions($0.argumentValue, &formatOptions) }
         return formatOptions
     }

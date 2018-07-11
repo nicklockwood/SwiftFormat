@@ -108,14 +108,14 @@ class CommandLineTests: XCTestCase {
     // MARK: format options to arguments
 
     func testCommandLineArgumentsHaveValidNames() {
-        let arguments = commandLineArguments(for: FormatOptions())
+        let arguments = commandLineArguments(for: .default)
         for key in arguments.keys {
             XCTAssertTrue(commandLineArguments.contains(key), "\(key) is not a valid argument name")
         }
     }
 
     func testCommandLineArgumentsAreCorrect() {
-        let options = FormatOptions()
+        let options = FormatOptions.default
         let output = ["allman": "false", "wraparguments": "disabled", "wrapcollections": "beforefirst", "self": "remove", "header": "ignore", "binarygrouping": "4,8", "octalgrouping": "4,8", "patternlet": "hoist", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "commas": "always", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "stripunusedargs": "always", "experimental": "disabled", "fragment": "false", "conflictmarkers": "reject"]
         XCTAssertEqual(commandLineArguments(for: options), output)
     }
@@ -125,7 +125,7 @@ class CommandLineTests: XCTestCase {
     func testFormatArgumentsAreAllImplemented() {
         CLI.print = { _, _ in }
         for key in formatArguments {
-            guard let value = commandLineArguments(for: FormatOptions())[key] else {
+            guard let value = commandLineArguments(for: .default)[key] else {
                 XCTAssert(deprecatedArguments.contains(key))
                 continue
             }

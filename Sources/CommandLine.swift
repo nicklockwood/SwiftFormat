@@ -326,7 +326,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             }
             if inputURLs.count > 0 {
                 print("inferring swiftformat options from source file(s)...")
-                var filesParsed = 0, options = FormatOptions(), errors = [Error]()
+                var filesParsed = 0, options = FormatOptions.default, errors = [Error]()
                 let time = timeEvent {
                     (filesParsed, options, errors) = inferOptions(from: inputURLs, excluding: excludedURLs)
                 }
@@ -908,7 +908,7 @@ func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
 }
 
 func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
-    var options = FormatOptions()
+    var options = FormatOptions.default
     var arguments = Set(formatArguments)
 
     let optionsToProcess = FormatOptions.Descriptor.formats + FormatOptions.Descriptor.files

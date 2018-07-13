@@ -53,9 +53,8 @@ public class Formatter: NSObject {
 
     // Process a comment token (which may contain directives)
     func processCommentBody(_ comment: String) {
-        guard let rule = currentRule, comment.hasPrefix("swiftformat:"),
-            let directive = ["disable", "enable"].first(where: { comment.hasPrefix("swiftformat:\($0)") }),
-            comment.range(of: "\\b\(rule)\\b", options: .regularExpression) != nil else {
+        guard let directive = self.directive(inComment: comment),
+            hasCurrentRule(inComment: comment) || hasAllRule(inComment: comment) else {
             return
         }
         switch directive {
@@ -66,6 +65,19 @@ public class Formatter: NSObject {
         default:
             preconditionFailure()
         }
+    }
+
+    private func directive(inComment comment: String) -> String? {
+        return ["disable", "enable"].first(where: { comment.hasPrefix("swiftformat:\($0)") })
+    }
+
+    private func hasCurrentRule(inComment comment: String) -> Bool {
+        guard let rule = currentRule else { return false }
+        return comment.range(of: "\\b\(rule)\\b", options: .regularExpression) != nil
+    }
+
+    private func hasAllRule(inComment comment: String) -> Bool {
+        return comment.range(of: "\\ball\\b", options: .regularExpression) != nil
     }
 
     /// The options that the formatter was initialized with

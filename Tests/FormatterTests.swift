@@ -147,4 +147,40 @@ class FormatterTests: XCTestCase {
         """
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
+
+    func testFormatterAllDirective() {
+        let input = """
+        // swiftformat:disable all
+        class Foo {
+        let _foo = "foo"
+        func foo() {
+        print(self._foo)
+        }
+        }
+        // swiftformat:enable all
+        class Bar {
+        let _bar = "bar"
+        func bar() {
+        print(_bar)
+        }
+        }
+        """
+        let output = """
+        // swiftformat:disable all
+        class Foo {
+        let _foo = "foo"
+        func foo() {
+        print(self._foo)
+        }
+        }
+        // swiftformat:enable all
+        class Bar {
+            let _bar = "bar"
+            func bar() {
+                print(_bar)
+            }
+        }
+        """
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
 }

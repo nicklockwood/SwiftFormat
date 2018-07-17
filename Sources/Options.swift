@@ -141,10 +141,10 @@ public struct FormatOptions: CustomStringConvertible {
     public var experimentalRules: Bool
     public var fragment: Bool
 
-    public static let `default` = FormatOptions()
-
     // Doesn't really belong here, but hard to put elsewhere
     public var ignoreConflictMarkers: Bool
+
+    public static let `default` = FormatOptions()
 
     public init(indent: String = "    ",
                 linebreak: String = "\n",

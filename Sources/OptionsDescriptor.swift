@@ -41,7 +41,7 @@ extension FormatOptions {
 
         let argumentName: String // command-line argument; must not change
         let propertyName: String // internal property; ok to change this
-        let name: String
+        let displayName: String
         let type: ArgumentType
         let toOptions: (String, inout FormatOptions) throws -> Void
         let fromOptions: (FormatOptions) -> String
@@ -53,7 +53,7 @@ extension FormatOptions {
 }
 
 extension FormatOptions.Descriptor {
-    static let formats: [FormatOptions.Descriptor] = [
+    static let formatting: [FormatOptions.Descriptor] = [
         .indentation,
         .lineBreak,
         .allowInlineSemicolons,
@@ -79,19 +79,27 @@ extension FormatOptions.Descriptor {
         .stripUnusedArguments,
         .elsePosition,
         .removeSelf,
-        .experimentalRules,
     ]
 
-    static let files: [FormatOptions.Descriptor] = [
+    static let `internal`: [FormatOptions.Descriptor] = [
+        .experimentalRules,
         .fragment,
         .ignoreConflictMarkers,
     ]
 
-    static let all = formats + files + deprecated
+    /// An Array of all descriptors
+    static let all = formatting + `internal` + deprecated
+
+    /// A Dictionary of descriptors by name
+    public static let byName: [String: FormatOptions.Descriptor] = {
+        var allOptions = [String: FormatOptions.Descriptor]()
+        all.forEach { allOptions[$0.argumentName] = $0 }
+        return allOptions
+    }()
 
     static let indentation = FormatOptions.Descriptor(argumentName: "indent",
                                                       propertyName: "indent",
-                                                      name: "Indent",
+                                                      displayName: "Indent",
                                                       type: .freeText(validationStrategy: { input in
                                                           let validText = Set<String>(arrayLiteral: "tab", "tabs", "tabbed")
                                                           var result = validText.contains(input.lowercased())
@@ -118,7 +126,7 @@ extension FormatOptions.Descriptor {
     })
     static let lineBreak = FormatOptions.Descriptor(argumentName: "linebreaks",
                                                     propertyName: "linebreak",
-                                                    name: "Linebreaks Character",
+                                                    displayName: "Linebreaks Character",
                                                     type: .list(["cr", "lf", "crlf"]),
                                                     toOptions: { input, options in
                                                         switch input.lowercased() {
@@ -148,7 +156,7 @@ extension FormatOptions.Descriptor {
     })
     static let allowInlineSemicolons = FormatOptions.Descriptor(argumentName: "semicolons",
                                                                 propertyName: "allowInlineSemicolons",
-                                                                name: "Semicolons",
+                                                                displayName: "Semicolons",
                                                                 type: .binary(true: ["inline"], false: ["never", "false"]),
                                                                 toOptions: { input, options in
                                                                     switch input.lowercased() {
@@ -165,8 +173,8 @@ extension FormatOptions.Descriptor {
     })
     static let spaceAroundRangeOperators = FormatOptions.Descriptor(argumentName: "ranges",
                                                                     propertyName: "spaceAroundRangeOperators",
-                                                                    name: "Ranges",
-                                                                    type: .binary(true: ["space", "spaced", "spaces"], false: ["nospace"]),
+                                                                    displayName: "Ranges",
+                                                                    type: .binary(true: ["spaced", "space", "spaces"], false: ["nospace"]),
                                                                     toOptions: { input, options in
                                                                         switch input.lowercased() {
                                                                         case "space", "spaced", "spaces":
@@ -182,8 +190,8 @@ extension FormatOptions.Descriptor {
     })
     static let spaceAroundOperatorDeclarations = FormatOptions.Descriptor(argumentName: "operatorfunc",
                                                                           propertyName: "spaceAroundOperatorDeclarations",
-                                                                          name: "Operator Func",
-                                                                          type: .binary(true: ["space", "spaced", "spaces"], false: ["nospace"]),
+                                                                          displayName: "Operator Functions",
+                                                                          type: .binary(true: ["spaced", "space", "spaces"], false: ["nospace"]),
                                                                           toOptions: { input, options in
                                                                               switch input.lowercased() {
                                                                               case "space", "spaced", "spaces":
@@ -199,7 +207,7 @@ extension FormatOptions.Descriptor {
     })
     static let useVoid = FormatOptions.Descriptor(argumentName: "empty",
                                                   propertyName: "useVoid",
-                                                  name: "Empty",
+                                                  displayName: "Empty",
                                                   type: .binary(true: ["void"], false: ["tuple", "tuples"]),
                                                   toOptions: { input, options in
                                                       switch input.lowercased() {
@@ -212,11 +220,11 @@ extension FormatOptions.Descriptor {
                                                       }
                                                   },
                                                   fromOptions: { options in
-                                                      options.useVoid ? "void" : "tuples"
+                                                      options.useVoid ? "void" : "tuple"
     })
     static let indentCase = FormatOptions.Descriptor(argumentName: "indentcase",
                                                      propertyName: "indentCase",
-                                                     name: "Indent Case",
+                                                     displayName: "Indent Case",
                                                      type: .binary(true: ["true"], false: ["false"]),
                                                      toOptions: { input, options in
                                                          switch input.lowercased() {
@@ -233,7 +241,7 @@ extension FormatOptions.Descriptor {
     })
     static let trailingCommas = FormatOptions.Descriptor(argumentName: "commas",
                                                          propertyName: "trailingCommas",
-                                                         name: "Commas",
+                                                         displayName: "Commas",
                                                          type: .binary(true: ["always", "true"], false: ["inline", "false"]),
                                                          toOptions: { input, options in
                                                              switch input.lowercased() {
@@ -250,7 +258,7 @@ extension FormatOptions.Descriptor {
     })
     static let indentComments = FormatOptions.Descriptor(argumentName: "comments",
                                                          propertyName: "indentComments",
-                                                         name: "Comments",
+                                                         displayName: "Comments",
                                                          type: .binary(true: ["indent", "indented"], false: ["ignore"]),
                                                          toOptions: { input, options in
                                                              switch input.lowercased() {
@@ -267,7 +275,7 @@ extension FormatOptions.Descriptor {
     })
     static let truncateBlankLines = FormatOptions.Descriptor(argumentName: "trimwhitespace",
                                                              propertyName: "truncateBlankLines",
-                                                             name: "Trim White Space",
+                                                             displayName: "Trim White Space",
                                                              type: .binary(true: ["always"], false: ["nonblank-lines", "nonblank", "non-blank-lines", "non-blank", "nonempty-lines", "nonempty", "non-empty-lines", "non-empty"]),
                                                              toOptions: { input, options in
                                                                  switch input.lowercased() {
@@ -284,7 +292,7 @@ extension FormatOptions.Descriptor {
     })
     static let allmanBraces = FormatOptions.Descriptor(argumentName: "allman",
                                                        propertyName: "allmanBraces",
-                                                       name: "Allman Braces",
+                                                       displayName: "Allman Braces",
                                                        type: .binary(true: ["true", "enabled"], false: ["false", "disabled"]),
                                                        toOptions: { input, options in
                                                            switch input.lowercased() {
@@ -301,7 +309,7 @@ extension FormatOptions.Descriptor {
     })
     static let fileHeader = FormatOptions.Descriptor(argumentName: "header",
                                                      propertyName: "fileHeader",
-                                                     name: "Header",
+                                                     displayName: "Header",
                                                      type: .freeText(validationStrategy: { _ in true }),
                                                      toOptions: { input, options in
                                                          switch input.lowercased() {
@@ -337,7 +345,7 @@ extension FormatOptions.Descriptor {
     })
     static let ifdefIndent = FormatOptions.Descriptor(argumentName: "ifdef",
                                                       propertyName: "ifdefIndent",
-                                                      name: "Ifdef Indent",
+                                                      displayName: "Ifdef Indent",
                                                       type: .list(["indent", "noindent", "outdent"]),
                                                       toOptions: { input, options in
                                                           if let mode = IndentMode(rawValue: input.lowercased()) {
@@ -351,7 +359,7 @@ extension FormatOptions.Descriptor {
     })
     static let wrapArguments = FormatOptions.Descriptor(argumentName: "wraparguments",
                                                         propertyName: "wrapArguments",
-                                                        name: "Wrap Arguments",
+                                                        displayName: "Wrap Arguments",
                                                         type: .list(["beforefirst", "afterfirst", "preserve", "disabled"]),
                                                         toOptions: { input, options in
                                                             if let mode = WrapMode(rawValue: input.lowercased()) {
@@ -365,7 +373,7 @@ extension FormatOptions.Descriptor {
     })
     static let wrapCollections = FormatOptions.Descriptor(argumentName: "wrapcollections",
                                                           propertyName: "wrapCollections",
-                                                          name: "Wrap Collections",
+                                                          displayName: "Wrap Collections",
                                                           type: .list(["beforefirst", "afterfirst", "preserve", "disabled"]),
                                                           toOptions: { input, options in
                                                               if let mode = WrapMode(rawValue: input.lowercased()) {
@@ -379,7 +387,7 @@ extension FormatOptions.Descriptor {
     })
     static let hexLiteralCase = FormatOptions.Descriptor(argumentName: "hexliteralcase",
                                                          propertyName: "uppercaseHex",
-                                                         name: "Hex Literal Case",
+                                                         displayName: "Hex Literal Case",
                                                          type: .binary(true: ["uppercase", "upper"], false: ["lowercase", "lower"]),
                                                          toOptions: { input, options in
                                                              switch input.lowercased() {
@@ -396,7 +404,7 @@ extension FormatOptions.Descriptor {
     })
     static let exponentCase = FormatOptions.Descriptor(argumentName: "exponentcase",
                                                        propertyName: "uppercaseExponent",
-                                                       name: "Exponent Case",
+                                                       displayName: "Exponent Case",
                                                        type: .binary(true: ["uppercase", "upper"], false: ["lowercase", "lower"]),
                                                        toOptions: { input, options in
                                                            switch input.lowercased() {
@@ -413,7 +421,7 @@ extension FormatOptions.Descriptor {
     })
     static let decimalGrouping = FormatOptions.Descriptor(argumentName: "decimalgrouping",
                                                           propertyName: "decimalGrouping",
-                                                          name: "Decimal Grouping",
+                                                          displayName: "Decimal Grouping",
                                                           type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
                                                           toOptions: { input, options in
                                                               guard let grouping = Grouping(rawValue: input.lowercased()) else {
@@ -426,7 +434,7 @@ extension FormatOptions.Descriptor {
     })
     static let binaryGrouping = FormatOptions.Descriptor(argumentName: "binarygrouping",
                                                          propertyName: "binaryGrouping",
-                                                         name: "Binary Grouping",
+                                                         displayName: "Binary Grouping",
                                                          type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
                                                          toOptions: { input, options in
                                                              guard let grouping = Grouping(rawValue: input.lowercased()) else {
@@ -439,7 +447,7 @@ extension FormatOptions.Descriptor {
     })
     static let octalGrouping = FormatOptions.Descriptor(argumentName: "octalgrouping",
                                                         propertyName: "octalGrouping",
-                                                        name: "Octal Grouping",
+                                                        displayName: "Octal Grouping",
                                                         type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
                                                         toOptions: { input, options in
                                                             guard let grouping = Grouping(rawValue: input.lowercased()) else {
@@ -452,7 +460,7 @@ extension FormatOptions.Descriptor {
     })
     static let hexGrouping = FormatOptions.Descriptor(argumentName: "hexgrouping",
                                                       propertyName: "hexGrouping",
-                                                      name: "Hex Grouping",
+                                                      displayName: "Hex Grouping",
                                                       type: .freeText(validationStrategy: { Grouping(rawValue: $0) != nil }),
                                                       toOptions: { input, options in
                                                           guard let grouping = Grouping(rawValue: input.lowercased()) else {
@@ -465,7 +473,7 @@ extension FormatOptions.Descriptor {
     })
     static let letPatternPlacement = FormatOptions.Descriptor(argumentName: "patternlet",
                                                               propertyName: "hoistPatternLet",
-                                                              name: "Pattern Let",
+                                                              displayName: "Pattern Let",
                                                               type: .binary(true: ["hoist"], false: ["inline"]),
                                                               toOptions: { input, options in
                                                                   switch input.lowercased() {
@@ -482,7 +490,7 @@ extension FormatOptions.Descriptor {
     })
     static let stripUnusedArguments = FormatOptions.Descriptor(argumentName: "stripunusedargs",
                                                                propertyName: "stripUnusedArguments",
-                                                               name: "Strip Unused Arguments",
+                                                               displayName: "Strip Unused Arguments",
                                                                type: .list(["unnamed-only", "closure-only", "always"]),
                                                                toOptions: { input, options in
                                                                    guard let type = ArgumentStrippingMode(rawValue: input.lowercased()) else {
@@ -495,7 +503,7 @@ extension FormatOptions.Descriptor {
     })
     static let elsePosition = FormatOptions.Descriptor(argumentName: "elseposition",
                                                        propertyName: "elseOnNextLine",
-                                                       name: "Else Position",
+                                                       displayName: "Else Position",
                                                        type: .binary(true: ["next-line", "nextline"], false: ["same-line", "sameline"]),
                                                        toOptions: { input, options in
                                                            switch input.lowercased() {
@@ -512,7 +520,7 @@ extension FormatOptions.Descriptor {
     })
     static let removeSelf = FormatOptions.Descriptor(argumentName: "self",
                                                      propertyName: "removeSelf",
-                                                     name: "Self",
+                                                     displayName: "Self",
                                                      type: .binary(true: ["remove"], false: ["insert"]),
                                                      toOptions: { input, options in
                                                          switch input.lowercased() {
@@ -527,9 +535,12 @@ extension FormatOptions.Descriptor {
                                                      fromOptions: { options in
                                                          options.removeSelf ? "remove" : "insert"
     })
+
+    // MARK: - Internal
+
     static let experimentalRules = FormatOptions.Descriptor(argumentName: "experimental",
                                                             propertyName: "experimentalRules",
-                                                            name: "Experimental Rules",
+                                                            displayName: "Experimental Rules",
                                                             type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
                                                             toOptions: { input, options in
                                                                 switch input.lowercased() {
@@ -546,7 +557,7 @@ extension FormatOptions.Descriptor {
     })
     static let fragment = FormatOptions.Descriptor(argumentName: "fragment",
                                                    propertyName: "fragment",
-                                                   name: "Fragment",
+                                                   displayName: "Fragment",
                                                    type: .binary(true: ["true", "enabled"], false: ["false", "disabled"]),
                                                    toOptions: { input, options in
                                                        switch input.lowercased() {
@@ -563,7 +574,7 @@ extension FormatOptions.Descriptor {
     })
     static let ignoreConflictMarkers = FormatOptions.Descriptor(argumentName: "conflictmarkers",
                                                                 propertyName: "ignoreConflictMarkers",
-                                                                name: "Conflict Markers",
+                                                                displayName: "Conflict Markers",
                                                                 type: .binary(true: ["ignore", "true", "enabled"], false: ["reject", "false", "disabled"]),
                                                                 toOptions: { input, options in
                                                                     switch input.lowercased() {
@@ -578,21 +589,18 @@ extension FormatOptions.Descriptor {
                                                                 fromOptions: { options in
                                                                     options.ignoreConflictMarkers ? "ignore" : "reject"
     })
-}
 
-// MARK: - DEPRECATED
+    // MARK: - DEPRECATED
 
-extension FormatOptions.Descriptor {
-    static let deprecatedWithProperty = [
+    static let deprecated = [
         insertBlankLines,
         removeBlankLines,
     ]
 
-    static let deprecatedWithoutProperty = [
+    static let renamed = [
         hexLiterals,
         wrapElements,
     ]
-    static let deprecated = deprecatedWithProperty + deprecatedWithoutProperty
 
     static let deprecatedMessage = [
         insertBlankLines.argumentName: "`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` or `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead.",
@@ -603,7 +611,7 @@ extension FormatOptions.Descriptor {
 
     static let insertBlankLines = FormatOptions.Descriptor(argumentName: "insertlines",
                                                            propertyName: "insertBlankLines",
-                                                           name: "Insert Lines",
+                                                           displayName: "Insert Lines",
                                                            type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
                                                            toOptions: { input, options in
                                                                switch input.lowercased() {
@@ -620,7 +628,7 @@ extension FormatOptions.Descriptor {
     })
     static let removeBlankLines = FormatOptions.Descriptor(argumentName: "removelines",
                                                            propertyName: "removeBlankLines",
-                                                           name: "Remove Lines",
+                                                           displayName: "Remove Lines",
                                                            type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
                                                            toOptions: { input, options in
                                                                switch input.lowercased() {
@@ -637,7 +645,7 @@ extension FormatOptions.Descriptor {
     })
     static let hexLiterals = FormatOptions.Descriptor(argumentName: "hexliterals",
                                                       propertyName: "hexLiteralCase",
-                                                      name: "hexliterals",
+                                                      displayName: "hexliterals",
                                                       type: .binary(true: ["uppercase", "upper"], false: ["lowercase", "lower"]),
                                                       toOptions: { input, options in
                                                           switch input.lowercased() {
@@ -654,7 +662,7 @@ extension FormatOptions.Descriptor {
     })
     static let wrapElements = FormatOptions.Descriptor(argumentName: "wrapelements",
                                                        propertyName: "wrapCollections",
-                                                       name: "Wrap Elements",
+                                                       displayName: "Wrap Elements",
                                                        type: .list(["beforefirst", "afterfirst", "preserve", "disabled"]),
                                                        toOptions: { input, options in
                                                            if let mode = WrapMode(rawValue: input.lowercased()) {

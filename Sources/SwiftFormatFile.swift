@@ -147,13 +147,13 @@ struct SwiftFormatCLIArgumentsFile {
 
             let enabledRules = try enabled.map { name -> Rule in
                 if ruleNames.remove(name) == nil {
-                    throw FormatError.reading("Unsupported Rule provided in 'enable' configuration")
+                    throw FormatError.reading("Unknown rule '\(name)' in 'enable' configuration")
                 }
                 return Rule(name: name, isEnabled: true)
             }
             let disabledRules = try disabled.map { name -> Rule in
                 if ruleNames.remove(name) == nil {
-                    throw FormatError.reading("Unsupported Rule provided in 'disable' configuration")
+                    throw FormatError.reading("Unknown rule '\(name)' in 'disable' configuration")
                 }
                 return Rule(name: name, isEnabled: false)
             }

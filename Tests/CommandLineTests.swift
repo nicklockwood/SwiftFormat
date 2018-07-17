@@ -116,38 +116,30 @@ class CommandLineTests: XCTestCase {
 
     func testCommandLineArgumentsAreCorrect() {
         let options = FormatOptions.default
-        let output = ["allman": "false", "wraparguments": "preserve", "wrapcollections": "preserve", "self": "remove", "header": "ignore", "binarygrouping": "4,8", "octalgrouping": "4,8", "patternlet": "hoist", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "commas": "always", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "stripunusedargs": "always", "experimental": "disabled", "fragment": "false", "conflictmarkers": "reject"]
+        let output = ["allman": "false", "wraparguments": "preserve", "wrapcollections": "preserve", "self": "remove", "header": "ignore", "binarygrouping": "4,8", "octalgrouping": "4,8", "patternlet": "hoist", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "commas": "always", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "stripunusedargs": "always"]
         XCTAssertEqual(commandLineArguments(for: options), output)
     }
 
     // MARK: format arguments to options
 
-    func testFormatArgumentsAreAllImplemented() {
+    func testFormattingArgumentsAreAllImplemented() throws {
         CLI.print = { _, _ in }
-        for key in formatArguments {
+        for key in formattingArguments {
             guard let value = commandLineArguments(for: .default)[key] else {
                 XCTAssert(deprecatedArguments.contains(key))
                 continue
             }
             XCTAssert(!deprecatedArguments.contains(key))
-            do {
-                _ = try formatOptionsFor([key: value])
-            } catch {
-                XCTFail("\(error)")
-            }
+            _ = try formatOptionsFor([key: value])
         }
     }
 
-    func testFileHeaderYearReplacement() {
-        do {
-            let options = try formatOptionsFor(["header": " Copyright 1981 - {year}"])
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy"
-            let year = formatter.string(from: Date())
-            XCTAssertEqual(options.fileHeader, "//Copyright 1981 - \(year)")
-        } catch {
-            XCTFail("\(error)")
-        }
+    func testFileHeaderYearReplacement() throws {
+        let options = try formatOptionsFor(["header": " Copyright 1981 - {year}"])
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy"
+        let year = formatter.string(from: Date())
+        XCTAssertEqual(options.fileHeader, "//Copyright 1981 - \(year)")
     }
 
     // MARK: pipe
@@ -219,7 +211,7 @@ class CommandLineTests: XCTestCase {
 
     func testHelpOptionsDocumented() {
         var arguments = Set(commandLineArguments)
-        deprecatedArguments.forEach { arguments.remove($0) }
+        (deprecatedArguments + renamedArguments).forEach { arguments.remove($0) }
         CLI.print = { message, _ in
             if message.hasPrefix("--") {
                 let name = String(message["--".endIndex ..< message.endIndex]).components(separatedBy: " ")[0]
@@ -251,8 +243,8 @@ class CommandLineTests: XCTestCase {
     }
 
     func testAllOptionsInReadme() {
-        var arguments = Set(formatArguments)
-        deprecatedArguments.forEach { arguments.remove($0) }
+        var arguments = Set(formattingArguments)
+        (deprecatedArguments + renamedArguments).forEach { arguments.remove($0) }
         for argument in arguments {
             XCTAssertTrue(readme.contains("`--\(argument)`"), argument)
         }

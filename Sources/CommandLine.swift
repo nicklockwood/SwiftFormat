@@ -109,9 +109,10 @@ func printHelp() {
     print("swiftformat has a number of rules that can be enabled or disabled. by default")
     print("most rules are enabled. use --rules to display all enabled/disabled rules:")
     print("")
+    print("--rules            the list of rules to apply (pass nothing to print all rules)")
     print("--disable          a list of format rules to be disabled (comma-delimited)")
     print("--enable           a list of disabled rules to be re-enabled (comma-delimited)")
-    print("--rules            the list of rules to apply (pass nothing to print rules)")
+    print("--experimental     experimental rules. \"enabled\" or \"disabled\" (default)")
     print("")
     print("swiftformat's rules can be configured using options. a given option may affect")
     print("multiple rules. options have no affect if the related rules have been disabled:")
@@ -123,7 +124,6 @@ func printHelp() {
     print("--decimalgrouping  decimal grouping,threshold or \"none\", \"ignore\". default: 3,6")
     print("--elseposition     placement of else/catch. \"same-line\" (default) or \"next-line\"")
     print("--empty            how empty values are represented. \"void\" (default) or \"tuple\"")
-    print("--experimental     experimental rules. \"enabled\" or \"disabled\" (default)")
     print("--exponentcase     case of 'e' in numbers. \"lowercase\" or \"uppercase\" (default)")
     print("--header           header comments. \"strip\", \"ignore\", or the text you wish use")
     print("--hexgrouping      hex grouping,threshold or \"none\", \"ignore\". default: 4,8")
@@ -776,75 +776,12 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     return namedArgs
 }
 
+/// Get command line arguments for formatting options
+/// (excludes non-formatting options and deprecated/renamed options)
 func commandLineArguments(for options: FormatOptions) -> [String: String] {
     var args = [String: String]()
-    for key in options.allOptions.keys {
-        switch key {
-        case FormatOptions.Descriptor.indentation.propertyName:
-            args[FormatOptions.Descriptor.indentation.argumentName] = FormatOptions.Descriptor.indentation.fromOptions(options)
-        case FormatOptions.Descriptor.lineBreak.propertyName:
-            args[FormatOptions.Descriptor.lineBreak.argumentName] = FormatOptions.Descriptor.lineBreak.fromOptions(options)
-        case FormatOptions.Descriptor.allowInlineSemicolons.propertyName:
-            args[FormatOptions.Descriptor.allowInlineSemicolons.argumentName] = FormatOptions.Descriptor.allowInlineSemicolons.fromOptions(options)
-        case FormatOptions.Descriptor.spaceAroundRangeOperators.propertyName:
-            args[FormatOptions.Descriptor.spaceAroundRangeOperators.argumentName] = FormatOptions.Descriptor.spaceAroundRangeOperators.fromOptions(options)
-        case FormatOptions.Descriptor.spaceAroundOperatorDeclarations.propertyName:
-            args[FormatOptions.Descriptor.spaceAroundOperatorDeclarations.argumentName] = FormatOptions.Descriptor.spaceAroundOperatorDeclarations.fromOptions(options)
-        case FormatOptions.Descriptor.useVoid.propertyName:
-            args[FormatOptions.Descriptor.useVoid.argumentName] = FormatOptions.Descriptor.useVoid.fromOptions(options)
-        case FormatOptions.Descriptor.trailingCommas.propertyName:
-            args[FormatOptions.Descriptor.trailingCommas.argumentName] = FormatOptions.Descriptor.trailingCommas.fromOptions(options)
-        case FormatOptions.Descriptor.indentCase.propertyName:
-            args[FormatOptions.Descriptor.indentCase.argumentName] = FormatOptions.Descriptor.indentCase.fromOptions(options)
-        case FormatOptions.Descriptor.indentComments.propertyName:
-            args[FormatOptions.Descriptor.indentComments.argumentName] = FormatOptions.Descriptor.indentComments.fromOptions(options)
-        case FormatOptions.Descriptor.truncateBlankLines.propertyName:
-            args[FormatOptions.Descriptor.truncateBlankLines.argumentName] = FormatOptions.Descriptor.truncateBlankLines.fromOptions(options)
-        case FormatOptions.Descriptor.allmanBraces.propertyName:
-            args[FormatOptions.Descriptor.allmanBraces.argumentName] = FormatOptions.Descriptor.allmanBraces.fromOptions(options)
-        case FormatOptions.Descriptor.fileHeader.propertyName:
-            args[FormatOptions.Descriptor.fileHeader.argumentName] = FormatOptions.Descriptor.fileHeader.fromOptions(options)
-        case FormatOptions.Descriptor.ifdefIndent.propertyName:
-            args[FormatOptions.Descriptor.ifdefIndent.argumentName] = FormatOptions.Descriptor.ifdefIndent.fromOptions(options)
-        case FormatOptions.Descriptor.wrapArguments.propertyName:
-            args[FormatOptions.Descriptor.wrapArguments.argumentName] = FormatOptions.Descriptor.wrapArguments.fromOptions(options)
-        case FormatOptions.Descriptor.wrapCollections.propertyName:
-            args[FormatOptions.Descriptor.wrapCollections.argumentName] = FormatOptions.Descriptor.wrapCollections.fromOptions(options)
-        case FormatOptions.Descriptor.hexLiteralCase.propertyName:
-            args[FormatOptions.Descriptor.hexLiteralCase.argumentName] = FormatOptions.Descriptor.hexLiteralCase.fromOptions(options)
-        case FormatOptions.Descriptor.exponentCase.propertyName:
-            args[FormatOptions.Descriptor.exponentCase.argumentName] = FormatOptions.Descriptor.exponentCase.fromOptions(options)
-        case FormatOptions.Descriptor.decimalGrouping.propertyName:
-            args[FormatOptions.Descriptor.decimalGrouping.argumentName] = FormatOptions.Descriptor.decimalGrouping.fromOptions(options)
-        case FormatOptions.Descriptor.binaryGrouping.propertyName:
-            args[FormatOptions.Descriptor.binaryGrouping.argumentName] = FormatOptions.Descriptor.binaryGrouping.fromOptions(options)
-        case FormatOptions.Descriptor.octalGrouping.propertyName:
-            args[FormatOptions.Descriptor.octalGrouping.argumentName] = FormatOptions.Descriptor.octalGrouping.fromOptions(options)
-        case FormatOptions.Descriptor.hexGrouping.propertyName:
-            args[FormatOptions.Descriptor.hexGrouping.argumentName] = FormatOptions.Descriptor.hexGrouping.fromOptions(options)
-        case FormatOptions.Descriptor.letPatternPlacement.propertyName:
-            args[FormatOptions.Descriptor.letPatternPlacement.argumentName] = FormatOptions.Descriptor.letPatternPlacement.fromOptions(options)
-        case FormatOptions.Descriptor.stripUnusedArguments.propertyName:
-            args[FormatOptions.Descriptor.stripUnusedArguments.argumentName] = FormatOptions.Descriptor.stripUnusedArguments.fromOptions(options)
-        case FormatOptions.Descriptor.elsePosition.propertyName:
-            args[FormatOptions.Descriptor.elsePosition.argumentName] = FormatOptions.Descriptor.elsePosition.fromOptions(options)
-        case FormatOptions.Descriptor.removeSelf.propertyName:
-            args[FormatOptions.Descriptor.removeSelf.argumentName] = FormatOptions.Descriptor.removeSelf.fromOptions(options)
-        case FormatOptions.Descriptor.experimentalRules.propertyName:
-            args[FormatOptions.Descriptor.experimentalRules.argumentName] = FormatOptions.Descriptor.experimentalRules.fromOptions(options)
-        case FormatOptions.Descriptor.fragment.propertyName:
-            args[FormatOptions.Descriptor.fragment.argumentName] = FormatOptions.Descriptor.fragment.fromOptions(options)
-        case FormatOptions.Descriptor.ignoreConflictMarkers.propertyName:
-            args[FormatOptions.Descriptor.ignoreConflictMarkers.argumentName] = FormatOptions.Descriptor.ignoreConflictMarkers.fromOptions(options)
-        case FormatOptions.Descriptor.insertBlankLines.propertyName,
-             FormatOptions.Descriptor.removeBlankLines.propertyName:
-            break // Deprecated
-        default:
-            assertionFailure("Unknown option: \(key)")
-        }
-    }
-    for arg in deprecatedArguments {
-        args[arg] = nil
+    for descriptor in FormatOptions.Descriptor.formatting {
+        args[descriptor.argumentName] = descriptor.fromOptions(options)
     }
     return args
 }
@@ -870,26 +807,6 @@ private func processOption(_ key: String,
     }
 }
 
-private func processOption(_ key: String,
-                           in args: [String: String],
-                           from: inout Set<String>,
-                           to options: inout FormatOptions,
-                           handler: (String, inout FormatOptions) throws -> Void) throws {
-    do {
-        try processOption(key,
-                          in: args,
-                          from: &from) {
-            do {
-                try handler($0, &options)
-            } catch let err {
-                throw err
-            }
-        }
-    } catch let err {
-        throw err
-    }
-}
-
 func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
     var options = FileOptions()
     var arguments = Set(fileArguments)
@@ -909,34 +826,22 @@ func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
 
 func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     var options = FormatOptions.default
-    var arguments = Set(formatArguments)
+    let deprecatedOptions = Set(FormatOptions.Descriptor.deprecated.map { $0.propertyName })
+    let renamedOptions = Set(FormatOptions.Descriptor.renamed.map { $0.propertyName })
+    var arguments = Set(formattingArguments)
 
-    let optionsToProcess = FormatOptions.Descriptor.formats + FormatOptions.Descriptor.files
-    for opt in optionsToProcess {
-        try processOption(opt.argumentName,
-                          in: args,
-                          from: &arguments,
-                          to: &options,
-                          handler: opt.toOptions)
-    }
-
-    let deprecatedOptionsToProcess = FormatOptions.Descriptor.deprecated
-    for opt in deprecatedOptionsToProcess {
-        let deprecationHandler: (String, inout FormatOptions) throws -> Void = { string, options in
-            let message: String = FormatOptions.Descriptor.deprecatedMessage[opt.argumentName] ?? "Deprecated option \(opt.argumentName), print help for more information"
-            print(message, as: .warning)
-            do {
-                try opt.toOptions(string, &options)
-            } catch let err {
-                throw err
+    for option in FormatOptions.Descriptor.all {
+        var handler = option.toOptions
+        if deprecatedOptions.contains(option.propertyName) || renamedOptions.contains(option.propertyName) {
+            handler = { string, options in
+                let message: String = FormatOptions.Descriptor.deprecatedMessage[option.argumentName] ?? "Deprecated option \(option.argumentName), print help for more information"
+                print(message, as: .warning)
+                try option.toOptions(string, &options)
             }
         }
-
-        try processOption(opt.argumentName,
-                          in: args,
-                          from: &arguments,
-                          to: &options,
-                          handler: deprecationHandler)
+        try processOption(option.argumentName, in: args, from: &arguments) {
+            try handler($0, &options)
+        }
     }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return options
@@ -947,51 +852,16 @@ let fileArguments = [
     "symlinks",
 ]
 
-let formatArguments = [
-    // Format options
-    "allman",
-    "binarygrouping",
-    "commas",
-    "comments",
-    "decimalgrouping",
-    "elseposition",
-    "empty",
-    "exponentcase",
-    "header",
-    "hexgrouping",
-    "hexliteralcase",
-    "ifdef",
-    "indent",
-    "indentcase",
-    "insertlines",
-    "linebreaks",
-    "octalgrouping",
-    "operatorfunc",
-    "ranges",
-    "removelines",
-    "semicolons",
-    "stripunusedargs",
-    "trimwhitespace",
-    "wraparguments",
-    "wrapcollections",
-    "patternlet",
-    "self",
-]
-
-let deprecatedArguments = [
-    "hexliterals",
-    "insertlines",
-    "removelines",
-    "wrapelements",
-]
+let formattingArguments = FormatOptions.Descriptor.formatting.map { $0.argumentName }
+let internalArguments = FormatOptions.Descriptor.internal.map { $0.argumentName }
+let deprecatedArguments = FormatOptions.Descriptor.deprecated.map { $0.argumentName }
+let renamedArguments = FormatOptions.Descriptor.renamed.map { $0.argumentName }
 
 let commandLineArguments = [
     // File options
     "inferoptions",
     "output",
     "exclude",
-    "fragment",
-    "conflictmarkers",
     "cache",
     "verbose",
     "dryrun",
@@ -1003,6 +873,4 @@ let commandLineArguments = [
     // Misc
     "help",
     "version",
-    // Format options
-    "experimental",
-] + deprecatedArguments + fileArguments + formatArguments
+] + fileArguments + deprecatedArguments + renamedArguments + formattingArguments + internalArguments

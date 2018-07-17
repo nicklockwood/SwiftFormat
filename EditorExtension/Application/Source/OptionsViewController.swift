@@ -51,7 +51,7 @@ final class OptionsViewController: NSViewController {
         let store = OptionsStore()
         let result = store
             .options
-            .sorted()
+            .sorted(by: { $0.descriptor.displayName < $1.descriptor.displayName })
             .map { option -> UserSelectionType in
                 let descriptor = option.descriptor
                 let selection = option.argumentValue
@@ -65,7 +65,7 @@ final class OptionsViewController: NSViewController {
                 case let .binary(t, f):
                     let list = UserSelectionList(
                         identifier: descriptor.argumentName,
-                        title: descriptor.name,
+                        title: descriptor.displayName,
                         description: nil,
                         selection: selection,
                         options: [t[0], f[0]],
@@ -76,7 +76,7 @@ final class OptionsViewController: NSViewController {
                 case let .list(values):
                     let list = UserSelectionList(
                         identifier: descriptor.argumentName,
-                        title: descriptor.name,
+                        title: descriptor.displayName,
                         description: nil,
                         selection: selection,
                         options: values,
@@ -87,7 +87,7 @@ final class OptionsViewController: NSViewController {
                 case let .freeText(validationStrategy: validation):
                     let freeText = UserSelectionFreeText(
                         identifier: descriptor.argumentName,
-                        title: descriptor.name,
+                        title: descriptor.displayName,
                         description: nil,
                         selection: selection,
                         observer: { input in

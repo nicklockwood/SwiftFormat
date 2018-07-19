@@ -3016,7 +3016,7 @@ extension FormatRules {
             suffix = formatter.options.uppercaseExponent ? suffix.uppercased() : suffix.lowercased()
             let length = characters.distance(from: characters.startIndex, to: endIndex)
             var output: String.UnicodeScalarView.SubSequence
-            if case let .group(group, threshold) = grouping, length >= threshold {
+            if case let .group(group, threshold) = grouping, group > 0, length >= threshold {
                 output = String.UnicodeScalarView.SubSequence()
                 var index = endIndex
                 var count = 0

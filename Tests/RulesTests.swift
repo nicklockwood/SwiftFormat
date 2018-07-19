@@ -5864,6 +5864,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testZeroGrouping() {
+        let input = "let foo = 1234"
+        let output = "let foo = 1234"
+        let options = FormatOptions(decimalGrouping: .group(0, 0))
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // binary grouping
 
     func testDefaultBinaryGrouping() {

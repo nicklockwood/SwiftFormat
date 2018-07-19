@@ -5983,6 +5983,39 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    // exponent case
+
+    func testLowercaseExponent() {
+        let input = "let foo = 0.456E-5"
+        let output = "let foo = 0.456e-5"
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testUppercaseExponent() {
+        let input = "let foo = 0.456e-5"
+        let output = "let foo = 0.456E-5"
+        let options = FormatOptions(uppercaseExponent: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testUppercaseHexExponent() {
+        let input = "let foo = 0xFF00p54"
+        let output = "let foo = 0xFF00P54"
+        let options = FormatOptions(uppercaseExponent: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testUppercaseGroupedHexExponent() {
+        let input = "let foo = 0xFF00_AABB_CCDDp54"
+        let output = "let foo = 0xFF00_AABB_CCDDP54"
+        let options = FormatOptions(uppercaseExponent: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // decimal grouping
 
     func testDefaultDecimalGrouping() {
@@ -6099,35 +6132,36 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // exponent case
+    // fraction grouping
 
-    func testLowercaseExponent() {
-        let input = "let foo = 0.456E-5"
-        let output = "let foo = 0.456e-5"
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testUppercaseExponent() {
-        let input = "let foo = 0.456e-5"
-        let output = "let foo = 0.456E-5"
-        let options = FormatOptions(uppercaseExponent: true)
+    func testIgnoreFractionGrouping() {
+        let input = "let foo = 1.234_5_678"
+        let output = "let foo = 1.234_5_678"
+        let options = FormatOptions(decimalGrouping: .ignore, fractionGrouping: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testUppercaseHexExponent() {
-        let input = "let foo = 0xFF00p54"
-        let output = "let foo = 0xFF00P54"
-        let options = FormatOptions(uppercaseExponent: true)
+    func testNoFractionGrouping() {
+        let input = "let foo = 1.234_5_678"
+        let output = "let foo = 1.2345678"
+        let options = FormatOptions(decimalGrouping: .none, fractionGrouping: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testUppercaseGroupedHexExponent() {
-        let input = "let foo = 0xFF00_AABB_CCDDp54"
-        let output = "let foo = 0xFF00_AABB_CCDDP54"
-        let options = FormatOptions(uppercaseExponent: true)
+    func testFractionGroupingThousands() {
+        let input = "let foo = 12.34_56_78"
+        let output = "let foo = 12.345_678"
+        let options = FormatOptions(decimalGrouping: .group(3, 3), fractionGrouping: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testHexFractionGrouping() {
+        let input = "let foo = 0x12.34_56_78p56"
+        let output = "let foo = 0x12.34_5678p56"
+        let options = FormatOptions(hexGrouping: .group(4, 4), fractionGrouping: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }

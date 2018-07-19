@@ -550,7 +550,7 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
        
 ***linebreaks*** - normalizes all linebreaks to use the same character, as specified in options (either CR, LF or CRLF, depending on the `--linebreaks` option).
 
-***numberFormatting*** - handles case and grouping of number literals, depending on the `--hexliteralcase`, `--exponentcase`, `--hexgrouping`, `--binarygrouping`, `--decimalgrouping`, and `--octalgrouping` options:
+***numberFormatting*** - handles case and grouping of number literals, depending on the `--hexliteralcase`, `--exponentcase`, `--hexgrouping`, `--binarygrouping`, `--decimalgrouping`, `--octalgrouping`, `--fractiongrouping` and `--exponentgrouping` options:
 
 ```diff
 - let color = 0xFF77A5

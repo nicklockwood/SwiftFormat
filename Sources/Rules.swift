@@ -3015,63 +3015,86 @@ extension FormatRules {
 
     /// Standardize formatting of numeric literals
     @objc public class func numberFormatting(_ formatter: Formatter) {
+        func applyGrouping(_ grouping: Grouping, to number: inout String) {
+            switch grouping {
+            case .none, .group:
+                number = number.replacingOccurrences(of: "_", with: "")
+            case .ignore:
+                return
+            }
+            guard case let .group(group, threshold) = grouping, group > 0, number.count >= threshold else {
+                return
+            }
+            var output = Substring()
+            var index = number.endIndex
+            var count = 0
+            repeat {
+                index = number.index(before: index)
+                if count > 0, count % group == 0 {
+                    output.insert("_", at: output.startIndex)
+                }
+                count += 1
+                output.insert(number[index], at: output.startIndex)
+            } while index != number.startIndex
+            number = String(output)
+        }
         formatter.forEachToken { i, token in
-            guard case let .number(string, type) = token else {
+            guard case let .number(number, type) = token else {
                 return
             }
             let grouping: Grouping
-            let prefix: String
+            let prefix: String, exponentSeparator: String, parts: [String]
             switch type {
             case .integer, .decimal:
                 grouping = formatter.options.decimalGrouping
                 prefix = ""
+                exponentSeparator = formatter.options.uppercaseExponent ? "E" : "e"
+                parts = number.components(separatedBy: CharacterSet(charactersIn: ".eE"))
             case .binary:
                 grouping = formatter.options.binaryGrouping
                 prefix = "0b"
+                exponentSeparator = ""
+                parts = [String(number[prefix.endIndex...])]
             case .octal:
                 grouping = formatter.options.octalGrouping
                 prefix = "0o"
+                exponentSeparator = ""
+                parts = [String(number[prefix.endIndex...])]
             case .hex:
                 grouping = formatter.options.hexGrouping
                 prefix = "0x"
+                exponentSeparator = formatter.options.uppercaseExponent ? "P" : "p"
+                parts = number[prefix.endIndex...].components(separatedBy: CharacterSet(charactersIn: ".pP")).map {
+                    formatter.options.uppercaseHex ? $0.uppercased() : $0.lowercased()
+                }
             }
-            let characters: String.UnicodeScalarView.SubSequence
-            if case .ignore = grouping {
-                characters = string.unicodeScalars.suffix(from: prefix.unicodeScalars.endIndex)
-            } else {
-                characters = String.UnicodeScalarView.SubSequence(token.unescaped().unicodeScalars)
+            var main = parts[0], fraction = "", exponent = ""
+            switch parts.count {
+            case 2 where number.contains("."):
+                fraction = parts[1]
+            case 2:
+                exponent = parts[1]
+            case 3:
+                fraction = parts[1]
+                exponent = parts[2]
+            default:
+                break
             }
-            let endIndex: String.UnicodeScalarView.Index
-            switch type {
-            case .decimal:
-                endIndex = characters.index { [".", "e", "E"].contains($0) } ?? characters.endIndex
-            case .hex:
-                endIndex = characters.index { [".", "p", "P"].contains($0) } ?? characters.endIndex
-            case .integer, .octal, .binary:
-                endIndex = characters.endIndex
+            applyGrouping(grouping, to: &main)
+            if formatter.options.fractionGrouping {
+                applyGrouping(grouping, to: &fraction)
             }
-            var suffix = String(characters.suffix(from: endIndex))
-            suffix = formatter.options.uppercaseExponent ? suffix.uppercased() : suffix.lowercased()
-            let length = characters.distance(from: characters.startIndex, to: endIndex)
-            var output: String.UnicodeScalarView.SubSequence
-            if case let .group(group, threshold) = grouping, group > 0, length >= threshold {
-                output = String.UnicodeScalarView.SubSequence()
-                var index = endIndex
-                var count = 0
-                repeat {
-                    index = characters.index(before: index)
-                    if count > 0 && count % group == 0 {
-                        output.insert("_", at: characters.startIndex)
-                    }
-                    count += 1
-                    output.insert(characters[index], at: characters.startIndex)
-                } while index != characters.startIndex
-            } else {
-                output = characters[characters.startIndex ..< endIndex]
+            if formatter.options.exponentGrouping {
+                applyGrouping(grouping, to: &exponent)
             }
-            var result = String(output)
-            result = formatter.options.uppercaseHex ? result.uppercased() : result.lowercased()
-            formatter.replaceToken(at: i, with: .number(prefix + result + suffix, type))
+            var result = prefix + main
+            if !fraction.isEmpty {
+                result += "." + fraction
+            }
+            if exponent.count > 0 {
+                result += exponentSeparator + exponent
+            }
+            formatter.replaceToken(at: i, with: .number(result, type))
         }
     }
 

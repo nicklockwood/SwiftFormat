@@ -526,6 +526,18 @@ class OptionsDescriptorTests: XCTestCase {
                                    keyPath: \FormatOptions.hexGrouping)
     }
 
+    func testFractionGrouping() {
+        validateArgumentsBinaryType(.fractionGrouping,
+                                    controlTrue: ["enabled", "true"],
+                                    controlFalse: ["disabled", "false"])
+    }
+
+    func testExponentGrouping() {
+        validateArgumentsBinaryType(.exponentGrouping,
+                                    controlTrue: ["enabled", "true"],
+                                    controlFalse: ["disabled", "false"])
+    }
+
     func testIndentation() {
         let descriptor = FormatOptions.Descriptor.indentation
         let validations: [FreeTextValidationExpectation] = [

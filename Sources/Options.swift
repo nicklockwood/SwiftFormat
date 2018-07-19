@@ -134,6 +134,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var binaryGrouping: Grouping
     public var octalGrouping: Grouping
     public var hexGrouping: Grouping
+    public var fractionGrouping: Bool
+    public var exponentGrouping: Bool
     public var hoistPatternLet: Bool
     public var stripUnusedArguments: ArgumentStrippingMode
     public var elseOnNextLine: Bool
@@ -169,6 +171,8 @@ public struct FormatOptions: CustomStringConvertible {
                 binaryGrouping: Grouping = .group(4, 8),
                 octalGrouping: Grouping = .group(4, 8),
                 hexGrouping: Grouping = .group(4, 8),
+                fractionGrouping: Bool = false,
+                exponentGrouping: Bool = false,
                 hoistPatternLet: Bool = true,
                 stripUnusedArguments: ArgumentStrippingMode = .all,
                 elseOnNextLine: Bool = false,
@@ -196,6 +200,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.uppercaseHex = uppercaseHex
         self.uppercaseExponent = uppercaseExponent
         self.decimalGrouping = decimalGrouping
+        self.fractionGrouping = fractionGrouping
+        self.exponentGrouping = exponentGrouping
         self.binaryGrouping = binaryGrouping
         self.octalGrouping = octalGrouping
         self.hexGrouping = hexGrouping
@@ -624,13 +630,13 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
             case .integer:
                 digits = number
             case .binary, .octal:
-                digits = String(number[prefix.endIndex ..< number.endIndex])
+                digits = String(number[prefix.endIndex...])
             case .hex:
                 let endIndex = number.index { [".", "p", "P"].contains($0) } ?? number.endIndex
                 digits = String(number[prefix.endIndex ..< endIndex])
             case .decimal:
                 let endIndex = number.index { [".", "e", "E"].contains($0) } ?? number.endIndex
-                digits = String(number[number.startIndex ..< endIndex])
+                digits = String(number[..<endIndex])
             }
             // Get the group for this number
             var count = 0
@@ -692,6 +698,61 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
     options.binaryGrouping = grouping(for: .binary)
     options.octalGrouping = grouping(for: .octal)
     options.hexGrouping = grouping(for: .hex)
+
+    do {
+        var fractions: (grouped: Int, ungrouped: Int) = (0, 0)
+        var exponents: (grouped: Int, ungrouped: Int) = (0, 0)
+        formatter.forEachToken { _, token in
+            guard case let .number(number, type) = token else {
+                return
+            }
+            // Strip prefix/suffix
+            let digits: String
+            let prefix = "0x"
+            var main = "", fraction = "", exponent = ""
+            let parts: [String]
+            switch type {
+            case .integer, .binary, .octal:
+                return
+            case .hex:
+                parts = number[prefix.endIndex...].components(separatedBy: CharacterSet(charactersIn: ".pP"))
+            case .decimal:
+                parts = number.components(separatedBy: CharacterSet(charactersIn: ".eE"))
+            }
+            switch parts.count {
+            case 2 where number.contains("."):
+                main = parts[0]
+                fraction = parts[1]
+            case 2:
+                main = parts[0]
+                exponent = parts[1]
+            case 3:
+                main = parts[0]
+                fraction = parts[1]
+                exponent = parts[2]
+            default:
+                return
+            }
+            if fraction.contains("_") {
+                fractions.grouped += 1
+            } else if let range = main.range(of: "_") {
+                let threshold = main.distance(from: range.lowerBound, to: main.endIndex)
+                if fraction.count >= threshold {
+                    fractions.ungrouped += 1
+                }
+            }
+            if exponent.contains("_") {
+                exponents.grouped += 1
+            } else if let range = main.range(of: "_") {
+                let threshold = main.distance(from: range.lowerBound, to: main.endIndex)
+                if exponent.count >= threshold {
+                    exponents.ungrouped += 1
+                }
+            }
+        }
+        options.fractionGrouping = fractions.grouped > fractions.ungrouped
+        options.exponentGrouping = exponents.grouped > exponents.ungrouped
+    }
 
     options.hoistPatternLet = {
         var hoisted = 0, unhoisted = 0

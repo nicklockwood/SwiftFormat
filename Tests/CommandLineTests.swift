@@ -116,7 +116,7 @@ class CommandLineTests: XCTestCase {
 
     func testCommandLineArgumentsAreCorrect() {
         let options = FormatOptions.default
-        let output = ["allman": "false", "wraparguments": "preserve", "wrapcollections": "preserve", "self": "remove", "header": "ignore", "binarygrouping": "4,8", "octalgrouping": "4,8", "patternlet": "hoist", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "commas": "always", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "stripunusedargs": "always"]
+        let output = ["allman": "false", "wraparguments": "preserve", "self": "remove", "header": "ignore", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "patternlet": "hoist", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "stripunusedargs": "always"]
         XCTAssertEqual(commandLineArguments(for: options), output)
     }
 

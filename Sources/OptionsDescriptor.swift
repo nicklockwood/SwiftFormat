@@ -75,6 +75,8 @@ extension FormatOptions.Descriptor {
         .binaryGrouping,
         .octalGrouping,
         .hexGrouping,
+        .fractionGrouping,
+        .exponentGrouping,
         .letPatternPlacement,
         .stripUnusedArguments,
         .elsePosition,
@@ -431,6 +433,40 @@ extension FormatOptions.Descriptor {
                                                           },
                                                           fromOptions: { options in
                                                               options.decimalGrouping.rawValue
+    })
+    static let fractionGrouping = FormatOptions.Descriptor(argumentName: "fractiongrouping",
+                                                           propertyName: "fractionGrouping",
+                                                           displayName: "Fraction Grouping",
+                                                           type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
+                                                           toOptions: { input, options in
+                                                               switch input.lowercased() {
+                                                               case "true", "enabled":
+                                                                   options.fractionGrouping = true
+                                                               case "false", "disabled":
+                                                                   options.fractionGrouping = false
+                                                               default:
+                                                                   throw FormatError.options("")
+                                                               }
+                                                           },
+                                                           fromOptions: { options in
+                                                               options.fractionGrouping ? "enabled" : "disabled"
+    })
+    static let exponentGrouping = FormatOptions.Descriptor(argumentName: "exponentgrouping",
+                                                           propertyName: "exponentGrouping",
+                                                           displayName: "Exponent Grouping",
+                                                           type: .binary(true: ["enabled", "true"], false: ["disabled", "false"]),
+                                                           toOptions: { input, options in
+                                                               switch input.lowercased() {
+                                                               case "true", "enabled":
+                                                                   options.exponentGrouping = true
+                                                               case "false", "disabled":
+                                                                   options.exponentGrouping = false
+                                                               default:
+                                                                   throw FormatError.options("")
+                                                               }
+                                                           },
+                                                           fromOptions: { options in
+                                                               options.exponentGrouping ? "enabled" : "disabled"
     })
     static let binaryGrouping = FormatOptions.Descriptor(argumentName: "binarygrouping",
                                                          propertyName: "binaryGrouping",

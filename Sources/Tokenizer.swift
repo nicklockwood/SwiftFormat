@@ -1387,6 +1387,11 @@ public func tokenize(_ source: String) -> [Token] {
                     } else if scope == .startOfScope("\"\"\"") {
                         processMultilineStringBody()
                     }
+                case .endOfScope(">"):
+                    if scope == .startOfScope("<"), scopeIndex == tokens.count - 2 {
+                        tokens[tokens.count - 2] = .operator("<>", .infix)
+                        tokens.remove(at: tokens.count - 1)
+                    }
                 default:
                     break
                 }

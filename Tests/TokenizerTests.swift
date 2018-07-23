@@ -948,6 +948,30 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testCustomOperator2() {
+        let input = "a <> b"
+        let output: [Token] = [
+            .identifier("a"),
+            .space(" "),
+            .operator("<>", .infix),
+            .space(" "),
+            .identifier("b"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testCustomOperator3() {
+        let input = "a |> b"
+        let output: [Token] = [
+            .identifier("a"),
+            .space(" "),
+            .operator("|>", .infix),
+            .space(" "),
+            .identifier("b"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testSequentialOperators() {
         let input = "a *= -b"
         let output: [Token] = [

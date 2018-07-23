@@ -57,28 +57,23 @@ public class FormatRules: NSObject {
     }()
 
     /// All rules
-    public static let all = Array(FormatRules.byName.values)
+    public static let all: [FormatRule] = {
+        Array(byName.keys.sorted().compactMap { byName[$0] })
+    }()
 
     /// All rules except those specified
     public static func all(except rules: [String]) -> [FormatRule] {
-        var byName = FormatRules.byName
+        var rulesByName = byName
         for name in rules {
             precondition(byName[name] != nil, "`\(name)` is not a valid rule")
-            byName[name] = nil
+            rulesByName[name] = nil
         }
-        return Array(byName.values)
+        return Array(rulesByName.keys.sorted().compactMap { rulesByName[$0] })
     }
 
+    @available(*, deprecated, message: "Use names.compactMap { FormatRules.byName[$0] }")
     public static func all(named: [String]) -> [FormatRule] {
-        let byName = FormatRules.byName
-        let names = Set(named)
-        var result = [FormatRule]()
-        for (key, formatRule) in byName {
-            if names.contains(key) {
-                result.append(formatRule)
-            }
-        }
-        return result
+        return Array(named.sorted().compactMap { byName[$0] })
     }
 
     /// Rules that are disabled by default

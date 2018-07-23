@@ -286,6 +286,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testSpaceBeforeCommentInsideParens() {
+        let input = "( /* foo */ 1, 2 )"
+        let output = "( /* foo */ 1, 2)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceInsideParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: spaceAroundBrackets
 
     func testSubscriptNoAddSpacing() {
@@ -356,6 +363,14 @@ class RulesTests: XCTestCase {
     func testSpaceInsideWrappedArray() {
         let input = "[ foo,\n bar ]"
         let output = "[foo,\n bar]"
+        let options = FormatOptions(wrapElements: .disabled)
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceInsideBrackets]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSpaceBeforeCommentInsideWrappedArray() {
+        let input = "[ // foo\n    bar,\n]"
+        let output = "[ // foo\n    bar,\n]"
         let options = FormatOptions(wrapElements: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceInsideBrackets]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

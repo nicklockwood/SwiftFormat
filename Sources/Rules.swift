@@ -238,13 +238,14 @@ extension FormatRules {
     /// Remove space immediately inside square brackets
     @objc public class func spaceInsideBrackets(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("[")) { i, _ in
-            if formatter.token(at: i + 1)?.isSpace == true {
+            if formatter.token(at: i + 1)?.isSpace == true &&
+                formatter.token(at: i + 2)?.isComment == false {
                 formatter.removeToken(at: i + 1)
             }
         }
         formatter.forEach(.endOfScope("]")) { i, _ in
             if formatter.token(at: i - 1)?.isSpace == true &&
-                formatter.token(at: i - 2)?.isLinebreak == false {
+                formatter.token(at: i - 2)?.isCommentOrLinebreak == false {
                 formatter.removeToken(at: i - 1)
             }
         }

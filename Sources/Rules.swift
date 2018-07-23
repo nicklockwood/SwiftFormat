@@ -715,11 +715,13 @@ extension FormatRules {
                 let startIndex = formatter.index(of: .nonSpace, before: i),
                 formatter.tokens[startIndex] == .startOfScope("//") else { return }
             if let nextIndex = formatter.index(of: .linebreak, after: i),
-                formatter.next(.nonSpace, after: nextIndex)?.isLinebreak == false {
+                let nextToken = formatter.next(.nonSpace, after: nextIndex),
+                !nextToken.isLinebreak, nextToken != .endOfScope("}") {
                 formatter.insertToken(.linebreak(formatter.options.linebreak), at: nextIndex)
             }
             if let lastIndex = formatter.index(of: .linebreak, before: startIndex),
-                formatter.last(.nonSpace, before: lastIndex)?.isLinebreak == false {
+                let lastToken = formatter.last(.nonSpace, before: lastIndex),
+                !lastToken.isLinebreak, lastToken != .startOfScope("{") {
                 formatter.insertToken(.linebreak(formatter.options.linebreak), at: lastIndex)
             }
         }

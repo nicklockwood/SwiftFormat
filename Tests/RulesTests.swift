@@ -1518,6 +1518,32 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoInsertBlankLineBeforeMarkAtStartOfScope() {
+        let input = """
+        do {
+            // MARK: foo
+
+            let foo = "foo"
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAroundMark]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoInsertBlankLineAfterMarkAtEndOfScope() {
+        let input = """
+        do {
+            let foo = "foo"
+
+            // MARK: foo
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAroundMark]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: linebreakAtEndOfFile
 
     func testLinebreakAtEndOfFile() {

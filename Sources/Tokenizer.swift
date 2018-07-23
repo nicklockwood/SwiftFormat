@@ -1389,8 +1389,9 @@ public func tokenize(_ source: String) -> [Token] {
                     }
                 case .endOfScope(">"):
                     if scope == .startOfScope("<"), scopeIndex == tokens.count - 2 {
-                        tokens[tokens.count - 2] = .operator("<>", .infix)
-                        tokens.remove(at: tokens.count - 1)
+                        convertOpeningChevronToSymbol(at: tokens.count - 2)
+                        processToken()
+                        return
                     }
                 default:
                     break

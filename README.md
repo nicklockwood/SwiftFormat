@@ -158,8 +158,11 @@ To set up SwiftFormat as an Xcode build phase, do the following:
 	Both paths should be relative to the directory containing your Xcode project. If you are installing SwiftFormat as a Cocoapod, the swiftformat path will be
 	
 	    "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat"
+	    
+    **NOTE:** Adding this script will slightly increase your build time, and will make changes to your source files as you work on them, which can have annoying side-effects such as clearing the undo buffer. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 
-Alternatively, you can reference a locally installed copy add a new "Run Script Phase" with:
+Alternatively, you can skip installation of the SwiftFormat pod and configure Xcode to use the locally installed swiftformat command-line tool instead by putting the following in your Run Script build phase:
+
 ```bash
   if which swiftformat >/dev/null; then
     swiftformat .
@@ -168,7 +171,7 @@ Alternatively, you can reference a locally installed copy add a new "Run Script 
   fi
 ```
 
-    **NOTE:** Adding this script will slightly increase your build time, and will make changes to your source files as you work on them, which can have annoying side-effects such as clearing the undo buffer. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
+This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commits as code gets reformatted inconsistently.
 
 
 Git pre-commit hook
@@ -180,11 +183,13 @@ Git pre-commit hook
 
 3. Add the following line in the pre-commit file (unlike the Xcode build phase approach, this uses your locally installed version of SwiftFormat, not a separate copy in your project repository)
 
-        #!/bin/bash
-        git diff --diff-filter=d --staged --name-only | grep -e '\(.*\).swift$' | while read line; do
-          swiftformat "${line}";
-          git add "$line";
-        done
+    ```bash
+    #!/bin/bash
+    git diff --diff-filter=d --staged --name-only | grep -e '\(.*\).swift$' | while read line; do
+      swiftformat "${line}";
+      git add "$line";
+    done
+    ```
 
 4. enable the hook by typing `chmod +x .git/hooks/pre-commit` in the terminal
  
@@ -200,16 +205,16 @@ On CI using Danger
 To setup SwiftFormat to be used by your continuous integration system using [Danger](http://danger.systems/ruby/), do the following:
 
 1. Follow the [`instructions`](http://danger.systems/guides/getting_started.html) to setup Danger.
-1. Add the [`danger-swiftformat`](https://github.com/garriguv/danger-ruby-swiftformat) plugin to your `Gemfile`.
-1. Add the following to your `Dangerfile`:
+2. Add the [`danger-swiftformat`](https://github.com/garriguv/danger-ruby-swiftformat) plugin to your `Gemfile`.
+3. Add the following to your `Dangerfile`:
 
-```ruby
-swiftformat.binary_path = "/path/to/swiftformat" # optional
-swiftformat.additional_args = "--indent tab --self insert" # optional
-swiftformat.check_format(fail_on_error: true)
-```
-
-**NOTE:** It is recommended to add the `swiftformat` binary to your project directory.
+    ```ruby
+    swiftformat.binary_path = "/path/to/swiftformat" # optional
+    swiftformat.additional_args = "--indent tab --self insert" # optional
+    swiftformat.check_format(fail_on_error: true)
+    ```
+    
+    **NOTE:** It is recommended to add the `swiftformat` binary to your project directory to ensure the same version is used each time (see the [Xcode build phase](#xcode-build-phase) instructions above).
 
 So what does SwiftFormat actually do?
 --------------------------------------

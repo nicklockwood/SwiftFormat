@@ -71,7 +71,6 @@ public class FormatRules: NSObject {
         return Array(rulesByName.keys.sorted().compactMap { rulesByName[$0] })
     }
 
-    @available(*, deprecated, message: "Use names.compactMap { FormatRules.byName[$0] }")
     public static func all(named: [String]) -> [FormatRule] {
         return Array(named.sorted().compactMap { byName[$0] })
     }

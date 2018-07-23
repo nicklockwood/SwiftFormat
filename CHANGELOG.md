@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.33.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.12) (2018-07-23)
+
+- Added `swiftformat:disable:all` and `swiftformat:enable:all` directives
+- Fixed a bug where redundant parens were not always removed correctly
+- Fixed errors when parsing custom operators such as `<>`, `|>` or `<<>>`
+- Fixed divide-by-zero crash when specifiying number groupings with a value of zero
+- Rules are now consistently applied in alphabetical order
+- Fixed the `--conflictmarkers` command-line option
+
 ## [0.33.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.11) (2018-07-05)
 
 - Fixed a bug where `--inferoptions` would always set `--self` to "insert" (this also affected the Xcode extension)

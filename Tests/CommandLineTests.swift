@@ -39,7 +39,6 @@ private var readme: String = {
 }()
 
 class CommandLineTests: XCTestCase {
-
     // MARK: arg parser
 
     func testParseSimpleArguments() {

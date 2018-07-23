@@ -255,7 +255,19 @@ To enable the rule(s) again, use:
 // swiftformat:enable <rule1> [<rule2> [rule<3> ...]]
 ```
 
-**Note:** The `swiftformat:enable` directive only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.
+To temporarily disable all rules use:
+
+```swift
+// swiftformat:disable:all
+```
+
+And to enable them all again, use:
+
+```swift
+// swiftformat:enable:all
+```
+
+**Note:** The `swiftformat:enable` directives only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.
 
 Here are all the rules that SwiftFormat currently applies, and the effects that they have:
 

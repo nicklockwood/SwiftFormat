@@ -10,7 +10,6 @@ import SwiftFormat
 import XCTest
 
 class OptionsTests: XCTestCase {
-
     // MARK: indent
 
     func testInferIndentLevel() {

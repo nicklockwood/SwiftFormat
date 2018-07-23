@@ -33,7 +33,6 @@ import SwiftFormat
 import XCTest
 
 class RulesTests: XCTestCase {
-
     // MARK: spaceAroundParens
 
     func testSpaceAfterSet() {

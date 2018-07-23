@@ -33,7 +33,6 @@ import SwiftFormat
 import XCTest
 
 class SwiftFormatTests: XCTestCase {
-
     // MARK: enumerateFiles
 
     func testInputFileMatchesOutputFileForNilOutput() {

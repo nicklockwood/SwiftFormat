@@ -33,7 +33,6 @@ import SwiftFormat
 import XCTest
 
 class TokenizerTests: XCTestCase {
-
     // MARK: Invalid input
 
     func testInvalidToken() {

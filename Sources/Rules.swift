@@ -1576,7 +1576,7 @@ extension FormatRules {
                 $0 == .startOfScope("(")
             }), let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound, if: {
                 $0 == .endOfScope(")")
-            }) else {
+            }), formatter.index(of: .endOfScope(")"), after: startIndex) == endIndex else {
                 return nil
             }
             return startIndex ... endIndex

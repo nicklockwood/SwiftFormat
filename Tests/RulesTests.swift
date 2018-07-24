@@ -3541,6 +3541,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRequiredParensNotRemovedAroundOptionalClosureType() {
+        let input = "let foo = (() -> ())?"
+        let output = "let foo = (() -> ())?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["void"])), output + "\n")
+    }
+
+    func testRedundantParensRemovedAroundOptionalClosureType() {
+        let input = "let foo = ((() -> ()))?"
+        let output = "let foo = (() -> ())?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["void"])), output + "\n")
+    }
+
     // around closure arguments
 
     func testSingleClosureArgumentUnwrapped() {

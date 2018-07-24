@@ -43,11 +43,12 @@ final class BinarySelectionTableCellView: NSTableCellView {
 
     override var objectValue: Any? {
         didSet {
-            guard let binarySelection = objectValue as? UserSelectionBinary else {
+            guard let model = objectValue as? UserSelectionBinary else {
                 return
             }
-            checkbox.title = binarySelection.title ?? ""
-            checkbox.state = binarySelection.selection ? .on : .off
+            checkbox.isEnabled = model.isEnabled
+            checkbox.title = model.title ?? ""
+            checkbox.state = model.selection ? .on : .off
         }
     }
 }

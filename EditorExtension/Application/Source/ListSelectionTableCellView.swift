@@ -46,7 +46,9 @@ class ListSelectionTableCellView: NSTableCellView {
             guard let model = objectValue as? UserSelectionList else {
                 return
             }
+            title.textColor = model.isEnabled ? .textColor : .disabledControlTextColor
             title.stringValue = model.title ?? ""
+            dropDown.isEnabled = model.isEnabled
             dropDown.removeAllItems()
             dropDown.addItems(withTitles: model.options.map { $0 })
             dropDown.selectItem(withTitle: model.selection)

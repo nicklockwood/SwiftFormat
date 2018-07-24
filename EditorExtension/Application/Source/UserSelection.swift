@@ -41,11 +41,13 @@ class UserSelection {
     let identifier: String
     let title: String?
     let description: String?
+    let isEnabled: Bool
 
-    init(identifier: String, title: String?, description: String?) {
+    init(identifier: String, title: String?, description: String?, isEnabled: Bool) {
         self.identifier = identifier
         self.title = title
         self.description = description
+        self.isEnabled = isEnabled
     }
 }
 
@@ -57,10 +59,16 @@ final class UserSelectionBinary: UserSelection {
     }
 
     private let selectionObserver: ((Bool) -> Void)?
-    init(identifier: String, title: String?, description: String?, selection: Bool, observer: ((Bool) -> Void)?) {
+    init(
+        identifier: String, title: String?,
+        description: String?,
+        isEnabled: Bool,
+        selection: Bool,
+        observer: ((Bool) -> Void)?
+    ) {
         self.selection = selection
         selectionObserver = observer
-        super.init(identifier: identifier, title: title, description: description)
+        super.init(identifier: identifier, title: title, description: description, isEnabled: isEnabled)
     }
 }
 
@@ -74,11 +82,19 @@ final class UserSelectionList: UserSelection {
     let options: [String]
 
     private let selectionObserver: ((String) -> Void)?
-    init(identifier: String, title: String?, description: String?, selection: String, options: [String], observer: ((String) -> Void)?) {
+    init(
+        identifier: String,
+        title: String?,
+        description: String?,
+        isEnabled: Bool,
+        selection: String,
+        options: [String],
+        observer: ((String) -> Void)?
+    ) {
         self.selection = selection
         self.options = options
         selectionObserver = observer
-        super.init(identifier: identifier, title: title, description: description)
+        super.init(identifier: identifier, title: title, description: description, isEnabled: isEnabled)
     }
 }
 
@@ -99,15 +115,18 @@ final class UserSelectionFreeText: UserSelection {
 
     private let validationStrategy: (String) -> Bool
     private let selectionObserver: ((String) -> Void)?
-    init(identifier: String,
-         title: String?,
-         description: String?,
-         selection: String,
-         observer: ((String) -> Void)? = nil,
-         validationStrategy: @escaping ((String) -> Bool) = UserSelectionFreeText.defaultValidationStrategy) {
+    init(
+        identifier: String,
+        title: String?,
+        description: String?,
+        isEnabled: Bool,
+        selection: String,
+        observer: ((String) -> Void)? = nil,
+        validationStrategy: @escaping ((String) -> Bool
+    ) = UserSelectionFreeText.defaultValidationStrategy) {
         self.selection = selection
         selectionObserver = observer
         self.validationStrategy = validationStrategy
-        super.init(identifier: identifier, title: title, description: description)
+        super.init(identifier: identifier, title: title, description: description, isEnabled: isEnabled)
     }
 }

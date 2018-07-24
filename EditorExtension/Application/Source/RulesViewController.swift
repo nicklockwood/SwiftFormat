@@ -57,6 +57,7 @@ final class RulesViewController: NSViewController {
                     identifier: rule.name,
                     title: rule.name,
                     description: nil,
+                    isEnabled: true,
                     selection: rule.isEnabled,
                     observer: {
                         var updatedRule = rule

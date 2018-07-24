@@ -76,6 +76,7 @@ struct OptionsStore {
     private typealias OptionStoreRepresentation = [OptionID: ArgumentValue]
 
     private let optionsKey = "format-options"
+    private let inferOptionsKey = "infer-options"
     private let store: UserDefaults
 
     private static var defaultStore: UserDefaults = {
@@ -95,6 +96,11 @@ struct OptionsStore {
         var formatOptions = FormatOptions.default
         allOptions.forEach { try! $0.descriptor.toOptions($0.argumentValue, &formatOptions) }
         return formatOptions
+    }
+
+    var inferOptions: Bool {
+        get { return (store.object(forKey: inferOptionsKey) as? NSNumber)?.boolValue ?? true }
+        nonmutating set { store.set(NSNumber(booleanLiteral: newValue), forKey: inferOptionsKey) }
     }
 
     var options: [SavedOption] {

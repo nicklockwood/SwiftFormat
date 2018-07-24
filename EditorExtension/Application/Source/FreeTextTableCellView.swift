@@ -37,20 +37,30 @@ class FreeTextTableCellView: NSTableCellView {
 
     override var objectValue: Any? {
         didSet {
-            guard let freeText = objectValue as? UserSelectionFreeText else {
+            guard let model = objectValue as? UserSelectionFreeText else {
                 return
             }
-            title.stringValue = freeText.title ?? ""
-            freeTextField.stringValue = freeText.selection
+            title.stringValue = model.title ?? ""
+            freeTextField.isEditable = model.isEnabled
+            freeTextField.stringValue = model.selection
             updateErrorState()
         }
     }
 
     func updateErrorState() {
-        guard let freeText = objectValue as? UserSelectionFreeText else {
+        guard let model = objectValue as? UserSelectionFreeText else {
             return
         }
-        title.textColor = freeText.isValid ? NSColor.textColor : NSColor.red
+        if !model.isValid {
+            title.textColor = .red
+            freeTextField.textColor = .red
+        } else if !model.isEnabled {
+            title.textColor = .disabledControlTextColor
+            freeTextField.textColor = .disabledControlTextColor
+        } else {
+            title.textColor = .textColor
+            freeTextField.textColor = .textColor
+        }
     }
 }
 

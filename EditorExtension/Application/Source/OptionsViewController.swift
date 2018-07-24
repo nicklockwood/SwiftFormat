@@ -33,12 +33,16 @@ import Cocoa
 
 final class OptionsViewController: NSViewController {
     private var viewModels = [UserSelectionType]()
+    private var inferOptions = false
+    private let store = OptionsStore()
 
     @IBOutlet var tableView: NSTableView!
+    @IBOutlet var inferOptionsButton: NSButton!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         viewModels = buildOptions()
+        inferOptionsButton.state = store.inferOptions ? .on : .off
         NotificationCenter.default.addObserver(self, selector: #selector(didLoadNewConfiguration), name: .applicationDidLoadNewConfiguration, object: nil)
     }
 
@@ -47,19 +51,26 @@ final class OptionsViewController: NSViewController {
         tableView?.reloadData()
     }
 
+    @IBAction private func toggleInferOptions(_: NSButton) {
+        store.inferOptions = (inferOptionsButton.state == .on)
+        viewModels = buildOptions()
+        tableView.reloadData()
+    }
+
     private func buildOptions() -> [UserSelectionType] {
-        let store = OptionsStore()
         let result = store
             .options
             .sorted(by: { $0.descriptor.displayName < $1.descriptor.displayName })
             .map { option -> UserSelectionType in
                 let descriptor = option.descriptor
                 let selection = option.argumentValue
-                let saveOption: (String) -> Void = {
-                    var opt = option
-                    opt.argumentValue = $0
-                    store.save(opt)
+                let saveOption: (String) -> Void = { [weak self] in
+                    var option = option
+                    option.argumentValue = $0
+                    self?.store.save(option)
                 }
+
+                let enabled = !store.inferOptions
 
                 switch descriptor.type {
                 case let .binary(t, f):
@@ -67,6 +78,7 @@ final class OptionsViewController: NSViewController {
                         identifier: descriptor.argumentName,
                         title: descriptor.displayName,
                         description: nil,
+                        isEnabled: enabled,
                         selection: selection,
                         options: [t[0], f[0]],
                         observer: saveOption
@@ -78,6 +90,7 @@ final class OptionsViewController: NSViewController {
                         identifier: descriptor.argumentName,
                         title: descriptor.displayName,
                         description: nil,
+                        isEnabled: enabled,
                         selection: selection,
                         options: values,
                         observer: saveOption
@@ -89,13 +102,15 @@ final class OptionsViewController: NSViewController {
                         identifier: descriptor.argumentName,
                         title: descriptor.displayName,
                         description: nil,
+                        isEnabled: enabled,
                         selection: selection,
                         observer: { input in
                             if validation(input) {
                                 saveOption(input)
                             }
                         },
-                        validationStrategy: validation)
+                        validationStrategy: validation
+                    )
                     return UserSelectionType.freeText(freeText)
                 }
             }

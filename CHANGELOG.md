@@ -1,12 +1,18 @@
 # Change Log
 
+## [0.33.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.13) (2018-07-25)
+
+- Fixed bug where required parens were incorrectly removed from around a closure type
+- Added `--lint` mode that is similar to `--dryrun` but returns a non-zero exit code if any files require formatting
+- The swiftformat command-line tool now returns a non-zero exit code in the event of a fatal error while formatting
+
 ## [0.33.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.12) (2018-07-23)
 
 - Added `swiftformat:disable:all` and `swiftformat:enable:all` directives
 - Fixed a bug where redundant parens were not always removed correctly
 - Fixed errors when parsing custom operators such as `<>`, `|>` or `<<>>`
 - Fixed divide-by-zero crash when specifiying number groupings with a value of zero
-- Rules are now consistently applied in alphabetical order
+- Rules are now always applied in alphabetical order to ensure consistency
 - Fixed the `--conflictmarkers` command-line option
 
 ## [0.33.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.11) (2018-07-05)

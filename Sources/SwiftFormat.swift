@@ -35,7 +35,7 @@ import Foundation
 public let version = "0.33.13"
 
 /// An enumeration of the types of error that may be thrown by SwiftFormat
-public enum FormatError: Error, CustomStringConvertible {
+public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomNSError {
     case reading(String)
     case writing(String)
     case parsing(String)
@@ -49,6 +49,14 @@ public enum FormatError: Error, CustomStringConvertible {
              let .options(string):
             return string
         }
+    }
+
+    public var localizedDescription: String {
+        return "Error: \(description)."
+    }
+
+    public var errorUserInfo: [String: Any] {
+        return [NSLocalizedDescriptionKey: localizedDescription]
     }
 }
 

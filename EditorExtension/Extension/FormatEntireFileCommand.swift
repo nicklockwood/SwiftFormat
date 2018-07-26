@@ -75,11 +75,7 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
 
             return completionHandler(nil)
         } catch let error {
-            return completionHandler(NSError(
-                domain: "SwiftFormat",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "\(error)"]
-            ))
+            return completionHandler(error)
         }
     }
 }

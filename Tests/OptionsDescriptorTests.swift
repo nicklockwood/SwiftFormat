@@ -175,27 +175,26 @@ class OptionsDescriptorTests: XCTestCase {
 
     // MARK: All options
 
-    func testAllPropertyHaveDescriptor() {
+    func testAllDescriptorsHaveProperty() {
         let allProperties = Set(FormatOptions.default.allOptions.keys)
-        let allDescriptorWithProperty = FormatOptions.Descriptor.all
-        let allDescriptorProperty = Set(allDescriptorWithProperty.map { $0.propertyName })
+        for descriptor in FormatOptions.Descriptor.all where !descriptor.isDeprecated {
+            XCTAssert(allProperties.contains(descriptor.propertyName))
+        }
+    }
 
-        XCTAssertEqual(allDescriptorWithProperty.count, allProperties.count, "Property and descriptor have equal count")
-        XCTAssertEqual(allDescriptorProperty, allProperties, "Each property have a descriptor with the same property name")
+    func testAllPropertiesHaveDescriptor() {
+        let allDescriptors = Set(FormatOptions.Descriptor.all.map { $0.propertyName })
+        for property in FormatOptions.default.allOptions.keys {
+            XCTAssert(allDescriptors.contains(property))
+        }
     }
 
     func testDeprecatedPropertyList() {
-        let deprecated = FormatOptions.Descriptor.deprecated
-        let controlArgumentNames = Set(["insertlines", "removelines"])
-        let descriptorArgumentNames = Set(deprecated.map { $0.argumentName })
+        let controlArgumentNames = Set(["insertlines", "removelines", "hexliterals", "wrapelements"])
+        let descriptorArgumentNames = Set(FormatOptions.Descriptor.all.compactMap {
+            $0.isDeprecated ? $0.argumentName : nil
+        })
         XCTAssertEqual(descriptorArgumentNames, controlArgumentNames, "All deprecated options are represented by a descriptor")
-    }
-
-    func testRenamedPropertyList() {
-        let deprecated = FormatOptions.Descriptor.renamed
-        let controlArgumentNames = Set(["hexliterals", "wrapelements"])
-        let descriptorArgumentNames = Set(deprecated.map { $0.argumentName })
-        XCTAssertEqual(descriptorArgumentNames, controlArgumentNames, "All renamed options are represented by a descriptor")
     }
 
     // MARK: Individual options

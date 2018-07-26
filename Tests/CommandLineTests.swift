@@ -129,7 +129,7 @@ class CommandLineTests: XCTestCase {
                 XCTAssert(deprecatedArguments.contains(key))
                 continue
             }
-            XCTAssert(!deprecatedArguments.contains(key))
+            XCTAssert(!deprecatedArguments.contains(key), key)
             _ = try formatOptionsFor([key: value])
         }
     }
@@ -211,7 +211,7 @@ class CommandLineTests: XCTestCase {
 
     func testHelpOptionsDocumented() {
         var arguments = Set(commandLineArguments)
-        (deprecatedArguments + renamedArguments).forEach { arguments.remove($0) }
+        deprecatedArguments.forEach { arguments.remove($0) }
         CLI.print = { message, _ in
             if message.hasPrefix("--") {
                 let name = String(message["--".endIndex ..< message.endIndex]).components(separatedBy: " ")[0]
@@ -244,7 +244,7 @@ class CommandLineTests: XCTestCase {
 
     func testAllOptionsInReadme() {
         var arguments = Set(formattingArguments)
-        (deprecatedArguments + renamedArguments).forEach { arguments.remove($0) }
+        deprecatedArguments.forEach { arguments.remove($0) }
         for argument in arguments {
             XCTAssertTrue(readme.contains("`--\(argument)`"), argument)
         }

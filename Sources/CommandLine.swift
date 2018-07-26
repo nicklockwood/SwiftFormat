@@ -782,7 +782,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
 /// (excludes non-formatting options and deprecated/renamed options)
 func commandLineArguments(for options: FormatOptions) -> [String: String] {
     var args = [String: String]()
-    for descriptor in FormatOptions.Descriptor.formatting {
+    for descriptor in FormatOptions.Descriptor.formatting where !descriptor.isDeprecated {
         args[descriptor.argumentName] = descriptor.fromOptions(options)
     }
     return args
@@ -828,15 +828,12 @@ func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
 
 func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
     var options = FormatOptions.default
-    let deprecatedOptions = Set(FormatOptions.Descriptor.deprecated.map { $0.propertyName })
-    let renamedOptions = Set(FormatOptions.Descriptor.renamed.map { $0.propertyName })
     var arguments = Set(formattingArguments)
 
     for option in FormatOptions.Descriptor.all {
         var handler = option.toOptions
-        if deprecatedOptions.contains(option.propertyName) || renamedOptions.contains(option.propertyName) {
+        if let message = option.deprecationMessage {
             handler = { string, options in
-                let message: String = FormatOptions.Descriptor.deprecatedMessage[option.argumentName] ?? "Deprecated option \(option.argumentName), print help for more information"
                 print(message, as: .warning)
                 try option.toOptions(string, &options)
             }
@@ -856,8 +853,6 @@ let fileArguments = [
 
 let formattingArguments = FormatOptions.Descriptor.formatting.map { $0.argumentName }
 let internalArguments = FormatOptions.Descriptor.internal.map { $0.argumentName }
-let deprecatedArguments = FormatOptions.Descriptor.deprecated.map { $0.argumentName }
-let renamedArguments = FormatOptions.Descriptor.renamed.map { $0.argumentName }
 
 let commandLineArguments = [
     // File options
@@ -875,4 +870,8 @@ let commandLineArguments = [
     // Misc
     "help",
     "version",
-] + fileArguments + deprecatedArguments + renamedArguments + formattingArguments + internalArguments
+] + fileArguments + formattingArguments + internalArguments
+
+let deprecatedArguments = FormatOptions.Descriptor.all.compactMap {
+    $0.isDeprecated ? $0.argumentName : nil
+}

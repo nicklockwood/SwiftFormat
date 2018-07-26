@@ -34,6 +34,10 @@ import Foundation
 struct SavedOption {
     var argumentValue: String
     let descriptor: FormatOptions.Descriptor
+
+    var isDeprecated: Bool {
+        return descriptor.isDeprecated
+    }
 }
 
 extension SavedOption: Codable {

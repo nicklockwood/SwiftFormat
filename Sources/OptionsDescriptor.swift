@@ -46,6 +46,14 @@ extension FormatOptions {
         let toOptions: (String, inout FormatOptions) throws -> Void
         let fromOptions: (FormatOptions) -> String
 
+        var deprecationMessage: String? {
+            return FormatOptions.Descriptor.deprecatedMessage[argumentName]
+        }
+
+        var isDeprecated: Bool {
+            return deprecationMessage != nil
+        }
+
         var defaultArgument: String {
             return fromOptions(FormatOptions.default)
         }
@@ -54,43 +62,51 @@ extension FormatOptions {
 
 extension FormatOptions.Descriptor {
     static let formatting: [FormatOptions.Descriptor] = [
-        .indentation,
-        .lineBreak,
-        .allowInlineSemicolons,
-        .spaceAroundRangeOperators,
-        .spaceAroundOperatorDeclarations,
-        .useVoid,
-        .indentCase,
-        .trailingCommas,
-        .indentComments,
-        .truncateBlankLines,
-        .allmanBraces,
-        .fileHeader,
-        .ifdefIndent,
-        .wrapArguments,
-        .wrapCollections,
-        .hexLiteralCase,
-        .exponentCase,
-        .decimalGrouping,
-        .binaryGrouping,
-        .octalGrouping,
-        .hexGrouping,
-        .fractionGrouping,
-        .exponentGrouping,
-        .letPatternPlacement,
-        .stripUnusedArguments,
-        .elsePosition,
-        .removeSelf,
+        indentation,
+        lineBreak,
+        allowInlineSemicolons,
+        spaceAroundRangeOperators,
+        spaceAroundOperatorDeclarations,
+        useVoid,
+        indentCase,
+        trailingCommas,
+        indentComments,
+        truncateBlankLines,
+        allmanBraces,
+        fileHeader,
+        ifdefIndent,
+        wrapArguments,
+        wrapCollections,
+        hexLiteralCase,
+        exponentCase,
+        decimalGrouping,
+        binaryGrouping,
+        octalGrouping,
+        hexGrouping,
+        fractionGrouping,
+        exponentGrouping,
+        letPatternPlacement,
+        stripUnusedArguments,
+        elsePosition,
+        removeSelf,
+
+        // Deprecated
+        insertBlankLines,
+        removeBlankLines,
+
+        // Renamed
+        hexLiterals,
+        wrapElements,
     ]
 
     static let `internal`: [FormatOptions.Descriptor] = [
-        .experimentalRules,
-        .fragment,
-        .ignoreConflictMarkers,
+        experimentalRules,
+        fragment,
+        ignoreConflictMarkers,
     ]
 
     /// An Array of all descriptors
-    static let all = formatting + `internal` + deprecated
+    static let all = formatting + `internal`
 
     /// A Dictionary of descriptors by name
     public static let byName: [String: FormatOptions.Descriptor] = {
@@ -627,16 +643,6 @@ extension FormatOptions.Descriptor {
     })
 
     // MARK: - DEPRECATED
-
-    static let deprecated = [
-        insertBlankLines,
-        removeBlankLines,
-    ]
-
-    static let renamed = [
-        hexLiterals,
-        wrapElements,
-    ]
 
     static let deprecatedMessage = [
         insertBlankLines.argumentName: "`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` or `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead.",

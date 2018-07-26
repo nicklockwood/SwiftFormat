@@ -61,7 +61,10 @@ final class OptionsViewController: NSViewController {
         let result = store
             .options
             .sorted(by: { $0.descriptor.displayName < $1.descriptor.displayName })
-            .map { option -> UserSelectionType in
+            .compactMap { option -> UserSelectionType? in
+                guard !option.isDeprecated else {
+                    return nil
+                }
                 let descriptor = option.descriptor
                 let selection = option.argumentValue
                 let saveOption: (String) -> Void = { [weak self] in

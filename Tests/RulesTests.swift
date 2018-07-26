@@ -2271,7 +2271,15 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testIfCaseEndifIndenting() {
+    func testEnumIfCaseEndifIndenting() {
+        let input = "enum Foo {\ncase bar\n#if x\ncase baz\n#endif\n}"
+        let output = "enum Foo {\n    case bar\n    #if x\n        case baz\n    #endif\n}"
+        let options = FormatOptions(indentCase: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSwitchIfCaseEndifIndenting() {
         let input = "switch foo {\ncase .bar: break\n#if x\ncase .baz: break\n#endif\n}"
         let output = "switch foo {\ncase .bar: break\n#if x\n    case .baz: break\n#endif\n}"
         let options = FormatOptions(indentCase: false)
@@ -2279,7 +2287,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfCaseEndifIndenting2() {
+    func testSwitchIfCaseEndifIndenting2() {
         let input = "switch foo {\ncase .bar: break\n#if x\ncase .baz: break\n#endif\n}"
         let output = "switch foo {\n    case .bar: break\n    #if x\n        case .baz: break\n    #endif\n}"
         let options = FormatOptions(indentCase: true)
@@ -2287,7 +2295,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfCaseEndifIndenting3() {
+    func testSwitchIfCaseEndifIndenting3() {
         let input = "switch foo {\n#if x\ncase .bar: break\ncase .baz: break\n#endif\n}"
         let output = "switch foo {\n#if x\n    case .bar: break\n    case .baz: break\n#endif\n}"
         let options = FormatOptions(indentCase: false)
@@ -2295,7 +2303,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfCaseEndifIndenting4() {
+    func testSwitchIfCaseEndifIndenting4() {
         let input = "switch foo {\n#if x\ncase .bar:\nbreak\ncase .baz:\nbreak\n#endif\n}"
         let output = "switch foo {\n    #if x\n        case .bar:\n            break\n        case .baz:\n            break\n    #endif\n}"
         let options = FormatOptions(indentCase: true)
@@ -2303,7 +2311,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfCaseElseCaseEndifIndenting() {
+    func testSwitchIfCaseElseCaseEndifIndenting() {
         let input = "switch foo {\n#if x\ncase .bar: break\n#else\ncase .baz: break\n#endif\n}"
         let output = "switch foo {\n#if x\n    case .bar: break\n#else\n    case .baz: break\n#endif\n}"
         let options = FormatOptions(indentCase: false)
@@ -2311,7 +2319,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfCaseElseCaseEndifIndenting2() {
+    func testSwitchIfCaseElseCaseEndifIndenting2() {
         let input = "switch foo {\n#if x\ncase .bar: break\n#else\ncase .baz: break\n#endif\n}"
         let output = "switch foo {\n    #if x\n        case .bar: break\n    #else\n        case .baz: break\n    #endif\n}"
         let options = FormatOptions(indentCase: true)
@@ -2319,7 +2327,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfEndifInsideCaseIndenting() {
+    func testSwitchIfEndifInsideCaseIndenting() {
         let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbreak\ncase .baz: break\n}"
         let output = "switch foo {\ncase .bar:\n    #if x\n        bar()\n    #endif\n    break\ncase .baz: break\n}"
         let options = FormatOptions(indentCase: false)
@@ -2327,7 +2335,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfEndifInsideCaseIndenting2() {
+    func testSwitchIfEndifInsideCaseIndenting2() {
         let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbreak\ncase .baz: break\n}"
         let output = "switch foo {\n    case .bar:\n        #if x\n            bar()\n        #endif\n        break\n    case .baz: break\n}"
         let options = FormatOptions(indentCase: true)

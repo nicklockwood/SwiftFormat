@@ -1446,10 +1446,12 @@ public func tokenize(_ source: String) -> [Token] {
                 }
             } else if case let .keyword(string) = token {
                 var scope = scope
+                var scopeIndex = scopeIndex
                 var scopeStackIndex = scopeIndexStack.count - 1
                 while scopeStackIndex > 0, scope == .startOfScope("#if") {
                     scopeStackIndex -= 1
-                    scope = tokens[scopeIndexStack[scopeStackIndex]]
+                    scopeIndex = scopeIndexStack[scopeStackIndex]
+                    scope = tokens[scopeIndex]
                 }
                 if [.startOfScope("{"), .startOfScope(":")].contains(scope) {
                     switch string {

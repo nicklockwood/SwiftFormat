@@ -36,14 +36,13 @@ extension UserDefaults {
 
     /// Nuke for dev purposes
     func clearAll(in domainName: String) {
-        guard let entries = persistentDomain(forName: domainName) else { return }
-        for (key, _) in entries {
-            set(nil, forKey: key)
+        persistentDomain(forName: domainName)?.forEach {
+            removeObject(forKey: $0.key)
         }
     }
 }
 
-struct Rule {
+struct Rule: Codable {
     let name: String
     var isEnabled: Bool
 }
@@ -71,7 +70,9 @@ extension Rule {
 }
 
 struct RulesStore {
-    private typealias RulesRepresentation = [String: Bool]
+    private typealias RuleName = String
+    private typealias RuleIsEnabled = Bool
+    private typealias RulesRepresentation = [RuleName: RuleIsEnabled]
     private let rulesKey = "rules"
     private let store: UserDefaults
 
@@ -92,14 +93,36 @@ struct RulesStore {
     }
 
     func save(_ rule: Rule) {
+        save([rule])
+    }
+
+    func save(_ rules: [Rule]) {
         var active = Set<String>()
         var disabled = Set<String>()
-        if rule.isEnabled {
-            active.insert(rule.name)
-        } else {
-            disabled.insert(rule.name)
+
+        for rule in rules {
+            if rule.isEnabled {
+                active.insert(rule.name)
+            } else {
+                disabled.insert(rule.name)
+            }
         }
         save(active: active, disabled: disabled)
+    }
+
+    func restore(_ rules: [Rule]) {
+        clear()
+        save(rules)
+        addNewRulesIfNeeded()
+    }
+
+    func resetRulesToDefaults() {
+        let allRuleNames = Set(FormatRules.byName.keys)
+        let disabledRules = Set(FormatRules.disabledByDefault)
+        let activeRules = allRuleNames.subtracting(disabledRules)
+
+        clear()
+        save(active: activeRules, disabled: disabledRules)
     }
 }
 
@@ -113,15 +136,6 @@ extension RulesStore {
         } else {
             addNewRulesIfNeeded()
         }
-    }
-
-    private func resetRulesToDefaults() {
-        let allRuleNames = Set(FormatRules.byName.keys)
-        let disabledRules = Set(FormatRules.disabledByDefault)
-        let activeRules = allRuleNames.subtracting(disabledRules)
-
-        clear()
-        save(active: activeRules, disabled: disabledRules)
     }
 
     private func addNewRulesIfNeeded() {
@@ -163,7 +177,6 @@ extension RulesStore {
         var rules = load()
         active.forEach { rules[$0] = true }
         disabled.forEach { rules[$0] = false }
-
         save(rules)
     }
 

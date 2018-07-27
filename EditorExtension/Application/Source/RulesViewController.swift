@@ -31,47 +31,48 @@
 
 import Cocoa
 
-/// Goal: Display Active & Inactive Rules and allow their state to be modified
 final class RulesViewController: NSViewController {
-    final class RuleViewModel {
-        let name: String
-
-        var isEnabled: Bool {
-            didSet {
-                enableDidChangeAction(isEnabled)
-            }
-        }
-
-        private let enableDidChangeAction: (Bool) -> Void
-
-        required init(name: String, isEnabled: Bool, enableDidChangeAction: @escaping (Bool) -> Void) {
-            self.name = name
-            self.isEnabled = isEnabled
-            self.enableDidChangeAction = enableDidChangeAction
-        }
-    }
-
-    private var ruleViewModels = [RuleViewModel]()
+    private var viewModels = [UserSelectionType]()
 
     @IBOutlet var tableView: NSTableView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        viewModels = buildRules()
+        NotificationCenter.default.addObserver(self, selector: #selector(didLoadNewConfiguration), name: .applicationDidLoadNewConfiguration, object: nil)
+    }
 
+    @objc private func didLoadNewConfiguration(_: Notification) {
+        viewModels = buildRules()
+        tableView?.reloadData()
+    }
+
+    private func buildRules() -> [UserSelectionType] {
         let store = RulesStore()
-
-        ruleViewModels = store
+        let rules: [UserSelectionType] = store
             .rules
             .sorted()
-            .map { rule in RuleViewModel(
-                name: rule.name,
-                isEnabled: rule.isEnabled,
-                enableDidChangeAction: {
-                    var updatedRule = rule
-                    updatedRule.isEnabled = $0
-                    store.save(updatedRule)
-                }
-            ) }
+            .map { rule in
+                let d = UserSelectionBinary(
+                    identifier: rule.name,
+                    title: rule.name,
+                    description: nil,
+                    isEnabled: true,
+                    selection: rule.isEnabled,
+                    observer: {
+                        var updatedRule = rule
+                        updatedRule.isEnabled = $0
+                        store.save(updatedRule)
+                    }
+                )
+                return UserSelectionType.binary(d)
+            }
+
+        return rules
+    }
+
+    func model(forRow row: Int) -> UserSelectionType {
+        return viewModels[row]
     }
 }
 
@@ -79,18 +80,18 @@ final class RulesViewController: NSViewController {
 
 extension RulesViewController: NSTableViewDataSource {
     func numberOfRows(in _: NSTableView) -> Int {
-        return ruleViewModels.count
+        return viewModels.count
     }
 
     func tableView(_: NSTableView, objectValueFor _: NSTableColumn?, row: Int) -> Any? {
-        return ruleViewModels[row]
+        return model(forRow: row).associatedValue()
     }
 }
 
 // MARK: - Table View Delegate
 
 extension RulesViewController: NSTableViewDelegate {
-    func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row _: Int) -> NSView? {
-        return tableView.makeView(withIdentifier: .ruleSelectionTableCellView, owner: self) as? RuleSelectionTableCellView
+    func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
+        return tableView.makeView(withIdentifier: .binarySelectionTableCellView, owner: self)
     }
 }

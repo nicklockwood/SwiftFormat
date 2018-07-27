@@ -1,11 +1,11 @@
 //
-//  CommandErrors.swift
-//  Swift Formatter
+//  EnumAssociable.swift
+//  SwiftFormat
 //
-//  Created by Tony Arnold on 6/10/16.
-//  Copyright 2016 Nick Lockwood
+//  Created by Vincent Bernier on 13-02-18.
+//  Copyright © 2018 Nick Lockwood.
 //
-//  Distributed under the permissive MIY license
+//  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
 //  https://github.com/nicklockwood/SwiftFormat
@@ -31,23 +31,37 @@
 
 import Foundation
 
-enum FormatCommandError: Error, LocalizedError, CustomNSError {
-    case notSwiftLanguage
-    case noSelection
-    case invalidSelection
+protocol EnumAssociable {}
 
-    var localizedDescription: String {
-        switch self {
-        case .notSwiftLanguage:
-            return "Error: not a Swift source file."
-        case .noSelection:
-            return "Error: no text selected."
-        case .invalidSelection:
-            return "Error: invalid selection."
+extension EnumAssociable {
+    private var _associatedValue: Any? {
+        let mirror = Mirror(reflecting: self)
+        precondition(mirror.displayStyle == Mirror.DisplayStyle.enum, "Can only be apply to an Enum")
+        let optionalValue = mirror.children.first?.value
+        if let value = optionalValue {
+            let description = "\(value)"
+            precondition(!description.contains("->") && !description.contains("(Function)"),
+                         "Doesn't work when associated value is a closure")
         }
+        return optionalValue
     }
 
-    var errorUserInfo: [String: Any] {
-        return [NSLocalizedDescriptionKey: localizedDescription]
+    func associatedValue<T: _Optional>() -> T {
+        guard let value = _associatedValue else {
+            return T._none
+        }
+        return value as! T
     }
+
+    func associatedValue<T>() -> T {
+        return _associatedValue as! T
+    }
+}
+
+protocol _Optional {
+    static var _none: Self { get }
+}
+
+extension Optional: _Optional {
+    static var _none: Optional { return none }
 }

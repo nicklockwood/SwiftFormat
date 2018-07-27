@@ -1,11 +1,11 @@
 //
-//  CommandErrors.swift
-//  Swift Formatter
+//  RuleSelectionTableCellView.swift
+//  SwiftFormat for Xcode
 //
-//  Created by Tony Arnold on 6/10/16.
-//  Copyright 2016 Nick Lockwood
+//  Created by Vincent Bernier on 28/01/18.
+//  Copyright © 2018 Nick Lockwood.
 //
-//  Distributed under the permissive MIY license
+//  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
 //  https://github.com/nicklockwood/SwiftFormat
@@ -29,25 +29,30 @@
 //  SOFTWARE.
 //
 
-import Foundation
+import Cocoa
 
-enum FormatCommandError: Error, LocalizedError, CustomNSError {
-    case notSwiftLanguage
-    case noSelection
-    case invalidSelection
+final class BinarySelectionTableCellView: NSTableCellView {
+    @IBOutlet var checkbox: NSButton!
 
-    var localizedDescription: String {
-        switch self {
-        case .notSwiftLanguage:
-            return "Error: not a Swift source file."
-        case .noSelection:
-            return "Error: no text selected."
-        case .invalidSelection:
-            return "Error: invalid selection."
+    @IBAction func toggleRuleValue(_ sender: NSButton) {
+        guard let binarySelection = objectValue as? UserSelectionBinary else {
+            return
+        }
+        binarySelection.selection = (sender.state == .on)
+    }
+
+    override var objectValue: Any? {
+        didSet {
+            guard let model = objectValue as? UserSelectionBinary else {
+                return
+            }
+            checkbox.isEnabled = model.isEnabled
+            checkbox.title = model.title ?? ""
+            checkbox.state = model.selection ? .on : .off
         }
     }
+}
 
-    var errorUserInfo: [String: Any] {
-        return [NSLocalizedDescriptionKey: localizedDescription]
-    }
+extension NSUserInterfaceItemIdentifier {
+    static let binarySelectionTableCellView = NSUserInterfaceItemIdentifier(rawValue: "BinarySelectionTableCellView")
 }

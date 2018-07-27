@@ -35,7 +35,7 @@ import Foundation
 public let version = "0.33.13"
 
 /// An enumeration of the types of error that may be thrown by SwiftFormat
-public enum FormatError: Error, CustomStringConvertible {
+public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomNSError {
     case reading(String)
     case writing(String)
     case parsing(String)
@@ -49,6 +49,14 @@ public enum FormatError: Error, CustomStringConvertible {
              let .options(string):
             return string
         }
+    }
+
+    public var localizedDescription: String {
+        return "Error: \(description)."
+    }
+
+    public var errorUserInfo: [String: Any] {
+        return [NSLocalizedDescriptionKey: localizedDescription]
     }
 }
 
@@ -254,13 +262,13 @@ public func applyRules(_ rules: [FormatRule],
 /// Returns the formatted token array, and the number of edits made
 public func format(_ tokens: [Token],
                    rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = FormatOptions()) throws -> [Token] {
+                   options: FormatOptions = .default) throws -> [Token] {
     return try applyRules(rules, to: tokens, with: options)
 }
 
 /// Format code with specified rules and options
 public func format(_ source: String,
                    rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = FormatOptions()) throws -> String {
+                   options: FormatOptions = .default) throws -> String {
     return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
 }

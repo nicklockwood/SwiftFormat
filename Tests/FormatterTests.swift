@@ -40,7 +40,7 @@ class FormatterTests: XCTestCase {
             .identifier("baz"),
         ]
         var output: [Token] = []
-        let formatter = Formatter(input, options: FormatOptions())
+        let formatter = Formatter(input, options: .default)
         formatter.forEachToken { i, token in
             output.append(token)
             if i == 1 {
@@ -57,7 +57,7 @@ class FormatterTests: XCTestCase {
             .identifier("baz"),
         ]
         var output: [Token] = []
-        let formatter = Formatter(input, options: FormatOptions())
+        let formatter = Formatter(input, options: .default)
         formatter.forEachToken { i, token in
             output.append(token)
             if i == 1 {
@@ -74,7 +74,7 @@ class FormatterTests: XCTestCase {
             .identifier("baz"),
         ]
         var output: [Token] = []
-        let formatter = Formatter(input, options: FormatOptions())
+        let formatter = Formatter(input, options: .default)
         formatter.forEachToken { i, token in
             output.append(token)
             if i == 1 {
@@ -92,7 +92,7 @@ class FormatterTests: XCTestCase {
             .commentBody("bar"),
             .linebreak("\n"),
         ]
-        let formatter = Formatter(input, options: FormatOptions())
+        let formatter = Formatter(input, options: .default)
         let index = formatter.index(before: 4, where: { !$0.isSpaceOrComment })
         XCTAssertEqual(index, 0)
     }
@@ -107,7 +107,7 @@ class FormatterTests: XCTestCase {
             .endOfScope("*/"),
             .linebreak("\n"),
         ]
-        let formatter = Formatter(input, options: FormatOptions())
+        let formatter = Formatter(input, options: .default)
         let index = formatter.index(before: 6, where: { !$0.isSpaceOrComment })
         XCTAssertEqual(index, 0)
     }

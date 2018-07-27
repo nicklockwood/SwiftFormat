@@ -1,8 +1,8 @@
 //
-//  RuleSelectionTableCellView.swift
+//  ListSelectionTableCellView.swift
 //  SwiftFormat for Xcode
 //
-//  Created by Vincent Bernier on 28/01/18.
+//  Created by Vincent Bernier on 03-02-18.
 //  Copyright © 2018 Nick Lockwood.
 //
 //  Distributed under the permissive MIT license
@@ -31,29 +31,31 @@
 
 import Cocoa
 
-final class RuleSelectionTableCellView: NSTableCellView {
-    @IBOutlet var checkbox: NSButton!
-
-    @IBAction func toggleRuleValue(_ sender: NSButton) {
-        guard let model = objectValue as? RulesViewController.RuleViewModel else {
+class ListSelectionTableCellView: NSTableCellView {
+    @IBOutlet var title: NSTextField!
+    @IBOutlet var dropDown: NSPopUpButton!
+    @IBAction func listSelectionChanged(_: NSPopUpButton) {
+        guard let model = objectValue as? UserSelectionList else {
             return
         }
-
-        model.isEnabled = (sender.state == .on)
+        model.selection = dropDown.selectedItem!.title
     }
 
     override var objectValue: Any? {
         didSet {
-            guard let ruleViewModel = objectValue as? RulesViewController.RuleViewModel else {
+            guard let model = objectValue as? UserSelectionList else {
                 return
             }
-
-            checkbox.title = ruleViewModel.name
-            checkbox.state = ruleViewModel.isEnabled ? .on : .off
+            title.textColor = model.isEnabled ? .textColor : .disabledControlTextColor
+            title.stringValue = model.title ?? ""
+            dropDown.isEnabled = model.isEnabled
+            dropDown.removeAllItems()
+            dropDown.addItems(withTitles: model.options.map { $0 })
+            dropDown.selectItem(withTitle: model.selection)
         }
     }
 }
 
 extension NSUserInterfaceItemIdentifier {
-    static let ruleSelectionTableCellView = NSUserInterfaceItemIdentifier(rawValue: "RuleSelectionTableCellView")
+    static let listSelectionTableCellView = NSUserInterfaceItemIdentifier(rawValue: "ListSelectionTableCellView")
 }

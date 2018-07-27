@@ -2671,6 +2671,34 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testEnumWithConditionalCase() {
+        let input = "enum Foo {\ncase bar\n#if baz\ncase baz\n#endif\n}"
+        let output: [Token] = [
+            .keyword("enum"),
+            .space(" "),
+            .identifier("Foo"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .keyword("case"),
+            .space(" "),
+            .identifier("bar"),
+            .linebreak("\n"),
+            .startOfScope("#if"),
+            .space(" "),
+            .identifier("baz"),
+            .linebreak("\n"),
+            .keyword("case"),
+            .space(" "),
+            .identifier("baz"),
+            .linebreak("\n"),
+            .endOfScope("#endif"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testSwitchWithConditionalCase() {
         let input = "switch foo {\ncase bar:\nbreak\n#if baz\ndefault:\nbreak\n#endif\n}"
         let output: [Token] = [

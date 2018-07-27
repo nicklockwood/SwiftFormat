@@ -153,20 +153,20 @@ class OptionsTests: XCTestCase {
         XCTAssertEqual(options.wrapArguments, output)
     }
 
-    // MARK: wrapElements
+    // MARK: wrapCollections
 
     func testInferWrapElementsAfterFirstArgument() {
         let input = "[foo: 1,\n    bar: 2, baz: 3]"
         let output = WrapMode.afterFirst
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.wrapElements, output)
+        XCTAssertEqual(options.wrapCollections, output)
     }
 
     func testInferWrapElementsAfterSecondArgument() {
         let input = "[foo, bar,\n]"
         let output = WrapMode.afterFirst
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.wrapElements, output)
+        XCTAssertEqual(options.wrapCollections, output)
     }
 
     // MARK: uppercaseHex
@@ -233,6 +233,32 @@ class OptionsTests: XCTestCase {
         let input = "[1000_00, 1_000, 100, 23, 50]"
         let options = inferOptions(from: tokenize(input))
         XCTAssertEqual(options.decimalGrouping, .ignore)
+    }
+
+    // MARK: fractionGrouping
+
+    func testInferFractionGrouping() {
+        let input = "[100.0_001, 1.00_002, 1.0, 23.001, 50]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.fractionGrouping)
+    }
+
+    func testInferFractionGrouping2() {
+        let input = "[100.0_001, 1.00_002, 1_000.0, 23_234.001, 50]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertTrue(options.fractionGrouping)
+    }
+
+    func testInferNoFractionGrouping() {
+        let input = "[1.00002, 1.0001, 1.103, 0.23, 0.50]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.fractionGrouping)
+    }
+
+    func testInferNoFractionGrouping2() {
+        let input = "[1_000.00002, 1_123.0001, 1.103, 0.23, 0.50]"
+        let options = inferOptions(from: tokenize(input))
+        XCTAssertFalse(options.fractionGrouping)
     }
 
     // MARK: binaryGrouping

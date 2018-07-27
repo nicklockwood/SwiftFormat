@@ -36,14 +36,23 @@ let swiftFormatFileExtension = "swiftformat"
 struct SwiftFormatCLIArgumentsFile {
     let rules: [Rule]
     let options: FormatOptions
+    let inferOptions: Bool
 
-    init(rules: [Rule], options: FormatOptions) {
+    init(rules: [Rule], options: FormatOptions, inferOptions: Bool) {
         self.rules = rules
         self.options = options
+        self.inferOptions = inferOptions
     }
 
     func encoded() throws -> Data {
         var arguments = ""
+
+        if inferOptions {
+            arguments += "--inferoptions true\n"
+        }
+
+        let options = commandLineArguments(for: self.options).map { "--\($0) \($1)\n" }.sorted()
+        arguments += options.joined()
 
         let rules = self.rules.sorted(by: { $0.name < $1.name })
         var defaultRules = Set(FormatRules.byName.map { $0.key })
@@ -59,9 +68,6 @@ struct SwiftFormatCLIArgumentsFile {
             arguments += "--disable \(disabled.map { $0.name }.joined(separator: ","))\n"
         }
 
-        let options = commandLineArguments(for: self.options).map { "--\($0) \($1)" }.sorted()
-        arguments += options.joined(separator: "\n")
-
         guard let result = arguments.data(using: .utf8) else {
             throw FormatError.writing("problem encoding configuration data")
         }
@@ -76,6 +82,8 @@ struct SwiftFormatCLIArgumentsFile {
         do {
             let inputs = input.components(separatedBy: CharacterSet.whitespacesAndNewlines)
             let args = try preprocessArguments(inputs, commandLineArguments)
+
+            let inferOptions = args["inferoptions"].map { $0 != "false" } ?? false
 
             let allRules = Set(FormatRules.byName.map { $0.key })
             func getRules(_ name: String) throws -> Set<String>? {
@@ -101,7 +109,7 @@ struct SwiftFormatCLIArgumentsFile {
             CLI.print = { _, _ in } // Prevent crash if file contains deprecated rules
             let formatOptions = try formatOptionsFor(args)
 
-            return SwiftFormatCLIArgumentsFile(rules: rules, options: formatOptions)
+            return SwiftFormatCLIArgumentsFile(rules: rules, options: formatOptions, inferOptions: inferOptions)
         } catch let error as FormatError {
             throw error
         } catch {

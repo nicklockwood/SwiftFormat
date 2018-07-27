@@ -41,13 +41,13 @@ final class OptionsViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        viewModels = buildOptions()
-        inferOptionsButton.state = store.inferOptions ? .on : .off
-        NotificationCenter.default.addObserver(self, selector: #selector(didLoadNewConfiguration), name: .applicationDidLoadNewConfiguration, object: nil)
+        updateConfiguration()
+        NotificationCenter.default.addObserver(self, selector: #selector(updateConfiguration), name: .applicationDidLoadNewConfiguration, object: nil)
     }
 
-    @objc private func didLoadNewConfiguration(_: Notification) {
+    @objc private func updateConfiguration() {
         viewModels = buildOptions()
+        inferOptionsButton.state = store.inferOptions ? .on : .off
         tableView?.reloadData()
     }
 

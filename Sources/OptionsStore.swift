@@ -73,6 +73,21 @@ extension SavedOption {
     }
 }
 
+extension FormatOptions {
+    init(_ options: [SavedOption]) {
+        var formatOptions = FormatOptions.default
+        options.forEach { try! $0.descriptor.toOptions($0.argumentValue, &formatOptions) }
+        self = formatOptions
+    }
+
+    var savedOptions: [SavedOption] {
+        return FormatOptions.Descriptor.all.map {
+            let value = $0.fromOptions(self)
+            return SavedOption(argumentValue: value, descriptor: $0)
+        }
+    }
+}
+
 struct OptionsStore {
     fileprivate typealias OptionID = String
     fileprivate typealias ArgumentValue = String
@@ -96,10 +111,7 @@ struct OptionsStore {
     }
 
     var formatOptions: FormatOptions {
-        let allOptions = options
-        var formatOptions = FormatOptions.default
-        allOptions.forEach { try! $0.descriptor.toOptions($0.argumentValue, &formatOptions) }
-        return formatOptions
+        return FormatOptions(options)
     }
 
     var inferOptions: Bool {
@@ -118,6 +130,12 @@ struct OptionsStore {
     func save(_ options: [SavedOption]) {
         let optRepresentations = options.map { (id: $0.descriptor.argumentName, arg: $0.argumentValue) }
         save(optRepresentations)
+    }
+
+    func restore(_ options: FormatOptions) {
+        clear()
+        save(options.savedOptions)
+        addNewOptionsIfNeeded()
     }
 
     func restore(_ options: [SavedOption]) {

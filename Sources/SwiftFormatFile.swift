@@ -33,146 +33,79 @@ import Foundation
 
 let swiftFormatFileExtension = "swiftformat"
 
-struct SwiftFormatFile: Codable {
-    private struct Version: Codable {
-        let version: Int
-    }
-
-    private let version: Int
-    let rules: [Rule]
-    let options: [SavedOption]
-
-    init(rules: [Rule], options: [SavedOption]) {
-        self.init(version: 1, rules: rules, options: options)
-    }
-
-    private init(version: Int, rules: [Rule], options: [SavedOption]) {
-        self.version = version
-        self.rules = rules
-        self.options = options
-    }
-
-    func encoded() throws -> Data {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
-        let dataToWrite: Data
-        do {
-            dataToWrite = try encoder.encode(self)
-        } catch let error {
-            throw FormatError.writing("Problem while encoding configuration data. [\(error)]")
-        }
-
-        return dataToWrite
-    }
-
-    static func decoded(_ data: Data) throws -> SwiftFormatFile {
-        let decoder = JSONDecoder()
-        let result: SwiftFormatFile
-        do {
-            let version = try decoder.decode(Version.self, from: data)
-            if version.version != 1 {
-                throw FormatError.parsing("Unsupported version number: \(version.version)")
-            }
-            result = try decoder.decode(SwiftFormatFile.self, from: data)
-        } catch let error {
-            throw FormatError.parsing("Problem while decoding data. [\(error)]")
-        }
-
-        return result
-    }
-}
-
 struct SwiftFormatCLIArgumentsFile {
     let rules: [Rule]
-    let options: [SavedOption]
+    let options: FormatOptions
 
-    init(rules: [Rule], options: [SavedOption]) {
+    init(rules: [Rule], options: FormatOptions) {
         self.rules = rules
         self.options = options
     }
 
     func encoded() throws -> Data {
-        let ruleEnabled = rules
-            .filter { $0.isEnabled }
-            .map { $0.name }
-            .joined(separator: ",")
-            .reduce("--enable ", { (acc: String, char: Character) in
-                acc.appending(String(char))
-            })
-        let ruleDisabled = rules
-            .filter { !$0.isEnabled }
-            .map { $0.name }
-            .joined(separator: ",")
-            .reduce("--disable ", { (acc: String, char: Character) in
-                acc.appending(String(char))
-            })
-        let optionsValues = options
-            .map { "--" + $0.descriptor.argumentName + " " + $0.argumentValue }
-            .joined(separator: "\n")
+        var arguments = ""
 
-        let content = [
-            ruleEnabled,
-            ruleDisabled,
-            optionsValues,
-        ].joined(separator: "\n")
+        let rules = self.rules.sorted(by: { $0.name < $1.name })
+        var defaultRules = Set(FormatRules.byName.map { $0.key })
+        FormatRules.disabledByDefault.forEach { defaultRules.remove($0) }
 
-        guard let result = content.data(using: .utf8) else {
-            throw FormatError.writing("Problem while encoding configuration data for bash file.")
+        let enabled = rules.filter { $0.isEnabled && !defaultRules.contains($0.name) }
+        if !enabled.isEmpty {
+            arguments += "--enable \(enabled.map { $0.name }.joined(separator: ","))\n"
+        }
+
+        let disabled = rules.filter { !$0.isEnabled && defaultRules.contains($0.name) }
+        if !disabled.isEmpty {
+            arguments += "--disable \(disabled.map { $0.name }.joined(separator: ","))\n"
+        }
+
+        let options = commandLineArguments(for: self.options).map { "--\($0) \($1)" }.sorted()
+        arguments += options.joined(separator: "\n")
+
+        guard let result = arguments.data(using: .utf8) else {
+            throw FormatError.writing("problem encoding configuration data")
         }
         return result
     }
 
     static func decoded(_ data: Data) throws -> SwiftFormatCLIArgumentsFile {
         guard let input = String(data: data, encoding: .utf8) else {
-            throw FormatError.reading("Not able to read data for configuration file")
+            throw FormatError.reading("unable to read data for configuration file")
         }
 
         do {
             let inputs = input.components(separatedBy: CharacterSet.whitespacesAndNewlines)
             let args = try preprocessArguments(inputs, commandLineArguments)
 
+            let allRules = Set(FormatRules.byName.map { $0.key })
+            func getRules(_ name: String) throws -> Set<String>? {
+                guard let rules = args[name]?.components(separatedBy: ",") else {
+                    return nil
+                }
+                try rules.forEach {
+                    if !allRules.contains($0) {
+                        throw FormatError.reading("unknown rule '\($0)' in --\(name)")
+                    }
+                }
+                return Set(rules)
+            }
+            var ruleNames = try getRules("rules") ?? {
+                var defaultRules = allRules
+                FormatRules.disabledByDefault.forEach { defaultRules.remove($0) }
+                return defaultRules
+            }()
+            try getRules("enable")?.forEach { ruleNames.insert($0) }
+            try getRules("disable")?.forEach { ruleNames.remove($0) }
+            let rules = allRules.map { Rule(name: $0, isEnabled: ruleNames.contains($0)) }
+
+            CLI.print = { _, _ in } // Prevent crash if file contains deprecated rules
             let formatOptions = try formatOptionsFor(args)
-            let descriptors = FormatOptions.Descriptor.all
-            var optionMap = [String: FormatOptions.Descriptor]()
-            descriptors.forEach { optionMap[$0.argumentName] = $0 }
 
-            let options: [SavedOption] = descriptors.map {
-                let value = $0.fromOptions(formatOptions)
-                return SavedOption(argumentValue: value, descriptor: $0)
-            }
-
-            let enabled: [String] = args["enable"]?.components(separatedBy: ",") ?? []
-            let disabled: [String] = args["disable"]?.components(separatedBy: ",") ?? []
-            var ruleNames = Set(FormatRules.byName.map { $0.key })
-
-            let enabledRules = try enabled.map { name -> Rule in
-                if ruleNames.remove(name) == nil {
-                    throw FormatError.reading("Unknown rule '\(name)' in 'enable' configuration")
-                }
-                return Rule(name: name, isEnabled: true)
-            }
-            let disabledRules = try disabled.map { name -> Rule in
-                if ruleNames.remove(name) == nil {
-                    throw FormatError.reading("Unknown rule '\(name)' in 'disable' configuration")
-                }
-                return Rule(name: name, isEnabled: false)
-            }
-
-            var rules = enabledRules + disabledRules
-            if !ruleNames.isEmpty {
-                //  deal with newer rules by setting default values
-                let disabledByDefault = Set(FormatRules.disabledByDefault)
-                for unSepcifiedRule in ruleNames {
-                    let rule = Rule(name: unSepcifiedRule, isEnabled: !disabledByDefault.contains(unSepcifiedRule))
-                    rules.append(rule)
-                }
-            }
-
-            return SwiftFormatCLIArgumentsFile(rules: rules, options: options)
+            return SwiftFormatCLIArgumentsFile(rules: rules, options: formatOptions)
         } catch let error as FormatError {
             throw error
         } catch {
-            throw FormatError.reading("Not able to read data for configuration file")
+            throw FormatError.reading("unable to read data for configuration file")
         }
     }
 }

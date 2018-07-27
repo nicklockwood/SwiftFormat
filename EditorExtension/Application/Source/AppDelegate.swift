@@ -88,7 +88,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let formatFile = SwiftFormatCLIArgumentsFile(rules: RulesStore().rules,
-                                                     options: OptionsStore().options)
+                                                     options: OptionsStore().formatOptions)
         let dataToWrite: Data
         do {
             dataToWrite = try formatFile.encoded()

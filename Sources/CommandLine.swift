@@ -748,7 +748,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             // Long argument names
             let key = String(arg.unicodeScalars.dropFirst(2))
             if !names.contains(key) {
-                throw FormatError.options("unknown argument: \(arg)")
+                throw FormatError.options("unknown option --\(key)")
             }
             name = key
             namedArgs[name] = ""
@@ -758,9 +758,9 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             let flag = String(arg.unicodeScalars.dropFirst())
             let matches = names.filter { $0.hasPrefix(flag) }
             if matches.count > 1 {
-                throw FormatError.options("ambiguous argument: \(arg)")
+                throw FormatError.options("ambiguous flag -\(flag)")
             } else if matches.count == 0 {
-                throw FormatError.options("unknown argument: \(arg)")
+                throw FormatError.options("unknown flag -\(flag)")
             } else {
                 name = matches[0]
                 namedArgs[name] = ""
@@ -780,10 +780,13 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
 
 /// Get command line arguments for formatting options
 /// (excludes non-formatting options and deprecated/renamed options)
-func commandLineArguments(for options: FormatOptions) -> [String: String] {
+func commandLineArguments(for options: FormatOptions, excludingDefaults: Bool = false) -> [String: String] {
     var args = [String: String]()
     for descriptor in FormatOptions.Descriptor.formatting where !descriptor.isDeprecated {
-        args[descriptor.argumentName] = descriptor.fromOptions(options)
+        let value = descriptor.fromOptions(options)
+        if !excludingDefaults || value != descriptor.fromOptions(.default) {
+            args[descriptor.argumentName] = value
+        }
     }
     return args
 }
@@ -805,7 +808,7 @@ private func processOption(_ key: String,
     do {
         try handler(value)
     } catch {
-        throw FormatError.options("unsupported --\(key) value: \(value)")
+        throw FormatError.options("unsupported --\(key) value '\(value)'")
     }
 }
 

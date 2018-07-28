@@ -193,8 +193,12 @@ class CommandLineTests: XCTestCase {
     // MARK: help
 
     func testHelpLineLength() {
-        CLI.print = { message, _ in
-            XCTAssertLessThanOrEqual(message.count, 80, message)
+        CLI.print = { allHelpMessage, _ in
+            allHelpMessage
+                .components(separatedBy: "\n")
+                .forEach { message in
+                    XCTAssertLessThanOrEqual(message.count, 80, message)
+                }
         }
         printHelp()
     }
@@ -212,11 +216,15 @@ class CommandLineTests: XCTestCase {
     func testHelpOptionsDocumented() {
         var arguments = Set(commandLineArguments)
         deprecatedArguments.forEach { arguments.remove($0) }
-        CLI.print = { message, _ in
-            if message.hasPrefix("--") {
-                let name = String(message["--".endIndex ..< message.endIndex]).components(separatedBy: " ")[0]
-                arguments.remove(name)
-            }
+        CLI.print = { allHelpMessage, _ in
+            allHelpMessage
+                .components(separatedBy: "\n")
+                .forEach { message in
+                    if message.hasPrefix("--") {
+                        let name = String(message["--".endIndex ..< message.endIndex]).components(separatedBy: " ")[0]
+                        arguments.remove(name)
+                    }
+                }
         }
         printHelp()
         XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ","))")

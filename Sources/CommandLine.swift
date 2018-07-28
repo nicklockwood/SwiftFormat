@@ -82,69 +82,71 @@ public enum ExitCode: Int32 {
 }
 
 func printHelp() {
-    print("")
-    print("swiftformat, version \(version)")
-    print("copyright (c) 2016 Nick Lockwood")
-    print("")
-    print("--help             print this help page")
-    print("--version          print the currently installed swiftformat version")
-    print("")
-    print("swiftformat can operate on file & directories, or directly on input from stdin:")
-    print("")
-    print("usage: swiftformat [<file> <file> ...] [--inferoptions] [--output path] [...]")
-    print("")
-    print("<file> <file> ...  one or more swift files or directory paths to be processed")
-    print("")
-    print("--inferoptions     instead of formatting input, use it to infer format options")
-    print("--output           output path for formatted file(s) (defaults to input path)")
-    print("--exclude          list of file or directory paths to ignore (comma-delimited)")
-    print("--symlinks         how symlinks are handled. \"follow\" or \"ignore\" (default)")
-    print("--fragment         input is part of a larger file. \"true\" or \"false\" (default)")
-    print("--conflictmarkers  merge conflict markers, either \"reject\" (default) or \"ignore\"")
-    print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
-    print("--verbose          display detailed formatting output and warnings/errors")
-    print("--dryrun           run in \"dry\" mode (without actually changing any files)")
-    print("--lint             returns non-zero exit code if files would be changed")
-    print("")
-    print("swiftformat has a number of rules that can be enabled or disabled. by default")
-    print("most rules are enabled. use --rules to display all enabled/disabled rules:")
-    print("")
-    print("--rules            the list of rules to apply (pass nothing to print all rules)")
-    print("--disable          a list of format rules to be disabled (comma-delimited)")
-    print("--enable           a list of disabled rules to be re-enabled (comma-delimited)")
-    print("--experimental     experimental rules. \"enabled\" or \"disabled\" (default)")
-    print("")
-    print("swiftformat's rules can be configured using options. a given option may affect")
-    print("multiple rules. options have no affect if the related rules have been disabled:")
-    print("")
-    print("--allman           use allman indentation style. \"true\" or \"false\" (default)")
-    print("--binarygrouping   binary grouping,threshold (default: 4,8) or \"none\", \"ignore\"")
-    print("--commas           commas in collection literals. \"always\" (default) or \"inline\"")
-    print("--comments         indenting of comment bodies. \"indent\" (default) or \"ignore\"")
-    print("--decimalgrouping  decimal grouping,threshold (default: 3,6) or \"none\", \"ignore\"")
-    print("--elseposition     placement of else/catch. \"same-line\" (default) or \"next-line\"")
-    print("--empty            how empty values are represented. \"void\" (default) or \"tuple\"")
-    print("--exponentcase     case of 'e' in numbers. \"lowercase\" or \"uppercase\" (default)")
-    print("--exponentgrouping group exponent digits, \"enabled\" or \"disabled\" (default)")
-    print("--fractiongrouping group digits after '.', \"enabled\" or \"disabled\" (default)")
-    print("--header           header comments. \"strip\", \"ignore\", or the text you wish use")
-    print("--hexgrouping      hex grouping,threshold (default: 4,8) or \"none\", \"ignore\"")
-    print("--hexliteralcase   casing for hex literals. \"uppercase\" (default) or \"lowercase\"")
-    print("--ifdef            #if indenting. \"indent\" (default), \"noindent\" or \"outdent\"")
-    print("--indent           number of spaces to indent, or \"tab\" to use tabs")
-    print("--indentcase       indent cases inside a switch. \"true\" or \"false\" (default)")
-    print("--linebreaks       linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
-    print("--octalgrouping    octal grouping,threshold or \"none\", \"ignore\". default: 4,8")
-    print("--operatorfunc     spacing for operator funcs. \"spaced\" (default) or \"nospace\"")
-    print("--patternlet       let/var placement in patterns. \"hoist\" (default) or \"inline\"")
-    print("--ranges           spacing for ranges. \"spaced\" (default) or \"nospace\"")
-    print("--semicolons       allow semicolons. \"never\" or \"inline\" (default)")
-    print("--self             use self for member variables. \"remove\" (default) or \"insert\"")
-    print("--stripunusedargs  \"closure-only\", \"unnamed-only\" or \"always\" (default)")
-    print("--trimwhitespace   trim trailing space. \"always\" (default) or \"nonblank-lines\"")
-    print("--wraparguments    wrap function args. \"beforefirst\", \"afterfirst\", \"preserve\"")
-    print("--wrapcollections  wrap array/dict. \"beforefirst\", \"afterfirst\", \"preserve\"")
-    print("")
+    print("""
+
+    swiftformat, version \(version)
+    copyright (c) 2016 Nick Lockwood
+
+    --help             print this help page
+    --version          print the currently installed swiftformat version
+
+    swiftformat can operate on file & directories, or directly on input from stdin:
+
+    usage: swiftformat [<file> <file> ...] [--inferoptions] [--output path] [...]
+
+    <file> <file> ...  one or more swift files or directory paths to be processed
+
+    --inferoptions     instead of formatting input, use it to infer format options
+    --output           output path for formatted file(s) (defaults to input path)
+    --exclude          list of file or directory paths to ignore (comma-delimited)
+    --symlinks         how symlinks are handled. "follow" or "ignore" (default)
+    --fragment         input is part of a larger file. "true" or "false" (default)
+    --conflictmarkers  merge conflict markers, either "reject" (default) or "ignore"
+    --cache            path to cache file, or "clear" or "ignore" the default cache
+    --verbose          display detailed formatting output and warnings/errors
+    --dryrun           run in "dry" mode (without actually changing any files)
+    --lint             returns non-zero exit code if files would be changed
+
+    swiftformat has a number of rules that can be enabled or disabled. by default
+    most rules are enabled. use --rules to display all enabled/disabled rules:
+
+    --rules            the list of rules to apply (pass nothing to print all rules)
+    --disable          a list of format rules to be disabled (comma-delimited)
+    --enable           a list of disabled rules to be re-enabled (comma-delimited)
+    --experimental     experimental rules. "enabled" or "disabled" (default)
+
+    swiftformat's rules can be configured using options. a given option may affect
+    multiple rules. options have no affect if the related rules have been disabled:
+
+    --allman           use allman indentation style. "true" or "false" (default)
+    --binarygrouping   binary grouping,threshold (default: 4,8) or "none", "ignore"
+    --commas           commas in collection literals. "always" (default) or "inline"
+    --comments         indenting of comment bodies. "indent" (default) or "ignore"
+    --decimalgrouping  decimal grouping,threshold (default: 3,6) or "none", "ignore"
+    --elseposition     placement of else/catch. "same-line" (default) or "next-line"
+    --empty            how empty values are represented. "void" (default) or "tuple"
+    --exponentcase     case of 'e' in numbers. "lowercase" or "uppercase" (default)
+    --exponentgrouping group exponent digits, "enabled" or "disabled" (default)
+    --fractiongrouping group digits after '.', "enabled" or "disabled" (default)
+    --header           header comments. "strip", "ignore", or the text you wish use
+    --hexgrouping      hex grouping,threshold (default: 4,8) or "none", "ignore"
+    --hexliteralcase   casing for hex literals. "uppercase" (default) or "lowercase"
+    --ifdef            #if indenting. "indent" (default), "noindent" or "outdent"
+    --indent           number of spaces to indent, or "tab" to use tabs
+    --indentcase       indent cases inside a switch. "true" or "false" (default)
+    --linebreaks       linebreak character to use. "cr", "crlf" or "lf" (default)
+    --octalgrouping    octal grouping,threshold or "none", "ignore". default: 4,8
+    --operatorfunc     spacing for operator funcs. "spaced" (default) or "nospace"
+    --patternlet       let/var placement in patterns. "hoist" (default) or "inline"
+    --ranges           spacing for ranges. "spaced" (default) or "nospace"
+    --semicolons       allow semicolons. "never" or "inline" (default)
+    --self             use self for member variables. "remove" (default) or "insert"
+    --stripunusedargs  "closure-only", "unnamed-only" or "always" (default)
+    --trimwhitespace   trim trailing space. "always" (default) or "nonblank-lines"
+    --wraparguments    wrap function args. "beforefirst", "afterfirst", "preserve"
+    --wrapcollections  wrap array/dict. "beforefirst", "afterfirst", "preserve"
+
+    """)
 }
 
 func expandPath(_ path: String, in directory: String) -> URL {

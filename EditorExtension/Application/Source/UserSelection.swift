@@ -122,8 +122,8 @@ final class UserSelectionFreeText: UserSelection {
         isEnabled: Bool,
         selection: String,
         observer: ((String) -> Void)? = nil,
-        validationStrategy: @escaping ((String) -> Bool
-    ) = UserSelectionFreeText.defaultValidationStrategy) {
+        validationStrategy: @escaping ((String) -> Bool) = UserSelectionFreeText.defaultValidationStrategy
+    ) {
         self.selection = selection
         selectionObserver = observer
         self.validationStrategy = validationStrategy

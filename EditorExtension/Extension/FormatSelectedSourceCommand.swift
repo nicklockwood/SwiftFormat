@@ -58,12 +58,10 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         }.joined()
 
         do {
-            let rules = FormatRules.all(named:
-                RulesStore()
-                    .rules
-                    .filter { $0.isEnabled }
-                    .map { $0.name }
-            )
+            let rules = FormatRules.all(named: RulesStore()
+                .rules
+                .filter { $0.isEnabled }
+                .map { $0.name })
 
             let formattedSource = try format(sourceToFormat, rules: rules, options: options)
             if formattedSource == sourceToFormat {
@@ -77,7 +75,8 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
             invocation.buffer.lines.insert(formattedSource, at: selection.start.line)
 
             let updatedSelectionRange = rangeForDifferences(
-                in: selection, between: sourceToFormat, and: formattedSource)
+                in: selection, between: sourceToFormat, and: formattedSource
+            )
 
             invocation.buffer.selections.add(updatedSelectionRange)
 

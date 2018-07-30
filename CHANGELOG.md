@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.34.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.34.0) (2018-07-30)
+
+- You can now configure format options for the Xcode Source Editor Extension (big thanks to @vinceburn for this feature)
+- Restored ability to build the swiftformat command-line app using Xcode 9.2 on macOS Sierra
+- Xcode Source Editor Extension no longer fails when using Playgrounds with multiple pages 
+- The `--wrapelementss` option has been renamed to `--wrapcollections`
+- Added new `--wraparguments preserve` and `--wrapcollections preserve` options
+- Added `--fractiongrouping` & `--exponentgrouping` options
+- Improved formatting of Xcode Source Editor Extension error messages
+- Fixed a bug where parens were incorrectly removed after an image literal
+
 ## [0.33.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.13) (2018-07-25)
 
 - Fixed bug where required parens were incorrectly removed from around a closure type

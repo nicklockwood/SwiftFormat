@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-public let version = "0.33.13"
+public let version = "0.34.0"
 
 /// An enumeration of the types of error that may be thrown by SwiftFormat
 public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomNSError {
@@ -88,7 +88,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
                            concurrent: Bool = true,
                            block: @escaping (URL, URL) throws -> () throws -> Void) -> [Error] {
     guard let resourceValues = try? inputURL.resourceValues(
-        forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])) else {
+        forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])
+    ) else {
         if FileManager.default.fileExists(atPath: inputURL.path) {
             return [FormatError.reading("failed to read attributes for \(inputURL.path)")]
         }
@@ -139,7 +140,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
             }
         } else if resourceValues.isDirectory == true {
             guard let files = try? manager.contentsOfDirectory(
-                at: inputURL, includingPropertiesForKeys: keys, options: .skipsHiddenFiles) else {
+                at: inputURL, includingPropertiesForKeys: keys, options: .skipsHiddenFiles
+            ) else {
                 onComplete { throw FormatError.reading("failed to read contents of directory at \(inputURL.path)") }
                 return
             }

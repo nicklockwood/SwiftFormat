@@ -50,8 +50,7 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
                 RulesStore()
                     .rules
                     .filter { $0.isEnabled }
-                    .map { $0.name }
-            )
+                    .map { $0.name })
 
             let output = try format(tokens, rules: rules, options: options)
             if output == tokens {

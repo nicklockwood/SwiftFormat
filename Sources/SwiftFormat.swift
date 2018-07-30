@@ -272,3 +272,15 @@ public func format(_ source: String,
                    options: FormatOptions = .default) throws -> String {
     return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
 }
+
+// MARK: Xcode 9.2 compatibility
+
+#if !swift(>=4.1)
+
+    extension Sequence {
+        func compactMap<T>(_ transform: (Element) throws -> T?) rethrows -> [T] {
+            return try flatMap { try transform($0).map { [$0] } ?? [] }
+        }
+    }
+
+#endif

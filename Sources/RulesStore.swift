@@ -42,7 +42,7 @@ extension UserDefaults {
     }
 }
 
-struct Rule: Codable {
+struct Rule {
     let name: String
     var isEnabled: Bool
 }

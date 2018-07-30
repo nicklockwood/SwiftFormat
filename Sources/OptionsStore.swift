@@ -125,6 +125,7 @@ struct OptionsStore {
     }
 
     func resetOptionsToDefaults() {
+        inferOptions = true
         let options = FormatOptions.Descriptor.formatting.map { (id: $0.argumentName, arg: $0.defaultArgument) }
         clear()
         save(options)

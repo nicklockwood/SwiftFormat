@@ -3665,6 +3665,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testParensNotRemovedBeforeIfBody4() {
+        let input = "if let data = #imageLiteral(resourceName: \"abc.png\").pngData() { /* some code */ }"
+        let output = "if let data = #imageLiteral(resourceName: \"abc.png\").pngData() { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testParensNotRemovedBeforeIfBodyAfterTry() {
         let input = "if let foo = try bar() { /* some code */ }"
         let output = "if let foo = try bar() { /* some code */ }"

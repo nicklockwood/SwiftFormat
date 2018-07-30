@@ -1623,10 +1623,8 @@ extension FormatRules {
                     ), formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousIndex) != .keyword("func") {
                     if var prevIndex = formatter.index(of: .keyword, before: i) {
                         var prevKeyword = formatter.tokens[prevIndex]
-                        while [
-                            .keyword("try"), .keyword("is"), .keyword("as"),
-                            .keyword("#color"), .keyword("#image"), .keyword("#selector"),
-                        ].contains(prevKeyword),
+                        while prevKeyword.string.hasPrefix("#") || prevKeyword.string.hasPrefix("@") ||
+                            [.keyword("try"), .keyword("is"), .keyword("as")].contains(prevKeyword),
                             let index = formatter.index(of: .keyword, before: prevIndex) {
                             prevIndex = index
                             prevKeyword = formatter.tokens[prevIndex]

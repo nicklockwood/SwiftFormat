@@ -72,8 +72,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 let configuration = try SwiftFormatCLIArgumentsFile.decoded(data)
                 RulesStore().restore(configuration.rules)
-                OptionsStore().restore(configuration.options)
-                OptionsStore().inferOptions = configuration.inferOptions
+                if let options = configuration.options {
+                    OptionsStore().inferOptions = false
+                    OptionsStore().restore(options)
+                } else {
+                    OptionsStore().inferOptions = true
+                }
 
                 NotificationCenter.default.post(name: .applicationDidLoadNewConfiguration, object: nil)
             } catch let error {
@@ -88,9 +92,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let formatFile = SwiftFormatCLIArgumentsFile(rules: RulesStore().rules,
-                                                     options: OptionsStore().formatOptions,
-                                                     inferOptions: OptionsStore().inferOptions)
+        let optionsStore = OptionsStore()
+        let options = optionsStore.inferOptions ? nil : optionsStore.formatOptions
+        let formatFile = SwiftFormatCLIArgumentsFile(rules: RulesStore().rules, options: options)
         let dataToWrite: Data
         do {
             dataToWrite = try formatFile.encoded()

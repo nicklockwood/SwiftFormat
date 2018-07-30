@@ -35,24 +35,19 @@ let swiftFormatFileExtension = "swiftformat"
 
 struct SwiftFormatCLIArgumentsFile {
     let rules: [Rule]
-    let options: FormatOptions
-    let inferOptions: Bool
+    let options: FormatOptions?
 
-    init(rules: [Rule], options: FormatOptions, inferOptions: Bool) {
+    init(rules: [Rule], options: FormatOptions?) {
         self.rules = rules
         self.options = options
-        self.inferOptions = inferOptions
     }
 
     func encoded() throws -> Data {
         var arguments = ""
 
-        if inferOptions {
-            arguments += "--inferoptions true\n"
+        if let options = options {
+            arguments += commandLineArguments(for: options).map { "--\($0) \($1)\n" }.sorted().joined()
         }
-
-        let options = commandLineArguments(for: self.options).map { "--\($0) \($1)\n" }.sorted()
-        arguments += options.joined()
 
         let rules = self.rules.sorted(by: { $0.name < $1.name })
         var defaultRules = Set(FormatRules.byName.map { $0.key })
@@ -83,8 +78,6 @@ struct SwiftFormatCLIArgumentsFile {
             let inputs = input.components(separatedBy: CharacterSet.whitespacesAndNewlines)
             let args = try preprocessArguments(inputs, commandLineArguments)
 
-            let inferOptions = args["inferoptions"].map { $0 != "false" } ?? false
-
             let allRules = Set(FormatRules.byName.map { $0.key })
             func getRules(_ name: String) throws -> Set<String>? {
                 guard let rules = args[name]?.components(separatedBy: ",") else {
@@ -107,9 +100,7 @@ struct SwiftFormatCLIArgumentsFile {
             let rules = allRules.map { Rule(name: $0, isEnabled: ruleNames.contains($0)) }
 
             CLI.print = { _, _ in } // Prevent crash if file contains deprecated rules
-            let formatOptions = try formatOptionsFor(args)
-
-            return SwiftFormatCLIArgumentsFile(rules: rules, options: formatOptions, inferOptions: inferOptions)
+            return try SwiftFormatCLIArgumentsFile(rules: rules, options: formatOptionsFor(args))
         } catch let error as FormatError {
             throw error
         } catch {

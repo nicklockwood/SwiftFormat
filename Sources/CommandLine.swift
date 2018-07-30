@@ -209,7 +209,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
     do {
         // Get options
         let args = try preprocessArguments(args, commandLineArguments)
-        let formatOptions = try formatOptionsFor(args)
+        let formatOptions = try formatOptionsFor(args) ?? .default
         let fileOptions = try fileOptionsFor(args)
 
         // Show help if requested specifically or if no arguments are passed
@@ -812,6 +812,7 @@ private func processOption(_ key: String,
     }
 }
 
+/// Parse FileOptions from arguments
 func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
     var options = FileOptions()
     var arguments = Set(fileArguments)
@@ -829,10 +830,13 @@ func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
     return options
 }
 
-func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
+/// Parse FormatOptions from arguments
+/// Returns nil if the arguments dictionary does not contain any formatting arguments
+func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
     var options = FormatOptions.default
     var arguments = Set(formattingArguments)
 
+    var containsFormatOption = false
     for option in FormatOptions.Descriptor.all {
         var handler = option.toOptions
         if let message = option.deprecationMessage {
@@ -842,11 +846,12 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
             }
         }
         try processOption(option.argumentName, in: args, from: &arguments) {
+            containsFormatOption = true
             try handler($0, &options)
         }
     }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
-    return options
+    return containsFormatOption ? options : nil
 }
 
 let fileArguments = [

@@ -42,7 +42,7 @@ struct SwiftFormatCLIArgumentsFile {
         self.options = options
     }
 
-    func encoded() throws -> Data {
+    func encoded() -> Data {
         var arguments = ""
 
         if let options = options {
@@ -63,10 +63,7 @@ struct SwiftFormatCLIArgumentsFile {
             arguments += "--disable \(disabled.map { $0.name }.joined(separator: ","))\n"
         }
 
-        guard let result = arguments.data(using: .utf8) else {
-            throw FormatError.writing("problem encoding configuration data")
-        }
-        return result
+        return Data(arguments.utf8)
     }
 
     static func decoded(_ data: Data) throws -> SwiftFormatCLIArgumentsFile {

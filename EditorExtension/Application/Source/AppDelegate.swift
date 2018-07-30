@@ -65,41 +65,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 data = try Data(contentsOf: url)
             } catch let error {
-                self.showError(FormatError.reading("Problem while reading the file \(url). [\(error)]"))
+                self.showError(FormatError.reading("problem reading configuration from \(url.path). [\(error)]"))
                 return
             }
 
+            let configuration: SwiftFormatCLIArgumentsFile
             do {
-                let configuration = try SwiftFormatCLIArgumentsFile.decoded(data)
-                RulesStore().restore(configuration.rules)
-                if let options = configuration.options {
-                    OptionsStore().inferOptions = false
-                    OptionsStore().restore(options)
-                } else {
-                    OptionsStore().inferOptions = true
-                }
-
-                NotificationCenter.default.post(name: .applicationDidLoadNewConfiguration, object: nil)
+                configuration = try SwiftFormatCLIArgumentsFile.decoded(data)
             } catch let error {
                 self.showError(error)
+                return
             }
+
+            RulesStore().restore(configuration.rules)
+            if let options = configuration.options {
+                OptionsStore().inferOptions = false
+                OptionsStore().restore(options)
+            } else {
+                OptionsStore().inferOptions = true
+            }
+
+            NotificationCenter.default.post(name: .applicationDidLoadNewConfiguration, object: nil)
         }
     }
 
     @objc
     @IBAction func saveConfiguration(_: NSMenuItem) {
         guard let window = window else {
-            return
-        }
-
-        let optionsStore = OptionsStore()
-        let options = optionsStore.inferOptions ? nil : optionsStore.formatOptions
-        let formatFile = SwiftFormatCLIArgumentsFile(rules: RulesStore().rules, options: options)
-        let dataToWrite: Data
-        do {
-            dataToWrite = try formatFile.encoded()
-        } catch let error {
-            self.showError(error)
             return
         }
 
@@ -110,10 +102,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             guard response == .OK, let url = dialog.url else {
                 return
             }
+
+            let optionsStore = OptionsStore()
+            let options = optionsStore.inferOptions ? nil : optionsStore.formatOptions
+            let formatFile = SwiftFormatCLIArgumentsFile(rules: RulesStore().rules, options: options)
+            let data = formatFile.encoded()
+
             do {
-                try dataToWrite.write(to: url)
+                try data.write(to: url)
             } catch let error {
-                self.showError(FormatError.writing("Problem while writing configuration to url: \(url). [\(error)]"))
+                self.showError(FormatError.writing("problem writing configuration to \(url.path). [\(error)]"))
             }
         }
     }

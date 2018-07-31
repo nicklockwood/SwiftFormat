@@ -570,7 +570,8 @@ func format(_ source: String,
 
     // Apply rules
     let rulesByName = FormatRules.byName
-    let rules = ruleNames.sorted().compactMap { rulesByName[$0] }
+    let ruleNames = ruleNames.sorted()
+    let rules = ruleNames.compactMap { rulesByName[$0] }
     var rulesApplied = Set<String>()
     let callback: ((Int, [Token]) -> Void)? = verbose ? { i, updatedTokens in
         if updatedTokens != tokens {

@@ -525,27 +525,13 @@ extension FormatRules {
     /// Remove trailing space from the end of lines, as it has no semantic
     /// meaning and leads to noise in commits.
     @objc public class func trailingSpace(_ formatter: Formatter) {
-        var isBlankLine = true
-        var spaceStart: Int?
-        formatter.forEachToken { i, token in
-            switch token {
-            case .linebreak:
-                if let spaceStart = spaceStart, !isBlankLine || formatter.options.truncateBlankLines {
-                    formatter.removeTokens(inRange: spaceStart ..< i)
-                }
-                isBlankLine = true
-                spaceStart = nil
-            case .space:
-                if spaceStart == nil {
-                    spaceStart = i
-                }
-            default:
-                isBlankLine = false
-                spaceStart = nil
+        formatter.forEach(.space) { i, _ in
+            guard formatter.token(at: i + 1)?.isLinebreak ?? true else {
+                return
             }
-        }
-        if formatter.isEnabled, let spaceStart = spaceStart, !isBlankLine || formatter.options.truncateBlankLines {
-            formatter.removeTokens(inRange: spaceStart ..< formatter.tokens.count)
+            if formatter.options.truncateBlankLines || formatter.token(at: i - 1)?.isLinebreak == false {
+                formatter.removeToken(at: i)
+            }
         }
     }
 

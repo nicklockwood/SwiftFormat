@@ -42,27 +42,41 @@ import Foundation
 public class Formatter: NSObject {
     private var enumerationIndex = -1
     private var disabledCount = 0
+    private var disabledNext = 0
 
     // Current rule, used for handling comment directives
     var currentRule: String? {
-        didSet { disabledCount = 0 }
+        didSet {
+            disabledCount = 0
+            disabledNext = 0
+        }
     }
 
     // Is current rule enabled
-    var isEnabled: Bool { return disabledCount <= 0 }
+    var isEnabled: Bool { return disabledCount + disabledNext <= 0 }
 
     // Process a comment token (which may contain directives)
     func processCommentBody(_ comment: String) {
-        guard let rule = currentRule, comment.hasPrefix("swiftformat:"),
-            let directive = ["disable", "enable"].first(where: { comment.hasPrefix("swiftformat:\($0)") }),
+        let prefix = "swiftformat:"
+        guard let rule = currentRule, comment.hasPrefix(prefix),
+            let directive = ["disable", "enable"].first(where: { comment.hasPrefix("\(prefix)\($0)") }),
             comment.range(of: "\\b(\(rule)|all)\\b", options: .regularExpression) != nil else {
             return
         }
+        let nextOnly = comment.hasPrefix("\(prefix)\(directive):next")
         switch directive {
         case "disable":
-            disabledCount += 1
+            if nextOnly {
+                disabledNext = 2
+            } else {
+                disabledCount += 1
+            }
         case "enable":
-            disabledCount -= 1
+            if nextOnly {
+                disabledNext = -2
+            } else {
+                disabledCount -= 1
+            }
         default:
             preconditionFailure()
         }
@@ -170,8 +184,17 @@ public class Formatter: NSObject {
         enumerationIndex = 0
         while enumerationIndex < tokens.count {
             let token = tokens[enumerationIndex]
-            if case let .commentBody(comment) = token {
+            switch token {
+            case let .commentBody(comment):
                 processCommentBody(comment)
+            case .linebreak where disabledNext != 0 && currentScope(at: enumerationIndex) != .startOfScope("/*"):
+                if disabledNext > 0 {
+                    disabledNext -= 1
+                } else if disabledNext < 0 {
+                    disabledNext += 1
+                }
+            default:
+                break
             }
             if isEnabled {
                 body(enumerationIndex, token) // May mutate enumerationIndex

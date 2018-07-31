@@ -203,4 +203,16 @@ class FormatterTests: XCTestCase {
         let output = "// swiftformat:disable all\nlet foo : Int=5;\n//swiftformat:enable linebreakAtEndOfFile\n"
         XCTAssertEqual(try format(input, rules: FormatRules.default), output)
     }
+
+    func testDisableNext() {
+        let input = "//swiftformat:disable:next all\nlet foo : Int=5;\nlet foo : Int=5;"
+        let output = "// swiftformat:disable:next all\nlet foo : Int=5;\nlet foo: Int = 5\n"
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
+    func testEnableNext() {
+        let input = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo : Int=5;\nlet foo : Int=5;"
+        let output = "// swiftformat:disable all\n//swiftformat:enable:next all\nlet foo: Int = 5\nlet foo : Int=5;"
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
 }

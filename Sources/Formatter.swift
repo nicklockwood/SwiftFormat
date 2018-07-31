@@ -43,6 +43,7 @@ public class Formatter: NSObject {
     private var enumerationIndex = -1
     private var disabledCount = 0
     private var disabledNext = 0
+    private var wasNextDirective = false
 
     // Current rule, used for handling comment directives
     var currentRule: String? {
@@ -63,22 +64,31 @@ public class Formatter: NSObject {
             comment.range(of: "\\b(\(rule)|all)\\b", options: .regularExpression) != nil else {
             return
         }
-        let nextOnly = comment.hasPrefix("\(prefix)\(directive):next")
+        wasNextDirective = comment.hasPrefix("\(prefix)\(directive):next")
         switch directive {
         case "disable":
-            if nextOnly {
-                disabledNext = 2
+            if wasNextDirective {
+                disabledNext = 1
             } else {
                 disabledCount += 1
             }
         case "enable":
-            if nextOnly {
-                disabledNext = -2
+            if wasNextDirective {
+                disabledNext = -1
             } else {
                 disabledCount -= 1
             }
         default:
             preconditionFailure()
+        }
+    }
+
+    /// Process a linebreak (used to cancel disable/enable:next directive)
+    func processLinebreak() {
+        if wasNextDirective {
+            wasNextDirective = false
+        } else if disabledNext != 0 {
+            disabledNext = 0
         }
     }
 
@@ -187,12 +197,8 @@ public class Formatter: NSObject {
             switch token {
             case let .commentBody(comment):
                 processCommentBody(comment)
-            case .linebreak where disabledNext != 0 && currentScope(at: enumerationIndex) != .startOfScope("/*"):
-                if disabledNext > 0 {
-                    disabledNext -= 1
-                } else if disabledNext < 0 {
-                    disabledNext += 1
-                }
+            case .linebreak:
+                processLinebreak()
             default:
                 break
             }
@@ -270,17 +276,19 @@ public class Formatter: NSObject {
     /// Returns the index of the previous token at the current scope that matches the block
     public func index(before index: Int, where matches: (Token) -> Bool) -> Int? {
         guard index > 0 else { return nil }
-        var linebreakEncountered = (token(at: index)?.isLinebreak == true)
+        var linebreakEncountered = false
         var scopeStack: [Token] = []
         for i in (0 ..< index).reversed() {
             let token = tokens[i]
             if case .startOfScope = token {
                 if let scope = scopeStack.last, scope.isEndOfScope(token) {
                     scopeStack.removeLast()
-                } else if token.string == "//" && linebreakEncountered {
+                } else if token.string == "//", linebreakEncountered {
                     linebreakEncountered = false
                 } else if matches(token) {
                     return i
+                } else if token.string == "//", self.token(at: index)?.isLinebreak == true {
+                    continue
                 } else {
                     return nil
                 }

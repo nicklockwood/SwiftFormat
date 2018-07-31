@@ -215,4 +215,28 @@ class FormatterTests: XCTestCase {
         let output = "// swiftformat:disable all\n//swiftformat:enable:next all\nlet foo: Int = 5\nlet foo : Int=5;"
         XCTAssertEqual(try format(input, rules: FormatRules.default), output)
     }
+
+    func testDisableRuleWithMultilineComment() {
+        let input = "/*swiftformat:disable spaceAroundOperators*/let foo : Int=5;"
+        let output = "/* swiftformat:disable spaceAroundOperators */ let foo : Int=5\n"
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
+    func testDisableAllRulesWithMultilineComment() {
+        let input = "/*swiftformat:disable all*/let foo : Int=5;"
+        let output = "/*swiftformat:disable all*/let foo : Int=5;"
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
+    func testDisableNextWithMultilineComment() {
+        let input = "/*swiftformat:disable:next all*/\nlet foo : Int=5;\nlet foo : Int=5;"
+        let output = "/* swiftformat:disable:next all */\nlet foo : Int=5;\n let foo: Int = 5\n"
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
+    func testEnableNextWithMultilineComment() {
+        let input = "//swiftformat:disable all\n/*swiftformat:enable:next all*/\nlet foo : Int=5;\nlet foo : Int=5;"
+        let output = "// swiftformat:disable all\n/*swiftformat:enable:next all*/\nlet foo: Int = 5\nlet foo : Int=5;"
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
 }

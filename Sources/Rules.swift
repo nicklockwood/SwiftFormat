@@ -537,28 +537,13 @@ extension FormatRules {
 
     /// Collapse all consecutive blank lines into a single blank line
     @objc public class func consecutiveBlankLines(_ formatter: Formatter) {
-        var linebreakCount = 0
-        var lastTokenWasSpace = false
-        formatter.forEachToken { i, token in
-            if token.isLinebreak {
-                linebreakCount += 1
-                if linebreakCount > 2 {
-                    formatter.removeToken(at: i)
-                    if lastTokenWasSpace {
-                        formatter.removeToken(at: i - 1)
-                    }
-                    linebreakCount -= 1
-                }
-            } else if !token.isSpace {
-                linebreakCount = 0
+        formatter.forEach(.linebreak) { i, _ in
+            guard let prevIndex = formatter.index(of: .nonSpace, before: i, if: { $0.isLinebreak }) else {
+                return
             }
-            lastTokenWasSpace = token.isSpace
-        }
-        if linebreakCount > 1, !formatter.options.fragment {
-            if lastTokenWasSpace {
-                formatter.removeLastToken()
+            if formatter.next(.nonSpace, after: i)?.isLinebreak ?? !formatter.options.fragment {
+                formatter.removeTokens(inRange: prevIndex ..< i)
             }
-            formatter.removeLastToken()
         }
     }
 
@@ -2276,6 +2261,14 @@ extension FormatRules {
                     lastKeyword = ""
                 case let .keyword(name):
                     lastKeyword = name
+                case .startOfScope("//"), .startOfScope("/*"):
+                    if case let .commentBody(comment)? = formatter.next(.nonSpace, after: index) {
+                        formatter.processCommentBody(comment)
+                        if token == .startOfScope("//") {
+                            formatter.processLinebreak()
+                        }
+                    }
+                    index = (formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1))
                 case .startOfScope("("):
                     // Special case to support autoclosure arguments in the Nimble framework
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("expect") {
@@ -2336,8 +2329,6 @@ extension FormatRules {
                     }
                 case .startOfScope(":"):
                     break
-                case .endOfScope("case"), .endOfScope("default"):
-                    return
                 case .startOfScope("{") where ["for", "where", "if", "else", "while", "do"].contains(lastKeyword):
                     lastKeyword = ""
                     fallthrough
@@ -2359,15 +2350,8 @@ extension FormatRules {
                     }
                     processAccessors(["get", "set", "willSet", "didSet"], at: &index, localNames: localNames, members: members)
                     continue
-                case .startOfScope("//"):
-                    if let bodyIndex = formatter.index(of: .nonSpace, after: index),
-                        case let .commentBody(comment) = formatter.tokens[bodyIndex] {
-                        formatter.processCommentBody(comment)
-                    }
-                    fallthrough
                 case .startOfScope:
-                    index = (formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)) + 1
-                    continue
+                    index = (formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1))
                 case .identifier("self") where !isTypeRoot:
                     if formatter.isEnabled, formatter.options.removeSelf,
                         formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
@@ -2400,9 +2384,10 @@ extension FormatRules {
                             break
                         }
                         formatter.insertTokens([.identifier("self"), .operator(".", .infix)], at: index)
-                        index += 3
-                        continue
+                        index += 2
                     }
+                case .endOfScope("case"), .endOfScope("default"):
+                    return
                 case .endOfScope:
                     if let scope = scopeStack.last {
                         assert(token.isEndOfScope(scope))
@@ -2412,6 +2397,8 @@ extension FormatRules {
                         index += 1
                         return
                     }
+                case .linebreak:
+                    formatter.processLinebreak()
                 default:
                     break
                 }

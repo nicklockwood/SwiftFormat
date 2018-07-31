@@ -1224,7 +1224,7 @@ class RulesTests: XCTestCase {
     // MARK: consecutiveBlankLines
 
     func testConsecutiveBlankLines() {
-        let input = "foo\n\n  \nbar"
+        let input = "foo\n   \n\nbar"
         let output = "foo\n\nbar"
         XCTAssertEqual(try format(input, rules: [FormatRules.consecutiveBlankLines]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
@@ -5342,6 +5342,112 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    // enable/disable
+
+    func testDisableRemoveSelf() {
+        let input = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                // swiftformat:disable redundantSelf
+                self.bar = 1
+                // swiftformat:enable redundantSelf
+                self.bar = 2
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                // swiftformat:disable redundantSelf
+                self.bar = 1
+                // swiftformat:enable redundantSelf
+                bar = 2
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: FormatRules.all(named: ["redundantSelf"]), options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testDisableNextRemoveSelf() {
+        let input = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                // swiftformat:disable:next redundantSelf
+                self.bar = 1
+                self.bar = 2
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                // swiftformat:disable:next redundantSelf
+                self.bar = 1
+                bar = 2
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: FormatRules.all(named: ["redundantSelf"]), options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testMultilineDisableRemoveSelf() {
+        let input = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                /* swiftformat:disable redundantSelf */ self.bar = 1 /* swiftformat:enable all */
+                self.bar = 2
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                /* swiftformat:disable redundantSelf */ self.bar = 1 /* swiftformat:enable all */
+                bar = 2
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: FormatRules.all(named: ["redundantSelf"]), options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testMultilineDisableNextRemoveSelf() {
+        let input = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                /* swiftformat:disable:next redundantSelf */
+                self.bar = 1
+                self.bar = 2
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                /* swiftformat:disable:next redundantSelf */
+                self.bar = 1
+                bar = 2
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: FormatRules.all(named: ["redundantSelf"]), options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // MARK: unusedArguments
 
     // closures
@@ -6201,7 +6307,7 @@ class RulesTests: XCTestCase {
 
     func testNoStripHeaderWhenDisabled() {
         let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
-        let output = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
+        let output = input
         let options = FormatOptions(fileHeader: nil)
         XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -6242,6 +6348,14 @@ class RulesTests: XCTestCase {
     func testNoStripHeaderIfRuleDisabled() {
         let input = "// swiftformat:disable fileHeader\n// test\n// swiftformat:enable fileHeader\n\nfunc foo() {}"
         let output = "// swiftformat:disable fileHeader\n// test\n// swiftformat:enable fileHeader\n\nfunc foo() {}"
+        let options = FormatOptions(fileHeader: "")
+        XCTAssertEqual(try format(input, rules: [FormatRules.byName["fileHeader"]!], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoStripHeaderIfNextRuleDisabled() {
+        let input = "// swiftformat:disable:next fileHeader\n// test\n\nfunc foo() {}"
+        let output = "// swiftformat:disable:next fileHeader\n// test\n\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "")
         XCTAssertEqual(try format(input, rules: [FormatRules.byName["fileHeader"]!], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

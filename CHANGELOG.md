@@ -19,7 +19,7 @@
 
 ## [0.33.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.12) (2018-07-23)
 
-- Added `swiftformat:disable:all` and `swiftformat:enable:all` directives
+- Added `swiftformat:disable all` and `swiftformat:enable all` directives
 - Fixed a bug where redundant parens were not always removed correctly
 - Fixed errors when parsing custom operators such as `<>`, `|>` or `<<>>`
 - Fixed divide-by-zero crash when specifiying number groupings with a value of zero
@@ -83,7 +83,7 @@
 
 ## [0.33.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.2) (2018-02-20)
 
-- The `fileHeader` rule can now be disabled in an individual file by prefixing header with `// swiftformat: disable fileHeader`
+- The `fileHeader` rule can now be disabled in an individual file by prefixing header with `// swiftformat:disable fileHeader`
 - Fixed a bug in the `specifiers` rule that could mangle code if the previous line ended with certain identifiers
 - Fixed typo in `--insertlines` deprecation warning message
 

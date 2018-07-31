@@ -112,7 +112,15 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(index, 0)
     }
 
-    func testFormatterDirectives() {
+    // MARK: enable/disable directives
+
+    func testDisableRule() {
+        let input = "//swiftformat:disable spaceAroundOperators\nlet foo : Int=5;"
+        let output = "// swiftformat:disable spaceAroundOperators\nlet foo : Int=5\n"
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
+    func testDisableAndReEnableRules() {
         let input = """
         // swiftformat:disable indent blankLinesBetweenScopes redundantSelf
         class Foo {
@@ -148,7 +156,13 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testFormatterAllDirective() {
+    func testDisableAllRules() {
+        let input = "//swiftformat:disable all\nlet foo : Int=5;"
+        let output = "// swiftformat:disable all\nlet foo : Int=5;"
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
+    func testDisableAndReEnableAllRules() {
         let input = """
         // swiftformat:disable all
         class Foo {
@@ -182,5 +196,11 @@ class FormatterTests: XCTestCase {
         }
         """
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testDisableAllRulesAndReEnableOneRule() {
+        let input = "//swiftformat:disable all\nlet foo : Int=5;\n//swiftformat:enable linebreakAtEndOfFile"
+        let output = "// swiftformat:disable all\nlet foo : Int=5;\n//swiftformat:enable linebreakAtEndOfFile\n"
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
     }
 }

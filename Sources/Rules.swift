@@ -544,7 +544,7 @@ extension FormatRules {
                 spaceStart = nil
             }
         }
-        if let spaceStart = spaceStart, !isBlankLine || formatter.options.truncateBlankLines {
+        if formatter.isEnabled, let spaceStart = spaceStart, !isBlankLine || formatter.options.truncateBlankLines {
             formatter.removeTokens(inRange: spaceStart ..< formatter.tokens.count)
         }
     }
@@ -741,7 +741,7 @@ extension FormatRules {
                 wasLinebreak = false
             }
         }
-        if !wasLinebreak {
+        if formatter.isEnabled, !wasLinebreak {
             formatter.insertToken(.linebreak(formatter.options.linebreak), at: formatter.tokens.count)
         }
     }

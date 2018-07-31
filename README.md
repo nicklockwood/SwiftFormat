@@ -258,13 +258,13 @@ To enable the rule(s) again, use:
 To temporarily disable all rules use:
 
 ```swift
-// swiftformat:disable:all
+// swiftformat:disable all
 ```
 
 And to enable them all again, use:
 
 ```swift
-// swiftformat:enable:all
+// swiftformat:enable all
 ```
 
 **Note:** The `swiftformat:enable` directives only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.

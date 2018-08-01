@@ -1140,6 +1140,9 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     fallthrough
                 case .startOfScope("\""), .startOfScope("#if"):
                     scopeStack.append(token)
+                case .startOfScope(":"):
+                    lastKeyword = ""
+                    break
                 case .startOfScope("{") where lastKeyword == "catch":
                     lastKeyword = ""
                     var localNames = localNames
@@ -1189,10 +1192,6 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                             break
                         }
                     }
-                case .startOfScope(":"):
-                    break
-                case .endOfScope("case"), .endOfScope("default"):
-                    return
                 case .startOfScope("{") where ["for", "where", "if", "else", "while", "do"].contains(lastKeyword):
                     lastKeyword = ""
                     fallthrough
@@ -1214,15 +1213,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     }
                     processAccessors(["get", "set", "willSet", "didSet"], at: &index, localNames: localNames, members: members)
                     continue
-                case .startOfScope("//"):
-                    if let bodyIndex = formatter.index(of: .nonSpace, after: index),
-                        case let .commentBody(comment) = formatter.tokens[bodyIndex] {
-                        formatter.processCommentBody(comment)
-                    }
-                    fallthrough
                 case .startOfScope:
-                    index = (formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)) + 1
-                    continue
+                    index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .identifier("self") where !isTypeRoot:
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
                         let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
@@ -1256,6 +1248,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                         index += 1
                         continue
                     }
+                case .endOfScope("case"), .endOfScope("default"):
+                    return
                 case .endOfScope:
                     if let scope = scopeStack.last {
                         assert(token.isEndOfScope(scope))

@@ -255,7 +255,7 @@ To enable the rule(s) again, use:
 // swiftformat:enable <rule1> [<rule2> [rule<3> ...]]
 ```
 
-To temporarily disable all rules use:
+To disable all rules use:
 
 ```swift
 // swiftformat:disable all
@@ -266,6 +266,16 @@ And to enable them all again, use:
 ```swift
 // swiftformat:enable all
 ```
+
+To temporarily prevent one or more rules being applied to just the next line, use:
+
+```swift
+// swiftformat:disable:next <rule1> [<rule2> [rule<3> ...]]
+let foo = bar // rule(s) will be disabled for this line
+let bar = baz // rule(s) will be re-enabled for this line
+```
+
+There is no need to manually re-enable a rule after using the `next` directive.
 
 **Note:** The `swiftformat:enable` directives only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.
 

@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.34.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.34.1) (2018-08-01)
+
+- Added `// swiftformat:disable:next` directive for temporarily disabling a rule on just the following line
+- Fixed bug where the `// swiftformat:disable all` directive could result in file contents being stripped
+- Fixed a bug where `--verbose` mode incorrectly reported which rules were applied to each file
+- Reset to Defaults menu item in SwiftFormat for Xcode now correctly resets the Infer Format Options setting
+
 ## [0.34.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.34.0) (2018-07-30)
 
 - You can now configure format options for the Xcode Source Editor Extension (big thanks to @vinceburn for this feature)

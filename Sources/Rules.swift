@@ -2268,7 +2268,7 @@ extension FormatRules {
                             formatter.processLinebreak()
                         }
                     }
-                    index = (formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1))
+                    index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .startOfScope("("):
                     // Special case to support autoclosure arguments in the Nimble framework
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("expect") {
@@ -2278,6 +2278,9 @@ extension FormatRules {
                     fallthrough
                 case .startOfScope("\""), .startOfScope("#if"):
                     scopeStack.append(token)
+                case .startOfScope(":"):
+                    lastKeyword = ""
+                    break
                 case .startOfScope("{") where lastKeyword == "catch":
                     lastKeyword = ""
                     var localNames = localNames
@@ -2327,8 +2330,6 @@ extension FormatRules {
                             break
                         }
                     }
-                case .startOfScope(":"):
-                    break
                 case .startOfScope("{") where ["for", "where", "if", "else", "while", "do"].contains(lastKeyword):
                     lastKeyword = ""
                     fallthrough
@@ -2351,7 +2352,7 @@ extension FormatRules {
                     processAccessors(["get", "set", "willSet", "didSet"], at: &index, localNames: localNames, members: members)
                     continue
                 case .startOfScope:
-                    index = (formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1))
+                    index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .identifier("self") where !isTypeRoot:
                     if formatter.isEnabled, formatter.options.removeSelf,
                         formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,

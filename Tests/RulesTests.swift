@@ -4998,6 +4998,19 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testSelfNotRemovedInClosureInCaseWithWhereClause() {
+        let input = """
+        switch foo {
+        case bar where baz:
+            quux = { self.foo }
+        }
+        """
+        let output = input
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // removeSelf = false
 
     func testInsertSelf() {

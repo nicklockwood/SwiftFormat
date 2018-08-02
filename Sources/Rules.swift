@@ -3196,6 +3196,17 @@ extension FormatRules {
             }
         }
     }
+
+    /// Remove white-space between empty braces
+    @objc public class func emptyBraces(_ formatter: Formatter) {
+        formatter.forEach(.startOfScope("{")) { i, _ in
+            if let closingIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
+                $0 == .endOfScope("}")
+            }) {
+                formatter.removeTokens(inRange: i + 1 ..< closingIndex)
+            }
+        }
+    }
 }
 
 private extension FormatRules {

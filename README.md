@@ -489,6 +489,17 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
     // bar
   }
 ```
+
+***emptyBraces*** - removes all white space between otherwise empty braces:
+
+```diff
+- func foo() {
+- 
+- }
+
+
++ func foo() {}
+```
    
 ***fileHeader*** - allows the replacement or removal of Xcode's automated comment header blocks. By default, no action is taken, but passing one of the following arguments to the command-line will activate its function.
 

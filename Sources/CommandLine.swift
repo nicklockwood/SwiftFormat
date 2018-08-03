@@ -217,6 +217,48 @@ func parseRules(_ rules: String) throws -> [String] {
     }
 }
 
+func mergeArguments(_ args: [String: String], into config: [String: String]) throws -> [String: String] {
+    var input = config
+    var output = args
+    // Merge rules
+    if let rules = try output["rules"].map(parseRules) {
+        if rules.isEmpty {
+            output["rules"] = nil
+        } else {
+            input["rules"] = nil
+            input["enable"] = nil
+            input["disable"] = nil
+        }
+    } else {
+        if let _disable = try output["disable"].map(parseRules) {
+            if let rules = try input["rules"].map(parseRules) {
+                input["rules"] = Set(rules).subtracting(_disable).joined(separator: ",")
+            }
+            if let enable = try input["enable"].map(parseRules) {
+                input["enable"] = Set(enable).subtracting(_disable).joined(separator: ",")
+            }
+            if let disable = try input["disable"].map(parseRules) {
+                input["disable"] = Set(disable).union(_disable).joined(separator: ",")
+                output["disable"] = nil
+            }
+        }
+        if let _enable = try args["enable"].map(parseRules) {
+            if let enable = try input["enable"].map(parseRules) {
+                input["enable"] = Set(enable).union(_enable).joined(separator: ",")
+                output["enable"] = nil
+            }
+            if let disable = try input["disable"].map(parseRules) {
+                input["disable"] = Set(disable).subtracting(_enable).joined(separator: ",")
+            }
+        }
+    }
+    // Merge other arguments
+    for (key, value) in input where output[key] == nil {
+        output[key] = value
+    }
+    return output
+}
+
 func processArguments(_ args: [String], in directory: String) -> ExitCode {
     var errors = [Error]()
     var verbose = false
@@ -238,6 +280,9 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             return .ok
         }
 
+        // Display rules (must be checked before merging config)
+        let showRules = (args["rules"] == "")
+
         // Config file
         if let configURL = args["config"].map({ expandPath($0, in: directory) }) {
             if args["config"] == "" {
@@ -252,11 +297,8 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             } catch let error {
                 throw FormatError.reading("failed to read config file at \(configURL.path), \(error)")
             }
-            var config = try parseConfigFile(data)
-            // Merge arguments
-            for (key, value) in config where args[key] == nil {
-                args[key] = value
-            }
+            let config = try parseConfigFile(data)
+            args = try mergeArguments(args, into: config)
         }
 
         // Rules
@@ -276,7 +318,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             }
             rules.subtract(names)
         }
-        if args["rules"] == "" {
+        if showRules {
             print("")
             for name in Array(allRules).sorted() {
                 print(" \(name)\(rules.contains(name) ? "" : " (disabled)")")

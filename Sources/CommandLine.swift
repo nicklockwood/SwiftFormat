@@ -96,7 +96,7 @@ func printHelp() {
 
     <file> <file> ...  one or more swift files or directory paths to be processed
 
-    --config           path to configuration file (ignores command line options)
+    --config           path to a configuration file containing rules and options
     --inferoptions     instead of formatting input, use it to infer format options
     --output           output path for formatted file(s) (defaults to input path)
     --exclude          list of file or directory paths to ignore (comma-delimited)
@@ -224,7 +224,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
     var lint = false
     do {
         // Get arguments
-        let args = try preprocessArguments(args, commandLineArguments)
+        var args = try preprocessArguments(args, commandLineArguments)
 
         // Show help
         if args["help"] != nil {
@@ -236,6 +236,27 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         if args["version"] != nil {
             print("swiftformat, version \(version)")
             return .ok
+        }
+
+        // Config file
+        if let configURL = args["config"].map({ expandPath($0, in: directory) }) {
+            if args["config"] == "" {
+                throw FormatError.options("--config argument expects a value")
+            }
+            if !FileManager.default.fileExists(atPath: configURL.path) {
+                throw FormatError.reading("specified config file does not exist: \(configURL.path)")
+            }
+            let data: Data
+            do {
+                data = try Data(contentsOf: configURL)
+            } catch let error {
+                throw FormatError.reading("failed to read config file at \(configURL.path), \(error)")
+            }
+            var config = try parseConfigFile(data)
+            // Merge arguments
+            for (key, value) in config where args[key] == nil {
+                args[key] = value
+            }
         }
 
         // Rules
@@ -265,12 +286,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // Options
-        let formatOptions: FormatOptions
-        if let file = args["config"] {
-            formatOptions = try formatOptionsFromFile(file)
-        } else {
-            formatOptions = try formatOptionsFor(args) ?? .default
-        }
+        let formatOptions = try formatOptionsFor(args) ?? .default
         let fileOptions = try fileOptionsFor(args)
 
         // Input path(s)
@@ -783,6 +799,21 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     return namedArgs
 }
 
+func parseConfigFile(_ data: Data) throws -> [String: String] {
+    guard let input = String(data: data, encoding: .utf8) else {
+        throw FormatError.reading("unable to read data for configuration file")
+    }
+    let lines = input.components(separatedBy: .newlines)
+    let arguments = try lines.flatMap { line -> [String] in
+        let parts = line.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+        if let key = parts.first, !key.hasPrefix("-") {
+            throw FormatError.options("unknown option \(key)")
+        }
+        return parts
+    }
+    return try preprocessArguments(arguments, commandLineArguments)
+}
+
 /// Get command line arguments for formatting options
 /// (excludes non-formatting options and deprecated/renamed options)
 func commandLineArguments(for options: FormatOptions, excludingDefaults: Bool = false) -> [String: String] {
@@ -857,31 +888,6 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
     }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return containsFormatOption ? options : nil
-}
-
-func formatOptionsFromFile(_ configPath: String) throws -> FormatOptions {
-    let configFileUrl = URL(fileURLWithPath: configPath)
-    guard let configFileContents = try? String(contentsOf: configFileUrl) else {
-        throw FormatError.reading("failed to read configuration file \(configFileUrl.path)")
-    }
-
-    let configLines = configFileContents.components(separatedBy: .newlines)
-    var args: [String: String] = [:]
-    _ = configLines
-        .filter({ !$0.isEmpty && !$0.hasPrefix("#") })
-        .map({ line in
-            let components = line.components(separatedBy: ":")
-            guard components.count == 2 else { return }
-            let key = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
-            let value = components[1].trimmingCharacters(in: .whitespacesAndNewlines)
-            args.updateValue(value, forKey: key)
-        })
-
-    do {
-        return try formatOptionsFor(args) ?? .default
-    } catch {
-        throw error
-    }
 }
 
 let fileArguments = [

@@ -67,12 +67,7 @@ struct SwiftFormatCLIArgumentsFile {
     }
 
     static func decoded(_ data: Data) throws -> SwiftFormatCLIArgumentsFile {
-        guard let input = String(data: data, encoding: .utf8) else {
-            throw FormatError.reading("unable to read data for configuration file")
-        }
-
-        let inputs = input.components(separatedBy: CharacterSet.whitespacesAndNewlines)
-        let args = try preprocessArguments(inputs, commandLineArguments)
+        let args = try parseConfigFile(data)
 
         let allRules = Set(FormatRules.byName.keys)
         var ruleNames = try args["rules"].map {

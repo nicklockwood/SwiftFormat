@@ -34,7 +34,7 @@ import XcodeKit
 
 class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
     func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
-        guard ["public.swift-source", "com.apple.dt.playground"].contains(invocation.buffer.contentUTI) else {
+        guard ["public.swift-source", "com.apple.dt.playground", "com.apple.dt.playgroundpage"].contains(invocation.buffer.contentUTI) else {
             return completionHandler(FormatCommandError.notSwiftLanguage)
         }
 
@@ -42,18 +42,15 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
         let sourceToFormat = invocation.buffer.completeBuffer
         let tokens = tokenize(sourceToFormat)
 
-        // TODO: Add support for config file here.
-        // Infer format options
-        var options = inferOptions(from: tokens)
+        let store = OptionsStore()
+        var options = store.inferOptions ? inferOptions(from: tokens) : store.formatOptions
         options.indent = indentationString(for: invocation.buffer)
-
         do {
             let rules = FormatRules.all(named:
                 RulesStore()
                     .rules
                     .filter { $0.isEnabled }
-                    .map { $0.name }
-            )
+                    .map { $0.name })
 
             let output = try format(tokens, rules: rules, options: options)
             if output == tokens {
@@ -77,11 +74,7 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
 
             return completionHandler(nil)
         } catch let error {
-            return completionHandler(NSError(
-                domain: "SwiftFormat",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "\(error)"]
-            ))
+            return completionHandler(error)
         }
     }
 }

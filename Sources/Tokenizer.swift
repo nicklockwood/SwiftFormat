@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.33.11
+//  Version 0.34.1
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -1393,6 +1393,12 @@ public func tokenize(_ source: String) -> [Token] {
                     } else if scope == .startOfScope("\"\"\"") {
                         processMultilineStringBody()
                     }
+                case .endOfScope(">"):
+                    if scope == .startOfScope("<"), scopeIndex == tokens.count - 2 {
+                        convertOpeningChevronToSymbol(at: tokens.count - 2)
+                        processToken()
+                        return
+                    }
                 default:
                     break
                 }
@@ -1446,10 +1452,12 @@ public func tokenize(_ source: String) -> [Token] {
                 }
             } else if case let .keyword(string) = token {
                 var scope = scope
+                var scopeIndex = scopeIndex
                 var scopeStackIndex = scopeIndexStack.count - 1
                 while scopeStackIndex > 0, scope == .startOfScope("#if") {
                     scopeStackIndex -= 1
-                    scope = tokens[scopeIndexStack[scopeStackIndex]]
+                    scopeIndex = scopeIndexStack[scopeStackIndex]
+                    scope = tokens[scopeIndex]
                 }
                 if [.startOfScope("{"), .startOfScope(":")].contains(scope) {
                     switch string {

@@ -35,7 +35,7 @@ import XcodeKit
 class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
     func perform(with invocation: XCSourceEditorCommandInvocation,
                  completionHandler: @escaping (Error?) -> Void) {
-        guard ["public.swift-source", "com.apple.dt.playground"].contains(invocation.buffer.contentUTI) else {
+        guard ["public.swift-source", "com.apple.dt.playground", "com.apple.dt.playgroundpage"].contains(invocation.buffer.contentUTI) else {
             return completionHandler(FormatCommandError.notSwiftLanguage)
         }
 
@@ -45,7 +45,10 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
 
         // TODO: Add support for config file here.
         // Inspect the whole file to infer the format options
-        var options = inferOptions(from: tokenize(invocation.buffer.completeBuffer))
+        let store = OptionsStore()
+        var options = store.inferOptions ?
+            inferOptions(from: tokenize(invocation.buffer.completeBuffer)) :
+            store.formatOptions
         options.indent = indentationString(for: invocation.buffer)
         options.fragment = true
 
@@ -56,12 +59,10 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         }.joined()
 
         do {
-            let rules = FormatRules.all(named:
-                RulesStore()
-                    .rules
-                    .filter { $0.isEnabled }
-                    .map { $0.name }
-            )
+            let rules = FormatRules.all(named: RulesStore()
+                .rules
+                .filter { $0.isEnabled }
+                .map { $0.name })
 
             let formattedSource = try format(sourceToFormat, rules: rules, options: options)
             if formattedSource == sourceToFormat {
@@ -75,17 +76,14 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
             invocation.buffer.lines.insert(formattedSource, at: selection.start.line)
 
             let updatedSelectionRange = rangeForDifferences(
-                in: selection, between: sourceToFormat, and: formattedSource)
+                in: selection, between: sourceToFormat, and: formattedSource
+            )
 
             invocation.buffer.selections.add(updatedSelectionRange)
 
             return completionHandler(nil)
         } catch let error {
-            return completionHandler(NSError(
-                domain: "SwiftFormat",
-                code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "\(error)"]
-            ))
+            return completionHandler(error)
         }
     }
 

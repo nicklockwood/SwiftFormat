@@ -33,7 +33,6 @@ import SwiftFormat
 import XCTest
 
 class RulesTests: XCTestCase {
-
     // MARK: spaceAroundParens
 
     func testSpaceAfterSet() {
@@ -286,6 +285,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testSpaceBeforeCommentInsideParens() {
+        let input = "( /* foo */ 1, 2 )"
+        let output = "( /* foo */ 1, 2)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceInsideParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: spaceAroundBrackets
 
     func testSubscriptNoAddSpacing() {
@@ -356,7 +362,15 @@ class RulesTests: XCTestCase {
     func testSpaceInsideWrappedArray() {
         let input = "[ foo,\n bar ]"
         let output = "[foo,\n bar]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceInsideBrackets]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSpaceBeforeCommentInsideWrappedArray() {
+        let input = "[ // foo\n    bar,\n]"
+        let output = "[ // foo\n    bar,\n]"
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceInsideBrackets]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -1210,7 +1224,7 @@ class RulesTests: XCTestCase {
     // MARK: consecutiveBlankLines
 
     func testConsecutiveBlankLines() {
-        let input = "foo\n\n  \nbar"
+        let input = "foo\n   \n\nbar"
         let output = "foo\n\nbar"
         XCTAssertEqual(try format(input, rules: [FormatRules.consecutiveBlankLines]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
@@ -1503,6 +1517,32 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoInsertBlankLineBeforeMarkAtStartOfScope() {
+        let input = """
+        do {
+            // MARK: foo
+
+            let foo = "foo"
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAroundMark]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoInsertBlankLineAfterMarkAtEndOfScope() {
+        let input = """
+        do {
+            let foo = "foo"
+
+            // MARK: foo
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesAroundMark]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: linebreakAtEndOfFile
 
     func testLinebreakAtEndOfFile() {
@@ -1546,8 +1586,8 @@ class RulesTests: XCTestCase {
     }
 
     func testNestedScopeOnSameLine2() {
-        let input = "foo(bar(in:\nbaz\n))"
-        let output = "foo(bar(in:\n    baz\n))"
+        let input = "foo(bar(in:\nbaz))"
+        let output = "foo(bar(in:\n    baz))"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -1560,15 +1600,15 @@ class RulesTests: XCTestCase {
     }
 
     func testClosingScopeAfterContent() {
-        let input = "foo(\nbar)"
-        let output = "foo(\n    bar)"
+        let input = "foo(\nbar\n)"
+        let output = "foo(\n    bar\n)"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testClosingNestedScopeAfterContent() {
-        let input = "foo(bar(\nbaz))"
-        let output = "foo(bar(\n    baz))"
+        let input = "foo(bar(\nbaz\n))"
+        let output = "foo(bar(\n    baz\n))"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -1807,7 +1847,7 @@ class RulesTests: XCTestCase {
     func testWrappedLineBeforeCommaInsideArray() {
         let input = "[\nfoo\n, bar,\n]"
         let output = "[\n    foo\n    , bar,\n]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -1815,7 +1855,7 @@ class RulesTests: XCTestCase {
     func testWrappedLineAfterCommaInsideInlineArray() {
         let input = "[foo,\nbar]"
         let output = "[foo,\n bar]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -1823,7 +1863,7 @@ class RulesTests: XCTestCase {
     func testWrappedLineBeforeCommaInsideInlineArray() {
         let input = "[foo\n, bar]"
         let output = "[foo\n , bar]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -1860,7 +1900,7 @@ class RulesTests: XCTestCase {
         let input = "(foo\nas Bar {\nbaz\n}\n)"
         let output = "(foo\n    as Bar {\n        baz\n    }\n)"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["wrapArguments"])), output + "\n")
     }
 
     func testNoPermanentReductionInScopeAfterWrap() {
@@ -2104,7 +2144,7 @@ class RulesTests: XCTestCase {
     func testIndentEnumDictionaryKeysAndValues() {
         let input = "[\n.foo:\n.bar,\n.baz:\n.quux,\n]"
         let output = "[\n    .foo:\n    .bar,\n    .baz:\n    .quux,\n]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -2231,7 +2271,15 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testIfCaseEndifIndenting() {
+    func testEnumIfCaseEndifIndenting() {
+        let input = "enum Foo {\ncase bar\n#if x\ncase baz\n#endif\n}"
+        let output = "enum Foo {\n    case bar\n    #if x\n        case baz\n    #endif\n}"
+        let options = FormatOptions(indentCase: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSwitchIfCaseEndifIndenting() {
         let input = "switch foo {\ncase .bar: break\n#if x\ncase .baz: break\n#endif\n}"
         let output = "switch foo {\ncase .bar: break\n#if x\n    case .baz: break\n#endif\n}"
         let options = FormatOptions(indentCase: false)
@@ -2239,7 +2287,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfCaseEndifIndenting2() {
+    func testSwitchIfCaseEndifIndenting2() {
         let input = "switch foo {\ncase .bar: break\n#if x\ncase .baz: break\n#endif\n}"
         let output = "switch foo {\n    case .bar: break\n    #if x\n        case .baz: break\n    #endif\n}"
         let options = FormatOptions(indentCase: true)
@@ -2247,7 +2295,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfCaseEndifIndenting3() {
+    func testSwitchIfCaseEndifIndenting3() {
         let input = "switch foo {\n#if x\ncase .bar: break\ncase .baz: break\n#endif\n}"
         let output = "switch foo {\n#if x\n    case .bar: break\n    case .baz: break\n#endif\n}"
         let options = FormatOptions(indentCase: false)
@@ -2255,7 +2303,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfCaseEndifIndenting4() {
+    func testSwitchIfCaseEndifIndenting4() {
         let input = "switch foo {\n#if x\ncase .bar:\nbreak\ncase .baz:\nbreak\n#endif\n}"
         let output = "switch foo {\n    #if x\n        case .bar:\n            break\n        case .baz:\n            break\n    #endif\n}"
         let options = FormatOptions(indentCase: true)
@@ -2263,7 +2311,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfCaseElseCaseEndifIndenting() {
+    func testSwitchIfCaseElseCaseEndifIndenting() {
         let input = "switch foo {\n#if x\ncase .bar: break\n#else\ncase .baz: break\n#endif\n}"
         let output = "switch foo {\n#if x\n    case .bar: break\n#else\n    case .baz: break\n#endif\n}"
         let options = FormatOptions(indentCase: false)
@@ -2271,7 +2319,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfCaseElseCaseEndifIndenting2() {
+    func testSwitchIfCaseElseCaseEndifIndenting2() {
         let input = "switch foo {\n#if x\ncase .bar: break\n#else\ncase .baz: break\n#endif\n}"
         let output = "switch foo {\n    #if x\n        case .bar: break\n    #else\n        case .baz: break\n    #endif\n}"
         let options = FormatOptions(indentCase: true)
@@ -2279,7 +2327,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfEndifInsideCaseIndenting() {
+    func testSwitchIfEndifInsideCaseIndenting() {
         let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbreak\ncase .baz: break\n}"
         let output = "switch foo {\ncase .bar:\n    #if x\n        bar()\n    #endif\n    break\ncase .baz: break\n}"
         let options = FormatOptions(indentCase: false)
@@ -2287,7 +2335,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testIfEndifInsideCaseIndenting2() {
+    func testSwitchIfEndifInsideCaseIndenting2() {
         let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbreak\ncase .baz: break\n}"
         let output = "switch foo {\n    case .bar:\n        #if x\n            bar()\n        #endif\n        break\n    case .baz: break\n}"
         let options = FormatOptions(indentCase: true)
@@ -2790,7 +2838,7 @@ class RulesTests: XCTestCase {
     func testCommaNotAddedInsideEmptyDictionaryLiteral() {
         let input = "foo = [:\n]"
         let output = "foo = [:\n]"
-        let options = FormatOptions(wrapElements: .disabled)
+        let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingCommas], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -3134,6 +3182,19 @@ class RulesTests: XCTestCase {
     func testNoConfusePostfixIdentifierWithKeyword2() {
         let input = "var foo = postfix\noverride init() {}"
         let output = "var foo = postfix\noverride init() {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoConfuseCaseWithSpecifier() {
+        let input = """
+        enum Foo {
+            case strong
+            case weak
+            public init() {}
+        }
+        """
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3494,6 +3555,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testParensRemovedAroundFunctionArgument() {
+        let input = "foo(bar: (5))"
+        let output = "foo(bar: 5)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRequiredParensNotRemovedAroundOptionalClosureType() {
+        let input = "let foo = (() -> ())?"
+        let output = "let foo = (() -> ())?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["void"])), output + "\n")
+    }
+
+    func testRedundantParensRemovedAroundOptionalClosureType() {
+        let input = "let foo = ((() -> ()))?"
+        let output = "let foo = (() -> ())?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["void"])), output + "\n")
+    }
+
     // around closure arguments
 
     func testSingleClosureArgumentUnwrapped() {
@@ -3596,6 +3678,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testParensNotRemovedBeforeIfBody4() {
+        let input = "if let data = #imageLiteral(resourceName: \"abc.png\").pngData() { /* some code */ }"
+        let output = "if let data = #imageLiteral(resourceName: \"abc.png\").pngData() { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testParensNotRemovedBeforeIfBodyAfterTry() {
         let input = "if let foo = try bar() { /* some code */ }"
         let output = "if let foo = try bar() { /* some code */ }"
@@ -3682,6 +3771,43 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // around tuples
+
+    func testParensRemovedAroundTuple() {
+        let input = "let foo = ((bar: Int, baz: String))"
+        let output = "let foo = (bar: Int, baz: String)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAroundTupleFunctionArgument() {
+        let input = "let foo = bar((bar: Int, baz: String))"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAroundTupleFunctionArgumentAfterSubscript() {
+        let input = "bar[5]((bar: Int, baz: String))"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNestedParensRemovedAroundTupleFunctionArgument() {
+        let input = "let foo = bar(((bar: Int, baz: String)))"
+        let output = "let foo = bar((bar: Int, baz: String))"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNestedParensRemovedAroundTupleFunctionArgument2() {
+        let input = "let foo = bar(foo: ((bar: Int, baz: String)))"
+        let output = "let foo = bar(foo: (bar: Int, baz: String))"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // after indexed tuple
 
     func testParensNotRemovedAfterTupleIndex() {
@@ -3694,6 +3820,20 @@ class RulesTests: XCTestCase {
     func testParensNotRemovedAfterTupleIndex2() {
         let input = "foo.1(true)"
         let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAfterTupleIndex3() {
+        let input = "foo.1((bar: Int, baz: String))"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNestedParensRemovedAfterTupleIndex3() {
+        let input = "foo.1(((bar: Int, baz: String)))"
+        let output = "foo.1((bar: Int, baz: String))"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -4871,6 +5011,19 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testSelfNotRemovedInClosureInCaseWithWhereClause() {
+        let input = """
+        switch foo {
+        case bar where baz:
+            quux = { self.foo }
+        }
+        """
+        let output = input
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // removeSelf = false
 
     func testInsertSelf() {
@@ -5212,6 +5365,112 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(removeSelf: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    // enable/disable
+
+    func testDisableRemoveSelf() {
+        let input = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                // swiftformat:disable redundantSelf
+                self.bar = 1
+                // swiftformat:enable redundantSelf
+                self.bar = 2
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                // swiftformat:disable redundantSelf
+                self.bar = 1
+                // swiftformat:enable redundantSelf
+                bar = 2
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: FormatRules.all(named: ["redundantSelf"]), options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testDisableNextRemoveSelf() {
+        let input = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                // swiftformat:disable:next redundantSelf
+                self.bar = 1
+                self.bar = 2
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                // swiftformat:disable:next redundantSelf
+                self.bar = 1
+                bar = 2
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: FormatRules.all(named: ["redundantSelf"]), options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testMultilineDisableRemoveSelf() {
+        let input = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                /* swiftformat:disable redundantSelf */ self.bar = 1 /* swiftformat:enable all */
+                self.bar = 2
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                /* swiftformat:disable redundantSelf */ self.bar = 1 /* swiftformat:enable all */
+                bar = 2
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: FormatRules.all(named: ["redundantSelf"]), options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testMultilineDisableNextRemoveSelf() {
+        let input = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                /* swiftformat:disable:next redundantSelf */
+                self.bar = 1
+                self.bar = 2
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                /* swiftformat:disable:next redundantSelf */
+                self.bar = 1
+                bar = 2
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: FormatRules.all(named: ["redundantSelf"]), options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
@@ -5706,10 +5965,58 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testAfterFirstPreserved() {
+        let input = "func foo(bar _: Int,\n         baz _: String) {\n}"
+        let output = input
+        let options = FormatOptions(wrapArguments: .preserve)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testAfterFirstPreservedIndentFixed() {
+        let input = "func foo(bar _: Int,\n baz _: String) {\n}"
+        let output = "func foo(bar _: Int,\n         baz _: String) {\n}"
+        let options = FormatOptions(wrapArguments: .preserve)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testAfterFirstPreservedNewlineRemoved() {
+        let input = "func foo(bar _: Int,\n         baz _: String\n) {\n}"
+        let output = "func foo(bar _: Int,\n         baz _: String) {\n}"
+        let options = FormatOptions(wrapArguments: .preserve)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     func testBeforeFirstConvertedToAfterFirst() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
         let output = "func foo(bar _: Int,\n         baz _: String) {\n}"
         let options = FormatOptions(wrapArguments: .afterFirst)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testBeforeFirstPreserved() {
+        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
+        let output = input
+        let options = FormatOptions(wrapArguments: .preserve)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testBeforeFirstPreservedIndentFixed() {
+        let input = "func foo(\n    bar _: Int,\n baz _: String\n) {\n}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
+        let options = FormatOptions(wrapArguments: .preserve)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testBeforeFirstPreservedNewlineAdded() {
+        let input = "func foo(\n    bar _: Int,\n    baz _: String) {\n}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {\n}"
+        let options = FormatOptions(wrapArguments: .preserve)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -5738,12 +6045,12 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output)
     }
 
-    // MARK: wrapElements
+    // MARK: wrapCollections
 
     func testNoDoubleSpaceAddedToWrappedArray() {
         let input = "[ foo,\n    bar ]"
         let output = "[\n    foo,\n    bar\n]"
-        let options = FormatOptions(trailingCommas: false, wrapElements: .beforeFirst)
+        let options = FormatOptions(trailingCommas: false, wrapCollections: .beforeFirst)
         let rules = [FormatRules.wrapArguments, FormatRules.spaceInsideBrackets]
         XCTAssertEqual(try format(input, rules: rules, options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -5752,7 +6059,7 @@ class RulesTests: XCTestCase {
     func testTrailingCommasAddedToWrappedArray() {
         let input = "[foo,\n    bar]"
         let output = "[\n    foo,\n    bar,\n]"
-        let options = FormatOptions(trailingCommas: true, wrapElements: .beforeFirst)
+        let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
         let rules = [FormatRules.wrapArguments, FormatRules.trailingCommas]
         XCTAssertEqual(try format(input, rules: rules, options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -5761,7 +6068,7 @@ class RulesTests: XCTestCase {
     func testSpaceAroundEnumValuesInArray() {
         let input = "[\n    .foo,\n    .bar, .baz,\n]"
         let output = "[\n    .foo,\n    .bar, .baz,\n]"
-        let options = FormatOptions(wrapElements: .beforeFirst)
+        let options = FormatOptions(wrapCollections: .beforeFirst)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -5769,7 +6076,7 @@ class RulesTests: XCTestCase {
     func testTrailingCommaRemovedInWrappedArray() {
         let input = "[\n    .foo,\n    .bar,\n    .baz,\n]"
         let output = "[.foo,\n .bar,\n .baz]"
-        let options = FormatOptions(wrapElements: .afterFirst)
+        let options = FormatOptions(wrapCollections: .afterFirst)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -5777,7 +6084,7 @@ class RulesTests: XCTestCase {
     func testNoRemoveLinebreakAfterCommentInElements() {
         let input = "[a, // comment\n]"
         let output = "[a] // comment\n"
-        let options = FormatOptions(wrapElements: .afterFirst)
+        let options = FormatOptions(wrapCollections: .afterFirst)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output)
     }
@@ -5823,6 +6130,39 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    // exponent case
+
+    func testLowercaseExponent() {
+        let input = "let foo = 0.456E-5"
+        let output = "let foo = 0.456e-5"
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testUppercaseExponent() {
+        let input = "let foo = 0.456e-5"
+        let output = "let foo = 0.456E-5"
+        let options = FormatOptions(uppercaseExponent: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testUppercaseHexExponent() {
+        let input = "let foo = 0xFF00p54"
+        let output = "let foo = 0xFF00P54"
+        let options = FormatOptions(uppercaseExponent: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testUppercaseGroupedHexExponent() {
+        let input = "let foo = 0xFF00_AABB_CCDDp54"
+        let output = "let foo = 0xFF00_AABB_CCDDP54"
+        let options = FormatOptions(uppercaseExponent: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // decimal grouping
 
     func testDefaultDecimalGrouping() {
@@ -5860,6 +6200,14 @@ class RulesTests: XCTestCase {
         let input = "let foo = 1234e5678"
         let output = "let foo = 1_234e5678"
         let options = FormatOptions(decimalGrouping: .group(3, 3))
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testZeroGrouping() {
+        let input = "let foo = 1234"
+        let output = "let foo = 1234"
+        let options = FormatOptions(decimalGrouping: .group(0, 0))
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -5931,35 +6279,36 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // exponent case
+    // fraction grouping
 
-    func testLowercaseExponent() {
-        let input = "let foo = 0.456E-5"
-        let output = "let foo = 0.456e-5"
-        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testUppercaseExponent() {
-        let input = "let foo = 0.456e-5"
-        let output = "let foo = 0.456E-5"
-        let options = FormatOptions(uppercaseExponent: true)
+    func testIgnoreFractionGrouping() {
+        let input = "let foo = 1.234_5_678"
+        let output = "let foo = 1.234_5_678"
+        let options = FormatOptions(decimalGrouping: .ignore, fractionGrouping: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testUppercaseHexExponent() {
-        let input = "let foo = 0xFF00p54"
-        let output = "let foo = 0xFF00P54"
-        let options = FormatOptions(uppercaseExponent: true)
+    func testNoFractionGrouping() {
+        let input = "let foo = 1.234_5_678"
+        let output = "let foo = 1.2345678"
+        let options = FormatOptions(decimalGrouping: .none, fractionGrouping: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    func testUppercaseGroupedHexExponent() {
-        let input = "let foo = 0xFF00_AABB_CCDDp54"
-        let output = "let foo = 0xFF00_AABB_CCDDP54"
-        let options = FormatOptions(uppercaseExponent: true)
+    func testFractionGroupingThousands() {
+        let input = "let foo = 12.34_56_78"
+        let output = "let foo = 12.345_678"
+        let options = FormatOptions(decimalGrouping: .group(3, 3), fractionGrouping: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testHexFractionGrouping() {
+        let input = "let foo = 0x12.34_56_78p56"
+        let output = "let foo = 0x12.34_5678p56"
+        let options = FormatOptions(hexGrouping: .group(4, 4), fractionGrouping: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.numberFormatting], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -5984,7 +6333,7 @@ class RulesTests: XCTestCase {
 
     func testNoStripHeaderWhenDisabled() {
         let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
-        let output = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
+        let output = input
         let options = FormatOptions(fileHeader: nil)
         XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -6025,6 +6374,14 @@ class RulesTests: XCTestCase {
     func testNoStripHeaderIfRuleDisabled() {
         let input = "// swiftformat:disable fileHeader\n// test\n// swiftformat:enable fileHeader\n\nfunc foo() {}"
         let output = "// swiftformat:disable fileHeader\n// test\n// swiftformat:enable fileHeader\n\nfunc foo() {}"
+        let options = FormatOptions(fileHeader: "")
+        XCTAssertEqual(try format(input, rules: [FormatRules.byName["fileHeader"]!], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testNoStripHeaderIfNextRuleDisabled() {
+        let input = "// swiftformat:disable:next fileHeader\n// test\n\nfunc foo() {}"
+        let output = "// swiftformat:disable:next fileHeader\n// test\n\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "")
         XCTAssertEqual(try format(input, rules: [FormatRules.byName["fileHeader"]!], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

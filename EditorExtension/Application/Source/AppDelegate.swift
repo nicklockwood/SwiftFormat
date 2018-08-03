@@ -32,4 +32,102 @@
 import Cocoa
 
 @NSApplicationMain
-class AppDelegate: NSObject, NSApplicationDelegate {}
+class AppDelegate: NSObject, NSApplicationDelegate {
+    var window: NSWindow? {
+        return NSApp.mainWindow
+    }
+
+    @objc
+    @IBAction func resetToDefault(_: NSMenuItem) {
+        RulesStore().resetRulesToDefaults()
+        OptionsStore().resetOptionsToDefaults()
+        NotificationCenter.default.post(name: .applicationDidLoadNewConfiguration, object: nil)
+    }
+
+    @objc
+    @IBAction func openConfiguration(_: NSMenuItem) {
+        guard let window = window else {
+            return
+        }
+
+        let dialog = NSOpenPanel()
+        dialog.title = "Choose a configuration file"
+        dialog.showsResizeIndicator = true
+        dialog.allowedFileTypes = [swiftFormatFileExtension]
+        dialog.allowsMultipleSelection = false
+
+        dialog.beginSheetModal(for: window) { response in
+            guard response == .OK, let url = dialog.url else {
+                return
+            }
+
+            let data: Data
+            do {
+                data = try Data(contentsOf: url)
+            } catch let error {
+                self.showError(FormatError.reading("problem reading configuration from \(url.path). [\(error)]"))
+                return
+            }
+
+            let configuration: SwiftFormatCLIArgumentsFile
+            do {
+                configuration = try SwiftFormatCLIArgumentsFile.decoded(data)
+            } catch let error {
+                self.showError(error)
+                return
+            }
+
+            RulesStore().restore(configuration.rules)
+            if let options = configuration.options {
+                OptionsStore().inferOptions = false
+                OptionsStore().restore(options)
+            } else {
+                OptionsStore().inferOptions = true
+            }
+
+            NotificationCenter.default.post(name: .applicationDidLoadNewConfiguration, object: nil)
+        }
+    }
+
+    @objc
+    @IBAction func saveConfiguration(_: NSMenuItem) {
+        guard let window = window else {
+            return
+        }
+
+        let dialog = NSSavePanel()
+        dialog.title = "Export Configuration"
+        dialog.nameFieldStringValue = "name.\(swiftFormatFileExtension)"
+        dialog.beginSheetModal(for: window) { response in
+            guard response == .OK, let url = dialog.url else {
+                return
+            }
+
+            let optionsStore = OptionsStore()
+            let options = optionsStore.inferOptions ? nil : optionsStore.formatOptions
+            let formatFile = SwiftFormatCLIArgumentsFile(rules: RulesStore().rules, options: options)
+            let data = formatFile.encoded()
+
+            do {
+                try data.write(to: url)
+            } catch let error {
+                self.showError(FormatError.writing("problem writing configuration to \(url.path). [\(error)]"))
+            }
+        }
+    }
+
+    private func showError(_ error: Error) {
+        guard let window = window else {
+            return
+        }
+
+        let alert = NSAlert(error: error)
+        alert.addButton(withTitle: "OK")
+        alert.alertStyle = .critical
+        alert.beginSheetModal(for: window)
+    }
+}
+
+extension NSNotification.Name {
+    static let applicationDidLoadNewConfiguration = NSNotification.Name("ApplicationDidLoadNewConfiguration")
+}

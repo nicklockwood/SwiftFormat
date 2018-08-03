@@ -29,19 +29,25 @@
 //  SOFTWARE.
 //
 
-enum FormatCommandError: Error, CustomStringConvertible {
+import Foundation
+
+enum FormatCommandError: Error, LocalizedError, CustomNSError {
     case notSwiftLanguage
     case noSelection
     case invalidSelection
 
-    var description: String {
+    var localizedDescription: String {
         switch self {
         case .notSwiftLanguage:
-            return "Not a Swift source file"
+            return "Error: not a Swift source file."
         case .noSelection:
-            return "No text selected"
+            return "Error: no text selected."
         case .invalidSelection:
-            return "Invalid selection"
+            return "Error: invalid selection."
         }
+    }
+
+    var errorUserInfo: [String: Any] {
+        return [NSLocalizedDescriptionKey: localizedDescription]
     }
 }

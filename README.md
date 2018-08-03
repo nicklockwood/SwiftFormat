@@ -158,8 +158,20 @@ To set up SwiftFormat as an Xcode build phase, do the following:
 	Both paths should be relative to the directory containing your Xcode project. If you are installing SwiftFormat as a Cocoapod, the swiftformat path will be
 	
 	    "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat"
-
+	    
     **NOTE:** Adding this script will slightly increase your build time, and will make changes to your source files as you work on them, which can have annoying side-effects such as clearing the undo buffer. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
+
+Alternatively, you can skip installation of the SwiftFormat pod and configure Xcode to use the locally installed swiftformat command-line tool instead by putting the following in your Run Script build phase:
+
+```bash
+  if which swiftformat >/dev/null; then
+    swiftformat .
+  else
+    echo "warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat"
+  fi
+```
+
+This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commits as code gets reformatted inconsistently.
 
 
 Git pre-commit hook
@@ -171,17 +183,19 @@ Git pre-commit hook
 
 3. Add the following line in the pre-commit file (unlike the Xcode build phase approach, this uses your locally installed version of SwiftFormat, not a separate copy in your project repository)
 
-        #!/bin/bash
-        git diff --diff-filter=d --staged --name-only | grep -e '\(.*\).swift$' | while read line; do
-          swiftformat "${line}";
-          git add "$line";
-        done
+    ```bash
+    #!/bin/bash
+    git diff --diff-filter=d --staged --name-only | grep -e '\(.*\).swift$' | while read line; do
+      swiftformat "${line}";
+      git add "$line";
+    done
+    ```
 
 4. enable the hook by typing `chmod +x .git/hooks/pre-commit` in the terminal
  
 The pre-commit hook will now run whenever you run `git commit`. Running `git commit --no-verify` will skip the pre-commit hook.
 
-**NOTE:** If you are using Git via a GUI client such as [Tower](https://www.git-tower.com), [additional steps](https://www.git-tower.com/help/mac/faq-and-tips/faq#faq-11) may be needed.
+**NOTE:** If you are using Git via a GUI client such as [Tower](https://www.git-tower.com), [additional steps](https://www.git-tower.com/help/mac/faq-and-tips/faq/hook-scripts) may be needed.
 
 **NOTE (2):** Unlike the Xcode build phase approach, git pre-commit hook won't be checked in to source control, and there's no way to guarantee that all users of the project are using the same version of SwiftFormat. For a collaborative project, you might want to consider a *post*-commit hook instead, which would run on your continuous integration server.
 
@@ -191,16 +205,16 @@ On CI using Danger
 To setup SwiftFormat to be used by your continuous integration system using [Danger](http://danger.systems/ruby/), do the following:
 
 1. Follow the [`instructions`](http://danger.systems/guides/getting_started.html) to setup Danger.
-1. Add the [`danger-swiftformat`](https://github.com/garriguv/danger-ruby-swiftformat) plugin to your `Gemfile`.
-1. Add the following to your `Dangerfile`:
+2. Add the [`danger-swiftformat`](https://github.com/garriguv/danger-ruby-swiftformat) plugin to your `Gemfile`.
+3. Add the following to your `Dangerfile`:
 
-```ruby
-swiftformat.binary_path = "/path/to/swiftformat" # optional
-swiftformat.additional_args = "--indent tab --self insert" # optional
-swiftformat.check_format(fail_on_error: true)
-```
-
-**NOTE:** It is recommended to add the `swiftformat` binary to your project directory.
+    ```ruby
+    swiftformat.binary_path = "/path/to/swiftformat" # optional
+    swiftformat.additional_args = "--indent tab --self insert" # optional
+    swiftformat.check_format(fail_on_error: true)
+    ```
+    
+    **NOTE:** It is recommended to add the `swiftformat` binary to your project directory to ensure the same version is used each time (see the [Xcode build phase](#xcode-build-phase) instructions above).
 
 So what does SwiftFormat actually do?
 --------------------------------------
@@ -241,7 +255,29 @@ To enable the rule(s) again, use:
 // swiftformat:enable <rule1> [<rule2> [rule<3> ...]]
 ```
 
-**Note:** The `swiftformat:enable` directive only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.
+To disable all rules use:
+
+```swift
+// swiftformat:disable all
+```
+
+And to enable them all again, use:
+
+```swift
+// swiftformat:enable all
+```
+
+To temporarily prevent one or more rules being applied to just the next line, use:
+
+```swift
+// swiftformat:disable:next <rule1> [<rule2> [rule<3> ...]]
+let foo = bar // rule(s) will be disabled for this line
+let bar = baz // rule(s) will be re-enabled for this line
+```
+
+There is no need to manually re-enable a rule after using the `next` directive.
+
+**Note:** The `swiftformat:enable` directives only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.
 
 Here are all the rules that SwiftFormat currently applies, and the effects that they have:
 
@@ -524,7 +560,7 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
        
 ***linebreaks*** - normalizes all linebreaks to use the same character, as specified in options (either CR, LF or CRLF, depending on the `--linebreaks` option).
 
-***numberFormatting*** - handles case and grouping of number literals, depending on the `--hexliteralcase`, `--exponentcase`, `--hexgrouping`, `--binarygrouping`, `--decimalgrouping`, and `--octalgrouping` options:
+***numberFormatting*** - handles case and grouping of number literals, depending on the `--hexliteralcase`, `--exponentcase`, `--hexgrouping`, `--binarygrouping`, `--decimalgrouping`, `--octalgrouping`, `--fractiongrouping` and `--exponentgrouping` options:
 
 ```diff
 - let color = 0xFF77A5
@@ -965,7 +1001,7 @@ goto(fail)
 + func quux() -> Void
 ```
 
-***wrapArguments*** - wraps function arguments and array elements depending on the `--wraparguments`, and `--wrapelements` modes specified. E.g. for a value of `beforefirst`:
+***wrapArguments*** - wraps function arguments and collection literals depending on the `--wraparguments`, and `--wrapcollections` modes specified. E.g. for a value of `beforefirst`:
 
 ```diff
 - func foo(bar: Int,

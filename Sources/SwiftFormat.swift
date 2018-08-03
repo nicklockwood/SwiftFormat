@@ -32,10 +32,10 @@
 import Foundation
 
 /// The current SwiftFormat version
-public let version = "0.33.11"
+public let version = "0.34.1"
 
 /// An enumeration of the types of error that may be thrown by SwiftFormat
-public enum FormatError: Error, CustomStringConvertible {
+public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomNSError {
     case reading(String)
     case writing(String)
     case parsing(String)
@@ -49,6 +49,14 @@ public enum FormatError: Error, CustomStringConvertible {
              let .options(string):
             return string
         }
+    }
+
+    public var localizedDescription: String {
+        return "Error: \(description)."
+    }
+
+    public var errorUserInfo: [String: Any] {
+        return [NSLocalizedDescriptionKey: localizedDescription]
     }
 }
 
@@ -80,7 +88,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
                            concurrent: Bool = true,
                            block: @escaping (URL, URL) throws -> () throws -> Void) -> [Error] {
     guard let resourceValues = try? inputURL.resourceValues(
-        forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])) else {
+        forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])
+    ) else {
         if FileManager.default.fileExists(atPath: inputURL.path) {
             return [FormatError.reading("failed to read attributes for \(inputURL.path)")]
         }
@@ -131,7 +140,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
             }
         } else if resourceValues.isDirectory == true {
             guard let files = try? manager.contentsOfDirectory(
-                at: inputURL, includingPropertiesForKeys: keys, options: .skipsHiddenFiles) else {
+                at: inputURL, includingPropertiesForKeys: keys, options: .skipsHiddenFiles
+            ) else {
                 onComplete { throw FormatError.reading("failed to read contents of directory at \(inputURL.path)") }
                 return
             }
@@ -254,13 +264,25 @@ public func applyRules(_ rules: [FormatRule],
 /// Returns the formatted token array, and the number of edits made
 public func format(_ tokens: [Token],
                    rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = FormatOptions()) throws -> [Token] {
+                   options: FormatOptions = .default) throws -> [Token] {
     return try applyRules(rules, to: tokens, with: options)
 }
 
 /// Format code with specified rules and options
 public func format(_ source: String,
                    rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = FormatOptions()) throws -> String {
+                   options: FormatOptions = .default) throws -> String {
     return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
 }
+
+// MARK: Xcode 9.2 compatibility
+
+#if !swift(>=4.1)
+
+    extension Sequence {
+        func compactMap<T>(_ transform: (Element) throws -> T?) rethrows -> [T] {
+            return try flatMap { try transform($0).map { [$0] } ?? [] }
+        }
+    }
+
+#endif

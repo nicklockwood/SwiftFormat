@@ -33,7 +33,6 @@ import SwiftFormat
 import XCTest
 
 class TokenizerTests: XCTestCase {
-
     // MARK: Invalid input
 
     func testInvalidToken() {
@@ -945,6 +944,42 @@ class TokenizerTests: XCTestCase {
     func testCustomOperator() {
         let input = "~="
         let output: [Token] = [.operator("~=", .none)]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testCustomOperator2() {
+        let input = "a <> b"
+        let output: [Token] = [
+            .identifier("a"),
+            .space(" "),
+            .operator("<>", .infix),
+            .space(" "),
+            .identifier("b"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testCustomOperator3() {
+        let input = "a |> b"
+        let output: [Token] = [
+            .identifier("a"),
+            .space(" "),
+            .operator("|>", .infix),
+            .space(" "),
+            .identifier("b"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testCustomOperator4() {
+        let input = "a <<>> b"
+        let output: [Token] = [
+            .identifier("a"),
+            .space(" "),
+            .operator("<<>>", .infix),
+            .space(" "),
+            .identifier("b"),
+        ]
         XCTAssertEqual(tokenize(input), output)
     }
 
@@ -2630,6 +2665,34 @@ class TokenizerTests: XCTestCase {
             .startOfScope(":"),
             .linebreak("\n"),
             .keyword("break"),
+            .linebreak("\n"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testEnumWithConditionalCase() {
+        let input = "enum Foo {\ncase bar\n#if baz\ncase baz\n#endif\n}"
+        let output: [Token] = [
+            .keyword("enum"),
+            .space(" "),
+            .identifier("Foo"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n"),
+            .keyword("case"),
+            .space(" "),
+            .identifier("bar"),
+            .linebreak("\n"),
+            .startOfScope("#if"),
+            .space(" "),
+            .identifier("baz"),
+            .linebreak("\n"),
+            .keyword("case"),
+            .space(" "),
+            .identifier("baz"),
+            .linebreak("\n"),
+            .endOfScope("#endif"),
             .linebreak("\n"),
             .endOfScope("}"),
         ]

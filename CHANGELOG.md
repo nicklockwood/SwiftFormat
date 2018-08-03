@@ -1,5 +1,38 @@
 # Change Log
 
+## [0.34.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.34.1) (2018-08-01)
+
+- Added `// swiftformat:disable:next` directive for temporarily disabling a rule on just the following line
+- Fixed bug where the `// swiftformat:disable all` directive could result in file contents being stripped
+- Fixed a bug where `--verbose` mode incorrectly reported which rules were applied to each file
+- Reset to Defaults menu item in SwiftFormat for Xcode now correctly resets the Infer Format Options setting
+
+## [0.34.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.34.0) (2018-07-30)
+
+- You can now configure format options for the Xcode Source Editor Extension (big thanks to @vinceburn for this feature)
+- Restored ability to build the swiftformat command-line app using Xcode 9.2 on macOS Sierra
+- Xcode Source Editor Extension no longer fails when using Playgrounds with multiple pages 
+- The `--wrapelementss` option has been renamed to `--wrapcollections`
+- Added new `--wraparguments preserve` and `--wrapcollections preserve` options
+- Added `--fractiongrouping` & `--exponentgrouping` options
+- Improved formatting of Xcode Source Editor Extension error messages
+- Fixed a bug where parens were incorrectly removed after an image literal
+
+## [0.33.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.13) (2018-07-25)
+
+- Fixed bug where required parens were incorrectly removed from around a closure type
+- Added `--lint` mode that is similar to `--dryrun` but returns a non-zero exit code if any files require formatting
+- The swiftformat command-line tool now returns a non-zero exit code in the event of a fatal error while formatting
+
+## [0.33.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.12) (2018-07-23)
+
+- Added `swiftformat:disable all` and `swiftformat:enable all` directives
+- Fixed a bug where redundant parens were not always removed correctly
+- Fixed errors when parsing custom operators such as `<>`, `|>` or `<<>>`
+- Fixed divide-by-zero crash when specifiying number groupings with a value of zero
+- Rules are now always applied in alphabetical order to ensure consistency
+- Fixed the `--conflictmarkers` command-line option
+
 ## [0.33.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.11) (2018-07-05)
 
 - Fixed a bug where `--inferoptions` would always set `--self` to "insert" (this also affected the Xcode extension)
@@ -57,7 +90,7 @@
 
 ## [0.33.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.33.2) (2018-02-20)
 
-- The `fileHeader` rule can now be disabled in an individual file by prefixing header with `// swiftformat: disable fileHeader`
+- The `fileHeader` rule can now be disabled in an individual file by prefixing header with `// swiftformat:disable fileHeader`
 - Fixed a bug in the `specifiers` rule that could mangle code if the previous line ended with certain identifiers
 - Fixed typo in `--insertlines` deprecation warning message
 

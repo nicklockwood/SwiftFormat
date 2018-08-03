@@ -54,13 +54,13 @@ public struct CLI {
     }
 
     /// Run the CLI with the specified input arguments
-    public static func run(in directory: String, with args: [String] = CommandLine.arguments) {
-        processArguments(args, in: directory)
+    public static func run(in directory: String, with args: [String] = CommandLine.arguments) -> ExitCode {
+        return processArguments(args, in: directory)
     }
 
     /// Run the CLI with the specified input string (this will be parsed into multiple arguments)
-    public static func run(in directory: String, with argumentString: String) {
-        run(in: directory, with: parseArguments(argumentString))
+    public static func run(in directory: String, with argumentString: String) -> ExitCode {
+        return run(in: directory, with: parseArguments(argumentString))
     }
 }
 
@@ -74,68 +74,80 @@ func printWarnings(_ errors: [Error]) {
     }
 }
 
+// Represents the exit codes to the command line. See `man sysexits` for more information.
+public enum ExitCode: Int32 {
+    case ok = 0 // EX_OK
+    case lintFailure = 1
+    case error = 70 // EX_SOFTWARE
+}
+
 func printHelp() {
-    print("")
-    print("swiftformat, version \(version)")
-    print("copyright (c) 2016 Nick Lockwood")
-    print("")
-    print("--help             print this help page")
-    print("--version          print the currently installed swiftformat version")
-    print("")
-    print("swiftformat can operate on file & directories, or directly on input from stdin:")
-    print("")
-    print("usage: swiftformat [<file> <file> ...] [--inferoptions] [--output path] [...]")
-    print("")
-    print("<file> <file> ...  one or more swift files or directory paths to be processed")
-    print("")
-    print("--inferoptions     instead of formatting input, use it to infer format options")
-    print("--output           output path for formatted file(s) (defaults to input path)")
-    print("--exclude          list of file or directory paths to ignore (comma-delimited)")
-    print("--symlinks         how symlinks are handled. \"follow\" or \"ignore\" (default)")
-    print("--fragment         input is part of a larger file. \"true\" or \"false\" (default)")
-    print("--conflictmarkers  merge conflict markers, either \"reject\" (default) or \"ignore\"")
-    print("--cache            path to cache file, or \"clear\" or \"ignore\" the default cache")
-    print("--verbose          display detailed formatting output and warnings/errors")
-    print("--config           path to configuration file (ignores command line options)")
-    print("--dryrun           run in \"dry\" mode (without actually changing any files)")
-    print("")
-    print("swiftformat has a number of rules that can be enabled or disabled. by default")
-    print("most rules are enabled. use --rules to display all enabled/disabled rules:")
-    print("")
-    print("--disable          a list of format rules to be disabled (comma-delimited)")
-    print("--enable           a list of disabled rules to be re-enabled (comma-delimited)")
-    print("--rules            the list of rules to apply (pass nothing to print rules)")
-    print("")
-    print("swiftformat's rules can be configured using options. a given option may affect")
-    print("multiple rules. options have no affect if the related rules have been disabled:")
-    print("")
-    print("--allman           use allman indentation style. \"true\" or \"false\" (default)")
-    print("--binarygrouping   binary grouping,threshold or \"none\", \"ignore\". default: 4,8")
-    print("--commas           commas in collection literals. \"always\" (default) or \"inline\"")
-    print("--comments         indenting of comment bodies. \"indent\" (default) or \"ignore\"")
-    print("--decimalgrouping  decimal grouping,threshold or \"none\", \"ignore\". default: 3,6")
-    print("--elseposition     placement of else/catch. \"same-line\" (default) or \"next-line\"")
-    print("--empty            how empty values are represented. \"void\" (default) or \"tuple\"")
-    print("--experimental     experimental rules. \"enabled\" or \"disabled\" (default)")
-    print("--exponentcase     case of 'e' in numbers. \"lowercase\" or \"uppercase\" (default)")
-    print("--header           header comments. \"strip\", \"ignore\", or the text you wish use")
-    print("--hexgrouping      hex grouping,threshold or \"none\", \"ignore\". default: 4,8")
-    print("--hexliteralcase   casing for hex literals. \"uppercase\" (default) or \"lowercase\"")
-    print("--ifdef            #if indenting. \"indent\" (default), \"noindent\" or \"outdent\"")
-    print("--indent           number of spaces to indent, or \"tab\" to use tabs")
-    print("--indentcase       indent cases inside a switch. \"true\" or \"false\" (default)")
-    print("--linebreaks       linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)")
-    print("--octalgrouping    octal grouping,threshold or \"none\", \"ignore\". default: 4,8")
-    print("--operatorfunc     spacing for operator funcs. \"spaced\" (default) or \"nospace\"")
-    print("--patternlet       let/var placement in patterns. \"hoist\" (default) or \"inline\"")
-    print("--ranges           spacing for ranges. \"spaced\" (default) or \"nospace\"")
-    print("--semicolons       allow semicolons. \"never\" or \"inline\" (default)")
-    print("--self             use self for member variables. \"remove\" (default) or \"insert\"")
-    print("--stripunusedargs  \"closure-only\", \"unnamed-only\" or \"always\" (default)")
-    print("--trimwhitespace   trim trailing space. \"always\" (default) or \"nonblank-lines\"")
-    print("--wraparguments    wrap function args. \"beforefirst\", \"afterfirst\", \"disabled\"")
-    print("--wrapelements     wrap array/dict. \"beforefirst\", \"afterfirst\", \"disabled\"")
-    print("")
+    print("""
+
+    swiftformat, version \(version)
+    copyright (c) 2016 Nick Lockwood
+
+    --help             print this help page
+    --version          print the currently installed swiftformat version
+
+    swiftformat can operate on file & directories, or directly on input from stdin:
+
+    usage: swiftformat [<file> <file> ...] [--inferoptions] [--output path] [...]
+
+    <file> <file> ...  one or more swift files or directory paths to be processed
+
+    --config           path to configuration file (ignores command line options)
+    --inferoptions     instead of formatting input, use it to infer format options
+    --output           output path for formatted file(s) (defaults to input path)
+    --exclude          list of file or directory paths to ignore (comma-delimited)
+    --symlinks         how symlinks are handled. "follow" or "ignore" (default)
+    --fragment         input is part of a larger file. "true" or "false" (default)
+    --conflictmarkers  merge conflict markers, either "reject" (default) or "ignore"
+    --cache            path to cache file, or "clear" or "ignore" the default cache
+    --verbose          display detailed formatting output and warnings/errors
+    --dryrun           run in "dry" mode (without actually changing any files)
+    --lint             returns non-zero exit code if files would be changed
+
+    swiftformat has a number of rules that can be enabled or disabled. by default
+    most rules are enabled. use --rules to display all enabled/disabled rules:
+
+    --rules            the list of rules to apply (pass nothing to print all rules)
+    --disable          a list of format rules to be disabled (comma-delimited)
+    --enable           a list of disabled rules to be re-enabled (comma-delimited)
+    --experimental     experimental rules. "enabled" or "disabled" (default)
+
+    swiftformat's rules can be configured using options. a given option may affect
+    multiple rules. options have no affect if the related rules have been disabled:
+
+    --allman           use allman indentation style. "true" or "false" (default)
+    --binarygrouping   binary grouping,threshold (default: 4,8) or "none", "ignore"
+    --commas           commas in collection literals. "always" (default) or "inline"
+    --comments         indenting of comment bodies. "indent" (default) or "ignore"
+    --decimalgrouping  decimal grouping,threshold (default: 3,6) or "none", "ignore"
+    --elseposition     placement of else/catch. "same-line" (default) or "next-line"
+    --empty            how empty values are represented. "void" (default) or "tuple"
+    --exponentcase     case of 'e' in numbers. "lowercase" or "uppercase" (default)
+    --exponentgrouping group exponent digits, "enabled" or "disabled" (default)
+    --fractiongrouping group digits after '.', "enabled" or "disabled" (default)
+    --header           header comments. "strip", "ignore", or the text you wish use
+    --hexgrouping      hex grouping,threshold (default: 4,8) or "none", "ignore"
+    --hexliteralcase   casing for hex literals. "uppercase" (default) or "lowercase"
+    --ifdef            #if indenting. "indent" (default), "noindent" or "outdent"
+    --indent           number of spaces to indent, or "tab" to use tabs
+    --indentcase       indent cases inside a switch. "true" or "false" (default)
+    --linebreaks       linebreak character to use. "cr", "crlf" or "lf" (default)
+    --octalgrouping    octal grouping,threshold or "none", "ignore". default: 4,8
+    --operatorfunc     spacing for operator funcs. "spaced" (default) or "nospace"
+    --patternlet       let/var placement in patterns. "hoist" (default) or "inline"
+    --ranges           spacing for ranges. "spaced" (default) or "nospace"
+    --semicolons       allow semicolons. "never" or "inline" (default)
+    --self             use self for member variables. "remove" (default) or "insert"
+    --stripunusedargs  "closure-only", "unnamed-only" or "always" (default)
+    --trimwhitespace   trim trailing space. "always" (default) or "nonblank-lines"
+    --wraparguments    wrap function args. "beforefirst", "afterfirst", "preserve"
+    --wrapcollections  wrap array/dict. "beforefirst", "afterfirst", "preserve"
+
+    """)
 }
 
 func expandPath(_ path: String, in directory: String) -> URL {
@@ -192,24 +204,42 @@ func parseArguments(_ argumentString: String) -> [String] {
     return arguments
 }
 
-func processArguments(_ args: [String], in directory: String) {
+private let allRules = Set(FormatRules.byName.keys)
+func parseRules(_ rules: String) throws -> [String] {
+    return try rules.components(separatedBy: ",").compactMap {
+        let name = $0.trimmingCharacters(in: .whitespacesAndNewlines)
+        if name.isEmpty {
+            return nil
+        } else if !allRules.contains(name) {
+            throw FormatError.options("unknown rule '\(name)'")
+        }
+        return name
+    }
+}
+
+func processArguments(_ args: [String], in directory: String) -> ExitCode {
     var errors = [Error]()
     var verbose = false
     var dryrun = false
+    var lint = false
     do {
-        // Get options
+        // Get arguments
         let args = try preprocessArguments(args, commandLineArguments)
 
         // Show help if requested specifically or if no arguments are passed
         if args["help"] != nil {
             printHelp()
-            return
+            return .ok
         }
+
+        // Options
+        let formatOptions = try formatOptionsFor(args) ?? .default
+        let fileOptions = try fileOptionsFor(args)
 
         // Version
         if args["version"] != nil {
             print("swiftformat, version \(version)")
-            return
+            return .ok
         }
 
         // Get format options
@@ -224,50 +254,29 @@ func processArguments(_ args: [String], in directory: String) {
         let fileOptions = try fileOptionsFor(args)
 
         // Rules
-        var rules = Set(FormatRules.byName.keys)
-        var disabled = Set(FormatRules.disabledByDefault)
-        if let names = args["enable"]?.components(separatedBy: ",") {
-            for name in names {
-                var name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !rules.contains(name) {
-                    throw FormatError.options("unknown rule '\(name)'")
-                }
-                disabled.remove(name)
-            }
+        var rules = allRules.subtracting(FormatRules.disabledByDefault)
+        if let names = try args["rules"].map(parseRules), !names.isEmpty {
+            rules = Set(names)
         }
-        if let names = args["disable"]?.components(separatedBy: ",") {
-            for name in names {
-                var name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !rules.contains(name) {
-                    throw FormatError.options("unknown rule '\(name)'")
-                }
-                disabled.insert(name)
+        if let names = try args["enable"].map(parseRules) {
+            if names.isEmpty {
+                throw FormatError.options("--enable argument expects a value")
             }
+            rules.formUnion(names)
         }
-        if let names = args["rules"]?.components(separatedBy: ",") {
-            if names.count == 1, names[0].isEmpty {
-                print("")
-                for name in Array(rules).sorted() {
-                    let disabled = disabled.contains(name) ? " (disabled)" : ""
-                    print(" \(name)\(disabled)")
-                }
-                print("")
-                return
+        if let names = try args["disable"].map(parseRules) {
+            if names.isEmpty {
+                throw FormatError.options("--disable argument expects a value")
             }
-            var whitelist = Set<String>()
-            for name in names {
-                var name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                if rules.contains(name) {
-                    whitelist.insert(name)
-                } else {
-                    throw FormatError.options("unknown rule '\(name)'")
-                }
+            rules.subtract(names)
+        }
+        if args["rules"] == "" {
+            print("")
+            for name in Array(allRules).sorted() {
+                print(" \(name)\(rules.contains(name) ? "" : " (disabled)")")
             }
-            rules = whitelist
-        } else {
-            for name: String in disabled {
-                rules.remove(name)
-            }
+            print("")
+            return .ok
         }
 
         // Get input path(s)
@@ -288,11 +297,21 @@ func processArguments(_ args: [String], in directory: String) {
             }
         }
 
-        // Dry
+        // Dry run
         if let arg = args["dryrun"] {
             dryrun = true
             if !arg.isEmpty {
                 // dryrun doesn't take an argument, so treat argument as another input path
+                inputURLs.append(expandPath(arg, in: directory))
+            }
+        }
+
+        // Lint
+        if let arg = args["lint"] {
+            dryrun = true
+            lint = true
+            if !arg.isEmpty {
+                // lint doesn't take an argument, so treat argument as another input path
                 inputURLs.append(expandPath(arg, in: directory))
             }
         }
@@ -322,7 +341,7 @@ func processArguments(_ args: [String], in directory: String) {
             }
             if inputURLs.count > 0 {
                 print("inferring swiftformat options from source file(s)...")
-                var filesParsed = 0, options = FormatOptions(), errors = [Error]()
+                var filesParsed = 0, options = FormatOptions.default, errors = [Error]()
                 let time = timeEvent {
                     (filesParsed, options, errors) = inferOptions(from: inputURLs, excluding: excludedURLs)
                 }
@@ -345,7 +364,7 @@ func processArguments(_ args: [String], in directory: String) {
                 print("")
                 print(commandLineArguments(for: options).map({ "--\($0.key) \($0.value)" }).joined(separator: " "))
                 print("")
-                return
+                return .ok
             }
         }
 
@@ -426,12 +445,10 @@ func processArguments(_ args: [String], in directory: String) {
                             if dryrun {
                                 print("(dryrun mode - no files will be changed)", as: .warning)
                             }
-                            let output = try format(
-                                input,
-                                ruleNames: Array(rules),
-                                options: formatOptions,
-                                verbose: verbose
-                            )
+                            let output = try format(input,
+                                                    ruleNames: Array(rules),
+                                                    options: formatOptions,
+                                                    verbose: verbose)
                             if (try? String(contentsOf: outputURL)) != output {
                                 if dryrun {
                                     print("would have updated \(outputURL.path)", as: .info)
@@ -446,12 +463,10 @@ func processArguments(_ args: [String], in directory: String) {
                             print("swiftformat completed successfully", as: .success)
                         } else {
                             // Write to stdout
-                            let output = try format(
-                                input,
-                                ruleNames: Array(rules),
-                                options: formatOptions,
-                                verbose: false
-                            )
+                            let output = try format(input,
+                                                    ruleNames: Array(rules),
+                                                    options: formatOptions,
+                                                    verbose: false)
                             print(output, as: .content)
                         }
                     } catch {
@@ -474,7 +489,7 @@ func processArguments(_ args: [String], in directory: String) {
             } else {
                 printHelp()
             }
-            return
+            return .ok
         }
 
         print("running swiftformat...")
@@ -486,17 +501,15 @@ func processArguments(_ args: [String], in directory: String) {
         var filesWritten = 0, filesFailed = 0, filesChecked = 0
         let time = timeEvent {
             var _errors = [Error]()
-            (filesWritten, filesFailed, filesChecked, _errors) = processInput(
-                inputURLs,
-                excluding: excludedURLs,
-                andWriteToOutput: outputURL,
-                withRules: Array(rules),
-                formatOptions: formatOptions,
-                fileOptions: fileOptions,
-                verbose: verbose,
-                dryrun: dryrun,
-                cacheURL: cacheURL
-            )
+            (filesWritten, filesFailed, filesChecked, _errors) = processInput(inputURLs,
+                                                                              excluding: excludedURLs,
+                                                                              andWriteToOutput: outputURL,
+                                                                              withRules: Array(rules),
+                                                                              formatOptions: formatOptions,
+                                                                              fileOptions: fileOptions,
+                                                                              verbose: verbose,
+                                                                              dryrun: dryrun,
+                                                                              cacheURL: cacheURL)
             errors += _errors
         }
 
@@ -517,10 +530,17 @@ func processArguments(_ args: [String], in directory: String) {
         }
         printWarnings(errors)
         if dryrun {
-            print("swiftformat completed. \(filesFailed)/\(filesChecked) files would have been updated in \(time)", as: .success)
+            let result = "swiftformat completed. \(filesFailed)/\(filesChecked) files would have been updated in \(time)"
+            if lint && filesFailed > 0 {
+                print(result, as: .error)
+                return .lintFailure
+            } else {
+                print(result, as: .success)
+            }
         } else {
             print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)", as: .success)
         }
+        return .ok
     } catch {
         if !verbose {
             // Warnings would be redundant at this point
@@ -528,6 +548,7 @@ func processArguments(_ args: [String], in directory: String) {
         }
         // Fatal error
         print("error: \(error)", as: .error)
+        return .error
     }
 }
 
@@ -560,12 +581,8 @@ func format(_ source: String,
 
     // Apply rules
     let rulesByName = FormatRules.byName
-    var rules = [FormatRule]()
-    for name in ruleNames {
-        if let rule = rulesByName[name] {
-            rules.append(rule)
-        }
-    }
+    let ruleNames = ruleNames.sorted()
+    let rules = ruleNames.compactMap { rulesByName[$0] }
     var rulesApplied = Set<String>()
     let callback: ((Int, [Token]) -> Void)? = verbose ? { i, updatedTokens in
         if updatedTokens != tokens {
@@ -745,7 +762,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             // Long argument names
             let key = String(arg.unicodeScalars.dropFirst(2))
             if !names.contains(key) {
-                throw FormatError.options("unknown argument: \(arg)")
+                throw FormatError.options("unknown option --\(key)")
             }
             name = key
             namedArgs[name] = ""
@@ -755,9 +772,9 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             let flag = String(arg.unicodeScalars.dropFirst())
             let matches = names.filter { $0.hasPrefix(flag) }
             if matches.count > 1 {
-                throw FormatError.options("ambiguous argument: \(arg)")
+                throw FormatError.options("ambiguous flag -\(flag)")
             } else if matches.count == 0 {
-                throw FormatError.options("unknown argument: \(arg)")
+                throw FormatError.options("unknown flag -\(flag)")
             } else {
                 name = matches[0]
                 namedArgs[name] = ""
@@ -775,95 +792,23 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     return namedArgs
 }
 
-func commandLineArguments(for options: FormatOptions) -> [String: String] {
+/// Get command line arguments for formatting options
+/// (excludes non-formatting options and deprecated/renamed options)
+func commandLineArguments(for options: FormatOptions, excludingDefaults: Bool = false) -> [String: String] {
     var args = [String: String]()
-    for child in Mirror(reflecting: options).children {
-        if let label = child.label {
-            switch label {
-            case "indent":
-                if options.indent == "\t" {
-                    args["indent"] = "tabs"
-                } else {
-                    args["indent"] = String(options.indent.count)
-                }
-            case "linebreak":
-                switch options.linebreak {
-                case "\r":
-                    args["linebreaks"] = "cr"
-                case "\n":
-                    args["linebreaks"] = "lf"
-                case "\r\n":
-                    args["linebreaks"] = "crlf"
-                default:
-                    break
-                }
-            case "allowInlineSemicolons":
-                args["semicolons"] = options.allowInlineSemicolons ? "inline" : "never"
-            case "spaceAroundRangeOperators":
-                args["ranges"] = options.spaceAroundRangeOperators ? "spaced" : "nospace"
-            case "spaceAroundOperatorDeclarations":
-                args["operatorfunc"] = options.spaceAroundOperatorDeclarations ? "spaced" : "nospace"
-            case "useVoid":
-                args["empty"] = options.useVoid ? "void" : "tuples"
-            case "trailingCommas":
-                args["commas"] = options.trailingCommas ? "always" : "inline"
-            case "indentCase":
-                args["indentcase"] = options.indentCase ? "true" : "false"
-            case "indentComments":
-                args["comments"] = options.indentComments ? "indent" : "ignore"
-            case "truncateBlankLines":
-                args["trimwhitespace"] = options.truncateBlankLines ? "always" : "nonblank-lines"
-            case "allmanBraces":
-                args["allman"] = options.allmanBraces ? "true" : "false"
-            case "fileHeader":
-                args["header"] = options.fileHeader.map { $0.isEmpty ? "strip" : $0 } ?? "ignore"
-            case "ifdefIndent":
-                args["ifdef"] = options.ifdefIndent.rawValue
-            case "wrapArguments":
-                args["wraparguments"] = options.wrapArguments.rawValue
-            case "wrapElements":
-                args["wrapelements"] = options.wrapElements.rawValue
-            case "uppercaseHex":
-                args["hexliteralcase"] = options.uppercaseHex ? "uppercase" : "lowercase"
-            case "uppercaseExponent":
-                args["exponentcase"] = options.uppercaseExponent ? "uppercase" : "lowercase"
-            case "decimalGrouping":
-                args["decimalgrouping"] = options.decimalGrouping.rawValue
-            case "binaryGrouping":
-                args["binarygrouping"] = options.binaryGrouping.rawValue
-            case "octalGrouping":
-                args["octalgrouping"] = options.octalGrouping.rawValue
-            case "hexGrouping":
-                args["hexgrouping"] = options.hexGrouping.rawValue
-            case "hoistPatternLet":
-                args["patternlet"] = options.hoistPatternLet ? "hoist" : "inline"
-            case "stripUnusedArguments":
-                args["stripunusedargs"] = options.stripUnusedArguments.rawValue
-            case "elseOnNextLine":
-                args["elseposition"] = options.elseOnNextLine ? "next-line" : "same-line"
-            case "removeSelf":
-                args["self"] = options.removeSelf ? "remove" : "insert"
-            case "experimentalRules":
-                args["experimental"] = options.experimentalRules ? "enabled" : nil
-            case "fragment":
-                args["fragment"] = options.fragment ? "true" : nil
-            case "ignoreConflictMarkers":
-                args["conflictmarkers"] = options.ignoreConflictMarkers ? "ignore" : nil
-            case "insertBlankLines", "removeBlankLines":
-                break // Deprecated
-            default:
-                assertionFailure("Unknown option: \(label)")
-            }
+    for descriptor in FormatOptions.Descriptor.formatting where !descriptor.isDeprecated {
+        let value = descriptor.fromOptions(options)
+        if !excludingDefaults || value != descriptor.fromOptions(.default) {
+            args[descriptor.argumentName] = value
         }
-    }
-    for arg in deprecatedArguments {
-        args[arg] = nil
     }
     return args
 }
 
-private func processOption(_ key: String, in args: [String: String],
-                           from: inout Set<String>, handler: (String) throws -> Void) throws {
+private func processOption(_ key: String,
+                           in args: [String: String],
+                           from: inout Set<String>,
+                           handler: (String) throws -> Void) throws {
     precondition(commandLineArguments.contains(key))
     var arguments = from
     arguments.remove(key)
@@ -877,10 +822,11 @@ private func processOption(_ key: String, in args: [String: String],
     do {
         try handler(value)
     } catch {
-        throw FormatError.options("unsupported --\(key) value: \(value)")
+        throw FormatError.options("unsupported --\(key) value '\(value)'")
     }
 }
 
+/// Parse FileOptions from arguments
 func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
     var options = FileOptions()
     var arguments = Set(fileArguments)
@@ -898,8 +844,31 @@ func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
     return options
 }
 
-func formatOptionsFromFile(_ configPath: String) throws -> FormatOptions {
+/// Parse FormatOptions from arguments
+/// Returns nil if the arguments dictionary does not contain any formatting arguments
+func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
+    var options = FormatOptions.default
+    var arguments = Set(formattingArguments)
 
+    var containsFormatOption = false
+    for option in FormatOptions.Descriptor.all {
+        var handler = option.toOptions
+        if let message = option.deprecationMessage {
+            handler = { string, options in
+                print(message, as: .warning)
+                try option.toOptions(string, &options)
+            }
+        }
+        try processOption(option.argumentName, in: args, from: &arguments) {
+            containsFormatOption = true
+            try handler($0, &options)
+        }
+    }
+    assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
+    return containsFormatOption ? options : nil
+}
+
+func formatOptionsFromFile(_ configPath: String) throws -> FormatOptions {
     let configFileUrl = URL(fileURLWithPath: configPath)
     guard let configFileContents = try? String(contentsOf: configFileUrl) else {
         throw FormatError.reading("failed to read configuration file \(configFileUrl.path)")
@@ -908,7 +877,7 @@ func formatOptionsFromFile(_ configPath: String) throws -> FormatOptions {
     let configLines = configFileContents.components(separatedBy: .newlines)
     var args: [String: String] = [:]
     _ = configLines
-        .filter({ !$0.isEmpty && !$0.isShellComment() })
+        .filter({ !$0.isEmpty && !$0.hasPrefix("#") })
         .map({ line in
             let components = line.components(separatedBy: ":")
             guard components.count == 2 else { return }
@@ -918,328 +887,10 @@ func formatOptionsFromFile(_ configPath: String) throws -> FormatOptions {
         })
 
     do {
-        return try formatOptionsFor(args)
+        return try formatOptionsFor(args) ?? .default
     } catch {
         throw error
     }
-}
-
-func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions {
-    var options = FormatOptions()
-    var arguments = Set(formatArguments)
-    try processOption("indent", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "tab", "tabs", "tabbed":
-            options.indent = "\t"
-        default:
-            if let spaces = Int($0) {
-                options.indent = String(repeating: " ", count: spaces)
-                break
-            }
-            throw FormatError.options("")
-        }
-    }
-    try processOption("indentcase", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "true":
-            options.indentCase = true
-        case "false":
-            options.indentCase = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("allman", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "true", "enabled":
-            options.allmanBraces = true
-        case "false", "disabled":
-            options.allmanBraces = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("semicolons", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "inline":
-            options.allowInlineSemicolons = true
-        case "never", "false":
-            options.allowInlineSemicolons = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("commas", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "always", "true":
-            options.trailingCommas = true
-        case "inline", "false":
-            options.trailingCommas = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("comments", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "indent", "indented":
-            options.indentComments = true
-        case "ignore":
-            options.indentComments = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("linebreaks", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "cr":
-            options.linebreak = "\r"
-        case "lf":
-            options.linebreak = "\n"
-        case "crlf":
-            options.linebreak = "\r\n"
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("ranges", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "space", "spaced", "spaces":
-            options.spaceAroundRangeOperators = true
-        case "nospace":
-            options.spaceAroundRangeOperators = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("operatorfunc", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "space", "spaced", "spaces":
-            options.spaceAroundOperatorDeclarations = true
-        case "nospace":
-            options.spaceAroundOperatorDeclarations = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("elseposition", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "nextline", "next-line":
-            options.elseOnNextLine = true
-        case "sameline", "same-line":
-            options.elseOnNextLine = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("empty", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "void":
-            options.useVoid = true
-        case "tuple", "tuples":
-            options.useVoid = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("trimwhitespace", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "always":
-            options.truncateBlankLines = true
-        case "nonblank-lines", "nonblank", "non-blank-lines", "non-blank",
-             "nonempty-lines", "nonempty", "non-empty-lines", "non-empty":
-            options.truncateBlankLines = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("header", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "strip":
-            options.fileHeader = ""
-        case "ignore":
-            options.fileHeader = nil
-        default:
-            // Normalize the header
-            let header = $0.trimmingCharacters(in: .whitespacesAndNewlines)
-            let isMultiline = header.hasPrefix("/*")
-            var lines = header.components(separatedBy: "\\n")
-            lines = lines.map {
-                var line = $0
-                if !isMultiline, !line.hasPrefix("//") {
-                    line = "//" + line
-                }
-                if let range = line.range(of: "{year}") {
-                    let formatter = DateFormatter()
-                    formatter.dateFormat = "yyyy"
-                    line.replaceSubrange(range, with: formatter.string(from: Date()))
-                }
-                return line
-            }
-            while lines.last?.isEmpty == true {
-                lines.removeLast()
-            }
-            options.fileHeader = lines.joined(separator: "\n")
-        }
-    }
-    try processOption("ifdef", in: args, from: &arguments) {
-        if let mode = IndentMode(rawValue: $0.lowercased()) {
-            options.ifdefIndent = mode
-        } else {
-            throw FormatError.options("")
-        }
-    }
-    try processOption("wraparguments", in: args, from: &arguments) {
-        if let mode = WrapMode(rawValue: $0.lowercased()) {
-            options.wrapArguments = mode
-        } else {
-            throw FormatError.options("")
-        }
-    }
-    try processOption("wrapelements", in: args, from: &arguments) {
-        if let mode = WrapMode(rawValue: $0.lowercased()) {
-            options.wrapElements = mode
-        } else {
-            throw FormatError.options("")
-        }
-    }
-    try processOption("hexliteralcase", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "uppercase", "upper":
-            options.uppercaseHex = true
-        case "lowercase", "lower":
-            options.uppercaseHex = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("exponentcase", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "uppercase", "upper":
-            options.uppercaseExponent = true
-        case "lowercase", "lower":
-            options.uppercaseExponent = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("decimalgrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.decimalGrouping = grouping
-    }
-    try processOption("binarygrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.binaryGrouping = grouping
-    }
-    try processOption("octalgrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.octalGrouping = grouping
-    }
-    try processOption("hexgrouping", in: args, from: &arguments) {
-        guard let grouping = Grouping(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.hexGrouping = grouping
-    }
-    try processOption("patternlet", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "hoist":
-            options.hoistPatternLet = true
-        case "inline":
-            options.hoistPatternLet = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("self", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "remove":
-            options.removeSelf = true
-        case "insert":
-            options.removeSelf = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("fragment", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "true", "enabled":
-            options.fragment = true
-        case "false", "disabled":
-            options.fragment = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("conflictmarkers", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "true", "enabled":
-            options.fragment = true
-        case "false", "disabled":
-            options.fragment = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("stripunusedargs", in: args, from: &arguments) {
-        guard let type = ArgumentType(rawValue: $0.lowercased()) else {
-            throw FormatError.options("")
-        }
-        options.stripUnusedArguments = type
-    }
-    try processOption("experimental", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "enabled", "true":
-            options.experimentalRules = true
-        case "disabled", "false":
-            options.experimentalRules = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    // Deprecated
-    try processOption("hexliterals", in: args, from: &arguments) {
-        print("`--hexliterals` option is deprecated. Use `--hexliteralcase` instead", as: .warning)
-        switch $0.lowercased() {
-        case "uppercase", "upper":
-            options.uppercaseHex = true
-        case "lowercase", "lower":
-            options.uppercaseHex = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("insertlines", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "enabled", "true":
-            print("`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` instead", as: .warning)
-            options.insertBlankLines = true
-        case "disabled", "false":
-            print("`--insertlines` option is deprecated. Use `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead", as: .warning)
-            options.insertBlankLines = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("removelines", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "enabled", "true":
-            print("`--removelines` option is deprecated. Use `--enable blankLinesAtStartOfScope` or `--enable blankLinesAtEndOfScope` instead", as: .warning)
-            options.removeBlankLines = true
-        case "disabled", "false":
-            print("`--removelines` option is deprecated. Use `--disable blankLinesAtStartOfScope` or `--disable blankLinesAtEndOfScope` instead", as: .warning)
-            options.removeBlankLines = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
-    return options
 }
 
 let fileArguments = [
@@ -1247,54 +898,19 @@ let fileArguments = [
     "symlinks",
 ]
 
-let formatArguments = [
-    // Format options
-    "allman",
-    "binarygrouping",
-    "commas",
-    "comments",
-    "decimalgrouping",
-    "elseposition",
-    "empty",
-    "exponentcase",
-    "header",
-    "hexgrouping",
-    "hexliteralcase",
-    "ifdef",
-    "indent",
-    "indentcase",
-    "insertlines",
-    "linebreaks",
-    "octalgrouping",
-    "operatorfunc",
-    "ranges",
-    "removelines",
-    "semicolons",
-    "stripunusedargs",
-    "trimwhitespace",
-    "wraparguments",
-    "wrapelements",
-    "patternlet",
-    "self",
-]
-
-let deprecatedArguments = [
-    "hexliterals",
-    "insertlines",
-    "removelines",
-]
+let formattingArguments = FormatOptions.Descriptor.formatting.map { $0.argumentName }
+let internalArguments = FormatOptions.Descriptor.internal.map { $0.argumentName }
 
 let commandLineArguments = [
     // File options
     "inferoptions",
     "output",
     "exclude",
-    "fragment",
-    "conflictmarkers",
     "cache",
     "verbose",
     "config",
     "dryrun",
+    "lint",
     // Rules
     "disable",
     "enable",
@@ -1302,6 +918,8 @@ let commandLineArguments = [
     // Misc
     "help",
     "version",
-    // Format options
-    "experimental",
-] + deprecatedArguments + fileArguments + formatArguments
+] + fileArguments + formattingArguments + internalArguments
+
+let deprecatedArguments = FormatOptions.Descriptor.all.compactMap {
+    $0.isDeprecated ? $0.argumentName : nil
+}

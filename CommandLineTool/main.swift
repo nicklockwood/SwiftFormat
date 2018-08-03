@@ -43,9 +43,7 @@ extension String {
 
 extension FileHandle: TextOutputStream {
     public func write(_ string: String) {
-        if let data = string.data(using: .utf8) {
-            write(data)
-        }
+        write(Data(string.utf8))
     }
 }
 
@@ -66,4 +64,4 @@ CLI.print = { message, type in
     }
 }
 
-CLI.run(in: FileManager.default.currentDirectoryPath)
+exit(CLI.run(in: FileManager.default.currentDirectoryPath).rawValue)

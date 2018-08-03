@@ -58,7 +58,7 @@ class PerformanceTests: XCTestCase {
             allmanBraces: true,
             ifdefIndent: .outdent,
             wrapArguments: .beforeFirst,
-            wrapElements: .afterFirst,
+            wrapCollections: .afterFirst,
             uppercaseHex: false,
             uppercaseExponent: true,
             decimalGrouping: .group(1, 1),

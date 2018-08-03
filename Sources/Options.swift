@@ -42,11 +42,12 @@ public enum IndentMode: String {
 public enum WrapMode: String {
     case beforeFirst = "beforefirst"
     case afterFirst = "afterfirst"
+    case preserve
     case disabled
 }
 
 /// Argument type for stripping
-public enum ArgumentType: String {
+public enum ArgumentStrippingMode: String {
     case unnamedOnly = "unnamed-only"
     case closureOnly = "closure-only"
     case all = "always"
@@ -126,15 +127,17 @@ public struct FormatOptions: CustomStringConvertible {
     public var fileHeader: String?
     public var ifdefIndent: IndentMode
     public var wrapArguments: WrapMode
-    public var wrapElements: WrapMode
+    public var wrapCollections: WrapMode
     public var uppercaseHex: Bool
     public var uppercaseExponent: Bool
     public var decimalGrouping: Grouping
     public var binaryGrouping: Grouping
     public var octalGrouping: Grouping
     public var hexGrouping: Grouping
+    public var fractionGrouping: Bool
+    public var exponentGrouping: Bool
     public var hoistPatternLet: Bool
-    public var stripUnusedArguments: ArgumentType
+    public var stripUnusedArguments: ArgumentStrippingMode
     public var elseOnNextLine: Bool
     public var removeSelf: Bool
     public var experimentalRules: Bool
@@ -142,6 +145,8 @@ public struct FormatOptions: CustomStringConvertible {
 
     // Doesn't really belong here, but hard to put elsewhere
     public var ignoreConflictMarkers: Bool
+
+    public static let `default` = FormatOptions()
 
     public init(indent: String = "    ",
                 linebreak: String = "\n",
@@ -158,16 +163,18 @@ public struct FormatOptions: CustomStringConvertible {
                 allmanBraces: Bool = false,
                 fileHeader: String? = nil,
                 ifdefIndent: IndentMode = .indent,
-                wrapArguments: WrapMode = .disabled,
-                wrapElements: WrapMode = .beforeFirst,
+                wrapArguments: WrapMode = .preserve,
+                wrapCollections: WrapMode = .preserve,
                 uppercaseHex: Bool = true,
                 uppercaseExponent: Bool = false,
                 decimalGrouping: Grouping = .group(3, 6),
                 binaryGrouping: Grouping = .group(4, 8),
                 octalGrouping: Grouping = .group(4, 8),
                 hexGrouping: Grouping = .group(4, 8),
+                fractionGrouping: Bool = false,
+                exponentGrouping: Bool = false,
                 hoistPatternLet: Bool = true,
-                stripUnusedArguments: ArgumentType = .all,
+                stripUnusedArguments: ArgumentStrippingMode = .all,
                 elseOnNextLine: Bool = false,
                 removeSelf: Bool = true,
                 experimentalRules: Bool = false,
@@ -189,10 +196,12 @@ public struct FormatOptions: CustomStringConvertible {
         self.fileHeader = fileHeader
         self.ifdefIndent = ifdefIndent
         self.wrapArguments = wrapArguments
-        self.wrapElements = wrapElements
+        self.wrapCollections = wrapCollections
         self.uppercaseHex = uppercaseHex
         self.uppercaseExponent = uppercaseExponent
         self.decimalGrouping = decimalGrouping
+        self.fractionGrouping = fractionGrouping
+        self.exponentGrouping = exponentGrouping
         self.binaryGrouping = binaryGrouping
         self.octalGrouping = octalGrouping
         self.hexGrouping = hexGrouping
@@ -203,6 +212,11 @@ public struct FormatOptions: CustomStringConvertible {
         self.experimentalRules = experimentalRules
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers
+    }
+
+    public var allOptions: [String: Any] {
+        let pairs = Mirror(reflecting: self).children.compactMap { ($0!, $1) }
+        return Dictionary(pairs, uniquingKeysWith: { $1 })
     }
 
     public var description: String {
@@ -216,7 +230,7 @@ public struct FormatOptions: CustomStringConvertible {
 /// Infer default options by examining the existing source
 public func inferOptions(from tokens: [Token]) -> FormatOptions {
     let formatter = Formatter(tokens)
-    var options = FormatOptions()
+    var options = FormatOptions.default
 
     options.indent = {
         var indents = [(indent: String, count: Int)]()
@@ -552,7 +566,7 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
         }
     }
     options.wrapArguments = wrapMode(for: "(", "<", allowGrouping: false)
-    options.wrapElements = wrapMode(for: "[", allowGrouping: true)
+    options.wrapCollections = wrapMode(for: "[", allowGrouping: true)
 
     options.uppercaseHex = {
         let prefix = "0x"
@@ -616,13 +630,13 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
             case .integer:
                 digits = number
             case .binary, .octal:
-                digits = String(number[prefix.endIndex ..< number.endIndex])
+                digits = String(number[prefix.endIndex...])
             case .hex:
                 let endIndex = number.index { [".", "p", "P"].contains($0) } ?? number.endIndex
                 digits = String(number[prefix.endIndex ..< endIndex])
             case .decimal:
                 let endIndex = number.index { [".", "e", "E"].contains($0) } ?? number.endIndex
-                digits = String(number[number.startIndex ..< endIndex])
+                digits = String(number[..<endIndex])
             }
             // Get the group for this number
             var count = 0
@@ -684,6 +698,61 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
     options.binaryGrouping = grouping(for: .binary)
     options.octalGrouping = grouping(for: .octal)
     options.hexGrouping = grouping(for: .hex)
+
+    do {
+        var fractions: (grouped: Int, ungrouped: Int) = (0, 0)
+        var exponents: (grouped: Int, ungrouped: Int) = (0, 0)
+        formatter.forEachToken { _, token in
+            guard case let .number(number, type) = token else {
+                return
+            }
+            // Strip prefix/suffix
+            let digits: String
+            let prefix = "0x"
+            var main = "", fraction = "", exponent = ""
+            let parts: [String]
+            switch type {
+            case .integer, .binary, .octal:
+                return
+            case .hex:
+                parts = number[prefix.endIndex...].components(separatedBy: CharacterSet(charactersIn: ".pP"))
+            case .decimal:
+                parts = number.components(separatedBy: CharacterSet(charactersIn: ".eE"))
+            }
+            switch parts.count {
+            case 2 where number.contains("."):
+                main = parts[0]
+                fraction = parts[1]
+            case 2:
+                main = parts[0]
+                exponent = parts[1]
+            case 3:
+                main = parts[0]
+                fraction = parts[1]
+                exponent = parts[2]
+            default:
+                return
+            }
+            if fraction.contains("_") {
+                fractions.grouped += 1
+            } else if let range = main.range(of: "_") {
+                let threshold = main.distance(from: range.lowerBound, to: main.endIndex)
+                if fraction.count >= threshold {
+                    fractions.ungrouped += 1
+                }
+            }
+            if exponent.contains("_") {
+                exponents.grouped += 1
+            } else if let range = main.range(of: "_") {
+                let threshold = main.distance(from: range.lowerBound, to: main.endIndex)
+                if exponent.count >= threshold {
+                    exponents.ungrouped += 1
+                }
+            }
+        }
+        options.fractionGrouping = fractions.grouped > fractions.ungrouped
+        options.exponentGrouping = exponents.grouped > exponents.ungrouped
+    }
 
     options.hoistPatternLet = {
         var hoisted = 0, unhoisted = 0
@@ -1071,6 +1140,9 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     fallthrough
                 case .startOfScope("\""), .startOfScope("#if"):
                     scopeStack.append(token)
+                case .startOfScope(":"):
+                    lastKeyword = ""
+                    break
                 case .startOfScope("{") where lastKeyword == "catch":
                     lastKeyword = ""
                     var localNames = localNames
@@ -1120,10 +1192,6 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                             break
                         }
                     }
-                case .startOfScope(":"):
-                    break
-                case .endOfScope("case"), .endOfScope("default"):
-                    return
                 case .startOfScope("{") where ["for", "where", "if", "else", "while", "do"].contains(lastKeyword):
                     lastKeyword = ""
                     fallthrough
@@ -1145,15 +1213,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     }
                     processAccessors(["get", "set", "willSet", "didSet"], at: &index, localNames: localNames, members: members)
                     continue
-                case .startOfScope("//"):
-                    if let bodyIndex = formatter.index(of: .nonSpace, after: index),
-                        case let .commentBody(comment) = formatter.tokens[bodyIndex] {
-                        formatter.processCommentBody(comment)
-                    }
-                    fallthrough
                 case .startOfScope:
-                    index = (formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)) + 1
-                    continue
+                    index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .identifier("self") where !isTypeRoot:
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
                         let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
@@ -1187,6 +1248,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                         index += 1
                         continue
                     }
+                case .endOfScope("case"), .endOfScope("default"):
+                    return
                 case .endOfScope:
                     if let scope = scopeStack.last {
                         assert(token.isEndOfScope(scope))

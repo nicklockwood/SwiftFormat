@@ -276,7 +276,85 @@ class CommandLineTests: XCTestCase {
         }
     }
 
-    // MARK: config file
+    // MARK: config file parsing
+
+    func testParseArgumentsContainingBlankLines() {
+        let config = """
+        --allman true
+
+        --rules braces,fileHeader
+        """
+        let data = Data(config.utf8)
+        do {
+            let args = try parseConfigFile(data)
+            XCTAssertEqual(args.count, 2)
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    func testParseArgumentsContainingValuelessKeys() throws {
+        let config = """
+        --allman true
+        --help
+        --version
+        --rules braces
+        """
+        let data = Data(config.utf8)
+        do {
+            let args = try parseConfigFile(data)
+            XCTAssertEqual(args.count, 4)
+            XCTAssertEqual(args["allman"], "true")
+            XCTAssertEqual(args["help"], "")
+            XCTAssertEqual(args["version"], "")
+            XCTAssertEqual(args["rules"], "braces")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    func testParseArgumentsContainingAnonymousValues() throws {
+        let config = """
+        hello
+        --allman true
+        """
+        let data = Data(config.utf8)
+        XCTAssertThrowsError(try parseConfigFile(data)) { error in
+            guard case let FormatError.options(message) = error else {
+                XCTFail("\(error)")
+                return
+            }
+            XCTAssert(message.contains("hello"))
+        }
+    }
+
+    func testParseArgumentsContainingSpaces() throws {
+        let config = "--rules braces, fileHeader, consecutiveSpaces"
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        XCTAssertEqual(args.count, 1)
+        XCTAssertEqual(args["rules"], "braces, fileHeader, consecutiveSpaces")
+    }
+
+    func testParseArgumentsContainingEscapedCharacters() throws {
+        let config = "--header hello\\ world\\ngoodbye\\ world"
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        XCTAssertEqual(args.count, 1)
+        XCTAssertEqual(args["header"], "hello world\\ngoodbye world")
+    }
+
+    func testParseArgumentsContainingQuotedCharacters() throws {
+        let config = """
+        --header "hello world\\ngoodbye world"
+        """
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        XCTAssertEqual(args.count, 1)
+        XCTAssertEqual(args["header"], "hello world\\ngoodbye world")
+    }
+
+    // MARK: config file merging
 
     func testMergeFormatOptionArguments() throws {
         let args = ["allman": "false", "commas": "always"]

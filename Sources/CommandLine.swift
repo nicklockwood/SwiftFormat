@@ -847,11 +847,17 @@ func parseConfigFile(_ data: Data) throws -> [String: String] {
     }
     let lines = input.components(separatedBy: .newlines)
     let arguments = try lines.flatMap { line -> [String] in
-        let parts = line.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
-        if let key = parts.first, !key.hasPrefix("-") {
+        // TODO: parseArguments isn't a perfect fit here - should we use a different approach?
+        let parts = parseArguments(line.replacingOccurrences(of: "\\n", with: "\n")).dropFirst().map {
+            $0.replacingOccurrences(of: "\n", with: "\\n")
+        }
+        guard let key = parts.first else {
+            return []
+        }
+        if !key.hasPrefix("-") {
             throw FormatError.options("unknown option \(key)")
         }
-        return parts
+        return [key, parts.dropFirst().joined(separator: " ")]
     }
     return try preprocessArguments(arguments, commandLineArguments)
 }

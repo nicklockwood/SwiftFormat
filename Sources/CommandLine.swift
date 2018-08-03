@@ -203,22 +203,37 @@ func parseArguments(_ argumentString: String) -> [String] {
     return arguments
 }
 
+private let allRules = Set(FormatRules.byName.keys)
+func parseRules(_ rules: String) throws -> [String] {
+    return try rules.components(separatedBy: ",").compactMap {
+        let name = $0.trimmingCharacters(in: .whitespacesAndNewlines)
+        if name.isEmpty {
+            return nil
+        } else if !allRules.contains(name) {
+            throw FormatError.options("unknown rule '\(name)'")
+        }
+        return name
+    }
+}
+
 func processArguments(_ args: [String], in directory: String) -> ExitCode {
     var errors = [Error]()
     var verbose = false
     var dryrun = false
     var lint = false
     do {
-        // Get options
+        // Get arguments
         let args = try preprocessArguments(args, commandLineArguments)
-        let formatOptions = try formatOptionsFor(args) ?? .default
-        let fileOptions = try fileOptionsFor(args)
 
         // Show help if requested specifically or if no arguments are passed
         if args["help"] != nil {
             printHelp()
             return .ok
         }
+
+        // Options
+        let formatOptions = try formatOptionsFor(args) ?? .default
+        let fileOptions = try fileOptionsFor(args)
 
         // Version
         if args["version"] != nil {
@@ -227,50 +242,29 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // Rules
-        var rules = Set(FormatRules.byName.keys)
-        var disabled = Set(FormatRules.disabledByDefault)
-        if let names = args["enable"]?.components(separatedBy: ",") {
-            for name in names {
-                var name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !rules.contains(name) {
-                    throw FormatError.options("unknown rule '\(name)'")
-                }
-                disabled.remove(name)
-            }
+        var rules = allRules.subtracting(FormatRules.disabledByDefault)
+        if let names = try args["rules"].map(parseRules), !names.isEmpty {
+            rules = Set(names)
         }
-        if let names = args["disable"]?.components(separatedBy: ",") {
-            for name in names {
-                var name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !rules.contains(name) {
-                    throw FormatError.options("unknown rule '\(name)'")
-                }
-                disabled.insert(name)
+        if let names = try args["enable"].map(parseRules) {
+            if names.isEmpty {
+                throw FormatError.options("--enable argument expects a value")
             }
+            rules.formUnion(names)
         }
-        if let names = args["rules"]?.components(separatedBy: ",") {
-            if names.count == 1, names[0].isEmpty {
-                print("")
-                for name in Array(rules).sorted() {
-                    let disabled = disabled.contains(name) ? " (disabled)" : ""
-                    print(" \(name)\(disabled)")
-                }
-                print("")
-                return .ok
+        if let names = try args["disable"].map(parseRules) {
+            if names.isEmpty {
+                throw FormatError.options("--disable argument expects a value")
             }
-            var whitelist = Set<String>()
-            for name in names {
-                var name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                if rules.contains(name) {
-                    whitelist.insert(name)
-                } else {
-                    throw FormatError.options("unknown rule '\(name)'")
-                }
+            rules.subtract(names)
+        }
+        if args["rules"] == "" {
+            print("")
+            for name in Array(allRules).sorted() {
+                print(" \(name)\(rules.contains(name) ? "" : " (disabled)")")
             }
-            rules = whitelist
-        } else {
-            for name: String in disabled {
-                rules.remove(name)
-            }
+            print("")
+            return .ok
         }
 
         // Get input path(s)
@@ -291,7 +285,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             }
         }
 
-        // Dry
+        // Dry run
         if let arg = args["dryrun"] {
             dryrun = true
             if !arg.isEmpty {

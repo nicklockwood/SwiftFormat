@@ -50,7 +50,7 @@ struct SwiftFormatCLIArgumentsFile {
         }
 
         let rules = self.rules.sorted(by: { $0.name < $1.name })
-        var defaultRules = Set(FormatRules.byName.map { $0.key })
+        var defaultRules = Set(FormatRules.byName.keys)
         FormatRules.disabledByDefault.forEach { defaultRules.remove($0) }
 
         let enabled = rules.filter { $0.isEnabled && !defaultRules.contains($0.name) }
@@ -71,37 +71,24 @@ struct SwiftFormatCLIArgumentsFile {
             throw FormatError.reading("unable to read data for configuration file")
         }
 
-        do {
-            let inputs = input.components(separatedBy: CharacterSet.whitespacesAndNewlines)
-            let args = try preprocessArguments(inputs, commandLineArguments)
+        let inputs = input.components(separatedBy: CharacterSet.whitespacesAndNewlines)
+        let args = try preprocessArguments(inputs, commandLineArguments)
 
-            let allRules = Set(FormatRules.byName.map { $0.key })
-            func getRules(_ name: String) throws -> Set<String>? {
-                guard let rules = args[name]?.components(separatedBy: ",") else {
-                    return nil
-                }
-                try rules.forEach {
-                    if !allRules.contains($0) {
-                        throw FormatError.reading("unknown rule '\($0)' in --\(name)")
-                    }
-                }
-                return Set(rules)
-            }
-            var ruleNames = try getRules("rules") ?? {
-                var defaultRules = allRules
-                FormatRules.disabledByDefault.forEach { defaultRules.remove($0) }
-                return defaultRules
-            }()
-            try getRules("enable")?.forEach { ruleNames.insert($0) }
-            try getRules("disable")?.forEach { ruleNames.remove($0) }
-            let rules = allRules.map { Rule(name: $0, isEnabled: ruleNames.contains($0)) }
-
-            CLI.print = { _, _ in } // Prevent crash if file contains deprecated rules
-            return try SwiftFormatCLIArgumentsFile(rules: rules, options: formatOptionsFor(args))
-        } catch let error as FormatError {
-            throw error
-        } catch {
-            throw FormatError.reading("unable to read data for configuration file")
+        let allRules = Set(FormatRules.byName.keys)
+        var ruleNames = try args["rules"].map {
+            try Set(parseRules($0))
+        } ?? allRules.subtracting(FormatRules.disabledByDefault)
+        try args["enable"].map {
+            try ruleNames.formUnion(parseRules($0))
         }
+        try args["disable"].map {
+            try ruleNames.subtract(parseRules($0))
+        }
+        let rules = allRules.map {
+            Rule(name: $0, isEnabled: ruleNames.contains($0))
+        }
+
+        CLI.print = { _, _ in } // Prevent crash if file contains deprecated rules
+        return try SwiftFormatCLIArgumentsFile(rules: rules, options: formatOptionsFor(args))
     }
 }

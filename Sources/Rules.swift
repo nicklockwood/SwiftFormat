@@ -1386,6 +1386,11 @@ extension FormatRules {
             var previousIndex = lastIndex
             loop: while let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: lastIndex) {
                 switch formatter.tokens[index] {
+                case .operator(_, .prefix), .operator(_, .infix), .keyword("case"):
+                    // Last specifier was invalid
+                    lastSpecifier = nil
+                    lastIndex = previousIndex
+                    break loop
                 case let .keyword(string), let .identifier(string):
                     if !validSpecifiers.contains(string) {
                         break loop
@@ -1407,11 +1412,6 @@ extension FormatRules {
                     } else {
                         break loop
                     }
-                case .operator(_, .prefix), .operator(_, .infix):
-                    // Last specifier was invalid
-                    lastSpecifier = nil
-                    lastIndex = previousIndex
-                    fallthrough
                 default:
                     // Not a specifier
                     break loop

@@ -3186,6 +3186,19 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoConfuseCaseWithSpecifier() {
+        let input = """
+        enum Foo {
+            case strong
+            case weak
+            public init() {}
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.specifiers]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: void
 
     func testEmptyParensReturnValueConvertedToVoid() {

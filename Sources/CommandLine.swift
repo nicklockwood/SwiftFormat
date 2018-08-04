@@ -379,6 +379,16 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             }
         }
 
+        // Output path
+        let outputURL = args["output"].map { expandPath($0, in: directory) }
+        if outputURL != nil {
+            if args["output"] == "" {
+                throw FormatError.options("--output argument expects a value")
+            } else if inputURLs.count > 1 {
+                throw FormatError.options("--output argument is only valid for a single input file")
+            }
+        }
+
         // Infer options
         if let arg = args["inferoptions"] {
             guard args["config"] == nil else {
@@ -409,22 +419,20 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                         break
                     }
                 }
-                let arguments = commandLineArguments(for: options, excludingDefaults: true)
                 print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)")
                 print("")
-                print(arguments.map { "--\($0.key) \($0.value)" }.joined(separator: " "))
-                print("")
+                if let outputURL = outputURL {
+                    let file = serialize(rules: rules, options: options) + "\n"
+                    do {
+                        try file.write(to: outputURL, atomically: true, encoding: .utf8)
+                    } catch {
+                        throw FormatError.writing("failed to write options to \(outputURL.path)")
+                    }
+                } else {
+                    print(serialize(rules: nil, options: options, excludingDefaults: true, separator: " "))
+                    print("")
+                }
                 return .ok
-            }
-        }
-
-        // Output path
-        let outputURL = args["output"].map { expandPath($0, in: directory) }
-        if outputURL != nil {
-            if args["output"] == "" {
-                throw FormatError.options("--output argument expects a value")
-            } else if inputURLs.count > 1 {
-                throw FormatError.options("--output argument is only valid for a single input file")
             }
         }
 
@@ -861,6 +869,36 @@ func parseConfigFile(_ data: Data) throws -> [String: String] {
         return [key, parts.dropFirst().joined(separator: " ")]
     }
     return try preprocessArguments(arguments, commandLineArguments)
+}
+
+func serialize(rules: Set<String>?,
+               options: FormatOptions?,
+               excludingDefaults: Bool = false,
+               separator: String = "\n") -> String {
+    var result = ""
+    if let options = options {
+        result += commandLineArguments(for: options, excludingDefaults: excludingDefaults).map {
+            var value = $1
+            if value.contains(" ") {
+                value = "\"\(value.replacingOccurrences(of: "\"", with: "\\\""))\""
+            }
+            return "--\($0) \(value)"
+        }.sorted().joined(separator: separator)
+    }
+    if let rules = rules {
+        let defaultRules = Set(FormatRules.byName.keys).subtracting(FormatRules.disabledByDefault)
+
+        let enabled = rules.subtracting(defaultRules)
+        if !enabled.isEmpty {
+            result += "\(separator)--enable \(enabled.sorted().joined(separator: ","))"
+        }
+
+        let disabled = defaultRules.subtracting(rules)
+        if !disabled.isEmpty {
+            result += "\(separator)--disable \(disabled.sorted().joined(separator: ","))"
+        }
+    }
+    return result
 }
 
 /// Get command line arguments for formatting options

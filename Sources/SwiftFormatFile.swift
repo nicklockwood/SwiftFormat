@@ -43,27 +43,9 @@ struct SwiftFormatCLIArgumentsFile {
     }
 
     func encoded() -> Data {
-        var arguments = ""
-
-        if let options = options {
-            arguments += commandLineArguments(for: options).map { "--\($0) \($1)\n" }.sorted().joined()
-        }
-
-        let rules = self.rules.sorted(by: { $0.name < $1.name })
-        var defaultRules = Set(FormatRules.byName.keys)
-        FormatRules.disabledByDefault.forEach { defaultRules.remove($0) }
-
-        let enabled = rules.filter { $0.isEnabled && !defaultRules.contains($0.name) }
-        if !enabled.isEmpty {
-            arguments += "--enable \(enabled.map { $0.name }.joined(separator: ","))\n"
-        }
-
-        let disabled = rules.filter { !$0.isEnabled && defaultRules.contains($0.name) }
-        if !disabled.isEmpty {
-            arguments += "--disable \(disabled.map { $0.name }.joined(separator: ","))\n"
-        }
-
-        return Data(arguments.utf8)
+        let rules = self.rules.compactMap { $0.isEnabled ? $0.name : nil }
+        let config = serialize(rules: Set(rules), options: options)
+        return Data(config.utf8)
     }
 
     static func decoded(_ data: Data) throws -> SwiftFormatCLIArgumentsFile {

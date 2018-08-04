@@ -351,6 +351,32 @@ class CommandLineTests: XCTestCase {
         XCTAssertEqual(args["header"], "hello world\\ngoodbye world")
     }
 
+    // MARK: config file serialization
+
+    func testSerializeFileHeaderContainingSpace() throws {
+        let options = FormatOptions(fileHeader: "// hello world")
+        let config = serialize(rules: nil, options: options, excludingDefaults: true)
+        XCTAssertEqual(config, "--header \"// hello world\"")
+    }
+
+    func testSerializeFileHeaderContainingEscapedSpace() throws {
+        let options = FormatOptions(fileHeader: "// hello\\ world")
+        let config = serialize(rules: nil, options: options, excludingDefaults: true)
+        XCTAssertEqual(config, "--header \"// hello\\ world\"")
+    }
+
+    func testSerializeFileHeaderContainingLinebreak() throws {
+        let options = FormatOptions(fileHeader: "//hello\nworld")
+        let config = serialize(rules: nil, options: options, excludingDefaults: true)
+        XCTAssertEqual(config, "--header //hello\\nworld")
+    }
+
+    func testSerializeFileHeaderContainingLinebreakAndSpaces() throws {
+        let options = FormatOptions(fileHeader: "// hello\n// world")
+        let config = serialize(rules: nil, options: options, excludingDefaults: true)
+        XCTAssertEqual(config, "--header \"// hello\\n// world\"")
+    }
+
     // MARK: config file merging
 
     func testMergeFormatOptionArguments() throws {

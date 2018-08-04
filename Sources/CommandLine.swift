@@ -409,9 +409,10 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                         break
                     }
                 }
+                let arguments = commandLineArguments(for: options, excludingDefaults: true)
                 print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)")
                 print("")
-                print(commandLineArguments(for: options).map({ "--\($0.key) \($0.value)" }).joined(separator: " "))
+                print(arguments.map { "--\($0.key) \($0.value)" }.joined(separator: " "))
                 print("")
                 return .ok
             }

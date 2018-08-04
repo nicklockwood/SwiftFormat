@@ -3072,7 +3072,10 @@ extension FormatRules {
 
     /// Strip header comments from the file
     @objc public class func fileHeader(_ formatter: Formatter) {
-        guard let header = formatter.options.fileHeader, !formatter.options.fragment else { return }
+        guard var header = formatter.options.fileHeader, !formatter.options.fragment else { return }
+        if let range = header.range(of: "{year}") {
+            header.replaceSubrange(range, with: currentYear)
+        }
         if let startIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1) {
             switch formatter.tokens[startIndex] {
             case .startOfScope("//"):
@@ -3210,6 +3213,13 @@ extension FormatRules {
 }
 
 private extension FormatRules {
+    /// Current year. Used by fileHeader rule
+    private static var currentYear: String = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy"
+        return formatter.string(from: Date())
+    }()
+
     // Shared import rules implementation
     static func parseImports(_ formatter: Formatter) -> [[(String, Range<Int>)]] {
         var importStack = [[(String, Range<Int>)]]()

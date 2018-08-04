@@ -589,21 +589,18 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: "", argumentValue: "strip"),
             (optionValue: "// Header", argumentValue: "// Header"),
             (optionValue: nil, argumentValue: "ignore"),
-            (optionValue: "/*\n\n\n*/", argumentValue: "/*\n\n\n*/"),
+            (optionValue: "/*\n\n\n*/", argumentValue: "/*\\n\\n\\n*/"),
         ]
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy"
-        let thisYear = formatter.string(from: Date())
         let fromArgumentExpectations: [OptionArgumentMapping<String?>] = [
             (optionValue: "", argumentValue: "strip"),
             (optionValue: "// Header", argumentValue: "// Header"),
             (optionValue: nil, argumentValue: "ignore"),
-            (optionValue: "//\(thisYear)", argumentValue: "{year}"),
+            (optionValue: "// {year}", argumentValue: "{year}"),
             (optionValue: "/*\n\n\n*/", argumentValue: "/*\\n\\n\\n*/"),
             (optionValue: "//\n//\n//\n//\n//", argumentValue: "\\n\\n\\n\\n"),
-            (optionValue: "//\n//\n//a\n//\n//", argumentValue: "\\n\\na\\n\\n"),
-            (optionValue: "//\n//a\n//\n//a\n//", argumentValue: "\\na\\n\\na\\n"),
-            (optionValue: "//a\n//", argumentValue: "a\\n"),
+            (optionValue: "//\n//\n// a\n//\n//", argumentValue: "\\n\\na\\n\\n"),
+            (optionValue: "//\n// a\n//\n// a\n//", argumentValue: "\\na\\n\\na\\n"),
+            (optionValue: "// a\n//", argumentValue: "a\\n"),
             (optionValue: "//a\n//b", argumentValue: "//a\\n//b"),
         ]
 

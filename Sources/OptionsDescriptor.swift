@@ -343,12 +343,7 @@ extension FormatOptions.Descriptor {
                                                              lines = lines.map {
                                                                  var line = $0
                                                                  if !isMultiline, !line.hasPrefix("//") {
-                                                                     line = "//" + line
-                                                                 }
-                                                                 if let range = line.range(of: "{year}") {
-                                                                     let formatter = DateFormatter()
-                                                                     formatter.dateFormat = "yyyy"
-                                                                     line.replaceSubrange(range, with: formatter.string(from: Date()))
+                                                                     line = "//\(line.isEmpty ? "" : " ")\(line)"
                                                                  }
                                                                  return line
                                                              }
@@ -359,7 +354,9 @@ extension FormatOptions.Descriptor {
                                                          }
                                                      },
                                                      fromOptions: { options in
-                                                         options.fileHeader.map { $0.isEmpty ? "strip" : $0 } ?? "ignore"
+                                                         options.fileHeader.map {
+                                                             $0.isEmpty ? "strip" : $0.replacingOccurrences(of: "\n", with: "\\n")
+                                                         } ?? "ignore"
     })
     static let ifdefIndent = FormatOptions.Descriptor(argumentName: "ifdef",
                                                       propertyName: "ifdefIndent",

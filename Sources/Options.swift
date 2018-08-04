@@ -215,7 +215,7 @@ public struct FormatOptions: CustomStringConvertible {
     }
 
     public var allOptions: [String: Any] {
-        let pairs = Mirror(reflecting: self).children.compactMap { ($0!, $1) }
+        let pairs = Mirror(reflecting: self).children.map { ($0!, $1) }
         return Dictionary(pairs, uniquingKeysWith: { $1 })
     }
 
@@ -259,7 +259,11 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                 }
             }
         }
-        return indents.sorted(by: { $0.count > $1.count }).first.map({ $0.indent }) ?? options.indent
+        return indents.sorted(by: {
+            $0.count > $1.count
+        }).first.map {
+            $0.indent
+        } ?? options.indent
     }()
 
     options.linebreak = {

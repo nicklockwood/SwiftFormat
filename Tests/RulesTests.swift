@@ -6395,6 +6395,18 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testFileHeaderYearReplacement() {
+        let input = "let foo = bar"
+        let output: String = {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy"
+            return "// Copyright © \(formatter.string(from: Date()))\n\nlet foo = bar"
+        }()
+        let options = FormatOptions(fileHeader: "// Copyright © {year}")
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // MARK: redundantInit
 
     func testRemoveRedundantInit() {

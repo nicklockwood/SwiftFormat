@@ -139,15 +139,12 @@ class CommandLineTests: XCTestCase {
         XCTAssertNil(try formatOptionsFor(["--disable": "void"]))
     }
 
-    func testFileHeaderYearReplacement() throws {
-        guard let options = try formatOptionsFor(["header": " Copyright 1981 - {year}"]) else {
-            XCTFail()
-            return
-        }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy"
-        let year = formatter.string(from: Date())
-        XCTAssertEqual(options.fileHeader, "//Copyright 1981 - \(year)")
+    // MARK: format options to arguments
+
+    func testFileHeaderOptionToArguments() throws {
+        let options = FormatOptions(fileHeader: "//  Hello World\n//  Goodbye World")
+        let arguments = commandLineArguments(for: options, excludingDefaults: true)
+        XCTAssertEqual(arguments["header"], "//  Hello World\\n//  Goodbye World")
     }
 
     // MARK: pipe

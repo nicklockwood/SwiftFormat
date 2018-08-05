@@ -19,6 +19,7 @@ Table of Contents
 - [Usage](#so-what-does-swiftformat-actually-do)
     - [Options](#options)
     - [Rules](#rules)
+    - [Config](#config)
 - [FAQ](#faq)
 - [Cache](#cache)
 - [File Headers](#file-headers)
@@ -101,7 +102,7 @@ To use it safely, do the following:
 
 1. Choose a file or directory that you want to apply the changes to.
 
-2. Make sure that you have committed all your changes to that code safely in git (or whatever source control system you use. If you don't use source control, rethink your life choices).
+2. Make sure that you have committed all your changes to that code safely in git (or whatever source control system you use).
 
 3. (Optional) In Terminal, type `swiftformat --inferoptions "/path/to/your/code/"`. This will suggest a set of formatting options to use that match your existing project style (but you are free to ignore these and use the defaults, or your own settings if you prefer).
 
@@ -110,6 +111,8 @@ To use it safely, do the following:
 4. In Terminal, type `swiftformat "/path/to/your/code/"`. The same rules apply as above with respect to path formatting, but you can enter multiple paths if you wish, separated by spaces.
 
     If you used `--inferoptions` to generate a suggested set of options in step 3, you should copy and paste them into the command, either before or after the path(s) to your source files.
+    
+    If you have created a [configuration file](#config), you can specify it's path using `--config "/path/to/your/config-file/".
 
 5. Press enter to begin formatting. Once the formatting is complete, use your source control system to check the changes, and verify that no undesirable changes have been introduced. If they have, revert the changes, tweak the options and try again.
 
@@ -131,13 +134,15 @@ Xcode Source Editor Extension
 
 You'll find the latest version of the `SwiftFormat for Xcode` application inside the `EditorExtension` folder included in the SwiftFormat repository. Drag it into your `Applications` folder, then double-click to launch it, and follow the on-screen instructions.
 
-**NOTE:** The Extension requires Xcode 8 and macOS 10.12 Sierra. It *may* work on macOS 10.11 El Capitan if you open Terminal, execute the following command, then restart your Mac (but it didn't work for me).
+**NOTE:** The Extension requires Xcode 8 and macOS 10.12 Sierra or higher.
 
-    > sudo /usr/libexec/xpccachectl
-    
 **Usage:**
 
-In Xcode, you'll find a SwiftFormat option under the Editor menu. You can use this to format either the current selection or the whole file. 
+In Xcode, you'll find a SwiftFormat option under the Editor menu. You can use this to format either the current selection or the whole file.
+
+You can configure the formatting [rules](#rules) and [options](#options) used by the Xcode Source Editor Extension using the host application. There is currently no way to override these per-project, however you can import and export different configurations using the File menu.
+
+The format of the configuration file is described in the [Config section](#config) below.
 
 
 Xcode build phase
@@ -229,9 +234,9 @@ Options
 
 The options available in SwiftFormat can be displayed using the `--help` command-line argument. The default value for each option is indicated in the help text.
 
-Rules are configured by adding `--[rulename] [value]` to your command-line arguments.
+Rules are configured by adding `--[rulename] [value]` to your command-line arguments, or by creating a [config file](#config) as explained below.
 
-A given option may affect multiple rules. See the Rules list below for details about which options affect which rule.
+A given option may affect multiple rules. See the [Rules](#rules) section below for details about which options affect which rule.
 
 
 Rules
@@ -1041,6 +1046,29 @@ goto(fail)
 ```
 
 
+Config
+------
+
+Although it is possible to configure SwiftFormat directly by using the command-line [options](#options) and [rules](#rules) detailed above, it is sometimes more convenient to create a configuration file, which can be added to your project and shared with other developers.
+
+A SwiftFormat configuration file consists of one or more command-line options, split onto separate lines, e.g:
+
+```
+--allman true
+--indent tabs
+--disable elseOnSameLine,semicolons
+```
+
+You can select a configuration file to use for formatting with the `--config "path/to/config/file"` command-line argument. The suggested name for this file is ".swiftformat", and it should typically be located in the root directory of your Xcode project.
+
+If you would prefer not to create the configuration file by hand, you can use the SwiftFormat for Xcode app to create the configuration and export a configuration file. Alternatively, you can use the swiftformat command-line-tool's `--inferoptions` command to generate a config file from your existing project, like this:
+
+```bash
+> cd /path/to/project
+> swiftformat --inferoptions . --output .swiftformat
+```
+
+
 FAQ
 -----
 
@@ -1049,7 +1077,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. What versions of Swift are supported?*
 
-> A. The framework compiles on Swift 3.2 or 4.x and can format programs written in Swift 3.x or 4.x. Swift 2.x is no longer actively supported. If you all still using Swift 2.x, and find that SwiftFormat breaks your code, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a small subset of rules.
+> A. The framework compiles on Swift 3.x or 4.x and can format programs written in Swift 3.x or 4.x. Swift 2.x is no longer actively supported. If you are still using Swift 2.x, and find that SwiftFormat breaks your code, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a small subset of rules.
 
 
 *Q. I don't like how SwiftFormat formatted my code*
@@ -1059,9 +1087,11 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. How can I modify the formatting rules?*
 
-> A. Many configuration options are exposed in the command-line interface. You can either set these manually, or use the `--inferoptions` argument to automatically generate the configuration from your existing project.
+> A. Many configuration options are exposed in the command-line interface or .swiftformat configuration file. You can either set these manually, or use the `--inferoptions` argument to automatically generate the configuration from your existing project.
 
 > If there is a rule that you don't like, and which cannot be configured to your liking via the command-line options, you can disable the rule by using the `--disable` argument, followed by the name of the rule. You can display a list of all rules using the `--rules` argument, and their behaviors are documented above this section in the README.
+
+> If you are using the Xcode Source Editor Extension, rules and options can be configured using the SwiftFormat for Xcode host application. Unfortunately, due to limitation of the Extensions API, there is no way to configure these on a per-project basis.
 
 > If the options you want aren't exposed, and disabling the rule doesn't solve the problem, the rules are implemented as functions in the file `Rules.swift`, so you can modify them and build a new version of the command-line tool. If you think your changes might be generally useful, make a pull request.
 

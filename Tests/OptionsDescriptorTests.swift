@@ -442,7 +442,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: "\r", argumentValue: "cr"),
             (optionValue: "\r\n", argumentValue: "crlf"),
         ]
-        validateDescriptor(descriptor, displayName: "Linebreaks Character", argumentName: "linebreaks", propertyName: "linebreak")
+        validateDescriptor(descriptor, displayName: "Linebreak Character", argumentName: "linebreaks", propertyName: "linebreak")
         validateArgumentsListType(descriptor, validArguments: ["cr", "lf", "crlf"])
         validateFromOptions(descriptor, keyPath: \FormatOptions.linebreak, expectations: expectedMapping, invalid: "invalid")
         validateFromArguments(descriptor, keyPath: \FormatOptions.linebreak, expectations: expectedMapping)

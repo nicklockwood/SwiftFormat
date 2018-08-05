@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.35.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.0) (2018-08-04)
+
+- Added `--config` argument for loading an external config file using the command-line tool
+- The `--inferoptions` command can now write the result to a config file using the `--output` option
+- Added `emptyBraces` rule for removing blank lines inside empty `{}` pairs
+- Fixed handling of spaces and other special characters inside the `--header` option when using config files
+- Fixed parsing and serialization of `--header` option in Xcode Source Editor Extension
+- Fixed a bug in the `specifiers` rule affecting enum cases whose name matches a specifier
+- Fixed bug where `redundantSelf` could incorrectly remove `self` from a closure instead a case with a `where` clause
+- Fixed indent inference, which would previously calculate the wrong indent value
+
 ## [0.34.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.34.1) (2018-08-01)
 
 - Added `// swiftformat:disable:next` directive for temporarily disabling a rule on just the following line

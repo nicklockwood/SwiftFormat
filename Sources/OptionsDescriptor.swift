@@ -144,7 +144,7 @@ extension FormatOptions.Descriptor {
     })
     static let lineBreak = FormatOptions.Descriptor(argumentName: "linebreaks",
                                                     propertyName: "linebreak",
-                                                    displayName: "Linebreaks Character",
+                                                    displayName: "Linebreak Character",
                                                     type: .list(["cr", "lf", "crlf"]),
                                                     toOptions: { input, options in
                                                         switch input.lowercased() {

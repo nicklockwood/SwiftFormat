@@ -97,7 +97,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let dialog = NSSavePanel()
         dialog.title = "Export Configuration"
-        dialog.nameFieldStringValue = "name.\(swiftFormatFileExtension)"
+        dialog.nameFieldStringValue = ".\(swiftFormatFileExtension)"
         dialog.beginSheetModal(for: window) { response in
             guard response == .OK, let url = dialog.url else {
                 return

@@ -13,9 +13,18 @@ class OptionsTests: XCTestCase {
     // MARK: indent
 
     func testInferIndentLevel() {
-        let input = "\t\nclass Foo {\n   func bar() {\n      //baz\n}\n}"
+        let input = """
+        \t
+        class Foo {
+            func bar() {
+                //baz
+                //quux
+                //foo
+            }
+        }
+        """
         let options = inferOptions(from: tokenize(input))
-        XCTAssertEqual(options.indent, "   ")
+        XCTAssertEqual(options.indent, "    ")
     }
 
     // MARK: linebreak

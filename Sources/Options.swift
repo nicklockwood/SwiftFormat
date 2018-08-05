@@ -250,11 +250,8 @@ public func inferOptions(from tokens: [Token]) -> FormatOptions {
                     increment("\t")
                 } else {
                     let length = string.count
-                    for i in [8, 4, 3, 2, 1] {
-                        if length % i == 0 {
-                            increment(String(repeating: " ", count: i))
-                            break
-                        }
+                    for i in [8, 4, 3, 2, 1] where length % i == 0 {
+                        increment(String(repeating: " ", count: i))
                     }
                 }
             }

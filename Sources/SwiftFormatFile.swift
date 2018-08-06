@@ -50,21 +50,10 @@ struct SwiftFormatCLIArgumentsFile {
 
     static func decoded(_ data: Data) throws -> SwiftFormatCLIArgumentsFile {
         let args = try parseConfigFile(data)
-
-        let allRules = Set(FormatRules.byName.keys)
-        var ruleNames = try args["rules"].map {
-            try Set(parseRules($0))
-        } ?? allRules.subtracting(FormatRules.disabledByDefault)
-        try args["enable"].map {
-            try ruleNames.formUnion(parseRules($0))
-        }
-        try args["disable"].map {
-            try ruleNames.subtract(parseRules($0))
-        }
-        let rules = allRules.map {
+        let ruleNames = try rulesFor(args)
+        let rules = Set(FormatRules.byName.keys).map {
             Rule(name: $0, isEnabled: ruleNames.contains($0))
         }
-
         CLI.print = { _, _ in } // Prevent crash if file contains deprecated rules
         return try SwiftFormatCLIArgumentsFile(rules: rules, options: formatOptionsFor(args))
     }

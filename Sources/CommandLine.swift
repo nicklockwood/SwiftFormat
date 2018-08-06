@@ -302,22 +302,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // Rules
-        var rules = allRules.subtracting(FormatRules.disabledByDefault)
-        if let names = try args["rules"].map(parseRules), !names.isEmpty {
-            rules = Set(names)
-        }
-        if let names = try args["enable"].map(parseRules) {
-            if names.isEmpty {
-                throw FormatError.options("--enable argument expects a value")
-            }
-            rules.formUnion(names)
-        }
-        if let names = try args["disable"].map(parseRules) {
-            if names.isEmpty {
-                throw FormatError.options("--disable argument expects a value")
-            }
-            rules.subtract(names)
-        }
+        let rules = try rulesFor(args)
         if showRules {
             print("")
             for name in Array(allRules).sorted() {
@@ -920,6 +905,21 @@ private func processOption(_ key: String,
     } catch {
         throw FormatError.options("unsupported --\(key) value '\(value)'")
     }
+}
+
+/// Parse rule names from arguments
+func rulesFor(_ args: [String: String]) throws -> Set<String> {
+    var rules = Set(FormatRules.byName.keys)
+    rules = try args["rules"].map {
+        try Set(parseRules($0))
+    } ?? rules.subtracting(FormatRules.disabledByDefault)
+    try args["enable"].map {
+        try rules.formUnion(parseRules($0))
+    }
+    try args["disable"].map {
+        try rules.subtract(parseRules($0))
+    }
+    return rules
 }
 
 /// Parse FileOptions from arguments

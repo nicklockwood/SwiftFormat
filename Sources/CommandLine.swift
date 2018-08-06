@@ -329,7 +329,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
 
         // Options
         let formatOptions = try formatOptionsFor(args) ?? .default
-        let fileOptions = try fileOptionsFor(args)
+        let fileOptions = try fileOptionsFor(args, in: directory)
 
         // Input path(s)
         var inputURLs = [URL]()
@@ -368,17 +368,6 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             }
         }
 
-        // Excluded path(s)
-        var excludedURLs = [URL]()
-        if let arg = args["exclude"] {
-            if inputURLs.isEmpty {
-                throw FormatError.options("--exclude option has no effect unless an input path is specified")
-            }
-            for path in arg.components(separatedBy: ",") {
-                excludedURLs.append(expandPath(path, in: directory))
-            }
-        }
-
         // Output path
         let outputURL = args["output"].map { expandPath($0, in: directory) }
         if outputURL != nil {
@@ -402,7 +391,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 print("inferring swiftformat options from source file(s)...")
                 var filesParsed = 0, options = FormatOptions.default, errors = [Error]()
                 let time = timeEvent {
-                    (filesParsed, options, errors) = inferOptions(from: inputURLs, excluding: excludedURLs)
+                    (filesParsed, options, errors) = inferOptions(from: inputURLs, excluding: fileOptions.excludedURLs)
                 }
                 printWarnings(errors)
                 if filesParsed == 0 {
@@ -560,7 +549,6 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         let time = timeEvent {
             var _errors = [Error]()
             (filesWritten, filesFailed, filesChecked, _errors) = processInput(inputURLs,
-                                                                              excluding: excludedURLs,
                                                                               andWriteToOutput: outputURL,
                                                                               withRules: Array(rules),
                                                                               formatOptions: formatOptions,
@@ -614,8 +602,9 @@ func inferOptions(from inputURLs: [URL], excluding excludedURLs: [URL]) -> (Int,
     var tokens = [Token]()
     var errors = [Error]()
     var filesParsed = 0
+    let fileOptions = FileOptions(excludedURLs: excludedURLs)
     for inputURL in inputURLs {
-        errors += enumerateFiles(withInputURL: inputURL, excluding: excludedURLs) { inputURL, _ in
+        errors += enumerateFiles(withInputURL: inputURL, options: fileOptions) { inputURL, _ in
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("failed to read file \(inputURL.path)")
             }
@@ -665,7 +654,6 @@ func format(_ source: String,
 }
 
 func processInput(_ inputURLs: [URL],
-                  excluding excludedURLs: [URL],
                   andWriteToOutput outputURL: URL?,
                   withRules enabled: [String],
                   formatOptions: FormatOptions,
@@ -695,7 +683,6 @@ func processInput(_ inputURLs: [URL],
     var filesChecked = 0, filesFailed = 0, filesWritten = 0
     for inputURL in inputURLs {
         errors += enumerateFiles(withInputURL: inputURL,
-                                 excluding: excludedURLs,
                                  outputURL: outputURL,
                                  options: fileOptions,
                                  concurrent: !verbose) { inputURL, outputURL in
@@ -936,7 +923,7 @@ private func processOption(_ key: String,
 }
 
 /// Parse FileOptions from arguments
-func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
+func fileOptionsFor(_ args: [String: String], in directory: String) throws -> FileOptions {
     var options = FileOptions()
     var arguments = Set(fileArguments)
     try processOption("symlinks", in: args, from: &arguments) {
@@ -947,6 +934,11 @@ func fileOptionsFor(_ args: [String: String]) throws -> FileOptions {
             options.followSymlinks = false
         default:
             throw FormatError.options("")
+        }
+    }
+    try processOption("exclude", in: args, from: &arguments) {
+        for path in $0.components(separatedBy: ",") {
+            options.excludedURLs.append(expandPath(path, in: directory))
         }
     }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")

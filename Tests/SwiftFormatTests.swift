@@ -84,9 +84,9 @@ class SwiftFormatTests: XCTestCase {
     func testInputFileNotEnumeratedWhenExcluded() {
         var files = [URL]()
         let currentFile = URL(fileURLWithPath: #file)
-        let excludedURLs = [currentFile.deletingLastPathComponent()]
+        let options = FileOptions(excludedURLs: [currentFile.deletingLastPathComponent()])
         let inputURL = currentFile.deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateFiles(withInputURL: inputURL, excluding: excludedURLs, outputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL, options: options) { inputURL, outputURL in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }

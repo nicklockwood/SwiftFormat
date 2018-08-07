@@ -108,12 +108,9 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testCommandLineArgumentsAreCorrect() {
-        let options = FormatOptions.default
-        let output = ["allman": "false", "wraparguments": "preserve", "self": "remove", "header": "ignore", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "patternlet": "hoist", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "stripunusedargs": "always"]
-        XCTAssertEqual(argumentsFor(options), output)
+        let output = ["allman": "false", "wraparguments": "preserve", "self": "remove", "header": "ignore", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "stripunusedargs": "always"]
+        XCTAssertEqual(argumentsFor(.default), output)
     }
-
-    // MARK: format arguments to options
 
     func testFormattingArgumentsAreAllImplemented() throws {
         CLI.print = { _, _ in }
@@ -132,11 +129,9 @@ class ArgumentsTests: XCTestCase {
         XCTAssertNil(try formatOptionsFor(["--disable": "void"]))
     }
 
-    // MARK: format options to arguments
-
     func testFileHeaderOptionToArguments() throws {
         let options = FormatOptions(fileHeader: "//  Hello World\n//  Goodbye World")
-        let args = argumentsFor(options, excludingDefaults: true)
+        let args = argumentsFor(Options(formatOptions: options), excludingDefaults: true)
         XCTAssertEqual(args["header"], "//  Hello World\\n//  Goodbye World")
     }
 

@@ -423,8 +423,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 01A0EAB81D5DB4D000A0A8E3 /* Build configuration list for PBXNativeTarget "SwiftFormat" */;
 			buildPhases = (
-				0142F06D1D72B4A6007D66CC /* Format Code */,
 				01A0EA9F1D5DB4CF00A0A8E3 /* Sources */,
+				0142F06D1D72B4A6007D66CC /* Format Code */,
 				01A0EAA01D5DB4CF00A0A8E3 /* Frameworks */,
 				01A0EAA11D5DB4CF00A0A8E3 /* Headers */,
 				01A0EAA21D5DB4CF00A0A8E3 /* Resources */,

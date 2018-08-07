@@ -33,14 +33,15 @@ import Foundation
 
 extension Options {
     init(_ args: [String: String], in directory: String) throws {
-        try self.init(args)
         fileOptions = try fileOptionsFor(args, in: directory)
-    }
-
-    init(_ args: [String: String]) throws {
-        fileOptions = nil
         formatOptions = try formatOptionsFor(args)
         rules = try rulesFor(args)
+    }
+
+    mutating func addArguments(_ args: [String: String], in directory: String) throws {
+        let oldArguments = argumentsFor(self)
+        let newArguments = try mergeArguments(args, into: oldArguments)
+        self = try Options(newArguments, in: directory)
     }
 }
 
@@ -212,40 +213,73 @@ func parseConfigFile(_ data: Data) throws -> [String: String] {
 func serialize(options: Options,
                excludingDefaults: Bool = false,
                separator: String = "\n") -> String {
-    var result = ""
-    if let options = options.formatOptions {
-        result += argumentsFor(options, excludingDefaults: excludingDefaults).map {
-            var value = $1
-            if value.contains(" ") {
-                value = "\"\(value.replacingOccurrences(of: "\"", with: "\\\""))\""
+    var optionSets = [Options]()
+    if let fileOptions = options.fileOptions {
+        optionSets.append(Options(fileOptions: fileOptions))
+    }
+    if let formatOptions = options.formatOptions {
+        optionSets.append(Options(formatOptions: formatOptions))
+    }
+    if let rules = options.rules {
+        optionSets.append(Options(rules: rules))
+    }
+    return optionSets.map {
+        let arguments = argumentsFor($0, excludingDefaults: excludingDefaults)
+        return serialize(arguments: arguments, separator: separator)
+    }.joined(separator: separator)
+}
+
+// Serialize arguments
+func serialize(arguments: [String: String],
+               separator: String = "\n") -> String {
+    return arguments.map {
+        var value = $1
+        if value.contains(" ") {
+            value = "\"\(value.replacingOccurrences(of: "\"", with: "\\\""))\""
+        }
+        return "--\($0) \(value)"
+    }.sorted().joined(separator: separator)
+}
+
+// Get command line arguments from options (excludes deprecated/renamed options)
+func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [String: String] {
+    var args = [String: String]()
+    if let fileOptions = options.fileOptions {
+        var arguments = Set(fileArguments)
+        do {
+            if !excludingDefaults || fileOptions.followSymlinks != FileOptions.default.followSymlinks {
+                args["symlinks"] = fileOptions.followSymlinks ? "follow" : "ignore"
             }
-            return "--\($0) \(value)"
-        }.sorted().joined(separator: separator)
+            arguments.remove("symlinks")
+        }
+        do {
+            if !fileOptions.excludedURLs.isEmpty {
+                // TODO: find a better alternative to stringifying url
+                args["exclude"] = fileOptions.excludedURLs.map { "\($0.path)" }.sorted().joined(separator: ",")
+            }
+            arguments.remove("exclude")
+        }
+        assert(arguments.isEmpty)
+    }
+    if let formatOptions = options.formatOptions {
+        for descriptor in FormatOptions.Descriptor.formatting where !descriptor.isDeprecated {
+            let value = descriptor.fromOptions(formatOptions)
+            if !excludingDefaults || value != descriptor.fromOptions(.default) {
+                args[descriptor.argumentName] = value
+            }
+        }
     }
     if let rules = options.rules {
         let defaultRules = allRules.subtracting(FormatRules.disabledByDefault)
 
         let enabled = rules.subtracting(defaultRules)
         if !enabled.isEmpty {
-            result += "\(separator)--enable \(enabled.sorted().joined(separator: ","))"
+            args["enable"] = enabled.sorted().joined(separator: ",")
         }
 
         let disabled = defaultRules.subtracting(rules)
         if !disabled.isEmpty {
-            result += "\(separator)--disable \(disabled.sorted().joined(separator: ","))"
-        }
-    }
-    return result
-}
-
-// Get command line arguments for formatting options
-// (excludes non-formatting options and deprecated/renamed options)
-func argumentsFor(_ options: FormatOptions, excludingDefaults: Bool = false) -> [String: String] {
-    var args = [String: String]()
-    for descriptor in FormatOptions.Descriptor.formatting where !descriptor.isDeprecated {
-        let value = descriptor.fromOptions(options)
-        if !excludingDefaults || value != descriptor.fromOptions(.default) {
-            args[descriptor.argumentName] = value
+            args["disable"] = disabled.sorted().joined(separator: ",")
         }
     }
     return args

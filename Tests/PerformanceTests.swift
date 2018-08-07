@@ -37,7 +37,8 @@ class PerformanceTests: XCTestCase {
         var files = [String]()
         let inputURL = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
-        _ = enumerateFiles(withInputURL: inputURL) { url, _ in
+
+        _ = enumerateFiles(withInputURL: inputURL) { url, _, _ in
             return {
                 if let source = try? String(contentsOf: url) {
                     files.append(source)

@@ -226,18 +226,22 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
 
         // Options
         let options = try Options(args, in: directory)
-        let formatOptions = options.formatOptions ?? .default
-        let fileOptions = options.fileOptions ?? .default
-        let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
 
         // Show rules
         if showRules {
             print("")
+            let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
             for name in Array(allRules).sorted() {
                 print(" \(name)\(rules.contains(name) ? "" : " (disabled)")")
             }
             print("")
             return .ok
+        }
+
+        // FormatOption overrides
+        var overrides = [String: String]()
+        for key in formattingArguments + rulesArguments {
+            overrides[key] = args[key]
         }
 
         // Input path(s)
@@ -299,8 +303,9 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             if inputURLs.count > 0 {
                 print("inferring swiftformat options from source file(s)...")
                 var filesParsed = 0, formatOptions = FormatOptions.default, errors = [Error]()
+                let fileOptions = options.fileOptions ?? .default
                 let time = timeEvent {
-                    (filesParsed, formatOptions, errors) = inferOptions(from: inputURLs, excluding: fileOptions.excludedURLs)
+                    (filesParsed, formatOptions, errors) = inferOptions(from: inputURLs, options: fileOptions)
                 }
                 printWarnings(errors)
                 if filesParsed == 0 {
@@ -394,10 +399,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                             if dryrun {
                                 print("(dryrun mode - no files will be changed)", as: .warning)
                             }
-                            let output = try format(input,
-                                                    ruleNames: Array(rules),
-                                                    options: formatOptions,
-                                                    verbose: verbose)
+                            let output = try format(input, options: options, verbose: verbose)
                             if (try? String(contentsOf: outputURL)) != output {
                                 if dryrun {
                                     print("would have updated \(outputURL.path)", as: .info)
@@ -412,10 +414,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                             print("swiftformat completed successfully", as: .success)
                         } else {
                             // Write to stdout
-                            let output = try format(input,
-                                                    ruleNames: Array(rules),
-                                                    options: formatOptions,
-                                                    verbose: false)
+                            let output = try format(input, options: options, verbose: false)
                             print(output, as: .content)
                         }
                     } catch {
@@ -452,9 +451,8 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             var _errors = [Error]()
             (filesWritten, filesFailed, filesChecked, _errors) = processInput(inputURLs,
                                                                               andWriteToOutput: outputURL,
-                                                                              withRules: Array(rules),
-                                                                              formatOptions: formatOptions,
-                                                                              fileOptions: fileOptions,
+                                                                              options: options,
+                                                                              overrides: overrides,
                                                                               verbose: verbose,
                                                                               dryrun: dryrun,
                                                                               cacheURL: cacheURL)
@@ -500,13 +498,13 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
     }
 }
 
-func inferOptions(from inputURLs: [URL], excluding excludedURLs: [URL]) -> (Int, FormatOptions, [Error]) {
+func inferOptions(from inputURLs: [URL], options: FileOptions) -> (Int, FormatOptions, [Error]) {
     var tokens = [Token]()
     var errors = [Error]()
     var filesParsed = 0
-    let fileOptions = FileOptions(excludedURLs: excludedURLs)
+    let baseOptions = Options(fileOptions: options)
     for inputURL in inputURLs {
-        errors += enumerateFiles(withInputURL: inputURL, options: fileOptions) { inputURL, _ in
+        errors += enumerateFiles(withInputURL: inputURL, options: baseOptions) { inputURL, _, _ in
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("failed to read file \(inputURL.path)")
             }
@@ -520,17 +518,14 @@ func inferOptions(from inputURLs: [URL], excluding excludedURLs: [URL]) -> (Int,
     return (filesParsed, inferFormatOptions(from: tokens), errors)
 }
 
-func format(_ source: String,
-            ruleNames: [String],
-            options: FormatOptions,
-            verbose: Bool) throws -> String {
+func format(_ source: String, options: Options, verbose: Bool) throws -> String {
     // Parse source
     let originalTokens = tokenize(source)
     var tokens = originalTokens
 
-    // Apply rules
+    // Get rules
     let rulesByName = FormatRules.byName
-    let ruleNames = ruleNames.sorted()
+    let ruleNames = Array(options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)).sorted()
     let rules = ruleNames.compactMap { rulesByName[$0] }
     var rulesApplied = Set<String>()
     let callback: ((Int, [Token]) -> Void)? = verbose ? { i, updatedTokens in
@@ -539,7 +534,10 @@ func format(_ source: String,
             tokens = updatedTokens
         }
     } : nil
-    tokens = try applyRules(rules, to: tokens, with: options, callback: callback)
+
+    // Apply rules
+    let formatOptions = options.formatOptions ?? .default
+    tokens = try applyRules(rules, to: tokens, with: formatOptions, callback: callback)
 
     // Display info
     if verbose {
@@ -557,24 +555,12 @@ func format(_ source: String,
 
 func processInput(_ inputURLs: [URL],
                   andWriteToOutput outputURL: URL?,
-                  withRules enabled: [String],
-                  formatOptions: FormatOptions,
-                  fileOptions: FileOptions,
+                  options: Options,
+                  overrides: [String: String],
                   verbose: Bool,
                   dryrun: Bool,
                   cacheURL: URL?) -> (Int, Int, Int, [Error]) {
-    // Filter rules
-    var disabled = [String]()
-    for name: String in FormatRules.byName.keys {
-        if !enabled.contains(name) {
-            disabled.append(name)
-        }
-    }
-    let ruleNames = enabled.count <= disabled.count ?
-        (enabled.count == 0 ? "" : "rules:\(enabled.joined(separator: ","));") :
-        (disabled.count == 0 ? "" : "disabled:\(disabled.joined(separator: ","));")
     // Load cache
-    let cachePrefix = "\(version);\(formatOptions)\(ruleNames)"
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
     var cache: [String: String]?
     if let cacheURL = cacheURL {
@@ -586,12 +572,19 @@ func processInput(_ inputURLs: [URL],
     for inputURL in inputURLs {
         errors += enumerateFiles(withInputURL: inputURL,
                                  outputURL: outputURL,
-                                 options: fileOptions,
-                                 concurrent: !verbose) { inputURL, outputURL in
+                                 options: options,
+                                 concurrent: !verbose) { inputURL, outputURL, options in
 
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("failed to read file \(inputURL.path)")
             }
+            // Override options
+            var options = options
+            try options.addArguments(overrides, in: "") // No need for directory as overrides are formatOptions only
+            // Check cache
+            let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
+            let formatOptions = options.formatOptions ?? .default
+            let cachePrefix = "\(version);\(formatOptions)\(rules.joined(separator: ","));"
             let cacheKey: String = {
                 var path = inputURL.absoluteURL.path
                 if let cacheDirectory = cacheDirectory {
@@ -611,7 +604,7 @@ func processInput(_ inputURLs: [URL],
                         print("-- no changes", as: .success)
                     }
                 } else {
-                    output = try format(input, ruleNames: enabled, options: formatOptions, verbose: verbose)
+                    output = try format(input, options: options, verbose: verbose)
                 }
                 if outputURL != inputURL, (try? String(contentsOf: outputURL)) != output {
                     if !dryrun {

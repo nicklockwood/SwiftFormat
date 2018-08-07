@@ -34,6 +34,9 @@ import Foundation
 /// The current SwiftFormat version
 public let version = "0.35.0"
 
+/// The standard SwiftFormat config file name
+public let swiftFormatConfigurationFile = ".swiftformat"
+
 /// An enumeration of the types of error that may be thrown by SwiftFormat
 public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomNSError {
     case reading(String)
@@ -61,6 +64,7 @@ public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomN
 }
 
 /// Legacy file enumeration function
+@available(*, deprecated, message: "Use other enumerateFiles() method instead")
 public func enumerateFiles(withInputURL inputURL: URL,
                            excluding excludedURLs: [URL] = [],
                            outputURL: URL? = nil,
@@ -98,7 +102,7 @@ public typealias FileEnumerationHandler = (
 /// Throwing an error from inside either block does *not* terminate the enumeration.
 public func enumerateFiles(withInputURL inputURL: URL,
                            outputURL: URL? = nil,
-                           options: Options = .default,
+                           options baseOptions: Options = .default,
                            concurrent: Bool = true,
                            block: @escaping FileEnumerationHandler) -> [Error] {
     guard let resourceValues = try? inputURL.resourceValues(
@@ -109,7 +113,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
         }
         return [FormatError.options("file not found at \(inputURL.path)")]
     }
-    let fileOptions = options.fileOptions ?? .default
+    let fileOptions = baseOptions.fileOptions ?? .default
     if !fileOptions.followSymlinks &&
         (resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true) {
         return [FormatError.options("symbolic link or alias was skipped: \(inputURL.path)")]
@@ -156,6 +160,18 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 }
             }
         } else if resourceValues.isDirectory == true {
+            var options = options
+            let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
+            if manager.fileExists(atPath: configFile.path) {
+                do {
+                    let data = try Data(contentsOf: configFile)
+                    let args = try parseConfigFile(data)
+                    try options.addArguments(args, in: inputURL.path)
+                } catch {
+                    onComplete { throw error }
+                    return
+                }
+            }
             guard let files = try? manager.contentsOfDirectory(
                 at: inputURL, includingPropertiesForKeys: keys, options: .skipsHiddenFiles
             ) else {
@@ -182,7 +198,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
             onComplete { throw FormatError.options("file not found at \(inputURL.path)") }
             return
         }
-        enumerate(inputURL: inputURL, outputURL: outputURL, options: options, block: block)
+        enumerate(inputURL: inputURL, outputURL: outputURL, options: baseOptions, block: block)
     }
     group.wait()
 

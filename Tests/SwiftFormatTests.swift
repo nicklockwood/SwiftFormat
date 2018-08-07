@@ -38,7 +38,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFileMatchesOutputFileForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)
-        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
             return { files.append(inputURL) }
@@ -50,7 +50,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFileMatchesOutputFileForSameOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)
-        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
             return { files.append(inputURL) }
@@ -62,7 +62,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFilesMatchOutputFilesForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }
@@ -73,7 +73,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFilesMatchOutputFilesForSameOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }
@@ -84,9 +84,9 @@ class SwiftFormatTests: XCTestCase {
     func testInputFileNotEnumeratedWhenExcluded() {
         var files = [URL]()
         let currentFile = URL(fileURLWithPath: #file)
-        let options = FileOptions(excludedURLs: [currentFile.deletingLastPathComponent()])
+        let options = Options(fileOptions: FileOptions(excludedURLs: [currentFile.deletingLastPathComponent()]))
         let inputURL = currentFile.deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL, options: options) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL, options: options) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }

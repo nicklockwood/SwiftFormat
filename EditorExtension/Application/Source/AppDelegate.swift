@@ -31,8 +31,6 @@
 
 import Cocoa
 
-let swiftFormatFileExtension = "swiftformat"
-
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow? {
@@ -55,7 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let dialog = NSOpenPanel()
         dialog.title = "Choose a configuration file"
         dialog.showsResizeIndicator = true
-        dialog.allowedFileTypes = [swiftFormatFileExtension]
+        dialog.allowedFileTypes = [URL(fileURLWithPath: swiftFormatConfigurationFile).pathExtension]
         dialog.allowsMultipleSelection = false
 
         dialog.beginSheetModal(for: window) { response in
@@ -74,7 +72,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let options: Options
             do {
                 let args = try parseConfigFile(data)
-                options = try Options(args)
+                options = try Options(args, in: url.deletingLastPathComponent().path)
             } catch let error {
                 self.showError(error)
                 return
@@ -103,7 +101,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let dialog = NSSavePanel()
         dialog.title = "Export Configuration"
-        dialog.nameFieldStringValue = ".\(swiftFormatFileExtension)"
+        dialog.nameFieldStringValue = swiftFormatConfigurationFile
         dialog.beginSheetModal(for: window) { response in
             guard response == .OK, let url = dialog.url else {
                 return

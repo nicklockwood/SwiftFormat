@@ -31,6 +31,8 @@
 
 import Cocoa
 
+let swiftFormatFileExtension = "swiftformat"
+
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow? {
@@ -69,16 +71,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
 
-            let configuration: SwiftFormatCLIArgumentsFile
+            let rules: [Rule]
+            let options: FormatOptions?
             do {
-                configuration = try SwiftFormatCLIArgumentsFile.decoded(data)
+                let args = try parseConfigFile(data)
+                let ruleNames = try rulesFor(args)
+                rules = Set(FormatRules.byName.keys).map {
+                    Rule(name: $0, isEnabled: ruleNames.contains($0))
+                }
+                CLI.print = { _, _ in } // Prevent crash if file contains deprecated rules
+                options = try formatOptionsFor(args)
             } catch let error {
                 self.showError(error)
                 return
             }
 
-            RulesStore().restore(configuration.rules)
-            if let options = configuration.options {
+            RulesStore().restore(rules)
+            if let options = options {
                 OptionsStore().inferOptions = false
                 OptionsStore().restore(options)
             } else {
@@ -105,11 +114,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             let optionsStore = OptionsStore()
             let options = optionsStore.inferOptions ? nil : optionsStore.formatOptions
-            let formatFile = SwiftFormatCLIArgumentsFile(rules: RulesStore().rules, options: options)
-            let data = formatFile.encoded()
-
+            let rules = RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil }
+            let config = serialize(rules: Set(rules), options: options)
             do {
-                try data.write(to: url)
+                try config.write(to: url)
             } catch let error {
                 self.showError(FormatError.writing("problem writing configuration to \(url.path). [\(error)]"))
             }

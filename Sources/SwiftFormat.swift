@@ -60,20 +60,32 @@ public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomN
     }
 }
 
-/// File enumeration options
-public struct FileOptions {
-    public var followSymlinks: Bool
-    public var supportedFileExtensions: [String]
-    public var excludedURLs: [URL]
-
-    public init(followSymlinks: Bool = false,
-                supportedFileExtensions: [String] = ["swift"],
-                excludedURLs: [URL] = []) {
-        self.followSymlinks = followSymlinks
-        self.supportedFileExtensions = supportedFileExtensions
-        self.excludedURLs = excludedURLs
+/// Legacy file enumeration function
+public func enumerateFiles(withInputURL inputURL: URL,
+                           excluding excludedURLs: [URL] = [],
+                           outputURL: URL? = nil,
+                           options fileOptions: FileOptions = .default,
+                           concurrent: Bool = true,
+                           block: @escaping (URL, URL) throws -> () throws -> Void) -> [Error] {
+    var fileOptions = fileOptions
+    fileOptions.excludedURLs += excludedURLs
+    let options = Options(fileOptions: fileOptions)
+    return enumerateFiles(
+        withInputURL: inputURL,
+        outputURL: outputURL,
+        options: options,
+        concurrent: concurrent
+    ) { inputURL, outputURL, _ in
+        try block(inputURL, outputURL)
     }
 }
+
+/// Callback for enumerateFiles() function
+public typealias FileEnumerationHandler = (
+    _ inputURL: URL,
+    _ ouputURL: URL,
+    _ options: Options
+) throws -> () throws -> Void
 
 /// Enumerate all swift files at the specified location and (optionally) calculate an output file URL for each.
 /// Ignores the file if any of the excluded file URLs is a prefix of the input file URL.
@@ -86,9 +98,9 @@ public struct FileOptions {
 /// Throwing an error from inside either block does *not* terminate the enumeration.
 public func enumerateFiles(withInputURL inputURL: URL,
                            outputURL: URL? = nil,
-                           options: FileOptions = FileOptions(),
+                           options: Options = .default,
                            concurrent: Bool = true,
-                           block: @escaping (URL, URL) throws -> () throws -> Void) -> [Error] {
+                           block: @escaping FileEnumerationHandler) -> [Error] {
     guard let resourceValues = try? inputURL.resourceValues(
         forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])
     ) else {
@@ -97,12 +109,13 @@ public func enumerateFiles(withInputURL inputURL: URL,
         }
         return [FormatError.options("file not found at \(inputURL.path)")]
     }
-    if !options.followSymlinks &&
+    let fileOptions = options.fileOptions ?? .default
+    if !fileOptions.followSymlinks &&
         (resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true) {
         return [FormatError.options("symbolic link or alias was skipped: \(inputURL.path)")]
     }
     if resourceValues.isDirectory == false &&
-        !options.supportedFileExtensions.contains(inputURL.pathExtension) {
+        !fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
         return [FormatError.options("unsupported file type: \(inputURL.path)")]
     }
 
@@ -121,10 +134,11 @@ public func enumerateFiles(withInputURL inputURL: URL,
 
     func enumerate(inputURL: URL,
                    outputURL: URL?,
-                   options: FileOptions,
-                   block: @escaping (URL, URL) throws -> () throws -> Void) {
+                   options: Options,
+                   block: @escaping FileEnumerationHandler) {
         let inputURL = inputURL.standardizedFileURL
-        for excludedURL in options.excludedURLs {
+        let fileOptions = options.fileOptions ?? .default
+        for excludedURL in fileOptions.excludedURLs {
             if inputURL.absoluteString.hasPrefix(excludedURL.standardizedFileURL.absoluteString) {
                 return
             }
@@ -134,9 +148,9 @@ public func enumerateFiles(withInputURL inputURL: URL,
             return
         }
         if resourceValues.isRegularFile == true {
-            if options.supportedFileExtensions.contains(inputURL.pathExtension) {
+            if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
                 do {
-                    onComplete(try block(inputURL, outputURL ?? inputURL))
+                    onComplete(try block(inputURL, outputURL ?? inputURL, options))
                 } catch {
                     onComplete { throw error }
                 }
@@ -156,7 +170,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     enumerate(inputURL: url, outputURL: outputURL, options: options, block: block)
                 }
             }
-        } else if options.followSymlinks &&
+        } else if fileOptions.followSymlinks &&
             (resourceValues.isSymbolicLink == true || resourceValues.isAliasFile == true) {
             let resolvedURL = inputURL.resolvingSymlinksInPath()
             enumerate(inputURL: resolvedURL, outputURL: outputURL, options: options, block: block)
@@ -276,6 +290,18 @@ public func format(_ source: String,
                    rules: [FormatRule] = FormatRules.default,
                    options: FormatOptions = .default) throws -> String {
     return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
+}
+
+// MARK: Utilities
+
+func expandPath(_ path: String, in directory: String) -> URL {
+    if path.hasPrefix("/") {
+        return URL(fileURLWithPath: path)
+    }
+    if path.hasPrefix("~") {
+        return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
+    }
+    return URL(fileURLWithPath: directory).appendingPathComponent(path)
 }
 
 // MARK: Xcode 9.2 compatibility

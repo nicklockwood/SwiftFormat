@@ -68,7 +68,7 @@ private func print(_ message: String, as type: CLI.OutputType = .info) {
     CLI.print(message, type)
 }
 
-func printWarnings(_ errors: [Error]) {
+private func printWarnings(_ errors: [Error]) {
     for error in errors {
         print("warning: \(error)", as: .warning)
     }
@@ -150,113 +150,25 @@ func printHelp() {
     """)
 }
 
-func expandPath(_ path: String, in directory: String) -> URL {
-    if path.hasPrefix("/") {
-        return URL(fileURLWithPath: path)
-    }
-    if path.hasPrefix("~") {
-        return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
-    }
-    return URL(fileURLWithPath: directory).appendingPathComponent(path)
-}
-
-func timeEvent(block: () throws -> Void) rethrows -> String {
+private func timeEvent(block: () throws -> Void) rethrows -> String {
     let start = CFAbsoluteTimeGetCurrent()
     try block()
     let time = round((CFAbsoluteTimeGetCurrent() - start) * 100) / 100 // round to nearest 10ms
     return String(format: "%gs", time)
 }
 
-func parseArguments(_ argumentString: String) -> [String] {
-    var arguments = [""] // Arguments always begin with script path
-    var characters = String.UnicodeScalarView.SubSequence(argumentString.unicodeScalars)
-    var string = ""
-    var escaped = false
-    var quoted = false
-    while let char = characters.popFirst() {
-        switch char {
-        case "\\" where !escaped:
-            escaped = true
-        case "\"" where !escaped && !quoted:
-            quoted = true
-        case "\"" where !escaped && quoted:
-            quoted = false
-            fallthrough
-        case " " where !escaped && !quoted:
-            if !string.isEmpty {
-                arguments.append(string)
-            }
-            string.removeAll()
-        case "\"" where escaped:
-            escaped = false
-            string.append("\"")
-        case _ where escaped && quoted:
-            string.append("\\")
-            fallthrough
-        default:
-            escaped = false
-            string.append(Character(char))
-        }
-    }
-    if !string.isEmpty {
-        arguments.append(string)
-    }
-    return arguments
-}
-
-private let allRules = Set(FormatRules.byName.keys)
-func parseRules(_ rules: String) throws -> [String] {
-    return try rules.components(separatedBy: ",").compactMap {
-        let name = $0.trimmingCharacters(in: .whitespacesAndNewlines)
-        if name.isEmpty {
-            return nil
-        } else if !allRules.contains(name) {
-            throw FormatError.options("unknown rule '\(name)'")
-        }
-        return name
-    }
-}
-
-func mergeArguments(_ args: [String: String], into config: [String: String]) throws -> [String: String] {
-    var input = config
-    var output = args
-    // Merge rules
-    if let rules = try output["rules"].map(parseRules) {
-        if rules.isEmpty {
-            output["rules"] = nil
-        } else {
-            input["rules"] = nil
-            input["enable"] = nil
-            input["disable"] = nil
+private func serializeOptions(_ options: Options, to outputURL: URL?) throws {
+    if let outputURL = outputURL {
+        let file = serialize(options: options) + "\n"
+        do {
+            try file.write(to: outputURL, atomically: true, encoding: .utf8)
+        } catch {
+            throw FormatError.writing("failed to write options to \(outputURL.path)")
         }
     } else {
-        if let _disable = try output["disable"].map(parseRules) {
-            if let rules = try input["rules"].map(parseRules) {
-                input["rules"] = Set(rules).subtracting(_disable).joined(separator: ",")
-            }
-            if let enable = try input["enable"].map(parseRules) {
-                input["enable"] = Set(enable).subtracting(_disable).joined(separator: ",")
-            }
-            if let disable = try input["disable"].map(parseRules) {
-                input["disable"] = Set(disable).union(_disable).joined(separator: ",")
-                output["disable"] = nil
-            }
-        }
-        if let _enable = try args["enable"].map(parseRules) {
-            if let enable = try input["enable"].map(parseRules) {
-                input["enable"] = Set(enable).union(_enable).joined(separator: ",")
-                output["enable"] = nil
-            }
-            if let disable = try input["disable"].map(parseRules) {
-                input["disable"] = Set(disable).subtracting(_enable).joined(separator: ",")
-            }
-        }
+        print(serialize(options: options, excludingDefaults: true, separator: " "))
+        print("")
     }
-    // Merge other arguments
-    for (key, value) in input where output[key] == nil {
-        output[key] = value
-    }
-    return output
 }
 
 func processArguments(_ args: [String], in directory: String) -> ExitCode {
@@ -280,6 +192,11 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             return .ok
         }
 
+        // Warnings
+        for warning in warningsForArguments(args) {
+            print(warning, as: .warning)
+        }
+
         // Display rules (must be checked before merging config)
         let showRules = (args["rules"] == "")
 
@@ -297,12 +214,23 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             } catch let error {
                 throw FormatError.reading("failed to read config file at \(configURL.path), \(error)")
             }
-            let config = try parseConfigFile(data)
+            var config = try parseConfigFile(data)
+            if let excluded = config["exclude"]?.components(separatedBy: ",") {
+                // Ensure exclude paths in config file are treated as relative to the file itself
+                // TODO: find a better way/place to do this
+                let directory = configURL.deletingLastPathComponent().path
+                config["exclude"] = excluded.map { expandPath($0, in: directory).path }.sorted().joined(separator: ",")
+            }
             args = try mergeArguments(args, into: config)
         }
 
-        // Rules
-        let rules = try rulesFor(args)
+        // Options
+        let options = try Options(args, in: directory)
+        let formatOptions = options.formatOptions ?? .default
+        let fileOptions = options.fileOptions ?? .default
+        let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
+
+        // Show rules
         if showRules {
             print("")
             for name in Array(allRules).sorted() {
@@ -311,10 +239,6 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             print("")
             return .ok
         }
-
-        // Options
-        let formatOptions = try formatOptionsFor(args) ?? .default
-        let fileOptions = try fileOptionsFor(args, in: directory)
 
         // Input path(s)
         var inputURLs = [URL]()
@@ -374,9 +298,9 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             }
             if inputURLs.count > 0 {
                 print("inferring swiftformat options from source file(s)...")
-                var filesParsed = 0, options = FormatOptions.default, errors = [Error]()
+                var filesParsed = 0, formatOptions = FormatOptions.default, errors = [Error]()
                 let time = timeEvent {
-                    (filesParsed, options, errors) = inferOptions(from: inputURLs, excluding: fileOptions.excludedURLs)
+                    (filesParsed, formatOptions, errors) = inferOptions(from: inputURLs, excluding: fileOptions.excludedURLs)
                 }
                 printWarnings(errors)
                 if filesParsed == 0 {
@@ -395,17 +319,9 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 }
                 print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)")
                 print("")
-                if let outputURL = outputURL {
-                    let file = serialize(rules: rules, options: options) + "\n"
-                    do {
-                        try file.write(to: outputURL, atomically: true, encoding: .utf8)
-                    } catch {
-                        throw FormatError.writing("failed to write options to \(outputURL.path)")
-                    }
-                } else {
-                    print(serialize(rules: nil, options: options, excludingDefaults: true, separator: " "))
-                    print("")
-                }
+                var options = options
+                options.formatOptions = formatOptions
+                try serializeOptions(options, to: outputURL)
                 return .ok
             }
         }
@@ -470,8 +386,9 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                     do {
                         if args["inferoptions"] != nil {
                             let tokens = tokenize(input)
-                            let options = inferOptions(from: tokens)
-                            print(commandLineArguments(for: options).map({ "--\($0.key) \($0.value)" }).joined(separator: " "))
+                            var options = options
+                            options.formatOptions = inferFormatOptions(from: tokens)
+                            try serializeOptions(options, to: outputURL)
                         } else if let outputURL = outputURL {
                             print("running swiftformat...")
                             if dryrun {
@@ -600,7 +517,7 @@ func inferOptions(from inputURLs: [URL], excluding excludedURLs: [URL]) -> (Int,
             }
         }
     }
-    return (filesParsed, inferOptions(from: tokens), errors)
+    return (filesParsed, inferFormatOptions(from: tokens), errors)
 }
 
 func format(_ source: String,
@@ -781,221 +698,4 @@ func processInput(_ inputURLs: [URL],
         }
     }
     return (filesWritten, filesFailed, filesChecked, errors)
-}
-
-func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String: String] {
-    var anonymousArgs = 0
-    var namedArgs: [String: String] = [:]
-    var name = ""
-    for arg in args {
-        if arg.hasPrefix("--") {
-            // Long argument names
-            let key = String(arg.unicodeScalars.dropFirst(2))
-            if !names.contains(key) {
-                throw FormatError.options("unknown option --\(key)")
-            }
-            name = key
-            namedArgs[name] = ""
-            continue
-        } else if arg.hasPrefix("-") {
-            // Short argument names
-            let flag = String(arg.unicodeScalars.dropFirst())
-            let matches = names.filter { $0.hasPrefix(flag) }
-            if matches.count > 1 {
-                throw FormatError.options("ambiguous flag -\(flag)")
-            } else if matches.count == 0 {
-                throw FormatError.options("unknown flag -\(flag)")
-            } else {
-                name = matches[0]
-                namedArgs[name] = ""
-            }
-            continue
-        }
-        if name == "" {
-            // Argument is anonymous
-            name = String(anonymousArgs)
-            anonymousArgs += 1
-        }
-        namedArgs[name] = arg
-        name = ""
-    }
-    return namedArgs
-}
-
-func parseConfigFile(_ data: Data) throws -> [String: String] {
-    guard let input = String(data: data, encoding: .utf8) else {
-        throw FormatError.reading("unable to read data for configuration file")
-    }
-    let lines = input.components(separatedBy: .newlines)
-    let arguments = try lines.flatMap { line -> [String] in
-        // TODO: parseArguments isn't a perfect fit here - should we use a different approach?
-        let parts = parseArguments(line.replacingOccurrences(of: "\\n", with: "\n")).dropFirst().map {
-            $0.replacingOccurrences(of: "\n", with: "\\n")
-        }
-        guard let key = parts.first else {
-            return []
-        }
-        if !key.hasPrefix("-") {
-            throw FormatError.options("unknown option \(key)")
-        }
-        return [key, parts.dropFirst().joined(separator: " ")]
-    }
-    return try preprocessArguments(arguments, commandLineArguments)
-}
-
-func serialize(rules: Set<String>?,
-               options: FormatOptions?,
-               excludingDefaults: Bool = false,
-               separator: String = "\n") -> String {
-    var result = ""
-    if let options = options {
-        result += commandLineArguments(for: options, excludingDefaults: excludingDefaults).map {
-            var value = $1
-            if value.contains(" ") {
-                value = "\"\(value.replacingOccurrences(of: "\"", with: "\\\""))\""
-            }
-            return "--\($0) \(value)"
-        }.sorted().joined(separator: separator)
-    }
-    if let rules = rules {
-        let defaultRules = Set(FormatRules.byName.keys).subtracting(FormatRules.disabledByDefault)
-
-        let enabled = rules.subtracting(defaultRules)
-        if !enabled.isEmpty {
-            result += "\(separator)--enable \(enabled.sorted().joined(separator: ","))"
-        }
-
-        let disabled = defaultRules.subtracting(rules)
-        if !disabled.isEmpty {
-            result += "\(separator)--disable \(disabled.sorted().joined(separator: ","))"
-        }
-    }
-    return result
-}
-
-/// Get command line arguments for formatting options
-/// (excludes non-formatting options and deprecated/renamed options)
-func commandLineArguments(for options: FormatOptions, excludingDefaults: Bool = false) -> [String: String] {
-    var args = [String: String]()
-    for descriptor in FormatOptions.Descriptor.formatting where !descriptor.isDeprecated {
-        let value = descriptor.fromOptions(options)
-        if !excludingDefaults || value != descriptor.fromOptions(.default) {
-            args[descriptor.argumentName] = value
-        }
-    }
-    return args
-}
-
-private func processOption(_ key: String,
-                           in args: [String: String],
-                           from: inout Set<String>,
-                           handler: (String) throws -> Void) throws {
-    precondition(commandLineArguments.contains(key))
-    var arguments = from
-    arguments.remove(key)
-    from = arguments
-    guard let value = args[key] else {
-        return
-    }
-    guard !value.isEmpty else {
-        throw FormatError.options("--\(key) option expects a value")
-    }
-    do {
-        try handler(value)
-    } catch {
-        throw FormatError.options("unsupported --\(key) value '\(value)'")
-    }
-}
-
-/// Parse rule names from arguments
-func rulesFor(_ args: [String: String]) throws -> Set<String> {
-    var rules = Set(FormatRules.byName.keys)
-    rules = try args["rules"].map {
-        try Set(parseRules($0))
-    } ?? rules.subtracting(FormatRules.disabledByDefault)
-    try args["enable"].map {
-        try rules.formUnion(parseRules($0))
-    }
-    try args["disable"].map {
-        try rules.subtract(parseRules($0))
-    }
-    return rules
-}
-
-/// Parse FileOptions from arguments
-func fileOptionsFor(_ args: [String: String], in directory: String) throws -> FileOptions {
-    var options = FileOptions()
-    var arguments = Set(fileArguments)
-    try processOption("symlinks", in: args, from: &arguments) {
-        switch $0.lowercased() {
-        case "follow":
-            options.followSymlinks = true
-        case "ignore":
-            options.followSymlinks = false
-        default:
-            throw FormatError.options("")
-        }
-    }
-    try processOption("exclude", in: args, from: &arguments) {
-        for path in $0.components(separatedBy: ",") {
-            options.excludedURLs.append(expandPath(path, in: directory))
-        }
-    }
-    assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
-    return options
-}
-
-/// Parse FormatOptions from arguments
-/// Returns nil if the arguments dictionary does not contain any formatting arguments
-func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
-    var options = FormatOptions.default
-    var arguments = Set(formattingArguments)
-
-    var containsFormatOption = false
-    for option in FormatOptions.Descriptor.all {
-        var handler = option.toOptions
-        if let message = option.deprecationMessage {
-            handler = { string, options in
-                print(message, as: .warning)
-                try option.toOptions(string, &options)
-            }
-        }
-        try processOption(option.argumentName, in: args, from: &arguments) {
-            containsFormatOption = true
-            try handler($0, &options)
-        }
-    }
-    assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
-    return containsFormatOption ? options : nil
-}
-
-let fileArguments = [
-    // File options
-    "symlinks",
-]
-
-let formattingArguments = FormatOptions.Descriptor.formatting.map { $0.argumentName }
-let internalArguments = FormatOptions.Descriptor.internal.map { $0.argumentName }
-
-let commandLineArguments = [
-    // File options
-    "config",
-    "inferoptions",
-    "output",
-    "exclude",
-    "cache",
-    "verbose",
-    "dryrun",
-    "lint",
-    // Rules
-    "disable",
-    "enable",
-    "rules",
-    // Misc
-    "help",
-    "version",
-] + fileArguments + formattingArguments + internalArguments
-
-let deprecatedArguments = FormatOptions.Descriptor.all.compactMap {
-    $0.isDeprecated ? $0.argumentName : nil
 }

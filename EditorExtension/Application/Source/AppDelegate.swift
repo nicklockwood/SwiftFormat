@@ -71,25 +71,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
 
-            let rules: [Rule]
-            let options: FormatOptions?
+            let options: Options
             do {
                 let args = try parseConfigFile(data)
-                let ruleNames = try rulesFor(args)
-                rules = Set(FormatRules.byName.keys).map {
-                    Rule(name: $0, isEnabled: ruleNames.contains($0))
-                }
-                CLI.print = { _, _ in } // Prevent crash if file contains deprecated rules
-                options = try formatOptionsFor(args)
+                options = try Options(args)
             } catch let error {
                 self.showError(error)
                 return
             }
 
-            RulesStore().restore(rules)
-            if let options = options {
+            let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
+            RulesStore().restore(Set(FormatRules.byName.keys).map {
+                Rule(name: $0, isEnabled: rules.contains($0))
+            })
+            if let formatOptions = options.formatOptions {
                 OptionsStore().inferOptions = false
-                OptionsStore().restore(options)
+                OptionsStore().restore(formatOptions)
             } else {
                 OptionsStore().inferOptions = true
             }
@@ -113,11 +110,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             let optionsStore = OptionsStore()
-            let options = optionsStore.inferOptions ? nil : optionsStore.formatOptions
+            let formatOptions = optionsStore.inferOptions ? nil : optionsStore.formatOptions
             let rules = RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil }
-            let config = serialize(rules: Set(rules), options: options)
+            let config = serialize(options: Options(formatOptions: formatOptions, rules: Set(rules)))
             do {
-                try config.write(to: url)
+                try config.write(to: url, atomically: true, encoding: .utf8)
             } catch let error {
                 self.showError(FormatError.writing("problem writing configuration to \(url.path). [\(error)]"))
             }

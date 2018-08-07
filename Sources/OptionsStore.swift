@@ -59,13 +59,6 @@ extension FormatOptions {
         options.forEach { try! $0.descriptor.toOptions($0.argumentValue, &formatOptions) }
         self = formatOptions
     }
-
-    var savedOptions: [SavedOption] {
-        return FormatOptions.Descriptor.all.map {
-            let value = $0.fromOptions(self)
-            return SavedOption(argumentValue: value, descriptor: $0)
-        }
-    }
 }
 
 struct OptionsStore {
@@ -112,9 +105,16 @@ struct OptionsStore {
         save(optRepresentations)
     }
 
+    func save(_ options: FormatOptions) {
+        save(FormatOptions.Descriptor.all.map {
+            let value = $0.fromOptions(options)
+            return SavedOption(argumentValue: value, descriptor: $0)
+        } as [SavedOption])
+    }
+
     func restore(_ options: FormatOptions) {
         clear()
-        save(options.savedOptions)
+        save(options)
         addNewOptionsIfNeeded()
     }
 

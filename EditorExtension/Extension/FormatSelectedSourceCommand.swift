@@ -45,11 +45,10 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
 
         // Inspect the whole file to infer the format options
         let store = OptionsStore()
-        var options = store.inferOptions ?
-            inferOptions(from: tokenize(invocation.buffer.completeBuffer)) :
-            store.formatOptions
-        options.indent = indentationString(for: invocation.buffer)
-        options.fragment = true
+        let tokens = tokenize(invocation.buffer.completeBuffer)
+        var formatOptions = store.inferOptions ? inferFormatOptions(from: tokens) : store.formatOptions
+        formatOptions.indent = indentationString(for: invocation.buffer)
+        formatOptions.fragment = true
 
         // Grab the selected source to format using entire lines of text
         let selectionRange = selection.start.line ... min(selection.end.line, invocation.buffer.lines.count - 1)
@@ -63,7 +62,7 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
                 .filter { $0.isEnabled }
                 .map { $0.name })
 
-            let formattedSource = try format(sourceToFormat, rules: rules, options: options)
+            let formattedSource = try format(sourceToFormat, rules: rules, options: formatOptions)
             if formattedSource == sourceToFormat {
                 // No changes needed
                 return completionHandler(nil)

@@ -43,16 +43,11 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
         let tokens = tokenize(sourceToFormat)
 
         let store = OptionsStore()
-        var options = store.inferOptions ? inferOptions(from: tokens) : store.formatOptions
-        options.indent = indentationString(for: invocation.buffer)
+        var formatOptions = store.inferOptions ? inferFormatOptions(from: tokens) : store.formatOptions
+        formatOptions.indent = indentationString(for: invocation.buffer)
         do {
-            let rules = FormatRules.all(named:
-                RulesStore()
-                    .rules
-                    .filter { $0.isEnabled }
-                    .map { $0.name })
-
-            let output = try format(tokens, rules: rules, options: options)
+            let rules = FormatRules.all(named: RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
+            let output = try format(tokens, rules: rules, options: formatOptions)
             if output == tokens {
                 // No changes needed
                 return completionHandler(nil)

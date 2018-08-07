@@ -29,7 +29,7 @@
 //  SOFTWARE.
 //
 
-import SwiftFormat
+@testable import SwiftFormat
 import XCTest
 
 class SwiftFormatTests: XCTestCase {
@@ -67,7 +67,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 33)
+        XCTAssertEqual(files.count, 36)
     }
 
     func testInputFilesMatchOutputFilesForSameOutput() {
@@ -78,7 +78,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 33)
+        XCTAssertEqual(files.count, 36)
     }
 
     func testInputFileNotEnumeratedWhenExcluded() {
@@ -91,7 +91,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 24)
+        XCTAssertEqual(files.count, 26)
     }
 
     // MARK: format function
@@ -146,5 +146,28 @@ class SwiftFormatTests: XCTestCase {
         let (line, column) = offsetForToken(at: 7, in: tokens)
         XCTAssertEqual(line, 2)
         XCTAssertEqual(column, 8)
+    }
+
+    // MARK: input paths
+
+    func testExpandPathWithRelativePath() {
+        XCTAssertEqual(
+            expandPath("relpath/to/file.swift", in: "/dir").path,
+            "/dir/relpath/to/file.swift"
+        )
+    }
+
+    func testExpandPathWithFullPath() {
+        XCTAssertEqual(
+            expandPath("/full/path/to/file.swift", in: "/dir").path,
+            "/full/path/to/file.swift"
+        )
+    }
+
+    func testExpandPathWithUserPath() {
+        XCTAssertEqual(
+            expandPath("~/file.swift", in: "/dir").path,
+            NSString(string: "~/file.swift").expandingTildeInPath
+        )
     }
 }

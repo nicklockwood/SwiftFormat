@@ -150,10 +150,14 @@ func printHelp() {
     """)
 }
 
-private func timeEvent(block: () throws -> Void) rethrows -> String {
+func timeEvent(block: () throws -> Void) rethrows -> TimeInterval {
     let start = CFAbsoluteTimeGetCurrent()
     try block()
-    let time = round((CFAbsoluteTimeGetCurrent() - start) * 100) / 100 // round to nearest 10ms
+    return CFAbsoluteTimeGetCurrent() - start
+}
+
+private func formatTime(_ time: TimeInterval) -> String {
+    let time = round(time * 100) / 100 // round to nearest 10ms
     return String(format: "%gs", time)
 }
 
@@ -304,9 +308,9 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 print("inferring swiftformat options from source file(s)...")
                 var filesParsed = 0, formatOptions = FormatOptions.default, errors = [Error]()
                 let fileOptions = options.fileOptions ?? .default
-                let time = timeEvent {
+                let time = formatTime(timeEvent {
                     (filesParsed, formatOptions, errors) = inferOptions(from: inputURLs, options: fileOptions)
-                }
+                })
                 printWarnings(errors)
                 if filesParsed == 0 {
                     throw FormatError.parsing("failed to to infer options")
@@ -447,7 +451,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
 
         // Format the code
         var filesWritten = 0, filesFailed = 0, filesChecked = 0
-        let time = timeEvent {
+        let time = formatTime(timeEvent {
             var _errors = [Error]()
             (filesWritten, filesFailed, filesChecked, _errors) = processInput(inputURLs,
                                                                               andWriteToOutput: outputURL,
@@ -457,7 +461,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                                                                               dryrun: dryrun,
                                                                               cacheURL: cacheURL)
             errors += _errors
-        }
+        })
 
         if filesWritten == 0 {
             if filesChecked == 0 {
@@ -516,6 +520,16 @@ func inferOptions(from inputURLs: [URL], options: FileOptions) -> (Int, FormatOp
         }
     }
     return (filesParsed, inferFormatOptions(from: tokens), errors)
+}
+
+func computeHash(_ source: String) -> String {
+    var count = 0
+    var hash: UInt64 = 5381
+    for byte in source.utf8 {
+        count += 1
+        hash = 127 &* (hash & 0x00FF_FFFF_FFFF_FFFF) &+ UInt64(byte)
+    }
+    return "\(count)\(hash)"
 }
 
 func format(_ source: String, options: Options, verbose: Bool) throws -> String {
@@ -597,14 +611,27 @@ func processInput(_ inputURLs: [URL],
                 if verbose {
                     print("formatting \(inputURL.path)")
                 }
+                var cacheHash: String?
+                var sourceHash: String?
+                if let cacheEntry = cache?[cacheKey], cacheEntry.hasPrefix(cachePrefix) {
+                    cacheHash = String(cacheEntry[cachePrefix.endIndex...])
+                    sourceHash = computeHash(input)
+                }
                 let output: String
-                if cache?[cacheKey] == cachePrefix + String(input.count) {
+                if let cacheHash = cacheHash, cacheHash == sourceHash {
                     output = input
                     if verbose {
                         print("-- no changes", as: .success)
                     }
                 } else {
                     output = try format(input, options: options, verbose: verbose)
+                    if output != input {
+                        sourceHash = nil
+                    }
+                }
+                let cacheValue = cache.map { _ in
+                    // Only bother computing this if cache is enabled
+                    cachePrefix + (sourceHash ?? computeHash(output))
                 }
                 if outputURL != inputURL, (try? String(contentsOf: outputURL)) != output {
                     if !dryrun {
@@ -620,7 +647,7 @@ func processInput(_ inputURLs: [URL],
                     // No changes needed
                     return {
                         filesChecked += 1
-                        cache?[cacheKey] = cachePrefix + String(output.count)
+                        cache?[cacheKey] = cacheValue
                     }
                 }
                 if dryrun {
@@ -639,7 +666,7 @@ func processInput(_ inputURLs: [URL],
                             filesChecked += 1
                             filesFailed += 1
                             filesWritten += 1
-                            cache?[cacheKey] = cachePrefix + String(output.count)
+                            cache?[cacheKey] = cacheValue
                         }
                     } catch {
                         throw FormatError.writing("failed to write file \(outputURL.path), \(error)")

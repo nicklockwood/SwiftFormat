@@ -141,4 +141,63 @@ class CommandLineTests: XCTestCase {
             range = match.upperBound ..< range.upperBound
         }
     }
+
+    // MARK: cache
+
+    func testHashIsFasterThanFormatting() throws {
+        let sourceFile = URL(fileURLWithPath: #file)
+        let source = try String(contentsOf: sourceFile, encoding: .utf8)
+        let hash = computeHash(source + ";")
+
+        let hashTime = timeEvent { _ = computeHash(source) == hash }
+        let formatTime = try timeEvent { _ = try format(source) }
+        XCTAssertLessThan(hashTime, formatTime)
+    }
+
+    func testCacheHit() throws {
+        let input = "let foo = bar"
+        XCTAssertEqual(computeHash(input), computeHash(input))
+    }
+
+    func testCacheMiss() throws {
+        let input = "let foo = bar"
+        let output = "let foo = bar\n"
+        XCTAssertNotEqual(computeHash(input), computeHash(output))
+    }
+
+    func testCachePotentialFalsePositive() throws {
+        let input = "let foo = bar;"
+        let output = "let foo = bar\n"
+        XCTAssertNotEqual(computeHash(input), computeHash(output))
+    }
+
+    func testCachePotentialFalsePositive2() throws {
+        let input = """
+        import Foo
+        import Bar
+
+        """
+        let output = """
+        import Bar
+        import Foo
+
+        """
+        XCTAssertNotEqual(computeHash(input), computeHash(output))
+    }
+
+    // MARK: end-to-end formatting
+
+    func testFormatting() {
+        CLI.print = { _, _ in }
+        let sourceDirectory = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent().deletingLastPathComponent().path
+
+        #if swift(>=4.1.5)
+            let args = "."
+        #else
+            let args = ". --disable redundantSelf" // redundantSelf crashes Xcode 9.4 in debug mode
+        #endif
+
+        XCTAssertEqual(CLI.run(in: sourceDirectory, with: args), .ok)
+    }
 }

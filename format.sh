@@ -1,3 +1,3 @@
 if [[ -z "${TRAVIS}" ]]; then
-    CommandLineTool/swiftformat . --config .swiftformat --cache ignore
+    CommandLineTool/swiftformat . --cache ignore
 fi

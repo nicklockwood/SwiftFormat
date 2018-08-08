@@ -33,12 +33,12 @@ import SwiftFormat
 import XCTest
 
 class PerformanceTests: XCTestCase {
+    static let sourceDirectory = URL(fileURLWithPath: #file)
+        .deletingLastPathComponent().deletingLastPathComponent()
+
     static let files: [String] = {
         var files = [String]()
-        let inputURL = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent()
-
-        _ = enumerateFiles(withInputURL: inputURL) { url, _, _ in
+        _ = enumerateFiles(withInputURL: sourceDirectory) { url, _, _ in
             return {
                 if let source = try? String(contentsOf: url) {
                     files.append(source)
@@ -63,7 +63,22 @@ class PerformanceTests: XCTestCase {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
-            _ = tokens.map { try! format($0, rules: FormatRules.default) }
+            _ = tokens.map { try! format($0) }
+        }
+    }
+
+    func testUncachedFormatting() {
+        CLI.print = { _, _ in }
+        measure {
+            XCTAssertEqual(CLI.run(in: PerformanceTests.sourceDirectory.path, with: ". --cache ignore"), .ok)
+        }
+    }
+
+    func testCachedFormatting() {
+        CLI.print = { _, _ in }
+        _ = CLI.run(in: PerformanceTests.sourceDirectory.path, with: ".") // warm the cache
+        measure {
+            XCTAssertEqual(CLI.run(in: PerformanceTests.sourceDirectory.path, with: "."), .ok)
         }
     }
 
@@ -95,7 +110,7 @@ class PerformanceTests: XCTestCase {
             experimentalRules: true
         )
         measure {
-            _ = tokens.map { try! format($0, rules: FormatRules.default, options: options) }
+            _ = tokens.map { try! format($0, options: options) }
         }
     }
 

@@ -102,9 +102,11 @@ class PerformanceTests: XCTestCase {
     func testInferring() {
         let files = PerformanceTests.files
         let tokens = files.flatMap { tokenize($0) }
+        var options: FormatOptions?
         measure {
-            _ = inferFormatOptions(from: tokens)
+            options = inferFormatOptions(from: tokens)
         }
+        XCTAssertEqual(options?.indent.count, 4)
     }
 
     func testIndent() {

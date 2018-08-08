@@ -47,15 +47,28 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
             }
             indents.append((indent, 0))
         }
+        var previousLength = 0
         formatter.forEach(.linebreak) { i, _ in
-            let start = formatter.startOfLine(at: i)
-            if case let .space(string) = formatter.tokens[start] {
+            if case let .space(string)? = formatter.token(at: i + 1) {
                 if string.hasPrefix("\t") {
                     increment("\t")
                 } else {
                     let length = string.count
-                    for i in [8, 4, 3, 2, 1] where length % i == 0 {
-                        increment(String(repeating: " ", count: i))
+                    let delta = previousLength - length
+                    if delta != 0 {
+                        switch formatter.token(at: i + 2) ?? .space("") {
+                        case .commentBody, .delimiter(","):
+                            return
+                        default:
+                            break
+                        }
+                        switch formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) ?? .space("") {
+                        case .delimiter(","):
+                            break
+                        default:
+                            increment(String(repeating: " ", count: abs(delta)))
+                            previousLength = length
+                        }
                     }
                 }
             }

@@ -29,10 +29,33 @@
 //  SOFTWARE.
 //
 
-import SwiftFormat
+@testable import SwiftFormat
 import XCTest
 
 class InferenceTests: XCTestCase {
+    static let files: [String] = {
+        var files = [String]()
+        let inputURL = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent().deletingLastPathComponent()
+
+        _ = enumerateFiles(withInputURL: inputURL) { url, _, _ in
+            return {
+                if let source = try? String(contentsOf: url) {
+                    files.append(source)
+                }
+            }
+        }
+        return files
+    }()
+
+    func testInferOptionsForProject() {
+        let files = InferenceTests.files
+        let tokens = files.flatMap { tokenize($0) }
+        let options = Options(formatOptions: inferFormatOptions(from: tokens))
+        let arguments = serialize(options: options, excludingDefaults: true, separator: " ")
+        XCTAssertEqual(arguments, "--binarygrouping none --decimalgrouping none --hexgrouping none --octalgrouping none --wraparguments afterfirst --wrapcollections beforefirst")
+    }
+
     // MARK: indent
 
     func testInferIndentLevel() {
@@ -40,14 +63,50 @@ class InferenceTests: XCTestCase {
         \t
         class Foo {
             func bar() {
-                //baz
-                //quux
-                //foo
+                baz()
+                quux()
+                let foo = Foo()
             }
         }
         """
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertEqual(options.indent, "    ")
+        XCTAssertEqual(options.indent.count, 4)
+    }
+
+    func testInferIndentWithComment() {
+        let input = """
+        class Foo {
+            /*
+             A multiline comment
+              which has unusual
+               indenting that
+                might screw up
+                 the indent inference
+             */
+        }
+        """
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.indent.count, 4)
+    }
+
+    func testInferIndentWithWrappedFunction() {
+        let input = """
+        class Foo {
+            func foo(arg: Int,
+                     arg: Int,
+                     arg: Int) {}
+
+            func bar(arg: Int,
+                     arg: Int,
+                     arg: Int) {}
+
+            func baz(arg: Int,
+                     arg: Int,
+                     arg: Int) {}
+        }
+        """
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.indent.count, 4)
     }
 
     // MARK: linebreak

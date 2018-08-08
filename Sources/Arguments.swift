@@ -202,11 +202,15 @@ func parseConfigFile(_ data: Data) throws -> [String: String] {
             return []
         }
         if !key.hasPrefix("-") {
-            throw FormatError.options("unknown option \(key)")
+            throw FormatError.options("unknown option \(key) in configuration file")
         }
         return [key, parts.dropFirst().joined(separator: " ")]
     }
-    return try preprocessArguments(arguments, commandLineArguments)
+    do {
+        return try preprocessArguments(arguments, optionsArguments)
+    } catch let FormatError.options(message) {
+        throw FormatError.options("\(message) in configuration file")
+    }
 }
 
 // Serialize a set of options into either an arguments string or a file
@@ -289,7 +293,7 @@ private func processOption(_ key: String,
                            in args: [String: String],
                            from: inout Set<String>,
                            handler: (String) throws -> Void) throws {
-    precondition(commandLineArguments.contains(key))
+    precondition(optionsArguments.contains(key))
     var arguments = from
     arguments.remove(key)
     from = arguments
@@ -389,6 +393,7 @@ let rulesArguments = [
 
 let formattingArguments = FormatOptions.Descriptor.formatting.map { $0.argumentName }
 let internalArguments = FormatOptions.Descriptor.internal.map { $0.argumentName }
+let optionsArguments = fileArguments + rulesArguments + formattingArguments + internalArguments
 
 let commandLineArguments = [
     // Input options
@@ -402,7 +407,7 @@ let commandLineArguments = [
     // Misc
     "help",
     "version",
-] + fileArguments + rulesArguments + formattingArguments + internalArguments
+] + optionsArguments
 
 let deprecatedArguments = FormatOptions.Descriptor.all.compactMap {
     $0.isDeprecated ? $0.argumentName : nil

@@ -103,7 +103,7 @@ class ArgumentsTests: XCTestCase {
 
     func testCommandLineArgumentsHaveValidNames() {
         for key in argumentsFor(.default).keys {
-            XCTAssertTrue(commandLineArguments.contains(key), "\(key) is not a valid argument name")
+            XCTAssertTrue(optionsArguments.contains(key), "\(key) is not a valid argument name")
         }
     }
 
@@ -147,26 +147,6 @@ class ArgumentsTests: XCTestCase {
         do {
             let args = try parseConfigFile(data)
             XCTAssertEqual(args.count, 2)
-        } catch {
-            XCTFail("\(error)")
-        }
-    }
-
-    func testParseArgumentsContainingValuelessKeys() throws {
-        let config = """
-        --allman true
-        --help
-        --version
-        --rules braces
-        """
-        let data = Data(config.utf8)
-        do {
-            let args = try parseConfigFile(data)
-            XCTAssertEqual(args.count, 4)
-            XCTAssertEqual(args["allman"], "true")
-            XCTAssertEqual(args["help"], "")
-            XCTAssertEqual(args["version"], "")
-            XCTAssertEqual(args["rules"], "braces")
         } catch {
             XCTFail("\(error)")
         }

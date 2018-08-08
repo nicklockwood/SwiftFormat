@@ -62,7 +62,8 @@ final class OptionsViewController: NSViewController {
             .options
             .sorted(by: { $0.descriptor.displayName < $1.descriptor.displayName })
             .compactMap { option -> UserSelectionType? in
-                guard !option.isDeprecated else {
+                guard !option.isDeprecated,
+                    option.descriptor.argumentName != FormatOptions.Descriptor.indentation.argumentName else {
                     return nil
                 }
                 let descriptor = option.descriptor

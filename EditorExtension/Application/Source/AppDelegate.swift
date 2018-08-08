@@ -52,8 +52,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let dialog = NSOpenPanel()
         dialog.title = "Choose a configuration file"
+        dialog.delegate = self
+        dialog.showsHiddenFiles = true
         dialog.showsResizeIndicator = true
-        dialog.allowedFileTypes = [URL(fileURLWithPath: swiftFormatConfigurationFile).pathExtension]
         dialog.allowsMultipleSelection = false
 
         dialog.beginSheetModal(for: window) { response in
@@ -101,6 +102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let dialog = NSSavePanel()
         dialog.title = "Export Configuration"
+        dialog.showsHiddenFiles = true
         dialog.nameFieldStringValue = swiftFormatConfigurationFile
         dialog.beginSheetModal(for: window) { response in
             guard response == .OK, let url = dialog.url else {
@@ -128,6 +130,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.addButton(withTitle: "OK")
         alert.alertStyle = .critical
         alert.beginSheetModal(for: window)
+    }
+}
+
+extension AppDelegate: NSOpenSavePanelDelegate {
+    func panel(_: Any, shouldEnable url: URL) -> Bool {
+        return url.hasDirectoryPath ||
+            url.pathExtension == swiftFormatConfigurationFile.dropFirst() ||
+            url.lastPathComponent == swiftFormatConfigurationFile
     }
 }
 

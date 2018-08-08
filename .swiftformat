@@ -1,3 +1,5 @@
+# format options
+
 --allman false
 --binarygrouping 4,8
 --commas always
@@ -26,3 +28,7 @@
 --trimwhitespace always
 --wraparguments preserve
 --wrapcollections preserve
+
+# rules
+
+--disable trailingClosures

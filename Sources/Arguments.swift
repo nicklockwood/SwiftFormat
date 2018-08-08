@@ -47,14 +47,16 @@ extension Options {
 
 // Parse a space-delimited string into an array of command-line arguments
 // Replicates the behavior implemented by the console when parsing input
-func parseArguments(_ argumentString: String) -> [String] {
+func parseArguments(_ argumentString: String, ignoreComments: Bool = true) -> [String] {
     var arguments = [""] // Arguments always begin with script path
     var characters = String.UnicodeScalarView.SubSequence(argumentString.unicodeScalars)
     var string = ""
     var escaped = false
     var quoted = false
-    while let char = characters.popFirst() {
+    loop: while let char = characters.popFirst() {
         switch char {
+        case "#" where !ignoreComments && !escaped && !quoted:
+            break loop // comment
         case "\\" where !escaped:
             escaped = true
         case "\"" where !escaped && !quoted:
@@ -195,7 +197,8 @@ func parseConfigFile(_ data: Data) throws -> [String: String] {
     let lines = input.components(separatedBy: .newlines)
     let arguments = try lines.flatMap { line -> [String] in
         // TODO: parseArguments isn't a perfect fit here - should we use a different approach?
-        let parts = parseArguments(line.replacingOccurrences(of: "\\n", with: "\n")).dropFirst().map {
+        let line = line.replacingOccurrences(of: "\\n", with: "\n")
+        let parts = parseArguments(line, ignoreComments: false).dropFirst().map {
             $0.replacingOccurrences(of: "\n", with: "\\n")
         }
         guard let key = parts.first else {

@@ -77,6 +77,48 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(parseArguments(input), output)
     }
 
+    func testCommentedLine() {
+        let input = "#hello"
+        let output = [""]
+        XCTAssertEqual(parseArguments(input, ignoreComments: false), output)
+    }
+
+    func testCommentInLine() {
+        let input = "hello#world"
+        let output = ["", "hello"]
+        XCTAssertEqual(parseArguments(input, ignoreComments: false), output)
+    }
+
+    func testCommentAfterSpace() {
+        let input = "hello #world"
+        let output = ["", "hello"]
+        XCTAssertEqual(parseArguments(input, ignoreComments: false), output)
+    }
+
+    func testCommentBeforeSpace() {
+        let input = "hello# world"
+        let output = ["", "hello"]
+        XCTAssertEqual(parseArguments(input, ignoreComments: false), output)
+    }
+
+    func testCommentContainingSpace() {
+        let input = "hello #wide world"
+        let output = ["", "hello"]
+        XCTAssertEqual(parseArguments(input, ignoreComments: false), output)
+    }
+
+    func testEscapedComment() {
+        let input = "hello \\#world"
+        let output = ["", "hello", "#world"]
+        XCTAssertEqual(parseArguments(input, ignoreComments: false), output)
+    }
+
+    func testQuotedComment() {
+        let input = "hello \"#world\""
+        let output = ["", "hello", "#world"]
+        XCTAssertEqual(parseArguments(input, ignoreComments: false), output)
+    }
+
     // MARK: arg preprocessor
 
     func testPreprocessArguments() {

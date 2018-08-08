@@ -20,6 +20,7 @@ Table of Contents
     - [Options](#options)
     - [Rules](#rules)
     - [Config](#config)
+    - [Linting](#linting)
 - [FAQ](#faq)
 - [Cache](#cache)
 - [File Headers](#file-headers)
@@ -32,7 +33,7 @@ What is this?
 
 SwiftFormat is a code library and command-line tool for reformatting swift code.
 
-It applies a set of rules to the formatting and space around the code, leaving the meaning intact.
+It applies a set of rules to the formatting and space around the code, leaving the behavior intact.
 
 
 Why would I want to do that?
@@ -132,7 +133,7 @@ Xcode Source Editor Extension
 
 **Installation:**
 
-You'll find the latest version of the `SwiftFormat for Xcode` application inside the `EditorExtension` folder included in the SwiftFormat repository. Drag it into your `Applications` folder, then double-click to launch it, and follow the on-screen instructions.
+You'll find the latest version of the SwiftFormat for Xcode application inside the EditorExtension folder included in the SwiftFormat repository. Drag it into your `Applications` folder, then double-click to launch it, and follow the on-screen instructions.
 
 **NOTE:** The Extension requires Xcode 8 and macOS 10.12 Sierra or higher.
 
@@ -1059,14 +1060,52 @@ A SwiftFormat configuration file consists of one or more command-line options, s
 --disable elseOnSameLine,semicolons
 ```
 
-You can select a configuration file to use for formatting with the `--config "path/to/config/file"` command-line argument. The suggested name for this file is ".swiftformat", and it should typically be located in the root directory of your Xcode project.
+While formatting, SwiftFormat will automatically check inside each subdirectory for the presence of a ".swiftformat" file and will apply any options that it finds there to the files in that directory.
 
-If you would prefer not to create the configuration file by hand, you can use the SwiftFormat for Xcode app to create the configuration and export a configuration file. Alternatively, you can use the swiftformat command-line-tool's `--inferoptions` command to generate a config file from your existing project, like this:
+This allows you to override certain rules or formatting options just for a particular directory of files. You can also specify excluded files relative to that directory using `--exclude`, which may be more convenient that specifying them at the top-level.
+
+Files named ".swiftformat" will be processed automatically, however you can select an additional configuration file to use for formatting using the `--config "path/to/config/file"` command-line argument. A configuration file selected using `--config` does not need to be named ".swiftformat", and can be located outside of the project directory.
+
+The config file format is designed to be human editable. You may include blank lines for readability, and can also add comments using a hash prefix (#), e.g.
+
+```
+# format options
+--allman true
+--indent tabs # tabs FTW!
+
+# file options
+-- exclude Pods
+
+# rules
+--disable elseOnSameLine,semicolons
+```
+
+If you would prefer not to edit the configuration file by hand, you can use the [SwiftFormat for Xcode](#xcode-source-editor-extension) app to edit the configuration and export a configuration file. Alternatively, you can use the swiftformat command-line-tool's `--inferoptions` command to generate a config file from your existing project, like this:
 
 ```bash
 > cd /path/to/project
 > swiftformat --inferoptions . --output .swiftformat
 ```
+
+
+Linting
+-------
+
+SwiftFormat is primarily designed as a formatter rather than a linter, i.e. it is designed to fix your code rather than tell you what's wrong with it. However, sometimes it can be useful to verify that code has been formatted in a context where it is not desirable to actually change it.
+
+A typical example would be as part of a CI (Continuous Integration) process, where you may wish to have an automated script that checks committed code for style violations. While you could use a separate tool such as [SwiftLint](https://github.com/realm/SwiftLint) for this, it makes sense to be able to validate the formatting against the exact same rules as you are using to apply it.
+
+In order to run SwiftFormat as a linter, you can use the `--lint` command-line option:
+
+```bash
+> swiftformat --lint path/to/project
+```
+
+This works exactly the same way as when running in format mode, and all the same configuration options apply, however no files will be modified. SwiftFormat will simply format each file in memory and then compare the result against the input. If any formatting changes would have been applied, it will report an error.
+
+The `--lint` option is very similar to `--dryrun`, except that `--lint` will return a nonzero error code if any changes are detected, which is useful if you want it to fail a build step on your CI server.
+
+By default, `--lint` will only report the number of files that were changed, but you can use the additional `--verbose` flag to display a detailed report about which specific rules were applied to which specific files.
 
 
 FAQ
@@ -1091,14 +1130,19 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 > If there is a rule that you don't like, and which cannot be configured to your liking via the command-line options, you can disable the rule by using the `--disable` argument, followed by the name of the rule. You can display a list of all rules using the `--rules` argument, and their behaviors are documented above this section in the README.
 
-> If you are using the Xcode Source Editor Extension, rules and options can be configured using the SwiftFormat for Xcode host application. Unfortunately, due to limitation of the Extensions API, there is no way to configure these on a per-project basis.
+> If you are using the Xcode Source Editor Extension, rules and options can be configured using the [SwiftFormat for Xcode](#xcode-source-editor-extension) host application. Unfortunately, due to limitation of the Extensions API, there is no way to configure these on a per-project basis.
 
 > If the options you want aren't exposed, and disabling the rule doesn't solve the problem, the rules are implemented as functions in the file `Rules.swift`, so you can modify them and build a new version of the command-line tool. If you think your changes might be generally useful, make a pull request.
 
 
+*Q. Why can't I set the indent width or choose between tabs/spaces in the [SwiftFormat for Xcode](#xcode-source-editor-extension) options?*
+
+> Indent width and tabs/spaces can be configured in Xcode on a per project-basis. You'll find the option under "Text Settings" in the right-hand sidebar.
+
+
 *Q. After applying SwiftFormat, my code won't compile. Is that a bug?*
 
-> A. SwiftFormat should never break your code. Check the known issues below, and if it's not already listed there, or the suggested workaround doesn't solve your problem, please raise an issue on github: https://github.com/nicklockwood/SwiftFormat/issues
+> A. SwiftFormat should never break your code. Check the known issues below, and if it's not already listed there, or the suggested workaround doesn't solve your problem, please [raise an issue on Github](https://github.com/nicklockwood/SwiftFormat/issues).
 
 
 *Q. Why did you write yet another Swift formatting tool?*
@@ -1133,6 +1177,11 @@ There haven't been many questions yet, but here's what I'd like to think people 
 *Q. Why aren't you using regular expressions?*
 
 > A. See https://xkcd.com/1171/ for details.
+
+
+*Q. Can I use SwiftFormat to lint my code without changing it?*
+
+> A. Yes, see the [linting](#linting) section above for details.
 
 
 *Q. Can I use the `SwiftFormat.framework` inside another app?*
@@ -1184,7 +1233,7 @@ Known issues
 
 * When using the `--self remove` option, the `redundantSelf` rule will remove references to `self` in autoclosure arguments, which may change the meaning of the code, or cause it not to compile. Currently, the only workaround is to use `--disable redundantSelf` to disable the rule for any affected files. If you are using the `--self insert` option then this is not an issue.
 
-* The `--self insert` option can only recognize locally declared member variables, not ones inherited from superclasses or extensions, so it cannot insert missing `self` references for those. Note that the reverse is not true: `--self remove` should remove *all* redundant `self` references.
+* The `--self insert` option can only recognize locally declared member variables, not ones inherited from superclasses or extensions in other files, so it cannot insert missing `self` references for those. Note that the reverse is not true: `--self remove` should remove *all* redundant `self` references.
 
 * The `trailingClosures` rule will sometimes generate ambiguous code that breaks your program. For this reason, the rule is disabled by default. It is recommended that you apply this rule manually and review the changes, rather than including it in an automated formatting process.
 
@@ -1192,7 +1241,10 @@ Known issues
 
         let foo: Dictionary<String, String>=["Hello": "World"]
         
-    To work around this, either manually add spaces around the `=` character to eliminate the ambiguity, or add `--disable spaceAroundOperators` to the command-line options.
+    To work around this, either manually add spaces around the `=` character to eliminate the ambiguity, or add a comment directive above that line in the file:
+    
+        // swiftformat:disable:next spaceAroundOperators
+        let foo: Dictionary<String, String>=["Hello": "World"]
 
 * If a file begins with a comment, the `stripHeaders` rule will remove it if is followed by a blank line. To avoid this, make sure that the first comment is directly followed by a line of code.
 
@@ -1238,9 +1290,9 @@ Known issues
          *  
          */
          
-* The formatted file cache is based on file length, so it's possible (though unlikely) that an edited file will have the exact same character count as the previously formatted version, causing SwiftFormat to incorrectly identify it as not having changed, and fail to format it.
+* The formatted file cache is based on a hash of the file contents, so it's possible (though unlikely) that an edited file will have the exact same hash as the previously formatted version, causing SwiftFormat to incorrectly identify it as not having changed, and fail to update it.
 
-    To fix this, you can use the command-line option `--cache ignore` to force SwiftFormat to ignore the cache for this run, or just type an extra space in the file (which SwiftFormat will then remove again when it applies the formatting).
+    To fix this, you can use the command-line option `--cache ignore` to force SwiftFormat to ignore the cache for this run, or just type an extra space in the file (which SwiftFormat will then remove again when it applies the correct formatting).
 
 
 Credits

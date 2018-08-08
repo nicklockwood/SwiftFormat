@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.35.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.1) (2018-08-08)
+
+- Added support for hierarchical config files with a standard naming convention (see README for details)
+- You can now specify excluded file paths and file options such as `--symlinks` in configuration files 
+- Standard .swiftformat configuration files are now visible in the SwiftFormat for Xcode open/save dialogs
+- The .swiftformat configuration file can now contain comments, which are marked using a hash (#) character
+- Improved cache invalidation. It should no longer be necessary to disable the cache in some cases
+- Removed Indent from the SwiftFormat for Xcode options, as this is configured using Xcode project settings
+- Fixed indent inference (really this time!)
+
 ## [0.35.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.0) (2018-08-04)
 
 - Added `--config` argument for loading an external config file using the command-line tool

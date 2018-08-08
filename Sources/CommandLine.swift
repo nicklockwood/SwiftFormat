@@ -180,6 +180,16 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
     var verbose = false
     var dryrun = false
     var lint = false
+
+    func printRunningMessage() {
+        print("running swiftformat...")
+        if lint {
+            print("(lint mode - no files will be changed)", as: .warning)
+        } else if dryrun {
+            print("(dryrun mode - no files will be changed)", as: .warning)
+        }
+    }
+
     do {
         // Get arguments
         var args = try preprocessArguments(args, commandLineArguments)
@@ -399,10 +409,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                             options.formatOptions = inferFormatOptions(from: tokens)
                             try serializeOptions(options, to: outputURL)
                         } else if let outputURL = outputURL {
-                            print("running swiftformat...")
-                            if dryrun {
-                                print("(dryrun mode - no files will be changed)", as: .warning)
-                            }
+                            printRunningMessage()
                             let output = try format(input, options: options, verbose: verbose)
                             if (try? String(contentsOf: outputURL)) != output {
                                 if dryrun {
@@ -444,10 +451,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             return .ok
         }
 
-        print("running swiftformat...")
-        if dryrun {
-            print("(dryrun mode - no files will be changed)", as: .warning)
-        }
+        printRunningMessage()
 
         // Format the code
         var filesWritten = 0, filesFailed = 0, filesChecked = 0

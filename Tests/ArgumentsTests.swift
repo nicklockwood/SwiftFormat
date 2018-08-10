@@ -349,4 +349,13 @@ class ArgumentsTests: XCTestCase {
         let disabled = try parseRules(result["disable"]!)
         XCTAssertEqual(Set(disabled), Set(["braces"]))
     }
+
+    // MARK: Options parsing
+
+    func testParseEmptyOptions() throws {
+        let options = try Options([:], in: "")
+        XCTAssertNil(options.formatOptions)
+        XCTAssertNil(options.fileOptions)
+        XCTAssertEqual(options.rules, allRules.subtracting(FormatRules.disabledByDefault))
+    }
 }

@@ -32,9 +32,11 @@
 @testable import SwiftFormat
 import XCTest
 
-private var readme: String = {
-    let directoryURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-    let readmeURL = directoryURL.appendingPathComponent("README.md")
+private let sourceDirectory = URL(fileURLWithPath: #file)
+    .deletingLastPathComponent().deletingLastPathComponent()
+
+private let readme: String = {
+    let readmeURL = sourceDirectory.appendingPathComponent("README.md")
     return try! String(contentsOf: readmeURL, encoding: .utf8)
 }()
 
@@ -185,19 +187,23 @@ class CommandLineTests: XCTestCase {
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
-    // MARK: end-to-end formatting
+    // MARK: end-to-end tests
 
     func testFormatting() {
         CLI.print = { _, _ in }
-        let sourceDirectory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().path
-
         #if swift(>=4.1.5)
             let args = "."
         #else
             let args = ". --disable redundantSelf" // redundantSelf crashes Xcode 9.4 in debug mode
         #endif
 
-        XCTAssertEqual(CLI.run(in: sourceDirectory, with: args), .ok)
+        XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: args), .ok)
+    }
+
+    func testRulesNotMarkedAsDisabled() {
+        CLI.print = { message, _ in
+            XCTAssert(message.contains("trailingClosures") || !message.contains("(disabled)"))
+        }
+        XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "--rules"), .ok)
     }
 }

@@ -212,7 +212,13 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // Display rules (must be checked before merging config)
-        let showRules = (args["rules"] == "")
+        let showRules: Bool = args["rules"].map {
+            if $0 == "" {
+                args["rules"] = nil
+                return true
+            }
+            return false
+        } ?? false
 
         // Config file
         if let configURL = args["config"].map({ expandPath($0, in: directory) }) {

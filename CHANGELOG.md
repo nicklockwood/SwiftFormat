@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.35.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.2) (2018-08-10)
+
+- Fixed a bug where `--rules` command incorrectly showed all rules as disabled
+- Added close button to SwiftFormat for Xcode application window 
+
 ## [0.35.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.1) (2018-08-08)
 
 - Added support for hierarchical config files with a standard naming convention (see README for details)

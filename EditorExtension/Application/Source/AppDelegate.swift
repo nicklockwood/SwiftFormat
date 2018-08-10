@@ -132,7 +132,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.beginSheetModal(for: window)
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+    func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool {
         return true
     }
 }

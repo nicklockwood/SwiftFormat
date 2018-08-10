@@ -131,6 +131,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.alertStyle = .critical
         alert.beginSheetModal(for: window)
     }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return true
+    }
 }
 
 extension AppDelegate: NSOpenSavePanelDelegate {

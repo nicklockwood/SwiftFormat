@@ -29,6 +29,7 @@
 //  SOFTWARE.
 //
 
+import Darwin.POSIX
 import Foundation
 #if SWIFT_PACKAGE
     import SwiftFormat
@@ -50,17 +51,26 @@ extension FileHandle: TextOutputStream {
 private var stderr = FileHandle.standardError
 
 CLI.print = { message, type in
-    switch type {
-    case .info:
-        print(message.inDefault)
-    case .success:
-        print(message.inGreen)
-    case .error:
-        print(message.inRed, to: &stderr)
-    case .warning:
-        print(message.inYellow, to: &stderr)
-    case .content:
-        print(message)
+    if isatty(STDOUT_FILENO) != 0 {
+        switch type {
+        case .info:
+            print(message.inDefault)
+        case .success:
+            print(message.inGreen)
+        case .error:
+            print(message.inRed, to: &stderr)
+        case .warning:
+            print(message.inYellow, to: &stderr)
+        case .content:
+            print(message)
+        }
+    } else {
+        switch type {
+        case .info, .success, .content:
+            print(message)
+        case .error, .warning:
+            print(message, to: &stderr)
+        }
     }
 }
 

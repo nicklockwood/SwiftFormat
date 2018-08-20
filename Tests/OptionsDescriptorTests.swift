@@ -41,29 +41,41 @@ class OptionsDescriptorTests: XCTestCase {
                                                      testName: String = #function) {
         var options = FormatOptions.default
         expectations.forEach {
-            try! descriptor.toOptions($0.argumentValue, &options)
-            XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument \($0.argumentValue) map to option \($0.optionValue)")
-            try! descriptor.toOptions($0.argumentValue.uppercased(), &options)
-            XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument Uppercased \($0.argumentValue) map to option \($0.optionValue)")
-            try! descriptor.toOptions($0.argumentValue.capitalized, &options)
-            XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument capitalized \($0.argumentValue) map to option \($0.optionValue)")
+            do {
+                try descriptor.toOptions($0.argumentValue, &options)
+                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument \($0.argumentValue) map to option \($0.optionValue)")
+                try descriptor.toOptions($0.argumentValue.uppercased(), &options)
+                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument Uppercased \($0.argumentValue) map to option \($0.optionValue)")
+                try descriptor.toOptions($0.argumentValue.capitalized, &options)
+                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument capitalized \($0.argumentValue) map to option \($0.optionValue)")
+            } catch {
+                XCTFail("\(testName): error: \(error)")
+            }
         }
     }
 
     private func validateFromOptionalArguments<T: Equatable>(_ descriptor: FormatOptions.Descriptor,
-                                                             keyPath: WritableKeyPath<FormatOptions, T?>,
-                                                             expectations: [OptionArgumentMapping<T?>],
+                                                             keyPath: WritableKeyPath<FormatOptions, T>,
+                                                             expectations: [OptionArgumentMapping<T>],
                                                              testCaseVariation: Bool = true,
                                                              testName: String = #function) {
         var options = FormatOptions.default
         expectations.forEach {
-            try! descriptor.toOptions($0.argumentValue, &options)
-            XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
-            if testCaseVariation {
-                try! descriptor.toOptions($0.argumentValue.uppercased(), &options)
-                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument Uppercased \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
-                try! descriptor.toOptions($0.argumentValue.capitalized, &options)
-                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument capitalized \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
+            do {
+                try descriptor.toOptions($0.argumentValue, &options)
+                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
+                if testCaseVariation {
+                    do {
+                        try descriptor.toOptions($0.argumentValue.uppercased(), &options)
+                        XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument Uppercased \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
+                        try descriptor.toOptions($0.argumentValue.capitalized, &options)
+                        XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument capitalized \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
+                    } catch {
+                        XCTFail("\(testName): error: \(error)")
+                    }
+                }
+            } catch {
+                XCTFail("\(testName): error: \(error)")
             }
         }
     }
@@ -128,13 +140,9 @@ class OptionsDescriptorTests: XCTestCase {
     private func validateArgumentsFreeTextType(_ descriptor: FormatOptions.Descriptor,
                                                expectations: [FreeTextValidationExpectation],
                                                testName: String = #function) {
-        guard case let FormatOptions.Descriptor.ArgumentType.freeText(validator) = descriptor.type else {
-            XCTAssert(false)
-            return
-        }
-
         expectations.forEach {
-            XCTAssert(validator($0.input) == $0.isValid, "\(testName): \($0.input) isValid: \($0.isValid)")
+            let isValid = descriptor.validateArgument($0.input)
+            XCTAssertEqual(isValid, $0.isValid, "\(testName): \(isValid) != \($0.isValid)")
         }
     }
 
@@ -585,16 +593,16 @@ class OptionsDescriptorTests: XCTestCase {
             (input: "/*\n\n\n*/", isValid: true),
             (input: "\n\n\n", isValid: true),
         ]
-        let fromOptionExpectations: [OptionArgumentMapping<String?>] = [
+        let fromOptionExpectations: [OptionArgumentMapping<HeaderStrippingMode>] = [
             (optionValue: "", argumentValue: "strip"),
             (optionValue: "// Header", argumentValue: "// Header"),
-            (optionValue: nil, argumentValue: "ignore"),
+            (optionValue: .ignore, argumentValue: "ignore"),
             (optionValue: "/*\n\n\n*/", argumentValue: "/*\\n\\n\\n*/"),
         ]
-        let fromArgumentExpectations: [OptionArgumentMapping<String?>] = [
+        let fromArgumentExpectations: [OptionArgumentMapping<HeaderStrippingMode>] = [
             (optionValue: "", argumentValue: "strip"),
             (optionValue: "// Header", argumentValue: "// Header"),
-            (optionValue: nil, argumentValue: "ignore"),
+            (optionValue: .ignore, argumentValue: "ignore"),
             (optionValue: "// {year}", argumentValue: "{year}"),
             (optionValue: "/*\n\n\n*/", argumentValue: "/*\\n\\n\\n*/"),
             (optionValue: "//\n//\n//\n//\n//", argumentValue: "\\n\\n\\n\\n"),
@@ -644,7 +652,7 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: true, argumentValue: "uppercase"),
             (optionValue: false, argumentValue: "lowercase"),
         ]
-        validateDescriptor(descriptor, displayName: "hexliterals", argumentName: "hexliterals", propertyName: "hexLiteralCase")
+        validateDescriptor(descriptor, displayName: "hexliterals", argumentName: "hexliterals", propertyName: "uppercaseHex")
         validateArgumentsBinaryType(descriptor, controlTrue: ["uppercase", "upper"], controlFalse: ["lowercase", "lower"])
         validateFromOptions(descriptor, keyPath: \FormatOptions.uppercaseHex, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.uppercaseHex)

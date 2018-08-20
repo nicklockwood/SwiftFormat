@@ -101,7 +101,7 @@ final class OptionsViewController: NSViewController {
                     )
                     return UserSelectionType.list(list)
 
-                case let .freeText(validationStrategy: validation):
+                case .text:
                     let freeText = UserSelectionFreeText(
                         identifier: descriptor.argumentName,
                         title: descriptor.displayName,
@@ -109,11 +109,11 @@ final class OptionsViewController: NSViewController {
                         isEnabled: enabled,
                         selection: selection,
                         observer: { input in
-                            if validation(input) {
+                            if descriptor.validateArgument(input) {
                                 saveOption(input)
                             }
                         },
-                        validationStrategy: validation
+                        validationStrategy: descriptor.validateArgument
                     )
                     return UserSelectionType.freeText(freeText)
                 }

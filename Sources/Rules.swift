@@ -3092,9 +3092,16 @@ extension FormatRules {
 
     /// Strip header comments from the file
     @objc public class func fileHeader(_ formatter: Formatter) {
-        guard var header = formatter.options.fileHeader, !formatter.options.fragment else { return }
-        if let range = header.range(of: "{year}") {
-            header.replaceSubrange(range, with: currentYear)
+        guard !formatter.options.fragment else { return }
+        let header: String
+        switch formatter.options.fileHeader {
+        case .ignore:
+            return
+        case var .replace(string):
+            if let range = string.range(of: "{year}") {
+                string.replaceSubrange(range, with: currentYear)
+            }
+            header = string
         }
         if let startIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1) {
             switch formatter.tokens[startIndex] {

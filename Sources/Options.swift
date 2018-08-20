@@ -53,6 +53,62 @@ public enum ArgumentStrippingMode: String {
     case all = "always"
 }
 
+/// Argument type for stripping
+public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStringLiteral {
+    case ignore
+    case replace(String)
+
+    public init(stringLiteral value: String) {
+        self.init(rawValue: value)!
+    }
+
+    public init?(rawValue: String) {
+        switch rawValue.lowercased() {
+        case "ignore", "keep", "preserve":
+            self = .ignore
+        case "strip", "":
+            self = .replace("")
+        default:
+            // Normalize the header
+            let header = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            let isMultiline = header.hasPrefix("/*")
+            var lines = header.components(separatedBy: "\\n")
+            lines = lines.map {
+                var line = $0
+                if !isMultiline, !line.hasPrefix("//") {
+                    line = "//\(line.isEmpty ? "" : " ")\(line)"
+                }
+                return line
+            }
+            while lines.last?.isEmpty == true {
+                lines.removeLast()
+            }
+            self = .replace(lines.joined(separator: "\n"))
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .ignore:
+            return "ignore"
+        case let .replace(string):
+            return string.isEmpty ? "strip" : string.replacingOccurrences(of: "\n", with: "\\n")
+        }
+    }
+
+    public static func == (lhs: HeaderStrippingMode, rhs: HeaderStrippingMode) -> Bool {
+        switch (lhs, rhs) {
+        case (.ignore, .ignore):
+            return true
+        case let (.replace(lhs), .replace(rhs)):
+            return lhs == rhs
+        case (.ignore, _),
+             (.replace, _):
+            return false
+        }
+    }
+}
+
 /// Grouping for numeric literals
 public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
     case ignore
@@ -124,7 +180,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var insertBlankLines: Bool
     public var removeBlankLines: Bool
     public var allmanBraces: Bool
-    public var fileHeader: String?
+    public var fileHeader: HeaderStrippingMode
     public var ifdefIndent: IndentMode
     public var wrapArguments: WrapMode
     public var wrapCollections: WrapMode
@@ -162,7 +218,7 @@ public struct FormatOptions: CustomStringConvertible {
                 insertBlankLines: Bool = true,
                 removeBlankLines: Bool = true,
                 allmanBraces: Bool = false,
-                fileHeader: String? = nil,
+                fileHeader: HeaderStrippingMode = .ignore,
                 ifdefIndent: IndentMode = .indent,
                 wrapArguments: WrapMode = .preserve,
                 wrapCollections: WrapMode = .preserve,

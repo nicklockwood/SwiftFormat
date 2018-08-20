@@ -288,7 +288,7 @@ public func applyRules(_ rules: [FormatRule],
             return tokens
         }
         tokens = formatter.tokens
-        options.fileHeader = nil // Prevents infinite recursion
+        options.fileHeader = .ignore // Prevents infinite recursion
     }
     throw FormatError.writing("failed to terminate")
 }

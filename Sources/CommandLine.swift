@@ -90,7 +90,7 @@ func printHelp() {
     --help             print this help page
     --version          print the currently installed swiftformat version
 
-    swiftformat can operate on file & directories, or directly on input from stdin:
+    swiftformat can operate on files & directories, or directly on input from stdin:
 
     usage: swiftformat [<file> <file> ...] [--inferoptions] [--output path] [...]
 

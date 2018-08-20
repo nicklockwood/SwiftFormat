@@ -224,40 +224,35 @@ class InferenceTests: XCTestCase {
     // MARK: wrapArguments
 
     func testInferWrapBeforeFirstArgument() {
-        let input = "func foo(bar: Int,\n    baz: String) {\n}\nfunc foo(\n    bar: Int,\n    baz: String) {\n}\nfunc foo(\n    bar: Int,\n    baz: String)"
-        let output = WrapMode.beforeFirst
+        let input = "func foo(\n    bar: Int,\n    baz: String) {}\nfunc foo(\n    bar: Int,\n    baz: String)"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertEqual(options.wrapArguments, output)
+        XCTAssertEqual(options.wrapArguments, .beforeFirst)
     }
 
     func testInferWrapAfterFirstArgument() {
-        let input = "func foo(bar: Int,\n    baz: String,\n    quux: String) {\n}"
-        let output = WrapMode.afterFirst
+        let input = "func foo(bar: Int,\n    baz: String,\n    quux: String) {}"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertEqual(options.wrapArguments, output)
+        XCTAssertEqual(options.wrapArguments, .afterFirst)
     }
 
-    func testInferWrapDisabled() {
-        let input = "func foo(bar: Int, baz: String,\n    quux: String) {\n}"
-        let output = WrapMode.disabled
+    func testInferWrapPreserve() {
+        let input = "func foo(bar: Int,\n    baz: String) {}\nfunc foo(\n    bar: Int,\n    baz: String) {}\nfunc foo(\n    bar: Int,\n    baz: String)\nfunc foo(bar: Int,\n    baz: String,\n    quux: String) {}"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertEqual(options.wrapArguments, output)
+        XCTAssertEqual(options.wrapArguments, .preserve)
     }
 
     // MARK: wrapCollections
 
     func testInferWrapElementsAfterFirstArgument() {
         let input = "[foo: 1,\n    bar: 2, baz: 3]"
-        let output = WrapMode.afterFirst
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertEqual(options.wrapCollections, output)
+        XCTAssertEqual(options.wrapCollections, .afterFirst)
     }
 
     func testInferWrapElementsAfterSecondArgument() {
         let input = "[foo, bar,\n]"
-        let output = WrapMode.afterFirst
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertEqual(options.wrapCollections, output)
+        XCTAssertEqual(options.wrapCollections, .afterFirst)
     }
 
     // MARK: uppercaseHex

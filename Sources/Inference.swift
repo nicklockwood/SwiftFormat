@@ -340,51 +340,33 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
         }
     }()
 
-    func wrapMode(for scopes: String..., allowGrouping: Bool) -> WrapMode {
-        var beforeFirst = 0, afterFirst = 0, neither = 0
+    func wrapMode(for scopes: String...) -> WrapMode {
+        var beforeFirst = 0, afterFirst = 0
         formatter.forEachToken(where: { $0.isStartOfScope && scopes.contains($0.string) }) { i, _ in
-            if let closingBraceIndex = formatter.endOfScope(at: i),
+            guard let closingBraceIndex = formatter.endOfScope(at: i),
                 let linebreakIndex = formatter.index(of: .linebreak, after: i),
                 linebreakIndex < closingBraceIndex,
                 let firstCommaIndex = formatter.index(of: .delimiter(","), after: i),
-                firstCommaIndex < closingBraceIndex {
-                if !allowGrouping {
-                    // Check for two consecutive arguments on the same line
-                    var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex)!
-                    if formatter.tokens[index] != .delimiter(",") {
-                        index += 1
-                    }
-                    while index > i {
-                        guard let commaIndex = formatter.index(of: .delimiter(","), before: index) else {
-                            break
-                        }
-                        if formatter.next(.nonSpaceOrComment, after: commaIndex)?.isLinebreak == false {
-                            neither += 1
-                            return
-                        }
-                        index = commaIndex
-                    }
-                }
-                // Check if linebreak is after opening paren or first comma
-                if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
-                    beforeFirst += 1
-                } else {
-                    assert(allowGrouping ||
-                        formatter.next(.nonSpaceOrComment, after: firstCommaIndex)?.isLinebreak == true)
-                    afterFirst += 1
-                }
+                firstCommaIndex < closingBraceIndex else {
+                return
+            }
+            // Check if linebreak is after opening paren or first comma
+            if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
+                beforeFirst += 1
+            } else {
+                afterFirst += 1
             }
         }
-        if beforeFirst > afterFirst + neither {
+        if beforeFirst > afterFirst * 3 {
             return .beforeFirst
-        } else if afterFirst > beforeFirst + neither {
+        } else if afterFirst > beforeFirst * 3 {
             return .afterFirst
         } else {
-            return .disabled
+            return .preserve
         }
     }
-    options.wrapArguments = wrapMode(for: "(", "<", allowGrouping: false)
-    options.wrapCollections = wrapMode(for: "[", allowGrouping: true)
+    options.wrapArguments = wrapMode(for: "(", "<")
+    options.wrapCollections = wrapMode(for: "[")
 
     options.uppercaseHex = {
         let prefix = "0x"

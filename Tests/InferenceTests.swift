@@ -255,6 +255,20 @@ class InferenceTests: XCTestCase {
         XCTAssertEqual(options.wrapCollections, .afterFirst)
     }
 
+    // MARK: closingParenOnSameLine
+
+    func testInferParenOnSameLine() {
+        let input = "func foo(\n    bar: Int,\n    baz: String) {\n}\nfunc foo(\n    bar: Int,\n    baz: String)"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertTrue(options.closingParenOnSameLine)
+    }
+
+    func testInferParenOnNextLine() {
+        let input = "func foo(\n    bar: Int,\n    baz: String) {\n}\nfunc foo(\n    bar: Int,\n    baz: String\n)"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertFalse(options.closingParenOnSameLine)
+    }
+
     // MARK: uppercaseHex
 
     func testInferUppercaseHex() {

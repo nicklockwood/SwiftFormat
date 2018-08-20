@@ -128,6 +128,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var ifdefIndent: IndentMode
     public var wrapArguments: WrapMode
     public var wrapCollections: WrapMode
+    public var closingParenOnSameLine: Bool
     public var uppercaseHex: Bool
     public var uppercaseExponent: Bool
     public var decimalGrouping: Grouping
@@ -165,6 +166,7 @@ public struct FormatOptions: CustomStringConvertible {
                 ifdefIndent: IndentMode = .indent,
                 wrapArguments: WrapMode = .preserve,
                 wrapCollections: WrapMode = .preserve,
+                closingParenOnSameLine: Bool = false,
                 uppercaseHex: Bool = true,
                 uppercaseExponent: Bool = false,
                 decimalGrouping: Grouping = .group(3, 6),
@@ -197,6 +199,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.ifdefIndent = ifdefIndent
         self.wrapArguments = wrapArguments
         self.wrapCollections = wrapCollections
+        self.closingParenOnSameLine = closingParenOnSameLine
         self.uppercaseHex = uppercaseHex
         self.uppercaseExponent = uppercaseExponent
         self.decimalGrouping = decimalGrouping

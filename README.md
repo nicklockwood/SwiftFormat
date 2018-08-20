@@ -1018,7 +1018,7 @@ goto(fail)
 + func quux() -> Void
 ```
 
-***wrapArguments*** - wraps function arguments and collection literals depending on the `--wraparguments`, and `--wrapcollections` modes specified. E.g. for a value of `beforefirst`:
+***wrapArguments*** - wraps function arguments and collection literals depending on the `--wraparguments`, and `--wrapcollections` modes specified, and the `--closingparen` option. E.g. for `--wraparguments beforefirst` and `--closingparen balanced`:
 
 ```diff
 - func foo(bar: Int,
@@ -1034,6 +1034,8 @@ goto(fail)
   }
 ```
 
+Or for `--wrapcollections beforefirst`:
+
 ```diff
 - let foo = [bar,
              baz,
@@ -1043,7 +1045,7 @@ goto(fail)
 +   bar,
     baz,
 +   quuz
-+ ]
+]
 ```
 
 

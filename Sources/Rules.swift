@@ -2785,7 +2785,35 @@ extension FormatRules {
 
     /// Normalize argument wrapping style
     @objc public class func wrapArguments(_ formatter: Formatter) {
-        func wrapArgumentsBeforeFirst(startOfScope i: Int, closingBraceIndex: Int, allowGrouping: Bool) {
+        func removeLinebreakBeforeClosingBrace(at closingBraceIndex: inout Int) {
+            if var lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
+                $0.isLinebreak
+            }) {
+                if let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: closingBraceIndex),
+                    case .commentBody = formatter.tokens[prevIndex],
+                    let startIndex = formatter.index(of: .startOfScope("//"), before: prevIndex) {
+                    lastIndex = formatter.index(of: .space, before: startIndex) ?? startIndex
+                    formatter.insertToken(formatter.tokens[closingBraceIndex], at: lastIndex)
+                    formatter.removeToken(at: closingBraceIndex + 1)
+                    closingBraceIndex = lastIndex
+                } else {
+                    formatter.removeTokens(inRange: lastIndex ..< closingBraceIndex)
+                    closingBraceIndex = lastIndex
+                }
+                // Remove trailing comma
+                if let prevCommaIndex = formatter.index(of:
+                    .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex, if: {
+                        $0 == .delimiter(",")
+                }) {
+                    formatter.removeToken(at: prevCommaIndex)
+                    closingBraceIndex -= 1
+                }
+            }
+        }
+        func wrapArgumentsBeforeFirst(startOfScope i: Int,
+                                      closingBraceIndex: Int,
+                                      allowGrouping: Bool,
+                                      closingBraceOnSameLine: Bool) {
             // Get indent
             let start = formatter.startOfLine(at: i)
             let indent: String
@@ -2794,12 +2822,18 @@ extension FormatRules {
             } else {
                 indent = ""
             }
-            // Insert linebreak before closing paren
-            if let lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
-                !$0.isLinebreak
-            }) {
-                formatter.insertSpace(indent, at: lastIndex + 1)
-                formatter.insertToken(.linebreak(formatter.options.linebreak), at: lastIndex + 1)
+            var closingBraceIndex = closingBraceIndex
+            if closingBraceOnSameLine {
+                removeLinebreakBeforeClosingBrace(at: &closingBraceIndex)
+            } else {
+                // Insert linebreak before closing paren
+                if let lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
+                    !$0.isLinebreak
+                }) {
+                    formatter.insertSpace(indent, at: lastIndex + 1)
+                    formatter.insertToken(.linebreak(formatter.options.linebreak), at: lastIndex + 1)
+                    closingBraceIndex += 1
+                }
             }
             // Insert linebreak after each comma
             var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex)!
@@ -2844,30 +2878,7 @@ extension FormatRules {
                     indent += String(repeating: " ", count: token.string.count)
                 }
             }
-            // Remove linebreak before closing paren
-            if var lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
-                $0.isLinebreak
-            }) {
-                if let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: closingBraceIndex),
-                    case .commentBody = formatter.tokens[prevIndex],
-                    let startIndex = formatter.index(of: .startOfScope("//"), before: prevIndex) {
-                    lastIndex = formatter.index(of: .space, before: startIndex) ?? startIndex
-                    formatter.insertToken(formatter.tokens[closingBraceIndex], at: lastIndex)
-                    formatter.removeToken(at: closingBraceIndex + 1)
-                    closingBraceIndex = lastIndex
-                } else {
-                    formatter.removeTokens(inRange: lastIndex ..< closingBraceIndex)
-                    closingBraceIndex = lastIndex
-                }
-                // Remove trailing comma
-                if let prevCommaIndex = formatter.index(of:
-                    .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex, if: {
-                        $0 == .delimiter(",")
-                }) {
-                    formatter.removeToken(at: prevCommaIndex)
-                    closingBraceIndex -= 1
-                }
-            }
+            removeLinebreakBeforeClosingBrace(at: &closingBraceIndex)
             // Insert linebreak after each comma
             var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex)!
             if formatter.tokens[index] != .delimiter(",") {
@@ -2887,35 +2898,44 @@ extension FormatRules {
                 index = commaIndex
             }
         }
-        func wrapArguments(for scopes: String..., mode: WrapMode, allowGrouping: Bool) {
-            guard mode != .disabled else { return }
-            formatter.forEach(.startOfScope) { i, token in
-                guard scopes.contains(token.string),
-                    let firstLinebreakIndex = formatter.index(of: .linebreak, after: i),
-                    let closingBraceIndex = formatter.endOfScope(at: i),
-                    firstLinebreakIndex < closingBraceIndex else {
-                    return
-                }
-                let firstIdentifierIndex = formatter.index(of:
-                    .nonSpaceOrCommentOrLinebreak, after: i) ?? firstLinebreakIndex
-                switch mode {
-                case .beforeFirst,
-                     .preserve where firstIdentifierIndex > firstLinebreakIndex:
-                    wrapArgumentsBeforeFirst(startOfScope: i,
-                                             closingBraceIndex: closingBraceIndex,
-                                             allowGrouping: allowGrouping)
-                case .afterFirst,
-                     .preserve:
-                    wrapArgumentsAfterFirst(startOfScope: i,
-                                            closingBraceIndex: closingBraceIndex,
-                                            allowGrouping: allowGrouping)
-                case .disabled:
-                    assertionFailure() // Shouldn't happen
-                }
+        formatter.forEach(.startOfScope) { i, token in
+            let mode: WrapMode
+            var closingBraceOnSameLine = false
+            switch token.string {
+            case "(":
+                closingBraceOnSameLine = formatter.options.closingParenOnSameLine
+                fallthrough
+            case "<":
+                mode = formatter.options.wrapArguments
+            case "[":
+                mode = formatter.options.wrapCollections
+            default:
+                return
+            }
+            guard mode != .disabled,
+                let firstLinebreakIndex = formatter.index(of: .linebreak, after: i),
+                let closingBraceIndex = formatter.endOfScope(at: i),
+                firstLinebreakIndex < closingBraceIndex else {
+                return
+            }
+            let firstIdentifierIndex = formatter.index(of:
+                .nonSpaceOrCommentOrLinebreak, after: i) ?? firstLinebreakIndex
+            switch mode {
+            case .beforeFirst,
+                 .preserve where firstIdentifierIndex > firstLinebreakIndex:
+                wrapArgumentsBeforeFirst(startOfScope: i,
+                                         closingBraceIndex: closingBraceIndex,
+                                         allowGrouping: true,
+                                         closingBraceOnSameLine: closingBraceOnSameLine)
+            case .afterFirst,
+                 .preserve:
+                wrapArgumentsAfterFirst(startOfScope: i,
+                                        closingBraceIndex: closingBraceIndex,
+                                        allowGrouping: true)
+            case .disabled:
+                assertionFailure() // Shouldn't happen
             }
         }
-        wrapArguments(for: "(", "<", mode: formatter.options.wrapArguments, allowGrouping: true)
-        wrapArguments(for: "[", mode: formatter.options.wrapCollections, allowGrouping: true)
     }
 
     /// Normalize the use of void in closure arguments and return values

@@ -368,6 +368,23 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
     options.wrapArguments = wrapMode(for: "(", "<")
     options.wrapCollections = wrapMode(for: "[")
 
+    options.closingParenOnSameLine = {
+        var balanced = 0, sameLine = 0
+        formatter.forEach(.startOfScope("(")) { i, _ in
+            guard let closingBraceIndex = formatter.endOfScope(at: i),
+                let linebreakIndex = formatter.index(of: .linebreak, after: i),
+                formatter.index(of: .nonSpaceOrComment, after: i) == linebreakIndex else {
+                return
+            }
+            if formatter.last(.nonSpaceOrComment, before: closingBraceIndex)?.isLinebreak == true {
+                balanced += 1
+            } else {
+                sameLine += 1
+            }
+        }
+        return sameLine > balanced
+    }()
+
     options.uppercaseHex = {
         let prefix = "0x"
         var uppercase = 0, lowercase = 0

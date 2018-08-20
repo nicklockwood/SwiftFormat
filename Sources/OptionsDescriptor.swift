@@ -77,6 +77,7 @@ extension FormatOptions.Descriptor {
         ifdefIndent,
         wrapArguments,
         wrapCollections,
+        closingParen,
         hexLiteralCase,
         exponentCase,
         decimalGrouping,
@@ -399,6 +400,23 @@ extension FormatOptions.Descriptor {
                                                           },
                                                           fromOptions: { options in
                                                               options.wrapCollections.rawValue
+    })
+    static let closingParen = FormatOptions.Descriptor(argumentName: "closingparen",
+                                                       propertyName: "closingParenOnSameLine",
+                                                       displayName: "Closing Paren Position",
+                                                       type: .binary(true: ["same-line"], false: ["balanced"]),
+                                                       toOptions: { input, options in
+                                                           switch input.lowercased() {
+                                                           case "same-line":
+                                                               options.closingParenOnSameLine = true
+                                                           case "balanced":
+                                                               options.closingParenOnSameLine = false
+                                                           default:
+                                                               throw FormatError.options("")
+                                                           }
+                                                       },
+                                                       fromOptions: { options in
+                                                           options.closingParenOnSameLine ? "same-line" : "balanced"
     })
     static let hexLiteralCase = FormatOptions.Descriptor(argumentName: "hexliteralcase",
                                                          propertyName: "uppercaseHex",

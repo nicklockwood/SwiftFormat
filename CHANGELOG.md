@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.35.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.3) (2018-08-21)
+
+- Added `--closingparen` option for finer control over function argument wrapping
+- Fixed bug in wraparguments/collections options inference
+- Skipped files are now logged when running with the `--verbose` option
+- SwiftFormat no longer mangles XCUITest tokens in comments by introducing spaces
+- Dictionary values wrapped onto a different line from the key are now indented correctly
+- Fixed a bug where automatic removal of spaces around range operators could introduce ambiguity
+- Disabled ANSI formatting for non-terminal output
+- Fixed typo in command-line help
+
 ## [0.35.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.2) (2018-08-10)
 
 - Fixed a bug where `--rules` command incorrectly showed all rules as disabled

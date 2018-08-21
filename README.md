@@ -64,16 +64,22 @@ Command-line tool
 
 You can install the `swiftformat` command-line tool using [Homebrew](http://brew.sh/). Assuming you already have Homebrew installed, just type:
 
-    > brew update
-    > brew install swiftformat
+```bash
+> brew update
+> brew install swiftformat
+```
 
 Alternatively, you can install the tool using [Mint](https://github.com/yonaskolb/Mint) as follows:
 
-    > mint install nicklockwood/SwiftFormat swiftformat
+```bash
+> mint install nicklockwood/SwiftFormat swiftformat
+```
     
 And then run it using:
 
-    > mint run swiftformat
+```bash
+> mint run swiftformat
+```
 
 If you are installing SwiftFormat into your project directory, you can use [CocoaPods](https://cocoapods.org/) to automatically install the swiftformat binary along with your other pods - see the Xcode build phase instructions below for details.
 
@@ -93,7 +99,9 @@ If you would prefer not to use a package manager, you can build the command-line
 
 If you followed the installation instructions above, you can now just type
 
-    swiftformat .
+```bash
+> swiftformat .
+```
     
 (that's a space and then a period after the command) in the terminal to format any Swift files in the current directory.
 
@@ -123,7 +131,9 @@ Following these instructions *should* ensure that you avoid catastrophic data lo
 
 If you prefer, you can also use unix pipes to include swiftformat as part of a command chain. For example, this is an alternative way to format a file:
 
-    cat /path/to/file.swift | swiftformat --output /path/to/file.swift
+```bash
+> cat /path/to/file.swift | swiftformat --output /path/to/file.swift
+```
     
 Omitting the `--output /path/to/file.swift` will print the formatted file to `stdout`.
 
@@ -141,9 +151,11 @@ You'll find the latest version of the SwiftFormat for Xcode application inside t
 
 In Xcode, you'll find a SwiftFormat option under the Editor menu. You can use this to format either the current selection or the whole file.
 
-You can configure the formatting [rules](#rules) and [options](#options) used by the Xcode Source Editor Extension using the host application. There is currently no way to override these per-project, however you can import and export different configurations using the File menu.
+You can configure the formatting [rules](#rules) and [options](#options) used by the Xcode Source Editor Extension using the host application. There is currently no way to override these per-project, however you can import and export different configurations using the File menu. You will need to do this again each time you switch project.
 
 The format of the configuration file is described in the [Config section](#config) below.
+
+**Note:** SwiftFormat for Xcode cannot automatically detect changes to an imported configuration file. If you update the `.swiftformat` file for your project, you will need to manually re-import that file into SwiftFormat for Xcode in order for the Xcode Source Editor Extension to use the new configuration.
 
 
 Xcode build phase
@@ -153,28 +165,34 @@ To set up SwiftFormat as an Xcode build phase, do the following:
 
 1. Add the `swiftformat` binary to your project directory (this is better than referencing a locally installed copy because it means that project will still compile on machines that don't have the `swiftformat` command-line tool installed). You can install the binary manually, or via [CocoaPods](https://cocoapods.org/), by adding the following line to your Podfile then running `pod install`:
 
-        pod 'SwiftFormat/CLI'
+    ```ruby
+    pod 'SwiftFormat/CLI'
+    ```
 
     **NOTE:** This will only install the pre-built command-line app, not the source code for the SwiftFormat framework.
 
 2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be
 
-        "${SRCROOT}/path/to/swiftformat" "${SRCROOT}/path/to/your/swift/code/"
+    ```bash
+    "${SRCROOT}/path/to/swiftformat" "${SRCROOT}/path/to/your/swift/code/"
+    ```
         
 	Both paths should be relative to the directory containing your Xcode project. If you are installing SwiftFormat as a Cocoapod, the swiftformat path will be
-	
-	    "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat"
+
+    ```bash
+    "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat"
+    ```
 	    
     **NOTE:** Adding this script will slightly increase your build time, and will make changes to your source files as you work on them, which can have annoying side-effects such as clearing the undo buffer. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 
 Alternatively, you can skip installation of the SwiftFormat pod and configure Xcode to use the locally installed swiftformat command-line tool instead by putting the following in your Run Script build phase:
 
 ```bash
-  if which swiftformat >/dev/null; then
-    swiftformat .
-  else
-    echo "warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat"
-  fi
+if which swiftformat >/dev/null; then
+  swiftformat .
+else
+  echo "warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat"
+fi
 ```
 
 This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commits as code gets reformatted inconsistently.
@@ -1208,10 +1226,14 @@ File headers
 
 SwiftFormat can be configured to strip or replace the header comments in every file with a template. The "header comment" is defined as a comment block that begins on the first nonblank line in the file, and is followed by at least one blank line. This may consist of a single comment body, or multiple comments on consecutive lines:
 
-    // This is a header comment
-    
-    // This is a regular comment
-    func foo(bar: Int) -> Void { ... }
+```swift
+// This is a header comment
+```
+
+```swift
+// This is a regular comment
+func foo(bar: Int) -> Void { ... }
+```
 
 The header template is a string that you provide using the `--header` command-line option. Passing a value of `ignore` (the default) will leave the header comments unmodified. Passing `strip` or an empty string `""` will remove them. If you wish to provide a custom header template, the format is as follows:
 
@@ -1225,7 +1247,9 @@ If you do not include comment markup, each line in the template will be prepende
 
 Finally, it is common practice to include the current year in a comment header copyright notice. To do that, use the following syntax:
 
-    --header "Copyright (c) {year} Foobar Industries"
+```bash
+--header "Copyright (c) {year} Foobar Industries"
+```
     
 And the `{year}` token will be automatically replaced by the current year whenever SwiftFormat is applied (**Note:** the year is determined from the locale and timezone of the machine running the script).
 
@@ -1241,56 +1265,68 @@ Known issues
 
 * Under rare circumstances, SwiftFormat may misinterpret a generic type followed by an `=` sign as a pair of `<` and `>=` expressions. For example, the following case would be handled incorrectly:
 
-        let foo: Dictionary<String, String>=["Hello": "World"]
-        
+    ```swift
+    let foo: Dictionary<String, String>=["Hello": "World"]
+    ```    
+
     To work around this, either manually add spaces around the `=` character to eliminate the ambiguity, or add a comment directive above that line in the file:
     
-        // swiftformat:disable:next spaceAroundOperators
-        let foo: Dictionary<String, String>=["Hello": "World"]
+    ```swift
+    // swiftformat:disable:next spaceAroundOperators
+    let foo: Dictionary<String, String>=["Hello": "World"]
+    ```
 
 * If a file begins with a comment, the `stripHeaders` rule will remove it if is followed by a blank line. To avoid this, make sure that the first comment is directly followed by a line of code.
 
 * SwiftFormat currently reformats multiline comment blocks without regard for the original indenting. That means
 
-        /* some documentation
-        
-              func codeExample() {
-                  print("Hello World")
-              }
-     
-         */
+    ```swift
+    /* some documentation
+    
+          func codeExample() {
+              print("Hello World")
+          }
+ 
+     */
+    ```
          
     Will become
     
-        /* some documentation
-        
-         func codeExample() {
-         print("Hello World")
-         }
-         
-         */
+    ```swift
+    /* some documentation
+    
+     func codeExample() {
+     print("Hello World")
+     }
+     
+     */
+    ```
          
     To work around that, you can disable automatic indenting of comments using the `comments` command-line flag.
     
     Alternatively, if you prefer to leave the comment indenting feature enabled, you can rewrite your multiline comment as a block of single-line comments...
     
-        // some documentation
-        //
-        //    func codeExample() {
-        //        print("Hello World")
-        //    }
-        //
-        //
+    ```swift
+    // some documentation
+    //
+    //    func codeExample() {
+    //        print("Hello World")
+    //    }
+    //
+    //
+    ```
         
     Or begin each line with a `*` (or any other non-whitespace character)
     
-        /* some documentation
-         *
-         *    func codeExample() {
-         *        print("Hello World")
-         *    }
-         *  
-         */
+    ```swift
+    /* some documentation
+     *
+     *    func codeExample() {
+     *        print("Hello World")
+     *    }
+     *  
+     */
+    ```
          
 * The formatted file cache is based on a hash of the file contents, so it's possible (though unlikely) that an edited file will have the exact same hash as the previously formatted version, causing SwiftFormat to incorrectly identify it as not having changed, and fail to update it.
 

@@ -5,41 +5,40 @@
 //  Created by Nick Lockwood on 28/08/2016.
 //  Copyright 2016 Nick Lockwood
 //
-//  Distributed under the permissive zlib license
+//  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
 //  https://github.com/nicklockwood/SwiftFormat
 //
-//  This software is provided 'as-is', without any express or implied
-//  warranty.  In no event will the authors be held liable for any damages
-//  arising from the use of this software.
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
 //
-//  Permission is granted to anyone to use this software for any purpose,
-//  including commercial applications, and to alter it and redistribute it
-//  freely, subject to the following restrictions:
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
 //
-//  1. The origin of this software must not be misrepresented; you must not
-//  claim that you wrote the original software. If you use this software
-//  in a product, an acknowledgment in the product documentation would be
-//  appreciated but is not required.
-//
-//  2. Altered source versions must be plainly marked as such, and must not be
-//  misrepresented as being the original software.
-//
-//  3. This notice may not be removed or altered from any source distribution.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 //
 
+@testable import SwiftFormat
 import XCTest
-import SwiftFormat
 
 class SwiftFormatTests: XCTestCase {
-
     // MARK: enumerateFiles
 
     func testInputFileMatchesOutputFileForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)
-        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
             return { files.append(inputURL) }
@@ -51,7 +50,7 @@ class SwiftFormatTests: XCTestCase {
     func testInputFileMatchesOutputFileForSameOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)
-        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
             return { files.append(inputURL) }
@@ -63,36 +62,36 @@ class SwiftFormatTests: XCTestCase {
     func testInputFilesMatchOutputFilesForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 22)
+        XCTAssertEqual(files.count, 36)
     }
 
     func testInputFilesMatchOutputFilesForSameOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 22)
+        XCTAssertEqual(files.count, 36)
     }
 
     func testInputFileNotEnumeratedWhenExcluded() {
         var files = [URL]()
         let currentFile = URL(fileURLWithPath: #file)
-        let excludedURLs = [currentFile.deletingLastPathComponent()]
+        let options = Options(fileOptions: FileOptions(excludedURLs: [currentFile.deletingLastPathComponent()]))
         let inputURL = currentFile.deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateFiles(withInputURL: inputURL, excluding: excludedURLs, outputURL: inputURL) { inputURL, outputURL in
+        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL, options: options) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 15)
+        XCTAssertEqual(files.count, 26)
     }
 
     // MARK: format function
@@ -147,5 +146,28 @@ class SwiftFormatTests: XCTestCase {
         let (line, column) = offsetForToken(at: 7, in: tokens)
         XCTAssertEqual(line, 2)
         XCTAssertEqual(column, 8)
+    }
+
+    // MARK: input paths
+
+    func testExpandPathWithRelativePath() {
+        XCTAssertEqual(
+            expandPath("relpath/to/file.swift", in: "/dir").path,
+            "/dir/relpath/to/file.swift"
+        )
+    }
+
+    func testExpandPathWithFullPath() {
+        XCTAssertEqual(
+            expandPath("/full/path/to/file.swift", in: "/dir").path,
+            "/full/path/to/file.swift"
+        )
+    }
+
+    func testExpandPathWithUserPath() {
+        XCTAssertEqual(
+            expandPath("~/file.swift", in: "/dir").path,
+            NSString(string: "~/file.swift").expandingTildeInPath
+        )
     }
 }

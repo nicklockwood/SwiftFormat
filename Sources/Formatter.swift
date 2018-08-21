@@ -2,31 +2,33 @@
 //  Formatter.swift
 //  SwiftFormat
 //
+//  Version 0.35.2
+//
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
 //
-//  Distributed under the permissive zlib license
+//  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
 //  https://github.com/nicklockwood/SwiftFormat
 //
-//  This software is provided 'as-is', without any express or implied
-//  warranty.  In no event will the authors be held liable for any damages
-//  arising from the use of this software.
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
 //
-//  Permission is granted to anyone to use this software for any purpose,
-//  including commercial applications, and to alter it and redistribute it
-//  freely, subject to the following restrictions:
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
 //
-//  1. The origin of this software must not be misrepresented; you must not
-//  claim that you wrote the original software. If you use this software
-//  in a product, an acknowledgment in the product documentation would be
-//  appreciated but is not required.
-//
-//  2. Altered source versions must be plainly marked as such, and must not be
-//  misrepresented as being the original software.
-//
-//  3. This notice may not be removed or altered from any source distribution.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 //
 
 import Foundation
@@ -39,6 +41,56 @@ import Foundation
 /// transparently handles changes that affect the current token index.
 public class Formatter: NSObject {
     private var enumerationIndex = -1
+    private var disabledCount = 0
+    private var disabledNext = 0
+    private var wasNextDirective = false
+
+    // Current rule, used for handling comment directives
+    var currentRule: String? {
+        didSet {
+            disabledCount = 0
+            disabledNext = 0
+        }
+    }
+
+    // Is current rule enabled
+    var isEnabled: Bool { return disabledCount + disabledNext <= 0 }
+
+    // Process a comment token (which may contain directives)
+    func processCommentBody(_ comment: String) {
+        let prefix = "swiftformat:"
+        guard let rule = currentRule, comment.hasPrefix(prefix),
+            let directive = ["disable", "enable"].first(where: { comment.hasPrefix("\(prefix)\($0)") }),
+            comment.range(of: "\\b(\(rule)|all)\\b", options: .regularExpression) != nil else {
+            return
+        }
+        wasNextDirective = comment.hasPrefix("\(prefix)\(directive):next")
+        switch directive {
+        case "disable":
+            if wasNextDirective {
+                disabledNext = 1
+            } else {
+                disabledCount += 1
+            }
+        case "enable":
+            if wasNextDirective {
+                disabledNext = -1
+            } else {
+                disabledCount -= 1
+            }
+        default:
+            preconditionFailure()
+        }
+    }
+
+    /// Process a linebreak (used to cancel disable/enable:next directive)
+    func processLinebreak() {
+        if wasNextDirective {
+            wasNextDirective = false
+        } else if disabledNext != 0 {
+            disabledNext = 0
+        }
+    }
 
     /// The options that the formatter was initialized with
     public let options: FormatOptions
@@ -141,7 +193,18 @@ public class Formatter: NSObject {
         assert(enumerationIndex == -1, "forEachToken does not support re-entrancy")
         enumerationIndex = 0
         while enumerationIndex < tokens.count {
-            body(enumerationIndex, tokens[enumerationIndex]) // May mutate enumerationIndex
+            let token = tokens[enumerationIndex]
+            switch token {
+            case let .commentBody(comment):
+                processCommentBody(comment)
+            case .linebreak:
+                processLinebreak()
+            default:
+                break
+            }
+            if isEnabled {
+                body(enumerationIndex, token) // May mutate enumerationIndex
+            }
             enumerationIndex += 1
         }
         enumerationIndex = -1
@@ -213,17 +276,19 @@ public class Formatter: NSObject {
     /// Returns the index of the previous token at the current scope that matches the block
     public func index(before index: Int, where matches: (Token) -> Bool) -> Int? {
         guard index > 0 else { return nil }
-        var linebreakEncountered = (token(at: index)?.isLinebreak == true)
+        var linebreakEncountered = false
         var scopeStack: [Token] = []
         for i in (0 ..< index).reversed() {
             let token = tokens[i]
             if case .startOfScope = token {
                 if let scope = scopeStack.last, scope.isEndOfScope(token) {
                     scopeStack.removeLast()
-                } else if token.string == "//" && linebreakEncountered {
+                } else if token.string == "//", linebreakEncountered {
                     linebreakEncountered = false
                 } else if matches(token) {
                     return i
+                } else if token.string == "//", self.token(at: index)?.isLinebreak == true {
+                    continue
                 } else {
                     return nil
                 }

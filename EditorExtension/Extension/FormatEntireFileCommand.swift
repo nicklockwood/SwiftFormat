@@ -5,37 +5,36 @@
 //  Created by Tony Arnold on 5/10/16.
 //  Copyright 2016 Nick Lockwood
 //
-//  Distributed under the permissive zlib license
+//  Distributed under the permissive MIT license
 //  Get the latest version from here:
 //
 //  https://github.com/nicklockwood/SwiftFormat
 //
-//  This software is provided 'as-is', without any express or implied
-//  warranty.  In no event will the authors be held liable for any damages
-//  arising from the use of this software.
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
 //
-//  Permission is granted to anyone to use this software for any purpose,
-//  including commercial applications, and to alter it and redistribute it
-//  freely, subject to the following restrictions:
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
 //
-//  1. The origin of this software must not be misrepresented; you must not
-//  claim that you wrote the original software. If you use this software
-//  in a product, an acknowledgment in the product documentation would be
-//  appreciated but is not required.
-//
-//  2. Altered source versions must be plainly marked as such, and must not be
-//  misrepresented as being the original software.
-//
-//  3. This notice may not be removed or altered from any source distribution.
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 //
 
 import Foundation
 import XcodeKit
 
 class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
-
     func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
-        guard ["public.swift-source", "com.apple.dt.playground"].contains(invocation.buffer.contentUTI) else {
+        guard ["public.swift-source", "com.apple.dt.playground", "com.apple.dt.playgroundpage"].contains(invocation.buffer.contentUTI) else {
             return completionHandler(FormatCommandError.notSwiftLanguage)
         }
 
@@ -43,12 +42,12 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
         let sourceToFormat = invocation.buffer.completeBuffer
         let tokens = tokenize(sourceToFormat)
 
-        // Infer format options
-        var options = inferOptions(from: tokens)
-        options.indent = indentationString(for: invocation.buffer)
-
+        let store = OptionsStore()
+        var formatOptions = store.inferOptions ? inferFormatOptions(from: tokens) : store.formatOptions
+        formatOptions.indent = indentationString(for: invocation.buffer)
         do {
-            let output = try format(tokens, options: options)
+            let rules = FormatRules.all(named: RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
+            let output = try format(tokens, rules: rules, options: formatOptions)
             if output == tokens {
                 // No changes needed
                 return completionHandler(nil)
@@ -64,7 +63,7 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
             guard let lastLine = invocation.buffer.lines.lastObject as? String else {
                 return completionHandler(FormatCommandError.invalidSelection)
             }
-            let position = XCSourceTextPosition(line: invocation.buffer.lines.count - 1, column: lastLine.characters.count)
+            let position = XCSourceTextPosition(line: invocation.buffer.lines.count - 1, column: lastLine.count)
             let updatedSelectionRange = XCSourceTextRange(start: position, end: position)
             invocation.buffer.selections.add(updatedSelectionRange)
 

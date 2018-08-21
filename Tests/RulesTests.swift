@@ -1121,6 +1121,15 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoSpaceAddedInsideXCUITestCommentTokens() {
+        let input = """
+        XCUIApplication()/*@START_MENU_TOKEN@*/.buttons["Button"]/*[[".buttons[\"Button\"]",".buttons[\"buttonId\"]"],[[[-1,1],[-1,0]]],[1]]@END_MENU_TOKEN@*/.tap()
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceInsideComments]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: consecutiveSpaces
 
     func testConsecutiveSpaces() {

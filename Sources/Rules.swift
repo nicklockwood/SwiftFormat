@@ -415,24 +415,29 @@ extension FormatRules {
 
     /// Add space around comments, except at the start or end of a line
     @objc public class func spaceAroundComments(_ formatter: Formatter) {
-        formatter.forEachToken { i, token in
-            switch token {
-            case .startOfScope("/*"), .startOfScope("//"):
-                if let prevToken = formatter.token(at: i - 1), !prevToken.isSpaceOrLinebreak {
-                    formatter.insertToken(.space(" "), at: i)
-                }
-            case .endOfScope("*/"):
-                if let nextToken = formatter.token(at: i + 1) {
-                    if !nextToken.isSpaceOrLinebreak {
-                        if nextToken != .delimiter(",") {
-                            formatter.insertToken(.space(" "), at: i + 1)
-                        }
-                    } else if formatter.next(.nonSpace, after: i + 1) == .delimiter(",") {
-                        formatter.removeToken(at: i + 1)
+        formatter.forEach(.startOfScope("//")) { i, _ in
+            if let prevToken = formatter.token(at: i - 1), !prevToken.isSpaceOrLinebreak {
+                formatter.insertToken(.space(" "), at: i)
+            }
+        }
+        formatter.forEach(.endOfScope("*/")) { i, _ in
+            guard let startIndex = formatter.index(of: .startOfScope("/*"), before: i),
+                case let .commentBody(commentStart)? = formatter.next(.nonSpaceOrLinebreak, after: startIndex),
+                case let .commentBody(commentEnd)? = formatter.last(.nonSpaceOrLinebreak, before: i),
+                !commentStart.hasPrefix("@"), !commentEnd.hasSuffix("@") else {
+                return
+            }
+            if let nextToken = formatter.token(at: i + 1) {
+                if !nextToken.isSpaceOrLinebreak {
+                    if nextToken != .delimiter(",") {
+                        formatter.insertToken(.space(" "), at: i + 1)
                     }
+                } else if formatter.next(.nonSpace, after: i + 1) == .delimiter(",") {
+                    formatter.removeToken(at: i + 1)
                 }
-            default:
-                break
+            }
+            if let prevToken = formatter.token(at: startIndex - 1), !prevToken.isSpaceOrLinebreak {
+                formatter.insertToken(.space(" "), at: startIndex)
             }
         }
     }
@@ -456,7 +461,10 @@ extension FormatRules {
             }
         }
         formatter.forEach(.startOfScope("/*")) { i, _ in
-            guard let nextToken = formatter.token(at: i + 1), case let .commentBody(string) = nextToken else { return }
+            guard let nextToken = formatter.token(at: i + 1), case let .commentBody(string) = nextToken,
+                !string.hasPrefix("---"), !string.hasPrefix("@"), !string.hasSuffix("---"), !string.hasSuffix("@") else {
+                return
+            }
             if let first = string.first, "*!:".contains(first) {
                 let nextIndex = string.index(after: string.startIndex)
                 if nextIndex < string.endIndex, case let next = string[nextIndex],
@@ -464,11 +472,11 @@ extension FormatRules {
                     let string = String(string.first!) + " " + String(string.dropFirst())
                     formatter.replaceToken(at: i + 1, with: .commentBody(string))
                 }
-            } else if !string.hasPrefix("---") {
+            } else {
                 formatter.insertToken(.space(" "), at: i + 1)
             }
             if let i = formatter.index(of: .endOfScope("*/"), after: i), let prevToken = formatter.token(at: i - 1) {
-                if !prevToken.isSpaceOrLinebreak, !prevToken.string.hasSuffix("*"), !prevToken.string.hasSuffix("---") {
+                if !prevToken.isSpaceOrLinebreak, !prevToken.string.hasSuffix("*") {
                     formatter.insertToken(.space(" "), at: i)
                 }
             }

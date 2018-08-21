@@ -760,9 +760,12 @@ extension FormatRules {
                 default:
                     return true
                 }
-            case .delimiter(","), .delimiter(":"):
+            case .delimiter(","):
                 // For arrays or argument lists, we already indent
-                return ["<", "[", "(", "case"].contains(scopeStack.last?.string ?? "")
+                return ["<", "[", "(", "case", "default"].contains(scopeStack.last?.string ?? "")
+            case .delimiter(":"):
+                // For arrays or argument lists, we already indent
+                return ["case", "default", "("].contains(scopeStack.last?.string ?? "")
             case .operator(_, .infix), .operator(_, .prefix):
                 return false
             case .operator("?", .postfix), .operator("!", .postfix):
@@ -788,18 +791,15 @@ extension FormatRules {
             ].contains(string):
                 return false
             case .keyword("as"), .keyword("in"):
-                if scopeStack.last?.string == "case" {
-                    // For case statements, we already indent
-                    return true
-                }
-                return false
-            case .delimiter(","), .delimiter(":"):
+                // For case statements, we already indent
+                return scopeStack.last?.string == "case"
+            case .delimiter(","):
                 if let scope = scopeStack.last?.string, ["<", "[", "(", "case"].contains(scope) {
                     // For arrays, dictionaries, cases, or argument lists, we already indent
                     return true
                 }
                 return false
-            case .delimiter("->"), .operator(_, .infix), .operator(_, .postfix):
+            case .delimiter(":"), .delimiter("->"), .operator(_, .infix), .operator(_, .postfix):
                 return false
             default:
                 return true

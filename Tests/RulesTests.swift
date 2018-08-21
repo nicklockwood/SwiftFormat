@@ -2143,7 +2143,7 @@ class RulesTests: XCTestCase {
 
     func testIndentEnumDictionaryKeysAndValues() {
         let input = "[\n.foo:\n.bar,\n.baz:\n.quux,\n]"
-        let output = "[\n    .foo:\n    .bar,\n    .baz:\n    .quux,\n]"
+        let output = "[\n    .foo:\n        .bar,\n    .baz:\n        .quux,\n]"
         let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -2872,15 +2872,15 @@ class RulesTests: XCTestCase {
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration() {
-        let input = "var: [\n    Int:\n    String\n]"
-        let output = "var: [\n    Int:\n    String\n]"
+        let input = "var: [\n    Int:\n        String\n]"
+        let output = "var: [\n    Int:\n        String\n]"
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingCommas]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration2() {
-        let input = "func foo(bar: [\n    Int:\n    String\n])"
-        let output = "func foo(bar: [\n    Int:\n    String\n])"
+        let input = "func foo(bar: [\n    Int:\n        String\n])"
+        let output = "func foo(bar: [\n    Int:\n        String\n])"
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingCommas]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

@@ -3055,6 +3055,8 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    // spaceAroundRangeOperators = true
+
     func testNoSpaceAroundRangeOperatorsWithCustomOptions() {
         let input = "foo ..< bar"
         let output = "foo..<bar"
@@ -3118,6 +3120,8 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    // spaceAroundRangeOperators = false
+
     func testSpaceNotRemovedBeforeLeadingRangeOperatorWithSpaceAroundRangeOperatorsFalse() {
         let input = "let range = ..<foo.endIndex"
         let output = "let range = ..<foo.endIndex"
@@ -3126,7 +3130,79 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    // specifiers
+    func testSpaceOnOneSideOfRangeMatchedByCommentNotRemoved() {
+        let input = "let range = 0 .../*foo*/4"
+        let output = input
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+    }
+
+    func testSpaceOnOneSideOfRangeMatchedByCommentNotRemoved2() {
+        let input = "let range = 0/*foo*/... 4"
+        let output = input
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+    }
+
+    func testSpaceAroundRangeWithCommentOnOneSideNotRemoved() {
+        let input = "let range = 0 ... /*foo*/4"
+        let output = input
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+    }
+
+    func testSpaceAroundRangeWithCommentOnOneSideNotRemoved2() {
+        let input = "let range = 0/*foo*/ ... 4"
+        let output = input
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+    }
+
+    func testSpaceOnOneSideOfRangeMatchedByLinebreakNotRemoved() {
+        let input = "let range = 0 ...\n4"
+        let output = input
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+    }
+
+    func testSpaceOnOneSideOfRangeMatchedByLinebreakNotRemoved2() {
+        let input = "let range = 0\n... 4"
+        let output = input
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+    }
+
+    func testSpaceAroundRangeWithLinebreakOnOneSideNotRemoved() {
+        let input = "let range = 0 ... \n4"
+        let output = input
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+    }
+
+    func testSpaceAroundRangeWithLinebreakOnOneSideNotRemoved2() {
+        let input = "let range = 0\n ... 4"
+        let output = input
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+    }
+
+    func testSpaceNotRemovedAroundRangeFollowedByPrefixOperator() {
+        let input = "let range = 0 ... -4"
+        let output = input
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSpaceNotRemovedAroundRangePreceededByPostfixOperator() {
+        let input = "let range = 0>> ... 4"
+        let output = input
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.ranges], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    // MARK: specifiers
 
     func testVarSpecifiersCorrected() {
         let input = "unowned private static var foo"

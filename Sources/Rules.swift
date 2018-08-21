@@ -480,15 +480,16 @@ extension FormatRules {
         formatter.forEach(.rangeOperator) { i, token in
             guard case .operator(_, .infix) = token else { return }
             if !formatter.options.spaceAroundRangeOperators {
-                if formatter.token(at: i + 1)?.isSpace == true {
+                if formatter.token(at: i + 1)?.isSpace == true,
+                    formatter.token(at: i - 1)?.isSpace == true,
+                    let nextToken = formatter.next(.nonSpace, after: i),
+                    !nextToken.isCommentOrLinebreak, !nextToken.isOperator(ofType: .prefix),
+                    let prevToken = formatter.last(.nonSpace, before: i),
+                    !prevToken.isCommentOrLinebreak, !prevToken.isOperator(ofType: .postfix) {
                     formatter.removeToken(at: i + 1)
-                }
-                if formatter.token(at: i - 1)?.isSpace == true {
                     formatter.removeToken(at: i - 1)
                 }
-            } else if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
-                let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-                nextToken.isRvalue, prevToken.isLvalue {
+            } else {
                 if formatter.token(at: i + 1)?.isSpaceOrLinebreak == false {
                     formatter.insertToken(.space(" "), at: i + 1)
                 }

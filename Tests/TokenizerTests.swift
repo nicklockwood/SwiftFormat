@@ -1154,6 +1154,44 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testInfixOperatorAfterLinebreak() {
+        let input = "foo\n+ bar"
+        let output: [Token] = [
+            .identifier("foo"),
+            .linebreak("\n"),
+            .operator("+", .infix),
+            .space(" "),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInfixOperatorBeforeComment() {
+        let input = "foo +/**/bar"
+        let output: [Token] = [
+            .identifier("foo"),
+            .space(" "),
+            .operator("+", .infix),
+            .startOfScope("/*"),
+            .endOfScope("*/"),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInfixOperatorAfterComment() {
+        let input = "foo/**/+ bar"
+        let output: [Token] = [
+            .identifier("foo"),
+            .startOfScope("/*"),
+            .endOfScope("*/"),
+            .operator("+", .infix),
+            .space(" "),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testPrefixMinusBeforeMember() {
         let input = "-.foo"
         let output: [Token] = [

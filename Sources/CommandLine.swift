@@ -598,7 +598,8 @@ func processInput(_ inputURLs: [URL],
         errors += enumerateFiles(withInputURL: inputURL,
                                  outputURL: outputURL,
                                  options: options,
-                                 concurrent: !verbose) { inputURL, outputURL, options in
+                                 concurrent: !verbose,
+                                 verbose: verbose) { inputURL, outputURL, options in
 
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("failed to read file \(inputURL.path)")

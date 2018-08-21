@@ -591,6 +591,12 @@ func processInput(_ inputURLs: [URL],
     if let cacheURL = cacheURL {
         cache = NSDictionary(contentsOf: cacheURL) as? [String: String] ?? [:]
     }
+    // Logging skipped files
+    let skippedHandler: FileEnumerationHandler? = verbose ? { inputURL, _, _ in
+        print("skipping \(inputURL.path)")
+        print("-- ignored", as: .success)
+        return {}
+    } : nil
     // Format files
     var errors = [Error]()
     var filesChecked = 0, filesFailed = 0, filesWritten = 0
@@ -599,7 +605,7 @@ func processInput(_ inputURLs: [URL],
                                  outputURL: outputURL,
                                  options: options,
                                  concurrent: !verbose,
-                                 verbose: verbose) { inputURL, outputURL, options in
+                                 skipped: skippedHandler) { inputURL, outputURL, options in
 
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("failed to read file \(inputURL.path)")
@@ -633,7 +639,7 @@ func processInput(_ inputURLs: [URL],
                 if let cacheHash = cacheHash, cacheHash == sourceHash {
                     output = input
                     if verbose {
-                        print("-- no changes", as: .success)
+                        print("-- no changes (cached)", as: .success)
                     }
                 } else {
                     output = try format(input, options: options, verbose: verbose)

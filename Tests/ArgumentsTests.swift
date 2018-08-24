@@ -261,6 +261,57 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(config, "--header \"// hello\\n// world\"")
     }
 
+    // MARK: config file serialization depending on formatOptions and rules
+
+    func optionsAndRulesForTest(allOptionsEnabled: Bool, allRulesEnabled: Bool) -> (options: FormatOptions?, rules: Set<String>) {
+        var formatOptions: FormatOptions?
+        var rules: Set<String>!
+
+        let allRules = FormatRules.byName.keys
+        let disabledByDefault = FormatRules.disabledByDefault
+        let disabled3 = allRules.prefix(3)
+
+        switch (allOptionsEnabled, allRulesEnabled) {
+        case (false, true):
+            formatOptions = nil
+            rules = Set(allRules).subtracting(disabledByDefault)
+        case (false, false):
+            formatOptions = nil
+            rules = Set(allRules).subtracting(disabledByDefault).subtracting(Array(disabled3))
+        case (true, true):
+            formatOptions = Options.default.formatOptions
+            rules = Set(allRules).subtracting(disabledByDefault)
+        case (true, false):
+            formatOptions = Options.default.formatOptions
+            rules = Set(allRules).subtracting(disabledByDefault).subtracting(Array(disabled3))
+        }
+        return (formatOptions, rules)
+    }
+
+    func testSerializeOptionsDisabledAllRulesEnabled() throws {
+        let (formatOptions, rules) = optionsAndRulesForTest(allOptionsEnabled: false, allRulesEnabled: true)
+        let config: String = serialize(options: Options(formatOptions: formatOptions, rules: rules))
+        XCTAssertEqual("", config)
+    }
+
+    func testSerializeOptionsDisabledSomeRulesDisabled() throws {
+        let (formatOptions, rules) = optionsAndRulesForTest(allOptionsEnabled: false, allRulesEnabled: false)
+        let config: String = serialize(options: Options(formatOptions: formatOptions, rules: rules))
+        XCTAssertNotEqual("\n", config.last)
+    }
+
+    func testSerializeOptionsEnabledAllRulesEnabled() throws {
+        let (formatOptions, rules) = optionsAndRulesForTest(allOptionsEnabled: true, allRulesEnabled: true)
+        let config: String = serialize(options: Options(formatOptions: formatOptions, rules: rules))
+        XCTAssertEqual("\n", config.last)
+    }
+
+    func testSerializeOptionsEnabledSomeRulesDisabled() throws {
+        let (formatOptions, rules) = optionsAndRulesForTest(allOptionsEnabled: true, allRulesEnabled: false)
+        let config: String = serialize(options: Options(formatOptions: formatOptions, rules: rules))
+        XCTAssertNotEqual("\n", config.last)
+    }
+
     // MARK: config file merging
 
     func testMergeFormatOptionArguments() throws {

@@ -233,7 +233,7 @@ func serialize(options: Options,
     return optionSets.map {
         let arguments = argumentsFor($0, excludingDefaults: excludingDefaults)
         return serialize(arguments: arguments, separator: separator)
-    }.joined(separator: separator)
+    }.filter { !$0.isEmpty }.joined(separator: separator)
 }
 
 // Serialize arguments

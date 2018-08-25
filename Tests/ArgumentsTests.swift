@@ -303,7 +303,7 @@ class ArgumentsTests: XCTestCase {
     func testSerializeOptionsEnabledAllRulesEnabled() throws {
         let (formatOptions, rules) = optionsAndRulesForTest(allOptionsEnabled: true, allRulesEnabled: true)
         let config: String = serialize(options: Options(formatOptions: formatOptions, rules: rules))
-        XCTAssertEqual("\n", config.last)
+        XCTAssertNotEqual("\n", config.last)
     }
 
     func testSerializeOptionsEnabledSomeRulesDisabled() throws {

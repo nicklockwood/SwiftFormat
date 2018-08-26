@@ -112,10 +112,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let optionsStore = OptionsStore()
             let formatOptions = optionsStore.inferOptions ? nil : optionsStore.formatOptions
             let rules = RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil }
-            var config = serialize(options: Options(formatOptions: formatOptions, rules: Set(rules)))
-            if !config.isEmpty {
-                config += "\n"
-            }
+            let config = serialize(options: Options(formatOptions: formatOptions, rules: Set(rules))) + "\n"
             do {
                 try config.write(to: url, atomically: true, encoding: .utf8)
             } catch let error {

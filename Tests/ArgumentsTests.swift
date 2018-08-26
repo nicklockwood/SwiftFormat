@@ -237,6 +237,8 @@ class ArgumentsTests: XCTestCase {
 
     // MARK: config file serialization
 
+    // file header comment encoding
+
     func testSerializeFileHeaderContainingSpace() throws {
         let options = Options(formatOptions: FormatOptions(fileHeader: "// hello world"))
         let config = serialize(options: options, excludingDefaults: true)
@@ -261,55 +263,53 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(config, "--header \"// hello\\n// world\"")
     }
 
-    // MARK: config file serialization depending on formatOptions and rules
+    // trailing separator
 
-    func optionsAndRulesForTest(allOptionsEnabled: Bool, allRulesEnabled: Bool) -> (options: FormatOptions?, rules: Set<String>) {
-        var formatOptions: FormatOptions?
-        var rules: Set<String>!
-
-        let allRules = FormatRules.byName.keys
-        let disabledByDefault = FormatRules.disabledByDefault
-        let disabled3 = allRules.prefix(3)
-
-        switch (allOptionsEnabled, allRulesEnabled) {
-        case (false, true):
-            formatOptions = nil
-            rules = Set(allRules).subtracting(disabledByDefault)
-        case (false, false):
-            formatOptions = nil
-            rules = Set(allRules).subtracting(disabledByDefault).subtracting(Array(disabled3))
-        case (true, true):
-            formatOptions = Options.default.formatOptions
-            rules = Set(allRules).subtracting(disabledByDefault)
-        case (true, false):
-            formatOptions = Options.default.formatOptions
-            rules = Set(allRules).subtracting(disabledByDefault).subtracting(Array(disabled3))
-        }
-        return (formatOptions, rules)
+    func testSerializeOptionsDisabledDefaultRulesEnabledIsEmpty() throws {
+        let rules = allRules.subtracting(FormatRules.disabledByDefault)
+        let config: String = serialize(options: Options(formatOptions: nil, rules: rules))
+        XCTAssertEqual(config, "")
     }
 
-    func testSerializeOptionsDisabledAllRulesEnabled() throws {
-        let (formatOptions, rules) = optionsAndRulesForTest(allOptionsEnabled: false, allRulesEnabled: true)
-        let config: String = serialize(options: Options(formatOptions: formatOptions, rules: rules))
-        XCTAssertEqual("", config)
+    func testSerializeOptionsDisabledAllRulesEnabledNoTerminatingSeparator() throws {
+        let rules = allRules
+        let config: String = serialize(options: Options(formatOptions: nil, rules: rules))
+        XCTAssertFalse(config.contains("--disable"))
+        XCTAssertTrue(config.contains("--enable"))
+        XCTAssertNotEqual(config.last, "\n")
     }
 
-    func testSerializeOptionsDisabledSomeRulesDisabled() throws {
-        let (formatOptions, rules) = optionsAndRulesForTest(allOptionsEnabled: false, allRulesEnabled: false)
-        let config: String = serialize(options: Options(formatOptions: formatOptions, rules: rules))
-        XCTAssertNotEqual("\n", config.last)
+    func testSerializeOptionsDisabledSomeRulesDisabledNoTerminatingSeparator() throws {
+        let rules = Set(allRules.prefix(3)).subtracting(FormatRules.disabledByDefault)
+        let config: String = serialize(options: Options(formatOptions: nil, rules: rules))
+        XCTAssertTrue(config.contains("--disable"))
+        XCTAssertFalse(config.contains("--enable"))
+        XCTAssertNotEqual(config.last, "\n")
     }
 
-    func testSerializeOptionsEnabledAllRulesEnabled() throws {
-        let (formatOptions, rules) = optionsAndRulesForTest(allOptionsEnabled: true, allRulesEnabled: true)
-        let config: String = serialize(options: Options(formatOptions: formatOptions, rules: rules))
-        XCTAssertNotEqual("\n", config.last)
+    func testSerializeOptionsEnabledDefaultRulesEnabledNoTerminatingSeparator() throws {
+        let rules = allRules.subtracting(FormatRules.disabledByDefault)
+        let config: String = serialize(options: Options(formatOptions: .default, rules: rules))
+        XCTAssertNotEqual(config, "")
+        XCTAssertFalse(config.contains("--disable"))
+        XCTAssertFalse(config.contains("--enable"))
+        XCTAssertNotEqual(config.last, "\n")
     }
 
-    func testSerializeOptionsEnabledSomeRulesDisabled() throws {
-        let (formatOptions, rules) = optionsAndRulesForTest(allOptionsEnabled: true, allRulesEnabled: false)
-        let config: String = serialize(options: Options(formatOptions: formatOptions, rules: rules))
-        XCTAssertNotEqual("\n", config.last)
+    func testSerializeOptionsEnabledAllRulesEnabledNoTerminatingSeparator() throws {
+        let rules = allRules
+        let config: String = serialize(options: Options(formatOptions: .default, rules: rules))
+        XCTAssertFalse(config.contains("--disable"))
+        XCTAssertTrue(config.contains("--enable"))
+        XCTAssertNotEqual(config.last, "\n")
+    }
+
+    func testSerializeOptionsEnabledSomeRulesDisabledNoTerminatingSeparator() throws {
+        let rules = Set(allRules.prefix(3)).subtracting(FormatRules.disabledByDefault)
+        let config: String = serialize(options: Options(formatOptions: .default, rules: rules))
+        XCTAssertTrue(config.contains("--disable"))
+        XCTAssertFalse(config.contains("--enable"))
+        XCTAssertNotEqual(config.last, "\n")
     }
 
     // MARK: config file merging

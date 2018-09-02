@@ -2108,6 +2108,11 @@ extension FormatRules {
                 var classOrStatic = false
                 outer: while let token = formatter.token(at: i) {
                     switch token {
+                    case .keyword("import"):
+                        guard let nextIndex = formatter.index(of: .identifier, after: i) else {
+                            return // error
+                        }
+                        i = nextIndex
                     case .keyword("class"), .keyword("static"):
                         classOrStatic = true
                     case .keyword("repeat"):
@@ -2186,7 +2191,8 @@ extension FormatRules {
                 switch token {
                 case .keyword("is"), .keyword("as"), .keyword("try"):
                     break
-                case .keyword("func"), .keyword("init"), .keyword("subscript"):
+                case .keyword("init"), .keyword("subscript"),
+                     .keyword("func") where lastKeyword != "import":
                     lastKeyword = ""
                     if classOrStatic {
                         if !isTypeRoot {

@@ -6647,6 +6647,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testSortedImportFunc() {
+        let input = "import func Foo.baz\nimport Foo.bar"
+        let output = "import Foo.bar\nimport func Foo.baz"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testAlreadySortedImportsDoesNothing() {
         let input = "import Bar\nimport Foo"
         let output = input
@@ -6740,6 +6747,13 @@ class RulesTests: XCTestCase {
         let input = "import MyModule\nimport MyModule.Private"
         let output = "import MyModule\nimport MyModule.Private"
         XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
+    }
+
+    func testRemoveDuplicateImportFunc() {
+        let input = "import func Foo.bar\nimport func Foo.bar"
+        let output = "import func Foo.bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     // MARK: strongOutlets

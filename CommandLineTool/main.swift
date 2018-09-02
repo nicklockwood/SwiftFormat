@@ -50,27 +50,21 @@ extension FileHandle: TextOutputStream {
 
 private var stderr = FileHandle.standardError
 
+private let stdoutIsTTY = isatty(STDOUT_FILENO) != 0
+private let stderrIsTTY = isatty(STDERR_FILENO) != 0
+
 CLI.print = { message, type in
-    if isatty(STDOUT_FILENO) != 0 {
-        switch type {
-        case .info:
-            print(message.inDefault)
-        case .success:
-            print(message.inGreen)
-        case .error:
-            print(message.inRed, to: &stderr)
-        case .warning:
-            print(message.inYellow, to: &stderr)
-        case .content:
-            print(message)
-        }
-    } else {
-        switch type {
-        case .info, .success, .content:
-            print(message)
-        case .error, .warning:
-            print(message, to: &stderr)
-        }
+    switch type {
+    case .info:
+        print(stdoutIsTTY ? message.inDefault : message)
+    case .success:
+        print(stdoutIsTTY ? message.inGreen : message)
+    case .error:
+        print(stderrIsTTY ? message.inRed : message, to: &stderr)
+    case .warning:
+        print(stderrIsTTY ? message.inYellow : message, to: &stderr)
+    case .content:
+        print(message)
     }
 }
 

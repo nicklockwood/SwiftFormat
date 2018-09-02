@@ -126,17 +126,42 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     return namedArgs
 }
 
-// Parse a comma-delimited rules string into an array of rules
+// Parse a comma-delimited list of items
+private func parseCommaDelimitedList(_ string: String) -> [String] {
+    return string.components(separatedBy: ",").compactMap {
+        let item = $0.trimmingCharacters(in: .whitespacesAndNewlines)
+        return item.isEmpty ? nil : item
+    }
+}
+
+// Parse a comma-delimited string into an array of rules
 let allRules = Set(FormatRules.byName.keys)
 func parseRules(_ rules: String) throws -> [String] {
-    return try rules.components(separatedBy: ",").compactMap {
-        let name = $0.trimmingCharacters(in: .whitespacesAndNewlines)
-        if name.isEmpty {
-            return nil
-        } else if !allRules.contains(name) {
-            throw FormatError.options("unknown rule '\(name)'")
+    let rules = parseCommaDelimitedList(rules)
+    try rules.first(where: { !allRules.contains($0) }).map {
+        throw FormatError.options("unknown rule '\($0)'")
+    }
+    return rules
+}
+
+// Parse single file path
+func parsePath(_ path: String, for argument: String, in directory: String) throws -> URL {
+    let expandedPath = expandPath(path, in: directory)
+    if !FileManager.default.fileExists(atPath: expandedPath.path) {
+        if path.contains(",") {
+            throw FormatError.options("\(argument) argument does not support multiple paths")
         }
-        return name
+        if path.contains("*") || path.contains("?") {
+            throw FormatError.options("\(argument) path cannot contain wildcards")
+        }
+    }
+    return expandedPath
+}
+
+// Parse one or more comma-delimited file paths
+func parsePaths(_ paths: String, for argument: String, in directory: String) throws -> [URL] {
+    return try parseCommaDelimitedList(paths).map {
+        try parsePath($0, for: argument, in: directory)
     }
 }
 
@@ -145,8 +170,8 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
     var input = config
     var output = args
     // Merge excluded urls
-    if let exclude = output["exclude"]?.components(separatedBy: ",") {
-        var excluded = Set(input["exclude"]?.components(separatedBy: ",") ?? [])
+    if let exclude = output["exclude"].map(parseCommaDelimitedList),
+        var excluded = input["exclude"].map({ Set(parseCommaDelimitedList($0)) }) {
         excluded.formUnion(exclude)
         output["exclude"] = Array(excluded).sorted().joined(separator: ",")
     }
@@ -347,9 +372,7 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
     }
     try processOption("exclude", in: args, from: &arguments) {
         containsFileOption = true
-        for path in $0.components(separatedBy: ",") {
-            options.excludedURLs.append(expandPath(path, in: directory))
-        }
+        options.excludedURLs += try parsePaths($0, for: "--exclude", in: directory)
     }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return containsFileOption ? options : nil

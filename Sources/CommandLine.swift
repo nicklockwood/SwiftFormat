@@ -222,7 +222,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         } ?? false
 
         // Config file
-        if let configURL = args["config"].map({ expandPath($0, in: directory) }) {
+        if let configURL = try args["config"].map({ try parsePath($0, for: "--config", in: directory) }) {
             if args["config"] == "" {
                 throw FormatError.options("--config argument expects a value")
             }
@@ -236,11 +236,13 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 throw FormatError.reading("failed to read config file at \(configURL.path), \(error)")
             }
             var config = try parseConfigFile(data)
-            if let excluded = config["exclude"]?.components(separatedBy: ",") {
-                // Ensure exclude paths in config file are treated as relative to the file itself
-                // TODO: find a better way/place to do this
-                let directory = configURL.deletingLastPathComponent().path
-                config["exclude"] = excluded.map { expandPath($0, in: directory).path }.sorted().joined(separator: ",")
+            // Ensure exclude paths in config file are treated as relative to the file itself
+            // TODO: find a better way/place to do this
+            let directory = configURL.deletingLastPathComponent().path
+            if let excluded = try config["exclude"].map({
+                try parsePaths($0, for: "--exclude", in: directory)
+            }) {
+                config["exclude"] = excluded.map { $0.path }.sorted().joined(separator: ",")
             }
             args = try mergeArguments(args, into: config)
         }
@@ -268,7 +270,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         // Input path(s)
         var inputURLs = [URL]()
         while let inputPath = args[String(inputURLs.count + 1)] {
-            inputURLs.append(expandPath(inputPath, in: directory))
+            inputURLs += try parsePaths(inputPath, for: "input", in: directory)
         }
 
         // Verbose
@@ -276,7 +278,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             verbose = true
             if !arg.isEmpty {
                 // verbose doesn't take an argument, so treat argument as another input path
-                inputURLs.append(expandPath(arg, in: directory))
+                inputURLs += try parsePaths(arg, for: "input", in: directory)
             }
             if inputURLs.isEmpty, args["output"] ?? "" != "" {
                 throw FormatError.options("--verbose option has no effect unless an output file is specified")
@@ -288,7 +290,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             dryrun = true
             if !arg.isEmpty {
                 // dryrun doesn't take an argument, so treat argument as another input path
-                inputURLs.append(expandPath(arg, in: directory))
+                inputURLs += try parsePaths(arg, for: "input", in: directory)
             }
         }
 
@@ -298,17 +300,17 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             lint = true
             if !arg.isEmpty {
                 // lint doesn't take an argument, so treat argument as another input path
-                inputURLs.append(expandPath(arg, in: directory))
+                inputURLs += try parsePaths(arg, for: "input", in: directory)
             }
         }
 
         // Output path
-        let outputURL = args["output"].map { expandPath($0, in: directory) }
+        let outputURL = try args["output"].map { try parsePath($0, for: "--output", in: directory) }
         if outputURL != nil {
             if args["output"] == "" {
                 throw FormatError.options("--output argument expects a value")
             } else if inputURLs.count > 1 {
-                throw FormatError.options("--output argument is only valid for a single input file")
+                throw FormatError.options("--output argument is only valid for a single input file or directory")
             }
         }
 
@@ -319,7 +321,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             }
             if !arg.isEmpty {
                 // inferoptions doesn't take an argument, so treat argument as another input path
-                inputURLs.append(expandPath(arg, in: directory))
+                inputURLs += try parsePaths(arg, for: "input", in: directory)
             }
             if inputURLs.count > 0 {
                 print("inferring swiftformat options from source file(s)...")
@@ -386,7 +388,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                     }
                 }
             default:
-                cacheURL = expandPath(cache, in: directory)
+                cacheURL = try parsePath(cache, for: "--cache", in: directory)
                 guard cacheURL != nil else {
                     throw FormatError.options("unsupported --cache value `\(cache)`")
                 }

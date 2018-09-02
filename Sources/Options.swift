@@ -122,12 +122,12 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
         case "none":
             self = .none
         default:
-            var parts = rawValue.components(separatedBy: ",")
-            if parts.count == 1 {
-                parts.append(parts[0])
+            let parts = rawValue.components(separatedBy: ",").map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines)
             }
-            guard let group = Int(parts[0].trimmingCharacters(in: .whitespaces)),
-                let threshold = Int(parts[1].trimmingCharacters(in: .whitespaces)) else {
+            guard (1 ... 2).contains(parts.count),
+                let group = parts.first.flatMap(Int.init),
+                let threshold = parts.last.flatMap(Int.init) else {
                 return nil
             }
             self = (group == 0) ? .none : .group(group, threshold)

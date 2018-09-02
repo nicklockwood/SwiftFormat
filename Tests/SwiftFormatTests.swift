@@ -148,7 +148,7 @@ class SwiftFormatTests: XCTestCase {
         XCTAssertEqual(column, 8)
     }
 
-    // MARK: input paths
+    // MARK: expand path
 
     func testExpandPathWithRelativePath() {
         XCTAssertEqual(

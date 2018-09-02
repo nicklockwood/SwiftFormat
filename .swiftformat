@@ -1,3 +1,7 @@
+# file options
+
+--symlinks ignore
+
 # format options
 
 --allman false

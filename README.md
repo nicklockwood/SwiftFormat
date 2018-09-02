@@ -72,7 +72,7 @@ You can install the `swiftformat` command-line tool using [Homebrew](http://brew
 Alternatively, you can install the tool using [Mint](https://github.com/yonaskolb/Mint) as follows:
 
 ```bash
-> mint install nicklockwood/SwiftFormat swiftformat
+> mint install nicklockwood/SwiftFormat
 ```
     
 And then run it using:

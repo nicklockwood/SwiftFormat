@@ -1082,7 +1082,7 @@ A SwiftFormat configuration file consists of one or more command-line options, s
 
 While formatting, SwiftFormat will automatically check inside each subdirectory for the presence of a ".swiftformat" file and will apply any options that it finds there to the files in that directory.
 
-This allows you to override certain rules or formatting options just for a particular directory of files. You can also specify excluded files relative to that directory using `--exclude`, which may be more convenient that specifying them at the top-level.
+This allows you to override certain rules or formatting options just for a particular directory of files. You can also specify excluded files relative to that directory using `--exclude`, which may be more convenient than specifying them at the top-level.
 
 Files named ".swiftformat" will be processed automatically, however you can select an additional configuration file to use for formatting using the `--config "path/to/config/file"` command-line argument. A configuration file selected using `--config` does not need to be named ".swiftformat", and can be located outside of the project directory.
 

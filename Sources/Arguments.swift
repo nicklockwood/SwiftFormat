@@ -127,7 +127,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
 }
 
 // Parse a comma-delimited list of items
-private func parseCommaDelimitedList(_ string: String) -> [String] {
+func parseCommaDelimitedList(_ string: String) -> [String] {
     return string.components(separatedBy: ",").compactMap {
         let item = $0.trimmingCharacters(in: .whitespacesAndNewlines)
         return item.isEmpty ? nil : item
@@ -151,7 +151,7 @@ func parsePath(_ path: String, for argument: String, in directory: String) throw
         if path.contains(",") {
             throw FormatError.options("\(argument) argument does not support multiple paths")
         }
-        if path.contains("*") || path.contains("?") {
+        if pathContainsGlobSyntax(path) {
             throw FormatError.options("\(argument) path cannot contain wildcards")
         }
     }
@@ -372,7 +372,7 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
     }
     try processOption("exclude", in: args, from: &arguments) {
         containsFileOption = true
-        options.excludedURLs += try parsePaths($0, for: "--exclude", in: directory)
+        options.excludedURLs += expandGlobs($0, in: directory)
     }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return containsFileOption ? options : nil

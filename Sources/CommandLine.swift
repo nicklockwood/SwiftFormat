@@ -99,7 +99,7 @@ func printHelp() {
     --config           path to a configuration file containing rules and options
     --inferoptions     instead of formatting input, use it to infer format options
     --output           output path for formatted file(s) (defaults to input path)
-    --exclude          list of file or directory paths to ignore (comma-delimited)
+    --exclude          comma-delimited list of ignored paths (supports glob syntax)
     --symlinks         how symlinks are handled. "follow" or "ignore" (default)
     --fragment         input is part of a larger file. "true" or "false" (default)
     --conflictmarkers  merge conflict markers, either "reject" (default) or "ignore"
@@ -239,9 +239,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             // Ensure exclude paths in config file are treated as relative to the file itself
             // TODO: find a better way/place to do this
             let directory = configURL.deletingLastPathComponent().path
-            if let excluded = try config["exclude"].map({
-                try parsePaths($0, for: "--exclude", in: directory)
-            }) {
+            if let excluded = config["exclude"].map({ expandGlobs($0, in: directory) }) {
                 config["exclude"] = excluded.map { $0.path }.sorted().joined(separator: ",")
             }
             args = try mergeArguments(args, into: config)

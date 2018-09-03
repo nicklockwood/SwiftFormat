@@ -315,7 +315,7 @@ public func format(_ source: String,
     return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
 }
 
-// MARK: Utilities
+// MARK: Path utilities
 
 func expandPath(_ path: String, in directory: String) -> URL {
     if path.hasPrefix("/") {
@@ -325,6 +325,56 @@ func expandPath(_ path: String, in directory: String) -> URL {
         return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
     }
     return URL(fileURLWithPath: directory).appendingPathComponent(path)
+}
+
+func pathContainsGlobSyntax(_ path: String) -> Bool {
+    return "*?[{".contains(where: { path.contains($0) })
+}
+
+// Expand one or more comma-delimited file paths using glob syntax
+func expandGlobs(_ paths: String, in directory: String) -> [URL] {
+    guard pathContainsGlobSyntax(paths) else {
+        return parseCommaDelimitedList(paths).map {
+            expandPath($0, in: directory)
+        }
+    }
+    var paths = paths
+    var tokens = [String: String]()
+    while let range = paths.range(of: "\\{[^}]+\\}", options: .regularExpression) {
+        let options = paths[range].dropFirst().dropLast().components(separatedBy: ",")
+        let token = "<<<\(tokens.count)>>>"
+        tokens[token] = "(\(options.joined(separator: "|")))"
+        paths.replaceSubrange(range, with: token)
+    }
+    return parseCommaDelimitedList(paths).flatMap { path -> [URL] in
+        let url = expandPath(path, in: directory)
+        if FileManager.default.fileExists(atPath: url.path) {
+            // TODO: should we also handle cases where path includes tokens?
+            return [url]
+        }
+        var regex = "^\(url.path)$"
+            .replacingOccurrences(of: "[.+(){\\\\|]", with: "\\\\$0", options: .regularExpression)
+            .replacingOccurrences(of: "?", with: "[^/]")
+            .replacingOccurrences(of: "**/", with: "(.+/)?")
+            .replacingOccurrences(of: "**", with: ".+")
+            .replacingOccurrences(of: "*", with: "([^/]+)?")
+        for (token, replacement) in tokens {
+            regex = regex.replacingOccurrences(of: token, with: replacement)
+        }
+        guard let enumerator = FileManager.default.enumerator(
+            at: URL(fileURLWithPath: directory), includingPropertiesForKeys: nil
+        ) else {
+            return []
+        }
+        return enumerator.compactMap { url -> URL? in
+            let url = url as! URL
+            let path = url.path
+            guard path.range(of: regex, options: .regularExpression) != nil else {
+                return nil
+            }
+            return url
+        }
+    }
 }
 
 // MARK: Xcode 9.2 compatibility

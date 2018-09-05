@@ -3893,6 +3893,55 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNestedParensRemovedAroundTupleOperands() {
+        let input = "((1, 2)) == ((1, 2))"
+        let output = "(1, 2) == (1, 2)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAroundTupleFunctionTypeDeclaration() {
+        let input = "let foo: ((bar: Int, baz: String)) -> Void"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAroundUnlabelledTupleFunctionTypeDeclaration() {
+        let input = "let foo: ((Int, String)) -> Void"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAroundTupleFunctionTypeAssignment() {
+        let input = "foo = ((bar: Int, baz: String)) -> Void { _ in }"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRedundantParensRemovedAroundTupleFunctionTypeAssignment() {
+        let input = "foo = ((((bar: Int, baz: String)))) -> Void { _ in }"
+        let output = "foo = ((bar: Int, baz: String)) -> Void { _ in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testParensNotRemovedAroundUnlabelledTupleFunctionTypeAssignment() {
+        let input = "foo = ((Int, String)) -> Void { _ in }"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRedundantParensRemovedAroundUnlabelledTupleFunctionTypeAssignment() {
+        let input = "foo = ((((Int, String)))) -> Void { _ in }"
+        let output = "foo = ((Int, String)) -> Void { _ in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // after indexed tuple
 
     func testParensNotRemovedAfterTupleIndex() {

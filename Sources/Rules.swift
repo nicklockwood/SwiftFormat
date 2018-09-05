@@ -1576,6 +1576,10 @@ extension FormatRules {
                 closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
                 innerParens = nestedParens(in: i ... closingIndex)
             }
+            if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex),
+                [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
+                return
+            }
             let token = formatter.token(at: previousIndex) ?? .space("")
             switch token {
             case .endOfScope("]"):
@@ -1658,14 +1662,6 @@ extension FormatRules {
                 }
                 removeParen(at: closingIndex)
                 removeParen(at: i)
-            case .delimiter(":"), .operator("=", .infix):
-                if let range = innerParens {
-                    removeParen(at: range.upperBound)
-                    removeParen(at: range.lowerBound)
-                    closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
-                    innerParens = nil
-                }
-                fallthrough
             case .operator(_, .infix):
                 if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: i, if: { $0 == .startOfScope("{") }),
                     let lastIndex = formatter.index(of: .endOfScope("}"), after: nextIndex),
@@ -1675,12 +1671,14 @@ extension FormatRules {
                 }
                 fallthrough
             default:
+                if let range = innerParens {
+                    removeParen(at: range.upperBound)
+                    removeParen(at: range.lowerBound)
+                    closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
+                    innerParens = nil
+                }
                 if let nextTokenIndex = formatter.index(of: .nonSpace, after: i),
                     closingIndex == formatter.index(of: .nonSpace, after: nextTokenIndex) {
-                    if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex),
-                        [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
-                        return
-                    }
                     switch formatter.tokens[nextTokenIndex] {
                     case .identifier, .number:
                         removeParen(at: closingIndex)

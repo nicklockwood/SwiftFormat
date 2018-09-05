@@ -1257,7 +1257,9 @@ And the `{year}` token will be automatically replaced by the current year whenev
 Known issues
 ---------------
 
-* When using the `--self remove` option, the `redundantSelf` rule will remove references to `self` in autoclosure arguments, which may change the meaning of the code, or cause it not to compile. Currently, the only workaround is to use `--disable redundantSelf` to disable the rule for any affected files. If you are using the `--self insert` option then this is not an issue.
+* When using the `--self remove` option, the `redundantSelf` rule will remove references to `self` in autoclosure arguments, which may change the meaning of the code, or cause it not to compile. To work around this issue, use the `// swiftformat:disable:next redundantSelf` comment directive to disable the rule for any affected lines of code (or just disable the `redundantSelf` rule completely). If you are using the `--self insert` option then this is not an issue.
+
+* If you assign `SomeClass.self` to a variable and then instantiate an instance of the class using that variable, Swift requires that you use an explicit `.init()`, however the   `redundantInit` rule is not currently capable of detecting this situation and will remove the `.init`. To work around this issue, use the `// swiftformat:disable:next redundantInit` comment directive to disable the rule for any affected lines of code (or just disable the `redundantInit` rule completely).
 
 * The `--self insert` option can only recognize locally declared member variables, not ones inherited from superclasses or extensions in other files, so it cannot insert missing `self` references for those. Note that the reverse is not true: `--self remove` should remove *all* redundant `self` references.
 

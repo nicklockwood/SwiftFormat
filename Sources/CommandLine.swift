@@ -110,7 +110,7 @@ func printHelp(as type: CLI.OutputType) {
     --verbose          display detailed formatting output and warnings/errors
     --quiet            disables non-critical output messages and warnings
     --dryrun           run in "dry" mode (without actually changing any files)
-    --lint             returns non-zero exit code if files would be changed
+    --lint             like --dryrun, but returns an error if formatting is needed
 
     swiftformat has a number of rules that can be enabled or disabled. by default
     most rules are enabled. use --rules to display all enabled/disabled rules:

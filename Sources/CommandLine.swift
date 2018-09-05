@@ -212,12 +212,8 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // Quiet mode
-        if let arg = args["quiet"] {
+        if args["quiet"] != nil {
             quietMode = true
-            if !arg.isEmpty {
-                // quiet doesn't take an argument, so treat argument as another input path
-                inputURLs += try parsePaths(arg, for: "input", in: directory)
-            }
         }
 
         // Warnings
@@ -290,36 +286,21 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             overrides[key] = args[key]
         }
 
-        // Verbose
-        if let arg = args["verbose"] {
-            verbose = true
-            if !arg.isEmpty {
-                // verbose doesn't take an argument, so treat argument as another input path
-                inputURLs += try parsePaths(arg, for: "input", in: directory)
+        // Treat values for arguments that do not take a value as input paths
+        func addInputPaths(for argName: String) throws {
+            guard let arg = args[argName], !arg.isEmpty else {
+                return
             }
-            if inputURLs.isEmpty, args["output"] ?? "" != "" {
-                print("--verbose option has no effect unless an output file is specified", as: .warning)
+            guard inputURLs.isEmpty || "/.,".contains(where: { arg.contains($0) }) else {
+                throw FormatError.options("--\(argName) argument does not expect a value")
             }
+            inputURLs += try parsePaths(arg, for: "input", in: directory)
         }
-
-        // Dry run
-        if let arg = args["dryrun"] {
-            dryrun = true
-            if !arg.isEmpty {
-                // dryrun doesn't take an argument, so treat argument as another input path
-                inputURLs += try parsePaths(arg, for: "input", in: directory)
-            }
-        }
-
-        // Lint
-        if let arg = args["lint"] {
-            dryrun = true
-            lint = true
-            if !arg.isEmpty {
-                // lint doesn't take an argument, so treat argument as another input path
-                inputURLs += try parsePaths(arg, for: "input", in: directory)
-            }
-        }
+        try addInputPaths(for: "quiet")
+        try addInputPaths(for: "verbose")
+        try addInputPaths(for: "dryrun")
+        try addInputPaths(for: "lint")
+        try addInputPaths(for: "inferoptions")
 
         // Output path
         let outputURL = try args["output"].map { try parsePath($0, for: "--output", in: directory) }
@@ -331,14 +312,29 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             }
         }
 
+        // Verbose
+        if args["verbose"] != nil {
+            verbose = true
+            if outputURL == nil {
+                print("--verbose option has no effect unless an output file is specified", as: .warning)
+            }
+        }
+
+        // Dry run
+        if args["dryrun"] != nil {
+            dryrun = true
+        }
+
+        // Lint
+        if args["lint"] != nil {
+            dryrun = true
+            lint = true
+        }
+
         // Infer options
-        if let arg = args["inferoptions"] {
+        if args["inferoptions"] != nil {
             guard args["config"] == nil else {
                 throw FormatError.options("--inferoptions option can't be used along with a config file")
-            }
-            if !arg.isEmpty {
-                // inferoptions doesn't take an argument, so treat argument as another input path
-                inputURLs += try parsePaths(arg, for: "input", in: directory)
             }
             if inputURLs.count > 0 {
                 print("inferring swiftformat options from source file(s)...", as: .info)

@@ -32,11 +32,11 @@
 @testable import SwiftFormat
 import XCTest
 
-private let sourceDirectory = URL(fileURLWithPath: #file)
+private let projectDirectory = URL(fileURLWithPath: #file)
     .deletingLastPathComponent().deletingLastPathComponent()
 
 private let readme: String = {
-    let readmeURL = sourceDirectory.appendingPathComponent("README.md")
+    let readmeURL = projectDirectory.appendingPathComponent("README.md")
     return try! String(contentsOf: readmeURL, encoding: .utf8)
 }()
 
@@ -197,7 +197,7 @@ class CommandLineTests: XCTestCase {
             let args = ". --disable redundantSelf" // redundantSelf crashes Xcode 9.4 in debug mode
         #endif
 
-        XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: args), .ok)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: args), .ok)
     }
 
     // MARK: rules
@@ -206,7 +206,7 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, _ in
             XCTAssert(message.contains("trailingClosures") || !message.contains("(disabled)"))
         }
-        XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "--rules"), .ok)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--rules"), .ok)
     }
 
     // MARK: quiet mode
@@ -215,20 +215,29 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, _ in
             XCTFail(message)
         }
-        XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "--quiet --dryrun"), .ok)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--quiet --dryrun"), .ok)
     }
 
     func testQuietModeAllowsContent() {
         CLI.print = { message, type in
             XCTAssertEqual(type, .content, message)
         }
-        XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "--quiet --help"), .ok)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--quiet --help"), .ok)
     }
 
     func testQuietModeAllowsErrors() {
         CLI.print = { message, type in
             XCTAssertEqual(type, .error, message)
         }
-        XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "foobar.swift --quiet"), .error)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "foobar.swift --quiet"), .error)
+    }
+
+    // MARK: split input paths
+
+    func testSplitInputPaths() {
+        CLI.print = { message, type in
+            XCTAssertEqual(type, .error, message)
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Sources --dryrun Tests --rules indent"), .error)
     }
 }

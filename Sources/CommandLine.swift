@@ -64,8 +64,11 @@ public struct CLI {
     }
 }
 
+private var quietMode = false
 private func print(_ message: String, as type: CLI.OutputType = .info) {
-    CLI.print(message, type)
+    if !quietMode || [.content, .error].contains(type) {
+        CLI.print(message, type)
+    }
 }
 
 private func printWarnings(_ errors: [Error]) {
@@ -81,9 +84,9 @@ public enum ExitCode: Int32 {
     case error = 70 // EX_SOFTWARE
 }
 
-func printHelp() {
+func printHelp(as type: CLI.OutputType) {
+    print("")
     print("""
-
     swiftformat, version \(version)
     copyright (c) 2016 Nick Lockwood
 
@@ -105,6 +108,7 @@ func printHelp() {
     --conflictmarkers  merge conflict markers, either "reject" (default) or "ignore"
     --cache            path to cache file, or "clear" or "ignore" the default cache
     --verbose          display detailed formatting output and warnings/errors
+    --quiet            disables non-critical output messages and warnings
     --dryrun           run in "dry" mode (without actually changing any files)
     --lint             returns non-zero exit code if files would be changed
 
@@ -147,8 +151,8 @@ func printHelp() {
     --trimwhitespace   trim trailing space. "always" (default) or "nonblank-lines"
     --wraparguments    wrap function args. "beforefirst", "afterfirst", "preserve"
     --wrapcollections  wrap array/dict. "beforefirst", "afterfirst", "preserve"
-
-    """)
+    """, as: type)
+    print("")
 }
 
 func timeEvent(block: () throws -> Void) rethrows -> TimeInterval {
@@ -171,7 +175,7 @@ private func serializeOptions(_ options: Options, to outputURL: URL?) throws {
             throw FormatError.writing("failed to write options to \(outputURL.path)")
         }
     } else {
-        print(serialize(options: options, excludingDefaults: true, separator: " "))
+        print(serialize(options: options, excludingDefaults: true, separator: " "), as: .content)
         print("")
     }
 }
@@ -182,8 +186,14 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
     var dryrun = false
     var lint = false
 
+    quietMode = false
+    defer {
+        // Reset quiet mode on exit to prevent side-effects between unit tests
+        quietMode = false
+    }
+
     func printRunningMessage() {
-        print("running swiftformat...")
+        print("running swiftformat...", as: .info)
         if lint {
             print("(lint mode - no files will be changed)", as: .warning)
         } else if dryrun {
@@ -195,21 +205,36 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         // Get arguments
         var args = try preprocessArguments(args, commandLineArguments)
 
-        // Show help
-        if args["help"] != nil {
-            printHelp()
-            return .ok
+        // Input path(s)
+        var inputURLs = [URL]()
+        while let inputPath = args[String(inputURLs.count + 1)] {
+            inputURLs += try parsePaths(inputPath, for: "input", in: directory)
         }
 
-        // Show version
-        if args["version"] != nil {
-            print("swiftformat, version \(version)")
-            return .ok
+        // Quiet mode
+        if let arg = args["quiet"] {
+            quietMode = true
+            if !arg.isEmpty {
+                // quiet doesn't take an argument, so treat argument as another input path
+                inputURLs += try parsePaths(arg, for: "input", in: directory)
+            }
         }
 
         // Warnings
         for warning in warningsForArguments(args) {
             print(warning, as: .warning)
+        }
+
+        // Show help
+        if args["help"] != nil {
+            printHelp(as: .content)
+            return .ok
+        }
+
+        // Show version
+        if args["version"] != nil {
+            print("swiftformat, version \(version)", as: .content)
+            return .ok
         }
 
         // Display rules (must be checked before merging config)
@@ -253,7 +278,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             print("")
             let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
             for name in Array(allRules).sorted() {
-                print(" \(name)\(rules.contains(name) ? "" : " (disabled)")")
+                print(" \(name)\(rules.contains(name) ? "" : " (disabled)")", as: .content)
             }
             print("")
             return .ok
@@ -265,12 +290,6 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             overrides[key] = args[key]
         }
 
-        // Input path(s)
-        var inputURLs = [URL]()
-        while let inputPath = args[String(inputURLs.count + 1)] {
-            inputURLs += try parsePaths(inputPath, for: "input", in: directory)
-        }
-
         // Verbose
         if let arg = args["verbose"] {
             verbose = true
@@ -279,7 +298,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 inputURLs += try parsePaths(arg, for: "input", in: directory)
             }
             if inputURLs.isEmpty, args["output"] ?? "" != "" {
-                throw FormatError.options("--verbose option has no effect unless an output file is specified")
+                print("--verbose option has no effect unless an output file is specified", as: .warning)
             }
         }
 
@@ -322,7 +341,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 inputURLs += try parsePaths(arg, for: "input", in: directory)
             }
             if inputURLs.count > 0 {
-                print("inferring swiftformat options from source file(s)...")
+                print("inferring swiftformat options from source file(s)...", as: .info)
                 var filesParsed = 0, formatOptions = FormatOptions.default, errors = [Error]()
                 let fileOptions = options.fileOptions ?? .default
                 let time = formatTime(timeEvent {
@@ -343,7 +362,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                         break
                     }
                 }
-                print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)")
+                print("options inferred from \(filesParsed)/\(filesChecked) files in \(time)", as: .info)
                 print("")
                 var options = options
                 options.formatOptions = formatOptions
@@ -453,7 +472,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             } else if args["inferoptions"] != nil {
                 throw FormatError.options("--inferoptions requires one or more input files")
             } else {
-                printHelp()
+                printHelp(as: .info)
             }
             return .ok
         }
@@ -593,7 +612,7 @@ func processInput(_ inputURLs: [URL],
     }
     // Logging skipped files
     let skippedHandler: FileEnumerationHandler? = verbose ? { inputURL, _, _ in
-        print("skipping \(inputURL.path)")
+        print("skipping \(inputURL.path)", as: .info)
         print("-- ignored", as: .success)
         return {}
     } : nil
@@ -627,7 +646,7 @@ func processInput(_ inputURLs: [URL],
             }()
             do {
                 if verbose {
-                    print("formatting \(inputURL.path)")
+                    print("formatting \(inputURL.path)", as: .info)
                 }
                 var cacheHash: String?
                 var sourceHash: String?

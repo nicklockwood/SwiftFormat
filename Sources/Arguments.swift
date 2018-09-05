@@ -428,6 +428,7 @@ let commandLineArguments = [
     "output",
     "cache",
     "verbose",
+    "quiet",
     "dryrun",
     "lint",
     // Misc

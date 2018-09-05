@@ -74,7 +74,7 @@ class CommandLineTests: XCTestCase {
                 XCTAssertLessThanOrEqual(line.count, 80, line)
             }
         }
-        printHelp()
+        printHelp(as: .content)
     }
 
     func testHelpOptionsImplemented() {
@@ -84,7 +84,7 @@ class CommandLineTests: XCTestCase {
                 XCTAssertTrue(commandLineArguments.contains(name), name)
             }
         }
-        printHelp()
+        printHelp(as: .content)
     }
 
     func testHelpOptionsDocumented() {
@@ -100,7 +100,7 @@ class CommandLineTests: XCTestCase {
                     }
                 }
         }
-        printHelp()
+        printHelp(as: .content)
         XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     }
 
@@ -187,7 +187,7 @@ class CommandLineTests: XCTestCase {
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
-    // MARK: end-to-end tests
+    // MARK: end-to-end formatting
 
     func testFormatting() {
         CLI.print = { _, _ in }
@@ -200,10 +200,35 @@ class CommandLineTests: XCTestCase {
         XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: args), .ok)
     }
 
+    // MARK: rules
+
     func testRulesNotMarkedAsDisabled() {
         CLI.print = { message, _ in
             XCTAssert(message.contains("trailingClosures") || !message.contains("(disabled)"))
         }
         XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "--rules"), .ok)
+    }
+
+    // MARK: quiet mode
+
+    func testQuietModeNoOutput() {
+        CLI.print = { message, _ in
+            XCTFail(message)
+        }
+        XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "--quiet --dryrun"), .ok)
+    }
+
+    func testQuietModeAllowsContent() {
+        CLI.print = { message, type in
+            XCTAssertEqual(type, .content, message)
+        }
+        XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "--quiet --help"), .ok)
+    }
+
+    func testQuietModeAllowsErrors() {
+        CLI.print = { message, type in
+            XCTAssertEqual(type, .error, message)
+        }
+        XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "foobar.swift --quiet"), .error)
     }
 }

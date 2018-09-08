@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.35.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.5) (2018-09-08)
+
+- Fixed a bug in `redundantParens` rule that affected closure types that take a single tuple argument
+
 ## [0.35.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.4) (2018-09-05)
 
 - Added glob support (unix-style wildcard file pattern matching) for `--exclude` paths

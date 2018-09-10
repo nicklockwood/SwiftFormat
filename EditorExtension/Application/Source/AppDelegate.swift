@@ -37,6 +37,41 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return NSApp.mainWindow
     }
 
+    func loadConfiguration(_ url: URL) -> Bool {
+        let data: Data
+        do {
+            data = try Data(contentsOf: url)
+        } catch let error {
+            self.showError(FormatError.reading("problem reading configuration from \(url.path). [\(error)]"))
+            return false
+        }
+
+        let options: Options
+        do {
+            let args = try parseConfigFile(data)
+            options = try Options(args, in: url.deletingLastPathComponent().path)
+        } catch let error {
+            self.showError(error)
+            return false
+        }
+
+        let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
+        RulesStore().restore(Set(FormatRules.byName.keys).map {
+            Rule(name: $0, isEnabled: rules.contains($0))
+        })
+        if let formatOptions = options.formatOptions {
+            OptionsStore().inferOptions = false
+            OptionsStore().restore(formatOptions)
+        } else {
+            OptionsStore().inferOptions = true
+        }
+        return true
+    }
+
+    func application(_: NSApplication, openFile file: String) -> Bool {
+        return loadConfiguration(URL(fileURLWithPath: file))
+    }
+
     @objc
     @IBAction func resetToDefault(_: NSMenuItem) {
         RulesStore().resetRulesToDefaults()
@@ -58,38 +93,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         dialog.allowsMultipleSelection = false
 
         dialog.beginSheetModal(for: window) { response in
-            guard response == .OK, let url = dialog.url else {
+            guard response == .OK, let url = dialog.url, self.loadConfiguration(url) else {
                 return
             }
-
-            let data: Data
-            do {
-                data = try Data(contentsOf: url)
-            } catch let error {
-                self.showError(FormatError.reading("problem reading configuration from \(url.path). [\(error)]"))
-                return
-            }
-
-            let options: Options
-            do {
-                let args = try parseConfigFile(data)
-                options = try Options(args, in: url.deletingLastPathComponent().path)
-            } catch let error {
-                self.showError(error)
-                return
-            }
-
-            let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
-            RulesStore().restore(Set(FormatRules.byName.keys).map {
-                Rule(name: $0, isEnabled: rules.contains($0))
-            })
-            if let formatOptions = options.formatOptions {
-                OptionsStore().inferOptions = false
-                OptionsStore().restore(formatOptions)
-            } else {
-                OptionsStore().inferOptions = true
-            }
-
+            NSDocumentController.shared.noteNewRecentDocumentURL(url)
             NotificationCenter.default.post(name: .applicationDidLoadNewConfiguration, object: nil)
         }
     }

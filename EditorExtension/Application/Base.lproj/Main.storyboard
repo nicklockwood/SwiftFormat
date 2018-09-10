@@ -66,12 +66,26 @@
                                                 <action selector="openConfiguration:" target="Ady-hI-5gd" id="NuB-Wf-Pne"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Open Recent" id="8P4-Yc-iZQ">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <menu key="submenu" title="Open Recent" systemMenu="recentDocuments" id="cdg-k9-3uT">
+                                                <items>
+                                                    <menuItem title="Clear Menu" id="dlG-Gw-5zq">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                                        <connections>
+                                                            <action selector="clearRecentDocuments:" target="Ady-hI-5gd" id="0oQ-94-eCU"/>
+                                                        </connections>
+                                                    </menuItem>
+                                                </items>
+                                            </menu>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="HcM-Pp-EH0"/>
                                         <menuItem title="Save" keyEquivalent="s" id="IAo-SY-fd9">
                                             <connections>
                                                 <action selector="saveConfiguration:" target="Ady-hI-5gd" id="dPZ-nR-qwL"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="HcM-Pp-EH0"/>
+                                        <menuItem isSeparatorItem="YES" id="3Z8-Zd-cnf"/>
                                         <menuItem title="Reset to Defaults" id="Lua-ub-IdX">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>

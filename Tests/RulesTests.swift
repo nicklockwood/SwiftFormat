@@ -5158,6 +5158,38 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    class Bar {
+        var foo: Bool = false {
+            didSet {
+                foo = !foo
+            }
+        }
+    }
+
+    func testSelfRemovedInDidSet() {
+        let input = """
+        class Foo {
+            var bar: Bool = false {
+                didSet {
+                    self.bar = !self.bar
+                }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Bool = false {
+                didSet {
+                    bar = !bar
+                }
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // removeSelf = false
 
     func testInsertSelf() {
@@ -5493,6 +5525,30 @@ class RulesTests: XCTestCase {
                     return self.bar
                 default:
                     return self.bar
+                }
+            }
+        }
+        """
+        let options = FormatOptions(removeSelf: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testSelfInsertedInDidSet() {
+        let input = """
+        class Foo {
+            var bar: Bool = false {
+                didSet {
+                    bar = !bar
+                }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Bool = false {
+                didSet {
+                    self.bar = !self.bar
                 }
             }
         }

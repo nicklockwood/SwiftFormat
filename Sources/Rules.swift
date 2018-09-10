@@ -2352,11 +2352,16 @@ extension FormatRules {
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
                     lastKeyword = ""
+                    if let token = formatter.last(.nonSpaceOrLinebreak, before: index),
+                        token.is(.startOfScope) || token == .operator("=", .infix) {
+                        // It's a closure
+                        fallthrough
+                    }
                     var prevIndex = index - 1
                     while let token = formatter.token(at: prevIndex), token != .keyword("var") {
-                        if token == .operator("=", .infix) || (token.isLvalue && formatter.nextToken(after: prevIndex, where: {
+                        if token.isLvalue, let nextToken = formatter.nextToken(after: prevIndex, where: {
                             !$0.isSpaceOrCommentOrLinebreak && !$0.isStartOfScope
-                        }).map({ $0.isRvalue && !$0.isOperator(".") }) == true) {
+                        }), nextToken.isRvalue, !nextToken.isOperator(".") {
                             // It's a closure
                             fallthrough
                         }

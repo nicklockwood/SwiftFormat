@@ -88,14 +88,14 @@ class CommandLineTests: XCTestCase {
     }
 
     func testHelpOptionsDocumented() {
-        var arguments = Set(commandLineArguments)
-        deprecatedArguments.forEach { arguments.remove($0) }
+        var arguments = Set(commandLineArguments).subtracting(deprecatedArguments)
         CLI.print = { allHelpMessage, _ in
             allHelpMessage
                 .components(separatedBy: "\n")
                 .forEach { message in
                     if message.hasPrefix("--") {
                         let name = String(message["--".endIndex ..< message.endIndex]).components(separatedBy: " ")[0]
+                        XCTAssert(arguments.contains(name), name)
                         arguments.remove(name)
                     }
                 }
@@ -125,15 +125,14 @@ class CommandLineTests: XCTestCase {
     }
 
     func testAllOptionsInReadme() {
-        var arguments = Set(formattingArguments)
-        deprecatedArguments.forEach { arguments.remove($0) }
+        let arguments = Set(formattingArguments).subtracting(deprecatedArguments)
         for argument in arguments {
             XCTAssertTrue(readme.contains("`--\(argument)`"), argument)
         }
     }
 
     func testNoInvalidOptionsInReadme() {
-        let arguments = Set(commandLineArguments)
+        let arguments = Set(commandLineArguments).subtracting(deprecatedArguments)
         var range = readme.startIndex ..< readme.endIndex
         while let match = readme.range(of: "`--[a-zA-Z]+`", options: .regularExpression, range: range, locale: nil) {
             let lower = readme.index(match.lowerBound, offsetBy: 3)

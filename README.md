@@ -305,7 +305,7 @@ There is no need to manually re-enable a rule after using the `next` directive.
 
 Here are all the rules that SwiftFormat currently applies, and the effects that they have:
 
-***blankLinesAtEndOfScope*** - removes trailing blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
+***blankLinesAtEndOfScope*** - removes trailing blank lines from inside braces, brackets, parens or chevrons:
 
 ```diff
   func foo() {
@@ -333,7 +333,7 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
   ]
 ```
 
-***blankLinesAtStartOfScope*** - removes leading blank lines from inside braces, brackets, parens or chevrons. This rule can be configured using the `--removelines` option:
+***blankLinesAtStartOfScope*** - removes leading blank lines from inside braces, brackets, parens or chevrons:
 
 ```diff
   func foo() {
@@ -361,7 +361,7 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
   ]
 ```
 
-***blankLinesBetweenScopes*** - adds a blank line before each class, struct, enum, extension, protocol or function. This rule can be configured using the `--insertlines` option:
+***blankLinesBetweenScopes*** - adds a blank line before each class, struct, enum, extension, protocol or function:
 
 ```diff
   func foo() {
@@ -385,7 +385,7 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
   var quux: Int
 ```
 
-***blankLinesAroundMark*** - adds a blank line before and after each `MARK:` comment. This rule can be configured using the `--insertlines` option:
+***blankLinesAroundMark*** - adds a blank line before and after each `MARK:` comment:
 
 ```diff
   func foo() {

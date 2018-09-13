@@ -11,10 +11,11 @@ Table of Contents
 - [What?](#what-is-this)
 - [Why?](#why-would-i-want-to-do-that)
 - [How?](#how-do-i-install-it)
-    - [Command-Line Tool](#command-line-tool)
-    - [Xcode Source Editor Extension](#xcode-source-editor-extension)
-    - [Xcode Build Phase](#xcode-build-phase)
-    - [Git Pre-Commit Hook](#git-pre-commit-hook)
+    - [Command-line tool](#command-line-tool)
+    - [Xcode source editor extension](#xcode-source-editor-extension)
+    - [Xcode build phase](#xcode-build-phase)
+    - [VSCode plugin](#vscode-plugin)
+    - [Git pre-commit hook](#git-pre-commit-hook)
     - [On CI using Danger](#on-ci-using-danger)
 - [Usage](#so-what-does-swiftformat-actually-do)
     - [Options](#options)
@@ -23,8 +24,8 @@ Table of Contents
     - [Linting](#linting)
 - [FAQ](#faq)
 - [Cache](#cache)
-- [File Headers](#file-headers)
-- [Known Issues](#known-issues)
+- [File headers](#file-headers)
+- [Known issues](#known-issues)
 - [Credits](#credits)
 
 
@@ -138,7 +139,7 @@ If you prefer, you can also use unix pipes to include swiftformat as part of a c
 Omitting the `--output /path/to/file.swift` will print the formatted file to `stdout`.
 
 
-Xcode Source Editor Extension
+Xcode source editor extension
 -----------------------------
 
 **Installation:**
@@ -151,11 +152,11 @@ You'll find the latest version of the SwiftFormat for Xcode application inside t
 
 In Xcode, you'll find a SwiftFormat option under the Editor menu. You can use this to format either the current selection or the whole file.
 
-You can configure the formatting [rules](#rules) and [options](#options) used by the Xcode Source Editor Extension using the host application. There is currently no way to override these per-project, however you can import and export different configurations using the File menu. You will need to do this again each time you switch project.
+You can configure the formatting [rules](#rules) and [options](#options) used by the Xcode source editor extension using the host application. There is currently no way to override these per-project, however you can import and export different configurations using the File menu. You will need to do this again each time you switch project.
 
 The format of the configuration file is described in the [Config section](#config) below.
 
-**Note:** SwiftFormat for Xcode cannot automatically detect changes to an imported configuration file. If you update the `.swiftformat` file for your project, you will need to manually re-import that file into SwiftFormat for Xcode in order for the Xcode Source Editor Extension to use the new configuration.
+**Note:** SwiftFormat for Xcode cannot automatically detect changes to an imported configuration file. If you update the `.swiftformat` file for your project, you will need to manually re-import that file into SwiftFormat for Xcode in order for the Xcode source editor extension to use the new configuration.
 
 
 Xcode build phase
@@ -196,6 +197,12 @@ fi
 ```
 
 This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commits as code gets reformatted inconsistently.
+
+
+VSCode plugin
+--------------
+
+If you prefer to use Microsoft's [VSCode](https://code.visualstudio.com) editor for writing Swift, [Valentin Knabel](https://github.com/vknabel) has created a [VSCode plugin](https://marketplace.visualstudio.com/items?itemName=vknabel.vscode-swiftformat) for SwiftFormat.
 
 
 Git pre-commit hook
@@ -1150,7 +1157,7 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 > If there is a rule that you don't like, and which cannot be configured to your liking via the command-line options, you can disable the rule by using the `--disable` argument, followed by the name of the rule. You can display a list of all rules using the `--rules` argument, and their behaviors are documented above this section in the README.
 
-> If you are using the Xcode Source Editor Extension, rules and options can be configured using the [SwiftFormat for Xcode](#xcode-source-editor-extension) host application. Unfortunately, due to limitation of the Extensions API, there is no way to configure these on a per-project basis.
+> If you are using the Xcode source editor extension, rules and options can be configured using the [SwiftFormat for Xcode](#xcode-source-editor-extension) host application. Unfortunately, due to limitation of the Extensions API, there is no way to configure these on a per-project basis.
 
 > If the options you want aren't exposed, and disabling the rule doesn't solve the problem, the rules are implemented as functions in the file `Rules.swift`, so you can modify them and build a new version of the command-line tool. If you think your changes might be generally useful, make a pull request.
 
@@ -1338,12 +1345,12 @@ Known issues
 Credits
 ------------
 
-* @tonyarnold - Xcode source editor extension
-* @vinceburn - Xcode extension settings UI
-* @bourvill - Git pre-commit hook script
-* @palleas - Homebrew formula
-* @aliak00 - Several path-related CLI enhancements
-* @yonaskolb - Swift Package Manager integration
-* @nicklockwood - Everything else
+* [Tony Arnold](https://github.com/tonyarnold) - Xcode source editor extension
+* [Vincent Bernier](https://github.com/vinceburn) - Xcode extension settings UI
+* [Maxime Marinel](https://github.com/bourvill) - Git pre-commit hook script
+* [Romain Pouclet](https://github.com/palleas) - Homebrew formula
+* [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
+* [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
+* [Nick Lockwood](https://github.com/nicklockwood) - Everything else
 
 ([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

@@ -127,14 +127,14 @@ class CommandLineTests: XCTestCase {
     func testAllOptionsInReadme() {
         let arguments = Set(formattingArguments).subtracting(deprecatedArguments)
         for argument in arguments {
-            XCTAssertTrue(readme.contains("`--\(argument)`"), argument)
+            XCTAssertTrue(readme.contains("`--\(argument)`") || readme.contains("`--\(argument) "), argument)
         }
     }
 
     func testNoInvalidOptionsInReadme() {
         let arguments = Set(commandLineArguments).subtracting(deprecatedArguments)
         var range = readme.startIndex ..< readme.endIndex
-        while let match = readme.range(of: "`--[a-zA-Z]+`", options: .regularExpression, range: range, locale: nil) {
+        while let match = readme.range(of: "`--[a-zA-Z]+[` ]", options: .regularExpression, range: range, locale: nil) {
             let lower = readme.index(match.lowerBound, offsetBy: 3)
             let upper = readme.index(before: match.upperBound)
             let argument: String = String(readme[lower ..< upper])

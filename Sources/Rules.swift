@@ -2925,12 +2925,22 @@ extension FormatRules {
             default:
                 return
             }
+
             guard mode != .disabled,
-                let firstLinebreakIndex = formatter.index(of: .linebreak, after: i),
-                let closingBraceIndex = formatter.endOfScope(at: i),
-                firstLinebreakIndex < closingBraceIndex else {
+                let closingBraceIndex = formatter.endOfScope(at: i) else {
                 return
             }
+
+            guard let firstLinebreakIndex = formatter.index(of: .linebreak, after: i), firstLinebreakIndex < closingBraceIndex else {
+                if mode == .beforeFirst && formatter.subScopeContains(.linebreak, after: i) {
+                    wrapArgumentsBeforeFirst(startOfScope: i,
+                                             closingBraceIndex: closingBraceIndex,
+                                             allowGrouping: true,
+                                             closingBraceOnSameLine: closingBraceOnSameLine)
+                }
+                return
+            }
+
             let firstIdentifierIndex = formatter.index(of:
                 .nonSpaceOrCommentOrLinebreak, after: i) ?? firstLinebreakIndex
             switch mode {

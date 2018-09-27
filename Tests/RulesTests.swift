@@ -6231,6 +6231,24 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testTrailingCommasAddedToWrappedNestedDictionary() {
+        let input = "[foo: [bar: baz,\n    bar2: baz2]]"
+        let output = "[\n    foo: [\n        bar: baz,\n        bar2: baz2,\n    ],\n]"
+        let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
+        let rules = [FormatRules.wrapArguments, FormatRules.trailingCommas]
+        XCTAssertEqual(try format(input, rules: rules, options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testTrailingCommasAddedToWrappedNestedDictionaries() {
+        let input = "[foo: [bar: baz,\n    bar2: baz2],\n    foo2: [bar: baz,\n    bar2: baz2]]"
+        let output = "[\n    foo: [\n        bar: baz,\n        bar2: baz2,\n    ],\n    foo2: [\n        bar: baz,\n        bar2: baz2,\n    ],\n]"
+        let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
+        let rules = [FormatRules.wrapArguments, FormatRules.trailingCommas]
+        XCTAssertEqual(try format(input, rules: rules, options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     func testSpaceAroundEnumValuesInArray() {
         let input = "[\n    .foo,\n    .bar, .baz,\n]"
         let output = "[\n    .foo,\n    .bar, .baz,\n]"

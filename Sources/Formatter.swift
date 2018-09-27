@@ -381,4 +381,31 @@ public class Formatter: NSObject {
         }
         return 0 // Inserted 0 tokens
     }
+
+    /// Returns whether the scope or subscopes contain a token that matches
+    public func subScopeContains(after index: Int, where matches: (Token) -> Bool) -> Bool {
+        guard index < tokens.count else { return false }
+        var scopeStack: [Token] = []
+        for i in index + 1 ..< tokens.count {
+            let token = tokens[i]
+            if let scope = scopeStack.last, token.isEndOfScope(scope) {
+                scopeStack.removeLast()
+                if case .linebreak = token, scopeStack.count == 0, matches(token) {
+                    return true
+                }
+            } else if matches(token) {
+                return true
+            } else if token.isEndOfScope {
+                return false
+            } else if case .startOfScope = token {
+                scopeStack.append(token)
+            }
+        }
+        return false
+    }
+
+    /// Returns whether the scope or subscopes contain a token of the specified type
+    public func subScopeContains(_ type: TokenType, after index: Int) -> Bool {
+        return subScopeContains(after: index, where: { $0.is(type) })
+    }
 }

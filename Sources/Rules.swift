@@ -2932,7 +2932,7 @@ extension FormatRules {
             }
 
             guard let firstLinebreakIndex = formatter.index(of: .linebreak, after: i), firstLinebreakIndex < closingBraceIndex else {
-                if mode == .beforeFirst && formatter.subScopeContains(.linebreak, after: i) {
+                if mode == .beforeFirst && formatter.hasLinebreakBetween(start: i, end: closingBraceIndex) {
                     wrapArgumentsBeforeFirst(startOfScope: i,
                                              closingBraceIndex: closingBraceIndex,
                                              allowGrouping: true,

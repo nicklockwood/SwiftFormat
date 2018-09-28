@@ -6159,6 +6159,24 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testNoBeforeFirstPreservedAndTrailingCommaIgnoredInMultilineNestedDictionary() {
+        let input = "[foo: [bar: baz,\n    bar2: baz2]]"
+        let output = "[foo: [bar: baz,\n       bar2: baz2]]"
+        let options = FormatOptions(trailingCommas: true, wrapCollections: .preserve)
+        let rules = [FormatRules.wrapArguments, FormatRules.trailingCommas]
+        XCTAssertEqual(try format(input, rules: rules, options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testBeforeFirstPreservedAndTrailingCommaAddedInSingleLineNestedDictionary() {
+        let input = "[\n    foo: [bar: baz, bar2: baz2]]"
+        let output = "[\n    foo: [bar: baz, bar2: baz2],\n]"
+        let options = FormatOptions(trailingCommas: true, wrapCollections: .preserve)
+        let rules = [FormatRules.wrapArguments, FormatRules.trailingCommas]
+        XCTAssertEqual(try format(input, rules: rules, options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // beforeFirst
 
     func testWrapAfterFirstConvertedToWrapBefore() {
@@ -6225,6 +6243,33 @@ class RulesTests: XCTestCase {
     func testTrailingCommasAddedToWrappedArray() {
         let input = "[foo,\n    bar]"
         let output = "[\n    foo,\n    bar,\n]"
+        let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
+        let rules = [FormatRules.wrapArguments, FormatRules.trailingCommas]
+        XCTAssertEqual(try format(input, rules: rules, options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testTrailingCommasAddedToWrappedNestedDictionary() {
+        let input = "[foo: [bar: baz,\n    bar2: baz2]]"
+        let output = "[\n    foo: [\n        bar: baz,\n        bar2: baz2,\n    ],\n]"
+        let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
+        let rules = [FormatRules.wrapArguments, FormatRules.trailingCommas]
+        XCTAssertEqual(try format(input, rules: rules, options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testTrailingCommasAddedToSingleLineNestedDictionary() {
+        let input = "[\n    foo: [bar: baz, bar2: baz2]]"
+        let output = "[\n    foo: [bar: baz, bar2: baz2],\n]"
+        let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
+        let rules = [FormatRules.wrapArguments, FormatRules.trailingCommas]
+        XCTAssertEqual(try format(input, rules: rules, options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testTrailingCommasAddedToWrappedNestedDictionaries() {
+        let input = "[foo: [bar: baz,\n    bar2: baz2],\n    foo2: [bar: baz,\n    bar2: baz2]]"
+        let output = "[\n    foo: [\n        bar: baz,\n        bar2: baz2,\n    ],\n    foo2: [\n        bar: baz,\n        bar2: baz2,\n    ],\n]"
         let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
         let rules = [FormatRules.wrapArguments, FormatRules.trailingCommas]
         XCTAssertEqual(try format(input, rules: rules, options: options), output)

@@ -6841,6 +6841,34 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.strongOutlets]), output)
     }
 
+    func testNoRemoveWeakFromDelegateOutlet() {
+        let input = "@IBOutlet weak var delegate: UITableViewDelegate?"
+        let output = "@IBOutlet weak var delegate: UITableViewDelegate?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongOutlets]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveWeakFromDataSourceOutlet() {
+        let input = "@IBOutlet weak var dataSource: UITableViewDataSource?"
+        let output = "@IBOutlet weak var dataSource: UITableViewDataSource?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongOutlets]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveWeakFromOutletAfterDelegateOutlet() {
+        let input = "@IBOutlet weak var delegate: UITableViewDelegate?\n@IBOutlet weak var label1: UILabel!"
+        let output = "@IBOutlet weak var delegate: UITableViewDelegate?\n@IBOutlet var label1: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongOutlets]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveWeakFromOutletAfterDataSourceOutlet() {
+        let input = "@IBOutlet weak var dataSource: UITableViewDataSource?\n@IBOutlet weak var label1: UILabel!"
+        let output = "@IBOutlet weak var dataSource: UITableViewDataSource?\n@IBOutlet var label1: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongOutlets]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: emptyBraces
 
     func testLinebreaksRemovedInsideBraces() {

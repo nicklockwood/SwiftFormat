@@ -3225,12 +3225,13 @@ extension FormatRules {
         }
     }
 
-    /// Strip unnecessary `weak` from @IBOutlet properties (except delegates)
+    /// Strip unnecessary `weak` from @IBOutlet properties (except delegates and datasources)
     @objc public class func strongOutlets(_ formatter: Formatter) {
         formatter.forEach(.keyword("@IBOutlet")) { i, _ in
             let delegateIdentifierIndex = formatter.index(after: i, where: { token in
                 if case let .identifier(val) = token {
-                    return val.lowercased().contains("delegate")
+                    let lowercased = val.lowercased()
+                    return lowercased.hasSuffix("delegate") || lowercased.hasSuffix("datasource")
                 }
                 return false
             })

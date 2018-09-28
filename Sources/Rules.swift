@@ -2925,22 +2925,10 @@ extension FormatRules {
             default:
                 return
             }
-
-            guard mode != .disabled,
-                let closingBraceIndex = formatter.endOfScope(at: i) else {
+            guard mode != .disabled, let closingBraceIndex = formatter.endOfScope(at: i),
+                let firstLinebreakIndex = (i ..< closingBraceIndex).first(where: { formatter.tokens[$0].isLinebreak }) else {
                 return
             }
-
-            guard let firstLinebreakIndex = formatter.index(of: .linebreak, after: i), firstLinebreakIndex < closingBraceIndex else {
-                if mode == .beforeFirst && formatter.hasLinebreakBetween(start: i, end: closingBraceIndex) {
-                    wrapArgumentsBeforeFirst(startOfScope: i,
-                                             closingBraceIndex: closingBraceIndex,
-                                             allowGrouping: true,
-                                             closingBraceOnSameLine: closingBraceOnSameLine)
-                }
-                return
-            }
-
             let firstIdentifierIndex = formatter.index(of:
                 .nonSpaceOrCommentOrLinebreak, after: i) ?? firstLinebreakIndex
             switch mode {
@@ -3238,24 +3226,21 @@ extension FormatRules {
     /// Strip unnecessary `weak` from @IBOutlet properties (except delegates and datasources)
     @objc public class func strongOutlets(_ formatter: Formatter) {
         formatter.forEach(.keyword("@IBOutlet")) { i, _ in
-            let delegateIdentifierIndex = formatter.index(after: i, where: { token in
-                if case let .identifier(val) = token {
-                    let lowercased = val.lowercased()
-                    return lowercased.hasSuffix("delegate") || lowercased.hasSuffix("datasource")
-                }
-                return false
-            })
-            guard delegateIdentifierIndex == nil else { return }
-
-            guard let varIndex = formatter.index(of: .keyword("var"), after: i) else { return }
-            for index in i ..< varIndex where formatter.tokens[index] == .identifier("weak") {
-                if formatter.tokens[index + 1].isSpace {
-                    formatter.removeToken(at: index + 1)
-                } else if formatter.tokens[index - 1].isSpace {
-                    formatter.removeToken(at: index - 1)
-                }
-                formatter.removeToken(at: index)
+            guard let varIndex = formatter.index(of: .keyword("var"), after: i),
+                let weakIndex = (i ..< varIndex).first(where: { formatter.tokens[$0] == .identifier("weak") }),
+                case let .identifier(name)? = formatter.next(.identifier, after: varIndex) else {
+                return
             }
+            let lowercased = name.lowercased()
+            if lowercased.hasSuffix("delegate") || lowercased.hasSuffix("datasource") {
+                return
+            }
+            if formatter.tokens[weakIndex + 1].isSpace {
+                formatter.removeToken(at: weakIndex + 1)
+            } else if formatter.tokens[weakIndex - 1].isSpace {
+                formatter.removeToken(at: weakIndex - 1)
+            }
+            formatter.removeToken(at: weakIndex)
         }
     }
 

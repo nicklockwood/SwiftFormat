@@ -381,15 +381,4 @@ public class Formatter: NSObject {
         }
         return 0 // Inserted 0 tokens
     }
-
-    /// Returns whether the range contains a linebreak
-    public func hasLinebreakBetween(start: Int, end: Int) -> Bool {
-        guard start < tokens.count && end < tokens.count else { return false }
-        for i in start + 1 ..< end {
-            if tokens[i].isLinebreak {
-                return true
-            }
-        }
-        return false
-    }
 }

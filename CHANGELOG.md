@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.35.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.6) (2018-09-29)
+
+- Fixed bug where `self` could be incorrectly removed inside `#if` blocks
+- Fixed some bugs when inserting or removing `self` inside `didSet` handlers
+- The `strongOutlets` rule now ignores properties named `delegate` or `dataSource`
+- The `wrapCollections` rule now behaves more consistently with nested collection literals
+- Added "Open Recent" menu item to the SwiftFormat for Xcode app
+
 ## [0.35.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.5) (2018-09-08)
 
 - Fixed a bug in `redundantParens` rule that affected closure types that take a single tuple argument

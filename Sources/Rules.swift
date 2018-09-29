@@ -2162,9 +2162,7 @@ extension FormatRules {
                                 localNames.insert(nameToken.unescaped())
                             }
                         }
-                    case .startOfScope("("), .endOfScope(")"):
-                        break
-                    case .startOfScope(":"):
+                    case .startOfScope("("), .startOfScope("#if"), .startOfScope(":"):
                         break
                     case .startOfScope:
                         classOrStatic = false

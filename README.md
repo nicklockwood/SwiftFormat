@@ -1105,7 +1105,7 @@ The config file format is designed to be human editable. You may include blank l
 --indent tabs # tabs FTW!
 
 # file options
--- exclude Pods
+--exclude Pods
 
 # rules
 --disable elseOnSameLine,semicolons

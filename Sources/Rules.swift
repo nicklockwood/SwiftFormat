@@ -2356,6 +2356,7 @@ extension FormatRules {
                         fallthrough
                     }
                     var prevIndex = index - 1
+                    var name: String?
                     while let token = formatter.token(at: prevIndex), token != .keyword("var") {
                         if token.isLvalue, let nextToken = formatter.nextToken(after: prevIndex, where: {
                             !$0.isSpaceOrCommentOrLinebreak && !$0.isStartOfScope
@@ -2363,9 +2364,16 @@ extension FormatRules {
                             // It's a closure
                             fallthrough
                         }
+                        if case let .identifier(_name) = token {
+                            // Is the declared variable
+                            name = _name
+                        }
                         prevIndex -= 1
                     }
-                    processAccessors(["get", "set", "willSet", "didSet"], at: &index, localNames: localNames, members: members)
+                    if let name = name {
+                        processAccessors(["get", "set", "willSet", "didSet"], for: name,
+                                         at: &index, localNames: localNames, members: members)
+                    }
                     continue
                 case .startOfScope:
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
@@ -2422,21 +2430,29 @@ extension FormatRules {
                 index += 1
             }
         }
-        func processAccessors(_ names: [String], at index: inout Int, localNames: Set<String>, members: Set<String>) {
+        func processAccessors(
+            _ names: [String], for name: String, at index: inout Int,
+            localNames: Set<String>, members: Set<String>
+        ) {
             var foundAccessors = false
+            var localNames = localNames
             while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
                 if case let .identifier(name) = $0, names.contains(name) { return true } else { return false }
             }), let startIndex = formatter.index(of: .startOfScope("{"), after: nextIndex) {
                 foundAccessors = true
                 index = startIndex + 1
-                var localNames = localNames
                 if let parenStart = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex, if: {
                     $0 == .startOfScope("(")
                 }), let varToken = formatter.next(.identifier, after: parenStart) {
                     localNames.insert(varToken.unescaped())
                 } else {
                     switch formatter.tokens[nextIndex].string {
-                    case "set", "willSet":
+                    case "get":
+                        localNames.insert(name)
+                    case "set":
+                        localNames.insert(name)
+                        localNames.insert("newValue")
+                    case "willSet":
                         localNames.insert("newValue")
                     case "didSet":
                         localNames.insert("oldValue")
@@ -2451,6 +2467,7 @@ extension FormatRules {
                 index = endIndex + 1
             } else {
                 index += 1
+                localNames.insert(name)
                 processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
             }
         }
@@ -2498,7 +2515,7 @@ extension FormatRules {
             }
             if isSubscript {
                 index = bodyStartIndex
-                processAccessors(["get", "set"], at: &index, localNames: localNames, members: members)
+                processAccessors(["get", "set"], for: "", at: &index, localNames: localNames, members: members)
             } else {
                 index = bodyStartIndex + 1
                 processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)

@@ -963,6 +963,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testSpaceAroundPlusBeforeHash() {
+        let input = "\"foo.\"+#file"
+        let output = "\"foo.\" + #file"
+        XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: spaceAroundComments
 
     func testSpaceAroundCommentInParens() {

@@ -412,6 +412,8 @@ public enum Token: Equatable {
              .endOfScope("}"), .endOfScope(">"),
              .endOfScope("\""), .endOfScope("\"\"\""):
             return true
+        case let .keyword(name) where name.hasPrefix("#"):
+            return true
         default:
             return false
         }
@@ -426,6 +428,8 @@ public enum Token: Equatable {
         case .identifier, .number, .operator,
              .startOfScope("("), .startOfScope("["), .startOfScope("{"),
              .startOfScope("\""), .startOfScope("\"\"\""):
+            return true
+        case let .keyword(name) where name.hasPrefix("#"):
             return true
         default:
             return false

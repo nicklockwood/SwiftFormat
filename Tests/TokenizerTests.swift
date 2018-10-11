@@ -2837,6 +2837,37 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testGenericEnumCase() {
+        let input = "enum Foo<T>: Bar where T: Bar { case bar }"
+        let output: [Token] = [
+            .keyword("enum"),
+            .space(" "),
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .identifier("T"),
+            .endOfScope(">"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("Bar"),
+            .space(" "),
+            .keyword("where"),
+            .space(" "),
+            .identifier("T"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("Bar"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .keyword("case"),
+            .space(" "),
+            .identifier("bar"),
+            .space(" "),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: dot prefix
 
     func testEnumValueInDictionaryLiteral() {

@@ -1464,9 +1464,15 @@ public func tokenize(_ source: String) -> [Token] {
                         processToken()
                         return
                     case "case":
-                        if let keywordIndex = index(of: .keyword, before: scopeIndex),
-                            case .keyword("enum") = tokens[keywordIndex] {
-                            break
+                        if let keywordIndex = index(of: .keyword, before: scopeIndex) {
+                            var keyword = tokens[keywordIndex]
+                            if case .keyword("where") = keyword,
+                                let keywordIndex = index(of: .keyword, before: keywordIndex) {
+                                keyword = tokens[keywordIndex]
+                            }
+                            if case .keyword("enum") = keyword {
+                                break
+                            }
                         }
                         if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1) {
                             switch tokens[prevIndex] {

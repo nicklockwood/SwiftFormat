@@ -17,7 +17,7 @@
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.35.6</string>
+	<string>0.35.7</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>
@@ -27,7 +27,7 @@
 	<key>DTCompiler</key>
 	<string>com.apple.compilers.llvm.clang.1_0</string>
 	<key>DTPlatformBuild</key>
-	<string>10A254a</string>
+	<string>10A255</string>
 	<key>DTPlatformVersion</key>
 	<string>GM</string>
 	<key>DTSDKBuild</key>
@@ -37,7 +37,7 @@
 	<key>DTXcode</key>
 	<string>1000</string>
 	<key>DTXcodeBuild</key>
-	<string>10A254a</string>
+	<string>10A255</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.11</string>
 	<key>NSExtension</key>

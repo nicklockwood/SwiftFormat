@@ -5165,14 +5165,6 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
-    class Bar {
-        var foo: Bool = false {
-            didSet {
-                foo = !foo
-            }
-        }
-    }
-
     func testSelfRemovedInDidSet() {
         let input = """
         class Foo {

@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.35.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.7) (2018-10-11)
+
+- Fixed error when tokenizing an `enum` declaration with a `where` clause
+- Fixed bug with spacing around an infix operator used before the `#file` keyword
+- Fixed bug where `self` was incorrectly removed inside property getters/setters
+
 ## [0.35.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.6) (2018-09-29)
 
 - Fixed bug where `self` could be incorrectly removed inside `#if` blocks

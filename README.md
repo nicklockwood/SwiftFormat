@@ -1077,7 +1077,7 @@ Or for `--wrapcollections beforefirst`:
 ]
 ```
 
-***commasInsteadOfAmpersands*** - replaces `&&` operator to `,` in if and guard constructions.
+***commasInsteadOfAmpersands*** - `--commasinsteadofampersands` replaces `&&` operator to `,` in if and guard constructions.
 
 ```diff
 - if true && true {

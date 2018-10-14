@@ -3277,6 +3277,7 @@ extension FormatRules {
 
     /// Replace `&&` to `,` in if or guard closure
     @objc public class func commasInsteadOfAmpersands(_ formatter: Formatter) {
+        guard formatter.options.commasInsteadOfAmpersands else { return }
         guard let firstToken = formatter.tokens.first,
             case let Token.keyword(keyword) = firstToken,
             keyword == "if" || keyword == "guard"

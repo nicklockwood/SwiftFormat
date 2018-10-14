@@ -199,6 +199,7 @@ extension FormatOptions.Descriptor {
         stripUnusedArguments,
         elsePosition,
         removeSelf,
+        commasInsteadOfAmpersands,
 
         // Deprecated
         insertBlankLines,
@@ -449,6 +450,15 @@ extension FormatOptions.Descriptor {
         keyPath: \.removeSelf,
         trueValues: ["remove"],
         falseValues: ["insert"]
+    )
+
+    static let commasInsteadOfAmpersands = FormatOptions.Descriptor(
+        argumentName: "commasinsteadofampersands",
+        propertyName: "commasInsteadOfAmpersands",
+        displayName: "Commas Instead Of Ampersands",
+        keyPath: \.commasInsteadOfAmpersands,
+        trueValues: ["true", "enabled"],
+        falseValues: ["false", "disabled"]
     )
 
     // MARK: - Internal

@@ -7064,4 +7064,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
+
+    func testIfAmpersandReplacedWithFunction() {
+        let input = "if functionReturnsBool() && true {}"
+        let output = "if functionReturnsBool(), true {}"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testGuardAmpersandReplacedWithFunction() {
+        let input = "if functionReturnsBool() && variable\nelse { return }"
+        let output = "if functionReturnsBool(), variable\nelse { return }"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
 }

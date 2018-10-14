@@ -2069,8 +2069,9 @@ class RulesTests: XCTestCase {
     func testNestedWrappedIfIndents() {
         let input = "if foo {\nif bar &&\n(baz ||\nquux) {\nfoo()\n}\n}"
         let output = "if foo {\n    if bar &&\n        (baz ||\n            quux) {\n        foo()\n    }\n}"
+        let options = FormatOptions(commasInsteadOfAmpersands: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testWrappedEnumThatLooksLikeIf() {
@@ -3759,15 +3760,17 @@ class RulesTests: XCTestCase {
     func testParensNotRemovedBeforeIfBody2() {
         let input = "if try foo as Bar && baz() { /* some code */ }"
         let output = "if try foo as Bar && baz() { /* some code */ }"
+        let options = FormatOptions(commasInsteadOfAmpersands: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testParensNotRemovedBeforeIfBody3() {
         let input = "if #selector(foo(_:)) && bar() { /* some code */ }"
         let output = "if #selector(foo(_:)) && bar() { /* some code */ }"
+        let options = FormatOptions(commasInsteadOfAmpersands: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testParensNotRemovedBeforeIfBody4() {

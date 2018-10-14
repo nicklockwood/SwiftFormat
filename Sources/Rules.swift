@@ -3274,6 +3274,40 @@ extension FormatRules {
             }
         }
     }
+
+    /// Replace `&&` to `,` in if or guard closure
+    @objc public class func commasInsteadOfAmpersands(_ formatter: Formatter) {
+        guard let firstToken = formatter.tokens.first,
+            case let Token.keyword(keyword) = firstToken,
+            keyword == "if" || keyword == "guard"
+        else { return }
+
+        var previous = (0, firstToken)
+        var openCommansCounter = 0
+        formatter.forEachToken { index, token in
+            defer {
+                previous = (index, token)
+            }
+            if case let Token.startOfScope(value) = token, value == "(" {
+                openCommansCounter += 1
+                return
+            } else if case let Token.endOfScope(value) = token, value == ")" {
+                openCommansCounter -= 1
+                return
+            }
+            guard openCommansCounter == 0 else { return }
+            guard case let Token.operator(operatorString, _) = token,
+                operatorString == "&&"
+            else { return }
+
+            let newToken = Token.delimiter(",")
+            formatter.replaceToken(at: index, with: newToken)
+
+            if case Token.space = previous.1 {
+                formatter.removeToken(at: previous.0)
+            }
+        }
+    }
 }
 
 private extension FormatRules {

@@ -7014,4 +7014,54 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.emptyBraces], options: options), output)
         XCTAssertEqual(try format(input, rules: FormatRules.default, options: options), output)
     }
+
+    // MARK: replaceDoubleAmpersandWithComma
+
+    func testIfAmpersandReplacedBase() {
+        let input = "if true && true {}"
+        let output = "if true, true {}"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testGuardAmpersandReplacedBase() {
+        let input = "guard true && true\nelse { return }"
+        let output = "guard true, true\nelse { return }"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testIfAmpersandReplacedTripple() {
+        let input = "if true && true && true {}"
+        let output = "if true, true, true {}"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testGuardAmpersandReplacedTripple() {
+        let input = "guard true && true && true\nelse { return }"
+        let output = "guard true, true, true\nelse { return }"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testIfAmpersandReplacedBrackets() {
+        let input = "if true && (true && true) {}"
+        let output = "if true, (true && true) {}"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testGuardAmpersandReplacedBrackets() {
+        let input = "guard true && (true && true)\nelse { return }"
+        let output = "guard true, (true && true)\nelse { return }"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
 }

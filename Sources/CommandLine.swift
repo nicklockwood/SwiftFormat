@@ -151,6 +151,7 @@ func printHelp(as type: CLI.OutputType) {
     --trimwhitespace   trim trailing space. "always" (default) or "nonblank-lines"
     --wraparguments    wrap function args. "beforefirst", "afterfirst", "preserve"
     --wrapcollections  wrap array/dict. "beforefirst", "afterfirst", "preserve"
+    --commasinsteadofampersands replaces `&&` symbols to `,`
     """, as: type)
     print("")
 }

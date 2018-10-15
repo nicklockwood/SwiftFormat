@@ -7083,4 +7083,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
+
+    func testIfAmpersandReplacedWithOtherOperators() {
+        let input = "if foo || bar && baz {}"
+        let output = "if foo || bar, baz {}"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testGuardAmpersandReplacedWithOtherOperators() {
+        let input = "guard foo || bar && baz\nelse { return }"
+        let output = "guard foo || bar, baz\nelse { return }"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
 }

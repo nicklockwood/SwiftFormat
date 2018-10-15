@@ -3504,8 +3504,9 @@ class RulesTests: XCTestCase {
     func testOuterParensRemoved() {
         let input = "while ((x || y) && z) {}"
         let output = "while (x || y) && z {}"
+        let options = FormatOptions(commasInsteadOfAmpersands: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testOuterParensRemoved2() {
@@ -7036,6 +7037,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testWhileAmpersandReplacedBase() {
+        let input = "while true && true {}"
+        let output = "while true, true {}"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testIfAmpersandReplacedTripple() {
         let input = "if true && true && true {}"
         let output = "if true, true, true {}"
@@ -7047,6 +7056,14 @@ class RulesTests: XCTestCase {
     func testGuardAmpersandReplacedTripple() {
         let input = "guard true && true && true\nelse { return }"
         let output = "guard true, true, true\nelse { return }"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testWhileAmpersandReplacedTripple() {
+        let input = "while true && true && true {}"
+        let output = "while true, true, true {}"
 
         XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
@@ -7068,6 +7085,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testWhileAmpersandReplacedBrackets() {
+        let input = "while true && (true && true) {}"
+        let output = "while true, (true && true) {}"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testIfAmpersandReplacedWithFunction() {
         let input = "if functionReturnsBool() && true {}"
         let output = "if functionReturnsBool(), true {}"
@@ -7084,9 +7109,17 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testWhileAmpersandReplacedWithFunction() {
+        let input = "while functionReturnsBool() && true {}"
+        let output = "while functionReturnsBool(), true {}"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testIfAmpersandReplacedWithOtherOperators() {
         let input = "if foo || bar && baz {}"
-        let output = "if foo || bar, baz {}"
+        let output = "if foo || bar && baz {}"
 
         XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
@@ -7094,7 +7127,15 @@ class RulesTests: XCTestCase {
 
     func testGuardAmpersandReplacedWithOtherOperators() {
         let input = "guard foo || bar && baz\nelse { return }"
-        let output = "guard foo || bar, baz\nelse { return }"
+        let output = "guard foo || bar && baz\nelse { return }"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testWhileAmpersandReplacedWithOtherOperators() {
+        let input = "while foo || bar && baz {}"
+        let output = "while foo || bar && baz {}"
 
         XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
@@ -7103,6 +7144,22 @@ class RulesTests: XCTestCase {
     func testIfAmpersandReplacedInParentScope() {
         let input = "func someFunc() { if bar && baz {} }"
         let output = "func someFunc() { if bar, baz {} }"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testGuardAmpersandReplacedInParentScope() {
+        let input = "func someFunc() { guard bar && baz else { return } }"
+        let output = "func someFunc() { guard bar, baz else { return } }"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testWhileAmpersandReplacedInParentScope() {
+        let input = "func someFunc() { while bar && baz {} }"
+        let output = "func someFunc() { while bar, baz {} }"
 
         XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")

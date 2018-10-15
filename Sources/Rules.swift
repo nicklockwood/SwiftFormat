@@ -3277,12 +3277,14 @@ extension FormatRules {
 
     /// Replace `&&` to `,` in if or guard closure
     @objc public class func commasInsteadOfAmpersands(_ formatter: Formatter) {
+        let keywords = ["if", "guard", "while"]
+
         guard formatter.options.commasInsteadOfAmpersands else { return }
 
         var scopeStarted = false
         var openCommasCounter = 0
         formatter.forEachToken { index, token in
-            if case let Token.keyword(keyword) = token, keyword == "if" || keyword == "guard" {
+            if case let Token.keyword(keyword) = token, keywords.contains(keyword) {
                 scopeStarted = true
                 return
             }
@@ -3302,7 +3304,7 @@ extension FormatRules {
             }
 
             guard openCommasCounter == 0 else { return }
-            guard case Token.operator("&&", _) = token else { return }
+            guard case Token.operator("&&", .infix) = token else { return }
 
             formatter.replaceToken(at: index, with: .delimiter(","))
 

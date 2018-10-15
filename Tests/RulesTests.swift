@@ -7164,4 +7164,29 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
+
+    func testIfAmpersandCase() {
+        let input = "if case let a = foo && bar {}"
+        let output = "if case let a = foo && bar {}"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testWhileAmpersandCase() {
+        let input = "while case let a = foo && bar {}"
+        let output = "while case let a = foo && bar {}"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testGuardAmpersandCase() {
+        let input = "guard case let a = foo && bar else { return }"
+        let output = "guard case let a = foo && bar else { return }"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
 }

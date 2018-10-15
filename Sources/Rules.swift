@@ -3279,12 +3279,25 @@ extension FormatRules {
     @objc public class func commasInsteadOfAmpersands(_ formatter: Formatter) {
         let keywords = ["if", "guard", "while"]
 
+        func noOtherOperators(_ formatter: Formatter, startIndex: Int) -> Bool {
+            for token in formatter.tokens[startIndex...] {
+                if case Token.operator("||", .infix) = token { return false }
+                if case Token.keyword("case") = token { return false }
+
+                if case Token.startOfScope("{") = token { return true }
+            }
+
+            return false
+        }
+
         guard formatter.options.commasInsteadOfAmpersands else { return }
 
         var scopeStarted = false
         var openCommasCounter = 0
         formatter.forEachToken { index, token in
-            if case let Token.keyword(keyword) = token, keywords.contains(keyword) {
+            if case let Token.keyword(keyword) = token,
+                keywords.contains(keyword),
+                noOtherOperators(formatter, startIndex: index) {
                 scopeStarted = true
                 return
             }

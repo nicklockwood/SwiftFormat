@@ -3278,34 +3278,37 @@ extension FormatRules {
     /// Replace `&&` to `,` in if or guard closure
     @objc public class func commasInsteadOfAmpersands(_ formatter: Formatter) {
         guard formatter.options.commasInsteadOfAmpersands else { return }
-        guard let firstToken = formatter.tokens.first,
-            case let Token.keyword(keyword) = firstToken,
-            keyword == "if" || keyword == "guard"
-        else { return }
 
-        var previous = (0, firstToken)
-        var openCommansCounter = 0
+        var scopeStarted = false
+        var openCommasCounter = 0
         formatter.forEachToken { index, token in
-            defer {
-                previous = (index, token)
-            }
-            if case let Token.startOfScope(value) = token, value == "(" {
-                openCommansCounter += 1
-                return
-            } else if case let Token.endOfScope(value) = token, value == ")" {
-                openCommansCounter -= 1
+            if case let Token.keyword(keyword) = token, keyword == "if" || keyword == "guard" {
+                scopeStarted = true
                 return
             }
-            guard openCommansCounter == 0 else { return }
-            guard case let Token.operator(operatorString, _) = token,
-                operatorString == "&&"
-            else { return }
 
-            let newToken = Token.delimiter(",")
-            formatter.replaceToken(at: index, with: newToken)
+            guard scopeStarted else { return }
+            if case Token.startOfScope("{") = token {
+                scopeStarted = false
+                return
+            }
 
-            if case Token.space = previous.1 {
-                formatter.removeToken(at: previous.0)
+            if case Token.startOfScope("(") = token {
+                openCommasCounter += 1
+                return
+            } else if case Token.endOfScope(")") = token {
+                openCommasCounter -= 1
+                return
+            }
+
+            guard openCommasCounter == 0 else { return }
+            guard case Token.operator("&&", _) = token else { return }
+
+            formatter.replaceToken(at: index, with: .delimiter(","))
+
+            guard let previousToken = formatter.token(at: index - 1) else { return }
+            if case Token.space = previousToken {
+                formatter.removeToken(at: index - 1)
             }
         }
     }

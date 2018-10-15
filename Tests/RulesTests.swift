@@ -7099,4 +7099,12 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
+
+    func testIfAmpersandReplacedInParentScope() {
+        let input = "func someFunc() { if bar && baz {} }"
+        let output = "func someFunc() { if bar, baz {} }"
+
+        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
 }

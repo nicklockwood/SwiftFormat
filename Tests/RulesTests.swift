@@ -6859,6 +6859,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testTestableImportsWithGroup() {
+        let input = "@testable import Bar\nimport Foo\n@testable import UIKit"
+        let output = "import Foo\n@testable import Foo\n@testable import UIKit"
+        let options = FormatOptions(groupTestableImport: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     func testCaseInsensitiveSortedImports() {
         let input = "import Zlib\nimport lib"
         let output = "import lib\nimport Zlib"

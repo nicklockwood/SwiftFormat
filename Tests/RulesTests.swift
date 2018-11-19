@@ -6861,7 +6861,7 @@ class RulesTests: XCTestCase {
 
     func testTestableImportsWithGroup() {
         let input = "@testable import Bar\nimport Foo\n@testable import UIKit"
-        let output = "import Foo\n@testable import Foo\n@testable import UIKit"
+        let output = "import Foo\n@testable import Bar\n@testable import UIKit"
         let options = FormatOptions(groupTestableImport: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

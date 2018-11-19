@@ -199,6 +199,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var removeSelf: Bool
     public var experimentalRules: Bool
     public var fragment: Bool
+    public var groupTestableImport: Bool
 
     // Doesn't really belong here, but hard to put elsewhere
     public var ignoreConflictMarkers: Bool
@@ -237,7 +238,8 @@ public struct FormatOptions: CustomStringConvertible {
                 removeSelf: Bool = true,
                 experimentalRules: Bool = false,
                 fragment: Bool = false,
-                ignoreConflictMarkers: Bool = false) {
+                ignoreConflictMarkers: Bool = false,
+                groupTestableImport: Bool = false) {
         self.indent = indent
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons
@@ -271,6 +273,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.experimentalRules = experimentalRules
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers
+        self.groupTestableImport = groupTestableImport
     }
 
     public var allOptions: [String: Any] {

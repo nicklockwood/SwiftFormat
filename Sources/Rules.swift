@@ -3285,9 +3285,10 @@ private extension FormatRules {
     }()
 
     // Shared import rules implementation
-    static func parseImports(_ formatter: Formatter) -> [[(String, Range<Int>)]] {
-        var importStack = [[(String, Range<Int>)]]()
-        var importRanges = [(String, Range<Int>)]()
+    typealias ImportRange = (String, Range<Int>)
+    static func parseImports(_ formatter: Formatter) -> [[ImportRange]] {
+        var importStack = [[ImportRange]]()
+        var importRanges = [ImportRange]()
         formatter.forEach(.keyword("import")) { i, _ in
 
             func pushStack() {

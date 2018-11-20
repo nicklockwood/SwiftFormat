@@ -165,7 +165,7 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
 }
 
 /// Grouping for sorting imports
-public enum ImportGrouping: String, Equatable {
+public enum ImportGrouping: String {
     case alphabetically
     case testableTop
     case testableBottom

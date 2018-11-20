@@ -3210,11 +3210,34 @@ extension FormatRules {
 
     /// Sort import statements
     @objc public class func sortedImports(_ formatter: Formatter) {
+        func sortRanges(_ ranges: [ImportRange]) -> [ImportRange] {
+            guard formatter.options.groupTestableImport else {
+                return ranges.sorted { $0.0 < $1.0 }
+            }
+
+            // Place @testable imports at the bottom
+            let sorted = ranges.sorted {
+                let lhsTokens = Array(formatter.tokens[$0.1])
+                let rhsTokens = Array(formatter.tokens[$1.1])
+
+                let isLhsTestable = lhsTokens.contains { $0 == Token.keyword("@testable") }
+                let isRhsTestable = rhsTokens.contains { $0 == Token.keyword("@testable") }
+
+                if isLhsTestable == isRhsTestable {
+                    return $0.0 < $1.0
+                } else {
+                    return isRhsTestable
+                }
+            }
+
+            return sorted
+        }
+
         var importStack = parseImports(formatter)
         while let importRanges = importStack.popLast() {
             guard importRanges.count > 1 else { continue }
             let range: Range = importRanges.first!.1.lowerBound ..< importRanges.last!.1.upperBound
-            let sortedRanges = importRanges.sorted { $0.0 < $1.0 }
+            let sortedRanges = sortRanges(importRanges)
             var insertedLinebreak = false
             var sortedTokens = sortedRanges.flatMap { inputRange -> [Token] in
                 var tokens = Array(formatter.tokens[inputRange.1])

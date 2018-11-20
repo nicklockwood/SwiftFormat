@@ -3211,23 +3211,25 @@ extension FormatRules {
     /// Sort import statements
     @objc public class func sortedImports(_ formatter: Formatter) {
         func sortRanges(_ ranges: [ImportRange]) -> [ImportRange] {
-            guard formatter.options.groupTestableImport else {
+            if case .alphabetically = formatter.options.importGrouping {
                 return ranges.sorted { $0.0 < $1.0 }
             }
 
-            // Place @testable imports at the bottom
+            // Group @testable imports at the top or bottom
+            let testableToken = Token.keyword("@testable")
             let sorted = ranges.sorted {
                 let lhsTokens = Array(formatter.tokens[$0.1])
                 let rhsTokens = Array(formatter.tokens[$1.1])
 
-                let isLhsTestable = lhsTokens.contains { $0 == Token.keyword("@testable") }
-                let isRhsTestable = rhsTokens.contains { $0 == Token.keyword("@testable") }
+                let isLhsTestable = lhsTokens.contains { $0 == testableToken }
+                let isRhsTestable = rhsTokens.contains { $0 == testableToken }
 
-                if isLhsTestable == isRhsTestable {
+                // If both have a @testable keyword, or neither has one, just sort alphabetically
+                guard isLhsTestable != isRhsTestable else {
                     return $0.0 < $1.0
-                } else {
-                    return isRhsTestable
                 }
+
+                return formatter.options.importGrouping == .testableTop ? isLhsTestable : isRhsTestable
             }
 
             return sorted

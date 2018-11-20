@@ -199,6 +199,7 @@ extension FormatOptions.Descriptor {
         stripUnusedArguments,
         elsePosition,
         removeSelf,
+        importGrouping,
 
         // Deprecated
         insertBlankLines,
@@ -449,6 +450,14 @@ extension FormatOptions.Descriptor {
         keyPath: \.removeSelf,
         trueValues: ["remove"],
         falseValues: ["insert"]
+    )
+
+    static let importGrouping = FormatOptions.Descriptor(
+        argumentName: "importgrouping",
+        propertyName: "importGrouping",
+        displayName: "Import Grouping",
+        keyPath: \FormatOptions.importGrouping,
+        options: ["alphabetically", "testable-top", "testable-bottom"]
     )
 
     // MARK: - Internal

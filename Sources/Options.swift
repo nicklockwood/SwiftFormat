@@ -164,6 +164,13 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
     }
 }
 
+/// Grouping for sorting imports
+public enum ImportGrouping: String, Equatable {
+    case alphabetically
+    case testableTop
+    case testableBottom
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -199,7 +206,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var removeSelf: Bool
     public var experimentalRules: Bool
     public var fragment: Bool
-    public var groupTestableImport: Bool
+    public var importGrouping: ImportGrouping
 
     // Doesn't really belong here, but hard to put elsewhere
     public var ignoreConflictMarkers: Bool
@@ -239,7 +246,7 @@ public struct FormatOptions: CustomStringConvertible {
                 experimentalRules: Bool = false,
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
-                groupTestableImport: Bool = false) {
+                importGrouping: ImportGrouping = .alphabetically) {
         self.indent = indent
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons
@@ -273,7 +280,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.experimentalRules = experimentalRules
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers
-        self.groupTestableImport = groupTestableImport
+        self.importGrouping = importGrouping
     }
 
     public var allOptions: [String: Any] {

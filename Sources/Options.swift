@@ -166,7 +166,7 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
 
 /// Grouping for sorting imports
 public enum ImportGrouping: String {
-    case alphabetically
+    case alphabetized
     case testableTop
     case testableBottom
 }
@@ -246,7 +246,7 @@ public struct FormatOptions: CustomStringConvertible {
                 experimentalRules: Bool = false,
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
-                importGrouping: ImportGrouping = .alphabetically) {
+                importGrouping: ImportGrouping = .alphabetized) {
         self.indent = indent
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons

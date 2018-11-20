@@ -457,7 +457,7 @@ extension FormatOptions.Descriptor {
         propertyName: "importGrouping",
         displayName: "Import Grouping",
         keyPath: \FormatOptions.importGrouping,
-        options: ["alphabetically", "testable-top", "testable-bottom"]
+        options: ["alphabetized", "testable-top", "testable-bottom"]
     )
 
     // MARK: - Internal

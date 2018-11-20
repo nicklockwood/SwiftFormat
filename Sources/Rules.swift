@@ -3211,7 +3211,7 @@ extension FormatRules {
     /// Sort import statements
     @objc public class func sortedImports(_ formatter: Formatter) {
         func sortRanges(_ ranges: [ImportRange]) -> [ImportRange] {
-            if case .alphabetically = formatter.options.importGrouping {
+            if case .alphabetized = formatter.options.importGrouping {
                 return ranges.sorted { $0.0 < $1.0 }
             }
 

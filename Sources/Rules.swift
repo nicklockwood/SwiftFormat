@@ -3210,11 +3210,36 @@ extension FormatRules {
 
     /// Sort import statements
     @objc public class func sortedImports(_ formatter: Formatter) {
+        func sortRanges(_ ranges: [ImportRange]) -> [ImportRange] {
+            if case .alphabetized = formatter.options.importGrouping {
+                return ranges.sorted { $0.0 < $1.0 }
+            }
+
+            // Group @testable imports at the top or bottom
+            let testableToken = Token.keyword("@testable")
+            let sorted = ranges.sorted {
+                let lhsTokens = Array(formatter.tokens[$0.1])
+                let rhsTokens = Array(formatter.tokens[$1.1])
+
+                let isLhsTestable = lhsTokens.contains { $0 == testableToken }
+                let isRhsTestable = rhsTokens.contains { $0 == testableToken }
+
+                // If both have a @testable keyword, or neither has one, just sort alphabetically
+                guard isLhsTestable != isRhsTestable else {
+                    return $0.0 < $1.0
+                }
+
+                return formatter.options.importGrouping == .testableTop ? isLhsTestable : isRhsTestable
+            }
+
+            return sorted
+        }
+
         var importStack = parseImports(formatter)
         while let importRanges = importStack.popLast() {
             guard importRanges.count > 1 else { continue }
             let range: Range = importRanges.first!.1.lowerBound ..< importRanges.last!.1.upperBound
-            let sortedRanges = importRanges.sorted { $0.0 < $1.0 }
+            let sortedRanges = sortRanges(importRanges)
             var insertedLinebreak = false
             var sortedTokens = sortedRanges.flatMap { inputRange -> [Token] in
                 var tokens = Array(formatter.tokens[inputRange.1])
@@ -3285,9 +3310,10 @@ private extension FormatRules {
     }()
 
     // Shared import rules implementation
-    static func parseImports(_ formatter: Formatter) -> [[(String, Range<Int>)]] {
-        var importStack = [[(String, Range<Int>)]]()
-        var importRanges = [(String, Range<Int>)]()
+    typealias ImportRange = (String, Range<Int>)
+    static func parseImports(_ formatter: Formatter) -> [[ImportRange]] {
+        var importStack = [[ImportRange]]()
+        var importRanges = [ImportRange]()
         formatter.forEach(.keyword("import")) { i, _ in
 
             func pushStack() {

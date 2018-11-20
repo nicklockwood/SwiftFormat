@@ -147,6 +147,7 @@ func printHelp(as type: CLI.OutputType) {
     --ranges           spacing for ranges. "spaced" (default) or "nospace"
     --semicolons       allow semicolons. "never" or "inline" (default)
     --self             use self for member variables. "remove" (default) or "insert"
+    --importgrouping   "testable-top", "testable-bottom" or "alphabetized" (default)
     --stripunusedargs  "closure-only", "unnamed-only" or "always" (default)
     --trimwhitespace   trim trailing space. "always" (default) or "nonblank-lines"
     --wraparguments    wrap function args. "beforefirst", "afterfirst", "preserve"

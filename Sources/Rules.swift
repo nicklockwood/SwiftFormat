@@ -986,7 +986,7 @@ extension FormatRules {
                     if token.isEndOfScope(scope) {
                         let indentCount = indentCounts.last! - 1
                         popScope()
-                        if lineIndex > scopeStartLineIndexes.last ?? -1 {
+                        if !token.isLinebreak, lineIndex > scopeStartLineIndexes.last ?? -1 {
                             // If indentCount > 0, drop back to previous indent level
                             if indentCount > 0 {
                                 indentStack.removeLast()

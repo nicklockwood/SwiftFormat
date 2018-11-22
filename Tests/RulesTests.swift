@@ -2359,6 +2359,34 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testIfEndifInsideEnumIndenting() {
+        let input = """
+        enum Foo {
+            case bar
+            #if x
+                case baz
+            #endif
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testIfEndifInsideEnumWithTrailingCommentIndenting() {
+        let input = """
+        enum Foo {
+            case bar
+            #if x
+                case baz
+            #endif // ends
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // indent #if/#else/#elseif/#endif (mode: noindent)
 
     func testIfEndifNoIndenting() {
@@ -2413,6 +2441,36 @@ class RulesTests: XCTestCase {
         let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbreak\ncase .baz: break\n}"
         let output = "switch foo {\n    case .bar:\n        #if x\n        bar()\n        #endif\n        break\n    case .baz: break\n}"
         let options = FormatOptions(indentCase: true, ifdefIndent: .noIndent)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testIfEndifInsideEnumNoIndenting() {
+        let input = """
+        enum Foo {
+            case bar
+            #if x
+            case baz
+            #endif
+        }
+        """
+        let output = input
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testIfEndifInsideEnumWithTrailingCommentNoIndenting() {
+        let input = """
+        enum Foo {
+            case bar
+            #if x
+            case baz
+            #endif // ends
+        }
+        """
+        let output = input
+        let options = FormatOptions(ifdefIndent: .noIndent)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -2486,6 +2544,36 @@ class RulesTests: XCTestCase {
     func testIfCaseEndifOutdenting() {
         let input = "switch foo {\ncase .bar: break\n#if x\ncase .baz: break\n#endif\n}"
         let output = "switch foo {\ncase .bar: break\n#if x\ncase .baz: break\n#endif\n}"
+        let options = FormatOptions(ifdefIndent: .outdent)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testIfEndifInsideEnumOutdenting() {
+        let input = """
+        enum Foo {
+            case bar
+        #if x
+            case baz
+        #endif
+        }
+        """
+        let output = input
+        let options = FormatOptions(ifdefIndent: .outdent)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testIfEndifInsideEnumWithTrailingCommentOutdenting() {
+        let input = """
+        enum Foo {
+            case bar
+        #if x
+            case baz
+        #endif // ends
+        }
+        """
+        let output = input
         let options = FormatOptions(ifdefIndent: .outdent)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

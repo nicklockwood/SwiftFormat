@@ -3328,51 +3328,58 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testVoidArgumentInParensConvertedToEmptyParens() {
+    func testVoidArgumentInParensNotConvertedToEmptyParens() {
         let input = "(Void) -> Void"
-        let output = "() -> Void"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testAnonymousVoidArgumentConvertedToEmptyParens() {
-        let input = "(_: Void) -> Void"
-        let output = "() -> Void"
+    func testAnonymousVoidArgumentNotConvertedToEmptyParens() {
+        let input = "{ (_: Void) -> Void in }"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testFuncWithAnonymousVoidArgumentNotStripped() {
+        let input = "func foo(_: Void) -> Void"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testFunctionThatReturnsAFunction() {
         let input = "(Void) -> Void -> ()"
-        let output = "() -> () -> Void"
+        let output = "(Void) -> () -> Void"
         XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testFunctionThatReturnsAFunctionThatThrows() {
         let input = "(Void) -> Void throws -> ()"
-        let output = "() -> () throws -> Void"
+        let output = "(Void) -> () throws -> Void"
         XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testChainOfFunctionsIsNotChanged() {
         let input = "() -> () -> () -> Void"
-        let output = "() -> () -> () -> Void"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testChainOfFunctionsWithThrowsIsNotChanged() {
         let input = "() -> () throws -> () throws -> Void"
-        let output = "() -> () throws -> () throws -> Void"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
     func testVoidThrowsIsNotMangled() {
         let input = "(Void) throws -> Void"
-        let output = "() throws -> Void"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -3391,9 +3398,9 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testAnonymousVoidClosureArgConvertedToEmptyParens() {
+    func testAnonymousVoidClosureNotChanged() {
         let input = "{ (_: Void) in }"
-        let output = "{ () in }"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"])), output + "\n")
     }
@@ -3409,7 +3416,7 @@ class RulesTests: XCTestCase {
 
     func testUseVoidOptionFalse() {
         let input = "(Void) -> Void"
-        let output = "() -> ()"
+        let output = "(()) -> ()"
         let options = FormatOptions(useVoid: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.void], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

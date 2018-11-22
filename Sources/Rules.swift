@@ -2976,12 +2976,12 @@ extension FormatRules {
                 if [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
                     return true
                 }
-                if nextToken == .keyword("in"),
-                    let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) {
-                    if prevToken == .operator("->", .infix) {
-                        return false
+                if nextToken == .keyword("in") {
+                    var index = index
+                    if formatter.tokens[index].isEndOfScope {
+                        index = formatter.index(of: .startOfScope, before: index) ?? index
                     }
-                    return prevToken == .startOfScope("{")
+                    return formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .startOfScope("{")
                 }
             }
             return false
@@ -3002,9 +3002,12 @@ extension FormatRules {
                 }
                 return token == .startOfScope("(")
             }() {
-                if isArgumentToken(at: i) {
-                    // Remove Void
-                    formatter.removeTokens(inRange: prevIndex + 1 ..< nextIndex)
+                if isArgumentToken(at: nextIndex) {
+                    if !formatter.options.useVoid {
+                        // Convert to parens
+                        formatter.replaceToken(at: i, with: .endOfScope(")"))
+                        formatter.insertToken(.startOfScope("("), at: i)
+                    }
                 } else if formatter.options.useVoid {
                     // Strip parens
                     formatter.removeTokens(inRange: i + 1 ... nextIndex)

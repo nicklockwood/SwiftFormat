@@ -206,6 +206,8 @@ extension FormatOptions.Descriptor {
         removeBlankLines,
 
         // Renamed
+        // NOTE: these must go after the non-deprecated versions
+        // to ensure OptionsStore loading works correctly
         hexLiterals,
         wrapElements,
     ]

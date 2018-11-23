@@ -259,11 +259,9 @@
 				01A0EAA91D5DB4CF00A0A8E3 /* Info.plist */,
 				01F3DF8B1DB9FD3F00454944 /* Options.swift */,
 				E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */,
-				E4962DDF203F3CD500A02013 /* OptionsStore.swift */,
 				01045A982119979400D2BE3D /* Arguments.swift */,
 				01045A90211988F100D2BE3D /* Inference.swift */,
 				01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */,
-				E4872128201E3DD50014845E /* RulesStore.swift */,
 				01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */,
 				01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */,
 				01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */,
@@ -295,6 +293,15 @@
 				01A0EACC1D5DB5F500A0A8E3 /* main.swift */,
 			);
 			path = CommandLineTool;
+			sourceTree = "<group>";
+		};
+		01D8980621A7F4B7005075E1 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				E4872128201E3DD50014845E /* RulesStore.swift */,
+				E4962DDF203F3CD500A02013 /* OptionsStore.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		9016DEFD1DA5042E008A4E36 /* Resources */ = {
@@ -348,6 +355,7 @@
 		90C4B6F01DA4B0BF009EB000 /* EditorExtension */ = {
 			isa = PBXGroup;
 			children = (
+				01D8980621A7F4B7005075E1 /* Shared */,
 				90C4B6CB1DA4B04A009EB000 /* Application */,
 				90C4B6E11DA4B059009EB000 /* Extension */,
 			);
@@ -661,7 +669,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cp ${BUILT_PRODUCTS_DIR}/swiftformat CommandLineTool/";
+			shellScript = "cp ${BUILT_PRODUCTS_DIR}/swiftformat CommandLineTool/\n";
 		};
 		01AC942B1DB5464F0008BDFF /* Copy App */ = {
 			isa = PBXShellScriptBuildPhase;

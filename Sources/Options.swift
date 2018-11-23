@@ -167,8 +167,8 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
 /// Grouping for sorting imports
 public enum ImportGrouping: String {
     case alphabetized
-    case testableTop
-    case testableBottom
+    case testableTop = "testable-top"
+    case testableBottom = "testable-bottom"
 }
 
 /// Configuration options for formatting. These aren't actually used by the

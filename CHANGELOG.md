@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.35.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.8) (2018-11-23)
+
+- Updated `void` rule to support changes introduced in Swift 4
+- Fixed a bug where `#endif` could be incorrectly indented if followed by a comment
+- Added `--importgrouping` option to group imports inside by `@testable`
+- Fixed a potential bug when loading options in the SwiftFormat for Xcode GUI
+
 ## [0.35.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.7) (2018-10-11)
 
 - Fixed error when tokenizing an `enum` declaration with a `where` clause

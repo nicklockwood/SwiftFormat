@@ -29,8 +29,8 @@
 //  SOFTWARE.
 //
 
-@testable import SwiftFormat
 import XCTest
+@testable import SwiftFormat
 
 class SwiftFormatTests: XCTestCase {
     // MARK: enumerateFiles
@@ -176,7 +176,7 @@ class SwiftFormatTests: XCTestCase {
     func testExpandWildcardPathWithExactName() {
         let path = "Tokenizer.swift"
         let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
+            .deletingLastPathComponent().deletingLastPathComponent()
         XCTAssertEqual(expandGlobs(path, in: directory.path).count, 1)
     }
 
@@ -184,7 +184,7 @@ class SwiftFormatTests: XCTestCase {
         let path = "Rule*.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(expandGlobs(path, in: directory.path).count, 2)
+        XCTAssertEqual(expandGlobs(path, in: directory.path).count, 1)
     }
 
     func testExpandPathWithSingleCharacterWildcardInMiddle() {
@@ -198,39 +198,39 @@ class SwiftFormatTests: XCTestCase {
         let path = "Options*"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(expandGlobs(path, in: directory.path).count, 3)
+        XCTAssertEqual(expandGlobs(path, in: directory.path).count, 2)
     }
 
     func testExpandPathWithDoubleWildcardAtEnd() {
         let path = "Options**"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(expandGlobs(path, in: directory.path).count, 3)
+        XCTAssertEqual(expandGlobs(path, in: directory.path).count, 2)
     }
 
     func testExpandPathWithCharacterClass() {
         let path = "Options[DS]*.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(expandGlobs(path, in: directory.path).count, 2)
+        XCTAssertEqual(expandGlobs(path, in: directory.path).count, 1)
     }
 
     func testExpandPathWithCharacterClassRange() {
         let path = "Options[E-T]*.swift"
         let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
+            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("EditorExtension/Shared")
         XCTAssertEqual(expandGlobs(path, in: directory.path).count, 1)
     }
 
     func testExpandPathWithPattern() {
-        let path = "Options{Descriptor,Store}*.swift"
+        let path = "Option{s,sDescriptor}.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
         XCTAssertEqual(expandGlobs(path, in: directory.path).count, 2)
     }
 
     func testExpandPathsWithPatterns() {
-        let path = "Options{Descriptor,Store}*.swift, SwiftFormat.{h,swift}"
+        let path = "Option{s,sDescriptor}.swift, SwiftFormat.{h,swift}"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
         XCTAssertEqual(expandGlobs(path, in: directory.path).count, 4)

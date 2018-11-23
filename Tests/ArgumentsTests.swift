@@ -29,8 +29,8 @@
 //  SOFTWARE.
 //
 
-@testable import SwiftFormat
 import XCTest
+@testable import SwiftFormat
 
 class ArgumentsTests: XCTestCase {
     // MARK: arg parser

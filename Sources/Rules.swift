@@ -3217,25 +3217,16 @@ extension FormatRules {
             if case .alphabetized = formatter.options.importGrouping {
                 return ranges.sorted { $0.0 < $1.0 }
             }
-
             // Group @testable imports at the top or bottom
-            let testableToken = Token.keyword("@testable")
-            let sorted = ranges.sorted {
-                let lhsTokens = Array(formatter.tokens[$0.1])
-                let rhsTokens = Array(formatter.tokens[$1.1])
-
-                let isLhsTestable = lhsTokens.contains { $0 == testableToken }
-                let isRhsTestable = rhsTokens.contains { $0 == testableToken }
-
+            return ranges.sorted {
+                let isLhsTestable = formatter.tokens[$0.1].contains(.keyword("@testable"))
+                let isRhsTestable = formatter.tokens[$1.1].contains(.keyword("@testable"))
                 // If both have a @testable keyword, or neither has one, just sort alphabetically
                 guard isLhsTestable != isRhsTestable else {
                     return $0.0 < $1.0
                 }
-
                 return formatter.options.importGrouping == .testableTop ? isLhsTestable : isRhsTestable
             }
-
-            return sorted
         }
 
         var importStack = parseImports(formatter)

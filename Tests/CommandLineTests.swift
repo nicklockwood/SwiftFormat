@@ -29,8 +29,8 @@
 //  SOFTWARE.
 //
 
-@testable import SwiftFormat
 import XCTest
+@testable import SwiftFormat
 
 private let projectDirectory = URL(fileURLWithPath: #file)
     .deletingLastPathComponent().deletingLastPathComponent()

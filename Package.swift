@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "SwiftFormat",
     products: [
-        .executable(name: "swiftFormat", targets: ["CommandLineTool"]),
+        .executable(name: "swiftformat", targets: ["CommandLineTool"]),
         .library(
             name: "SwiftFormat",
             targets: ["SwiftFormat"]

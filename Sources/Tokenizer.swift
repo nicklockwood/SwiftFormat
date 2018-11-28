@@ -1411,7 +1411,7 @@ public func tokenize(_ source: String) -> [Token] {
                 switch token {
                 case let .operator(string, _):
                     switch string {
-                    case ".", "==", "?", "!", "&":
+                    case ".", "==", "?", "!", "&", "->":
                         if scopeIndex == tokens.count - 2 {
                             // These are allowed in a generic, but not as the first character
                             fallthrough

@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.35.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.9) (2018-11-28)
+
+- Fixed incorrect formatting of generic arguments containing function types
+- Fixed inconsistent capitalization of the swiftformat executable in Package.swift
+
 ## [0.35.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.8) (2018-11-23)
 
 - Updated `void` rule to support changes introduced in Swift 4

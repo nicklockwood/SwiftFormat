@@ -1120,7 +1120,6 @@ extension FormatRules {
                         case .error:
                             break
                         case .endOfScope("case"), .endOfScope("default"):
-                            guard formatter.options.indentComments else { break }
                             formatter.insertSpace(indent, at: i + 1)
                             // TODO: is this the best place to do this?
                             var index = i

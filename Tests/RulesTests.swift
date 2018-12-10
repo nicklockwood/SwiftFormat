@@ -1796,6 +1796,21 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testIndentMultipleSingleLineSwitchCaseCommentsWithCommentsIgnoredCorrectly() {
+        let input = """
+        switch x {
+        // bar
+        case .y: return 1
+        // baz
+        case .z: return 2
+        }
+        """
+        let output = input
+        let options = FormatOptions(indentComments: false)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // indentCase = true
 
     func testSwitchCaseWithIndentCaseTrue() {
@@ -1826,6 +1841,21 @@ class RulesTests: XCTestCase {
         let input = "foo: while true {\n    break foo\n}"
         let output = "foo: while true {\n    break foo\n}"
         let options = FormatOptions(indentCase: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testIndentMultipleSingleLineSwitchCaseCommentsWithCommentsIgnoredCorrectlyWhenIndentCaseTrue() {
+        let input = """
+        switch x {
+            // bar
+            case .y: return 1
+            // baz
+            case .z: return 2
+        }
+        """
+        let output = input
+        let options = FormatOptions(indentCase: true, indentComments: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
@@ -2218,8 +2248,8 @@ class RulesTests: XCTestCase {
     }
 
     func testCommentIndentingDisabledInSwitch() {
-        let input = "func foo() {\n    switch bar {\n/** bar */\n    default: break\n    }\n}"
-        let output = "func foo() {\n    switch bar {\n/** bar */\n    default: break\n    }\n}"
+        let input = "func foo() {\n    switch bar {\n    /** bar */\n    default: break\n    }\n}"
+        let output = "func foo() {\n    switch bar {\n    /** bar */\n    default: break\n    }\n}"
         let options = FormatOptions(indentComments: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")

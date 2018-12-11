@@ -2912,7 +2912,9 @@ extension FormatRules {
             }
             removeLinebreakBeforeClosingBrace(at: &closingBraceIndex)
             // Insert linebreak after each comma
-            var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex)!
+            guard var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex) else {
+                return
+            }
             if formatter.tokens[index] != .delimiter(",") {
                 index += 1
             }

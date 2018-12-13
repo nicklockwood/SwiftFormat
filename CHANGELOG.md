@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.35.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.10) (2018-12-13)
+
+- Removed spurious --verbose argument warning
+- Non-swift files are no longer logged as skipped in --verbose mode
+- Fixed bug with comment indenting inside switch statements
+- Fixed crash in wrapArguments rule
+
 ## [0.35.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.9) (2018-11-28)
 
 - Fixed incorrect formatting of generic arguments containing function types

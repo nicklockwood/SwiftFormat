@@ -184,8 +184,6 @@ private func serializeOptions(_ options: Options, to outputURL: URL?) throws {
 func processArguments(_ args: [String], in directory: String) -> ExitCode {
     var errors = [Error]()
     var verbose = false
-    var dryrun = false
-    var lint = false
 
     quietMode = false
     defer {
@@ -193,28 +191,26 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         quietMode = false
     }
 
-    func printRunningMessage() {
-        print("running swiftformat...", as: .info)
-        if lint {
-            print("(lint mode - no files will be changed)", as: .info)
-        } else if dryrun {
-            print("(dryrun mode - no files will be changed)", as: .info)
-        }
-    }
-
     do {
         // Get arguments
         var args = try preprocessArguments(args, commandLineArguments)
+
+        // Quiet mode
+        quietMode = (args["quiet"] != nil)
+
+        // Verbose
+        verbose = (args["verbose"] != nil)
+
+        // Lint
+        let lint = (args["lint"] != nil)
+
+        // Dry run
+        let dryrun = lint || (args["dryrun"] != nil)
 
         // Input path(s)
         var inputURLs = [URL]()
         while let inputPath = args[String(inputURLs.count + 1)] {
             inputURLs += try parsePaths(inputPath, for: "input", in: directory)
-        }
-
-        // Quiet mode
-        if args["quiet"] != nil {
-            quietMode = true
         }
 
         // Warnings
@@ -313,25 +309,6 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             }
         }
 
-        // Verbose
-        if args["verbose"] != nil {
-            verbose = true
-            if outputURL == nil {
-                print("--verbose option has no effect unless an output file is specified", as: .warning)
-            }
-        }
-
-        // Dry run
-        if args["dryrun"] != nil {
-            dryrun = true
-        }
-
-        // Lint
-        if args["lint"] != nil {
-            dryrun = true
-            lint = true
-        }
-
         // Infer options
         if args["inferoptions"] != nil {
             guard args["config"] == nil else {
@@ -413,6 +390,15 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             }
         } else {
             setDefaultCacheURL()
+        }
+
+        func printRunningMessage() {
+            print("running swiftformat...", as: .info)
+            if lint {
+                print("(lint mode - no files will be changed)", as: .info)
+            } else if dryrun {
+                print("(dryrun mode - no files will be changed)", as: .info)
+            }
         }
 
         // If no input file, try stdin

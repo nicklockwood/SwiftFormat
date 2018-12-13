@@ -196,9 +196,9 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
     func printRunningMessage() {
         print("running swiftformat...", as: .info)
         if lint {
-            print("(lint mode - no files will be changed)", as: .warning)
+            print("(lint mode - no files will be changed)", as: .info)
         } else if dryrun {
-            print("(dryrun mode - no files will be changed)", as: .warning)
+            print("(dryrun mode - no files will be changed)", as: .info)
         }
     }
 

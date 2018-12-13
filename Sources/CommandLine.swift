@@ -596,7 +596,7 @@ func processInput(_ inputURLs: [URL],
     // Logging skipped files
     let skippedHandler: FileEnumerationHandler? = verbose ? { inputURL, _, _ in
         print("skipping \(inputURL.path)", as: .info)
-        print("-- ignored", as: .success)
+        print("-- ignored", as: .warning)
         return {}
     } : nil
     // Format files

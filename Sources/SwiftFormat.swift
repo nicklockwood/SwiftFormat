@@ -354,11 +354,16 @@ func expandGlobs(_ paths: String, in directory: String) -> [URL] {
         tokens[token] = "(\(options.joined(separator: "|")))"
         paths.replaceSubrange(range, with: token)
     }
-    return parseCommaDelimitedList(paths).flatMap { path -> [URL] in
+    var urls = [URL]()
+    var regexesMatchDirectories = false
+    let regexes = parseCommaDelimitedList(paths).map { path -> String in
+        if !regexesMatchDirectories, path.contains("/") {
+            regexesMatchDirectories = true
+        }
         let url = expandPath(path, in: directory)
         if FileManager.default.fileExists(atPath: url.path) {
             // TODO: should we also handle cases where path includes tokens?
-            return [url]
+            urls.append(url)
         }
         var regex = "^\(url.path)$"
             .replacingOccurrences(of: "[.+(){\\\\|]", with: "\\\\$0", options: .regularExpression)
@@ -369,20 +374,29 @@ func expandGlobs(_ paths: String, in directory: String) -> [URL] {
         for (token, replacement) in tokens {
             regex = regex.replacingOccurrences(of: token, with: replacement)
         }
-        guard let enumerator = FileManager.default.enumerator(
-            at: URL(fileURLWithPath: directory), includingPropertiesForKeys: nil
+        return regex
+    }
+    let keys: [URLResourceKey] = [.isDirectoryKey]
+    let manager = FileManager.default
+    func enumerate(_ directory: URL) {
+        guard let files = try? manager.contentsOfDirectory(
+            at: directory, includingPropertiesForKeys: keys, options: []
         ) else {
-            return []
+            return
         }
-        return enumerator.compactMap { url -> URL? in
-            let url = url as! URL
+        for url in files {
             let path = url.path
-            guard path.range(of: regex, options: .regularExpression) != nil else {
-                return nil
+            if regexes.contains(where: { path.range(of: $0, options: .regularExpression) != nil }) {
+                urls.append(url)
+            } else if regexesMatchDirectories,
+                let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey]),
+                resourceValues.isDirectory == true {
+                enumerate(url)
             }
-            return url
         }
     }
+    enumerate(URL(fileURLWithPath: directory))
+    return urls
 }
 
 // MARK: Xcode 9.2 compatibility

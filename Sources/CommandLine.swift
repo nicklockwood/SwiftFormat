@@ -390,7 +390,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                     throw FormatError.options("unsupported --cache value `\(cache)`")
                 }
                 var isDirectory: ObjCBool = false
-                if manager.fileExists(atPath: cacheURL!.path, isDirectory: &isDirectory) && isDirectory.boolValue {
+                if manager.fileExists(atPath: cacheURL!.path, isDirectory: &isDirectory), isDirectory.boolValue {
                     cacheURL = cacheURL!.appendingPathComponent(defaultCacheFileName)
                 }
             }
@@ -454,7 +454,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             while start.timeIntervalSinceNow > -0.01 {}
             // If no input received by now, assume none is coming
             if input != nil {
-                while !finished && start.timeIntervalSinceNow > -30 {}
+                while !finished, start.timeIntervalSinceNow > -30 {}
                 if let fatalError = fatalError {
                     throw fatalError
                 }
@@ -490,7 +490,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 }
                 let inputPaths = inputURLs.map({ $0.path }).joined(separator: ", ")
                 throw FormatError.options("no eligible files found at \(inputPaths)")
-            } else if !dryrun && !errors.isEmpty {
+            } else if !dryrun, !errors.isEmpty {
                 throw FormatError.options("failed to format any files")
             }
         }
@@ -500,7 +500,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         printWarnings(errors)
         if dryrun {
             let result = "swiftformat completed. \(filesFailed)/\(filesChecked) files would have been updated in \(time)"
-            if lint && filesFailed > 0 {
+            if lint, filesFailed > 0 {
                 print(result, as: .error)
                 return .lintFailure
             } else {

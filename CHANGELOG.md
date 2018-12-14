@@ -1,9 +1,19 @@
 # Change Log
 
+## [0.36.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.36.0) (2018-12-15)
+
+- Fixed `--exclude` globs matching path prefix instead of whole path (this may break exclude paths that relied on the bug)
+- Added new `andOperator` rule for replacing `&&` with `,` in `if`, `while` and `guard` statements
+- Added `init-only` option for the `--self` argument, to enable explicit `self` only inside initializers
+- Significantly improved performance when using complex `--exclude` rules
+- Fixed infinite loop bug in `redundantSelf` rule relating to properties named "type"
+- Fixed caching mechanism which was broken by an earlier Swift update
+- Fixed spurious error message when `--exclude` option matched no files
+
 ## [0.35.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.10) (2018-12-13)
 
-- Removed spurious --verbose argument warning
-- Non-swift files are no longer logged as skipped in --verbose mode
+- Removed spurious `--verbose` argument warning
+- Non-swift files are no longer logged as skipped in `--verbose` mode
 - Fixed bug with comment indenting inside switch statements
 - Fixed crash in wrapArguments rule
 

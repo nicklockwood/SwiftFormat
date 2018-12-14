@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.35.10
+//  Version 0.36.0
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -1281,8 +1281,8 @@ public func tokenize(_ source: String) -> [Token] {
                 type = prevToken.isLvalue ? .infix : .prefix
             } else if prevToken.isLvalue {
                 type = .postfix
-            } else if prevToken.isSpaceOrCommentOrLinebreak && prevNonSpaceToken.isLvalue &&
-                nextToken.isSpaceOrCommentOrLinebreak && nextNonSpaceToken.isRvalue {
+            } else if prevToken.isSpaceOrCommentOrLinebreak, prevNonSpaceToken.isLvalue,
+                nextToken.isSpaceOrCommentOrLinebreak, nextNonSpaceToken.isRvalue {
                 type = .infix
             } else {
                 // TODO: should we add an `identifier` type?
@@ -1334,7 +1334,7 @@ public func tokenize(_ source: String) -> [Token] {
         case .operator:
             stitchOperators(at: tokens.count - 1)
         case .startOfScope("<"):
-            if tokens.count >= 2 && tokens[tokens.count - 2].isOperator,
+            if tokens.count >= 2, tokens[tokens.count - 2].isOperator,
                 let index = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 2),
                 ![.keyword("func"), .keyword("init")].contains(tokens[index]) {
                 tokens[tokens.count - 1] = .operator("<", .none)

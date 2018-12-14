@@ -738,16 +738,32 @@ var foo: Int? = 0
 ***redundantSelf*** - removes or inserts `self` prefix from class and instance member references, depending on the `--self` option:
 
 ```diff
-  init(foo: Int, bar: Int) {
+  func foobar(foo: Int, bar: Int) {
     self.foo = foo
     self.bar = bar
 -   self.baz = 42
   }
 
-  init(foo: Int, bar: Int) {
+  func foobar(foo: Int, bar: Int) {
     self.foo = foo
     self.bar = bar
 +   baz = 42
+  }  
+```
+
+There is also an option to always use explicit `self` but *only* inside `init`, by using `--self init-only`:
+
+```diff
+  init(foo: Int, bar: Int) {
+    self.foo = foo
+    self.bar = bar
+-   baz = 42
+  }
+
+  init(foo: Int, bar: Int) {
+    self.foo = foo
+    self.bar = bar
++   self.baz = 42
   }  
 ```
     
@@ -1077,7 +1093,7 @@ Or for `--wrapcollections beforefirst`:
 ]
 ```
 
-***andOperator*** - replaces the `&&` operator with `,` inside `if` and `guard` conditions:
+***andOperator*** - replaces the `&&` operator with `,` inside `if`, `guard` and `while` conditions:
 
 ```diff
 - if true && true {

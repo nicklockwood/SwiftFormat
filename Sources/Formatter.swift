@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.35.10
+//  Version 0.36.0
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -108,7 +108,7 @@ public class Formatter: NSObject {
 
     /// Returns the token at the specified index, or nil if index is invalid
     public func token(at index: Int) -> Token? {
-        guard index >= 0 && index < tokens.count else { return nil }
+        guard index >= 0, index < tokens.count else { return nil }
         return tokens[index]
     }
 
@@ -242,7 +242,7 @@ public class Formatter: NSObject {
                 if case .linebreak = token, scopeStack.count == 0, matches(token) {
                     return i
                 }
-            } else if scopeStack.count == 0 && matches(token) {
+            } else if scopeStack.count == 0, matches(token) {
                 return i
             } else if token.isEndOfScope {
                 return nil
@@ -292,7 +292,7 @@ public class Formatter: NSObject {
                 } else {
                     return nil
                 }
-            } else if scopeStack.count == 0 && matches(token) {
+            } else if scopeStack.count == 0, matches(token) {
                 return i
             } else if case .linebreak = token {
                 linebreakEncountered = true

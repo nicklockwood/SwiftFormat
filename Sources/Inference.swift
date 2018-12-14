@@ -115,7 +115,7 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
         formatter.forEachToken { i, token in
             if token.isRangeOperator {
                 if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
-                    if nextToken.string != ")" && nextToken.string != "," {
+                    if nextToken.string != ")", nextToken.string != "," {
                         if formatter.token(at: i + 1)?.isSpaceOrLinebreak == true {
                             spaced += 1
                         } else {
@@ -185,7 +185,7 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 if token.string == "*/" {
                     if nestedComments > 0 {
                         if lastTokenWasLinebreak {
-                            if prevIndent != nil && prevIndent! >= 2 {
+                            if prevIndent != nil, prevIndent! >= 2 {
                                 shouldIndent = false
                                 break
                             }
@@ -200,7 +200,7 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
             case .space:
                 if lastTokenWasLinebreak, nestedComments > 0 {
                     let indent = token.string.count
-                    if prevIndent != nil && abs(prevIndent! - indent) >= 2 {
+                    if prevIndent != nil, abs(prevIndent! - indent) >= 2 {
                         shouldIndent = false
                         break
                     }
@@ -208,7 +208,7 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 }
             case .commentBody:
                 if lastTokenWasLinebreak, nestedComments > 0 {
-                    if prevIndent != nil && prevIndent! >= 2 {
+                    if prevIndent != nil, prevIndent! >= 2 {
                         shouldIndent = false
                         break
                     }

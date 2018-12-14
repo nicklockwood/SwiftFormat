@@ -247,7 +247,7 @@ public struct FormatOptions: CustomStringConvertible {
                 experimentalRules: Bool = false,
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
-                commasInsteadOfAmpersands: Bool = true) {
+                commasInsteadOfAmpersands: Bool = true,
                 importGrouping: ImportGrouping = .alphabetized) {
         self.indent = indent
         self.linebreak = linebreak

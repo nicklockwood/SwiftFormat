@@ -467,7 +467,7 @@ class InferenceTests: XCTestCase {
         }
         """
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertFalse(options.removeSelf)
+        XCTAssertEqual(options.explicitSelf, .insert)
     }
 
     func testInferRemoveSelf() {
@@ -482,7 +482,7 @@ class InferenceTests: XCTestCase {
         }
         """
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertTrue(options.removeSelf)
+        XCTAssertEqual(options.explicitSelf, .remove)
     }
 
     func testInferRemoveSelf2() {
@@ -497,7 +497,7 @@ class InferenceTests: XCTestCase {
         }
         """
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertTrue(options.removeSelf)
+        XCTAssertEqual(options.explicitSelf, .remove)
     }
 
     // MARK: spaceAroundOperatorDeclarations

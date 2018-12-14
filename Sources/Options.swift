@@ -171,6 +171,13 @@ public enum ImportGrouping: String {
     case testableBottom = "testable-bottom"
 }
 
+/// Self insertion mode
+public enum SelfMode: String {
+    case insert
+    case remove
+    case initOnly = "init-only"
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -203,7 +210,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var hoistPatternLet: Bool
     public var stripUnusedArguments: ArgumentStrippingMode
     public var elseOnNextLine: Bool
-    public var removeSelf: Bool
+    public var explicitSelf: SelfMode
     public var experimentalRules: Bool
     public var fragment: Bool
     public var importGrouping: ImportGrouping
@@ -242,7 +249,7 @@ public struct FormatOptions: CustomStringConvertible {
                 hoistPatternLet: Bool = true,
                 stripUnusedArguments: ArgumentStrippingMode = .all,
                 elseOnNextLine: Bool = false,
-                removeSelf: Bool = true,
+                explicitSelf: SelfMode = .remove,
                 experimentalRules: Bool = false,
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -276,7 +283,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.hoistPatternLet = hoistPatternLet
         self.stripUnusedArguments = stripUnusedArguments
         self.elseOnNextLine = elseOnNextLine
-        self.removeSelf = removeSelf
+        self.explicitSelf = explicitSelf
         self.experimentalRules = experimentalRules
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

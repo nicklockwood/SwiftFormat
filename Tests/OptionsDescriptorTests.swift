@@ -376,16 +376,17 @@ class OptionsDescriptorTests: XCTestCase {
         validateDescriptorThrowsOptionsError(descriptor)
     }
 
-    func testRemoveSelf() {
-        let descriptor = FormatOptions.Descriptor.removeSelf
-        let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
-            (optionValue: true, argumentValue: "remove"),
-            (optionValue: false, argumentValue: "insert"),
+    func testExplicitSelf() {
+        let descriptor = FormatOptions.Descriptor.explicitSelf
+        let expectedMapping: [OptionArgumentMapping<SelfMode>] = [
+            (optionValue: .remove, argumentValue: "remove"),
+            (optionValue: .insert, argumentValue: "insert"),
+            (optionValue: .initOnly, argumentValue: "init-only"),
         ]
-        validateDescriptor(descriptor, displayName: "Self", argumentName: "self", propertyName: "removeSelf")
-        validateArgumentsBinaryType(descriptor, controlTrue: ["remove"], controlFalse: ["insert"])
-        validateFromOptions(descriptor, keyPath: \FormatOptions.removeSelf, expectations: fromOptionsExpectation)
-        validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.removeSelf)
+        validateDescriptor(descriptor, displayName: "Self", argumentName: "self", propertyName: "explicitSelf")
+        validateArgumentsListType(descriptor, validArguments: ["remove", "insert", "init-only"])
+        validateFromOptions(descriptor, keyPath: \FormatOptions.explicitSelf, expectations: expectedMapping)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.explicitSelf, expectations: expectedMapping)
         validateDescriptorThrowsOptionsError(descriptor)
     }
 

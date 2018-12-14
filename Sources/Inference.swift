@@ -729,7 +729,8 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
         }
     }()
 
-    options.removeSelf = {
+    // TODO: handle init-only case
+    options.explicitSelf = {
         var removed = 0, unremoved = 0
 
         var typeStack = [String]()
@@ -1166,7 +1167,7 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
         }
         var index = 0
         processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false)
-        return removed >= unremoved // if both zero or equal, should be true
+        return removed >= unremoved ? .remove : .insert // if both zero or equal, should be true
     }()
 
     options.spaceAroundOperatorDeclarations = {

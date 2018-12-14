@@ -2069,13 +2069,18 @@ extension FormatRules {
                 index += 1
             }
         }
-        func processBody(at index: inout Int, localNames: Set<String>, members: Set<String>, isTypeRoot: Bool) {
+        let explicitSelf = formatter.options.explicitSelf
+        func processBody(at index: inout Int,
+                         localNames: Set<String>,
+                         members: Set<String>,
+                         isTypeRoot: Bool,
+                         isInit: Bool) {
             let currentScope = formatter.currentScope(at: index)
             let isWhereClause = index > 0 && formatter.tokens[index - 1] == .keyword("where")
             assert(isWhereClause || currentScope.map { token -> Bool in
                 [.startOfScope("{"), .startOfScope(":")].contains(token)
             } ?? true)
-            if formatter.options.removeSelf {
+            if explicitSelf == .remove {
                 // Check if scope actually includes self before we waste a bunch of time
                 var scopeCount = 0
                 loop: for i in index ..< formatter.tokens.count {
@@ -2100,7 +2105,7 @@ extension FormatRules {
             var members = type.flatMap { membersByType[$0] } ?? members
             var classMembers = type.flatMap { classMembersByType[$0] } ?? Set<String>()
             var localNames = localNames
-            if !isTypeRoot || !formatter.options.removeSelf {
+            if !isTypeRoot || explicitSelf != .remove {
                 var i = index
                 var classOrStatic = false
                 outer: while let token = formatter.token(at: i) {
@@ -2218,7 +2223,7 @@ extension FormatRules {
                     }
                     index = scopeStart + 1
                     typeStack.append(name)
-                    processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: true)
+                    processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: true, isInit: false)
                     typeStack.removeLast()
                 case .keyword("var"), .keyword("let"):
                     index += 1
@@ -2246,7 +2251,7 @@ extension FormatRules {
                             return // error
                         }
                         index = startIndex + 1
-                        processBody(at: &index, localNames: scopedNames, members: members, isTypeRoot: false)
+                        processBody(at: &index, localNames: scopedNames, members: members, isTypeRoot: false, isInit: isInit)
                         lastKeyword = ""
                     default:
                         lastKeyword = token.string
@@ -2265,7 +2270,7 @@ extension FormatRules {
                         }
                     }
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
                     continue
                 case .keyword("while") where lastKeyword == "repeat":
                     lastKeyword = ""
@@ -2296,7 +2301,7 @@ extension FormatRules {
                     var localNames = localNames
                     localNames.insert("error") // Implicit error argument
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where lastKeyword == "in":
                     lastKeyword = ""
@@ -2313,10 +2318,10 @@ extension FormatRules {
                     index += 1
                     if classOrStatic {
                         assert(isTypeRoot)
-                        processBody(at: &index, localNames: localNames, members: classMembers, isTypeRoot: false)
+                        processBody(at: &index, localNames: localNames, members: classMembers, isTypeRoot: false, isInit: false)
                         classOrStatic = false
                     } else {
-                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
                     }
                     continue
                 case .startOfScope("{") where isWhereClause:
@@ -2332,7 +2337,7 @@ extension FormatRules {
                         switch token {
                         case .endOfScope("case"), .endOfScope("default"):
                             let localNames = localNames
-                            processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                            processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
                             index -= 1
                         case .endOfScope("}"):
                             break loop
@@ -2345,7 +2350,7 @@ extension FormatRules {
                     fallthrough
                 case .startOfScope("{") where lastKeyword == "repeat":
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
                     lastKeyword = ""
@@ -2377,7 +2382,7 @@ extension FormatRules {
                 case .startOfScope:
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .identifier("self") where !isTypeRoot:
-                    if formatter.isEnabled, formatter.options.removeSelf,
+                    if formatter.isEnabled, explicitSelf == .remove || (explicitSelf == .initOnly && !isInit),
                         formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
                         let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
                             $0 == .operator(".", .infix)
@@ -2396,7 +2401,9 @@ extension FormatRules {
                     }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: parenIndex) == .identifier("of") else {
                         fallthrough
                     }
-                case .identifier where formatter.isEnabled && !formatter.options.removeSelf && !isTypeRoot:
+                case .identifier where formatter.isEnabled && !isTypeRoot &&
+                    (explicitSelf == .insert || (explicitSelf == .initOnly && isInit &&
+                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix))):
                     let name = token.unescaped()
                     if members.contains(name), !localNames.contains(name), !["for", "var", "let"].contains(lastKeyword) {
                         if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
@@ -2459,7 +2466,7 @@ extension FormatRules {
                         break
                     }
                 }
-                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: false)
             }
             if foundAccessors {
                 guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
@@ -2467,11 +2474,11 @@ extension FormatRules {
             } else {
                 index += 1
                 localNames.insert(name)
-                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: false)
             }
         }
         func processFunction(at index: inout Int, localNames: Set<String>, members: Set<String>) {
-            let isSubscript = (formatter.tokens[index] == .keyword("subscript"))
+            let startToken = formatter.tokens[index]
             var localNames = localNames
             guard let startIndex = formatter.index(of: .startOfScope("("), after: index),
                 let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
@@ -2512,16 +2519,20 @@ extension FormatRules {
             }), formatter.tokens[bodyStartIndex] == .startOfScope("{") else {
                 return
             }
-            if isSubscript {
+            if startToken == .keyword("subscript") {
                 index = bodyStartIndex
                 processAccessors(["get", "set"], for: "", at: &index, localNames: localNames, members: members)
             } else {
                 index = bodyStartIndex + 1
-                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                processBody(at: &index,
+                            localNames: localNames,
+                            members: members,
+                            isTypeRoot: false,
+                            isInit: startToken == .keyword("init"))
             }
         }
         var index = 0
-        processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false)
+        processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false, isInit: false)
     }
 
     /// Replace unused arguments with an underscore

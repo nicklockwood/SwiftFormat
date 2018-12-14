@@ -146,7 +146,7 @@ func printHelp(as type: CLI.OutputType) {
     --patternlet       let/var placement in patterns. "hoist" (default) or "inline"
     --ranges           spacing for ranges. "spaced" (default) or "nospace"
     --semicolons       allow semicolons. "never" or "inline" (default)
-    --self             use self for member variables. "remove" (default) or "insert"
+    --self             explicit self. "insert", "remove" (default) or "init-only"
     --importgrouping   "testable-top", "testable-bottom" or "alphabetized" (default)
     --stripunusedargs  "closure-only", "unnamed-only" or "always" (default)
     --trimwhitespace   trim trailing space. "always" (default) or "nonblank-lines"

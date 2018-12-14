@@ -198,7 +198,7 @@ extension FormatOptions.Descriptor {
         letPatternPlacement,
         stripUnusedArguments,
         elsePosition,
-        removeSelf,
+        explicitSelf,
         importGrouping,
 
         // Deprecated
@@ -445,15 +445,13 @@ extension FormatOptions.Descriptor {
         trueValues: ["next-line", "nextline"],
         falseValues: ["same-line", "sameline"]
     )
-    static let removeSelf = FormatOptions.Descriptor(
+    static let explicitSelf = FormatOptions.Descriptor(
         argumentName: "self",
-        propertyName: "removeSelf",
+        propertyName: "explicitSelf",
         displayName: "Self",
-        keyPath: \.removeSelf,
-        trueValues: ["remove"],
-        falseValues: ["insert"]
+        keyPath: \.explicitSelf,
+        options: ["insert", "remove", "init-only"]
     )
-
     static let importGrouping = FormatOptions.Descriptor(
         argumentName: "importgrouping",
         propertyName: "importGrouping",

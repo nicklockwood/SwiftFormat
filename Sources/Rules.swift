@@ -2401,9 +2401,12 @@ extension FormatRules {
                     }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: parenIndex) == .identifier("of") else {
                         fallthrough
                     }
-                case .identifier where formatter.isEnabled && !isTypeRoot &&
-                    (explicitSelf == .insert || (explicitSelf == .initOnly && isInit &&
-                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix))):
+                case .identifier:
+                    guard formatter.isEnabled && !isTypeRoot && (explicitSelf == .insert ||
+                        (explicitSelf == .initOnly && isInit &&
+                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix))) else {
+                        break
+                    }
                     let name = token.unescaped()
                     if members.contains(name), !localNames.contains(name), !["for", "var", "let"].contains(lastKeyword) {
                         if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),

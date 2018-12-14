@@ -5786,6 +5786,24 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testSelfDotTypeInsideClassInitEdgeCase() {
+        let input = """
+        class Foo {
+            let type: Int
+
+            init() {
+                self.type = 5
+            }
+
+            func baz() {
+                switch type {}
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf], options: options))
+    }
+
     // enable/disable
 
     func testDisableRemoveSelf() {

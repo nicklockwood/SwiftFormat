@@ -147,8 +147,10 @@ public func enumerateFiles(withInputURL inputURL: URL,
             return
         }
         func wasSkipped() -> Bool {
-            for excludedURL in fileOptions.excludedURLs where
-                inputURL.absoluteString.hasPrefix(excludedURL.standardizedFileURL.absoluteString) {
+            for excludedURL in fileOptions.excludedURLs {
+                guard inputURL == excludedURL.standardizedFileURL else {
+                    continue
+                }
                 if let handler = skipped {
                     do {
                         onComplete(try handler(inputURL, outputURL ?? inputURL, options))

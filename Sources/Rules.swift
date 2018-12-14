@@ -3308,6 +3308,57 @@ extension FormatRules {
             }
         }
     }
+
+    /// Replace the `&&` operator with `,` where applicable
+    @objc public class func commasInsteadOfAmpersands(_ formatter: Formatter) {
+        let keywords = ["if", "guard", "while"]
+
+        func noOtherOperators(_ formatter: Formatter, startIndex: Int) -> Bool {
+            for token in formatter.tokens[startIndex...] {
+                if case Token.operator("||", .infix) = token { return false }
+                if case Token.keyword("case") = token { return false }
+
+                if case Token.startOfScope("{") = token { return true }
+            }
+
+            return false
+        }
+
+        var scopeStarted = false
+        var openCommasCounter = 0
+        formatter.forEachToken { index, token in
+            if case let Token.keyword(keyword) = token,
+                keywords.contains(keyword),
+                noOtherOperators(formatter, startIndex: index) {
+                scopeStarted = true
+                return
+            }
+
+            guard scopeStarted else { return }
+            if case Token.startOfScope("{") = token {
+                scopeStarted = false
+                return
+            }
+
+            if case Token.startOfScope("(") = token {
+                openCommasCounter += 1
+                return
+            } else if case Token.endOfScope(")") = token {
+                openCommasCounter -= 1
+                return
+            }
+
+            guard openCommasCounter == 0 else { return }
+            guard case Token.operator("&&", .infix) = token else { return }
+
+            formatter.replaceToken(at: index, with: .delimiter(","))
+
+            guard let previousToken = formatter.token(at: index - 1) else { return }
+            if case Token.space = previousToken {
+                formatter.removeToken(at: index - 1)
+            }
+        }
+    }
 }
 
 private extension FormatRules {

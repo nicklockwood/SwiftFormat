@@ -1077,6 +1077,28 @@ Or for `--wrapcollections beforefirst`:
 ]
 ```
 
+***commasInsteadOfAmpersands*** - replaces the `&&` operator with `,` inside `if` and `guard` conditions:
+
+```diff
+- if true && true {
++ if true, true {
+```
+
+```diff
+- guard true && true
++ guard true, true
+```
+
+```diff
+- if functionReturnsBool() && true {
++ if functionReturnsBool(), true {
+```
+
+```diff
+- if functionReturnsBool() && variable
++ if functionReturnsBool(), variable
+```
+
 
 Config
 ------

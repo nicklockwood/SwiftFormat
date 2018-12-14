@@ -624,7 +624,7 @@ func processInput(_ inputURLs: [URL],
             // Check cache
             let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
             let formatOptions = options.formatOptions ?? .default
-            let cachePrefix = "\(version);\(formatOptions)\(rules.joined(separator: ","));"
+            let cachePrefix = "\(version);\(formatOptions)\(rules.sorted().joined(separator: ","));"
             let cacheKey: String = {
                 var path = inputURL.absoluteURL.path
                 if let cacheDirectory = cacheDirectory {

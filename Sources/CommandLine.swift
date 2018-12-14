@@ -257,8 +257,14 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             // Ensure exclude paths in config file are treated as relative to the file itself
             // TODO: find a better way/place to do this
             let directory = configURL.deletingLastPathComponent().path
-            if let excluded = config["exclude"].map({ expandGlobs($0, in: directory) }) {
-                config["exclude"] = excluded.map { $0.path }.sorted().joined(separator: ",")
+            if let exclude = config["exclude"] {
+                let excluded = expandGlobs(exclude, in: directory)
+                if excluded.isEmpty {
+                    print("warning: --exclude value '\(exclude)' did not match any files in \(directory)", as: .warning)
+                    config["exclude"] = nil
+                } else {
+                    config["exclude"] = excluded.map { $0.path }.sorted().joined(separator: ",")
+                }
             }
             args = try mergeArguments(args, into: config)
         }

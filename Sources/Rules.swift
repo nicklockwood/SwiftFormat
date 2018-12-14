@@ -3310,52 +3310,48 @@ extension FormatRules {
     }
 
     /// Replace the `&&` operator with `,` where applicable
-    @objc public class func commasInsteadOfAmpersands(_ formatter: Formatter) {
-        let keywords = ["if", "guard", "while"]
-
-        func noOtherOperators(_ formatter: Formatter, startIndex: Int) -> Bool {
-            for token in formatter.tokens[startIndex...] {
-                if case Token.operator("||", .infix) = token { return false }
-                if case Token.keyword("case") = token { return false }
-
-                if case Token.startOfScope("{") = token { return true }
-            }
-
-            return false
-        }
-
-        var scopeStarted = false
-        var openCommasCounter = 0
-        formatter.forEachToken { index, token in
-            if case let Token.keyword(keyword) = token,
-                keywords.contains(keyword),
-                noOtherOperators(formatter, startIndex: index) {
-                scopeStarted = true
+    @objc public class func andOperator(_ formatter: Formatter) {
+        formatter.forEachToken { i, token in
+            guard [.keyword("if"), .keyword("guard"), .keyword("while")].contains(token),
+                var endIndex = formatter.index(of: .startOfScope("{"), after: i) else {
                 return
             }
-
-            guard scopeStarted else { return }
-            if case Token.startOfScope("{") = token {
-                scopeStarted = false
-                return
-            }
-
-            if case Token.startOfScope("(") = token {
-                openCommasCounter += 1
-                return
-            } else if case Token.endOfScope(")") = token {
-                openCommasCounter -= 1
-                return
-            }
-
-            guard openCommasCounter == 0 else { return }
-            guard case Token.operator("&&", .infix) = token else { return }
-
-            formatter.replaceToken(at: index, with: .delimiter(","))
-
-            guard let previousToken = formatter.token(at: index - 1) else { return }
-            if case Token.space = previousToken {
-                formatter.removeToken(at: index - 1)
+            var index = i + 1
+            outer: while index < endIndex {
+                switch formatter.tokens[index] {
+                case .operator("&&", .infix):
+                    let endOfGroup = formatter.index(of: .delimiter(","), after: index) ?? endIndex
+                    var nextOpIndex = index
+                    while let next = formatter.index(of: .operator, after: nextOpIndex) {
+                        if formatter.tokens[next] == .operator("||", .infix) {
+                            index = endOfGroup
+                            continue outer
+                        }
+                        nextOpIndex = next
+                    }
+                    formatter.replaceToken(at: index, with: .delimiter(","))
+                    if formatter.tokens[index - 1] == .space(" ") {
+                        formatter.removeToken(at: index - 1)
+                        endIndex -= 1
+                        index -= 1
+                    } else if let prevIndex = formatter.index(of: .nonSpace, before: index),
+                        formatter.tokens[prevIndex].isLinebreak, let nonLinbreak =
+                        formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex) {
+                        formatter.removeToken(at: index)
+                        formatter.insertToken(.delimiter(","), at: nonLinbreak + 1)
+                        if formatter.tokens[index + 1] == .space(" ") {
+                            formatter.removeToken(at: index + 1)
+                            endIndex -= 1
+                        }
+                    }
+                case .operator("||", .infix), .operator("=", .infix), .keyword("try"):
+                    index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
+                case .startOfScope:
+                    index = formatter.endOfScope(at: index) ?? endIndex
+                default:
+                    break
+                }
+                index += 1
             }
         }
     }

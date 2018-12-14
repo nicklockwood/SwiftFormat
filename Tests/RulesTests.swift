@@ -2100,7 +2100,7 @@ class RulesTests: XCTestCase {
         let input = "if foo {\nif bar &&\n(baz ||\nquux) {\nfoo()\n}\n}"
         let output = "if foo {\n    if bar &&\n        (baz ||\n            quux) {\n        foo()\n    }\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["commasInsteadOfAmpersands"])), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["andOperator"])), output + "\n")
     }
 
     func testWrappedEnumThatLooksLikeIf() {
@@ -3629,7 +3629,7 @@ class RulesTests: XCTestCase {
         let input = "while ((x || y) && z) {}"
         let output = "while (x || y) && z {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["commasInsteadOfAmpersands"])), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["andOperator"])), output + "\n")
     }
 
     func testOuterParensRemoved2() {
@@ -3885,14 +3885,14 @@ class RulesTests: XCTestCase {
         let input = "if try foo as Bar && baz() { /* some code */ }"
         let output = "if try foo as Bar && baz() { /* some code */ }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["commasInsteadOfAmpersands"])), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["andOperator"])), output + "\n")
     }
 
     func testParensNotRemovedBeforeIfBody3() {
         let input = "if #selector(foo(_:)) && bar() { /* some code */ }"
         let output = "if #selector(foo(_:)) && bar() { /* some code */ }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["commasInsteadOfAmpersands"])), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["andOperator"])), output + "\n")
     }
 
     func testParensNotRemovedBeforeIfBody4() {
@@ -7246,173 +7246,110 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default, options: options), output)
     }
 
-    // MARK: replaceDoubleAmpersandWithComma
+    // MARK: andOperator
 
-    func testIfAmpersandReplacedBase() {
+    func testIfAndReplaced() {
         let input = "if true && true {}"
         let output = "if true, true {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testGuardAmpersandReplacedBase() {
+    func testGuardAndReplaced() {
         let input = "guard true && true\nelse { return }"
         let output = "guard true, true\nelse { return }"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testWhileAmpersandReplacedBase() {
+    func testWhileAndReplaced() {
         let input = "while true && true {}"
         let output = "while true, true {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testIfAmpersandReplacedTripple() {
+    func testIfDoubleAndReplaced() {
         let input = "if true && true && true {}"
         let output = "if true, true, true {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testGuardAmpersandReplacedTripple() {
-        let input = "guard true && true && true\nelse { return }"
-        let output = "guard true, true, true\nelse { return }"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testWhileAmpersandReplacedTripple() {
-        let input = "while true && true && true {}"
-        let output = "while true, true, true {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testIfAmpersandReplacedBrackets() {
+    func testIfAndParensReplaced() {
         let input = "if true && (true && true) {}"
         let output = "if true, (true && true) {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testGuardAmpersandReplacedBrackets() {
-        let input = "guard true && (true && true)\nelse { return }"
-        let output = "guard true, (true && true)\nelse { return }"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testWhileAmpersandReplacedBrackets() {
-        let input = "while true && (true && true) {}"
-        let output = "while true, (true && true) {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testIfAmpersandReplacedWithFunction() {
+    func testIfFunctionAndReplaced() {
         let input = "if functionReturnsBool() && true {}"
         let output = "if functionReturnsBool(), true {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testGuardAmpersandReplacedWithFunction() {
-        let input = "if functionReturnsBool() && variable\nelse { return }"
-        let output = "if functionReturnsBool(), variable\nelse { return }"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testWhileAmpersandReplacedWithFunction() {
-        let input = "while functionReturnsBool() && true {}"
-        let output = "while functionReturnsBool(), true {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testIfAmpersandReplacedWithOtherOperators() {
+    func testNoReplaceIfOrAnd() {
         let input = "if foo || bar && baz {}"
         let output = "if foo || bar && baz {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testGuardAmpersandReplacedWithOtherOperators() {
-        let input = "guard foo || bar && baz\nelse { return }"
-        let output = "guard foo || bar && baz\nelse { return }"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+    func testNoReplaceIfAndOr() {
+        let input = "if foo && bar || baz {}"
+        let output = "if foo && bar || baz {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testWhileAmpersandReplacedWithOtherOperators() {
-        let input = "while foo || bar && baz {}"
-        let output = "while foo || bar && baz {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testIfAmpersandReplacedInParentScope() {
+    func testIfAndReplacedInFunction() {
         let input = "func someFunc() { if bar && baz {} }"
         let output = "func someFunc() { if bar, baz {} }"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testGuardAmpersandReplacedInParentScope() {
-        let input = "func someFunc() { guard bar && baz else { return } }"
-        let output = "func someFunc() { guard bar, baz else { return } }"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testWhileAmpersandReplacedInParentScope() {
-        let input = "func someFunc() { while bar && baz {} }"
-        let output = "func someFunc() { while bar, baz {} }"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testIfAmpersandCase() {
+    func testNoReplaceIfCaseLetAnd() {
         let input = "if case let a = foo && bar {}"
         let output = "if case let a = foo && bar {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testWhileAmpersandCase() {
+    func testNoReplaceWhileCaseLetAnd() {
         let input = "while case let a = foo && bar {}"
         let output = "while case let a = foo && bar {}"
-
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testGuardAmpersandCase() {
-        let input = "guard case let a = foo && bar else { return }"
-        let output = "guard case let a = foo && bar else { return }"
+    func testNoReplaceIfLetAndLetAnd() {
+        let input = "if let a = b && c, let d = e && f {}"
+        let output = "if let a = b && c, let d = e && f {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
 
-        XCTAssertEqual(try format(input, rules: [FormatRules.commasInsteadOfAmpersands]), output)
+    func testNoReplaceIfTryAnd() {
+        let input = "if try true && explode() {}"
+        let output = "if try true && explode() {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testHandleAndAtStartOfLine() {
+        let input = "if a == b\n    && b == c {}"
+        let output = "if a == b,\n    b == c {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testHandleAndAtStartOfLineAfterComment() {
+        let input = "if a == b // foo\n    && b == c {}"
+        let output = "if a == b, // foo\n    b == c {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 }

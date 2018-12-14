@@ -1077,7 +1077,7 @@ Or for `--wrapcollections beforefirst`:
 ]
 ```
 
-***commasInsteadOfAmpersands*** - replaces the `&&` operator with `,` inside `if` and `guard` conditions:
+***andOperator*** - replaces the `&&` operator with `,` inside `if` and `guard` conditions:
 
 ```diff
 - if true && true {
@@ -1085,8 +1085,8 @@ Or for `--wrapcollections beforefirst`:
 ```
 
 ```diff
-- guard true && true
-+ guard true, true
+- guard true && true else {
++ guard true, true else {
 ```
 
 ```diff
@@ -1095,8 +1095,8 @@ Or for `--wrapcollections beforefirst`:
 ```
 
 ```diff
-- if functionReturnsBool() && variable
-+ if functionReturnsBool(), variable
+- if functionReturnsBool() && variable {
++ if functionReturnsBool(), variable {
 ```
 
 

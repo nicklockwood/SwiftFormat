@@ -1625,6 +1625,59 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testGenericContainingFunctionType() {
+        let input = "Foo<(Bar)->Baz>"
+        let output: [Token] = [
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .startOfScope("("),
+            .identifier("Bar"),
+            .endOfScope(")"),
+            .operator("->", .infix),
+            .identifier("Baz"),
+            .endOfScope(">"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testGenericContainingFunctionTypeWithMultipleArguments() {
+        let input = "Foo<(Bar,Baz)->Quux>"
+        let output: [Token] = [
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .startOfScope("("),
+            .identifier("Bar"),
+            .delimiter(","),
+            .identifier("Baz"),
+            .endOfScope(")"),
+            .operator("->", .infix),
+            .identifier("Quux"),
+            .endOfScope(">"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testGenericContainingMultipleFunctionTypes() {
+        let input = "Foo<(Bar)->Void,(Baz)->Void>"
+        let output: [Token] = [
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .startOfScope("("),
+            .identifier("Bar"),
+            .endOfScope(")"),
+            .operator("->", .infix),
+            .identifier("Void"),
+            .delimiter(","),
+            .startOfScope("("),
+            .identifier("Baz"),
+            .endOfScope(")"),
+            .operator("->", .infix),
+            .identifier("Void"),
+            .endOfScope(">"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testGenericContainingArrayType() {
         let input = "Foo<[Bar],Baz>"
         let output: [Token] = [

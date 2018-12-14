@@ -74,6 +74,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc
     @IBAction func resetToDefault(_: NSMenuItem) {
+        UserDefaults(suiteName: UserDefaults.groupDomain)?.clearAll(in: UserDefaults.groupDomain)
         RulesStore().resetRulesToDefaults()
         OptionsStore().resetOptionsToDefaults()
         NotificationCenter.default.post(name: .applicationDidLoadNewConfiguration, object: nil)

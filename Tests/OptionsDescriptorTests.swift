@@ -6,8 +6,8 @@
 //  Copyright © 2018 Nick Lockwood.
 //
 
-@testable import SwiftFormat
 import XCTest
+@testable import SwiftFormat
 
 class OptionsDescriptorTests: XCTestCase {
     private typealias OptionArgumentMapping<T> = (optionValue: T, argumentValue: String)

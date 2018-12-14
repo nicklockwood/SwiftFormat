@@ -29,8 +29,8 @@
 //  SOFTWARE.
 //
 
-@testable import SwiftFormat
 import XCTest
+@testable import SwiftFormat
 
 class InferenceTests: XCTestCase {
     static let files: [String] = {

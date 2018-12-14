@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.35.7
+//  Version 0.35.10
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -1411,7 +1411,7 @@ public func tokenize(_ source: String) -> [Token] {
                 switch token {
                 case let .operator(string, _):
                     switch string {
-                    case ".", "==", "?", "!", "&":
+                    case ".", "==", "?", "!", "&", "->":
                         if scopeIndex == tokens.count - 2 {
                             // These are allowed in a generic, but not as the first character
                             fallthrough

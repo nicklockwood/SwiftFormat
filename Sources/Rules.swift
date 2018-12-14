@@ -986,7 +986,7 @@ extension FormatRules {
                     if token.isEndOfScope(scope) {
                         let indentCount = indentCounts.last! - 1
                         popScope()
-                        if lineIndex > scopeStartLineIndexes.last ?? -1 {
+                        if !token.isLinebreak, lineIndex > scopeStartLineIndexes.last ?? -1 {
                             // If indentCount > 0, drop back to previous indent level
                             if indentCount > 0 {
                                 indentStack.removeLast()
@@ -1120,7 +1120,6 @@ extension FormatRules {
                         case .error:
                             break
                         case .endOfScope("case"), .endOfScope("default"):
-                            guard formatter.options.indentComments else { break }
                             formatter.insertSpace(indent, at: i + 1)
                             // TODO: is this the best place to do this?
                             var index = i
@@ -2913,7 +2912,9 @@ extension FormatRules {
             }
             removeLinebreakBeforeClosingBrace(at: &closingBraceIndex)
             // Insert linebreak after each comma
-            var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex)!
+            guard var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex) else {
+                return
+            }
             if formatter.tokens[index] != .delimiter(",") {
                 index += 1
             }
@@ -2976,12 +2977,12 @@ extension FormatRules {
                 if [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
                     return true
                 }
-                if nextToken == .keyword("in"),
-                    let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) {
-                    if prevToken == .operator("->", .infix) {
-                        return false
+                if nextToken == .keyword("in") {
+                    var index = index
+                    if formatter.tokens[index].isEndOfScope {
+                        index = formatter.index(of: .startOfScope, before: index) ?? index
                     }
-                    return prevToken == .startOfScope("{")
+                    return formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .startOfScope("{")
                 }
             }
             return false
@@ -3002,9 +3003,12 @@ extension FormatRules {
                 }
                 return token == .startOfScope("(")
             }() {
-                if isArgumentToken(at: i) {
-                    // Remove Void
-                    formatter.removeTokens(inRange: prevIndex + 1 ..< nextIndex)
+                if isArgumentToken(at: nextIndex) {
+                    if !formatter.options.useVoid {
+                        // Convert to parens
+                        formatter.replaceToken(at: i, with: .endOfScope(")"))
+                        formatter.insertToken(.startOfScope("("), at: i)
+                    }
                 } else if formatter.options.useVoid {
                     // Strip parens
                     formatter.removeTokens(inRange: i + 1 ... nextIndex)
@@ -3210,11 +3214,27 @@ extension FormatRules {
 
     /// Sort import statements
     @objc public class func sortedImports(_ formatter: Formatter) {
+        func sortRanges(_ ranges: [ImportRange]) -> [ImportRange] {
+            if case .alphabetized = formatter.options.importGrouping {
+                return ranges.sorted { $0.0 < $1.0 }
+            }
+            // Group @testable imports at the top or bottom
+            return ranges.sorted {
+                let isLhsTestable = formatter.tokens[$0.1].contains(.keyword("@testable"))
+                let isRhsTestable = formatter.tokens[$1.1].contains(.keyword("@testable"))
+                // If both have a @testable keyword, or neither has one, just sort alphabetically
+                guard isLhsTestable != isRhsTestable else {
+                    return $0.0 < $1.0
+                }
+                return formatter.options.importGrouping == .testableTop ? isLhsTestable : isRhsTestable
+            }
+        }
+
         var importStack = parseImports(formatter)
         while let importRanges = importStack.popLast() {
             guard importRanges.count > 1 else { continue }
             let range: Range = importRanges.first!.1.lowerBound ..< importRanges.last!.1.upperBound
-            let sortedRanges = importRanges.sorted { $0.0 < $1.0 }
+            let sortedRanges = sortRanges(importRanges)
             var insertedLinebreak = false
             var sortedTokens = sortedRanges.flatMap { inputRange -> [Token] in
                 var tokens = Array(formatter.tokens[inputRange.1])
@@ -3338,9 +3358,10 @@ private extension FormatRules {
     }()
 
     // Shared import rules implementation
-    static func parseImports(_ formatter: Formatter) -> [[(String, Range<Int>)]] {
-        var importStack = [[(String, Range<Int>)]]()
-        var importRanges = [(String, Range<Int>)]()
+    typealias ImportRange = (String, Range<Int>)
+    static func parseImports(_ formatter: Formatter) -> [[ImportRange]] {
+        var importStack = [[ImportRange]]()
+        var importRanges = [ImportRange]()
         formatter.forEach(.keyword("import")) { i, _ in
 
             func pushStack() {

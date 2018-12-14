@@ -1,5 +1,24 @@
 # Change Log
 
+## [0.35.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.10) (2018-12-13)
+
+- Removed spurious --verbose argument warning
+- Non-swift files are no longer logged as skipped in --verbose mode
+- Fixed bug with comment indenting inside switch statements
+- Fixed crash in wrapArguments rule
+
+## [0.35.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.9) (2018-11-28)
+
+- Fixed incorrect formatting of generic arguments containing function types
+- Fixed inconsistent capitalization of the swiftformat executable in Package.swift
+
+## [0.35.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.8) (2018-11-23)
+
+- Updated `void` rule to support changes introduced in Swift 4
+- Fixed a bug where `#endif` could be incorrectly indented if followed by a comment
+- Added `--importgrouping` option to group imports inside by `@testable`
+- Fixed a potential bug when loading options in the SwiftFormat for Xcode GUI
+
 ## [0.35.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.35.7) (2018-10-11)
 
 - Fixed error when tokenizing an `enum` declaration with a `where` clause

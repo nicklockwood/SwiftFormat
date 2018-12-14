@@ -34,7 +34,6 @@ import Foundation
 extension UserDefaults {
     static let groupDomain = "com.charcoaldesign.SwiftFormat"
 
-    /// Nuke for dev purposes
     func clearAll(in domainName: String) {
         persistentDomain(forName: domainName)?.forEach {
             removeObject(forKey: $0.key)

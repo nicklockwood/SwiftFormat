@@ -54,18 +54,24 @@ extension SavedOption {
 }
 
 extension FormatOptions {
-    init(_ options: [SavedOption]) {
+    fileprivate init(_ rep: OptionsStore.OptionStoreRepresentation) throws {
         var formatOptions = FormatOptions.default
-        options.forEach { try! $0.descriptor.toOptions($0.argumentValue, &formatOptions) }
+        for d in Descriptor.formatting.reversed() {
+            // By loading formatting options in reverse, we ensure that
+            // non-deprecated/renamed values will overwrite legacy values
+            if let value = rep[d.argumentName] {
+                try d.toOptions(value, &formatOptions)
+            }
+        }
         self = formatOptions
     }
 }
 
 struct OptionsStore {
-    fileprivate typealias OptionID = String
+    fileprivate typealias ArgumentName = String
     fileprivate typealias ArgumentValue = String
-    fileprivate typealias OptionRepresentation = (id: OptionID, arg: ArgumentValue)
-    private typealias OptionStoreRepresentation = [OptionID: ArgumentValue]
+    fileprivate typealias OptionRepresentation = (id: ArgumentName, arg: ArgumentValue)
+    fileprivate typealias OptionStoreRepresentation = [ArgumentName: ArgumentValue]
 
     private let optionsKey = "format-options"
     private let inferOptionsKey = "infer-options"
@@ -84,7 +90,7 @@ struct OptionsStore {
     }
 
     var formatOptions: FormatOptions {
-        return FormatOptions(options)
+        return try! FormatOptions(load())
     }
 
     var inferOptions: Bool {

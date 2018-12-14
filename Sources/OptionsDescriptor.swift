@@ -200,12 +200,15 @@ extension FormatOptions.Descriptor {
         elsePosition,
         removeSelf,
         commasInsteadOfAmpersands,
+        importGrouping,
 
         // Deprecated
         insertBlankLines,
         removeBlankLines,
 
         // Renamed
+        // NOTE: these must go after the non-deprecated versions
+        // to ensure OptionsStore loading works correctly
         hexLiterals,
         wrapElements,
     ]
@@ -451,7 +454,6 @@ extension FormatOptions.Descriptor {
         trueValues: ["remove"],
         falseValues: ["insert"]
     )
-
     static let commasInsteadOfAmpersands = FormatOptions.Descriptor(
         argumentName: "commasinsteadofampersands",
         propertyName: "commasInsteadOfAmpersands",
@@ -459,6 +461,13 @@ extension FormatOptions.Descriptor {
         keyPath: \.commasInsteadOfAmpersands,
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
+    )
+    static let importGrouping = FormatOptions.Descriptor(
+        argumentName: "importgrouping",
+        propertyName: "importGrouping",
+        displayName: "Import Grouping",
+        keyPath: \FormatOptions.importGrouping,
+        options: ["alphabetized", "testable-top", "testable-bottom"]
     )
 
     // MARK: - Internal

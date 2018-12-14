@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.35.7
+//  Version 0.35.10
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood

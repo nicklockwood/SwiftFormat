@@ -21,6 +21,7 @@
 --ifdef indent
 --indent 4
 --indentcase false
+--importgrouping testable-bottom
 --linebreaks lf
 --octalgrouping 4,8
 --operatorfunc spaced

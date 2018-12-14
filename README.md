@@ -789,7 +789,7 @@ return;
 goto(fail)
 ```
 
-***sortedImports*** - rearranges import statements so that they are sorted:
+***sortedImports*** - rearranges import statements so that they are sorted. Use the `--importgrouping` option to configure how to group `@testable import`s (alphabetically (default), testable-top or testable-bottom).
 
 ```diff
 - import Foo

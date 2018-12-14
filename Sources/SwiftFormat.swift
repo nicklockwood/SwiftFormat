@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-public let version = "0.35.7"
+public let version = "0.35.10"
 
 /// The standard SwiftFormat config file name
 public let swiftFormatConfigurationFile = ".swiftformat"
@@ -142,8 +142,13 @@ public func enumerateFiles(withInputURL inputURL: URL,
                    options: Options) {
         let inputURL = inputURL.standardizedFileURL
         let fileOptions = options.fileOptions ?? .default
-        for excludedURL in fileOptions.excludedURLs {
-            if inputURL.absoluteString.hasPrefix(excludedURL.standardizedFileURL.absoluteString) {
+        guard let resourceValues = try? inputURL.resourceValues(forKeys: Set(keys)) else {
+            onComplete { throw FormatError.reading("failed to read attributes for \(inputURL.path)") }
+            return
+        }
+        func wasSkipped() -> Bool {
+            for excludedURL in fileOptions.excludedURLs where
+                inputURL.absoluteString.hasPrefix(excludedURL.standardizedFileURL.absoluteString) {
                 if let handler = skipped {
                     do {
                         onComplete(try handler(inputURL, outputURL ?? inputURL, options))
@@ -151,15 +156,15 @@ public func enumerateFiles(withInputURL inputURL: URL,
                         onComplete { throw error }
                     }
                 }
-                return
+                return true
             }
-        }
-        guard let resourceValues = try? inputURL.resourceValues(forKeys: Set(keys)) else {
-            onComplete { throw FormatError.reading("failed to read attributes for \(inputURL.path)") }
-            return
+            return false
         }
         if resourceValues.isRegularFile == true {
             if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
+                if wasSkipped() {
+                    return
+                }
                 do {
                     onComplete(try handler(inputURL, outputURL ?? inputURL, options))
                 } catch {
@@ -167,6 +172,9 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 }
             }
         } else if resourceValues.isDirectory == true {
+            if wasSkipped() {
+                return
+            }
             var options = options
             let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
             if manager.fileExists(atPath: configFile.path) {

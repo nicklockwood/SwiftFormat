@@ -598,6 +598,19 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
   }
 ```
 
+***isEmpty*** - replaces `count == 0` checks with `isEmpty`, which is preferred for performance reasons (disabled by default because SwiftFormat is not able to check that the isEmpty property is actually available in all cases):
+
+```diff
+- if foo.count == 0 {
++ if foo.isEmpty {
+
+- if foo.count > 0 {
++ if !foo.isEmpty {
+
+- if foo?.count == 0 {
++ if foo?.isEmpty == true {
+```
+
 ***linebreakAtEndOfFile*** - ensures that the last line of the file is empty:
        
 ***linebreaks*** - normalizes all linebreaks to use the same character, depending on the `--linebreaks` option (`cr`, `crlf` or `lf`).
@@ -965,7 +978,7 @@ goto(fail)
 + @IBOutlet var label: UILabel!
 ```
 
-***trailingClosures*** - converts the last closure argument in a function call to trailing closure syntax where possible:
+***trailingClosures*** - converts the last closure argument in a function call to trailing closure syntax where possible (disabled by default because it can introduce ambiguity that prevents code from compiling):
 
 ```diff
 - DispatchQueue.main.async(execute: {

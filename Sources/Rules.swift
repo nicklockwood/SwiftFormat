@@ -76,7 +76,7 @@ public class FormatRules: NSObject {
     }
 
     /// Rules that are disabled by default
-    public static let disabledByDefault = ["trailingClosures"]
+    public static let disabledByDefault = ["trailingClosures", "isEmpty"]
 
     /// Default active rules
     public static let `default` = all(except: disabledByDefault)
@@ -3352,6 +3352,82 @@ extension FormatRules {
                     break
                 }
                 index += 1
+            }
+        }
+    }
+
+    /// Replace count == 0 with isEmpty
+    @objc public class func isEmpty(_ formatter: Formatter) {
+        formatter.forEach(.identifier("count")) { i, _ in
+            guard let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {
+                $0.isOperator(".")
+            }), let opIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
+                $0.isOperator
+            }), let endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: opIndex, if: {
+                $0 == .number("0", .integer)
+            }) else {
+                return
+            }
+            var isOptional = false
+            var index = dotIndex
+            var wasIdentifier = false
+            loop: while true {
+                guard let prev = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index) else {
+                    break
+                }
+                switch formatter.tokens[prev] {
+                case .operator("?", _):
+                    if formatter.tokens[prev - 1].isSpace {
+                        break loop
+                    }
+                    isOptional = true
+                case .operator("!", _), .operator(".", _):
+                    break // Ignored
+                case .operator, .keyword, .delimiter:
+                    break loop
+                case .identifier:
+                    if wasIdentifier {
+                        break loop
+                    }
+                    wasIdentifier = true
+                    index = prev
+                    continue
+                case .endOfScope:
+                    guard !wasIdentifier, let start = formatter.index(of: .startOfScope, before: prev) else {
+                        break loop
+                    }
+                    wasIdentifier = false
+                    index = start
+                    continue
+                default:
+                    break
+                }
+                wasIdentifier = false
+                index = prev
+            }
+            let isEmpty: Bool
+            switch formatter.tokens[opIndex] {
+            case .operator("==", .infix): isEmpty = true
+            case .operator("!=", .infix), .operator(">", .infix): isEmpty = false
+            default: return
+            }
+            if isEmpty {
+                if isOptional {
+                    formatter.replaceTokens(inRange: i ... endIndex, with: [
+                        .identifier("isEmpty"), .space(" "), .operator("==", .infix), .space(" "), .identifier("true"),
+                    ])
+                } else {
+                    formatter.replaceTokens(inRange: i ... endIndex, with: [.identifier("isEmpty")])
+                }
+            } else {
+                if isOptional {
+                    formatter.replaceTokens(inRange: i ... endIndex, with: [
+                        .identifier("isEmpty"), .space(" "), .operator("!=", .infix), .space(" "), .identifier("true"),
+                    ])
+                } else {
+                    formatter.replaceTokens(inRange: i ... endIndex, with: [.identifier("isEmpty")])
+                    formatter.insertToken(.operator("!", .prefix), at: index)
+                }
             }
         }
     }

@@ -7352,4 +7352,154 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
+
+    // MARK: isEmpty
+
+    // count == 0
+
+    func testCountEqualsZero() {
+        let input = "if foo.count == 0 {}"
+        let output = "if foo.isEmpty {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testFunctionCountEqualsZero() {
+        let input = "if foo().count == 0 {}"
+        let output = "if foo().isEmpty {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testExpressionCountEqualsZero() {
+        let input = "if foo || bar.count == 0 {}"
+        let output = "if foo || bar.isEmpty {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCompoundIfCountEqualsZero() {
+        let input = "if foo, bar.count == 0 {}"
+        let output = "if foo, bar.isEmpty {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testOptionalCountEqualsZero() {
+        let input = "if foo?.count == 0 {}"
+        let output = "if foo?.isEmpty == true {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testOptionalChainCountEqualsZero() {
+        let input = "if foo?.bar.count == 0 {}"
+        let output = "if foo?.bar.isEmpty == true {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCompoundIfOptionalCountEqualsZero() {
+        let input = "if foo, bar?.count == 0 {}"
+        let output = "if foo, bar?.isEmpty == true {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testTernaryCountEqualsZero() {
+        let input = "foo ? bar.count == 0 : baz.count == 0"
+        let output = "foo ? bar.isEmpty : baz.isEmpty"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    // count != 0
+
+    func testCountNotEqualToZero() {
+        let input = "if foo.count != 0 {}"
+        let output = "if !foo.isEmpty {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testFunctionCountNotEqualToZero() {
+        let input = "if foo().count != 0 {}"
+        let output = "if !foo().isEmpty {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testExpressionCountNotEqualToZero() {
+        let input = "if foo || bar.count != 0 {}"
+        let output = "if foo || !bar.isEmpty {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCompoundIfCountNotEqualToZero() {
+        let input = "if foo, bar.count != 0 {}"
+        let output = "if foo, !bar.isEmpty {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    // count > 0
+
+    func testCountGreaterThanZero() {
+        let input = "if foo.count > 0 {}"
+        let output = "if !foo.isEmpty {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    // optional count
+
+    func testOptionalCountNotEqualToZero() {
+        let input = "if foo?.count != 0 {}" // nil evaluates to true
+        let output = "if foo?.isEmpty != true {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testOptionalChainCountNotEqualToZero() {
+        let input = "if foo?.bar.count != 0 {}" // nil evaluates to true
+        let output = "if foo?.bar.isEmpty != true {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCompoundIfOptionalCountNotEqualToZero() {
+        let input = "if foo, bar?.count != 0 {}"
+        let output = "if foo, bar?.isEmpty != true {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testTernaryCountNotEqualToZero() {
+        let input = "foo ? bar.count != 0 : baz.count != 0"
+        let output = "foo ? !bar.isEmpty : !baz.isEmpty"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCountEqualsZeroAfterOptionalOnPreviousLine() {
+        let input = "_ = foo?.bar\nbar.count == 0 ? baz() : quux()"
+        let output = "_ = foo?.bar\nbar.isEmpty ? baz() : quux()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCountEqualsZeroAfterOptionalCallOnPreviousLine() {
+        let input = "foo?.bar()\nbar.count == 0 ? baz() : quux()"
+        let output = "foo?.bar()\nbar.isEmpty ? baz() : quux()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCountEqualsZeroAfterTrailingCommentOnPreviousLine() {
+        let input = "foo?.bar() // foobar\nbar.count == 0 ? baz() : quux()"
+        let output = "foo?.bar() // foobar\nbar.isEmpty ? baz() : quux()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
 }

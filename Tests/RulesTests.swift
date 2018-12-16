@@ -3067,6 +3067,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testMarkWithTripleSlash() {
+        let input = "/// MARK: foo"
+        let output = "// MARK: foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.todos]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testMarkWithNoSpaceAfterColon() {
         // NOTE: this was an unintended side-effect, but I like it
         let input = "// MARK:foo"

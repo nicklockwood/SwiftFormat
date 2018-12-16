@@ -1312,8 +1312,15 @@ extension FormatRules {
     /// Ensure that TODO, MARK and FIXME comments are followed by a : as required
     @objc public class func todos(_ formatter: Formatter) {
         formatter.forEachToken { i, token in
-            guard case let .commentBody(string) = token,
-                let tag = ["TODO", "MARK", "FIXME"].first(where: { string.hasPrefix($0) }) else {
+            guard case var .commentBody(string) = token else {
+                return
+            }
+            var removedSpace = false
+            if string.hasPrefix("/") {
+                removedSpace = true
+                string = string.replacingOccurrences(of: "^/(\\s+)", with: "", options: .regularExpression)
+            }
+            guard let tag = ["TODO", "MARK", "FIXME"].first(where: { string.hasPrefix($0) }) else {
                 return
             }
             var suffix: String = String(string[tag.endIndex ..< string.endIndex])
@@ -1325,6 +1332,9 @@ extension FormatRules {
                 suffix = String(suffix.unicodeScalars.dropFirst())
             }
             formatter.replaceToken(at: i, with: .commentBody(tag + ":" + (suffix.isEmpty ? "" : " \(suffix)")))
+            if removedSpace {
+                formatter.insertSpace(" ", at: i)
+            }
         }
     }
 

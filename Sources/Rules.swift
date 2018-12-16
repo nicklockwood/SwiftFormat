@@ -3431,10 +3431,27 @@ extension FormatRules {
             }
         }
     }
+
+    /// Remove redundant `let error` from `catch` statements
+    @objc public class func redundantLetError(_ formatter: Formatter) {
+        formatter.forEach(.keyword("catch")) { i, _ in
+            if let letIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                $0 == .keyword("let")
+            }), let errorIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: letIndex, if: {
+                $0 == .identifier("error")
+            }), let scopeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: errorIndex, if: {
+                $0 == .startOfScope("{")
+            }) {
+                formatter.removeTokens(inRange: letIndex ..< scopeIndex)
+            }
+        }
+    }
 }
 
+// MARK: shared helper methods
+
 private extension FormatRules {
-    /// Current year. Used by fileHeader rule
+    // Current year. Used by fileHeader rule
     private static var currentYear: String = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy"

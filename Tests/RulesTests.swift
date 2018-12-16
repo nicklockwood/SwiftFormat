@@ -7502,4 +7502,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
+
+    // MARK: redundantLetError
+
+    func testCatchLetError() {
+        let input = "do {} catch let error {}"
+        let output = "do {} catch {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantLetError]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
 }

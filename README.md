@@ -676,6 +676,13 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
 + if case .foo( /* unused */ _) = bar {}
 ```
 
+***redundantLetError*** - removes redundant `let error` from `catch` statements, where it is declared implicitly:
+
+```diff
+- do { ... } catch let error { log(error) }
++ do { ... } catch { log(error) }
+```
+
 ***redundantNilInit*** - removes unnecessary nil initialization of Optional vars (which are nil by default anyway):
 
 ```diff

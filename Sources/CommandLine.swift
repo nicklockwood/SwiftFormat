@@ -128,7 +128,7 @@ func printHelp(as type: CLI.OutputType) {
     --commas           commas in collection literals. "always" (default) or "inline"
     --comments         indenting of comment bodies. "indent" (default) or "ignore"
     --closingparen     closing paren position, "balanced" (default) or "same-line"
-    --decimalgrouping  decimal grouping, threshold (default: 3,6) or "none", "ignore"
+    --decimalgrouping  decimal grouping,threshold (default: 3,6) or "none", "ignore"
     --elseposition     placement of else/catch. "same-line" (default) or "next-line"
     --empty            how empty values are represented. "void" (default) or "tuple"
     --exponentcase     case of 'e' in numbers. "lowercase" or "uppercase" (default)

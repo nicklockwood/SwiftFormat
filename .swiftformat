@@ -37,3 +37,4 @@
 # rules
 
 --disable trailingClosures
+--enable isEmpty

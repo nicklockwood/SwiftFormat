@@ -41,8 +41,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let data: Data
         do {
             data = try Data(contentsOf: url)
-        } catch let error {
-            self.showError(FormatError.reading("problem reading configuration from \(url.path). [\(error)]"))
+        } catch {
+            showError(FormatError.reading("problem reading configuration from \(url.path). [\(error)]"))
             return false
         }
 
@@ -50,8 +50,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         do {
             let args = try parseConfigFile(data)
             options = try Options(args, in: url.deletingLastPathComponent().path)
-        } catch let error {
-            self.showError(error)
+        } catch {
+            showError(error)
             return false
         }
 
@@ -123,7 +123,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let config = serialize(options: Options(formatOptions: formatOptions, rules: Set(rules))) + "\n"
             do {
                 try config.write(to: url, atomically: true, encoding: .utf8)
-            } catch let error {
+            } catch {
                 self.showError(FormatError.writing("problem writing configuration to \(url.path). [\(error)]"))
             }
         }

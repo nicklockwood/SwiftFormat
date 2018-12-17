@@ -107,7 +107,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             let matches = names.filter { $0.hasPrefix(flag) }
             if matches.count > 1 {
                 throw FormatError.options("ambiguous flag -\(flag)")
-            } else if matches.count == 0 {
+            } else if matches.isEmpty {
                 throw FormatError.options("unknown flag -\(flag)")
             } else {
                 name = matches[0]

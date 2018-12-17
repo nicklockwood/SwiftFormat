@@ -250,7 +250,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             let data: Data
             do {
                 data = try Data(contentsOf: configURL)
-            } catch let error {
+            } catch {
                 throw FormatError.reading("failed to read config file at \(configURL.path), \(error)")
             }
             var config = try parseConfigFile(data)
@@ -320,7 +320,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             guard args["config"] == nil else {
                 throw FormatError.options("--inferoptions option can't be used along with a config file")
             }
-            if inputURLs.count > 0 {
+            if !inputURLs.isEmpty {
                 print("inferring swiftformat options from source file(s)...", as: .info)
                 var filesParsed = 0, formatOptions = FormatOptions.default, errors = [Error]()
                 let fileOptions = options.fileOptions ?? .default
@@ -408,7 +408,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // If no input file, try stdin
-        if inputURLs.count == 0 {
+        if inputURLs.isEmpty {
             var input: String?
             var finished = false
             var fatalError: Error?

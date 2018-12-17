@@ -1436,7 +1436,7 @@ extension FormatRules {
                 }
             }
             lastSpecifier.map { specifiers[$0.0] = $0.1 }
-            guard specifiers.count > 0 else { return }
+            guard !specifiers.isEmpty else { return }
             var sortedSpecifiers = [Token]()
             for specifier in order {
                 if let tokens = specifiers[specifier] {
@@ -3142,7 +3142,7 @@ extension FormatRules {
             if !fraction.isEmpty {
                 result += "." + fraction
             }
-            if exponent.count > 0 {
+            if !exponent.isEmpty {
                 result += exponentSeparator + exponent
             }
             formatter.replaceToken(at: i, with: .number(result, type))

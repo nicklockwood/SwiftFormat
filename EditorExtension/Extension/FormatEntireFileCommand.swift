@@ -68,7 +68,7 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
             invocation.buffer.selections.add(updatedSelectionRange)
 
             return completionHandler(nil)
-        } catch let error {
+        } catch {
             return completionHandler(error)
         }
     }

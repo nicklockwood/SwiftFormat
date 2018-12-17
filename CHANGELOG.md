@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.37.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.37.0) (2018-12-17)
+
+- Added `isEmpty` rule, which converts instances of `if foo.count == 0 {}` to `if foo.isEmpty` (disabled by default)
+- Added `redundantLetError` rule, which removes `let error` from `catch let error {}` because it's implict
+- The `todos` rule now converts `/// MARK:` to `// MARK:`, as the former isn't recognized by Xcode
+- Fixed problem with the peformance tests target not building locally in Xcode 10.1
+
 ## [0.36.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.36.0) (2018-12-15)
 
 - Fixed `--exclude` globs matching path prefix instead of whole path (this may break exclude paths that relied on the bug)

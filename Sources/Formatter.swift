@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.36.0
+//  Version 0.37.0
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -114,7 +114,7 @@ public class Formatter: NSObject {
 
     /// Replaces the token at the specified index with one or more new tokens
     public func replaceToken(at index: Int, with tokens: Token...) {
-        if tokens.count == 0 {
+        if tokens.isEmpty {
             removeToken(at: index)
         } else {
             self.tokens[index] = tokens[0]
@@ -239,10 +239,10 @@ public class Formatter: NSObject {
             let token = tokens[i]
             if let scope = scopeStack.last, token.isEndOfScope(scope) {
                 scopeStack.removeLast()
-                if case .linebreak = token, scopeStack.count == 0, matches(token) {
+                if case .linebreak = token, scopeStack.isEmpty, matches(token) {
                     return i
                 }
-            } else if scopeStack.count == 0, matches(token) {
+            } else if scopeStack.isEmpty, matches(token) {
                 return i
             } else if token.isEndOfScope {
                 return nil
@@ -292,7 +292,7 @@ public class Formatter: NSObject {
                 } else {
                     return nil
                 }
-            } else if scopeStack.count == 0, matches(token) {
+            } else if scopeStack.isEmpty, matches(token) {
                 return i
             } else if case .linebreak = token {
                 linebreakEncountered = true

@@ -112,36 +112,36 @@ func printHelp(as type: CLI.OutputType) {
     --dryrun           run in "dry" mode (without actually changing any files)
     --lint             like --dryrun, but returns an error if formatting is needed
 
-    swiftformat has a number of rules that can be enabled or disabled. by default
-    most rules are enabled. use --rules to display all enabled/disabled rules:
+    swiftformat has a number of rules that can be enabled or disabled. By default
+    most rules are enabled. Use --rules to display all enabled/disabled rules:
 
     --rules            the list of rules to apply (pass nothing to print all rules)
     --disable          a list of format rules to be disabled (comma-delimited)
     --enable           a list of disabled rules to be re-enabled (comma-delimited)
     --experimental     experimental rules. "enabled" or "disabled" (default)
 
-    swiftformat's rules can be configured using options. a given option may affect
-    multiple rules. options have no affect if the related rules have been disabled:
+    swiftformat's rules can be configured using options. A given option may affect
+    multiple rules. Options have no affect if the related rules have been disabled:
 
     --allman           use allman indentation style. "true" or "false" (default)
-    --binarygrouping   binary grouping,threshold (default: 4,8) or "none", "ignore"
+    --binarygrouping   binary grouping, threshold (default: 4,8) or "none", "ignore"
     --commas           commas in collection literals. "always" (default) or "inline"
     --comments         indenting of comment bodies. "indent" (default) or "ignore"
     --closingparen     closing paren position, "balanced" (default) or "same-line"
-    --decimalgrouping  decimal grouping,threshold (default: 3,6) or "none", "ignore"
+    --decimalgrouping  decimal grouping, threshold (default: 3,6) or "none", "ignore"
     --elseposition     placement of else/catch. "same-line" (default) or "next-line"
     --empty            how empty values are represented. "void" (default) or "tuple"
     --exponentcase     case of 'e' in numbers. "lowercase" or "uppercase" (default)
     --exponentgrouping group exponent digits, "enabled" or "disabled" (default)
     --fractiongrouping group digits after '.', "enabled" or "disabled" (default)
     --header           header comments. "strip", "ignore", or the text you wish use
-    --hexgrouping      hex grouping,threshold (default: 4,8) or "none", "ignore"
+    --hexgrouping      hex grouping, threshold (default: 4,8) or "none", "ignore"
     --hexliteralcase   casing for hex literals. "uppercase" (default) or "lowercase"
     --ifdef            #if indenting. "indent" (default), "noindent" or "outdent"
     --indent           number of spaces to indent, or "tab" to use tabs
     --indentcase       indent cases inside a switch. "true" or "false" (default)
     --linebreaks       linebreak character to use. "cr", "crlf" or "lf" (default)
-    --octalgrouping    octal grouping,threshold or "none", "ignore". default: 4,8
+    --octalgrouping    octal grouping, threshold or "none", "ignore". default: 4,8
     --operatorfunc     spacing for operator funcs. "spaced" (default) or "nospace"
     --patternlet       let/var placement in patterns. "hoist" (default) or "inline"
     --ranges           spacing for ranges. "spaced" (default) or "nospace"

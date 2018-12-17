@@ -13,6 +13,6 @@ let package = Package(
     targets: [
         .target(name: "CommandLineTool", dependencies: ["SwiftFormat"], path: "CommandLineTool"),
         .target(name: "SwiftFormat", path: "Sources"),
-        .testTarget(name: "Tests", dependencies: ["SwiftFormat"], path: "Tests"),
+        .testTarget(name: "SwiftFormatTests", dependencies: ["SwiftFormat"], path: "Tests"),
     ]
 )

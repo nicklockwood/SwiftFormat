@@ -106,7 +106,7 @@ class PerformanceTests: XCTestCase {
             hexGrouping: .group(1, 1),
             hoistPatternLet: false,
             elseOnNextLine: true,
-            removeSelf: false,
+            explicitSelf: .insert,
             experimentalRules: true
         )
         measure {
@@ -152,7 +152,7 @@ class PerformanceTests: XCTestCase {
     func testWorstCaseRedundantSelf() {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
-        let options = FormatOptions(removeSelf: false)
+        let options = FormatOptions(explicitSelf: .insert)
         measure {
             _ = tokens.map { try! format($0, rules: [FormatRules.redundantSelf], options: options) }
         }

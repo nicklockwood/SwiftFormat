@@ -7482,6 +7482,8 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    // edge cases
+
     func testTernaryCountNotEqualToZero() {
         let input = "foo ? bar.count != 0 : baz.count != 0"
         let output = "foo ? !bar.isEmpty : !baz.isEmpty"
@@ -7506,6 +7508,20 @@ class RulesTests: XCTestCase {
     func testCountEqualsZeroAfterTrailingCommentOnPreviousLine() {
         let input = "foo?.bar() // foobar\nbar.count == 0 ? baz() : quux()"
         let output = "foo?.bar() // foobar\nbar.isEmpty ? baz() : quux()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCountGreaterThanZeroAfterOpenParen() {
+        let input = "foo(bar.count > 0)"
+        let output = "foo(!bar.isEmpty)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCountGreaterThanZeroAfterArgumentLabel() {
+        let input = "foo(bar: baz.count > 0)"
+        let output = "foo(bar: !baz.isEmpty)"
         XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }

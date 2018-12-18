@@ -3393,7 +3393,7 @@ extension FormatRules {
                     isOptional = true
                 case .operator("!", _), .operator(".", _):
                     break // Ignored
-                case .operator, .keyword, .delimiter:
+                case .operator, .keyword, .delimiter, .startOfScope:
                     break loop
                 case .identifier:
                     if wasIdentifier {

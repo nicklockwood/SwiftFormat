@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.37.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.37.1) (2018-12-18)
+
+- Fixed a bug in the `isEmpty` rule when used inside a function argument
+- Fixed bug where log messages included ANSI codes in non-terminal stderr output
+
 ## [0.37.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.37.0) (2018-12-17)
 
 - Added `isEmpty` rule, which converts instances of `if foo.count == 0 {}` to `if foo.isEmpty` (disabled by default)

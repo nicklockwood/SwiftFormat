@@ -263,7 +263,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                     print("warning: --exclude value '\(exclude)' did not match any files in \(directory)", as: .warning)
                     config["exclude"] = nil
                 } else {
-                    config["exclude"] = excluded.map { $0.path }.sorted().joined(separator: ",")
+                    config["exclude"] = excluded.map { $0.description }.sorted().joined(separator: ",")
                 }
             }
             args = try mergeArguments(args, into: config)

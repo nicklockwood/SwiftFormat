@@ -307,16 +307,35 @@ public struct FormatOptions: CustomStringConvertible {
 public struct FileOptions {
     public var followSymlinks: Bool
     public var supportedFileExtensions: [String]
-    public var excludedURLs: [URL]
+    public var excludedGlobs: [Glob]
+
+    @available(*, deprecated, message: "Use excludedGlobs property instead")
+    public var excludedURLs: [URL] {
+        return excludedGlobs.compactMap {
+            switch $0 {
+            case let .path(path): return URL(fileURLWithPath: path)
+            case .regex: return nil
+            }
+        }
+    }
 
     public static let `default` = FileOptions()
 
+    @available(*, deprecated, message: "Use other init() method instead")
     public init(followSymlinks: Bool = false,
                 supportedFileExtensions: [String] = ["swift"],
-                excludedURLs: [URL] = []) {
+                excludedURLs: [URL]) {
+        self.init(followSymlinks: followSymlinks,
+                  supportedFileExtensions: supportedFileExtensions,
+                  excludedGlobs: excludedURLs.map { Glob.path($0.path) })
+    }
+
+    public init(followSymlinks: Bool = false,
+                supportedFileExtensions: [String] = ["swift"],
+                excludedGlobs: [Glob] = []) {
         self.followSymlinks = followSymlinks
         self.supportedFileExtensions = supportedFileExtensions
-        self.excludedURLs = excludedURLs
+        self.excludedGlobs = excludedGlobs
     }
 }
 

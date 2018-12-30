@@ -72,7 +72,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                            concurrent: Bool = true,
                            block: @escaping (URL, URL) throws -> () throws -> Void) -> [Error] {
     var fileOptions = fileOptions
-    fileOptions.excludedURLs += excludedURLs
+    fileOptions.excludedGlobs += excludedURLs.map { Glob.path($0.path) }
     let options = Options(fileOptions: fileOptions)
     return enumerateFiles(
         withInputURL: inputURL,
@@ -146,9 +146,10 @@ public func enumerateFiles(withInputURL inputURL: URL,
             onComplete { throw FormatError.reading("failed to read attributes for \(inputURL.path)") }
             return
         }
+        let inputPath = inputURL.path
         func wasSkipped() -> Bool {
-            for excludedURL in fileOptions.excludedURLs {
-                guard inputURL == excludedURL.standardizedFileURL else {
+            for excluded in fileOptions.excludedGlobs {
+                guard excluded.matches(inputPath) else {
                     continue
                 }
                 if let handler = skipped {
@@ -327,7 +328,7 @@ public func format(_ source: String,
 
 // MARK: Path utilities
 
-func expandPath(_ path: String, in directory: String) -> URL {
+public func expandPath(_ path: String, in directory: String) -> URL {
     if path.hasPrefix("/") {
         return URL(fileURLWithPath: path)
     }
@@ -341,11 +342,40 @@ func pathContainsGlobSyntax(_ path: String) -> Bool {
     return "*?[{".contains(where: { path.contains($0) })
 }
 
+public enum Glob: CustomStringConvertible {
+    case path(String)
+    case regex(NSRegularExpression)
+
+    public func matches(_ path: String) -> Bool {
+        switch self {
+        case let .path(_path):
+            return _path == path
+        case let .regex(regex):
+            let range = NSRange(location: 0, length: path.utf16.count)
+            return regex.firstMatch(in: path, options: [], range: range) != nil
+        }
+    }
+
+    public var description: String {
+        switch self {
+        case let .path(path):
+            return path
+        case let .regex(regex):
+            return regex.pattern
+                .replacingOccurrences(of: "([^/]+)?", with: "*")
+                .replacingOccurrences(of: "(.+/)?", with: "**/")
+                .replacingOccurrences(of: ".+", with: "**")
+                .replacingOccurrences(of: "[^/]", with: "?")
+                .replacingOccurrences(of: "\\", with: "", options: .regularExpression)
+        }
+    }
+}
+
 // Expand one or more comma-delimited file paths using glob syntax
-func expandGlobs(_ paths: String, in directory: String) -> [URL] {
+public func expandGlobs(_ paths: String, in directory: String) -> [Glob] {
     guard pathContainsGlobSyntax(paths) else {
         return parseCommaDelimitedList(paths).map {
-            expandPath($0, in: directory)
+            .path(expandPath($0, in: directory).path)
         }
     }
     var paths = paths
@@ -356,18 +386,13 @@ func expandGlobs(_ paths: String, in directory: String) -> [URL] {
         tokens[token] = "(\(options.joined(separator: "|")))"
         paths.replaceSubrange(range, with: token)
     }
-    var urls = [URL]()
-    var regexesMatchDirectories = false
-    let regexes = parseCommaDelimitedList(paths).map { path -> NSRegularExpression in
-        if !regexesMatchDirectories, path.contains("/") {
-            regexesMatchDirectories = true
-        }
-        let url = expandPath(path, in: directory)
-        if FileManager.default.fileExists(atPath: url.path) {
+    return parseCommaDelimitedList(paths).map { path -> Glob in
+        let path = expandPath(path, in: directory).path
+        if FileManager.default.fileExists(atPath: path) {
             // TODO: should we also handle cases where path includes tokens?
-            urls.append(url)
+            return .path(path)
         }
-        var regex = "^\(url.path)$"
+        var regex = "^\(path)$"
             .replacingOccurrences(of: "[.+(){\\\\|]", with: "\\\\$0", options: .regularExpression)
             .replacingOccurrences(of: "?", with: "[^/]")
             .replacingOccurrences(of: "**/", with: "(.+/)?")
@@ -376,8 +401,12 @@ func expandGlobs(_ paths: String, in directory: String) -> [URL] {
         for (token, replacement) in tokens {
             regex = regex.replacingOccurrences(of: token, with: replacement)
         }
-        return try! NSRegularExpression(pattern: regex, options: [])
+        return try! .regex(NSRegularExpression(pattern: regex, options: []))
     }
+}
+
+func matchGlobs(_ globs: [Glob], in directory: String) -> [URL] {
+    var urls = [URL]()
     let keys: [URLResourceKey] = [.isDirectoryKey]
     let manager = FileManager.default
     func enumerate(_ directory: URL) {
@@ -388,11 +417,9 @@ func expandGlobs(_ paths: String, in directory: String) -> [URL] {
         }
         for url in files {
             let path = url.path
-            let range = NSRange(location: 0, length: path.utf16.count)
-            if regexes.contains(where: { $0.firstMatch(in: path, options: [], range: range) != nil }) {
+            if globs.contains(where: { $0.matches(path) }) {
                 urls.append(url)
-            } else if regexesMatchDirectories,
-                let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey]),
+            } else if let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey]),
                 resourceValues.isDirectory == true {
                 enumerate(url)
             }

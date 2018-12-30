@@ -412,7 +412,7 @@ class ArgumentsTests: XCTestCase {
 
     func testParseExcludesURLsFileOption() throws {
         let options = try Options(["exclude": "foo bar, baz"], in: "/dir")
-        let paths = options.fileOptions?.excludedURLs.map { $0.path } ?? []
+        let paths = options.fileOptions?.excludedGlobs.map { $0.description } ?? []
         XCTAssertEqual(paths, ["/dir/foo bar", "/dir/baz"])
     }
 }

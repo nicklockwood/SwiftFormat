@@ -285,9 +285,9 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             arguments.remove("symlinks")
         }
         do {
-            if !fileOptions.excludedURLs.isEmpty {
+            if !fileOptions.excludedGlobs.isEmpty {
                 // TODO: find a better alternative to stringifying url
-                args["exclude"] = fileOptions.excludedURLs.map { "\($0.path)" }.sorted().joined(separator: ",")
+                args["exclude"] = fileOptions.excludedGlobs.map { $0.description }.sorted().joined(separator: ",")
             }
             arguments.remove("exclude")
         }
@@ -372,7 +372,7 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
     }
     try processOption("exclude", in: args, from: &arguments) {
         containsFileOption = true
-        options.excludedURLs += expandGlobs($0, in: directory)
+        options.excludedGlobs += expandGlobs($0, in: directory)
     }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return containsFileOption ? options : nil

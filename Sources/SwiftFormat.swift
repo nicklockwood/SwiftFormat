@@ -358,7 +358,7 @@ func expandGlobs(_ paths: String, in directory: String) -> [URL] {
     }
     var urls = [URL]()
     var regexesMatchDirectories = false
-    let regexes = parseCommaDelimitedList(paths).map { path -> String in
+    let regexes = parseCommaDelimitedList(paths).map { path -> NSRegularExpression in
         if !regexesMatchDirectories, path.contains("/") {
             regexesMatchDirectories = true
         }
@@ -376,7 +376,7 @@ func expandGlobs(_ paths: String, in directory: String) -> [URL] {
         for (token, replacement) in tokens {
             regex = regex.replacingOccurrences(of: token, with: replacement)
         }
-        return regex
+        return try! NSRegularExpression(pattern: regex, options: [])
     }
     let keys: [URLResourceKey] = [.isDirectoryKey]
     let manager = FileManager.default
@@ -388,7 +388,8 @@ func expandGlobs(_ paths: String, in directory: String) -> [URL] {
         }
         for url in files {
             let path = url.path
-            if regexes.contains(where: { path.range(of: $0, options: .regularExpression) != nil }) {
+            let range = NSRange(location: 0, length: path.utf16.count)
+            if regexes.contains(where: { $0.firstMatch(in: path, options: [], range: range) != nil }) {
                 urls.append(url)
             } else if regexesMatchDirectories,
                 let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey]),

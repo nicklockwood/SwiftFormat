@@ -361,12 +361,17 @@ public enum Glob: CustomStringConvertible {
         case let .path(path):
             return path
         case let .regex(regex):
-            return regex.pattern
+            var result = regex.pattern.dropFirst().dropLast()
                 .replacingOccurrences(of: "([^/]+)?", with: "*")
                 .replacingOccurrences(of: "(.+/)?", with: "**/")
                 .replacingOccurrences(of: ".+", with: "**")
                 .replacingOccurrences(of: "[^/]", with: "?")
-                .replacingOccurrences(of: "\\", with: "", options: .regularExpression)
+                .replacingOccurrences(of: "\\", with: "")
+            while let range = result.range(of: "\\([^)]+\\)", options: .regularExpression) {
+                let options = result[range].dropFirst().dropLast().components(separatedBy: "|")
+                result.replaceSubrange(range, with: "{\(options.joined(separator: ","))}")
+            }
+            return result
         }
     }
 }

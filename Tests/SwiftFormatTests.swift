@@ -67,7 +67,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 36)
+        XCTAssertEqual(files.count, 38)
     }
 
     func testInputFilesMatchOutputFilesForSameOutput() {
@@ -78,7 +78,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 36)
+        XCTAssertEqual(files.count, 38)
     }
 
     func testInputFileNotEnumeratedWhenExcluded() {
@@ -93,7 +93,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 26)
+        XCTAssertEqual(files.count, 27)
     }
 
     // MARK: format function
@@ -171,111 +171,5 @@ class SwiftFormatTests: XCTestCase {
             expandPath("~/file.swift", in: "/dir").path,
             NSString(string: "~/file.swift").expandingTildeInPath
         )
-    }
-
-    // MARK: expand glob
-
-    func testExpandWildcardPathWithExactName() {
-        let path = "Tokenizer.swift"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
-    }
-
-    func testExpandPathWithWildcardInMiddle() {
-        let path = "Rule*.swift"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
-    }
-
-    func testExpandPathWithSingleCharacterWildcardInMiddle() {
-        let path = "Rule?.swift"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
-    }
-
-    func testExpandPathWithWildcardAtEnd() {
-        let path = "Options*"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
-    }
-
-    func testExpandPathWithDoubleWildcardAtEnd() {
-        let path = "Options**"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
-    }
-
-    func testExpandPathWithCharacterClass() {
-        let path = "Options[DS]*.swift"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
-    }
-
-    func testExpandPathWithCharacterClassRange() {
-        let path = "Options[E-T]*.swift"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("EditorExtension/Shared")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
-    }
-
-    func testExpandPathWithPattern() {
-        let path = "Option{s,sDescriptor}.swift"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
-    }
-
-    func testExpandPathsWithPatterns() {
-        let path = "Option{s,sDescriptor}.swift, SwiftFormat.{h,swift}"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 4)
-    }
-
-    func testExpandPathWithWildcardAtStart() {
-        let path = "*Tests.swift"
-        let directory = URL(fileURLWithPath: #file).deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 10)
-    }
-
-    func testExpandPathWithSubdirectoryAndWildcard() {
-        let path = "Tests/*Tests.swift"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 10)
-    }
-
-    func testSingleWildcardDoesNotMatchDirectorySlash() {
-        let path = "*/SwiftFormatTests.swift"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 0)
-    }
-
-    func testDoubleWildcardMatchesDirectorySlash() {
-        let path = "**/SwiftFormatTests.swift"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
-    }
-
-    func testDoubleWildcardMatchesNoSubdirectories() {
-        let path = "Tests/**/SwiftFormatTests.swift"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
-    }
-
-    func testExpandGlobsChecksForExactPaths() {
-        let path = "Tests/Glob?Test[5]*.txt"
-        let directory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 }

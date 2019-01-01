@@ -21,6 +21,7 @@ Table of Contents
     - [Options](#options)
     - [Rules](#rules)
     - [Config](#config)
+    - [Globs](#globs)
     - [Linting](#linting)
 - [FAQ](#faq)
 - [Cache](#cache)
@@ -1151,9 +1152,15 @@ A SwiftFormat configuration file consists of one or more command-line options, s
 
 While formatting, SwiftFormat will automatically check inside each subdirectory for the presence of a ".swiftformat" file and will apply any options that it finds there to the files in that directory.
 
-This allows you to override certain rules or formatting options just for a particular directory of files. You can also specify excluded files relative to that directory using `--exclude`, which may be more convenient than specifying them at the top-level.
+This allows you to override certain rules or formatting options just for a particular directory of files. You can also specify excluded files relative to that directory using `--exclude`, which may be more convenient than specifying them at the top-level:
 
-Files named ".swiftformat" will be processed automatically, however you can select an additional configuration file to use for formatting using the `--config "path/to/config/file"` command-line argument. A configuration file selected using `--config` does not need to be named ".swiftformat", and can be located outside of the project directory.
+```
+--exclude Pods,Generated
+```
+
+The `--exclude` option takes a comma-delimited list of file or directory paths to exclude from formatting. Excluded paths are relative to the config file containing the `--exclude` command. The excluded paths can include wildcards, specified using Unix "Glob" syntax, as [documented below](#globs).
+
+Config files named ".swiftformat" will be processed automatically, however you can select an additional configuration file to use for formatting using the `--config "path/to/config/file"` command-line argument. A configuration file selected using `--config` does not need to be named ".swiftformat", and can be located outside of the project directory.
 
 The config file format is designed to be human editable. You may include blank lines for readability, and can also add comments using a hash prefix (#), e.g.
 
@@ -1175,6 +1182,41 @@ If you would prefer not to edit the configuration file by hand, you can use the 
 > cd /path/to/project
 > swiftformat --inferoptions . --output .swiftformat
 ```
+
+Globs
+-----
+
+When excluding files from formatting using the `--exclude` option, you may wish to make use of wildcard paths (aka "Globs") to match all files that match a particular naming convention without having to manually list them all.
+
+SwiftFormat's glob syntax is based on Ruby's implementation, which varies slightly from the Unix standard. The following patterns are supported:
+
+* `*` - A single star matches zero or more characters in a filename, but *not* a `/`.
+
+* `**` - A double star will match anything, including one or more `/`.
+
+* `?` - A question mark will match any single character except `/`.
+
+* `[abc]` - Matches any single character inside the brackets.
+
+* `[a-z]` - Matches a single character in the specified range in the brackets.
+
+* `{foo,bar}` - Matches any one of the comma-delimited strings inside the braces.
+    
+Examples:
+
+* `foo.swift` - Matches the file "foo.swift" in the same directory as the config file.
+
+* `*.swift` - Matches any swift file in the same directory as the config file.
+
+* `foo/bar.swift` - Matches the file "bar.swift" in the directory "foo".
+
+* `**/foo.swift` - Matches any file named "foo.swift" in the project.
+
+* `**/*.swift` - Matches any swift file in the project.
+
+* `**/Generated` - Matches any folder called `Generated` in the project.
+
+* `**/*_generated.swift` - Matches any Swift file with the suffix "_generated" in the project.
 
 
 Linting
@@ -1241,17 +1283,12 @@ There haven't been many questions yet, but here's what I'd like to think people 
 
 *Q. Does it use SourceKit?*
 
-> A. No.
+> A. No. SourceKit is too slow and doesn't support parsing incomplete code fragments.
 
 
-*Q. Why would you write a parser from scratch instead of just using SourceKit?*
+*Q. What about LibSyntax?*
 
-> A. The fact that there aren't already dozens of full-featured Swift formatters using SourceKit would suggest that the "just" isn't warranted.
-
-
-*Q. You wrote a Swift parser from scratch!? Are you a wizard?*
-
-> A. Yes. Yes I am.
+> A. No. SwiftFormat predates LibSyntax by a couple of years, and it would be a big job to rewrite.
 
 
 *Q. How does it work?*
@@ -1333,6 +1370,8 @@ Known issues
 * The `--self insert` option can only recognize locally declared member variables, not ones inherited from superclasses or extensions in other files, so it cannot insert missing `self` references for those. Note that the reverse is not true: `--self remove` should remove *all* redundant `self` references.
 
 * The `trailingClosures` rule will sometimes generate ambiguous code that breaks your program. For this reason, the rule is disabled by default. It is recommended that you apply this rule manually and review the changes, rather than including it in an automated formatting process.
+
+* The `isEmpty` rule will convert `count == 0` to `isEmpty` even for types that do not have an `isEmpty` method, such as `NSArray`/`NSDictionary`/etc. Use of Foundation collections in Swift code is pretty rare, but just in case, the rule is disabled by default.
 
 * Under rare circumstances, SwiftFormat may misinterpret a generic type followed by an `=` sign as a pair of `<` and `>=` expressions. For example, the following case would be handled incorrectly:
 

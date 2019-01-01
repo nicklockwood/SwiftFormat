@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.37.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.37.2) (2019-01-01)
+
+- Fixed codesign issues with bundled binaries
+- Significantly improved performance when using globs/wildcards in `--exclude` rules
+- Added glob syntax documentation to README file
+
 ## [0.37.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.37.1) (2018-12-18)
 
 - Fixed a bug in the `isEmpty` rule when used inside a function argument

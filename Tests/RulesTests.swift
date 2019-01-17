@@ -6508,6 +6508,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testClosureInsideParensNotWrappedOntoNextLine() {
+        let input = "foo({\n    bar()\n})"
+        let output = "foo({\n    bar()\n})"
+        let options = FormatOptions(wrapArguments: .beforeFirst)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // closingParenOnSameLine = true
 
     func testParenOnSameLineWhenWrapAfterFirstConvertedToWrapBefore() {

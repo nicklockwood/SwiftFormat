@@ -2958,9 +2958,11 @@ extension FormatRules {
         }
         formatter.forEach(.startOfScope) { i, token in
             let mode: WrapMode
+            var checkNestedScopes = true
             var closingBraceOnSameLine = false
             switch token.string {
             case "(":
+                checkNestedScopes = false
                 closingBraceOnSameLine = formatter.options.closingParenOnSameLine
                 fallthrough
             case "<":
@@ -2971,7 +2973,10 @@ extension FormatRules {
                 return
             }
             guard mode != .disabled, let closingBraceIndex = formatter.endOfScope(at: i),
-                let firstLinebreakIndex = (i ..< closingBraceIndex).first(where: { formatter.tokens[$0].isLinebreak }) else {
+                let firstLinebreakIndex = checkNestedScopes ?
+                (i ..< closingBraceIndex).first(where: { formatter.tokens[$0].isLinebreak }) :
+                formatter.index(of: .linebreak, after: i),
+                firstLinebreakIndex < closingBraceIndex else {
                 return
             }
             let firstIdentifierIndex = formatter.index(of:

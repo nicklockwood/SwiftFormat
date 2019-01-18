@@ -1226,38 +1226,42 @@ extension FormatRules {
     /// as the closing brace. This has no effect on the `else` part of a `guard` statement.
     /// Also applies to `catch` after `try` and `while` after `repeat`.
     @objc public class func elseOnSameLine(_ formatter: Formatter) {
-        var closingBraceIndex: Int?
+        func bracesContainLinebreak(_ endIndex: Int) -> Bool {
+            guard let startIndex = formatter.index(of: .startOfScope("{"), before: endIndex) else {
+                return false
+            }
+            return (startIndex ..< endIndex).contains(where: { formatter.tokens[$0].isLinebreak })
+        }
         formatter.forEachToken { i, token in
             switch token {
-            case .endOfScope("}"):
-                closingBraceIndex = i
             case .keyword("while"):
-                if let closingBraceIndex = closingBraceIndex,
-                    let previousBraceIndex = formatter.index(of: .startOfScope("{"), before: closingBraceIndex),
-                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousBraceIndex) == .keyword("repeat") {
+                if let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+                    $0 == .endOfScope("}")
+                }), let startIndex = formatter.index(of: .startOfScope("{"), before: endIndex),
+                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex) == .keyword("repeat") {
                     fallthrough
                 }
-                break
             case .keyword("else"), .keyword("catch"):
-                if let closingBraceIndex = closingBraceIndex {
-                    // Only applies to dangling braces
-                    if formatter.last(.nonSpace, before: closingBraceIndex)?.isLinebreak == true {
-                        if let prevLinebreakIndex = formatter.index(of: .linebreak, before: i),
-                            closingBraceIndex < prevLinebreakIndex {
-                            if !formatter.options.allmanBraces, !formatter.options.elseOnNextLine {
-                                formatter.replaceTokens(inRange: closingBraceIndex + 1 ..< i, with: [.space(" ")])
-                            }
-                        } else if formatter.options.allmanBraces || formatter.options.elseOnNextLine {
-                            formatter.replaceTokens(inRange: closingBraceIndex + 1 ..< i, with:
-                                [.linebreak(formatter.options.linebreak)])
-                            formatter.insertSpace(formatter.indentForLine(at: i), at: closingBraceIndex + 2)
-                        }
+                guard let prevIndex = formatter.index(of: .nonSpace, before: i) else {
+                    return
+                }
+                let shouldWrap = formatter.options.allmanBraces || formatter.options.elseOnNextLine
+                if !shouldWrap, formatter.tokens[prevIndex].isLinebreak {
+                    if let prevBraceIndex = formatter.index(of: .nonSpaceOrLinebreak, before: prevIndex, if: {
+                        $0 == .endOfScope("}")
+                    }), bracesContainLinebreak(prevBraceIndex) {
+                        formatter.replaceTokens(inRange: prevBraceIndex + 1 ..< i, with: [.space(" ")])
                     }
+                } else if shouldWrap, let token = formatter.token(at: prevIndex), !token.isLinebreak,
+                    let prevBraceIndex = (token == .endOfScope("}")) ? prevIndex :
+                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex, if: {
+                        $0 == .endOfScope("}")
+                    }), bracesContainLinebreak(prevBraceIndex) {
+                    formatter.replaceTokens(inRange: prevIndex + 1 ..< i, with:
+                        [.linebreak(formatter.options.linebreak)])
+                    formatter.insertSpace(formatter.indentForLine(at: i), at: prevIndex + 2)
                 }
             default:
-                if !token.isSpaceOrCommentOrLinebreak {
-                    closingBraceIndex = nil
-                }
                 break
             }
         }

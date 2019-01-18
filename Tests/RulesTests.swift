@@ -2904,6 +2904,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testCommentsNotDiscardedByElseOnSameLineRule() {
+        let input = "if true {\n    1\n}\n\n// comment\nelse {}"
+        let output = "if true {\n    1\n}\n\n// comment\nelse {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.elseOnSameLine]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: trailingCommas
 
     func testCommaAddedToSingleItem() {

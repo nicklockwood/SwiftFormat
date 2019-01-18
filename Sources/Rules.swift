@@ -1998,6 +1998,7 @@ extension FormatRules {
                 switch unescaped {
                 case "Any", "super", "self", "nil", "true", "false":
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {
+                        // TODO: this exception is no longer needed in Swift 4
                         return
                     }
                 case "Self" where formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"):
@@ -2025,8 +2026,11 @@ extension FormatRules {
                     return
                 }
             }
-            if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {
-                formatter.replaceToken(at: i, with: .identifier(unescaped))
+            if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                formatter.tokens[prevIndex].isOperator(".") {
+                if formatter.token(at: prevIndex - 1)?.isOperator("\\") != true {
+                    formatter.replaceToken(at: i, with: .identifier(unescaped))
+                }
                 return
             }
             guard !["let", "var"].contains(unescaped),

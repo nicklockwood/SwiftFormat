@@ -4690,6 +4690,34 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRemoveBackticksAroundProperty() {
+        let input = "var type = Foo.`bar`"
+        let output = "var type = Foo.bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveBackticksAroundKeywordProperty() {
+        let input = "var type = Foo.`default`"
+        let output = "var type = Foo.default"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testRemoveBackticksAroundKeypathProperty() {
+        let input = "var type = \\.`bar`"
+        let output = "var type = \\.bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveBackticksAroundKeypathKeywordProperty() {
+        let input = "var type = \\.`default`"
+        let output = "var type = \\.`default`"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testNoRemoveBackticksAroundAnyProperty() {
         let input = "enum Foo {\n    case `Any`\n}"
         let output = "enum Foo {\n    case `Any`\n}"

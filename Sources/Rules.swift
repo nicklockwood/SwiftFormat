@@ -817,6 +817,7 @@ extension FormatRules {
         func tokenIsStartOfClosure(_ i: Int) -> Bool {
             var i = i - 1
             var nextTokenIndex = i
+            var foundEquals = false
             while let token = formatter.token(at: i) {
                 let prevTokenIndex = formatter.index(before: i, where: {
                     !$0.isSpaceOrComment && (!$0.isEndOfScope || $0 == .endOfScope("}"))
@@ -824,10 +825,12 @@ extension FormatRules {
                 switch token {
                 case let .keyword(string):
                     switch string {
-                    case "class", "struct", "enum", "protocol", "var", "func":
-                        if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .keyword("import") {
-                            return false
+                    case "var":
+                        if !foundEquals {
+                            fallthrough
                         }
+                    case "class", "struct", "enum", "protocol", "func":
+                        return formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .keyword("import")
                     case "extension", "init", "subscript",
                          "if", "switch", "guard", "else",
                          "for", "while", "repeat",
@@ -836,6 +839,8 @@ extension FormatRules {
                     default:
                         break
                     }
+                case .operator("=", _):
+                    foundEquals = true
                 case .startOfScope:
                     return true
                 case .linebreak:

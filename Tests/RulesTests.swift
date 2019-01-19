@@ -1811,6 +1811,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testIndentIfCase() {
+        let input = "{\nif case let .foo(msg) = error {}\n}"
+        let output = "{\n    if case let .foo(msg) = error {}\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testIndentIfCaseCommaCase() {
+        let input = "{\nif case let .foo(msg) = a,\ncase let .bar(msg) = b {}\n}"
+        let output = "{\n    if case let .foo(msg) = a,\n        case let .bar(msg) = b {}\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testIndentGuardCase() {
+        let input = "{\nguard case .Foo = error else {}\n}"
+        let output = "{\n    guard case .Foo = error else {}\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // indentCase = true
 
     func testSwitchCaseWithIndentCaseTrue() {
@@ -2040,27 +2061,6 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testIndentIfCase() {
-        let input = "{\nif case let .foo(msg) = error {}\n}"
-        let output = "{\n    if case let .foo(msg) = error {}\n}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testIndentIfCaseCommaCase() {
-        let input = "{\nif case let .foo(msg) = a,\ncase let .bar(msg) = b {}\n}"
-        let output = "{\n    if case let .foo(msg) = a,\n        case let .bar(msg) = b {}\n}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
-    func testIndentGuardCase() {
-        let input = "{\nguard case .Foo = error else {}\n}"
-        let output = "{\n    guard case .Foo = error else {}\n}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
-    }
-
     func testIndentElseAfterComment() {
         let input = "if x {}\n// comment\nelse {}"
         let output = "if x {}\n// comment\nelse {}"
@@ -2092,6 +2092,13 @@ class RulesTests: XCTestCase {
     func testIndentClosureStartingOnIndentedLine() {
         let input = "foo\n.bar {\nbaz()\n}"
         let output = "foo\n    .bar {\n        baz()\n    }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testIndentClosureStartingOnIndentedLine2() {
+        let input = "var foo = foo\n.bar {\nbaz()\n}"
+        let output = "var foo = foo\n    .bar {\n        baz()\n    }"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

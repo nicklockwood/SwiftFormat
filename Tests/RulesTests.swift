@@ -4533,6 +4533,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testRemoveRedundantReturnInMap() {
+        let input = "let foo = bar.map { return 1 }"
+        let output = "let foo = bar.map { 1 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     func testNoRemoveReturnInComputedVar() {
         let input = "var foo: Int { return 5 }"
         let output = "var foo: Int { return 5 }"
@@ -4582,9 +4589,16 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testNoRemoveReturnInIfTry() {
+    func testNoRemoveReturnInIfLetTry() {
         let input = "if let foo = try? bar() { return 5 }"
         let output = "if let foo = try? bar() { return 5 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveReturnInMultiIfLetTry() {
+        let input = "if let foo = bar, let bar = baz { return 5 }"
+        let output = "if let foo = bar, let bar = baz { return 5 }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

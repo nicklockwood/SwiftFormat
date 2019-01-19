@@ -1960,10 +1960,30 @@ extension FormatRules {
 
     /// Remove redundant return keyword from single-line closures
     @objc public class func redundantReturn(_ formatter: Formatter) {
-        formatter.forEach(.startOfScope("{")) { i, _ in
-            guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .identifier("get") else { return }
-            if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .operator("=", .infix),
-                var prevKeywordIndex = formatter.index(of: .keyword, before: i) {
+        formatter.forEach(.keyword("return")) { i, _ in
+            guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .endOfScope("}"),
+                let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
+                return
+            }
+            switch formatter.tokens[startIndex] {
+            case .keyword("in"):
+                break
+            case .startOfScope("{"):
+                guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex) != .identifier("get") else {
+                    return
+                }
+                guard var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) else {
+                    break
+                }
+                if formatter.tokens[prevIndex] == .endOfScope(")"),
+                    let j = formatter.index(of: .startOfScope("("), before: prevIndex) {
+                    prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: j) ?? j
+                }
+                let prevToken = formatter.tokens[prevIndex]
+                guard ![.delimiter(":"), .operator("=", .infix), .startOfScope("(")].contains(prevToken),
+                    var prevKeywordIndex = formatter.index(of: .keyword, before: startIndex) else {
+                    break
+                }
                 var keyword = formatter.tokens[prevKeywordIndex].string
                 while ["try", "as", "is"].contains(keyword) || keyword.hasPrefix("#") || keyword.hasPrefix("@") {
                     prevKeywordIndex = formatter.index(of: .keyword, before: prevKeywordIndex) ?? -1
@@ -1973,24 +1993,28 @@ extension FormatRules {
                     keyword = formatter.tokens[prevKeywordIndex].string
                 }
                 if [
-                    "let", "var", "func", "throws", "rethrows", "init", "subscript", "else", "if",
+                    "func", "throws", "rethrows", "init", "subscript", "else", "if",
                     "case", "where", "for", "in", "while", "repeat", "do", "catch",
-                ].contains(keyword) { return }
-            }
-            var startIndex = i
-            if let inIndex = formatter.index(of: .keyword, after: i, if: { $0 == .keyword("in") }) {
-                startIndex = inIndex
-            }
-            guard let firstIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex) else {
+                ].contains(keyword) {
+                    return
+                }
+                if ["let", "var"].contains(keyword) {
+                    guard let equalIndex = formatter.index(of: .operator("=", .infix), before: prevIndex),
+                        equalIndex > prevKeywordIndex else {
+                        return
+                    }
+                    if let prev = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevKeywordIndex),
+                        (prev.isKeyword && ["if", "case", "for", "while", "where"].contains(prev.string))
+                        || prev == .delimiter(",") {
+                        return
+                    }
+                }
+            default:
                 return
             }
-            guard formatter.tokens[firstIndex] == .keyword("return"),
-                formatter.next(.nonSpaceOrCommentOrLinebreak, after: firstIndex) != .endOfScope("}") else {
-                return
-            }
-            formatter.removeToken(at: firstIndex)
-            if formatter.token(at: firstIndex)?.isSpace == true {
-                formatter.removeToken(at: firstIndex)
+            formatter.removeToken(at: i)
+            if formatter.token(at: i)?.isSpace == true {
+                formatter.removeToken(at: i)
             }
         }
     }

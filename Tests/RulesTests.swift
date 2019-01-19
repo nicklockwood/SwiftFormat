@@ -2768,6 +2768,19 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testKnRNoMangleClosureReturningClosure() {
+        let input = """
+        foo { bar in
+            {
+                bar()
+            }
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // allman style
 
     func testKnRBracesAreConverted() {

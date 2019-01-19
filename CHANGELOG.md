@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.37.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.37.3) (2019-01-19)
+
+- Fixed bug in `wrapArguments` rule when using the `after-first` mode
+- The `elseOnSameLine` rule no longer discards comments between clauses
+- Fixed bug with `redundantBackticks` incorrectly stripping backticks inside keyPaths
+- Wrapped closure chains inside a var declaration are now wrapped correctly
+- Fixed some cases where `redundantReturn` rule was not being applied
+- Fixed bug with `braces` rule affecting nested closures
+
 ## [0.37.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.37.2) (2019-01-01)
 
 - Fixed codesign issues with bundled binaries

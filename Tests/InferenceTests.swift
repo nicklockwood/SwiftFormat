@@ -39,7 +39,7 @@ class InferenceTests: XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent()
 
         _ = enumerateFiles(withInputURL: inputURL) { url, _, _ in
-            return {
+            {
                 if let source = try? String(contentsOf: url) {
                     files.append(source)
                 }

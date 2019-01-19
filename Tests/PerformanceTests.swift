@@ -39,7 +39,7 @@ class PerformanceTests: XCTestCase {
     static let files: [String] = {
         var files = [String]()
         _ = enumerateFiles(withInputURL: sourceDirectory) { url, _, _ in
-            return {
+            {
                 if let source = try? String(contentsOf: url) {
                     files.append(source)
                 }

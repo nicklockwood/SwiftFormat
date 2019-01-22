@@ -1980,7 +1980,7 @@ extension FormatRules {
                     prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: j) ?? j
                 }
                 let prevToken = formatter.tokens[prevIndex]
-                guard ![.delimiter(":"), .operator("=", .infix), .startOfScope("(")].contains(prevToken),
+                guard ![.delimiter(":"), .startOfScope("(")].contains(prevToken),
                     var prevKeywordIndex = formatter.index(of: .keyword, before: startIndex) else {
                     break
                 }
@@ -1999,7 +1999,8 @@ extension FormatRules {
                     return
                 }
                 if ["let", "var"].contains(keyword) {
-                    guard let equalIndex = formatter.index(of: .operator("=", .infix), before: prevIndex),
+                    guard let equalIndex = prevToken == .operator("=", .infix) ? prevIndex :
+                        formatter.index(of: .operator("=", .infix), before: prevIndex),
                         equalIndex > prevKeywordIndex else {
                         return
                     }

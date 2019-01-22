@@ -4624,6 +4624,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveReturnAfterParentheses() {
+        let input = "if let foo = (bar as? String) { return foo }"
+        let output = "if let foo = (bar as? String) { return foo }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

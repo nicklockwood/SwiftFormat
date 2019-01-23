@@ -328,6 +328,11 @@ public class Formatter: NSObject {
         return last(.startOfScope, before: index)
     }
 
+    /// Returns the index of the start of the containing scope at the specified index
+    public func startOfScope(at index: Int) -> Int? {
+        return self.index(of: .startOfScope, before: index)
+    }
+
     /// Returns the index of the ending token for the current scope
     public func endOfScope(at index: Int) -> Int? {
         let startIndex: Int

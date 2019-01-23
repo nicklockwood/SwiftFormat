@@ -1762,8 +1762,8 @@ class RulesTests: XCTestCase {
     }
 
     func testIndentEnumDeclarationInsideSwitchCase() {
-        let input = "switch x {\ncase y:\nenum Foo {\ncase z\n}\nbreak\ndefault: break\n}"
-        let output = "switch x {\ncase y:\n    enum Foo {\n        case z\n    }\n    break\ndefault: break\n}"
+        let input = "switch x {\ncase y:\nenum Foo {\ncase z\n}\nbar()\ndefault: break\n}"
+        let output = "switch x {\ncase y:\n    enum Foo {\n        case z\n    }\n    bar()\ndefault: break\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -2381,16 +2381,16 @@ class RulesTests: XCTestCase {
     }
 
     func testSwitchIfEndifInsideCaseIndenting() {
-        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbreak\ncase .baz: break\n}"
-        let output = "switch foo {\ncase .bar:\n    #if x\n        bar()\n    #endif\n    break\ncase .baz: break\n}"
+        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
+        let output = "switch foo {\ncase .bar:\n    #if x\n        bar()\n    #endif\n    baz()\ncase .baz: break\n}"
         let options = FormatOptions(indentCase: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testSwitchIfEndifInsideCaseIndenting2() {
-        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbreak\ncase .baz: break\n}"
-        let output = "switch foo {\n    case .bar:\n        #if x\n            bar()\n        #endif\n        break\n    case .baz: break\n}"
+        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
+        let output = "switch foo {\n    case .bar:\n        #if x\n            bar()\n        #endif\n        baz()\n    case .baz: break\n}"
         let options = FormatOptions(indentCase: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -2467,16 +2467,16 @@ class RulesTests: XCTestCase {
     }
 
     func testIfEndifInsideCaseNoIndenting() {
-        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbreak\ncase .baz: break\n}"
-        let output = "switch foo {\ncase .bar:\n    #if x\n    bar()\n    #endif\n    break\ncase .baz: break\n}"
+        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
+        let output = "switch foo {\ncase .bar:\n    #if x\n    bar()\n    #endif\n    baz()\ncase .baz: break\n}"
         let options = FormatOptions(indentCase: false, ifdefIndent: .noIndent)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testIfEndifInsideCaseNoIndenting2() {
-        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbreak\ncase .baz: break\n}"
-        let output = "switch foo {\n    case .bar:\n        #if x\n        bar()\n        #endif\n        break\n    case .baz: break\n}"
+        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
+        let output = "switch foo {\n    case .bar:\n        #if x\n        bar()\n        #endif\n        baz()\n    case .baz: break\n}"
         let options = FormatOptions(indentCase: true, ifdefIndent: .noIndent)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
@@ -7653,6 +7653,66 @@ class RulesTests: XCTestCase {
         let input = "import class Foo.Bar"
         let output = "import class Foo.Bar"
         XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    // MARK: redundantBreak
+
+    func testRedundantBreaksRemoved() {
+        let input = """
+        switch x {
+        case foo:
+            print("hello")
+            break
+        case bar:
+            print("world")
+            break
+        default:
+            print("goodbye")
+            break
+        }
+        """
+        let output = """
+        switch x {
+        case foo:
+            print("hello")
+        case bar:
+            print("world")
+        default:
+            print("goodbye")
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBreak]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testBreakInEmptyCaseNotRemoved() {
+        let input = """
+        switch x {
+        case foo:
+            break
+        case bar:
+            break
+        default:
+            break
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBreak]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testConditionalBreakNotRemoved() {
+        let input = """
+        switch x {
+        case foo:
+            if bar {
+                break
+            }
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBreak]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 }

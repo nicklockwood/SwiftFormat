@@ -663,6 +663,19 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
 + func foo(with default: Int) {}
 ```
 
+***redundantBreak*** - removes redundant `break` statements from inside switch cases:
+
+```diff
+  switch foo {
+    case bar:
+        print("bar")
+-       break
+    default:
+        print("default")
+-       break
+  }
+```
+
 ***redundantGet*** - removes unnecessary `get { }` clauses from inside read-only computed properties:
 
 ```diff

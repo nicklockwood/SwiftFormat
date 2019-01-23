@@ -3525,22 +3525,14 @@ extension FormatRules {
         formatter.forEach(.keyword("break")) { i, _ in
             guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope(":"),
                 formatter.currentScope(at: i) == .startOfScope(":"),
-                let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) else {
+                formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isEndOfScope == true,
+                let endIndex = formatter.index(of: .nonSpace, after: i) else {
                 return
             }
-            switch formatter.tokens[nextIndex] {
-            case .endOfScope("case"), .endOfScope("default"),
-                 .endOfScope("}") where formatter.isSwitchStatement(at: nextIndex):
-                break
-            default:
-                return
-            }
-            if let endIndex = formatter.index(of: .nonSpace, after: i) {
-                formatter.removeTokens(inRange: i ..< endIndex)
-                if formatter.tokens[i].isLinebreak {
-                    let startIndex = formatter.startOfLine(at: i)
-                    formatter.removeTokens(inRange: startIndex ... i)
-                }
+            formatter.removeTokens(inRange: i ..< endIndex)
+            if formatter.tokens[i].isLinebreak {
+                let startIndex = formatter.startOfLine(at: i)
+                formatter.removeTokens(inRange: startIndex ... i)
             }
         }
     }
@@ -3640,36 +3632,5 @@ private extension FormatRules {
         // End of imports
         importStack.append(importRanges)
         return importStack
-    }
-}
-
-private extension Formatter {
-    func isSwitchStatement(at index: Int) -> Bool {
-        var index = index
-        while let token = token(at: index), token != .startOfScope("{") {
-            if token == .startOfScope(":") {
-                return true
-            }
-            guard let i = startOfScope(at: index) else {
-                return false
-            }
-            index = i
-        }
-        loop: while let i = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
-            index = i
-            switch tokens[index] {
-            case .keyword("switch"):
-                return true
-            case .keyword("as"), .keyword("is"):
-                break
-            case .keyword, .startOfScope:
-                return false
-            case .endOfScope:
-                index = self.index(of: .startOfScope, before: index) ?? -1
-            default:
-                break
-            }
-        }
-        return false
     }
 }

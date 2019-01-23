@@ -7625,4 +7625,34 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantLetError]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
+
+    // MARK: anyObjectProtocol
+
+    func testClassReplacedByAnyObject() {
+        let input = "protocol Foo: class {}"
+        let output = "protocol Foo: AnyObject {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testClassReplacedByAnyObjectWithOtherProtocols() {
+        let input = "protocol Foo: class, Codable {}"
+        let output = "protocol Foo: AnyObject, Codable {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testClassDeclarationNotReplacedByAnyObject() {
+        let input = "class Foo: Codable {}"
+        let output = "class Foo: Codable {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testClassImportNotReplacedByAnyObject() {
+        let input = "import class Foo.Bar"
+        let output = "import class Foo.Bar"
+        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
 }

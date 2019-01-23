@@ -3503,6 +3503,22 @@ extension FormatRules {
             }
         }
     }
+
+    /// Prefer `AnyObject` over `class` for class-based protocols
+    @objc public class func anyObjectProtocol(_ formatter: Formatter) {
+        formatter.forEach(.keyword("protocol")) { i, _ in
+            guard let nameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                $0.isIdentifier
+            }), let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nameIndex, if: {
+                $0 == .delimiter(":")
+            }), let classIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex, if: {
+                $0 == .keyword("class")
+            }) else {
+                return
+            }
+            formatter.replaceToken(at: classIndex, with: .identifier("AnyObject"))
+        }
+    }
 }
 
 // MARK: shared helper methods

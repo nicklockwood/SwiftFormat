@@ -313,6 +313,13 @@ There is no need to manually re-enable a rule after using the `next` directive.
 
 Here are all the rules that SwiftFormat currently applies, and the effects that they have:
 
+***anyObjectProtocol*** - replaces `class` with `AnyObject` in protocol definitions, as recommended in modern Swift guidelines:
+
+```diff
+- protocol Foo: class {}
++ protocol Foo: AnyObject {}
+```
+
 ***blankLinesAtEndOfScope*** - removes trailing blank lines from inside braces, brackets, parens or chevrons:
 
 ```diff
@@ -632,7 +639,17 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
 + let big = 123_456.123
 ```
 
-***ranges*** - controls the spacing around range operators. By default, a space is added, but this can be configured using the `--ranges` option (`spaced` (default) or `nospace`).
+***ranges*** - controls the spacing around range operators. By default, a space is added, but this can be configured using the `--ranges` option (`spaced` (default) or `nospace`):
+
+```diff
+- for i in 0..<5 {}
++ for i in 0 ..< 5 {}
+```
+
+```diff
+- if (0...5).contains(i) {}
++ if (0 ... 5).contains(i) {}
+```
 
 ***redundantBackticks*** - removes unnecessary escaping of identifiers using backticks, e.g. in cases where the escaped word is not a keyword, or is not ambiguous in that context:
 

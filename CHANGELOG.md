@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.37.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.37.5) (2019-01-24)
+
+- Fixed another regression in the `redundantReturn` rule
+
 ## [0.37.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.37.4) (2019-01-22)
 
 - Fixed a regression in the `redundantReturn` rule, causing `return` to be removed when it shouldn't

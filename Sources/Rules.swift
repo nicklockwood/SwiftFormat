@@ -3044,19 +3044,30 @@ extension FormatRules {
     /// Normalize the use of void in closure arguments and return values
     @objc public class func void(_ formatter: Formatter) {
         func isArgumentToken(at index: Int) -> Bool {
-            if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) {
-                if [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
+            guard let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) else {
+                return false
+            }
+            switch nextToken {
+            case .operator("->", .infix), .keyword("throws"), .keyword("rethrows"):
+                return true
+            case .startOfScope("{"):
+                if formatter.tokens[index] == .endOfScope(")"),
+                    let index = formatter.index(of: .startOfScope("("), before: index),
+                    let nameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index, if: {
+                        $0.isIdentifier
+                    }), formatter.last(.nonSpaceOrCommentOrLinebreak, before: nameIndex) == .keyword("func") {
                     return true
                 }
-                if nextToken == .keyword("in") {
-                    var index = index
-                    if formatter.tokens[index].isEndOfScope {
-                        index = formatter.index(of: .startOfScope, before: index) ?? index
-                    }
+                return false
+            case .keyword("in"):
+                if formatter.tokens[index] == .endOfScope(")"),
+                    let index = formatter.index(of: .startOfScope("("), before: index) {
                     return formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .startOfScope("{")
                 }
+                return false
+            default:
+                return false
             }
-            return false
         }
 
         formatter.forEach(.identifier("Void")) { i, _ in

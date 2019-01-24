@@ -3564,6 +3564,12 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testMalformedFuncDoesNotCauseInvalidOutput() throws {
+        let input = "func baz(Void) {}"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
+    }
+
     // useVoid = false
 
     func testUseVoidOptionFalse() {

@@ -988,7 +988,7 @@ goto(fail)
 ***spaceInsideParens*** - removes the space inside `( ... )`:
 
 ```diff
-- ( a, b )
+- ( a, b)
 + (a, b)
 ```
 
@@ -1008,6 +1008,16 @@ goto(fail)
 - convenience private init() 
 + private convenience init()
 ```
+
+***strongifiedSelf*** - replaces ``self`` with self when using the common `guard let `self` = self` pattern for strongifying weak self references:
+
+```diff
+- guard let `self` = self else { return }
++ guard let self = self else { return }
+```
+
+**NOTE:** assignment to un-escaped `self` is only supported in Swift 4.2 and above, so the `strongifiedSelf` rule is disabled by default, and must be explicitly enabled using the `--enable strongifiedSelf` command-line option.
+
 
 ***strongOutlets*** - removes the `weak` specifier from `@IBOutlet` properties, as per [Apple's recommendation](https://developer.apple.com/videos/play/wwdc2015/407/):
 

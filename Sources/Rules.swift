@@ -76,7 +76,7 @@ public class FormatRules: NSObject {
     }
 
     /// Rules that are disabled by default
-    public static let disabledByDefault = ["trailingClosures", "isEmpty"]
+    public static let disabledByDefault = ["trailingClosures", "isEmpty", "strongifiedSelf"]
 
     /// Default active rules
     public static let `default` = all(except: disabledByDefault)
@@ -3534,6 +3534,18 @@ extension FormatRules {
                 let startIndex = formatter.startOfLine(at: i)
                 formatter.removeTokens(inRange: startIndex ... i)
             }
+        }
+    }
+
+    /// Removed backticks from `self` when strongifying
+    @objc public class func strongifiedSelf(_ formatter: Formatter) {
+        formatter.forEach(.identifier("`self`")) { i, _ in
+            guard let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                $0 == .operator("=", .infix)
+            }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: equalIndex) == .identifier("self") else {
+                return
+            }
+            formatter.replaceToken(at: i, with: .identifier("self"))
         }
     }
 }

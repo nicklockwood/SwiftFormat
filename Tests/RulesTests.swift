@@ -7715,4 +7715,36 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantBreak]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
+
+    // strongifiedSelf
+
+    func testBacktickedSelfConvertedToSelfInGuard() {
+        let input = """
+        { [weak self] in
+            guard let `self` = self else { return }
+        }
+        """
+        let output = """
+        { [weak self] in
+            guard let self = self else { return }
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongifiedSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testBacktickedSelfConvertedToSelfInIf() {
+        let input = """
+        { [weak self] in
+            if let `self` = self else { print(self) }
+        }
+        """
+        let output = """
+        { [weak self] in
+            if let self = self else { print(self) }
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongifiedSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
 }

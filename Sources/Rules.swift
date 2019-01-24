@@ -1978,6 +1978,9 @@ extension FormatRules {
                 if formatter.tokens[prevIndex] == .endOfScope(")"),
                     let j = formatter.index(of: .startOfScope("("), before: prevIndex) {
                     prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: j) ?? j
+                    guard formatter.tokens[prevIndex].isIdentifier else {
+                        return
+                    }
                 }
                 let prevToken = formatter.tokens[prevIndex]
                 guard ![.delimiter(":"), .startOfScope("(")].contains(prevToken),

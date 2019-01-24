@@ -4631,6 +4631,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
+    func testNoRemoveReturnInTupleVarGetter() {
+        let input = "var foo: (Int, Int) { return (1, 2) }"
+        let output = "var foo: (Int, Int) { return (1, 2) }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
     // MARK: redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

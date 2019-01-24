@@ -1065,7 +1065,7 @@ goto(fail)
 ***void*** - standardizes the use of `Void` vs an empty tuple `()` to represent empty argument lists and return values, depending on the `--empty` option (`void` (default) or `tuple`).
 
 ```diff
-- let foo: () -> (
+- let foo: () -> ()
 + let foo: () -> Void
 ```
 

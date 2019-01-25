@@ -1961,8 +1961,7 @@ extension FormatRules {
     /// Remove redundant return keyword from single-line closures
     @objc public class func redundantReturn(_ formatter: Formatter) {
         formatter.forEach(.keyword("return")) { i, _ in
-            guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .endOfScope("}"),
-                let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
+            guard let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
                 return
             }
             switch formatter.tokens[startIndex] {

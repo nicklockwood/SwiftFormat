@@ -4616,9 +4616,9 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testNoRemoveVoidReturn() {
+    func testRemoveVoidReturn() {
         let input = "{ _ in return }"
-        let output = "{ _ in return }"
+        let output = "{ _ in }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }

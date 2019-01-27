@@ -17,7 +17,6 @@
 		01045A9F2119D30D00D2BE3D /* Inference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01045A90211988F100D2BE3D /* Inference.swift */; };
 		01045AA0211A1EE300D2BE3D /* Arguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01045A982119979400D2BE3D /* Arguments.swift */; };
 		010BC9A21DCFDF1E003F4F11 /* TokenizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018E82741D62E730008CA0F8 /* TokenizerTests.swift */; };
-		012092821E2D9A3C008B0520 /* RulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */; };
 		012092861E2D9E14008B0520 /* FormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987A1D763424009ADE61 /* FormatterTests.swift */; };
 		0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */; };
 		015AF2C01DC6A538008F0A8C /* SwiftFormat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */; };
@@ -702,7 +701,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				012092861E2D9E14008B0520 /* FormatterTests.swift in Sources */,
-				012092821E2D9A3C008B0520 /* RulesTests.swift in Sources */,
 				015AF2CA1DC6A58C008F0A8C /* PerformanceTests.swift in Sources */,
 				010BC9A21DCFDF1E003F4F11 /* TokenizerTests.swift in Sources */,
 			);

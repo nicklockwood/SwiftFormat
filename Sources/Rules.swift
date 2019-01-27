@@ -641,8 +641,7 @@ extension FormatRules {
             case .endOfScope("}"):
                 if spaceableScopeStack.count > 1, spaceableScopeStack[spaceableScopeStack.count - 2] {
                     guard let openingBraceIndex = formatter.index(of: .startOfScope("{"), before: i),
-                        let previousLinebreakIndex = formatter.index(of: .linebreak, before: i),
-                        previousLinebreakIndex > openingBraceIndex else {
+                        formatter.lastIndex(of: .linebreak, in: openingBraceIndex + 1 ..< i) != nil else {
                         // Inline braces
                         break
                     }
@@ -666,15 +665,10 @@ extension FormatRules {
                             }
                             break
                         default:
-                            if let firstLinebreakIndex = formatter.index(of: .linebreak, after: i),
-                                firstLinebreakIndex < nextTokenIndex {
-                                if let secondLinebreakIndex = formatter.index(of: .linebreak, after: firstLinebreakIndex),
-                                    secondLinebreakIndex < nextTokenIndex {
-                                    // Already has a blank line after
-                                } else {
-                                    // Insert linebreak
-                                    formatter.insertToken(.linebreak(formatter.options.linebreak), at: firstLinebreakIndex)
-                                }
+                            if let firstLinebreakIndex = formatter.index(of: .linebreak, in: i + 1 ..< nextTokenIndex),
+                                formatter.index(of: .linebreak, in: firstLinebreakIndex + 1 ..< nextTokenIndex) == nil {
+                                // Insert linebreak
+                                formatter.insertToken(.linebreak(formatter.options.linebreak), at: firstLinebreakIndex)
                             }
                         }
                     }
@@ -1174,9 +1168,8 @@ extension FormatRules {
     @objc public class func braces(_ formatter: Formatter) {
         formatter.forEach(.startOfScope("{")) { i, token in
             // Check this isn't an inline block
-            guard let nextLinebreakIndex = formatter.index(of: .linebreak, after: i),
-                let closingBraceIndex = formatter.index(of: .endOfScope("}"), after: i),
-                nextLinebreakIndex < closingBraceIndex else { return }
+            guard let closingBraceIndex = formatter.index(of: .endOfScope("}"), after: i),
+                formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil else { return }
             guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 ![.delimiter(","), .keyword("in")].contains(prevToken),
                 !prevToken.is(.startOfScope) else { return }
@@ -1609,8 +1602,7 @@ extension FormatRules {
             case .startOfScope("{"):
                 if formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) == .keyword("in"),
                     formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex {
-                    if let labelIndex = formatter.index(of: .delimiter(":"), after: i),
-                        labelIndex < closingIndex {
+                    if formatter.index(of: .delimiter(":"), in: i + 1 ..< closingIndex) != nil {
                         break
                     }
                     removeParen(at: closingIndex)
@@ -1673,8 +1665,7 @@ extension FormatRules {
                     // TODO: this is confusing - refactor to move fallthrough to end of case
                     fallthrough
                 }
-                if let commaIndex = formatter.index(of: .delimiter(","), after: i),
-                    commaIndex < closingIndex {
+                if formatter.index(of: .delimiter(","), in: i + 1 ..< closingIndex) != nil {
                     // Might be a tuple, so we won't remove the parens
                     // TODO: improve the logic here so we don't misidentify function calls as tuples
                     break
@@ -1731,8 +1722,7 @@ extension FormatRules {
     @objc public class func redundantNilInit(_ formatter: Formatter) {
         func search(from index: Int) {
             if let optionalIndex = formatter.index(of: .unwrapOperator, after: index) {
-                if let terminatorIndex = formatter.index(of: .endOfStatement, after: index),
-                    terminatorIndex < optionalIndex {
+                if formatter.index(of: .endOfStatement, in: index + 1 ..< optionalIndex) != nil {
                     return
                 }
                 if !formatter.tokens[optionalIndex - 1].isSpaceOrCommentOrLinebreak,
@@ -1988,10 +1978,10 @@ extension FormatRules {
                 }
                 var keyword = formatter.tokens[prevKeywordIndex].string
                 while ["try", "as", "is"].contains(keyword) || keyword.hasPrefix("#") || keyword.hasPrefix("@") {
-                    prevKeywordIndex = formatter.index(of: .keyword, before: prevKeywordIndex) ?? -1
-                    guard prevKeywordIndex > -1 else {
+                    guard let prevIndex = formatter.index(of: .keyword, before: prevKeywordIndex) else {
                         return
                     }
+                    prevKeywordIndex = prevIndex
                     keyword = formatter.tokens[prevKeywordIndex].string
                 }
                 if [
@@ -2001,9 +1991,9 @@ extension FormatRules {
                     return
                 }
                 if ["let", "var"].contains(keyword) {
-                    guard let equalIndex = prevToken == .operator("=", .infix) ? prevIndex :
-                        formatter.index(of: .operator("=", .infix), before: prevIndex),
-                        equalIndex > prevKeywordIndex else {
+                    guard prevToken == .operator("=", .infix) ||
+                        formatter.lastIndex(of: .operator("=", .infix), in: prevKeywordIndex + 1 ..< prevIndex) != nil
+                    else {
                         return
                     }
                     if let prev = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevKeywordIndex),
@@ -2591,8 +2581,8 @@ extension FormatRules {
 
     /// Replace unused arguments with an underscore
     @objc public class func unusedArguments(_ formatter: Formatter) {
-        func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: Range<Int>) {
-            for i in range.lowerBound ..< range.upperBound {
+        func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: CountableRange<Int>) {
+            for i in range {
                 let token = formatter.tokens[i]
                 if case .identifier = token, let index = argNames.index(of: token.unescaped()),
                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
@@ -2937,11 +2927,8 @@ extension FormatRules {
             if formatter.tokens[index] != .delimiter(",") {
                 index += 1
             }
-            while index > i {
-                guard let commaIndex = formatter.index(of: .delimiter(","), before: index) else {
-                    break
-                }
-                let linebreakIndex = formatter.index(of: .nonSpaceOrComment, after: commaIndex)!
+            while let commaIndex = formatter.lastIndex(of: .delimiter(","), in: i + 1 ..< index),
+                let linebreakIndex = formatter.index(of: .nonSpaceOrComment, after: commaIndex) {
                 if formatter.tokens[linebreakIndex].isLinebreak, !formatter.options.truncateBlankLines ||
                     formatter.next(.nonSpace, after: linebreakIndex).map({ !$0.isLinebreak }) ?? false {
                     formatter.insertSpace(indent + formatter.options.indent, at: linebreakIndex + 1)
@@ -2983,11 +2970,8 @@ extension FormatRules {
             if formatter.tokens[index] != .delimiter(",") {
                 index += 1
             }
-            while index > i {
-                guard let commaIndex = formatter.index(of: .delimiter(","), before: index) else {
-                    break
-                }
-                let linebreakIndex = formatter.index(of: .nonSpaceOrComment, after: commaIndex)!
+            while let commaIndex = formatter.lastIndex(of: .delimiter(","), in: i + 1 ..< index),
+                let linebreakIndex = formatter.index(of: .nonSpaceOrComment, after: commaIndex) {
                 if formatter.tokens[linebreakIndex].isLinebreak {
                     formatter.insertSpace(indent, at: linebreakIndex + 1)
                 } else if !allowGrouping {
@@ -3016,8 +3000,7 @@ extension FormatRules {
             guard mode != .disabled, let closingBraceIndex = formatter.endOfScope(at: i),
                 let firstLinebreakIndex = checkNestedScopes ?
                 (i ..< closingBraceIndex).first(where: { formatter.tokens[$0].isLinebreak }) :
-                formatter.index(of: .linebreak, after: i),
-                firstLinebreakIndex < closingBraceIndex else {
+                formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) else {
                 return
             }
             let firstIdentifierIndex = formatter.index(of:

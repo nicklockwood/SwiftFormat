@@ -259,9 +259,10 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
         var allman = 0, knr = 0
         formatter.forEach(.startOfScope("{")) { i, _ in
             // Check this isn't an inline block
-            guard let nextLinebreakIndex = formatter.index(of: .linebreak, after: i),
-                let closingBraceIndex = formatter.index(of: .endOfScope("}"), after: i),
-                nextLinebreakIndex < closingBraceIndex else { return }
+            guard let closingBraceIndex = formatter.index(of: .endOfScope("}"), after: i),
+                formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil else {
+                return
+            }
             // Check if brace is wrapped
             if let prevTokenIndex = formatter.index(of: .nonSpace, before: i),
                 let prevToken = formatter.token(at: prevTokenIndex) {
@@ -344,10 +345,8 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
         var beforeFirst = 0, afterFirst = 0
         formatter.forEachToken(where: { $0.isStartOfScope && scopes.contains($0.string) }) { i, _ in
             guard let closingBraceIndex = formatter.endOfScope(at: i),
-                let linebreakIndex = formatter.index(of: .linebreak, after: i),
-                linebreakIndex < closingBraceIndex,
-                let firstCommaIndex = formatter.index(of: .delimiter(","), after: i),
-                firstCommaIndex < closingBraceIndex else {
+                formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil,
+                formatter.index(of: .delimiter(","), in: i + 1 ..< closingBraceIndex) != nil else {
                 return
             }
             // Check if linebreak is after opening paren or first comma
@@ -633,8 +632,8 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
         var functionArgsRemoved = 0, functionArgsKept = 0
         var unnamedFunctionArgsRemoved = 0, unnamedFunctionArgsKept = 0
 
-        func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: Range<Int>) {
-            for i in range.lowerBound ..< range.upperBound {
+        func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: CountableRange<Int>) {
+            for i in range {
                 let token = formatter.tokens[i]
                 if case .identifier = token, let index = argNames.index(of: token.unescaped()),
                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
@@ -1197,10 +1196,11 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
             }) else { return }
             // Check this isn't an inline block
             guard let prevBraceIndex = formatter.index(of: .startOfScope("{"), before: braceIndex),
-                let prevLinebreakIndex = formatter.index(of: .linebreak, before: braceIndex),
-                prevLinebreakIndex > prevBraceIndex else { return }
+                formatter.lastIndex(of: .linebreak, in: prevBraceIndex + 1 ..< braceIndex) != nil else {
+                return
+            }
             // Check if wrapped
-            if let linebreakIndex = formatter.index(of: .linebreak, before: i), linebreakIndex > braceIndex {
+            if formatter.lastIndex(of: .linebreak, in: braceIndex + 1 ..< i) != nil {
                 nextLine += 1
             } else {
                 sameLine += 1

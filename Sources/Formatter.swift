@@ -231,11 +231,11 @@ public class Formatter: NSObject {
 
     // MARK: utilities
 
-    /// Returns the index of the next token at the current scope that matches the block
-    public func index(after index: Int, where matches: (Token) -> Bool) -> Int? {
-        guard index < tokens.count else { return nil }
+    /// Returns the index of the next token in the specified range that matches the block
+    public func index(in range: CountableRange<Int>, where matches: (Token) -> Bool) -> Int? {
+        let range = range.clamped(to: 0 ..< tokens.count)
         var scopeStack: [Token] = []
-        for i in index + 1 ..< tokens.count {
+        for i in range {
             let token = tokens[i]
             if let scope = scopeStack.last, token.isEndOfScope(scope) {
                 scopeStack.removeLast()
@@ -253,9 +253,25 @@ public class Formatter: NSObject {
         return nil
     }
 
+    /// Returns the index of the next token at the current scope that matches the block
+    public func index(after index: Int, where matches: (Token) -> Bool) -> Int? {
+        guard index < tokens.count else { return nil }
+        return self.index(in: index + 1 ..< tokens.count, where: matches)
+    }
+
+    /// Returns the index of the next matching token in the specified range
+    public func index(of token: Token, in range: CountableRange<Int>) -> Int? {
+        return index(in: range, where: { $0 == token })
+    }
+
     /// Returns the index of the next matching token at the current scope
     public func index(of token: Token, after index: Int) -> Int? {
         return self.index(after: index, where: { $0 == token })
+    }
+
+    /// Returns the index of the next token in the specified range of the specified type
+    public func index(of type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return index(in: range, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the index of the next token at the current scope of the specified type
@@ -273,12 +289,12 @@ public class Formatter: NSObject {
         return self.index(of: type, after: index, if: matches).map { tokens[$0] }
     }
 
-    /// Returns the index of the previous token at the current scope that matches the block
-    public func index(before index: Int, where matches: (Token) -> Bool) -> Int? {
-        guard index > 0 else { return nil }
+    /// Returns the index of the last token in the specified range that matches the block
+    public func lastIndex(in range: CountableRange<Int>, where matches: (Token) -> Bool) -> Int? {
+        let range = range.clamped(to: 0 ..< tokens.count)
         var linebreakEncountered = false
         var scopeStack: [Token] = []
-        for i in (0 ..< index).reversed() {
+        for i in range.reversed() {
             let token = tokens[i]
             if case .startOfScope = token {
                 if let scope = scopeStack.last, scope.isEndOfScope(token) {
@@ -287,7 +303,7 @@ public class Formatter: NSObject {
                     linebreakEncountered = false
                 } else if matches(token) {
                     return i
-                } else if token.string == "//", self.token(at: index)?.isLinebreak == true {
+                } else if token.string == "//", self.token(at: range.upperBound)?.isLinebreak == true {
                     continue
                 } else {
                     return nil
@@ -303,9 +319,25 @@ public class Formatter: NSObject {
         return nil
     }
 
+    /// Returns the index of the previous token at the current scope that matches the block
+    public func index(before index: Int, where matches: (Token) -> Bool) -> Int? {
+        guard index > 0 else { return nil }
+        return lastIndex(in: 0 ..< index, where: matches)
+    }
+
+    /// Returns the index of the last matching token in the specified range
+    public func lastIndex(of token: Token, in range: CountableRange<Int>) -> Int? {
+        return lastIndex(in: range, where: { $0 == token })
+    }
+
     /// Returns the index of the previous matching token at the current scope
     public func index(of token: Token, before index: Int) -> Int? {
         return self.index(before: index, where: { $0 == token })
+    }
+
+    /// Returns the index of the last token in the specified range of the specified type
+    public func lastIndex(of type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+        return lastIndex(in: range, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the index of the previous token at the current scope of the specified type

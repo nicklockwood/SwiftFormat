@@ -76,7 +76,7 @@ public class FormatRules: NSObject {
     }
 
     /// Rules that are disabled by default
-    public static let disabledByDefault = ["trailingClosures", "isEmpty", "strongifiedSelf"]
+    public static let disabledByDefault = ["trailingClosures", "isEmpty"]
 
     /// Default active rules
     public static let `default` = all(except: disabledByDefault)
@@ -3499,6 +3499,9 @@ extension FormatRules {
 
     /// Prefer `AnyObject` over `class` for class-based protocols
     @objc public class func anyObjectProtocol(_ formatter: Formatter) {
+        guard formatter.options.swiftVersion >= "4.1" else {
+            return
+        }
         formatter.forEach(.keyword("protocol")) { i, _ in
             guard let nameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
                 $0.isIdentifier
@@ -3532,6 +3535,9 @@ extension FormatRules {
 
     /// Removed backticks from `self` when strongifying
     @objc public class func strongifiedSelf(_ formatter: Formatter) {
+        guard formatter.options.swiftVersion >= "4.2" else {
+            return
+        }
         formatter.forEach(.identifier("`self`")) { i, _ in
             guard let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
                 $0 == .operator("=", .infix)

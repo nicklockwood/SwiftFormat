@@ -37,6 +37,9 @@ public let version = "0.37.5"
 /// The standard SwiftFormat config file name
 public let swiftFormatConfigurationFile = ".swiftformat"
 
+/// The standard Swift version file name
+public let swiftVersionFile = ".swift-version"
+
 /// An enumeration of the types of error that may be thrown by SwiftFormat
 public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomNSError {
     case reading(String)
@@ -185,6 +188,19 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     let data = try Data(contentsOf: configFile)
                     let args = try parseConfigFile(data)
                     try options.addArguments(args, in: inputURL.path)
+                } catch {
+                    onComplete { throw error }
+                    return
+                }
+            }
+            let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
+            if manager.fileExists(atPath: versionFile.path) {
+                do {
+                    let versionString = try String(contentsOf: versionFile, encoding: .utf8)
+                    guard let version = Version(rawValue: versionString) else {
+                        throw FormatError.options("malformed .swift-format file as \(versionFile.path)")
+                    }
+                    options.formatOptions?.swiftVersion = version
                 } catch {
                     onComplete { throw error }
                     return

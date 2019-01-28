@@ -216,6 +216,7 @@ extension FormatOptions.Descriptor {
         experimentalRules,
         fragment,
         ignoreConflictMarkers,
+        swiftVersion,
     ]
 
     /// An Array of all descriptors
@@ -485,6 +486,12 @@ extension FormatOptions.Descriptor {
         keyPath: \.ignoreConflictMarkers,
         trueValues: ["ignore", "true", "enabled"],
         falseValues: ["reject", "false", "disabled"]
+    )
+    static let swiftVersion = FormatOptions.Descriptor(
+        argumentName: "swiftversion",
+        propertyName: "swiftVersion",
+        displayName: "Swift Version",
+        keyPath: \.swiftVersion
     )
 
     // MARK: - DEPRECATED

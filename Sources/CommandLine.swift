@@ -106,6 +106,7 @@ func printHelp(as type: CLI.OutputType) {
     --symlinks         how symlinks are handled. "follow" or "ignore" (default)
     --fragment         input is part of a larger file. "true" or "false" (default)
     --conflictmarkers  merge conflict markers, either "reject" (default) or "ignore"
+    --swiftversion     the version of swift used by the project being formatted
     --cache            path to cache file, or "clear" or "ignore" the default cache
     --verbose          display detailed formatting output and warnings/errors
     --quiet            disables non-critical output messages and warnings
@@ -605,6 +606,15 @@ func processInput(_ inputURLs: [URL],
         print("-- ignored", as: .warning)
         return {}
     } : nil
+    // Swift version
+    var warnedAboutSwiftVersion = false
+    func warnAboutSwiftVersion(_ options: Options) {
+        guard !warnedAboutSwiftVersion, options.formatOptions?.swiftVersion == nil else {
+            return
+        }
+        print("warning: no swift version was specified, so some formatting features were disabled. specify the version of swift you are using with the --swiftversion command line option, or by adding a .swift-version file to your project.", as: .warning)
+        warnedAboutSwiftVersion = true
+    }
     // Format files
     var errors = [Error]()
     var filesChecked = 0, filesFailed = 0, filesWritten = 0
@@ -674,6 +684,7 @@ func processInput(_ inputURLs: [URL],
                     return {
                         filesChecked += 1
                         cache?[cacheKey] = cacheValue
+                        warnAboutSwiftVersion(options)
                     }
                 }
                 if dryrun {
@@ -681,6 +692,7 @@ func processInput(_ inputURLs: [URL],
                     return {
                         filesChecked += 1
                         filesFailed += 1
+                        warnAboutSwiftVersion(options)
                     }
                 } else {
                     do {
@@ -693,6 +705,7 @@ func processInput(_ inputURLs: [URL],
                             filesFailed += 1
                             filesWritten += 1
                             cache?[cacheKey] = cacheValue
+                            warnAboutSwiftVersion(options)
                         }
                     } catch {
                         throw FormatError.writing("failed to write file \(outputURL.path), \(error)")
@@ -704,6 +717,7 @@ func processInput(_ inputURLs: [URL],
                 }
                 return {
                     filesChecked += 1
+                    warnAboutSwiftVersion(options)
                     if case let FormatError.parsing(string) = error {
                         throw FormatError.parsing("\(string) in \(inputURL.path)")
                     }

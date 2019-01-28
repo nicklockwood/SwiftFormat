@@ -7637,29 +7637,41 @@ class RulesTests: XCTestCase {
     func testClassReplacedByAnyObject() {
         let input = "protocol Foo: class {}"
         let output = "protocol Foo: AnyObject {}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        let options = FormatOptions(swiftVersion: "4.1")
+        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
     func testClassReplacedByAnyObjectWithOtherProtocols() {
         let input = "protocol Foo: class, Codable {}"
         let output = "protocol Foo: AnyObject, Codable {}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        let options = FormatOptions(swiftVersion: "4.1")
+        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
     func testClassDeclarationNotReplacedByAnyObject() {
         let input = "class Foo: Codable {}"
         let output = "class Foo: Codable {}"
-        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        let options = FormatOptions(swiftVersion: "4.1")
+        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
     func testClassImportNotReplacedByAnyObject() {
         let input = "import class Foo.Bar"
         let output = "import class Foo.Bar"
-        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        let options = FormatOptions(swiftVersion: "4.1")
+        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testClassNotReplacedByAnyObjectIfSwiftVersionLessThan4_1() {
+        let input = "protocol Foo: class {}"
+        let output = "protocol Foo: class {}"
+        let options = FormatOptions(swiftVersion: "4.0")
+        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
     // MARK: redundantBreak
@@ -7735,8 +7747,9 @@ class RulesTests: XCTestCase {
             guard let self = self else { return }
         }
         """
-        XCTAssertEqual(try format(input, rules: [FormatRules.strongifiedSelf]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        let options = FormatOptions(swiftVersion: "4.2")
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongifiedSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
     func testBacktickedSelfConvertedToSelfInIf() {
@@ -7750,6 +7763,30 @@ class RulesTests: XCTestCase {
             if let self = self else { print(self) }
         }
         """
+        let options = FormatOptions(swiftVersion: "4.2")
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongifiedSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testBacktickedSelfNotConvertedIfVersionLessThan4_2() {
+        let input = """
+        { [weak self] in
+            guard let `self` = self else { return }
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4.1.5")
+        XCTAssertEqual(try format(input, rules: [FormatRules.strongifiedSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testBacktickedSelfNotConvertedIfVersionUnspecified() {
+        let input = """
+        { [weak self] in
+            guard let `self` = self else { return }
+        }
+        """
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.strongifiedSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }

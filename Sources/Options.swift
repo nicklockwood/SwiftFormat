@@ -53,6 +53,37 @@ public enum ArgumentStrippingMode: String {
     case all = "always"
 }
 
+/// Version number wrapper
+public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral {
+    public let rawValue: String
+
+    public static let undefined = Version(rawValue: "0")!
+
+    public init(stringLiteral value: String) {
+        self.init(rawValue: value)!
+    }
+
+    public init?(rawValue: String) {
+        let rawValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !rawValue.components(separatedBy: ".").contains(where: { Double($0) == nil }) else {
+            return nil
+        }
+        self.rawValue = rawValue
+    }
+
+    public static func == (lhs: Version, rhs: Version) -> Bool {
+        return lhs.rawValue == rhs.rawValue
+    }
+
+    public static func < (lhs: Version, rhs: Version) -> Bool {
+        return lhs.rawValue.compare(
+            rhs.rawValue,
+            options: .numeric,
+            locale: Locale(identifier: "en_US")
+        ) == .orderedAscending
+    }
+}
+
 /// Argument type for stripping
 public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStringLiteral {
     case ignore
@@ -217,6 +248,7 @@ public struct FormatOptions: CustomStringConvertible {
 
     // Doesn't really belong here, but hard to put elsewhere
     public var ignoreConflictMarkers: Bool
+    public var swiftVersion: Version
 
     public static let `default` = FormatOptions()
 
@@ -253,7 +285,8 @@ public struct FormatOptions: CustomStringConvertible {
                 experimentalRules: Bool = false,
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
-                importGrouping: ImportGrouping = .alphabetized) {
+                importGrouping: ImportGrouping = .alphabetized,
+                swiftVersion: Version = .undefined) {
         self.indent = indent
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons
@@ -288,6 +321,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers
         self.importGrouping = importGrouping
+        self.swiftVersion = swiftVersion
     }
 
     public var allOptions: [String: Any] {

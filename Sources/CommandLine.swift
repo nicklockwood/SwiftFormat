@@ -84,6 +84,17 @@ public enum ExitCode: Int32 {
     case error = 70 // EX_SOFTWARE
 }
 
+var formatOptionsHelp: String {
+    return FormatOptions.Descriptor.formatting.compactMap {
+        guard !$0.isDeprecated else { return nil }
+        var result = "--\($0.argumentName)"
+        for _ in 0 ..< 19 - result.count {
+            result += " "
+        }
+        return result + $0.help
+    }.sorted().joined(separator: "\n")
+}
+
 func printHelp(as type: CLI.OutputType) {
     print("")
     print("""
@@ -104,9 +115,9 @@ func printHelp(as type: CLI.OutputType) {
     --output           output path for formatted file(s) (defaults to input path)
     --exclude          comma-delimited list of ignored paths (supports glob syntax)
     --symlinks         how symlinks are handled. "follow" or "ignore" (default)
-    --fragment         input is part of a larger file. "true" or "false" (default)
-    --conflictmarkers  merge conflict markers, either "reject" (default) or "ignore"
-    --swiftversion     the version of swift used by the project being formatted
+    --fragment         \(FormatOptions.Descriptor.fragment.help)
+    --conflictmarkers  \(FormatOptions.Descriptor.ignoreConflictMarkers.help)
+    --swiftversion     \(FormatOptions.Descriptor.swiftVersion.help)
     --cache            path to cache file, or "clear" or "ignore" the default cache
     --verbose          display detailed formatting output and warnings/errors
     --quiet            disables non-critical output messages and warnings
@@ -119,40 +130,12 @@ func printHelp(as type: CLI.OutputType) {
     --rules            the list of rules to apply (pass nothing to print all rules)
     --disable          a list of format rules to be disabled (comma-delimited)
     --enable           a list of disabled rules to be re-enabled (comma-delimited)
-    --experimental     experimental rules. "enabled" or "disabled" (default)
+    --experimental     \(FormatOptions.Descriptor.experimentalRules.help)
 
     swiftformat's rules can be configured using options. a given option may affect
     multiple rules. options have no affect if the related rules have been disabled:
 
-    --allman           use allman indentation style. "true" or "false" (default)
-    --binarygrouping   binary grouping,threshold (default: 4,8) or "none", "ignore"
-    --commas           commas in collection literals. "always" (default) or "inline"
-    --comments         indenting of comment bodies. "indent" (default) or "ignore"
-    --closingparen     closing paren position, "balanced" (default) or "same-line"
-    --decimalgrouping  decimal grouping,threshold (default: 3,6) or "none", "ignore"
-    --elseposition     placement of else/catch. "same-line" (default) or "next-line"
-    --empty            how empty values are represented. "void" (default) or "tuple"
-    --exponentcase     case of 'e' in numbers. "lowercase" or "uppercase" (default)
-    --exponentgrouping group exponent digits, "enabled" or "disabled" (default)
-    --fractiongrouping group digits after '.', "enabled" or "disabled" (default)
-    --header           header comments. "strip", "ignore", or the text you wish use
-    --hexgrouping      hex grouping,threshold (default: 4,8) or "none", "ignore"
-    --hexliteralcase   casing for hex literals. "uppercase" (default) or "lowercase"
-    --ifdef            #if indenting. "indent" (default), "no-indent" or "outdent"
-    --indent           number of spaces to indent, or "tab" to use tabs
-    --indentcase       indent cases inside a switch. "true" or "false" (default)
-    --linebreaks       linebreak character to use. "cr", "crlf" or "lf" (default)
-    --octalgrouping    octal grouping,threshold or "none", "ignore". default: 4,8
-    --operatorfunc     spacing for operator funcs. "spaced" (default) or "no-space"
-    --patternlet       let/var placement in patterns. "hoist" (default) or "inline"
-    --ranges           spacing for ranges. "spaced" (default) or "no-space"
-    --semicolons       allow semicolons. "never" or "inline" (default)
-    --self             explicit self. "insert", "remove" (default) or "init-only"
-    --importgrouping   "testable-top", "testable-bottom" or "alphabetized" (default)
-    --stripunusedargs  "closure-only", "unnamed-only" or "always" (default)
-    --trimwhitespace   trim trailing space. "always" (default) or "nonblank-lines"
-    --wraparguments    wrap function args. "before-first", "after-first", "preserve"
-    --wrapcollections  wrap array/dict. "before-first", "after-first", "preserve"
+    \(formatOptionsHelp)
     """, as: type)
     print("")
 }

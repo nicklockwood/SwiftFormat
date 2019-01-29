@@ -81,7 +81,7 @@ final class OptionsViewController: NSViewController {
                     let list = UserSelectionList(
                         identifier: descriptor.argumentName,
                         title: descriptor.displayName,
-                        description: nil,
+                        description: descriptor.toolTip,
                         isEnabled: enabled,
                         selection: selection,
                         options: [t[0], f[0]],
@@ -93,7 +93,7 @@ final class OptionsViewController: NSViewController {
                     let list = UserSelectionList(
                         identifier: descriptor.argumentName,
                         title: descriptor.displayName,
-                        description: nil,
+                        description: descriptor.toolTip,
                         isEnabled: enabled,
                         selection: selection,
                         options: values,
@@ -105,7 +105,7 @@ final class OptionsViewController: NSViewController {
                     let freeText = UserSelectionFreeText(
                         identifier: descriptor.argumentName,
                         title: descriptor.displayName,
-                        description: nil,
+                        description: descriptor.toolTip,
                         isEnabled: enabled,
                         selection: selection,
                         observer: { input in

@@ -48,6 +48,7 @@ class ListSelectionTableCellView: NSTableCellView {
             }
             title.textColor = model.isEnabled ? .textColor : .disabledControlTextColor
             title.stringValue = model.title ?? ""
+            toolTip = model.description
             dropDown.isEnabled = model.isEnabled
             dropDown.removeAllItems()
             dropDown.addItems(withTitles: model.options.map { $0 })

@@ -61,6 +61,7 @@ class FreeTextTableCellView: NSTableCellView {
             title.textColor = .textColor
             freeTextField.textColor = .textColor
         }
+        toolTip = model.description
     }
 }
 

@@ -43,6 +43,7 @@ extension FormatOptions {
         let argumentName: String // command-line argument; must not change
         let propertyName: String // internal property; ok to change this
         let displayName: String
+        let help: String
         let toOptions: (String, inout FormatOptions) throws -> Void
         let fromOptions: (FormatOptions) -> String
         private(set) var type: ArgumentType
@@ -59,6 +60,10 @@ extension FormatOptions {
             return fromOptions(FormatOptions.default)
         }
 
+        var toolTip: String {
+            return (help.first.map { "\($0)" } ?? "").uppercased() + help.dropFirst() + "."
+        }
+
         func validateArgument(_ arg: String) -> Bool {
             var options = FormatOptions.default
             return (try? toOptions(arg, &options)) != nil
@@ -67,12 +72,14 @@ extension FormatOptions {
         init(argumentName: String,
              propertyName: String,
              displayName: String,
+             help: String,
              keyPath: WritableKeyPath<FormatOptions, Bool>,
              trueValues: [String],
              falseValues: [String]) {
             self.argumentName = argumentName
             self.propertyName = propertyName
             self.displayName = displayName
+            self.help = help
             type = .binary(true: trueValues, false: falseValues)
             toOptions = { value, options in
                 switch value.lowercased() {
@@ -92,12 +99,14 @@ extension FormatOptions {
         init(argumentName: String,
              propertyName: String,
              displayName: String,
+             help: String,
              keyPath: WritableKeyPath<FormatOptions, String>,
              fromArgument: @escaping (String) -> String?,
              toArgument: @escaping (String) -> String) {
             self.argumentName = argumentName
             self.propertyName = propertyName
             self.displayName = displayName
+            self.help = help
             type = .text
             toOptions = { key, options in
                 guard let value = fromArgument(key) else {
@@ -113,6 +122,7 @@ extension FormatOptions {
         init(argumentName: String,
              propertyName: String,
              displayName: String,
+             help: String,
              keyPath: WritableKeyPath<FormatOptions, String>,
              options: DictionaryLiteral<String, String>) {
             let map: [String: String] = Dictionary(options.map { ($0, $1) }, uniquingKeysWith: { $1 })
@@ -120,6 +130,7 @@ extension FormatOptions {
             self.init(argumentName: argumentName,
                       propertyName: propertyName,
                       displayName: displayName,
+                      help: help,
                       keyPath: keyPath,
                       fromArgument: { map[$0.lowercased()] },
                       toArgument: { value in
@@ -138,10 +149,12 @@ extension FormatOptions {
         init<T: RawRepresentable>(argumentName: String,
                                   propertyName: String,
                                   displayName: String,
+                                  help: String = "",
                                   keyPath: WritableKeyPath<FormatOptions, T>) where T.RawValue == String {
             self.argumentName = argumentName
             self.propertyName = propertyName
             self.displayName = displayName
+            self.help = help
             type = .text
             toOptions = { value, options in
                 guard let value = T(rawValue: value) ?? T(rawValue: value.lowercased()) else {
@@ -157,12 +170,14 @@ extension FormatOptions {
         init<T: RawRepresentable>(argumentName: String,
                                   propertyName: String,
                                   displayName: String,
+                                  help: String = "",
                                   keyPath: WritableKeyPath<FormatOptions, T>,
                                   options: [String]) where T.RawValue == String {
             self.init(
                 argumentName: argumentName,
                 propertyName: propertyName,
                 displayName: displayName,
+                help: help,
                 keyPath: keyPath
             )
             type = .list(options)
@@ -234,6 +249,7 @@ extension FormatOptions.Descriptor {
         argumentName: "indent",
         propertyName: "indent",
         displayName: "Indent",
+        help: "number of spaces to indent, or \"tab\" to use tabs",
         keyPath: \.indent,
         fromArgument: { arg in
             switch arg.lowercased() {
@@ -257,6 +273,7 @@ extension FormatOptions.Descriptor {
         argumentName: "linebreaks",
         propertyName: "linebreak",
         displayName: "Linebreak Character",
+        help: "linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)",
         keyPath: \.linebreak,
         options: ["cr": "\r", "lf": "\n", "crlf": "\r\n"]
     )
@@ -264,6 +281,7 @@ extension FormatOptions.Descriptor {
         argumentName: "semicolons",
         propertyName: "allowInlineSemicolons",
         displayName: "Semicolons",
+        help: "allow semicolons. \"never\" or \"inline\" (default)",
         keyPath: \.allowInlineSemicolons,
         trueValues: ["inline"],
         falseValues: ["never", "false"]
@@ -272,6 +290,7 @@ extension FormatOptions.Descriptor {
         argumentName: "ranges",
         propertyName: "spaceAroundRangeOperators",
         displayName: "Ranges",
+        help: "spacing for ranges. \"spaced\" (default) or \"no-space\"",
         keyPath: \.spaceAroundRangeOperators,
         trueValues: ["spaced", "space", "spaces"],
         falseValues: ["no-space", "nospace"]
@@ -280,6 +299,7 @@ extension FormatOptions.Descriptor {
         argumentName: "operatorfunc",
         propertyName: "spaceAroundOperatorDeclarations",
         displayName: "Operator Functions",
+        help: "spacing for operator funcs. \"spaced\" (default) or \"no-space\"",
         keyPath: \.spaceAroundOperatorDeclarations,
         trueValues: ["spaced", "space", "spaces"],
         falseValues: ["no-space", "nospace"]
@@ -288,6 +308,7 @@ extension FormatOptions.Descriptor {
         argumentName: "empty",
         propertyName: "useVoid",
         displayName: "Empty",
+        help: "how empty values are represented. \"void\" (default) or \"tuple\"",
         keyPath: \.useVoid,
         trueValues: ["void"],
         falseValues: ["tuple", "tuples"]
@@ -296,6 +317,7 @@ extension FormatOptions.Descriptor {
         argumentName: "indentcase",
         propertyName: "indentCase",
         displayName: "Indent Case",
+        help: "indent cases inside a switch. \"true\" or \"false\" (default)",
         keyPath: \.indentCase,
         trueValues: ["true"],
         falseValues: ["false"]
@@ -304,6 +326,7 @@ extension FormatOptions.Descriptor {
         argumentName: "commas",
         propertyName: "trailingCommas",
         displayName: "Commas",
+        help: "commas in collection literals. \"always\" (default) or \"inline\"",
         keyPath: \.trailingCommas,
         trueValues: ["always", "true"],
         falseValues: ["inline", "false"]
@@ -312,6 +335,7 @@ extension FormatOptions.Descriptor {
         argumentName: "comments",
         propertyName: "indentComments",
         displayName: "Comments",
+        help: "indenting of comment bodies. \"indent\" (default) or \"ignore\"",
         keyPath: \.indentComments,
         trueValues: ["indent", "indented"],
         falseValues: ["ignore"]
@@ -320,6 +344,7 @@ extension FormatOptions.Descriptor {
         argumentName: "trimwhitespace",
         propertyName: "truncateBlankLines",
         displayName: "Trim White Space",
+        help: "trim trailing space. \"always\" (default) or \"nonblank-lines\"",
         keyPath: \.truncateBlankLines,
         trueValues: ["always"],
         falseValues: ["nonblank-lines", "nonblank", "non-blank-lines", "non-blank",
@@ -329,6 +354,7 @@ extension FormatOptions.Descriptor {
         argumentName: "allman",
         propertyName: "allmanBraces",
         displayName: "Allman Braces",
+        help: "use allman indentation style. \"true\" or \"false\" (default)",
         keyPath: \.allmanBraces,
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
@@ -337,12 +363,14 @@ extension FormatOptions.Descriptor {
         argumentName: "header",
         propertyName: "fileHeader",
         displayName: "Header",
+        help: "header comments. \"strip\", \"ignore\", or the text you wish use",
         keyPath: \.fileHeader
     )
     static let ifdefIndent = FormatOptions.Descriptor(
         argumentName: "ifdef",
         propertyName: "ifdefIndent",
         displayName: "Ifdef Indent",
+        help: "#if indenting. \"indent\" (default), \"no-indent\" or \"outdent\"",
         keyPath: \.ifdefIndent,
         options: ["indent", "no-indent", "outdent"]
     )
@@ -350,6 +378,7 @@ extension FormatOptions.Descriptor {
         argumentName: "wraparguments",
         propertyName: "wrapArguments",
         displayName: "Wrap Arguments",
+        help: "wrap function args. \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapArguments,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
@@ -357,6 +386,7 @@ extension FormatOptions.Descriptor {
         argumentName: "wrapcollections",
         propertyName: "wrapCollections",
         displayName: "Wrap Collections",
+        help: "wrap array/dict. \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapCollections,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
@@ -364,6 +394,7 @@ extension FormatOptions.Descriptor {
         argumentName: "closingparen",
         propertyName: "closingParenOnSameLine",
         displayName: "Closing Paren Position",
+        help: "closing paren position, \"balanced\" (default) or \"same-line\"",
         keyPath: \.closingParenOnSameLine,
         trueValues: ["same-line"],
         falseValues: ["balanced"]
@@ -372,6 +403,7 @@ extension FormatOptions.Descriptor {
         argumentName: "hexliteralcase",
         propertyName: "uppercaseHex",
         displayName: "Hex Literal Case",
+        help: "casing for hex literals. \"uppercase\" (default) or \"lowercase\"",
         keyPath: \.uppercaseHex,
         trueValues: ["uppercase", "upper"],
         falseValues: ["lowercase", "lower"]
@@ -380,6 +412,7 @@ extension FormatOptions.Descriptor {
         argumentName: "exponentcase",
         propertyName: "uppercaseExponent",
         displayName: "Exponent Case",
+        help: "case of 'e' in numbers. \"lowercase\" or \"uppercase\" (default)",
         keyPath: \.uppercaseExponent,
         trueValues: ["uppercase", "upper"],
         falseValues: ["lowercase", "lower"]
@@ -388,12 +421,14 @@ extension FormatOptions.Descriptor {
         argumentName: "decimalgrouping",
         propertyName: "decimalGrouping",
         displayName: "Decimal Grouping",
+        help: "decimal grouping,threshold (default: 3,6) or \"none\", \"ignore\"",
         keyPath: \.decimalGrouping
     )
     static let fractionGrouping = FormatOptions.Descriptor(
         argumentName: "fractiongrouping",
         propertyName: "fractionGrouping",
         displayName: "Fraction Grouping",
+        help: "group digits after '.', \"enabled\" or \"disabled\" (default)",
         keyPath: \.fractionGrouping,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -402,6 +437,7 @@ extension FormatOptions.Descriptor {
         argumentName: "exponentgrouping",
         propertyName: "exponentGrouping",
         displayName: "Exponent Grouping",
+        help: "group exponent digits, \"enabled\" or \"disabled\" (default)",
         keyPath: \.exponentGrouping,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -410,24 +446,28 @@ extension FormatOptions.Descriptor {
         argumentName: "binarygrouping",
         propertyName: "binaryGrouping",
         displayName: "Binary Grouping",
+        help: "binary grouping,threshold (default: 4,8) or \"none\", \"ignore\"",
         keyPath: \.binaryGrouping
     )
     static let octalGrouping = FormatOptions.Descriptor(
         argumentName: "octalgrouping",
         propertyName: "octalGrouping",
         displayName: "Octal Grouping",
+        help: "octal grouping,threshold or \"none\", \"ignore\". default: 4,8",
         keyPath: \.octalGrouping
     )
     static let hexGrouping = FormatOptions.Descriptor(
         argumentName: "hexgrouping",
         propertyName: "hexGrouping",
         displayName: "Hex Grouping",
+        help: "hex grouping,threshold (default: 4,8) or \"none\", \"ignore\"",
         keyPath: \.hexGrouping
     )
     static let letPatternPlacement = FormatOptions.Descriptor(
         argumentName: "patternlet",
         propertyName: "hoistPatternLet",
         displayName: "Pattern Let",
+        help: "let/var placement in patterns. \"hoist\" (default) or \"inline\"",
         keyPath: \.hoistPatternLet,
         trueValues: ["hoist"],
         falseValues: ["inline"]
@@ -436,6 +476,7 @@ extension FormatOptions.Descriptor {
         argumentName: "stripunusedargs",
         propertyName: "stripUnusedArguments",
         displayName: "Strip Unused Arguments",
+        help: "\"closure-only\", \"unnamed-only\" or \"always\" (default)",
         keyPath: \.stripUnusedArguments,
         options: ["unnamed-only", "closure-only", "always"]
     )
@@ -443,6 +484,7 @@ extension FormatOptions.Descriptor {
         argumentName: "elseposition",
         propertyName: "elseOnNextLine",
         displayName: "Else Position",
+        help: "placement of else/catch. \"same-line\" (default) or \"next-line\"",
         keyPath: \.elseOnNextLine,
         trueValues: ["next-line", "nextline"],
         falseValues: ["same-line", "sameline"]
@@ -451,6 +493,7 @@ extension FormatOptions.Descriptor {
         argumentName: "self",
         propertyName: "explicitSelf",
         displayName: "Self",
+        help: "explicit self. \"insert\", \"remove\" (default) or \"init-only\"",
         keyPath: \.explicitSelf,
         options: ["insert", "remove", "init-only"]
     )
@@ -458,6 +501,7 @@ extension FormatOptions.Descriptor {
         argumentName: "importgrouping",
         propertyName: "importGrouping",
         displayName: "Import Grouping",
+        help: "\"testable-top\", \"testable-bottom\" or \"alphabetized\" (default)",
         keyPath: \FormatOptions.importGrouping,
         options: ["alphabetized", "testable-top", "testable-bottom"]
     )
@@ -468,6 +512,7 @@ extension FormatOptions.Descriptor {
         argumentName: "experimental",
         propertyName: "experimentalRules",
         displayName: "Experimental Rules",
+        help: "experimental rules. \"enabled\" or \"disabled\" (default)",
         keyPath: \.experimentalRules,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -476,6 +521,7 @@ extension FormatOptions.Descriptor {
         argumentName: "fragment",
         propertyName: "fragment",
         displayName: "Fragment",
+        help: "input is part of a larger file. \"true\" or \"false\" (default)",
         keyPath: \.fragment,
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
@@ -484,6 +530,7 @@ extension FormatOptions.Descriptor {
         argumentName: "conflictmarkers",
         propertyName: "ignoreConflictMarkers",
         displayName: "Conflict Markers",
+        help: "merge-conflict markers, either \"reject\" (default) or \"ignore\"",
         keyPath: \.ignoreConflictMarkers,
         trueValues: ["ignore", "true", "enabled"],
         falseValues: ["reject", "false", "disabled"]
@@ -492,6 +539,7 @@ extension FormatOptions.Descriptor {
         argumentName: "swiftversion",
         propertyName: "swiftVersion",
         displayName: "Swift Version",
+        help: "the version of swift used in the project being formatted",
         keyPath: \.swiftVersion
     )
 
@@ -508,6 +556,7 @@ extension FormatOptions.Descriptor {
         argumentName: "insertlines",
         propertyName: "insertBlankLines",
         displayName: "Insert Lines",
+        help: "deprecated",
         keyPath: \.insertBlankLines,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -516,6 +565,7 @@ extension FormatOptions.Descriptor {
         argumentName: "removelines",
         propertyName: "removeBlankLines",
         displayName: "Remove Lines",
+        help: "deprecated",
         keyPath: \.removeBlankLines,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -524,6 +574,7 @@ extension FormatOptions.Descriptor {
         argumentName: "hexliterals",
         propertyName: "uppercaseHex",
         displayName: "hexliterals",
+        help: "deprecated",
         keyPath: \.uppercaseHex,
         trueValues: ["uppercase", "upper"],
         falseValues: ["lowercase", "lower"]
@@ -532,6 +583,7 @@ extension FormatOptions.Descriptor {
         argumentName: "wrapelements",
         propertyName: "wrapCollections",
         displayName: "Wrap Elements",
+        help: "deprecated",
         keyPath: \.wrapCollections,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )

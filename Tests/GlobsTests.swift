@@ -10,6 +10,15 @@ import XCTest
 @testable import SwiftFormat
 
 class GlobsTests: XCTestCase {
+    func testLinuxTestSuiteIncludesAllTests() {
+        #if os(macOS)
+            let thisClass = type(of: self)
+            let linuxCount = thisClass.__allTests.count
+            let darwinCount = thisClass.defaultTestSuite.testCaseCount
+            XCTAssertEqual(linuxCount, darwinCount)
+        #endif
+    }
+
     // MARK: glob matching
 
     func testExpandWildcardPathWithExactName() {
@@ -85,14 +94,14 @@ class GlobsTests: XCTestCase {
     func testExpandPathWithWildcardAtStart() {
         let path = "*Tests.swift"
         let directory = URL(fileURLWithPath: #file).deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 12)
+        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 11)
     }
 
     func testExpandPathWithSubdirectoryAndWildcard() {
         let path = "Tests/*Tests.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 12)
+        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 11)
     }
 
     func testSingleWildcardDoesNotMatchDirectorySlash() {

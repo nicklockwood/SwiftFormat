@@ -29,8 +29,16 @@
 //  SOFTWARE.
 //
 
-import Darwin.POSIX
 import Foundation
+
+#if canImport(Darwin)
+    import Darwin.POSIX
+#elseif canImport(Glibc)
+    import Glibc
+#else
+    #error("Unsupported platform")
+#endif
+
 #if SWIFT_PACKAGE
     import SwiftFormat
 #endif

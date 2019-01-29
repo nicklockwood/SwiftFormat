@@ -96,10 +96,11 @@ func matchGlobs(_ globs: [Glob], in directory: String) -> [URL] {
         }
         for url in files {
             let path = url.path
+            var isDirectory: ObjCBool = false
             if globs.contains(where: { $0.matches(path) }) {
                 urls.append(url)
-            } else if let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey]),
-                resourceValues.isDirectory == true {
+            } else if manager.fileExists(atPath: path, isDirectory: &isDirectory),
+                isDirectory.boolValue {
                 enumerate(url)
             }
         }

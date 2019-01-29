@@ -41,6 +41,15 @@ private let readme: String = {
 }()
 
 class CommandLineTests: XCTestCase {
+    func testLinuxTestSuiteIncludesAllTests() {
+        #if os(macOS)
+            let thisClass = type(of: self)
+            let linuxCount = thisClass.__allTests.count
+            let darwinCount = thisClass.defaultTestSuite.testCaseCount
+            XCTAssertEqual(linuxCount, darwinCount)
+        #endif
+    }
+
     // MARK: pipe
 
     func testPipe() {

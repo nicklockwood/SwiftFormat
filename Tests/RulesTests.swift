@@ -33,6 +33,15 @@ import SwiftFormat
 import XCTest
 
 class RulesTests: XCTestCase {
+    func testLinuxTestSuiteIncludesAllTests() {
+        #if os(macOS)
+            let thisClass = type(of: self)
+            let linuxCount = thisClass.__allTests.count
+            let darwinCount = thisClass.defaultTestSuite.testCaseCount
+            XCTAssertEqual(linuxCount, darwinCount)
+        #endif
+    }
+
     // MARK: spaceAroundParens
 
     func testSpaceAfterSet() {
@@ -5419,7 +5428,7 @@ class RulesTests: XCTestCase {
     func testSelfNotRemovedInIfdef() {
         let input = """
         func foo() {
-            #if os(OSX)
+            #if os(macOS)
                 let bar = self.bar
             #endif
         }

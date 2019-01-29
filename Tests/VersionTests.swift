@@ -10,6 +10,17 @@ import XCTest
 @testable import SwiftFormat
 
 class VersionTests: XCTestCase {
+    func testLinuxTestSuiteIncludesAllTests() {
+        #if os(macOS)
+            let thisClass = type(of: self)
+            let linuxCount = thisClass.__allTests.count
+            let darwinCount = thisClass.defaultTestSuite.testCaseCount
+            XCTAssertEqual(linuxCount, darwinCount)
+        #endif
+    }
+
+    // MARK: Version parsing
+
     func testParseEmptyVersion() throws {
         let version = Version(rawValue: "")
         XCTAssertNil(version)

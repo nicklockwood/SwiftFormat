@@ -109,13 +109,49 @@ public func enumerateFiles(withInputURL inputURL: URL,
                            concurrent: Bool = true,
                            skipped: FileEnumerationHandler? = nil,
                            handler: @escaping FileEnumerationHandler) -> [Error] {
-    guard let resourceValues = try? inputURL.resourceValues(
-        forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])
-    ) else {
-        if FileManager.default.fileExists(atPath: inputURL.path) {
-            return [FormatError.reading("failed to read attributes for \(inputURL.path)")]
-        }
-        return [FormatError.options("file not found at \(inputURL.path)")]
+    let manager = FileManager.default
+    let keys: [URLResourceKey] = [.isRegularFileKey, .isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey]
+
+    struct ResourceValues {
+        let isRegularFile: Bool?
+        let isDirectory: Bool?
+        let isAliasFile: Bool?
+        let isSymbolicLink: Bool?
+    }
+
+    func getResourceValues(for url: URL) throws -> ResourceValues {
+        #if os(macOS)
+            if let resourceValues = try? url.resourceValues(forKeys: Set(keys)) {
+                return ResourceValues(
+                    isRegularFile: resourceValues.isRegularFile,
+                    isDirectory: resourceValues.isDirectory,
+                    isAliasFile: resourceValues.isAliasFile,
+                    isSymbolicLink: resourceValues.isSymbolicLink
+                )
+            }
+            if manager.fileExists(atPath: url.path) {
+                throw FormatError.reading("failed to read attributes for \(url.path)")
+            }
+            throw FormatError.options("file not found at \(url.path)")
+        #else
+            var isDirectory: ObjCBool = false
+            if manager.fileExists(atPath: url.path, isDirectory: &isDirectory) {
+                return ResourceValues(
+                    isRegularFile: !isDirectory.boolValue,
+                    isDirectory: isDirectory.boolValue,
+                    isAliasFile: false,
+                    isSymbolicLink: false
+                )
+            }
+            throw FormatError.options("file not found at \(url.path)")
+        #endif
+    }
+
+    let resourceValues: ResourceValues
+    do {
+        resourceValues = try getResourceValues(for: inputURL)
+    } catch {
+        return [error]
     }
     let fileOptions = baseOptions.fileOptions ?? .default
     if !fileOptions.followSymlinks,
@@ -136,8 +172,6 @@ public func enumerateFiles(withInputURL inputURL: URL,
         }
     }
 
-    let manager = FileManager.default
-    let keys: [URLResourceKey] = [.isRegularFileKey, .isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey]
     let queue = concurrent ? DispatchQueue.global(qos: .userInitiated) : completionQueue
 
     func enumerate(inputURL: URL,
@@ -145,8 +179,11 @@ public func enumerateFiles(withInputURL inputURL: URL,
                    options: Options) {
         let inputURL = inputURL.standardizedFileURL
         let fileOptions = options.fileOptions ?? .default
-        guard let resourceValues = try? inputURL.resourceValues(forKeys: Set(keys)) else {
-            onComplete { throw FormatError.reading("failed to read attributes for \(inputURL.path)") }
+        let resourceValues: ResourceValues
+        do {
+            resourceValues = try getResourceValues(for: inputURL)
+        } catch {
+            onComplete { throw error }
             return
         }
         let inputPath = inputURL.path
@@ -206,13 +243,19 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     return
                 }
             }
+            let enumerationOptions: FileManager.DirectoryEnumerationOptions
+            #if os(macOS)
+                enumerationOptions = .skipsHiddenFiles
+            #else
+                enumerationOptions = []
+            #endif
             guard let files = try? manager.contentsOfDirectory(
-                at: inputURL, includingPropertiesForKeys: keys, options: .skipsHiddenFiles
+                at: inputURL, includingPropertiesForKeys: keys, options: enumerationOptions
             ) else {
                 onComplete { throw FormatError.reading("failed to read contents of directory at \(inputURL.path)") }
                 return
             }
-            for url in files {
+            for url in files where !url.path.hasPrefix(".") {
                 queue.async(group: group) {
                     let outputURL = outputURL.map {
                         URL(fileURLWithPath: $0.path + url.path[inputURL.path.endIndex ..< url.path.endIndex])

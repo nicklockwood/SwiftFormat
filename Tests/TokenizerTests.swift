@@ -33,6 +33,15 @@ import SwiftFormat
 import XCTest
 
 class TokenizerTests: XCTestCase {
+    func testLinuxTestSuiteIncludesAllTests() {
+        #if os(macOS)
+            let thisClass = type(of: self)
+            let linuxCount = thisClass.__allTests.count
+            let darwinCount = thisClass.defaultTestSuite.testCaseCount
+            XCTAssertEqual(linuxCount, darwinCount)
+        #endif
+    }
+
     // MARK: Invalid input
 
     func testInvalidToken() {

@@ -33,6 +33,15 @@ import XCTest
 @testable import SwiftFormat
 
 class SwiftFormatTests: XCTestCase {
+    func testLinuxTestSuiteIncludesAllTests() {
+        #if os(macOS)
+            let thisClass = type(of: self)
+            let linuxCount = thisClass.__allTests.count
+            let darwinCount = thisClass.defaultTestSuite.testCaseCount
+            XCTAssertEqual(linuxCount, darwinCount)
+        #endif
+    }
+
     // MARK: enumerateFiles
 
     func testInputFileMatchesOutputFileForNilOutput() {
@@ -67,7 +76,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 39)
+        XCTAssertEqual(files.count, 41)
     }
 
     func testInputFilesMatchOutputFilesForSameOutput() {
@@ -78,7 +87,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 39)
+        XCTAssertEqual(files.count, 41)
     }
 
     func testInputFileNotEnumeratedWhenExcluded() {
@@ -93,7 +102,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 27)
+        XCTAssertEqual(files.count, 29)
     }
 
     // MARK: format function

@@ -33,6 +33,15 @@ import SwiftFormat
 import XCTest
 
 class FormatterTests: XCTestCase {
+    func testLinuxTestSuiteIncludesAllTests() {
+        #if os(macOS)
+            let thisClass = type(of: self)
+            let linuxCount = thisClass.__allTests.count
+            let darwinCount = thisClass.defaultTestSuite.testCaseCount
+            XCTAssertEqual(linuxCount, darwinCount)
+        #endif
+    }
+
     func testRemoveCurrentTokenWhileEnumerating() {
         let input: [Token] = [
             .identifier("foo"),

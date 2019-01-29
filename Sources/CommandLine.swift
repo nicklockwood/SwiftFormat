@@ -141,9 +141,15 @@ func printHelp(as type: CLI.OutputType) {
 }
 
 func timeEvent(block: () throws -> Void) rethrows -> TimeInterval {
-    let start = CFAbsoluteTimeGetCurrent()
-    try block()
-    return CFAbsoluteTimeGetCurrent() - start
+    #if os(macOS)
+        let start = CFAbsoluteTimeGetCurrent()
+        try block()
+        return CFAbsoluteTimeGetCurrent() - start
+    #else
+        let start = Date.timeIntervalSinceReferenceDate
+        try block()
+        return Date.timeIntervalSinceReferenceDate - start
+    #endif
 }
 
 private func formatTime(_ time: TimeInterval) -> String {
@@ -340,17 +346,19 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         let defaultCacheFileName = "swiftformat.cache"
         let manager = FileManager.default
         func setDefaultCacheURL() {
-            if let cachePath =
-                NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first {
-                let cacheDirectory = URL(fileURLWithPath: cachePath).appendingPathComponent("com.charcoaldesign.swiftformat")
-                do {
-                    try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)
-                    cacheURL = cacheDirectory.appendingPathComponent(defaultCacheFileName)
-                } catch {
-                    errors.append(FormatError.writing("failed to create cache directory at \(cacheDirectory.path)"))
+            var cacheDirectory: URL!
+            #if os(macOS)
+                if let cachePath = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first {
+                    cacheDirectory = URL(fileURLWithPath: cachePath)
                 }
-            } else {
-                errors.append(FormatError.reading("failed to find cache directory at ~/Library/Caches"))
+            #endif
+            cacheDirectory = (cacheDirectory ?? URL(fileURLWithPath: "/var/tmp/"))
+                .appendingPathComponent("com.charcoaldesign.swiftformat")
+            do {
+                try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)
+                cacheURL = cacheDirectory.appendingPathComponent(defaultCacheFileName)
+            } catch {
+                errors.append(FormatError.writing("failed to create cache directory at \(cacheDirectory.path)"))
             }
         }
         if let cache = args["cache"] {

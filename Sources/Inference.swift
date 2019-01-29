@@ -959,7 +959,6 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                     scopeStack.append(token)
                 case .startOfScope(":"):
                     lastKeyword = ""
-                    break
                 case .startOfScope("{") where lastKeyword == "catch":
                     lastKeyword = ""
                     var localNames = localNames

@@ -31,12 +31,10 @@
 
 import Foundation
 
-#if canImport(Darwin)
+#if os(macOS)
     import Darwin.POSIX
-#elseif canImport(Glibc)
-    import Glibc
 #else
-    #error("Unsupported platform")
+    import Glibc
 #endif
 
 #if SWIFT_PACKAGE

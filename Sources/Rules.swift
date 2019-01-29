@@ -678,7 +678,6 @@ public struct _FormatRules {
                                 != .keyword("repeat") {
                                 fallthrough
                             }
-                            break
                         default:
                             if let firstLinebreakIndex = formatter.index(of: .linebreak, in: i + 1 ..< nextTokenIndex),
                                 formatter.index(of: .linebreak, in: firstLinebreakIndex + 1 ..< nextTokenIndex) == nil {
@@ -862,7 +861,6 @@ public struct _FormatRules {
                     if tokenIsEndOfStatement(prevTokenIndex), tokenIsStartOfStatement(nextTokenIndex) {
                         return true
                     }
-                    break
                 default:
                     break
                 }
@@ -2351,7 +2349,6 @@ public struct _FormatRules {
                     scopeStack.append(token)
                 case .startOfScope(":"):
                     lastKeyword = ""
-                    break
                 case .startOfScope("{") where lastKeyword == "catch":
                     lastKeyword = ""
                     var localNames = localNames
@@ -3591,11 +3588,13 @@ private extension _FormatRules {
             // Check for attributes
             var previousKeywordIndex = formatter.index(of: .keyword, before: i)
             while let previousIndex = previousKeywordIndex {
+                var nextStart: Int? // workaround for Swift Linux bug
                 if formatter.tokens[previousIndex].isAttribute {
                     if previousIndex < startIndex {
-                        startIndex = formatter.index(of: .linebreak, before: previousIndex) ?? 0
+                        nextStart = formatter.index(of: .linebreak, before: previousIndex) ?? 0
                     }
                     previousKeywordIndex = formatter.index(of: .keyword, before: previousIndex)
+                    startIndex = nextStart ?? startIndex
                 } else if previousIndex >= startIndex {
                     // Can't handle another keyword on same line as import
                     return

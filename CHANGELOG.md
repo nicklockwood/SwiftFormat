@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.38.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.38.0) (2019-01-29)
+
+- Added support for building, running and testing SwiftFormat on Linux
+- Added `--swiftversion` option for version-specific features 
+- Added `anyObjectProtocol` rule to replace `class` with `AnyObject` in protocol declarations
+- Added `redundantBreak` rule that removes unneeded breaks from switch cases
+- Added `strongifiedSelf` rule which removed backticks in `if let ``self`` = self {}`
+- The `redundantReturn` rule now removes void returns as well as ones that return a value
+- Renamed some option values for consistency
+- The Xcode Extension app now shows tooltips on Options tab
+
 ## [0.37.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.37.5) (2019-01-24)
 
 - Fixed another regression in the `redundantReturn` rule

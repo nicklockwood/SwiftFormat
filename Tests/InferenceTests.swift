@@ -53,7 +53,7 @@ class InferenceTests: XCTestCase {
         let tokens = files.flatMap { tokenize($0) }
         let options = Options(formatOptions: inferFormatOptions(from: tokens))
         let arguments = serialize(options: options, excludingDefaults: true, separator: " ")
-        XCTAssertEqual(arguments, "--binarygrouping none --decimalgrouping none --hexgrouping none --octalgrouping none --wrapcollections beforefirst")
+        XCTAssertEqual(arguments, "--binarygrouping none --decimalgrouping none --hexgrouping none --octalgrouping none --wrapcollections before-first")
     }
 
     // MARK: indent

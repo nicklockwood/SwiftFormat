@@ -237,10 +237,10 @@ class OptionsDescriptorTests: XCTestCase {
         let descriptor = FormatOptions.Descriptor.spaceAroundRangeOperators
         let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
             (optionValue: true, argumentValue: "spaced"),
-            (optionValue: false, argumentValue: "nospace"),
+            (optionValue: false, argumentValue: "no-space"),
         ]
         validateDescriptor(descriptor, displayName: "Ranges", argumentName: "ranges", propertyName: "spaceAroundRangeOperators")
-        validateArgumentsBinaryType(descriptor, controlTrue: ["spaced", "space", "spaces"], controlFalse: ["nospace"])
+        validateArgumentsBinaryType(descriptor, controlTrue: ["spaced", "space", "spaces"], controlFalse: ["no-space", "nospace"])
         validateFromOptions(descriptor, keyPath: \FormatOptions.spaceAroundRangeOperators, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.spaceAroundRangeOperators)
         validateDescriptorThrowsOptionsError(descriptor)
@@ -250,10 +250,10 @@ class OptionsDescriptorTests: XCTestCase {
         let descriptor = FormatOptions.Descriptor.spaceAroundOperatorDeclarations
         let fromOptionsExpectation: [OptionArgumentMapping<Bool>] = [
             (optionValue: true, argumentValue: "spaced"),
-            (optionValue: false, argumentValue: "nospace"),
+            (optionValue: false, argumentValue: "no-space"),
         ]
         validateDescriptor(descriptor, displayName: "Operator Functions", argumentName: "operatorfunc", propertyName: "spaceAroundOperatorDeclarations")
-        validateArgumentsBinaryType(descriptor, controlTrue: ["spaced", "space", "spaces"], controlFalse: ["nospace"])
+        validateArgumentsBinaryType(descriptor, controlTrue: ["spaced", "space", "spaces"], controlFalse: ["no-space", "nospace"])
         validateFromOptions(descriptor, keyPath: \FormatOptions.spaceAroundOperatorDeclarations, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.spaceAroundOperatorDeclarations)
         validateDescriptorThrowsOptionsError(descriptor)
@@ -433,14 +433,16 @@ class OptionsDescriptorTests: XCTestCase {
         let descriptor = FormatOptions.Descriptor.ifdefIndent
         let expectedMapping: [OptionArgumentMapping<IndentMode>] = [
             (optionValue: IndentMode.indent, argumentValue: "indent"),
-            (optionValue: IndentMode.noIndent, argumentValue: "noindent"),
+            (optionValue: IndentMode.noIndent, argumentValue: "no-indent"),
             (optionValue: IndentMode.outdent, argumentValue: "outdent"),
         ]
-
+        let alternateMapping: [OptionArgumentMapping<IndentMode>] = [
+            (optionValue: IndentMode.noIndent, argumentValue: "noindent"),
+        ]
         validateDescriptor(descriptor, displayName: "Ifdef Indent", argumentName: "ifdef", propertyName: "ifdefIndent")
-        validateArgumentsListType(descriptor, validArguments: ["indent", "noindent", "outdent"])
+        validateArgumentsListType(descriptor, validArguments: ["indent", "no-indent", "outdent"])
         validateFromOptions(descriptor, keyPath: \FormatOptions.ifdefIndent, expectations: expectedMapping)
-        validateFromArguments(descriptor, keyPath: \FormatOptions.ifdefIndent, expectations: expectedMapping)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.ifdefIndent, expectations: expectedMapping + alternateMapping)
         validateDescriptorThrowsOptionsError(descriptor)
     }
 
@@ -461,30 +463,42 @@ class OptionsDescriptorTests: XCTestCase {
     func testWrapArguments() {
         let descriptor = FormatOptions.Descriptor.wrapArguments
         let expectedMapping: [OptionArgumentMapping<WrapMode>] = [
-            (optionValue: .beforeFirst, argumentValue: "beforefirst"),
-            (optionValue: .afterFirst, argumentValue: "afterfirst"),
+            (optionValue: .beforeFirst, argumentValue: "before-first"),
+            (optionValue: .afterFirst, argumentValue: "after-first"),
             (optionValue: .preserve, argumentValue: "preserve"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
+        let alternateMapping: [OptionArgumentMapping<WrapMode>] = [
+            (optionValue: .beforeFirst, argumentValue: "beforefirst"),
+            (optionValue: .afterFirst, argumentValue: "afterfirst"),
+        ]
         validateDescriptor(descriptor, displayName: "Wrap Arguments", argumentName: "wraparguments", propertyName: "wrapArguments")
-        validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "preserve", "disabled"])
+        validateArgumentsListType(descriptor, validArguments: [
+            "before-first", "after-first", "preserve", "disabled",
+        ])
         validateFromOptions(descriptor, keyPath: \FormatOptions.wrapArguments, expectations: expectedMapping)
-        validateFromArguments(descriptor, keyPath: \FormatOptions.wrapArguments, expectations: expectedMapping)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.wrapArguments, expectations: expectedMapping + alternateMapping)
         validateDescriptorThrowsOptionsError(descriptor)
     }
 
     func testWrapCollections() {
         let descriptor = FormatOptions.Descriptor.wrapCollections
         let expectedMapping: [OptionArgumentMapping<WrapMode>] = [
-            (optionValue: .beforeFirst, argumentValue: "beforefirst"),
-            (optionValue: .afterFirst, argumentValue: "afterfirst"),
+            (optionValue: .beforeFirst, argumentValue: "before-first"),
+            (optionValue: .afterFirst, argumentValue: "after-first"),
             (optionValue: .preserve, argumentValue: "preserve"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
+        let alternateMapping: [OptionArgumentMapping<WrapMode>] = [
+            (optionValue: .beforeFirst, argumentValue: "beforefirst"),
+            (optionValue: .afterFirst, argumentValue: "afterfirst"),
+        ]
         validateDescriptor(descriptor, displayName: "Wrap Collections", argumentName: "wrapcollections", propertyName: "wrapCollections")
-        validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "preserve", "disabled"])
+        validateArgumentsListType(descriptor, validArguments: [
+            "before-first", "after-first", "preserve", "disabled",
+        ])
         validateFromOptions(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
-        validateFromArguments(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping + alternateMapping)
         validateDescriptorThrowsOptionsError(descriptor)
     }
 
@@ -663,15 +677,21 @@ class OptionsDescriptorTests: XCTestCase {
     func testWrapElements() {
         let descriptor = FormatOptions.Descriptor.wrapElements
         let expectedMapping: [OptionArgumentMapping<WrapMode>] = [
-            (optionValue: .beforeFirst, argumentValue: "beforefirst"),
-            (optionValue: .afterFirst, argumentValue: "afterfirst"),
+            (optionValue: .beforeFirst, argumentValue: "before-first"),
+            (optionValue: .afterFirst, argumentValue: "after-first"),
             (optionValue: .preserve, argumentValue: "preserve"),
             (optionValue: .disabled, argumentValue: "disabled"),
         ]
+        let alternateMapping: [OptionArgumentMapping<WrapMode>] = [
+            (optionValue: .beforeFirst, argumentValue: "beforefirst"),
+            (optionValue: .afterFirst, argumentValue: "afterfirst"),
+        ]
         validateDescriptor(descriptor, displayName: "Wrap Elements", argumentName: "wrapelements", propertyName: "wrapCollections")
-        validateArgumentsListType(descriptor, validArguments: ["beforefirst", "afterfirst", "preserve", "disabled"])
+        validateArgumentsListType(descriptor, validArguments: [
+            "before-first", "after-first", "preserve", "disabled",
+        ])
         validateFromOptions(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
-        validateFromArguments(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping)
+        validateFromArguments(descriptor, keyPath: \FormatOptions.wrapCollections, expectations: expectedMapping + alternateMapping)
         validateDescriptorThrowsOptionsError(descriptor)
     }
 }

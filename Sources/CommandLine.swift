@@ -138,21 +138,21 @@ func printHelp(as type: CLI.OutputType) {
     --header           header comments. "strip", "ignore", or the text you wish use
     --hexgrouping      hex grouping,threshold (default: 4,8) or "none", "ignore"
     --hexliteralcase   casing for hex literals. "uppercase" (default) or "lowercase"
-    --ifdef            #if indenting. "indent" (default), "noindent" or "outdent"
+    --ifdef            #if indenting. "indent" (default), "no-indent" or "outdent"
     --indent           number of spaces to indent, or "tab" to use tabs
     --indentcase       indent cases inside a switch. "true" or "false" (default)
     --linebreaks       linebreak character to use. "cr", "crlf" or "lf" (default)
     --octalgrouping    octal grouping,threshold or "none", "ignore". default: 4,8
-    --operatorfunc     spacing for operator funcs. "spaced" (default) or "nospace"
+    --operatorfunc     spacing for operator funcs. "spaced" (default) or "no-space"
     --patternlet       let/var placement in patterns. "hoist" (default) or "inline"
-    --ranges           spacing for ranges. "spaced" (default) or "nospace"
+    --ranges           spacing for ranges. "spaced" (default) or "no-space"
     --semicolons       allow semicolons. "never" or "inline" (default)
     --self             explicit self. "insert", "remove" (default) or "init-only"
     --importgrouping   "testable-top", "testable-bottom" or "alphabetized" (default)
     --stripunusedargs  "closure-only", "unnamed-only" or "always" (default)
     --trimwhitespace   trim trailing space. "always" (default) or "nonblank-lines"
-    --wraparguments    wrap function args. "beforefirst", "afterfirst", "preserve"
-    --wrapcollections  wrap array/dict. "beforefirst", "afterfirst", "preserve"
+    --wraparguments    wrap function args. "before-first", "after-first", "preserve"
+    --wrapcollections  wrap array/dict. "before-first", "after-first", "preserve"
     """, as: type)
     print("")
 }

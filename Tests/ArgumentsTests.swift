@@ -235,6 +235,22 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(args["header"], "hello world\\ngoodbye world")
     }
 
+    func testParseIgnoreFileHeader() throws {
+        let config = "--header ignore"
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        let options = try Options(args, in: "/")
+        XCTAssertEqual(options.formatOptions?.fileHeader, .ignore)
+    }
+
+    func testParseUppercaseIgnoreFileHeader() throws {
+        let config = "--header IGNORE"
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        let options = try Options(args, in: "/")
+        XCTAssertEqual(options.formatOptions?.fileHeader, .ignore)
+    }
+
     // MARK: config file serialization
 
     // file header comment encoding

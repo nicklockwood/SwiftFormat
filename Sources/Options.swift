@@ -34,16 +34,44 @@ import Foundation
 /// The indenting mode to use for #if/#endif statements
 public enum IndentMode: String {
     case indent
-    case noIndent = "noindent"
+    case noIndent = "no-indent"
     case outdent
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "indent":
+            self = .indent
+        case "no-indent", "noindent":
+            self = .noIndent
+        case "outdent":
+            self = .outdent
+        default:
+            return nil
+        }
+    }
 }
 
 /// Wrap mode for arguments
 public enum WrapMode: String {
-    case beforeFirst = "beforefirst"
-    case afterFirst = "afterfirst"
+    case beforeFirst = "before-first"
+    case afterFirst = "after-first"
     case preserve
     case disabled
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "before-first", "beforefirst":
+            self = .beforeFirst
+        case "after-first", "afterfirst":
+            self = .afterFirst
+        case "preserve":
+            self = .preserve
+        case "disabled":
+            self = .disabled
+        default:
+            return nil
+        }
+    }
 }
 
 /// Argument type for stripping

@@ -34,7 +34,8 @@ import Foundation
 extension FormatOptions {
     struct Descriptor {
         enum ArgumentType: EnumAssociable {
-            case binary(true: [String], false: [String]) // index 0 should be the official value, while others are tolerable values
+            // index 0 is official value, others are acceptable
+            case binary(true: [String], false: [String])
             case list([String])
             case text
         }
@@ -273,7 +274,7 @@ extension FormatOptions.Descriptor {
         displayName: "Ranges",
         keyPath: \.spaceAroundRangeOperators,
         trueValues: ["spaced", "space", "spaces"],
-        falseValues: ["nospace"]
+        falseValues: ["no-space", "nospace"]
     )
     static let spaceAroundOperatorDeclarations = FormatOptions.Descriptor(
         argumentName: "operatorfunc",
@@ -281,7 +282,7 @@ extension FormatOptions.Descriptor {
         displayName: "Operator Functions",
         keyPath: \.spaceAroundOperatorDeclarations,
         trueValues: ["spaced", "space", "spaces"],
-        falseValues: ["nospace"]
+        falseValues: ["no-space", "nospace"]
     )
     static let useVoid = FormatOptions.Descriptor(
         argumentName: "empty",
@@ -343,21 +344,21 @@ extension FormatOptions.Descriptor {
         propertyName: "ifdefIndent",
         displayName: "Ifdef Indent",
         keyPath: \.ifdefIndent,
-        options: ["indent", "noindent", "outdent"]
+        options: ["indent", "no-indent", "outdent"]
     )
     static let wrapArguments = FormatOptions.Descriptor(
         argumentName: "wraparguments",
         propertyName: "wrapArguments",
         displayName: "Wrap Arguments",
         keyPath: \.wrapArguments,
-        options: ["beforefirst", "afterfirst", "preserve", "disabled"]
+        options: ["before-first", "after-first", "preserve", "disabled"]
     )
     static let wrapCollections = FormatOptions.Descriptor(
         argumentName: "wrapcollections",
         propertyName: "wrapCollections",
         displayName: "Wrap Collections",
         keyPath: \.wrapCollections,
-        options: ["beforefirst", "afterfirst", "preserve", "disabled"]
+        options: ["before-first", "after-first", "preserve", "disabled"]
     )
     static let closingParen = FormatOptions.Descriptor(
         argumentName: "closingparen",
@@ -532,6 +533,6 @@ extension FormatOptions.Descriptor {
         propertyName: "wrapCollections",
         displayName: "Wrap Elements",
         keyPath: \.wrapCollections,
-        options: ["beforefirst", "afterfirst", "preserve", "disabled"]
+        options: ["before-first", "after-first", "preserve", "disabled"]
     )
 }

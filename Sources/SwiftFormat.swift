@@ -315,7 +315,7 @@ public func applyRules(_ rules: [FormatRule],
     for _ in 0 ..< 10 {
         let formatter = Formatter(tokens, options: options)
         for (i, rule) in rules.enumerated() {
-            rule(formatter)
+            rule.apply(with: formatter)
             callback?(i, formatter.tokens)
         }
         if tokens == formatter.tokens {

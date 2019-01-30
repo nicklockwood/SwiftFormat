@@ -7029,6 +7029,39 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
+    func testFileHeaderCreationYearReplacement() {
+        let input = "let foo = bar"
+        let output = "// Copyright © 1970\n\nlet foo = bar"
+        let fileInfo = FileInfo(creationDate: Date(timeIntervalSince1970: 0))
+        let options = FormatOptions(fileHeader: "// Copyright © {created.year}", fileInfo: fileInfo)
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testFileHeaderCreationDateReplacement() {
+        let input = "let foo = bar"
+        let date = Date(timeIntervalSince1970: 0)
+        let output: String = {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .short
+            formatter.timeStyle = .none
+            return "// Created by Nick Lockwood on \(formatter.string(from: date)).\n\nlet foo = bar"
+        }()
+        let fileInfo = FileInfo(creationDate: date)
+        let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: fileInfo)
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
+    func testFileHeaderFileReplacement() {
+        let input = "let foo = bar"
+        let output = "// MyFile.swift\n\nlet foo = bar"
+        let fileInfo = FileInfo(fileName: "MyFile.swift")
+        let options = FormatOptions(fileHeader: "// {file}", fileInfo: fileInfo)
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
+    }
+
     // MARK: redundantInit
 
     func testRemoveRedundantInit() {

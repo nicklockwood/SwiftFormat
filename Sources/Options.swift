@@ -168,6 +168,17 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
     }
 }
 
+/// File info, used for constructing header comments
+public struct FileInfo {
+    var fileName: String?
+    var creationDate: Date?
+
+    public init(fileName: String? = nil, creationDate: Date? = nil) {
+        self.fileName = fileName
+        self.creationDate = creationDate
+    }
+}
+
 /// Grouping for numeric literals
 public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
     case ignore
@@ -277,6 +288,7 @@ public struct FormatOptions: CustomStringConvertible {
     // Doesn't really belong here, but hard to put elsewhere
     public var ignoreConflictMarkers: Bool
     public var swiftVersion: Version
+    public var fileInfo: FileInfo
 
     public static let `default` = FormatOptions()
 
@@ -314,7 +326,8 @@ public struct FormatOptions: CustomStringConvertible {
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
                 importGrouping: ImportGrouping = .alphabetized,
-                swiftVersion: Version = .undefined) {
+                swiftVersion: Version = .undefined,
+                fileInfo: FileInfo = FileInfo()) {
         self.indent = indent
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons
@@ -350,11 +363,14 @@ public struct FormatOptions: CustomStringConvertible {
         self.ignoreConflictMarkers = ignoreConflictMarkers
         self.importGrouping = importGrouping
         self.swiftVersion = swiftVersion
+        self.fileInfo = fileInfo
     }
 
     public var allOptions: [String: Any] {
         let pairs = Mirror(reflecting: self).children.map { ($0!, $1) }
-        return Dictionary(pairs, uniquingKeysWith: { $1 })
+        var options = Dictionary(pairs, uniquingKeysWith: { $1 })
+        options["fileInfo"] = nil // Special case
+        return options
     }
 
     public var description: String {

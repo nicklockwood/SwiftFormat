@@ -3194,8 +3194,20 @@ public struct _FormatRules {
         case .ignore:
             return
         case var .replace(string):
+            if let range = string.range(of: "{file}"),
+                let file = formatter.options.fileInfo.fileName {
+                string.replaceSubrange(range, with: file)
+            }
             if let range = string.range(of: "{year}") {
                 string.replaceSubrange(range, with: currentYear)
+            }
+            if let range = string.range(of: "{created}"),
+                let date = formatter.options.fileInfo.creationDate {
+                string.replaceSubrange(range, with: shortDateFormatter(date))
+            }
+            if let range = string.range(of: "{created.year}"),
+                let date = formatter.options.fileInfo.creationDate {
+                string.replaceSubrange(range, with: yearFormatter(date))
             }
             header = string
         }
@@ -3643,11 +3655,24 @@ private extension Formatter {
 }
 
 private extension _FormatRules {
-    // Current year. Used by fileHeader rule
-    private static var currentYear: String = {
+    // Short date formater. Used by fileHeader rule
+    private static var shortDateFormatter: (Date) -> String = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .none
+        return { formatter.string(from: $0) }
+    }()
+
+    // Year formater. Used by fileHeader rule
+    private static var yearFormatter: (Date) -> String = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy"
-        return formatter.string(from: Date())
+        return { formatter.string(from: $0) }
+    }()
+
+    // Current year. Used by fileHeader rule
+    private static var currentYear: String = {
+        yearFormatter(Date())
     }()
 
     // Shared import rules implementation

@@ -1336,7 +1336,7 @@ Cache
 
 SwiftFormat uses a cache file to avoid reformatting files that haven't changed. For a large project, this can significantly reduce processing time.
 
-By default, the cache is stored in `~/Library/Caches/com.charcoaldesign.swiftformat`. Use the command-line option `--cache ignore` to ignore the cached version and re-apply formatting to all files. Alternatively, you can use `--cache clear` to delete the cache (or you can just manually delete the cache file).
+By default, the cache is stored in `~/Library/Caches/com.charcoaldesign.swiftformat` on macOS, or `/var/tmp/com.charcoaldesign.swiftformat` on Linux. Use the command-line option `--cache ignore` to ignore the cached version and re-apply formatting to all files. Alternatively, you can use `--cache clear` to delete the cache (or you can just manually delete the cache file).
 
 The cache is shared between all projects. The file is fairly small, as it only stores the path and size for each file, not the contents. If you do start experiencing slowdown due to the cache growing too large, you might want to consider using a separate cache file for each project.
 
@@ -1367,13 +1367,28 @@ You can optionally include Swift comment markup in the template if you wish: `--
 
 If you do not include comment markup, each line in the template will be prepended with `//` and a single space.
 
-Finally, it is common practice to include the current year in a comment header copyright notice. To do that, use the following syntax:
+It is common practice to include the file name, creation date and/or the current year in a comment header copyright notice. To do that, you can use the following placeholders:
+
+* `{file}` - the name of the file
+* `{year}` - the current year
+* `{created}` - the date on which the file was created
+* `{created.year}` - the year in which the file was created
+
+For example, a header template of:
 
 ```bash
---header "Copyright (c) {year} Foobar Industries"
+--header "{file}\nCopyright (c) {year} Foobar Industries\nCreated by John Smith on {created}."
 ```
-    
-And the `{year}` token will be automatically replaced by the current year whenever SwiftFormat is applied (**Note:** the year is determined from the locale and timezone of the machine running the script).
+
+Will be formatted as:
+
+```swift
+// SomeFile.swift
+// Copyright (c) 2019 Foobar Industries
+// Created by John Smith on 01/02/2016.
+```
+
+**NOTE:** the `{year}` value and `{created}` date format are determined from the current locale and timezone of the machine running the script.
 
 
 FAQ
@@ -1454,7 +1469,7 @@ Known issues
     let foo: Dictionary<String, String>=["Hello": "World"]
     ```
 
-* If a file begins with a comment, the `stripHeaders` rule will remove it if is followed by a blank line. To avoid this, make sure that the first comment is directly followed by a line of code.
+* If a file begins with a comment, the `stripHeaders` rule will remove it if it is followed by a blank line. To avoid this, make sure that the first comment is directly followed by a line of code.
 
 * SwiftFormat currently reformats multiline comment blocks without regard for the original indenting. That means
 

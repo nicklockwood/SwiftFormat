@@ -110,13 +110,19 @@ public func enumerateFiles(withInputURL inputURL: URL,
                            skipped: FileEnumerationHandler? = nil,
                            handler: @escaping FileEnumerationHandler) -> [Error] {
     let manager = FileManager.default
-    let keys: [URLResourceKey] = [.isRegularFileKey, .isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey]
+    let keys: [URLResourceKey] = [
+        .isRegularFileKey, .isDirectoryKey,
+        .isAliasFileKey, .isSymbolicLinkKey,
+        .creationDateKey, .nameKey,
+    ]
 
     struct ResourceValues {
         let isRegularFile: Bool?
         let isDirectory: Bool?
         let isAliasFile: Bool?
         let isSymbolicLink: Bool?
+        let creationDate: Date?
+        let name: String?
     }
 
     func getResourceValues(for url: URL) throws -> ResourceValues {
@@ -126,7 +132,9 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     isRegularFile: resourceValues.isRegularFile,
                     isDirectory: resourceValues.isDirectory,
                     isAliasFile: resourceValues.isAliasFile,
-                    isSymbolicLink: resourceValues.isSymbolicLink
+                    isSymbolicLink: resourceValues.isSymbolicLink,
+                    creationDate: resourceValues.creationDate,
+                    name: resourceValues.name
                 )
             }
             if manager.fileExists(atPath: url.path) {
@@ -140,7 +148,9 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     isRegularFile: !isDirectory.boolValue,
                     isDirectory: isDirectory.boolValue,
                     isAliasFile: false,
-                    isSymbolicLink: false
+                    isSymbolicLink: false,
+                    creationDate: nil,
+                    name: url.lastPathComponent
                 )
             }
             throw FormatError.options("file not found at \(url.path)")
@@ -219,6 +229,10 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 return
             }
             var options = options
+            options.formatOptions?.fileInfo = FileInfo(
+                fileName: resourceValues.name,
+                creationDate: resourceValues.creationDate
+            )
             let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
             if manager.fileExists(atPath: configFile.path) {
                 do {

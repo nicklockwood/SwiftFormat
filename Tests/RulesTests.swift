@@ -7743,7 +7743,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    // strongifiedSelf
+    // MARK: strongifiedSelf
 
     func testBacktickedSelfConvertedToSelfInGuard() {
         let input = """
@@ -7797,6 +7797,50 @@ class RulesTests: XCTestCase {
         """
         let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.strongifiedSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    // MARK: redundantObjc
+
+    func testRedundantObjcRemovedFromBeforeOutlet() {
+        let input = "@objc @IBOutlet var label: UILabel!"
+        let output = "@IBOutlet var label: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRedundantObjcRemovedFromAfterOutlet() {
+        let input = "@IBOutlet @objc var label: UILabel!"
+        let output = "@IBOutlet var label: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRedundantObjcRemovedFromLineBeforeOutlet() {
+        let input = "@objc\n@IBOutlet var label: UILabel!"
+        let output = "\n@IBOutlet var label: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRedundantObjcCommentNotRemoved() {
+        let input = "@objc // an outlet\n@IBOutlet var label: UILabel!"
+        let output = "// an outlet\n@IBOutlet var label: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testObjcNotRemovedFromNSCopying() {
+        let input = "@objc @NSCopying var foo: String!"
+        let output = "@objc @NSCopying var foo: String!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRenamedObjcNotRemoved() {
+        let input = "@IBOutlet @objc(uiLabel) var label: UILabel!"
+        let output = "@IBOutlet @objc(uiLabel) var label: UILabel!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 }

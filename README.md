@@ -754,6 +754,23 @@ let foo: Int? = nil
 var foo: Int? = 0
 ```
 
+***redundantObjc*** - removes unnecessary `@objc` annotation from properties and functions:
+
+```diff
+- @objc @IBOutlet var label: UILabel!
++ @IBOutlet var label: UILabel!
+```
+
+```diff
+- @IBAction @objc func goBack() {}
++ @IBOutlet func goBack() {}
+```
+
+```diff
+- @objc @NSManaged private var foo: String?
++ @NSManaged private var foo: String?
+```
+
 ***redundantParens*** - removes unnecessary parens from expressions and branch conditions:
 
 ```diff

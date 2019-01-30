@@ -845,6 +845,7 @@ extension RulesTests {
         ("testNoUnhoistIfLetTuple", testNoUnhoistIfLetTuple),
         ("testNoUnhoistTupleLet", testNoUnhoistTupleLet),
         ("testNoWrapInnerArguments", testNoWrapInnerArguments),
+        ("testObjcNotRemovedFromNSCopying", testObjcNotRemovedFromNSCopying),
         ("testOperatorArgumentsAreUnnamed", testOperatorArgumentsAreUnnamed),
         ("testOptionalChainCountEqualsZero", testOptionalChainCountEqualsZero),
         ("testOptionalChainCountNotEqualToZero", testOptionalChainCountNotEqualToZero),
@@ -910,6 +911,10 @@ extension RulesTests {
         ("testPrivateRequiredStaticFuncSpecifiers", testPrivateRequiredStaticFuncSpecifiers),
         ("testPrivateSetSpecifierNotMangled", testPrivateSetSpecifierNotMangled),
         ("testRedundantBreaksRemoved", testRedundantBreaksRemoved),
+        ("testRedundantObjcCommentNotRemoved", testRedundantObjcCommentNotRemoved),
+        ("testRedundantObjcRemovedFromAfterOutlet", testRedundantObjcRemovedFromAfterOutlet),
+        ("testRedundantObjcRemovedFromBeforeOutlet", testRedundantObjcRemovedFromBeforeOutlet),
+        ("testRedundantObjcRemovedFromLineBeforeOutlet", testRedundantObjcRemovedFromLineBeforeOutlet),
         ("testRedundantParensRemoved", testRedundantParensRemoved),
         ("testRedundantParensRemoved2", testRedundantParensRemoved2),
         ("testRedundantParensRemoved3", testRedundantParensRemoved3),
@@ -985,6 +990,7 @@ extension RulesTests {
         ("testRemoveWeakFromOutletAfterDelegateOutlet", testRemoveWeakFromOutletAfterDelegateOutlet),
         ("testRemoveWeakFromOutletOnSplitLine", testRemoveWeakFromOutletOnSplitLine),
         ("testRemoveWeakFromPrivateOutlet", testRemoveWeakFromPrivateOutlet),
+        ("testRenamedObjcNotRemoved", testRenamedObjcNotRemoved),
         ("testRepeatWhileNotOnSameLineForAllman", testRepeatWhileNotOnSameLineForAllman),
         ("testReplaceInlineSemicolon", testReplaceInlineSemicolon),
         ("testReplaceSemicolonFollowedByComment", testReplaceSemicolonFollowedByComment),
@@ -1488,19 +1494,19 @@ extension VersionTests {
 }
 
 #if !os(macOS)
-    public func __allTests() -> [XCTestCaseEntry] {
-        return [
-            testCase(ArgumentsTests.__allTests),
-            testCase(CommandLineTests.__allTests),
-            testCase(EnumAssociableTests.__allTests),
-            testCase(FormatterTests.__allTests),
-            testCase(GlobsTests.__allTests),
-            testCase(InferenceTests.__allTests),
-            testCase(OptionsDescriptorTests.__allTests),
-            testCase(RulesTests.__allTests),
-            testCase(SwiftFormatTests.__allTests),
-            testCase(TokenizerTests.__allTests),
-            testCase(VersionTests.__allTests),
-        ]
-    }
+public func __allTests() -> [XCTestCaseEntry] {
+    return [
+        testCase(ArgumentsTests.__allTests),
+        testCase(CommandLineTests.__allTests),
+        testCase(EnumAssociableTests.__allTests),
+        testCase(FormatterTests.__allTests),
+        testCase(GlobsTests.__allTests),
+        testCase(InferenceTests.__allTests),
+        testCase(OptionsDescriptorTests.__allTests),
+        testCase(RulesTests.__allTests),
+        testCase(SwiftFormatTests.__allTests),
+        testCase(TokenizerTests.__allTests),
+        testCase(VersionTests.__allTests),
+    ]
+}
 #endif

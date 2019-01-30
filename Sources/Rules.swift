@@ -3559,6 +3559,32 @@ public struct _FormatRules {
             formatter.replaceToken(at: i, with: .identifier("self"))
         }
     }
+
+    /// Remove redundant @objc annotation
+    public let redundantObjc = FormatRule { formatter in
+        let objcAttributes = [
+            "@IBOutlet", "@IBAction",
+            "@IBDesignable", "@IBInspectable", "@GKInspectable",
+            "@NSManaged",
+        ]
+        formatter.forEach(.keyword("@objc")) { i, _ in
+            guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .startOfScope("(") else {
+                return
+            }
+            if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i, if: {
+                $0.isAttribute && objcAttributes.contains($0.string)
+            }) != nil || formatter.next(.nonSpaceOrCommentOrLinebreak, after: i, if: {
+                $0.isAttribute && objcAttributes.contains($0.string)
+            }) != nil {
+                formatter.removeToken(at: i)
+                if formatter.token(at: i)?.isSpace == true {
+                    formatter.removeToken(at: i)
+                } else if formatter.token(at: i - 1)?.isSpace == true {
+                    formatter.removeToken(at: i - 1)
+                }
+            }
+        }
+    }
 }
 
 // MARK: shared helper methods

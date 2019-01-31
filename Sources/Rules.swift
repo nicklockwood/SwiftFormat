@@ -1391,21 +1391,6 @@ public struct _FormatRules {
 
     /// Standardise the order of property specifiers
     public let specifiers = FormatRule { formatter in
-        let order = [
-            "private", "fileprivate", "internal", "public", "open",
-            "private(set)", "fileprivate(set)", "internal(set)", "public(set)",
-            "final", "dynamic", // Can't be both
-            "optional", "required",
-            "convenience",
-            "override",
-            "indirect",
-            "lazy",
-            "weak", "unowned",
-            "static", "class",
-            "mutating", "nonmutating",
-            "prefix", "postfix",
-        ]
-        let validSpecifiers = Set(order)
         formatter.forEach(.keyword) { i, token in
             switch token.string {
             case "let", "func", "var", "class", "extension", "init", "enum",
@@ -1426,7 +1411,7 @@ public struct _FormatRules {
                     lastIndex = previousIndex
                     break loop
                 case let .keyword(string), let .identifier(string):
-                    if !validSpecifiers.contains(string) {
+                    if !allSpecifiers.contains(string) {
                         break loop
                     }
                     lastSpecifier.map { specifiers[$0.0] = $0.1 }
@@ -1454,7 +1439,7 @@ public struct _FormatRules {
             lastSpecifier.map { specifiers[$0.0] = $0.1 }
             guard !specifiers.isEmpty else { return }
             var sortedSpecifiers = [Token]()
-            for specifier in order {
+            for specifier in specifierOrder {
                 if let tokens = specifiers[specifier] {
                     sortedSpecifiers += tokens
                 }
@@ -3571,11 +3556,26 @@ public struct _FormatRules {
             guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .startOfScope("(") else {
                 return
             }
-            if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i, if: {
-                $0.isAttribute && objcAttributes.contains($0.string)
-            }) != nil || formatter.next(.nonSpaceOrCommentOrLinebreak, after: i, if: {
-                $0.isAttribute && objcAttributes.contains($0.string)
-            }) != nil {
+            var index = i
+            loop: while var nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                switch formatter.tokens[nextIndex] {
+                case .keyword("class"):
+                    return
+                case let token where token.isAttribute:
+                    if let startIndex = formatter.index(of: .startOfScope("("), after: nextIndex),
+                        let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) {
+                        nextIndex = endIndex
+                    }
+                case let .keyword(name), let .identifier(name):
+                    if !allSpecifiers.contains(name) {
+                        break loop
+                    }
+                default:
+                    break loop
+                }
+                index = nextIndex
+            }
+            func removeAttribute() {
                 formatter.removeToken(at: i)
                 if formatter.token(at: i)?.isSpace == true {
                     formatter.removeToken(at: i)
@@ -3583,11 +3583,64 @@ public struct _FormatRules {
                     formatter.removeToken(at: i - 1)
                 }
             }
+            if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i, if: {
+                $0.isAttribute && objcAttributes.contains($0.string)
+            }) != nil || formatter.next(.nonSpaceOrCommentOrLinebreak, after: i, if: {
+                $0.isAttribute && objcAttributes.contains($0.string)
+            }) != nil {
+                removeAttribute()
+                return
+            }
+            guard let scopeStart = formatter.index(of: .startOfScope("{"), before: i),
+                let keywordIndex = formatter.index(of: .keyword, before: scopeStart) else {
+                return
+            }
+            switch formatter.tokens[keywordIndex] {
+            case .keyword("class"):
+                if formatter.attributesForType(at: keywordIndex, contains: "@objcMembers") {
+                    removeAttribute()
+                }
+            case .keyword("extension"):
+                if formatter.attributesForType(at: keywordIndex, contains: "@objc") {
+                    removeAttribute()
+                }
+            default:
+                break
+            }
         }
     }
 }
 
 // MARK: shared helper methods
+
+private extension Formatter {
+    func attributesForType(at index: Int, contains: String) -> Bool {
+        let allSpecifiers = _FormatRules.allSpecifiers
+        var index = index
+        while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
+            switch tokens[prevIndex] {
+            case let token where token.isAttribute && token.string == contains:
+                return true
+            case .endOfScope(")"):
+                guard let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
+                    let index = self.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
+                        $0.isAttribute
+                    }) else {
+                    return false
+                }
+                prevIndex = index
+            case let .keyword(name), let .identifier(name):
+                if !allSpecifiers.contains(name) {
+                    return false
+                }
+            default:
+                return false
+            }
+            index = prevIndex
+        }
+        return false
+    }
+}
 
 private extension _FormatRules {
     // Current year. Used by fileHeader rule
@@ -3684,4 +3737,23 @@ private extension _FormatRules {
         importStack.append(importRanges)
         return importStack
     }
+
+    // All specifiers
+    static let allSpecifiers = Set(specifierOrder)
+
+    // Swift specifier keywords, in preferred order
+    static let specifierOrder = [
+        "private", "fileprivate", "internal", "public", "open",
+        "private(set)", "fileprivate(set)", "internal(set)", "public(set)",
+        "final", "dynamic", // Can't be both
+        "optional", "required",
+        "convenience",
+        "override",
+        "indirect",
+        "lazy",
+        "weak", "unowned",
+        "static", "class",
+        "mutating", "nonmutating",
+        "prefix", "postfix",
+    ]
 }

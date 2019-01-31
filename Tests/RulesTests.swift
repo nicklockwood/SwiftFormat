@@ -7843,4 +7843,86 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
+
+    func testObjcRemovedOnObjcMembersClass() {
+        let input = """
+        @objcMembers class Foo: NSObject {
+            @objc var foo: String
+        }
+        """
+        let output = """
+        @objcMembers class Foo: NSObject {
+            var foo: String
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testObjcRemovedOnRenamedObjcMembersClass() {
+        let input = """
+        @objcMembers @objc(OCFoo) class Foo: NSObject {
+            @objc var foo: String
+        }
+        """
+        let output = """
+        @objcMembers @objc(OCFoo) class Foo: NSObject {
+            var foo: String
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testObjcNotRemovedOnNestedClass() {
+        let input = """
+        @objcMembers class Foo: NSObject {
+            @objc class Bar: NSObject {}
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testObjcNotRemovedOnRenamedPrivateNestedClass() {
+        let input = """
+        @objcMembers class Foo: NSObject {
+            @objc private class Bar: NSObject {}
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testObjcRemovedOnObjcExtensionVar() {
+        let input = """
+        @objc extension Foo {
+            @objc var foo: String {}
+        }
+        """
+        let output = """
+        @objc extension Foo {
+            var foo: String {}
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testObjcRemovedOnObjcExtensionFunc() {
+        let input = """
+        @objc extension Foo {
+            @objc func foo() -> String {}
+        }
+        """
+        let output = """
+        @objc extension Foo {
+            func foo() -> String {}
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
 }

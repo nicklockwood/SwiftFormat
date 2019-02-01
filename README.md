@@ -207,6 +207,21 @@ fi
 
 This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commits as code gets reformatted inconsistently.
 
+Via Applescript
+----------------
+
+To run swiftformat on the frontmost Xcode document (project or workspace) you can use the following applescript:
+
+```applescript
+tell application "Xcode"
+	set frontWindow to the first window
+	set myPath to path of document of frontWindow
+	do shell script "cd " & myPath & ";cd ..; /usr/local/bin/swiftformat ."
+end tell
+```
+
+Some Apps you can trigger this from are [BetterTouchTool](https://folivora.ai), [Alfred](https://www.alfredapp.com) or [Keyboard Maestro](https://www.keyboardmaestro.com/main/).
+Another good way to trigger this, is to define a QuickAction for Xcode via Automator and then assign a keyboard shortcut for it in the System Settings.
 
 VSCode plugin
 --------------
@@ -1342,22 +1357,6 @@ Finally, it is common practice to include the current year in a comment header c
 ```
     
 And the `{year}` token will be automatically replaced by the current year whenever SwiftFormat is applied (**Note:** the year is determined from the locale and timezone of the machine running the script).
-
-Integrations
-----------------
-
-To run swiftformat on the frontmost xcode document (project or workspace) you can use the following applescript:
-
-```applescript
-tell application "Xcode"
-	set frontWindow to the first window
-	set myPath to path of document of frontWindow
-	do shell script "cd " & myPath & ";cd ..; /usr/local/bin/swiftformat ."
-end tell
-```
-
-Some Apps you can trigger this from are [BetterTouchTool](https://folivora.ai), [Alfred](https://www.alfredapp.com) or [Keyboard Maestro](https://www.keyboardmaestro.com/main/).
-
 
 
 FAQ

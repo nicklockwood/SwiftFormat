@@ -13,6 +13,7 @@ Table of Contents
     - [Command-line tool](#command-line-tool)
     - [Xcode source editor extension](#xcode-source-editor-extension)
     - [Xcode build phase](#xcode-build-phase)
+    - [Via Applescript](#via-applescript)
     - [VSCode plugin](#vscode-plugin)
     - [Git pre-commit hook](#git-pre-commit-hook)
     - [On CI using Danger](#on-ci-using-danger)
@@ -206,6 +207,21 @@ fi
 
 This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commits as code gets reformatted inconsistently.
 
+Via Applescript
+----------------
+
+To run swiftformat on the frontmost Xcode document (project or workspace) you can use the following applescript:
+
+```applescript
+tell application "Xcode"
+	set frontWindow to the first window
+	set myPath to path of document of frontWindow
+	do shell script "cd " & myPath & ";cd ..; /usr/local/bin/swiftformat ."
+end tell
+```
+
+Some Apps you can trigger this from are [BetterTouchTool](https://folivora.ai), [Alfred](https://www.alfredapp.com) or [Keyboard Maestro](https://www.keyboardmaestro.com/main/).
+Another good way to trigger this, is to define a QuickAction for Xcode via Automator and then assign a keyboard shortcut for it in the System Settings.
 
 VSCode plugin
 --------------

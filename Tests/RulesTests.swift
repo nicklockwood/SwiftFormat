@@ -807,14 +807,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testAsSpaceAfterOptionalAs() {
+    func testSpaceAfterOptionalAs() {
         let input = "foo as?[String]"
         let output = "foo as? [String]"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
 
-    func testAsSpaceAfterForcedAs() {
+    func testSpaceAfterForcedAs() {
         let input = "foo as![String]"
         let output = "foo as! [String]"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)

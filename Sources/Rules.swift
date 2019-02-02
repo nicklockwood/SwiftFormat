@@ -3559,11 +3559,6 @@ public struct _FormatRules {
             formatter.replaceToken(at: i, with: .identifier("self"))
         }
     }
-
-    public let typeMarks = FormatRule { formatter in
-        // TODO:
-        print(formatter)
-    }
 }
 
 // MARK: shared helper methods

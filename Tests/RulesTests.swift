@@ -822,8 +822,8 @@ class RulesTests: XCTestCase {
     }
 
     func testNoSpaceAroundGenerics() {
-        let input = "Array<String>"
-        let output = "Array<String>"
+        let input = "Foo<String>"
+        let output = "Foo<String>"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -5024,8 +5024,8 @@ class RulesTests: XCTestCase {
     }
 
     func testRemoveSelfFromGenericComputedVar() {
-        let input = "var foo: Array<Int> { return self.bar }"
-        let output = "var foo: Array<Int> { return bar }"
+        let input = "var foo: Foo<Int> { return self.bar }"
+        let output = "var foo: Foo<Int> { return bar }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -5255,8 +5255,8 @@ class RulesTests: XCTestCase {
     }
 
     func testNoRemoveSelfInClosureAfterGenericVar() {
-        let input = "var foo: Array<Int>\nbar { self.baz() }"
-        let output = "var foo: Array<Int>\nbar { self.baz() }"
+        let input = "var foo: Foo<Int>\nbar { self.baz() }"
+        let output = "var foo: Foo<Int>\nbar { self.baz() }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
     }
@@ -7956,6 +7956,36 @@ class RulesTests: XCTestCase {
         }
         """
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    // MARK: typeSugar
+
+    func testArrayTypeConvertedToSugar() {
+        let input = "var foo: Array<String>"
+        let output = "var foo: [String]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testDictionaryTypeConvertedToSugar() {
+        let input = "var foo: Dictionary<String, Int>"
+        let output = "var foo: [String: Int]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testOptionalTypeConvertedToSugar() {
+        let input = "var foo: Optional<String>"
+        let output = "var foo: String?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testOptionalClosureParenthesizedConvertedToSugar() {
+        let input = "var foo: Optional<(Int) -> String>"
+        let output = "var foo: ((Int) -> String)?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 }

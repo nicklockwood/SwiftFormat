@@ -1110,6 +1110,23 @@ goto(fail)
 + // MARK: - UIScrollViewDelegate
 ```
 
+***typeSugar*** - replaces Array, Dictionary and Optional types with their shorthand forms:
+
+```diff
+- var foo: Array<String>
++ var foo: [String]
+```
+
+```diff
+- var foo: Dictionary<String, Int>
++ var foo: [String: Int]
+```
+
+```diff
+- var foo: Optional<(Int) -> Void>
++ var foo: ((Int) -> Void)?
+```
+
 ***unusedArguments*** - marks unused arguments in functions and closures with `_` to make it clear they aren't used. Use the `--stripunusedargs` option to configure which argument types are affected (`always` (default), `closure-only` or `unnamed-only`).
 
 ```diff

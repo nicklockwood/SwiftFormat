@@ -3621,6 +3621,43 @@ public struct _FormatRules {
             }
         }
     }
+
+    /// Replace Array<T>, Dictionary<T, U> and Optional<T> with [T], [T: U] and T?
+    public let typeSugar = FormatRule { formatter in
+        formatter.forEach(.startOfScope("<")) { i, _ in
+            guard let typeIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {
+                $0.isIdentifier
+            }), let endIndex = formatter.index(of: .endOfScope(">"), after: i),
+                let typeStart = formatter.index(of: .nonSpaceOrLinebreak, in: i + 1 ..< endIndex),
+                let typeEnd = formatter.lastIndex(of: .nonSpaceOrLinebreak, in: i + 1 ..< endIndex) else {
+                return
+            }
+            switch formatter.tokens[typeIndex] {
+            case .identifier("Array"):
+                formatter.replaceTokens(inRange: typeIndex ... endIndex, with:
+                    [.startOfScope("[")] + formatter.tokens[typeStart ... typeEnd] + [.endOfScope("]")])
+            case .identifier("Dictionary"):
+                guard let commaIndex = formatter.index(of: .delimiter(","), in: typeStart ..< typeEnd) else {
+                    return
+                }
+                formatter.replaceToken(at: commaIndex, with: .delimiter(":"))
+                formatter.replaceTokens(inRange: typeIndex ... endIndex, with:
+                    [.startOfScope("[")] + formatter.tokens[typeStart ... typeEnd] + [.endOfScope("]")])
+            case .identifier("Optional"):
+                var typeTokens = formatter.tokens[typeStart ... typeEnd]
+                if formatter.tokens[typeStart] == .startOfScope("("),
+                    let commaEnd = formatter.index(of: .endOfScope(")"), after: typeStart),
+                    commaEnd < typeEnd {
+                    typeTokens.insert(.startOfScope("("), at: typeTokens.startIndex)
+                    typeTokens.append(.endOfScope(")"))
+                }
+                typeTokens.append(.operator("?", .postfix))
+                formatter.replaceTokens(inRange: typeIndex ... endIndex, with: Array(typeTokens))
+            default:
+                return
+            }
+        }
+    }
 }
 
 // MARK: shared helper methods

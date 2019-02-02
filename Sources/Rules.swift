@@ -3561,7 +3561,7 @@ public struct _FormatRules {
     }
 
     public let typeMarks = FormatRule { formatter in
-        // TODO
+        // TODO:
         print(formatter)
     }
 }

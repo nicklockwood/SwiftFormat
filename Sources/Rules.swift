@@ -3636,6 +3636,21 @@ public struct _FormatRules {
             }
         }
     }
+
+    /// Replace `fileprivate` with `private` where possible
+    public let redundantFileprivate = FormatRule { formatter in
+        guard !formatter.options.fragment else {
+            return
+        }
+        formatter.forEach(.keyword("fileprivate")) { i, _ in
+            guard formatter.currentScope(at: i) == nil else {
+                // Can only replace fileprivate with private at file scope
+                // TODO: handle subtler case where extensions can access private members
+                return
+            }
+            formatter.replaceToken(at: i, with: .keyword("private"))
+        }
+    }
 }
 
 // MARK: shared helper methods

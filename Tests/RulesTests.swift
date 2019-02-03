@@ -8028,4 +8028,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantExtensionACL]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
+
+    // MARK: redundantFileprivate
+
+    func testFileScopeFileprivateVarChangedToPrivate() {
+        let input = """
+        fileprivate var foo = "foo"
+        """
+        let output = """
+        private var foo = "foo"
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testFileScopeFileprivateVarNotChangedToPrivateIfFragment() {
+        let input = """
+        fileprivate var foo = "foo"
+        """
+        let output = input
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
 }

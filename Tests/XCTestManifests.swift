@@ -443,6 +443,8 @@ extension RulesTests {
         ("testFileHeaderCreationYearReplacement", testFileHeaderCreationYearReplacement),
         ("testFileHeaderFileReplacement", testFileHeaderFileReplacement),
         ("testFileHeaderYearReplacement", testFileHeaderYearReplacement),
+        ("testFileScopeFileprivateVarChangedToPrivate", testFileScopeFileprivateVarChangedToPrivate),
+        ("testFileScopeFileprivateVarNotChangedToPrivateIfFragment", testFileScopeFileprivateVarNotChangedToPrivateIfFragment),
         ("testFixmeIsUpdated", testFixmeIsUpdated),
         ("testForceUnwrapFunctionCallNotUnwrapped", testForceUnwrapFunctionCallNotUnwrapped),
         ("testForValueParensRemoved", testForValueParensRemoved),

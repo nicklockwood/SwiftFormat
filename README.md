@@ -727,6 +727,13 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
   }
 ```
 
+***redundantFileprivate*** - replaces `fileprivate` access control keyword with `private` when they are equivalent, e.g. for top-level constants, functions or types within a file:
+
+```diff
+-  fileprivate let someConstant = "someConstant"
++  private let someConstant = "someConstant"
+```
+
 ***redundantLet*** - removes redundant `let` or `var` from ignored variables in bindings (which is a warning in Xcode):
 
 ```diff

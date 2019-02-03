@@ -1422,8 +1422,7 @@ public struct _FormatRules {
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("set"),
                         let openParenIndex = formatter.index(of: .startOfScope("("), before: index),
                         let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: openParenIndex),
-                        case let .keyword(string)? = formatter.token(at: index),
-                        ["private", "fileprivate", "public", "internal"].contains(string) {
+                        case let .keyword(string)? = formatter.token(at: index), aclSpecifiers.contains(string) {
                         lastSpecifier.map { specifiers[$0.0] = $0.1 }
                         lastSpecifier = (string + "(set)", [Token](formatter.tokens[index ..< lastIndex]))
                         previousIndex = lastIndex
@@ -1736,52 +1735,10 @@ public struct _FormatRules {
         }
 
         // Check specifiers don't include `lazy`
-        // TODO: reduce duplication between this and the `specifiers` rule
-        let specifiers = Set([
-            "private", "fileprivate", "internal", "public", "open",
-            "final", "dynamic", // Can't be both
-            "optional", "required",
-            "override",
-            "lazy",
-            "weak", "unowned",
-            "static", "class",
-            "mutating", "nonmutating",
-        ])
         formatter.forEach(.keyword("var")) { i, _ in
-            var index = i - 1
-            loop: while let token = formatter.token(at: index) {
-                switch token {
-                case .keyword("lazy"):
-                    return // Can't remove the init
-                case let .keyword(string), let .identifier(string):
-                    if !specifiers.contains(string) {
-                        break loop
-                    }
-                case .endOfScope(")"):
-                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("set") {
-                        // Skip tokens for entire private(set) expression
-                        while let token = formatter.token(at: index) {
-                            if case let .keyword(string) = token,
-                                ["private", "fileprivate", "public", "internal"].contains(string) {
-                                break
-                            }
-                            index -= 1
-                        }
-                    }
-                case .linebreak,
-                     .space,
-                     .commentBody,
-                     .startOfScope("//"),
-                     .startOfScope("/*"),
-                     .endOfScope("*/"):
-                    break
-                default:
-                    // Not a specifier
-                    break loop
-                }
-                index -= 1
+            if formatter.specifiersForType(at: i, contains: "lazy") {
+                return // Can't remove the init
             }
-
             // Check this isn't a Codable
             if let scopeIndex = formatter.index(of: .startOfScope("{"), before: i) {
                 var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: scopeIndex)
@@ -1797,7 +1754,6 @@ public struct _FormatRules {
                     prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index)
                 }
             }
-
             // Find the nil
             search(from: i)
         }
@@ -3609,11 +3565,11 @@ public struct _FormatRules {
             }
             switch formatter.tokens[keywordIndex] {
             case .keyword("class"):
-                if formatter.attributesForType(at: keywordIndex, contains: "@objcMembers") {
+                if formatter.specifiersForType(at: keywordIndex, contains: "@objcMembers") {
                     removeAttribute()
                 }
             case .keyword("extension"):
-                if formatter.attributesForType(at: keywordIndex, contains: "@objc") {
+                if formatter.specifiersForType(at: keywordIndex, contains: "@objc") {
                     removeAttribute()
                 }
             default:
@@ -3658,28 +3614,50 @@ public struct _FormatRules {
             }
         }
     }
+
+    /// Remove redundant access control level modifiers in extensions
+    public let redundantExtensionACL = FormatRule { formatter in
+        formatter.forEach(.keyword("extension")) { i, _ in
+            var acl = ""
+            guard formatter.specifiersForType(at: i, contains: {
+                acl = $0.string
+                return aclSpecifiers.contains(acl)
+            }), let startIndex = formatter.index(of: .startOfScope("{"), after: i),
+                var endIndex = formatter.index(of: .endOfScope("}"), after: startIndex) else {
+                return
+            }
+            if acl == "private" { acl = "fileprivate" }
+            while let aclIndex = formatter.lastIndex(of: .keyword(acl), in: startIndex + 1 ..< endIndex) {
+                formatter.removeToken(at: aclIndex)
+                if formatter.token(at: aclIndex)?.isSpace == true {
+                    formatter.removeToken(at: aclIndex)
+                }
+                endIndex = aclIndex
+            }
+        }
+    }
 }
 
 // MARK: shared helper methods
 
 private extension Formatter {
-    func attributesForType(at index: Int, contains: String) -> Bool {
+    func specifiersForType(at index: Int, contains: (Token) -> Bool) -> Bool {
         let allSpecifiers = _FormatRules.allSpecifiers
         var index = index
         while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
             switch tokens[prevIndex] {
-            case let token where token.isAttribute && token.string == contains:
+            case let token where contains(token):
                 return true
             case .endOfScope(")"):
                 guard let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
                     let index = self.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
-                        $0.isAttribute
+                        $0.isAttribute || _FormatRules.aclSpecifiers.contains($0.string)
                     }) else {
                     return false
                 }
                 prevIndex = index
             case let .keyword(name), let .identifier(name):
-                if !allSpecifiers.contains(name) {
+                if !allSpecifiers.contains(name), !name.hasPrefix("@") {
                     return false
                 }
             default:
@@ -3688,6 +3666,10 @@ private extension Formatter {
             index = prevIndex
         }
         return false
+    }
+
+    func specifiersForType(at index: Int, contains: String) -> Bool {
+        return specifiersForType(at: index, contains: { $0.string == contains })
     }
 }
 
@@ -3803,10 +3785,11 @@ private extension _FormatRules {
     // All specifiers
     static let allSpecifiers = Set(specifierOrder)
 
+    // ACL specifiers
+    static let aclSpecifiers = ["private", "fileprivate", "internal", "public"]
+
     // Swift specifier keywords, in preferred order
-    static let specifierOrder = [
-        "private", "fileprivate", "internal", "public", "open",
-        "private(set)", "fileprivate(set)", "internal(set)", "public(set)",
+    static let specifierOrder = aclSpecifiers + ["open"] + aclSpecifiers.map { $0 + "(set)" } + [
         "final", "dynamic", // Can't be both
         "optional", "required",
         "convenience",

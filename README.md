@@ -713,21 +713,30 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
   }
 ```
 
+***redundantExtensionACL*** - removes access control level keywords from extension members when the access level matches the extension itself:
+
+```diff
+  var foo: Int {
+-   get {
+-     return 5
+-   }
+  }
+
+  var foo: Int {
++   return 5
+  }
+```
+
 ***redundantLet*** - removes redundant `let` or `var` from ignored variables in bindings (which is a warning in Xcode):
 
 ```diff
-- let _ = resultIgnorableFunction()
-+ _ = resultIgnorableFunction()
-```
-
-```diff
-- if case (let foo, let _) = bar {}
-+ if case (let foo, _) = bar {}
-```
-
-```diff
-- if case .foo(var /* unused */ _) = bar {}
-+ if case .foo( /* unused */ _) = bar {}
+  public extension URL {
+-   public func queryParameter(_ name: String) -> String { ... }
+  }
+  
+  public extension URL {
++   func queryParameter(_ name: String) -> String { ... }
+  }
 ```
 
 ***redundantLetError*** - removes redundant `let error` from `catch` statements, where it is declared implicitly:

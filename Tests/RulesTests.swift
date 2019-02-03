@@ -7988,4 +7988,44 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
+
+    // MARK: redundantExtensionACL
+
+    func testPublicExtensionMemberACLStripped() {
+        let input = """
+        public extension Foo {
+            public var bar: Int { 5 }
+            private static let baz = "baz"
+            public func quux() {}
+        }
+        """
+        let output = """
+        public extension Foo {
+            var bar: Int { 5 }
+            private static let baz = "baz"
+            func quux() {}
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantExtensionACL]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testPrivateExtensionMemberACLNotStrippedUnlessFileprivate() {
+        let input = """
+        private extension Foo {
+            fileprivate var bar: Int { 5 }
+            private static let baz = "baz"
+            fileprivate func quux() {}
+        }
+        """
+        let output = """
+        private extension Foo {
+            var bar: Int { 5 }
+            private static let baz = "baz"
+            func quux() {}
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantExtensionACL]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
 }

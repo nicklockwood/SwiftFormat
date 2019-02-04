@@ -3644,7 +3644,7 @@ public struct _FormatRules {
             }
             return false
         }
-        func isReferenced(_ name: String, in range: Range<Int>) -> Bool {
+        func isReferenced(_ name: String, in range: CountableRange<Int>) -> Bool {
             for i in range {
                 let token = formatter.tokens[i]
                 guard case .identifier(name) = token else { continue }
@@ -3908,7 +3908,9 @@ private extension _FormatRules {
     static let aclSpecifiers = ["private", "fileprivate", "internal", "public"]
 
     // Swift specifier keywords, in preferred order
-    static let specifierOrder = aclSpecifiers + ["open"] + aclSpecifiers.map { $0 + "(set)" } + [
+    static let specifierOrder = [
+        "private", "fileprivate", "internal", "public", "open",
+        "private(set)", "fileprivate(set)", "internal(set)", "public(set)",
         "final", "dynamic", // Can't be both
         "optional", "required",
         "convenience",

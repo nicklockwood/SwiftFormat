@@ -78,9 +78,15 @@ public extension _FormatRules {
     /// All rules
     var all: [FormatRule] { return _allRules }
 
-    /// All rules specified by name
-    func all(named: [String]) -> [FormatRule] {
-        return Array(named.sorted().compactMap { rulesByName[$0] })
+    /// Default active rules
+    var `default`: [FormatRule] { return _defaultRules }
+
+    /// Rules that are disabled by default
+    var disabledByDefault: [String] { return _disabledByDefault }
+
+    /// Just the specified rules
+    func named(_ names: [String]) -> [FormatRule] {
+        return Array(names.sorted().compactMap { rulesByName[$0] })
     }
 
     /// All rules except those specified
@@ -88,11 +94,11 @@ public extension _FormatRules {
         return allRules(except: rules)
     }
 
-    /// Default active rules
-    var `default`: [FormatRule] { return _defaultRules }
-
-    /// Rules that are disabled by default
-    var disabledByDefault: [String] { return _disabledByDefault }
+    // deprecated
+    @available(*, deprecated, message: "Use named() method instead")
+    func all(named: [String]) -> [FormatRule] {
+        return Array(named.sorted().compactMap { rulesByName[$0] })
+    }
 }
 
 public struct _FormatRules {
@@ -550,10 +556,8 @@ public struct _FormatRules {
     /// meaning and leads to noise in commits.
     public let trailingSpace = FormatRule { formatter in
         formatter.forEach(.space) { i, _ in
-            guard formatter.token(at: i + 1)?.isLinebreak ?? true else {
-                return
-            }
-            if formatter.options.truncateBlankLines || formatter.token(at: i - 1)?.isLinebreak == false {
+            if formatter.token(at: i + 1)?.isLinebreak ?? true,
+                formatter.options.truncateBlankLines || formatter.token(at: i - 1)?.isLinebreak == false {
                 formatter.removeToken(at: i)
             }
         }
@@ -562,10 +566,8 @@ public struct _FormatRules {
     /// Collapse all consecutive blank lines into a single blank line
     public let consecutiveBlankLines = FormatRule { formatter in
         formatter.forEach(.linebreak) { i, _ in
-            guard let prevIndex = formatter.index(of: .nonSpace, before: i, if: { $0.isLinebreak }) else {
-                return
-            }
-            if formatter.next(.nonSpace, after: i)?.isLinebreak ?? !formatter.options.fragment {
+            if let prevIndex = formatter.index(of: .nonSpace, before: i, if: { $0.isLinebreak }),
+                formatter.next(.nonSpace, after: i)?.isLinebreak ?? !formatter.options.fragment {
                 formatter.removeTokens(inRange: prevIndex ..< i)
             }
         }
@@ -647,47 +649,48 @@ public struct _FormatRules {
                  .keyword("struct"),
                  .keyword("extension"),
                  .keyword("enum"):
-                isSpaceableScopeType = (formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .keyword("import"))
+                isSpaceableScopeType =
+                    (formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .keyword("import"))
             case .keyword("func"), .keyword("var"):
                 isSpaceableScopeType = false
             case .startOfScope("{"):
                 spaceableScopeStack.append(isSpaceableScopeType)
                 isSpaceableScopeType = false
             case .endOfScope("}"):
-                if spaceableScopeStack.count > 1, spaceableScopeStack[spaceableScopeStack.count - 2] {
-                    guard let openingBraceIndex = formatter.index(of: .startOfScope("{"), before: i),
-                        formatter.lastIndex(of: .linebreak, in: openingBraceIndex + 1 ..< i) != nil else {
-                        // Inline braces
-                        break
+                spaceableScopeStack.removeLast()
+                guard spaceableScopeStack.last == true,
+                    let openingBraceIndex = formatter.index(of: .startOfScope("{"), before: i),
+                    formatter.lastIndex(of: .linebreak, in: openingBraceIndex + 1 ..< i) != nil else {
+                    // Inline braces
+                    break
+                }
+                var i = i
+                if let nextTokenIndex = formatter.index(of: .nonSpace, after: i, if: {
+                    $0 == .startOfScope("(") }), let closingParenIndex = formatter.index(of:
+                    .endOfScope(")"), after: nextTokenIndex) {
+                    i = closingParenIndex
+                }
+                guard let nextTokenIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i) else {
+                    break
+                }
+                switch formatter.tokens[nextTokenIndex] {
+                case .error, .endOfScope,
+                     .operator(".", _), .delimiter(","), .delimiter(":"),
+                     .keyword("else"), .keyword("catch"):
+                    break
+                case .keyword("while"):
+                    if let previousBraceIndex = formatter.index(of: .startOfScope("{"), before: i),
+                        formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousBraceIndex)
+                        != .keyword("repeat") {
+                        fallthrough
                     }
-                    var i = i
-                    if let nextTokenIndex = formatter.index(of: .nonSpace, after: i, if: {
-                        $0 == .startOfScope("(") }), let closingParenIndex = formatter.index(of:
-                        .endOfScope(")"), after: nextTokenIndex) {
-                        i = closingParenIndex
-                    }
-                    if let nextTokenIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i) {
-                        switch formatter.tokens[nextTokenIndex] {
-                        case .error, .endOfScope,
-                             .operator(".", _), .delimiter(","), .delimiter(":"),
-                             .keyword("else"), .keyword("catch"):
-                            break
-                        case .keyword("while"):
-                            if let previousBraceIndex = formatter.index(of: .startOfScope("{"), before: i),
-                                formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousBraceIndex)
-                                != .keyword("repeat") {
-                                fallthrough
-                            }
-                        default:
-                            if let firstLinebreakIndex = formatter.index(of: .linebreak, in: i + 1 ..< nextTokenIndex),
-                                formatter.index(of: .linebreak, in: firstLinebreakIndex + 1 ..< nextTokenIndex) == nil {
-                                // Insert linebreak
-                                formatter.insertToken(.linebreak(formatter.options.linebreak), at: firstLinebreakIndex)
-                            }
-                        }
+                default:
+                    if let firstLinebreakIndex = formatter.index(of: .linebreak, in: i + 1 ..< nextTokenIndex),
+                        formatter.index(of: .linebreak, in: firstLinebreakIndex + 1 ..< nextTokenIndex) == nil {
+                        // Insert linebreak
+                        formatter.insertToken(.linebreak(formatter.options.linebreak), at: firstLinebreakIndex)
                     }
                 }
-                spaceableScopeStack.removeLast()
             default:
                 break
             }
@@ -2117,17 +2120,18 @@ public struct _FormatRules {
                             formatter.processDeclaredVariables(at: &i, names: &localNames)
                         }
                     case .keyword("func"):
-                        if let nameToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
-                            if isTypeRoot {
-                                if classOrStatic {
-                                    classMembers.insert(nameToken.unescaped())
-                                    classOrStatic = false
-                                } else {
-                                    members.insert(nameToken.unescaped())
-                                }
+                        guard let nameToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) else {
+                            break
+                        }
+                        if isTypeRoot {
+                            if classOrStatic {
+                                classMembers.insert(nameToken.unescaped())
+                                classOrStatic = false
                             } else {
-                                localNames.insert(nameToken.unescaped())
+                                members.insert(nameToken.unescaped())
                             }
+                        } else {
+                            localNames.insert(nameToken.unescaped())
                         }
                     case .startOfScope("("), .startOfScope("#if"), .startOfScope(":"):
                         break
@@ -2226,7 +2230,9 @@ public struct _FormatRules {
                     guard let keywordIndex = formatter.index(of: .keyword, before: index),
                         let prevKeywordIndex = formatter.index(of: .keyword, before: keywordIndex),
                         let prevKeywordToken = formatter.token(at: prevKeywordIndex),
-                        case .keyword("for") = prevKeywordToken else { return }
+                        case .keyword("for") = prevKeywordToken else {
+                        return
+                    }
                     for token in formatter.tokens[prevKeywordIndex + 1 ..< keywordIndex] {
                         if case let .identifier(name) = token, name != "_" {
                             localNames.insert(token.unescaped())
@@ -2543,23 +2549,24 @@ public struct _FormatRules {
                         argNames.removeSubrange(count ..< argNames.count)
                         nameIndexPairs.removeSubrange(count ..< nameIndexPairs.count)
                     case .identifier:
-                        if argCountStack.count < 3,
+                        guard argCountStack.count < 3,
                             let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index), [
                                 .delimiter(","), .startOfScope("("), .startOfScope("{"), .endOfScope("]"),
                             ].contains(prevToken), let scopeStart = formatter.index(of: .startOfScope, before: index),
-                            ![.startOfScope("["), .startOfScope("<")].contains(formatter.tokens[scopeStart]) {
-                            let name = token.unescaped()
-                            if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                                let nextToken = formatter.token(at: nextIndex), case .identifier = nextToken {
-                                let internalName = nextToken.unescaped()
-                                if internalName != "_" {
-                                    argNames.append(internalName)
-                                    nameIndexPairs.append((index, nextIndex))
-                                }
-                            } else if name != "_" {
-                                argNames.append(name)
-                                nameIndexPairs.append((index, index))
+                            ![.startOfScope("["), .startOfScope("<")].contains(formatter.tokens[scopeStart]) else {
+                            break
+                        }
+                        let name = token.unescaped()
+                        if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                            let nextToken = formatter.token(at: nextIndex), case .identifier = nextToken {
+                            let internalName = nextToken.unescaped()
+                            if internalName != "_" {
+                                argNames.append(internalName)
+                                nameIndexPairs.append((index, nextIndex))
                             }
+                        } else if name != "_" {
+                            argNames.append(name)
+                            nameIndexPairs.append((index, index))
                         }
                     default:
                         break

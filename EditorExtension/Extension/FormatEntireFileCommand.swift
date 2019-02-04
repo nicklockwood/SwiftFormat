@@ -46,7 +46,7 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
         var formatOptions = store.inferOptions ? inferFormatOptions(from: tokens) : store.formatOptions
         formatOptions.indent = indentationString(for: invocation.buffer)
         do {
-            let rules = FormatRules.all(named: RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
+            let rules = FormatRules.named(RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
             let output = try format(tokens, rules: rules, options: formatOptions)
             if output == tokens {
                 // No changes needed

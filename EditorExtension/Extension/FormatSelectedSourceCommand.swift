@@ -57,7 +57,7 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         }.joined()
 
         do {
-            let rules = FormatRules.all(named: RulesStore()
+            let rules = FormatRules.named(RulesStore()
                 .rules
                 .filter { $0.isEnabled }
                 .map { $0.name })

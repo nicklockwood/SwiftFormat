@@ -629,7 +629,7 @@ Here are all the rules that SwiftFormat currently applies, and the effects that 
   }
 ```
 
-***isEmpty*** - replaces `count == 0` checks with `isEmpty`, which is preferred for performance reasons (disabled by default because SwiftFormat is not able to check that the isEmpty property is actually available in all cases):
+***isEmpty*** - replaces `count == 0` checks with `isEmpty`, which is preferred for performance reasons (especially for Strings where count has O(n) complexity):
 
 ```diff
 - if foo.count == 0 {
@@ -1504,7 +1504,7 @@ Known issues
 
 * The `trailingClosures` rule will sometimes generate ambiguous code that breaks your program. For this reason, the rule is disabled by default. It is recommended that you apply this rule manually and review the changes, rather than including it in an automated formatting process.
 
-* The `isEmpty` rule will convert `count == 0` to `isEmpty` even for types that do not have an `isEmpty` method, such as `NSArray`/`NSDictionary`/etc. Use of Foundation collections in Swift code is pretty rare, but just in case, the rule is disabled by default.
+* The `isEmpty` rule will convert `count == 0` to `isEmpty` even for types that do not have an `isEmpty` method, such as `NSArray`/`NSDictionary`/etc. Use of Objective-C collections in Swift code is pretty rare however, as the Swift-ObjC bridge converts them automatically.
 
 * Under rare circumstances, SwiftFormat may misinterpret a generic type followed by an `=` sign as a pair of `<` and `>=` expressions. For example, the following case would be handled incorrectly:
 

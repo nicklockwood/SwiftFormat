@@ -8051,4 +8051,228 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
+
+    func testFileprivateVarChangedToPrivateIfNotAccessedFromAnotherType() {
+        let input = """
+        struct Foo {
+            fileprivate var foo = "foo"
+        }
+        """
+        let output = """
+        struct Foo {
+            private var foo = "foo"
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateVarChangedToPrivateIfNotAccessedFromAnotherTypeAndFileIncludesImports() {
+        let input = """
+        import Foundation
+
+        struct Foo {
+            fileprivate var foo = "foo"
+        }
+        """
+        let output = """
+        import Foundation
+
+        struct Foo {
+            private var foo = "foo"
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateVarNotChangedToPrivateIfAccessedFromAnotherType() {
+        let input = """
+        struct Foo {
+            fileprivate let foo = "foo"
+        }
+
+        struct Bar {
+            func bar() {
+                print(Foo().foo)
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateVarNotChangedToPrivateIfAccessedFromAFunction() {
+        let input = """
+        struct Foo {
+            fileprivate let foo = "foo"
+        }
+
+        func getFoo() -> String {
+            return Foo().foo
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateVarNotChangedToPrivateIfAccessedFromAConstant() {
+        let input = """
+        struct Foo {
+            fileprivate let foo = "foo"
+        }
+
+        let kFoo = Foo().foo
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateVarNotChangedToPrivateIfAccessedFromAVar() {
+        let input = """
+        struct Foo {
+            fileprivate let foo = "foo"
+        }
+
+        var kFoo: String { return Foo().foo }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateVarNotChangedToPrivateIfAccessedFromCode() {
+        let input = """
+        struct Foo {
+            fileprivate let foo = "foo"
+        }
+
+        print(Foo().foo)
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateVarNotChangedToPrivateIfAccessedFromAClosure() {
+        let input = """
+        struct Foo {
+            fileprivate let foo = "foo"
+        }
+
+        print({ Foo().foo }())
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateVarNotChangedToPrivateIfAccessedFromAnExtensionOnAnotherType() {
+        let input = """
+        struct Foo {
+            fileprivate let foo = "foo"
+        }
+
+        extension Bar {
+            func bar() {
+                print(Foo().foo)
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateVarChangedToPrivateIfAccessedFromAnExtensionOnSameType() {
+        let input = """
+        struct Foo {
+            fileprivate let foo = "foo"
+        }
+
+        extension Foo {
+            func bar() {
+                print(foo)
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            private let foo = "foo"
+        }
+
+        extension Foo {
+            func bar() {
+                print(foo)
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateVarChangedToPrivateIfAccessedViaSelfFromAnExtensionOnSameType() {
+        let input = """
+        struct Foo {
+            fileprivate let foo = "foo"
+        }
+
+        extension Foo {
+            func bar() {
+                print(self.foo)
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            private let foo = "foo"
+        }
+
+        extension Foo {
+            func bar() {
+                print(self.foo)
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["redundantSelf"]), options: options), output + "\n")
+    }
+
+    func testFileprivateMultiLetNotChangedToPrivateIfAccessedOutsideType() {
+        let input = """
+        struct Foo {
+            fileprivate let foo = "foo", bar = "bar"
+        }
+
+        extension Foo {
+            func bar() {
+                print(foo)
+            }
+        }
+
+        extension Bar {
+            func bar() {
+                print(Foo().bar)
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
 }

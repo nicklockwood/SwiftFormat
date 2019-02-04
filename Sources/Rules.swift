@@ -2029,41 +2029,6 @@ public struct _FormatRules {
         var typeStack = [String]()
         var membersByType = [String: Set<String>]()
         var classMembersByType = [String: Set<String>]()
-        func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
-            while let token = formatter.token(at: index) {
-                switch token {
-                case .identifier where
-                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false:
-                    let name = token.unescaped()
-                    if name != "_" {
-                        names.insert(name)
-                    }
-                    inner: while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
-                        switch formatter.tokens[nextIndex] {
-                        case .keyword("as"), .keyword("is"), .keyword("try"):
-                            break
-                        case .startOfScope("<"), .startOfScope("["), .startOfScope("("):
-                            guard let endIndex = formatter.endOfScope(at: nextIndex) else {
-                                return // error
-                            }
-                            index = endIndex
-                            continue
-                        case .keyword, .startOfScope("{"), .endOfScope("}"), .startOfScope(":"):
-                            return
-                        case .delimiter(","):
-                            index = nextIndex
-                            break inner
-                        default:
-                            break
-                        }
-                        index = nextIndex
-                    }
-                default:
-                    break
-                }
-                index += 1
-            }
-        }
         let explicitSelf = formatter.options.explicitSelf
         func processBody(at index: inout Int,
                          localNames: Set<String>,
@@ -2140,13 +2105,13 @@ public struct _FormatRules {
                         i += 1
                         if isTypeRoot {
                             if classOrStatic {
-                                processDeclaredVariables(at: &i, names: &classMembers)
+                                formatter.processDeclaredVariables(at: &i, names: &classMembers)
                                 classOrStatic = false
                             } else {
-                                processDeclaredVariables(at: &i, names: &members)
+                                formatter.processDeclaredVariables(at: &i, names: &members)
                             }
                         } else {
-                            processDeclaredVariables(at: &i, names: &localNames)
+                            formatter.processDeclaredVariables(at: &i, names: &localNames)
                         }
                     case .keyword("func"):
                         if let nameToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
@@ -2241,7 +2206,7 @@ public struct _FormatRules {
                         assert(!isTypeRoot)
                         // Guard is included because it's an error to reference guard vars in body
                         var scopedNames = localNames
-                        processDeclaredVariables(at: &index, names: &scopedNames)
+                        formatter.processDeclaredVariables(at: &index, names: &scopedNames)
                         guard let startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
                             return // error
                         }
@@ -3620,7 +3585,7 @@ public struct _FormatRules {
         formatter.forEach(.keyword("extension")) { i, _ in
             var acl = ""
             guard formatter.specifiersForType(at: i, contains: {
-                acl = $0.string
+                acl = $1.string
                 return aclSpecifiers.contains(acl)
             }), let startIndex = formatter.index(of: .startOfScope("{"), after: i),
                 var endIndex = formatter.index(of: .endOfScope("}"), after: startIndex) else {
@@ -3642,13 +3607,74 @@ public struct _FormatRules {
         guard !formatter.options.fragment else {
             return
         }
+        var hasUnreplacedFileprivates = false
         formatter.forEach(.keyword("fileprivate")) { i, _ in
-            guard formatter.currentScope(at: i) == nil else {
-                // Can only replace fileprivate with private at file scope
-                // TODO: handle subtler case where extensions can access private members
+            // check if definition is at file-scope
+            if formatter.index(of: .startOfScope, before: i) == nil {
+                formatter.replaceToken(at: i, with: .keyword("private"))
+            } else {
+                hasUnreplacedFileprivates = true
+            }
+        }
+        guard hasUnreplacedFileprivates, formatter.options.swiftVersion >= "4" else {
+            return
+        }
+        let importRanges = _FormatRules.parseImports(formatter)
+        var fileJustContainsOneType: Bool?
+        func ifCodeInRange(_ range: CountableRange<Int>) -> Bool {
+            var index = range.lowerBound
+            while index < range.upperBound, let nextIndex =
+                formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: index ..< range.upperBound) {
+                guard let importRange = importRanges.first(where: {
+                    $0.contains(where: { $0.1.contains(nextIndex) })
+                }) else {
+                    return true
+                }
+                index = importRange.last!.1.upperBound + 1
+            }
+            return false
+        }
+        func isReferenced(_ name: String, in range: Range<Int>) -> Bool {
+            for i in range {
+                let token = formatter.tokens[i]
+                guard case .identifier(name) = token else { continue }
+                if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+                    $0 == .operator(".", .infix)
+                }), formatter.last(.nonSpaceOrCommentOrLinebreak, before: dotIndex)
+                    != .identifier("self") {
+                    return true
+                }
+            }
+            return false
+        }
+        formatter.forEach(.keyword("fileprivate")) { i, _ in
+            // check if definition is a member of a file-scope type
+            guard let scopeIndex = formatter.index(of: .startOfScope, before: i, if: {
+                $0 == .startOfScope("{")
+            }), let typeIndex = formatter.index(of: .keyword, before: scopeIndex, if: {
+                ["class", "struct", "enum"].contains($0.string)
+            }), formatter.currentScope(at: typeIndex) == nil,
+                let endIndex = formatter.index(of: .endOfScope, after: scopeIndex) else {
                 return
             }
-            formatter.replaceToken(at: i, with: .keyword("private"))
+            // check for code outside of main type definition
+            let startIndex = formatter.startOfSpecifiers(at: typeIndex)
+            if fileJustContainsOneType == nil {
+                fileJustContainsOneType = !ifCodeInRange(0 ..< startIndex) &&
+                    !ifCodeInRange(endIndex + 1 ..< formatter.tokens.count)
+            }
+            if fileJustContainsOneType == true {
+                formatter.replaceToken(at: i, with: .keyword("private"))
+                return
+            }
+            // check if member is referenced outside type
+            if let keywordIndex = formatter.index(of: .keyword, in: i + 1 ..< endIndex),
+                let names = formatter.namesInDeclaration(at: keywordIndex), !names.contains(where: {
+                    isReferenced($0, in: 0 ..< startIndex) ||
+                        isReferenced($0, in: endIndex + 1 ..< formatter.tokens.count)
+                }) {
+                formatter.replaceToken(at: i, with: .keyword("private"))
+            }
         }
     }
 }
@@ -3656,12 +3682,12 @@ public struct _FormatRules {
 // MARK: shared helper methods
 
 private extension Formatter {
-    func specifiersForType(at index: Int, contains: (Token) -> Bool) -> Bool {
+    func specifiersForType(at index: Int, contains: (Int, Token) -> Bool) -> Bool {
         let allSpecifiers = _FormatRules.allSpecifiers
         var index = index
         while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
             switch tokens[prevIndex] {
-            case let token where contains(token):
+            case let token where contains(prevIndex, token):
                 return true
             case .endOfScope(")"):
                 guard let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
@@ -3684,7 +3710,75 @@ private extension Formatter {
     }
 
     func specifiersForType(at index: Int, contains: String) -> Bool {
-        return specifiersForType(at: index, contains: { $0.string == contains })
+        return specifiersForType(at: index, contains: { $1.string == contains })
+    }
+
+    // first index of specifier list
+    func startOfSpecifiers(at index: Int) -> Int {
+        var startIndex = index
+        _ = specifiersForType(at: index, contains: { i, _ in
+            startIndex = i
+            return false
+        })
+        return startIndex
+    }
+
+    // gather declared name(s), starting at index of declaration keyword
+    func namesInDeclaration(at index: Int) -> Set<String>? {
+        guard case let .keyword(keyword)? = token(at: index) else {
+            return nil
+        }
+        switch keyword {
+        case "let", "var":
+            var index = index + 1
+            var names = Set<String>()
+            processDeclaredVariables(at: &index, names: &names)
+            return names
+        case "func", "class", "struct", "enum":
+            guard let name = next(.identifier, after: index) else {
+                return nil
+            }
+            return [name.string]
+        default:
+            return nil
+        }
+    }
+
+    // gather declared variable names, starting at index after let/var keyword
+    func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
+        while let token = self.token(at: index) {
+            switch token {
+            case .identifier where
+                last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false:
+                let name = token.unescaped()
+                if name != "_" {
+                    names.insert(name)
+                }
+                inner: while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                    switch tokens[nextIndex] {
+                    case .keyword("as"), .keyword("is"), .keyword("try"):
+                        break
+                    case .startOfScope("<"), .startOfScope("["), .startOfScope("("):
+                        guard let endIndex = endOfScope(at: nextIndex) else {
+                            return // error
+                        }
+                        index = endIndex
+                        continue
+                    case .keyword, .startOfScope("{"), .endOfScope("}"), .startOfScope(":"):
+                        return
+                    case .delimiter(","):
+                        index = nextIndex
+                        break inner
+                    default:
+                        break
+                    }
+                    index = nextIndex
+                }
+            default:
+                break
+            }
+            index += 1
+        }
     }
 }
 

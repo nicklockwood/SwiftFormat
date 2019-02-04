@@ -281,6 +281,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var stripUnusedArguments: ArgumentStrippingMode
     public var elseOnNextLine: Bool
     public var explicitSelf: SelfMode
+    public var selfRequired: [String]
     public var experimentalRules: Bool
     public var fragment: Bool
     public var importGrouping: ImportGrouping
@@ -322,6 +323,7 @@ public struct FormatOptions: CustomStringConvertible {
                 stripUnusedArguments: ArgumentStrippingMode = .all,
                 elseOnNextLine: Bool = false,
                 explicitSelf: SelfMode = .remove,
+                selfRequired: [String] = [],
                 experimentalRules: Bool = false,
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -358,6 +360,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.stripUnusedArguments = stripUnusedArguments
         self.elseOnNextLine = elseOnNextLine
         self.explicitSelf = explicitSelf
+        self.selfRequired = selfRequired
         self.experimentalRules = experimentalRules
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

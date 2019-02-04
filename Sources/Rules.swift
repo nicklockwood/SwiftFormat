@@ -2026,6 +2026,9 @@ public struct _FormatRules {
     /// Remove redundant self keyword
     // TODO: restructure this to use forEachToken to avoid exposing processCommentBody mechanism
     public let redundantSelf = FormatRule { formatter in
+        let selfRequired = formatter.options.selfRequired + [
+            "expect", // Special case to support autoclosure arguments in the Nimble framework
+        ]
         var typeStack = [String]()
         var membersByType = [String: Set<String>]()
         var classMembersByType = [String: Set<String>]()
@@ -2245,8 +2248,8 @@ public struct _FormatRules {
                     }
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .startOfScope("("):
-                    // Special case to support autoclosure arguments in the Nimble framework
-                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("expect") {
+                    if case let .identifier(fn)? = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
+                        selfRequired.contains(fn) {
                         index = formatter.index(of: .endOfScope(")"), after: index) ?? index
                         break
                     }

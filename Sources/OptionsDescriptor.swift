@@ -36,8 +36,9 @@ extension FormatOptions {
         enum ArgumentType: EnumAssociable {
             // index 0 is official value, others are acceptable
             case binary(true: [String], false: [String])
-            case list([String])
+            case `enum`([String])
             case text
+            case set
         }
 
         let argumentName: String // command-line argument; must not change
@@ -67,6 +68,13 @@ extension FormatOptions {
         func validateArgument(_ arg: String) -> Bool {
             var options = FormatOptions.default
             return (try? toOptions(arg, &options)) != nil
+        }
+
+        var isSetType: Bool {
+            guard case .set = type else {
+                return false
+            }
+            return true
         }
 
         init(argumentName: String,
@@ -143,7 +151,7 @@ extension FormatOptions {
                           }
                           return keys[0]
             })
-            type = .list(keys)
+            type = .enum(keys)
         }
 
         init<T: RawRepresentable>(argumentName: String,
@@ -180,7 +188,25 @@ extension FormatOptions {
                 help: help,
                 keyPath: keyPath
             )
-            type = .list(options)
+            type = .enum(options)
+        }
+
+        init(argumentName: String,
+             propertyName: String,
+             displayName: String,
+             help: String = "",
+             keyPath: WritableKeyPath<FormatOptions, [String]>) {
+            self.argumentName = argumentName
+            self.propertyName = propertyName
+            self.displayName = displayName
+            self.help = help
+            type = .set
+            toOptions = { value, options in
+                options[keyPath: keyPath] = parseCommaDelimitedList(value)
+            }
+            fromOptions = { options in
+                options[keyPath: keyPath].joined(separator: ",")
+            }
         }
     }
 }
@@ -215,6 +241,7 @@ extension FormatOptions.Descriptor {
         stripUnusedArguments,
         elsePosition,
         explicitSelf,
+        selfRequired,
         importGrouping,
 
         // Deprecated
@@ -496,6 +523,13 @@ extension FormatOptions.Descriptor {
         help: "explicit self. \"insert\", \"remove\" (default) or \"init-only\"",
         keyPath: \.explicitSelf,
         options: ["insert", "remove", "init-only"]
+    )
+    static let selfRequired = FormatOptions.Descriptor(
+        argumentName: "selfrequired",
+        propertyName: "selfRequired",
+        displayName: "Self Required",
+        help: "comma-delimited list of functions with autoclosure arguments",
+        keyPath: \FormatOptions.selfRequired
     )
     static let importGrouping = FormatOptions.Descriptor(
         argumentName: "importgrouping",

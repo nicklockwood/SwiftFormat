@@ -89,7 +89,7 @@ final class OptionsViewController: NSViewController {
                     )
                     return UserSelectionType.list(list)
 
-                case let .list(values):
+                case let .enum(values):
                     let list = UserSelectionList(
                         identifier: descriptor.argumentName,
                         title: descriptor.displayName,
@@ -101,7 +101,7 @@ final class OptionsViewController: NSViewController {
                     )
                     return UserSelectionType.list(list)
 
-                case .text:
+                case .text, .set:
                     let freeText = UserSelectionFreeText(
                         identifier: descriptor.argumentName,
                         title: descriptor.displayName,

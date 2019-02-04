@@ -159,7 +159,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testCommandLineArgumentsAreCorrect() {
-        let output = ["allman": "false", "wraparguments": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "closingparen": "balanced"]
+        let output = ["allman": "false", "wraparguments": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "closingparen": "balanced", "selfrequired": ""]
         XCTAssertEqual(argumentsFor(.default), output)
     }
 
@@ -365,7 +365,7 @@ class ArgumentsTests: XCTestCase {
         let config = ["rules": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
         let rules = try parseRules(result["rules"]!)
-        XCTAssertEqual(Set(rules), Set(["braces", "fileHeader"]))
+        XCTAssertEqual(rules, ["braces", "fileHeader"])
     }
 
     func testMergeEmptyRules() throws {
@@ -373,7 +373,7 @@ class ArgumentsTests: XCTestCase {
         let config = ["rules": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
         let rules = try parseRules(result["rules"]!)
-        XCTAssertEqual(Set(rules), Set(["consecutiveSpaces", "braces"]))
+        XCTAssertEqual(Set(rules), Set(["braces", "consecutiveSpaces"]))
     }
 
     func testMergeEnableRules() throws {
@@ -381,7 +381,7 @@ class ArgumentsTests: XCTestCase {
         let config = ["enable": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
         let enabled = try parseRules(result["enable"]!)
-        XCTAssertEqual(Set(enabled), Set(["braces", "consecutiveSpaces", "fileHeader"]))
+        XCTAssertEqual(enabled, ["braces", "consecutiveSpaces", "fileHeader"])
     }
 
     func testMergeDisableRules() throws {
@@ -389,7 +389,7 @@ class ArgumentsTests: XCTestCase {
         let config = ["disable": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
         let disabled = try parseRules(result["disable"]!)
-        XCTAssertEqual(Set(disabled), Set(["braces", "consecutiveSpaces", "fileHeader"]))
+        XCTAssertEqual(disabled, ["braces", "consecutiveSpaces", "fileHeader"])
     }
 
     func testRulesArgumentOverridesAllConfigRules() throws {
@@ -397,7 +397,7 @@ class ArgumentsTests: XCTestCase {
         let config = ["rules": "consecutiveSpaces", "disable": "braces", "enable": "redundantSelf"]
         let result = try mergeArguments(args, into: config)
         let disabled = try parseRules(result["rules"]!)
-        XCTAssertEqual(Set(disabled), Set(["braces", "fileHeader"]))
+        XCTAssertEqual(disabled, ["braces", "fileHeader"])
         XCTAssertNil(result["enabled"])
         XCTAssertNil(result["disabled"])
     }
@@ -407,11 +407,11 @@ class ArgumentsTests: XCTestCase {
         let config = ["rules": "fileHeader", "disable": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
         let rules = try parseRules(result["rules"]!)
-        XCTAssertEqual(Set(rules), Set(["fileHeader"]))
+        XCTAssertEqual(rules, ["fileHeader"])
         let enabled = try parseRules(result["enable"]!)
-        XCTAssertEqual(Set(enabled), Set(["braces"]))
+        XCTAssertEqual(enabled, ["braces"])
         let disabled = try parseRules(result["disable"]!)
-        XCTAssertEqual(Set(disabled), Set(["consecutiveSpaces"]))
+        XCTAssertEqual(disabled, ["consecutiveSpaces"])
     }
 
     func testDisableArgumentOverridesConfigRules() throws {
@@ -419,11 +419,19 @@ class ArgumentsTests: XCTestCase {
         let config = ["rules": "braces,fileHeader", "enable": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
         let rules = try parseRules(result["rules"]!)
-        XCTAssertEqual(Set(rules), Set(["fileHeader"]))
+        XCTAssertEqual(rules, ["fileHeader"])
         let enabled = try parseRules(result["enable"]!)
-        XCTAssertEqual(Set(enabled), Set(["consecutiveSpaces"]))
+        XCTAssertEqual(enabled, ["consecutiveSpaces"])
         let disabled = try parseRules(result["disable"]!)
-        XCTAssertEqual(Set(disabled), Set(["braces"]))
+        XCTAssertEqual(disabled, ["braces"])
+    }
+
+    func testMergeSelfRequiredOptions() throws {
+        let args = ["selfrequired": "log,assert"]
+        let config = ["selfrequired": "expect"]
+        let result = try mergeArguments(args, into: config)
+        let selfRequired = parseCommaDelimitedList(result["selfrequired"]!)
+        XCTAssertEqual(selfRequired, ["assert", "expect", "log"])
     }
 
     // MARK: Options parsing

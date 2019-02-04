@@ -208,8 +208,16 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
         }
     }
     // Merge other arguments
-    for (key, value) in input where output[key] == nil {
-        output[key] = value
+    for (key, inValue) in input {
+        guard let outValue = output[key] else {
+            output[key] = inValue
+            continue
+        }
+        if FormatOptions.Descriptor.all.contains(where: { $0.argumentName == key && $0.isSetType }) {
+            let inOptions = parseCommaDelimitedList(inValue)
+            let outOptions = parseCommaDelimitedList(outValue)
+            output[key] = Set(inOptions).union(outOptions).sorted().joined(separator: ",")
+        }
     }
     return output
 }
@@ -328,12 +336,12 @@ private func processOption(_ key: String,
     guard let value = args[key] else {
         return
     }
-    guard !value.isEmpty else {
-        throw FormatError.options("--\(key) option expects a value")
-    }
     do {
         try handler(value)
     } catch {
+        guard !value.isEmpty else {
+            throw FormatError.options("--\(key) option expects a value")
+        }
         throw FormatError.options("unsupported --\(key) value '\(value)'")
     }
 }

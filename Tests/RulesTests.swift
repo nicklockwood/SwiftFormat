@@ -5269,10 +5269,32 @@ class RulesTests: XCTestCase {
     }
 
     func testNoRemoveSelfInExpectFunction() { // Special case to support the Nimble framework
-        let input = "class FooTests: XCTestCase {\n    let foo = 1\n    func testFoo() {\n        expect(self.foo) == 1\n    }\n}"
-        let output = "class FooTests: XCTestCase {\n    let foo = 1\n    func testFoo() {\n        expect(self.foo) == 1\n    }\n}"
+        let input = """
+        class FooTests: XCTestCase {
+            let foo = 1
+            func testFoo() {
+                expect(self.foo) == 1
+            }
+        }
+        """
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
+
+    func testNoRemoveSelfInExcludedFunction() {
+        let input = """
+        class Foo {
+            let foo = 1
+            func testFoo() {
+                log(self.foo)
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(selfRequired: ["log"])
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default, options: options), output + "\n")
     }
 
     func testNoMistakeProtocolClassSpecifierForClassFunction() {

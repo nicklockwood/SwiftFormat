@@ -72,7 +72,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return loadConfiguration(URL(fileURLWithPath: file))
     }
 
-    @objc
     @IBAction func resetToDefault(_: NSMenuItem) {
         UserDefaults(suiteName: UserDefaults.groupDomain)?.clearAll(in: UserDefaults.groupDomain)
         RulesStore().resetRulesToDefaults()
@@ -80,7 +79,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.post(name: .applicationDidLoadNewConfiguration, object: nil)
     }
 
-    @objc
     @IBAction func openConfiguration(_: NSMenuItem) {
         guard let window = window else {
             return
@@ -102,7 +100,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc
     @IBAction func saveConfiguration(_: NSMenuItem) {
         guard let window = window else {
             return

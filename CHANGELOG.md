@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.39.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.0) (2019-02-04)
+
+- Added `redundantFileprivate` rule, which replaces `fileprivate` with `private` where possible
+- Added `redundantExtensionACL` rule, to remove redundant access level keywords inside extensions
+- Added `typeSugar` rule to replace Array, Dictionary and Optional types with shorthand forms
+- Added `redundantObjc` rule, which removes unnecessary `@objc` annotations
+- Added `—selfrequired` option for excluding `@autoclosure` arguments from `redundantSelf` rule
+- The `isEmpty` rule is now enabled by default, as the risk of false positives is fairly low
+- Enhanced the `fileHeader` rule with macros for file name and creation date
+- Added AppleScript integration instructions (thanks to @Lutzifer)
+
 ## [0.38.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.38.0) (2019-01-29)
 
 - Added support for building, running and testing SwiftFormat on Linux

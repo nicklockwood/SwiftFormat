@@ -207,10 +207,10 @@ fi
 
 This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commits as code gets reformatted inconsistently.
 
-Via Applescript
+Via AppleScript
 ----------------
 
-To run swiftformat on the frontmost Xcode document (project or workspace) you can use the following applescript:
+To run swiftformat on the frontmost Xcode document (project or workspace) you can use the following AppleScript:
 
 ```applescript
 tell application "Xcode"
@@ -220,8 +220,7 @@ tell application "Xcode"
 end tell
 ```
 
-Some Apps you can trigger this from are [BetterTouchTool](https://folivora.ai), [Alfred](https://www.alfredapp.com) or [Keyboard Maestro](https://www.keyboardmaestro.com/main/).
-Another good way to trigger this, is to define a QuickAction for Xcode via Automator and then assign a keyboard shortcut for it in the System Settings.
+Some Apps you can trigger this from are [BetterTouchTool](https://folivora.ai), [Alfred](https://www.alfredapp.com) or [Keyboard Maestro](https://www.keyboardmaestro.com/main/). Another option is to define a QuickAction for Xcode via Automator and then assign a keyboard shortcut for it in the System Preferences.
 
 VSCode plugin
 --------------
@@ -333,6 +332,28 @@ There is no need to manually re-enable a rule after using the `next` directive.
 **NOTE:** The `swiftformat:enable` directives only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.
 
 Here are all the rules that SwiftFormat currently applies, and the effects that they have:
+
+***andOperator*** - replaces the `&&` operator with `,` inside `if`, `guard` and `while` conditions:
+
+```diff
+- if true && true {
++ if true, true {
+```
+
+```diff
+- guard true && true else {
++ guard true, true else {
+```
+
+```diff
+- if functionReturnsBool() && true {
++ if functionReturnsBool(), true {
+```
+
+```diff
+- if functionReturnsBool() && variable {
++ if functionReturnsBool(), variable {
+```
 
 ***anyObjectProtocol*** - replaces `class` with `AnyObject` in protocol definitions, as recommended in modern Swift guidelines:
 
@@ -1244,28 +1265,6 @@ Or for `--wrapcollections beforefirst`:
 ]
 ```
 
-***andOperator*** - replaces the `&&` operator with `,` inside `if`, `guard` and `while` conditions:
-
-```diff
-- if true && true {
-+ if true, true {
-```
-
-```diff
-- guard true && true else {
-+ guard true, true else {
-```
-
-```diff
-- if functionReturnsBool() && true {
-+ if functionReturnsBool(), true {
-```
-
-```diff
-- if functionReturnsBool() && variable {
-+ if functionReturnsBool(), variable {
-```
-
 
 Swift version
 -------------
@@ -1366,7 +1365,7 @@ Linting
 
 SwiftFormat is primarily designed as a formatter rather than a linter, i.e. it is designed to fix your code rather than tell you what's wrong with it. However, sometimes it can be useful to verify that code has been formatted in a context where it is not desirable to actually change it.
 
-A typical example would be as part of a CI (Continuous Integration) process, where you may wish to have an automated script that checks committed code for style violations. While you could use a separate tool such as [SwiftLint](https://github.com/realm/SwiftLint) for this, it makes sense to be able to validate the formatting against the exact same rules as you are using to apply it.
+A typical example would be as part of a CI (Continuous Integration) process, where you may wish to have an automated script that checks committed code for style violations. While you can use a separate tool such as [SwiftLint](https://github.com/realm/SwiftLint) for this, it makes sense to be able to validate the formatting against the exact same rules as you are using to apply it.
 
 In order to run SwiftFormat as a linter, you can use the `--lint` command-line option:
 
@@ -1444,7 +1443,14 @@ Will be formatted as:
 FAQ
 -----
 
-There haven't been many questions yet, but here's what I'd like to think people are wondering:
+*Q. How is this different from SwiftLint?*
+
+> A. SwiftLint is primarily designed to find and report code smells and style violations in your code. SwiftFormat is designed to fix them. While SwiftLint can autocorrect some issues, and SwiftFormat has some support for [linting](#linting), their primary goals are different.
+
+
+*Q. Can SwiftFormat and SwiftLint be used together?*
+
+> A. Absolutely! The style rules encouraged by both tools are quite similar, and SwiftFormat even fixes some style violations that SwiftLint warns about, but can't currently autocorrect.
 
 
 *Q. What platforms does SwiftFormat support?*
@@ -1587,6 +1593,7 @@ Credits
 * [Romain Pouclet](https://github.com/palleas) - Homebrew formula
 * [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
 * [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
+* [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions
 * [Nick Lockwood](https://github.com/nicklockwood) - Everything else
 
 ([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

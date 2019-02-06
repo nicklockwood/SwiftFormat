@@ -29,8 +29,8 @@
 //  SOFTWARE.
 //
 
-import SwiftFormat
 import XCTest
+@testable import SwiftFormat
 
 class RulesTests: XCTestCase {
     func testLinuxTestSuiteIncludesAllTests() {
@@ -38,8 +38,47 @@ class RulesTests: XCTestCase {
             let thisClass = type(of: self)
             let linuxCount = thisClass.__allTests.count
             let darwinCount = thisClass.defaultTestSuite.testCaseCount
-            XCTAssertEqual(linuxCount, darwinCount)
+            XCTAssertEqual(linuxCount, darwinCount, "run swift test --generate-linuxmain")
         #endif
+    }
+
+    // MARK: rules metadata
+
+    func testRulesOptions() throws {
+        var optionsByProperty = [String: String]()
+        for descriptor in FormatOptions.Descriptor.formatting where !descriptor.isDeprecated {
+            optionsByProperty[descriptor.propertyName] = descriptor.argumentName
+        }
+        let rulesFile = URL(fileURLWithPath: #file).deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("Sources").appendingPathComponent("Rules.swift")
+        let rulesSource = try String(contentsOf: rulesFile, encoding: .utf8)
+        let tokens = tokenize(rulesSource)
+        let formatter = Formatter(tokens)
+        var referencedOptions = [String]()
+        formatter.forEach(.identifier("FormatRule")) { i, _ in
+            guard formatter.next(.nonSpaceOrLinebreak, after: i) == .startOfScope("("),
+                case let .identifier(name)? = formatter.last(.identifier, before: i),
+                let scopeStart = formatter.index(of: .startOfScope("{"), after: i),
+                let scopeEnd = formatter.index(of: .endOfScope("}"), after: scopeStart),
+                let rule = FormatRules.byName[name] else {
+                return
+            }
+            for index in scopeStart + 1 ..< scopeEnd {
+                guard formatter.tokens[index] == .identifier("options"),
+                    formatter.token(at: index - 1) == .operator(".", .infix),
+                    formatter.token(at: index - 2) == .identifier("formatter"),
+                    formatter.token(at: index + 1) == .operator(".", .infix),
+                    case let .identifier(property)? = formatter.token(at: index + 2),
+                    let option = optionsByProperty[property] else {
+                    continue
+                }
+                XCTAssert(rule.options.contains(option), "\(option) not listed in \(name) rule")
+                referencedOptions.append(option)
+            }
+            for option in rule.options {
+                XCTAssert(referencedOptions.contains(option), "\(option) not used in \(name) rule")
+            }
+        }
     }
 
     // MARK: spaceAroundParens

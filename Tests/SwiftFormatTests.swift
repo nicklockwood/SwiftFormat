@@ -38,7 +38,7 @@ class SwiftFormatTests: XCTestCase {
             let thisClass = type(of: self)
             let linuxCount = thisClass.__allTests.count
             let darwinCount = thisClass.defaultTestSuite.testCaseCount
-            XCTAssertEqual(linuxCount, darwinCount)
+            XCTAssertEqual(linuxCount, darwinCount, "run swift test --generate-linuxmain")
         #endif
     }
 

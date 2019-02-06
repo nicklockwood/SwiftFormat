@@ -1027,6 +1027,7 @@ extension RulesTests {
         ("testReplaceSemicolonFollowedByComment", testReplaceSemicolonFollowedByComment),
         ("testRequiredParensNotRemoved", testRequiredParensNotRemoved),
         ("testRequiredParensNotRemovedAroundOptionalClosureType", testRequiredParensNotRemovedAroundOptionalClosureType),
+        ("testRulesOptions", testRulesOptions),
         ("testSelfDotTypeInsideClassInitEdgeCase", testSelfDotTypeInsideClassInitEdgeCase),
         ("testSelfInsertedInDidSet", testSelfInsertedInDidSet),
         ("testSelfInsertedInSwitchCaseLet", testSelfInsertedInSwitchCaseLet),

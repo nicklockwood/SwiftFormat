@@ -1103,7 +1103,7 @@ goto(fail)
 + private convenience init()
 ```
 
-***strongifiedSelf*** - replaces ``self`` with self when using the common `guard let `self` = self` pattern for strongifying weak self references:
+***strongifiedSelf*** - replaces `` `self` `` with `self` when using the common ``guard let `self` = self`` pattern for strongifying weak self references:
 
 ```diff
 - guard let `self` = self else { return }

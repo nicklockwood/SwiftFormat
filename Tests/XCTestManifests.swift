@@ -470,6 +470,7 @@ extension RulesTests {
         ("testFunctionThatReturnsAFunction", testFunctionThatReturnsAFunction),
         ("testFunctionThatReturnsAFunctionThatThrows", testFunctionThatReturnsAFunctionThatThrows),
         ("testFuncWithAnonymousVoidArgumentNotStripped", testFuncWithAnonymousVoidArgumentNotStripped),
+        ("testGenerateRulesDocumentation", testGenerateRulesDocumentation),
         ("testGenericEnumCaseIndenting", testGenericEnumCaseIndenting),
         ("testGetNotRemovedInFunction", testGetNotRemovedInFunction),
         ("testGlobalAfterTypeNotTreatedAsMember", testGlobalAfterTypeNotTreatedAsMember),

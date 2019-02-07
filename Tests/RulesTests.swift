@@ -81,6 +81,38 @@ class RulesTests: XCTestCase {
         }
     }
 
+    func testGenerateRulesDocumentation() throws {
+        var result = "# Rules\n"
+        for rule in FormatRules.all {
+            result += "\n* [\(rule.name!)](#\(rule.name!))"
+        }
+        result += "\n\n----------"
+        for rule in FormatRules.all {
+            result += "\n\n## \(rule.name!)\n\n\(rule.help)."
+            if !rule.options.isEmpty {
+                result += "\n\nOption | Description\n--- | ---"
+                for option in rule.options {
+                    let help = FormatOptions.Descriptor.byName[option]!.help
+                    result += "\n`--\(option)` | \(help)"
+                }
+            }
+            if let examples = rule.examples {
+                result += "\n\n" + """
+                <details>
+                <summary>Examples</summary>
+
+                \(examples)
+
+                </details>
+                <br/>
+                """
+            }
+        }
+        let outputFile = URL(fileURLWithPath: #file).deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("Rules.md")
+        try result.write(to: outputFile, atomically: true, encoding: .utf8)
+    }
+
     // MARK: spaceAroundParens
 
     func testSpaceAfterSet() {

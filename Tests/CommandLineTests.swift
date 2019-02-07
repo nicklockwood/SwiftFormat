@@ -35,8 +35,8 @@ import XCTest
 private let projectDirectory = URL(fileURLWithPath: #file)
     .deletingLastPathComponent().deletingLastPathComponent()
 
-private let readme: String = {
-    let readmeURL = projectDirectory.appendingPathComponent("README.md")
+private let rulesFile: String = {
+    let readmeURL = projectDirectory.appendingPathComponent("Rules.md")
     return try! String(contentsOf: readmeURL, encoding: .utf8)
 }()
 
@@ -117,17 +117,17 @@ class CommandLineTests: XCTestCase {
 
     func testAllRulesInReadme() {
         for ruleName in FormatRules.byName.keys {
-            XCTAssertTrue(readme.contains("***\(ruleName)*** - "), ruleName)
+            XCTAssertTrue(rulesFile.contains("## \(ruleName)"), ruleName)
         }
     }
 
     func testNoInvalidRulesInReadme() {
         let ruleNames = Set(FormatRules.byName.keys)
-        var range = readme.startIndex ..< readme.endIndex
-        while let match = readme.range(of: "\\*[a-zA-Z]+\\* - ", options: .regularExpression, range: range, locale: nil) {
-            let lower = readme.index(after: match.lowerBound)
-            let upper = readme.index(match.upperBound, offsetBy: -4)
-            let ruleName: String = String(readme[lower ..< upper])
+        var range = rulesFile.startIndex ..< rulesFile.endIndex
+        while let match = rulesFile.range(of: "\\*[a-zA-Z]+\\* - ", options: .regularExpression, range: range, locale: nil) {
+            let lower = rulesFile.index(after: match.lowerBound)
+            let upper = rulesFile.index(match.upperBound, offsetBy: -4)
+            let ruleName: String = String(rulesFile[lower ..< upper])
             XCTAssertTrue(ruleNames.contains(ruleName), ruleName)
             range = match.upperBound ..< range.upperBound
         }
@@ -136,17 +136,17 @@ class CommandLineTests: XCTestCase {
     func testAllOptionsInReadme() {
         let arguments = Set(formattingArguments).subtracting(deprecatedArguments)
         for argument in arguments {
-            XCTAssertTrue(readme.contains("`--\(argument)`") || readme.contains("`--\(argument) "), argument)
+            XCTAssertTrue(rulesFile.contains("`--\(argument)`") || rulesFile.contains("`--\(argument) "), argument)
         }
     }
 
     func testNoInvalidOptionsInReadme() {
         let arguments = Set(commandLineArguments).subtracting(deprecatedArguments)
-        var range = readme.startIndex ..< readme.endIndex
-        while let match = readme.range(of: "`--[a-zA-Z]+[` ]", options: .regularExpression, range: range, locale: nil) {
-            let lower = readme.index(match.lowerBound, offsetBy: 3)
-            let upper = readme.index(before: match.upperBound)
-            let argument: String = String(readme[lower ..< upper])
+        var range = rulesFile.startIndex ..< rulesFile.endIndex
+        while let match = rulesFile.range(of: "`--[a-zA-Z]+[` ]", options: .regularExpression, range: range, locale: nil) {
+            let lower = rulesFile.index(match.lowerBound, offsetBy: 3)
+            let upper = rulesFile.index(before: match.upperBound)
+            let argument: String = String(rulesFile[lower ..< upper])
             XCTAssertTrue(arguments.contains(argument), argument)
             range = match.upperBound ..< range.upperBound
         }

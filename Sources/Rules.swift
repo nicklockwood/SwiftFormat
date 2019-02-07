@@ -31,7 +31,7 @@
 
 import Foundation
 
-public class FormatRule {
+public final class FormatRule {
     private let fn: (Formatter) -> Void
     fileprivate(set) var name: String?
     let help: String
@@ -3429,7 +3429,7 @@ public struct _FormatRules {
 
     /// Replace the `&&` operator with `,` where applicable
     public let andOperator = FormatRule(
-        help: "Replaces the `&&` operator with `,` inside `if`, `guard` and `while` conditions"
+        help: "Replaces the `&&` operator with a comma inside `if`, `guard` and `while` conditions"
     ) { formatter in
         formatter.forEachToken { i, token in
             guard [.keyword("if"), .keyword("guard"), .keyword("while")].contains(token),

@@ -61,10 +61,6 @@ extension FormatOptions {
             return fromOptions(FormatOptions.default)
         }
 
-        var toolTip: String {
-            return (help.first.map { "\($0)" } ?? "").uppercased() + help.dropFirst() + "."
-        }
-
         func validateArgument(_ arg: String) -> Bool {
             var options = FormatOptions.default
             return (try? toOptions(arg, &options)) != nil

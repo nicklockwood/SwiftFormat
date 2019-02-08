@@ -442,6 +442,8 @@ let commandLineArguments = [
     // Misc
     "help",
     "version",
+    "options",
+    "ruleinfo",
 ] + optionsArguments
 
 let deprecatedArguments = FormatOptions.Descriptor.all.compactMap {

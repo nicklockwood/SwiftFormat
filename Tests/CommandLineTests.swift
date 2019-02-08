@@ -84,6 +84,10 @@ class CommandLineTests: XCTestCase {
             }
         }
         printHelp(as: .content)
+        printOptions(as: .content)
+        for rule in FormatRules.all {
+            try! printRuleInfo(for: rule.name!, as: .content)
+        }
     }
 
     func testHelpOptionsImplemented() {
@@ -110,6 +114,7 @@ class CommandLineTests: XCTestCase {
                 }
         }
         printHelp(as: .content)
+        printOptions(as: .content)
         XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     }
 

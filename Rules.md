@@ -65,7 +65,8 @@
 
 ## andOperator
 
-Replaces the `&&` operator with a comma inside `if`, `guard` and `while` conditions.
+Replaces the `&&` operator with a comma inside `if`, `guard` and `while`
+conditions.
 
 <details>
 <summary>Examples</summary>
@@ -95,7 +96,8 @@ Replaces the `&&` operator with a comma inside `if`, `guard` and `while` conditi
 
 ## anyObjectProtocol
 
-Replaces `class` with `AnyObject` in protocol definitions, as recommended in modern Swift guidelines.
+Replaces `class` with `AnyObject` in protocol definitions, as recommended in
+modern Swift guidelines.
 
 <details>
 <summary>Examples</summary>
@@ -105,7 +107,9 @@ Replaces `class` with `AnyObject` in protocol definitions, as recommended in mod
 + protocol Foo: AnyObject {}
 ```
 
-**NOTE:** The guideline to use `AnyObject` instead of `class` was only introduced in Swift 4.1, so the `anyObjectProtocol` rule is disabled unless the swift version is set to 4.1 or above.
+**NOTE:** The guideline to use `AnyObject` instead of `class` was only
+introduced in Swift 4.1, so the `anyObjectProtocol` rule is disabled unless the
+swift version is set to 4.1 or above.
 
 </details>
 <br/>
@@ -116,7 +120,7 @@ Adds a blank line before and after each `MARK:` comment.
 
 Option | Description
 --- | ---
-`--linebreaks` | linebreak character to use. "cr", "crlf" or "lf" (default)
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -218,11 +222,12 @@ Removes leading blank lines from inside braces, brackets, parens or chevrons.
 
 ## blankLinesBetweenScopes
 
-Adds a blank line before each class, struct, enum, extension, protocol or function.
+Adds a blank line before each class, struct, enum, extension, protocol or
+function.
 
 Option | Description
 --- | ---
-`--linebreaks` | linebreak character to use. "cr", "crlf" or "lf" (default)
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -258,8 +263,8 @@ Implements K&R or Allman-style braces.
 
 Option | Description
 --- | ---
-`--allman` | use allman indentation style. "true" or "false" (default)
-`--linebreaks` | linebreak character to use. "cr", "crlf" or "lf" (default)
+`--allman` | Use allman indentation style: "true" or "false" (default)
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -351,13 +356,14 @@ Removes duplicate import statements.
 
 ## elseOnSameLine
 
-Controls whether an `else`, `catch` or `while` keyword after a `}` appears on the same line.
+Controls whether an `else`, `catch` or `while` keyword after a `}` appears on
+the same line.
 
 Option | Description
 --- | ---
-`--elseposition` | placement of else/catch. "same-line" (default) or "next-line"
-`--allman` | use allman indentation style. "true" or "false" (default)
-`--linebreaks` | linebreak character to use. "cr", "crlf" or "lf" (default)
+`--elseposition` | Placement of else/catch: "same-line" (default) or "next-line"
+`--allman` | Use allman indentation style: "true" or "false" (default)
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -434,16 +440,17 @@ Allows the replacement or removal of Xcode source file comment headers.
 
 Option | Description
 --- | ---
-`--header` | header comments. "strip", "ignore", or the text you wish use
-`--linebreaks` | linebreak character to use. "cr", "crlf" or "lf" (default)
+`--header` | Header comments: "strip", "ignore", or the text you wish use
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 ## hoistPatternLet
 
-Moves `let` or `var` bindings inside patterns to the start of the expression (or vice-versa).
+Moves `let` or `var` bindings inside patterns to the start of the expression
+(or vice-versa).
 
 Option | Description
 --- | ---
-`--patternlet` | let/var placement in patterns. "hoist" (default) or "inline"
+`--patternlet` | let/var placement in patterns: "hoist" (default) or "inline"
 
 <details>
 <summary>Examples</summary>
@@ -472,12 +479,12 @@ Adjusts leading whitespace based on scope and line wrapping.
 
 Option | Description
 --- | ---
-`--indent` | number of spaces to indent, or "tab" to use tabs
-`--indentcase` | indent cases inside a switch. "true" or "false" (default)
-`--comments` | indenting of comment bodies. "indent" (default) or "ignore"
-`--ifdef` | #if indenting. "indent" (default), "no-indent" or "outdent"
-`--trimwhitespace` | trim trailing space. "always" (default) or "nonblank-lines"
-`--linebreaks` | linebreak character to use. "cr", "crlf" or "lf" (default)
+`--indent` | Number of spaces to indent, or "tab" to use tabs
+`--indentcase` | Indent cases inside a switch: "true" or "false" (default)
+`--comments` | Indenting of comment bodies: "indent" (default) or "ignore"
+`--ifdef` | #if indenting: "indent" (default), "no-indent" or "outdent"
+`--trimwhitespace` | Trim trailing space: "always" (default) or "nonblank-lines"
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -527,7 +534,8 @@ Option | Description
 
 ## isEmpty
 
-Replaces `count == 0` checks with `isEmpty`, which is preferred for performance reasons (especially for Strings where count has O(n) complexity).
+Replaces `count == 0` checks with `isEmpty`, which is preferred for performance
+reasons (especially for Strings where count has O(n) complexity).
 
 <details>
 <summary>Examples</summary>
@@ -552,7 +560,7 @@ Ensures that the last line of the file is empty.
 
 Option | Description
 --- | ---
-`--linebreaks` | linebreak character to use. "cr", "crlf" or "lf" (default)
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 ## linebreaks
 
@@ -560,7 +568,7 @@ Normalizes all linebreaks to use the same character.
 
 Option | Description
 --- | ---
-`--linebreaks` | linebreak character to use. "cr", "crlf" or "lf" (default)
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 ## numberFormatting
 
@@ -568,14 +576,14 @@ Handles case and grouping of number literals.
 
 Option | Description
 --- | ---
-`--decimalgrouping` | decimal grouping,threshold (default: 3,6) or "none", "ignore"
-`--binarygrouping` | binary grouping,threshold (default: 4,8) or "none", "ignore"
-`--octalgrouping` | octal grouping,threshold or "none", "ignore". default: 4,8
-`--hexgrouping` | hex grouping,threshold (default: 4,8) or "none", "ignore"
-`--fractiongrouping` | group digits after '.', "enabled" or "disabled" (default)
-`--exponentgrouping` | group exponent digits, "enabled" or "disabled" (default)
-`--hexliteralcase` | casing for hex literals. "uppercase" (default) or "lowercase"
-`--exponentcase` | case of 'e' in numbers. "lowercase" or "uppercase" (default)
+`--decimalgrouping` | Decimal grouping,threshold (default: 3,6) or "none", "ignore"
+`--binarygrouping` | Binary grouping,threshold (default: 4,8) or "none", "ignore"
+`--octalgrouping` | Octal grouping,threshold (default: 4,8) or "none", "ignore"
+`--hexgrouping` | Hex grouping,threshold (default: 4,8) or "none", "ignore"
+`--fractiongrouping` | Group digits after '.': "enabled" or "disabled" (default)
+`--exponentgrouping` | Group exponent digits: "enabled" or "disabled" (default)
+`--hexliteralcase` | Casing for hex literals: "uppercase" (default) or "lowercase"
+`--exponentcase` | Case of 'e' in numbers: "lowercase" or "uppercase" (default)
 
 <details>
 <summary>Examples</summary>
@@ -599,7 +607,7 @@ Controls the spacing around range operators.
 
 Option | Description
 --- | ---
-`--ranges` | spacing for ranges. "spaced" (default) or "no-space"
+`--ranges` | Spacing for ranges: "spaced" (default) or "no-space"
 
 <details>
 <summary>Examples</summary>
@@ -619,7 +627,8 @@ Option | Description
 
 ## redundantBackticks
 
-Removes unnecessary escaping of identifiers using backticks, e.g. in cases where the escaped word is not a keyword, or is not ambiguous in that context.
+Removes unnecessary escaping of identifiers using backticks, e.g. in cases
+where the escaped word is not a keyword, or is not ambiguous in that context.
 
 <details>
 <summary>Examples</summary>
@@ -660,7 +669,8 @@ Removes redundant `break` statements from inside switch cases.
 
 ## redundantExtensionACL
 
-Removes access control level keywords from extension members when the access level matches the extension itself.
+Removes access control level keywords from extension members when the access
+level matches the extension itself.
 
 <details>
 <summary>Examples</summary>
@@ -680,7 +690,8 @@ Removes access control level keywords from extension members when the access lev
 
 ## redundantFileprivate
 
-Replaces `fileprivate` access control keyword with `private` when they are equivalent, e.g. for top-level constants, functions or types within a file.
+Replaces `fileprivate` access control keyword with `private` when they are
+equivalent, e.g. for top-level constants, functions or types within a file.
 
 <details>
 <summary>Examples</summary>
@@ -690,7 +701,8 @@ Replaces `fileprivate` access control keyword with `private` when they are equiv
 +  private let someConstant = "someConstant"
 ```
 
-In Swift 4 and above, `fileprivate` can also be replaced with `private` for members that are only accessed from extensions in the same file:
+In Swift 4 and above, `fileprivate` can also be replaced with `private` for
+members that are only accessed from extensions in the same file:
 
 ```diff
   class Foo {
@@ -747,7 +759,8 @@ Removes unnecessary `init` when instantiating types.
 
 ## redundantLet
 
-Removes redundant `let` or `var` from ignored variables in bindings (which is a warning in Xcode).
+Removes redundant `let` or `var` from ignored variables in bindings (which is a
+warning in Xcode).
 
 <details>
 <summary>Examples</summary>
@@ -762,7 +775,8 @@ Removes redundant `let` or `var` from ignored variables in bindings (which is a 
 
 ## redundantLetError
 
-Removes redundant `let error` from `catch` statements, where it is declared implicitly.
+Removes redundant `let error` from `catch` statements, where it is declared
+implicitly.
 
 <details>
 <summary>Examples</summary>
@@ -777,7 +791,8 @@ Removes redundant `let error` from `catch` statements, where it is declared impl
 
 ## redundantNilInit
 
-Removes unnecessary nil initialization of Optional vars (which are nil by default anyway).
+Removes unnecessary nil initialization of Optional vars (which are nil by
+default anyway).
 
 <details>
 <summary>Examples</summary>
@@ -914,12 +929,13 @@ Removes unnecessary `return` keyword from single-line closures.
 
 ## redundantSelf
 
-Adds or removes explicit `self` prefix from class and instance member references.
+Adds or removes explicit `self` prefix from class and instance member
+references.
 
 Option | Description
 --- | ---
-`--self` | explicit self. "insert", "remove" (default) or "init-only"
-`--selfrequired` | comma-delimited list of functions with autoclosure arguments
+`--self` | Explicit self: "insert", "remove" (default) or "init-only"
+`--selfrequired` | Comma-delimited list of functions with @autoclosure arguments
 
 <details>
 <summary>Examples</summary>
@@ -938,9 +954,17 @@ Option | Description
   }
 ```
 
-In the rare case of functions with`@autoclosure` arguments, `self` may be required at the call site, but SwiftFormat is unable to detect this automatically. You can use the `--selfrequired` command-line option to specify a list of such methods, and the `redundantSelf` rule will then ignore them. An example of such a method is the `expect()` function in the [Nimble](https://github.com/Quick/Nimble) unit testing framework, which is common enough that it is excluded by default.
+In the rare case of functions with `@autoclosure` arguments, `self` may be
+required at the call site, but SwiftFormat is unable to detect this
+automatically. You can use the `--selfrequired` command-line option to specify
+a list of such methods, and the `redundantSelf` rule will then ignore them.
 
-There is also an option to always use explicit `self` but *only* inside `init`, by using `--self init-only`:
+An example of such a method is the `expect()` function in the Nimble unit
+testing framework (https://github.com/Quick/Nimble), which is common enough that
+SwiftFormat excludes it by default.
+
+There is also an option to always use explicit `self` but *only* inside `init`,
+by using `--self init-only`:
 
 ```diff
   init(foo: Int, bar: Int) {
@@ -981,12 +1005,13 @@ Removes unnecessary `Void` return type from function declarations.
 
 ## semicolons
 
-Removes semicolons at the end of lines, and (optionally) replaces inline semicolons with a linebreak.
+Removes semicolons at the end of lines, and (optionally) replaces inline
+semicolons with a linebreak.
 
 Option | Description
 --- | ---
-`--semicolons` | allow semicolons. "never" or "inline" (default)
-`--linebreaks` | linebreak character to use. "cr", "crlf" or "lf" (default)
+`--semicolons` | Allow semicolons: "never" or "inline" (default)
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -1018,7 +1043,7 @@ Rearranges import statements so that they are sorted.
 Option | Description
 --- | ---
 `--importgrouping` | "testable-top", "testable-bottom" or "alphabetized" (default)
-`--linebreaks` | linebreak character to use. "cr", "crlf" or "lf" (default)
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -1090,7 +1115,8 @@ Contextually adjusts the space around `[ ... ]`.
 
 ## spaceAroundComments
 
-Adds space around `/* ... */` comments and before `//` comments, depending on the `--comments` option (`indent` (default) or `ignore`).
+Adds space around `/* ... */` comments and before `//` comments, depending on
+the `--comments` option (`indent` (default) or `ignore`).
 
 <details>
 <summary>Examples</summary>
@@ -1125,11 +1151,12 @@ Removes the space around `< ... >`.
 
 ## spaceAroundOperators
 
-Contextually adjusts the space around infix operators. Also adds or removes the space between an operator function declaration and its arguments.
+Contextually adjusts the space around infix operators. Also adds or removes the
+space between an operator function declaration and its arguments.
 
 Option | Description
 --- | ---
-`--operatorfunc` | spacing for operator funcs. "spaced" (default) or "no-space"
+`--operatorfunc` | Spacing for operator funcs: "spaced" (default) or "no-space"
 
 <details>
 <summary>Examples</summary>
@@ -1208,7 +1235,7 @@ Adds a space inside `/* ... */` comments and at the start of `//` comments.
 
 Option | Description
 --- | ---
-`--comments` | indenting of comment bodies. "indent" (default) or "ignore"
+`--comments` | Indenting of comment bodies: "indent" (default) or "ignore"
 
 <details>
 <summary>Examples</summary>
@@ -1258,7 +1285,8 @@ Removes the space inside `( ... )`.
 
 ## specifiers
 
-Normalizes the order for property/function/class specifiers (public, weak, lazy, etc.).
+Normalizes the order for property/function/class specifiers (public, weak,
+lazy, etc.).
 
 <details>
 <summary>Examples</summary>
@@ -1288,7 +1316,8 @@ Removes the `weak` specifier from `@IBOutlet` properties.
 <details>
 <summary>Examples</summary>
 
-As per Apple's recommendation (https://developer.apple.com/videos/play/wwdc2015/407/).
+As per Apple's recommendation
+(https://developer.apple.com/videos/play/wwdc2015/407/).
 
 ```diff
 - @IBOutlet weak var label: UILabel!
@@ -1300,7 +1329,8 @@ As per Apple's recommendation (https://developer.apple.com/videos/play/wwdc2015/
 
 ## strongifiedSelf
 
-Replaces `` `self` `` with `self` when using the common ``guard let `self` = self`` pattern for strongifying weak self references.
+Replaces `` `self` `` with `self` when using the common ``guard let `self` = self``
+pattern for strongifying weak self references.
 
 <details>
 <summary>Examples</summary>
@@ -1310,14 +1340,17 @@ Replaces `` `self` `` with `self` when using the common ``guard let `self` = sel
 + guard let self = self else { return }
 ```
 
-**NOTE:** assignment to un-escaped `self` is only supported in Swift 4.2 and above, so the `strongifiedSelf` rule is disabled unless the swift version is set to 4.2 or above.
+**NOTE:** assignment to un-escaped `self` is only supported in Swift 4.2 and
+above, so the `strongifiedSelf` rule is disabled unless the swift version is
+set to 4.2 or above.
 
 </details>
 <br/>
 
 ## todos
 
-Ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon (else they're ignored by Xcode).
+Ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon
+(else they're ignored by Xcode).
 
 <details>
 <summary>Examples</summary>
@@ -1337,7 +1370,9 @@ Ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon (
 
 ## trailingClosures
 
-Converts the last closure argument in a function call to trailing closure syntax where possible (disabled by default because it can introduce ambiguity that prevents code from compiling).
+Converts the last closure argument in a function call to trailing closure
+syntax where possible (disabled by default because it can introduce ambiguity
+that prevents code from compiling).
 
 <details>
 <summary>Examples</summary>
@@ -1352,18 +1387,22 @@ Converts the last closure argument in a function call to trailing closure syntax
 + }
 ```
 
-**NOTE:** Occasionally, using trailing closure syntax makes a function call ambiguous, and the compiler can't understand it. Since SwiftFormat isn't able to detect this in all cases, the `trailingClosures` rule is disabled by default, and must be manually enabled via the `--enable trailingClosures` option.
+**NOTE:** Occasionally, using trailing closure syntax makes a function call
+ambiguous, and the compiler can't understand it. Since SwiftFormat isn't able
+to detect this in all cases, the `trailingClosures` rule is disabled by default,
+and must be manually enabled via the `--enable trailingClosures` option.
 
 </details>
 <br/>
 
 ## trailingCommas
 
-Adds or removes trailing commas from the last item in an array or dictionary literal.
+Adds or removes trailing commas from the last item in an array or dictionary
+literal.
 
 Option | Description
 --- | ---
-`--commas` | commas in collection literals. "always" (default) or "inline"
+`--commas` | Commas in collection literals: "always" (default) or "inline"
 
 <details>
 <summary>Examples</summary>
@@ -1391,7 +1430,7 @@ Removes the whitespace at the end of a line.
 
 Option | Description
 --- | ---
-`--trimwhitespace` | trim trailing space. "always" (default) or "nonblank-lines"
+`--trimwhitespace` | Trim trailing space: "always" (default) or "nonblank-lines"
 
 ## typeSugar
 
@@ -1420,7 +1459,8 @@ Replaces Array, Dictionary and Optional types with their shorthand forms.
 
 ## unusedArguments
 
-Marks unused arguments in functions and closures with `_` to make it clear they aren't used.
+Marks unused arguments in functions and closures with `_` to make it clear they
+aren't used.
 
 Option | Description
 --- | ---
@@ -1468,7 +1508,7 @@ Standardizes the use of `Void` vs an empty tuple `()`.
 
 Option | Description
 --- | ---
-`--empty` | how empty values are represented. "void" (default) or "tuple"
+`--empty` | How empty values are represented: "void" (default) or "tuple"
 
 <details>
 <summary>Examples</summary>
@@ -1502,12 +1542,12 @@ Wraps function arguments and collection literals.
 
 Option | Description
 --- | ---
-`--wraparguments` | wrap function args. "before-first", "after-first", "preserve"
-`--wrapcollections` | wrap array/dict. "before-first", "after-first", "preserve"
-`--closingparen` | closing paren position, "balanced" (default) or "same-line"
-`--indent` | number of spaces to indent, or "tab" to use tabs
-`--trimwhitespace` | trim trailing space. "always" (default) or "nonblank-lines"
-`--linebreaks` | linebreak character to use. "cr", "crlf" or "lf" (default)
+`--wraparguments` | Wrap function args: "before-first", "after-first", "preserve"
+`--wrapcollections` | Wrap array/dict: "before-first", "after-first", "preserve"
+`--closingparen` | Closing paren position: "balanced" (default) or "same-line"
+`--indent` | Number of spaces to indent, or "tab" to use tabs
+`--trimwhitespace` | Trim trailing space: "always" (default) or "nonblank-lines"
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>

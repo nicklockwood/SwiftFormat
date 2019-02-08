@@ -84,58 +84,98 @@ public enum ExitCode: Int32 {
     case error = 70 // EX_SOFTWARE
 }
 
-var formatOptionsHelp: String {
-    return FormatOptions.Descriptor.formatting.compactMap {
+func printOptions(as type: CLI.OutputType) {
+    print("")
+    print(FormatOptions.Descriptor.formatting.compactMap {
         guard !$0.isDeprecated else { return nil }
         var result = "--\($0.argumentName)"
         for _ in 0 ..< 19 - result.count {
             result += " "
         }
-        return result + $0.help
-    }.sorted().joined(separator: "\n")
+        return result + stripMarkdown($0.help)
+    }.sorted().joined(separator: "\n"), as: type)
+    print("")
+}
+
+func printRuleInfo(for name: String, as type: CLI.OutputType) throws {
+    guard let rule = FormatRules.byName[name] else {
+        if name.isEmpty {
+            throw FormatError.options("--ruleinfo command expects a rule name")
+        }
+        throw FormatError.options("'\(name)' rule does not exist")
+    }
+    print("")
+    print(name, as: type)
+    print("", as: type)
+    print(stripMarkdown(rule.help) + ".", as: type)
+    if !rule.options.isEmpty {
+        print("\nOptions:\n", as: type)
+        print(rule.options.compactMap {
+            guard let descriptor = FormatOptions.Descriptor.byName[$0], !descriptor.isDeprecated else {
+                return nil
+            }
+            var result = "--\(descriptor.argumentName)"
+            for _ in 0 ..< 19 - result.count {
+                result += " "
+            }
+            return result + stripMarkdown(descriptor.help)
+        }.sorted().joined(separator: "\n"), as: type)
+    }
+    if var examples = rule.examples {
+        examples = examples
+            .replacingOccurrences(of: "```diff\n", with: "")
+            .replacingOccurrences(of: "```\n", with: "")
+        if examples.hasSuffix("```") {
+            examples = String(examples.dropLast(3))
+        }
+        print("\nExamples:\n", as: type)
+        print(examples, as: type)
+    }
+    print("")
 }
 
 func printHelp(as type: CLI.OutputType) {
     print("")
     print("""
-    swiftformat, version \(version)
-    copyright (c) 2016 Nick Lockwood
+    SwiftFormat, version \(version)
+    Copyright (c) 2016 Nick Lockwood
 
-    --help             print this help page
-    --version          print the currently installed swiftformat version
+    --help             Print this help page
+    --version          Print the currently installed swiftformat version
 
-    swiftformat can operate on files & directories, or directly on input from stdin:
+    SwiftFormat can operate on files & directories, or directly on input from stdin
 
-    usage: swiftformat [<file> <file> ...] [--inferoptions] [--output path] [...]
+    Usage: swiftformat [<file> <file> ...] [--inferoptions] [--output path] [...]
 
-    <file> <file> ...  one or more swift files or directory paths to be processed
+    <file> <file> ...  One or more swift files or directory paths to be processed
 
-    --config           path to a configuration file containing rules and options
-    --inferoptions     instead of formatting input, use it to infer format options
-    --output           output path for formatted file(s) (defaults to input path)
-    --exclude          comma-delimited list of ignored paths (supports glob syntax)
-    --symlinks         how symlinks are handled. "follow" or "ignore" (default)
-    --fragment         \(FormatOptions.Descriptor.fragment.help)
-    --conflictmarkers  \(FormatOptions.Descriptor.ignoreConflictMarkers.help)
-    --swiftversion     \(FormatOptions.Descriptor.swiftVersion.help)
-    --cache            path to cache file, or "clear" or "ignore" the default cache
-    --verbose          display detailed formatting output and warnings/errors
-    --quiet            disables non-critical output messages and warnings
-    --dryrun           run in "dry" mode (without actually changing any files)
-    --lint             like --dryrun, but returns an error if formatting is needed
+    --config           Path to a configuration file containing rules and options
+    --inferoptions     Instead of formatting input, use it to infer format options
+    --output           Output path for formatted file(s) (defaults to input path)
+    --exclude          Comma-delimited list of ignored paths (supports glob syntax)
+    --symlinks         How symlinks are handled: "follow" or "ignore" (default)
+    --fragment         \(stripMarkdown(FormatOptions.Descriptor.fragment.help))
+    --conflictmarkers  \(stripMarkdown(FormatOptions.Descriptor.ignoreConflictMarkers.help))
+    --swiftversion     \(stripMarkdown(FormatOptions.Descriptor.swiftVersion.help))
+    --cache            Path to cache file, or "clear" or "ignore" the default cache
+    --verbose          Display detailed formatting output and warnings/errors
+    --quiet            Disables non-critical output messages and warnings
+    --dryrun           Run in "dry" mode (without actually changing any files)
+    --lint             Like --dryrun, but returns an error if formatting is needed
 
-    swiftformat has a number of rules that can be enabled or disabled. by default
-    most rules are enabled. use --rules to display all enabled/disabled rules:
+    SwiftFormat has a number of rules that can be enabled or disabled. By default
+    most rules are enabled. Use --rules to display all enabled/disabled rules
 
-    --rules            the list of rules to apply (pass nothing to print all rules)
-    --disable          a list of format rules to be disabled (comma-delimited)
-    --enable           a list of disabled rules to be re-enabled (comma-delimited)
-    --experimental     \(FormatOptions.Descriptor.experimentalRules.help)
+    --rules            The list of rules to apply. Pass nothing to print all rules
+    --disable          A list of format rules to be disabled (comma-delimited)
+    --enable           A list of disabled rules to be re-enabled (comma-delimited)
 
-    swiftformat's rules can be configured using options. a given option may affect
-    multiple rules. options have no affect if the related rules have been disabled:
+    --ruleinfo         Pass a rule name to display detailed help for that rule
 
-    \(formatOptionsHelp)
+    SwiftFormat's rules can be configured using options. A given option may affect
+    multiple rules. Options have no affect if the related rules have been disabled
+
+    --options          Prints a list of all formatting options and their usage
     """, as: type)
     print("")
 }
@@ -217,6 +257,18 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         // Show version
         if args["version"] != nil {
             print("swiftformat, version \(version)", as: .content)
+            return .ok
+        }
+
+        // Show options
+        if args["options"] != nil {
+            printOptions(as: .content)
+            return .ok
+        }
+
+        // Show rule info
+        if let name = args["ruleinfo"] {
+            try printRuleInfo(for: name, as: .content)
             return .ok
         }
 

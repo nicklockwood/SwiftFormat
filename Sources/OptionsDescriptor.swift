@@ -272,7 +272,7 @@ extension FormatOptions.Descriptor {
         argumentName: "indent",
         propertyName: "indent",
         displayName: "Indent",
-        help: "number of spaces to indent, or \"tab\" to use tabs",
+        help: "Number of spaces to indent, or \"tab\" to use tabs",
         keyPath: \.indent,
         fromArgument: { arg in
             switch arg.lowercased() {
@@ -296,7 +296,7 @@ extension FormatOptions.Descriptor {
         argumentName: "linebreaks",
         propertyName: "linebreak",
         displayName: "Linebreak Character",
-        help: "linebreak character to use. \"cr\", \"crlf\" or \"lf\" (default)",
+        help: "Linebreak character to use: \"cr\", \"crlf\" or \"lf\" (default)",
         keyPath: \.linebreak,
         options: ["cr": "\r", "lf": "\n", "crlf": "\r\n"]
     )
@@ -304,7 +304,7 @@ extension FormatOptions.Descriptor {
         argumentName: "semicolons",
         propertyName: "allowInlineSemicolons",
         displayName: "Semicolons",
-        help: "allow semicolons. \"never\" or \"inline\" (default)",
+        help: "Allow semicolons: \"never\" or \"inline\" (default)",
         keyPath: \.allowInlineSemicolons,
         trueValues: ["inline"],
         falseValues: ["never", "false"]
@@ -313,7 +313,7 @@ extension FormatOptions.Descriptor {
         argumentName: "ranges",
         propertyName: "spaceAroundRangeOperators",
         displayName: "Ranges",
-        help: "spacing for ranges. \"spaced\" (default) or \"no-space\"",
+        help: "Spacing for ranges: \"spaced\" (default) or \"no-space\"",
         keyPath: \.spaceAroundRangeOperators,
         trueValues: ["spaced", "space", "spaces"],
         falseValues: ["no-space", "nospace"]
@@ -322,7 +322,7 @@ extension FormatOptions.Descriptor {
         argumentName: "operatorfunc",
         propertyName: "spaceAroundOperatorDeclarations",
         displayName: "Operator Functions",
-        help: "spacing for operator funcs. \"spaced\" (default) or \"no-space\"",
+        help: "Spacing for operator funcs: \"spaced\" (default) or \"no-space\"",
         keyPath: \.spaceAroundOperatorDeclarations,
         trueValues: ["spaced", "space", "spaces"],
         falseValues: ["no-space", "nospace"]
@@ -331,7 +331,7 @@ extension FormatOptions.Descriptor {
         argumentName: "empty",
         propertyName: "useVoid",
         displayName: "Empty",
-        help: "how empty values are represented. \"void\" (default) or \"tuple\"",
+        help: "How empty values are represented: \"void\" (default) or \"tuple\"",
         keyPath: \.useVoid,
         trueValues: ["void"],
         falseValues: ["tuple", "tuples"]
@@ -340,7 +340,7 @@ extension FormatOptions.Descriptor {
         argumentName: "indentcase",
         propertyName: "indentCase",
         displayName: "Indent Case",
-        help: "indent cases inside a switch. \"true\" or \"false\" (default)",
+        help: "Indent cases inside a switch: \"true\" or \"false\" (default)",
         keyPath: \.indentCase,
         trueValues: ["true"],
         falseValues: ["false"]
@@ -349,7 +349,7 @@ extension FormatOptions.Descriptor {
         argumentName: "commas",
         propertyName: "trailingCommas",
         displayName: "Commas",
-        help: "commas in collection literals. \"always\" (default) or \"inline\"",
+        help: "Commas in collection literals: \"always\" (default) or \"inline\"",
         keyPath: \.trailingCommas,
         trueValues: ["always", "true"],
         falseValues: ["inline", "false"]
@@ -358,7 +358,7 @@ extension FormatOptions.Descriptor {
         argumentName: "comments",
         propertyName: "indentComments",
         displayName: "Comments",
-        help: "indenting of comment bodies. \"indent\" (default) or \"ignore\"",
+        help: "Indenting of comment bodies: \"indent\" (default) or \"ignore\"",
         keyPath: \.indentComments,
         trueValues: ["indent", "indented"],
         falseValues: ["ignore"]
@@ -367,7 +367,7 @@ extension FormatOptions.Descriptor {
         argumentName: "trimwhitespace",
         propertyName: "truncateBlankLines",
         displayName: "Trim White Space",
-        help: "trim trailing space. \"always\" (default) or \"nonblank-lines\"",
+        help: "Trim trailing space: \"always\" (default) or \"nonblank-lines\"",
         keyPath: \.truncateBlankLines,
         trueValues: ["always"],
         falseValues: ["nonblank-lines", "nonblank", "non-blank-lines", "non-blank",
@@ -377,7 +377,7 @@ extension FormatOptions.Descriptor {
         argumentName: "allman",
         propertyName: "allmanBraces",
         displayName: "Allman Braces",
-        help: "use allman indentation style. \"true\" or \"false\" (default)",
+        help: "Use allman indentation style: \"true\" or \"false\" (default)",
         keyPath: \.allmanBraces,
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
@@ -386,14 +386,14 @@ extension FormatOptions.Descriptor {
         argumentName: "header",
         propertyName: "fileHeader",
         displayName: "Header",
-        help: "header comments. \"strip\", \"ignore\", or the text you wish use",
+        help: "Header comments: \"strip\", \"ignore\", or the text you wish use",
         keyPath: \.fileHeader
     )
     static let ifdefIndent = FormatOptions.Descriptor(
         argumentName: "ifdef",
         propertyName: "ifdefIndent",
         displayName: "Ifdef Indent",
-        help: "#if indenting. \"indent\" (default), \"no-indent\" or \"outdent\"",
+        help: "#if indenting: \"indent\" (default), \"no-indent\" or \"outdent\"",
         keyPath: \.ifdefIndent,
         options: ["indent", "no-indent", "outdent"]
     )
@@ -401,7 +401,7 @@ extension FormatOptions.Descriptor {
         argumentName: "wraparguments",
         propertyName: "wrapArguments",
         displayName: "Wrap Arguments",
-        help: "wrap function args. \"before-first\", \"after-first\", \"preserve\"",
+        help: "Wrap function args: \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapArguments,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
@@ -409,7 +409,7 @@ extension FormatOptions.Descriptor {
         argumentName: "wrapcollections",
         propertyName: "wrapCollections",
         displayName: "Wrap Collections",
-        help: "wrap array/dict. \"before-first\", \"after-first\", \"preserve\"",
+        help: "Wrap array/dict: \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapCollections,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
@@ -417,7 +417,7 @@ extension FormatOptions.Descriptor {
         argumentName: "closingparen",
         propertyName: "closingParenOnSameLine",
         displayName: "Closing Paren Position",
-        help: "closing paren position, \"balanced\" (default) or \"same-line\"",
+        help: "Closing paren position: \"balanced\" (default) or \"same-line\"",
         keyPath: \.closingParenOnSameLine,
         trueValues: ["same-line"],
         falseValues: ["balanced"]
@@ -426,7 +426,7 @@ extension FormatOptions.Descriptor {
         argumentName: "hexliteralcase",
         propertyName: "uppercaseHex",
         displayName: "Hex Literal Case",
-        help: "casing for hex literals. \"uppercase\" (default) or \"lowercase\"",
+        help: "Casing for hex literals: \"uppercase\" (default) or \"lowercase\"",
         keyPath: \.uppercaseHex,
         trueValues: ["uppercase", "upper"],
         falseValues: ["lowercase", "lower"]
@@ -435,7 +435,7 @@ extension FormatOptions.Descriptor {
         argumentName: "exponentcase",
         propertyName: "uppercaseExponent",
         displayName: "Exponent Case",
-        help: "case of 'e' in numbers. \"lowercase\" or \"uppercase\" (default)",
+        help: "Case of 'e' in numbers: \"lowercase\" or \"uppercase\" (default)",
         keyPath: \.uppercaseExponent,
         trueValues: ["uppercase", "upper"],
         falseValues: ["lowercase", "lower"]
@@ -444,14 +444,14 @@ extension FormatOptions.Descriptor {
         argumentName: "decimalgrouping",
         propertyName: "decimalGrouping",
         displayName: "Decimal Grouping",
-        help: "decimal grouping,threshold (default: 3,6) or \"none\", \"ignore\"",
+        help: "Decimal grouping,threshold (default: 3,6) or \"none\", \"ignore\"",
         keyPath: \.decimalGrouping
     )
     static let fractionGrouping = FormatOptions.Descriptor(
         argumentName: "fractiongrouping",
         propertyName: "fractionGrouping",
         displayName: "Fraction Grouping",
-        help: "group digits after '.', \"enabled\" or \"disabled\" (default)",
+        help: "Group digits after '.': \"enabled\" or \"disabled\" (default)",
         keyPath: \.fractionGrouping,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -460,7 +460,7 @@ extension FormatOptions.Descriptor {
         argumentName: "exponentgrouping",
         propertyName: "exponentGrouping",
         displayName: "Exponent Grouping",
-        help: "group exponent digits, \"enabled\" or \"disabled\" (default)",
+        help: "Group exponent digits: \"enabled\" or \"disabled\" (default)",
         keyPath: \.exponentGrouping,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -469,28 +469,28 @@ extension FormatOptions.Descriptor {
         argumentName: "binarygrouping",
         propertyName: "binaryGrouping",
         displayName: "Binary Grouping",
-        help: "binary grouping,threshold (default: 4,8) or \"none\", \"ignore\"",
+        help: "Binary grouping,threshold (default: 4,8) or \"none\", \"ignore\"",
         keyPath: \.binaryGrouping
     )
     static let octalGrouping = FormatOptions.Descriptor(
         argumentName: "octalgrouping",
         propertyName: "octalGrouping",
         displayName: "Octal Grouping",
-        help: "octal grouping,threshold or \"none\", \"ignore\". default: 4,8",
+        help: "Octal grouping,threshold (default: 4,8) or \"none\", \"ignore\"",
         keyPath: \.octalGrouping
     )
     static let hexGrouping = FormatOptions.Descriptor(
         argumentName: "hexgrouping",
         propertyName: "hexGrouping",
         displayName: "Hex Grouping",
-        help: "hex grouping,threshold (default: 4,8) or \"none\", \"ignore\"",
+        help: "Hex grouping,threshold (default: 4,8) or \"none\", \"ignore\"",
         keyPath: \.hexGrouping
     )
     static let letPatternPlacement = FormatOptions.Descriptor(
         argumentName: "patternlet",
         propertyName: "hoistPatternLet",
         displayName: "Pattern Let",
-        help: "let/var placement in patterns. \"hoist\" (default) or \"inline\"",
+        help: "let/var placement in patterns: \"hoist\" (default) or \"inline\"",
         keyPath: \.hoistPatternLet,
         trueValues: ["hoist"],
         falseValues: ["inline"]
@@ -507,7 +507,7 @@ extension FormatOptions.Descriptor {
         argumentName: "elseposition",
         propertyName: "elseOnNextLine",
         displayName: "Else Position",
-        help: "placement of else/catch. \"same-line\" (default) or \"next-line\"",
+        help: "Placement of else/catch: \"same-line\" (default) or \"next-line\"",
         keyPath: \.elseOnNextLine,
         trueValues: ["next-line", "nextline"],
         falseValues: ["same-line", "sameline"]
@@ -516,7 +516,7 @@ extension FormatOptions.Descriptor {
         argumentName: "self",
         propertyName: "explicitSelf",
         displayName: "Self",
-        help: "explicit self. \"insert\", \"remove\" (default) or \"init-only\"",
+        help: "Explicit self: \"insert\", \"remove\" (default) or \"init-only\"",
         keyPath: \.explicitSelf,
         options: ["insert", "remove", "init-only"]
     )
@@ -524,7 +524,7 @@ extension FormatOptions.Descriptor {
         argumentName: "selfrequired",
         propertyName: "selfRequired",
         displayName: "Self Required",
-        help: "comma-delimited list of functions with autoclosure arguments",
+        help: "Comma-delimited list of functions with @autoclosure arguments",
         keyPath: \FormatOptions.selfRequired
     )
     static let importGrouping = FormatOptions.Descriptor(
@@ -542,7 +542,7 @@ extension FormatOptions.Descriptor {
         argumentName: "experimental",
         propertyName: "experimentalRules",
         displayName: "Experimental Rules",
-        help: "experimental rules. \"enabled\" or \"disabled\" (default)",
+        help: "Experimental rules: \"enabled\" or \"disabled\" (default)",
         keyPath: \.experimentalRules,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -551,7 +551,7 @@ extension FormatOptions.Descriptor {
         argumentName: "fragment",
         propertyName: "fragment",
         displayName: "Fragment",
-        help: "input is part of a larger file. \"true\" or \"false\" (default)",
+        help: "Input is part of a larger file: \"true\" or \"false\" (default)",
         keyPath: \.fragment,
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
@@ -560,7 +560,7 @@ extension FormatOptions.Descriptor {
         argumentName: "conflictmarkers",
         propertyName: "ignoreConflictMarkers",
         displayName: "Conflict Markers",
-        help: "merge-conflict markers, either \"reject\" (default) or \"ignore\"",
+        help: "Merge-conflict markers: \"reject\" (default) or \"ignore\"",
         keyPath: \.ignoreConflictMarkers,
         trueValues: ["ignore", "true", "enabled"],
         falseValues: ["reject", "false", "disabled"]
@@ -569,7 +569,7 @@ extension FormatOptions.Descriptor {
         argumentName: "swiftversion",
         propertyName: "swiftVersion",
         displayName: "Swift Version",
-        help: "the version of swift used in the project being formatted",
+        help: "The version of swift used in the project being formatted",
         keyPath: \.swiftVersion
     )
 
@@ -580,6 +580,7 @@ extension FormatOptions.Descriptor {
         removeBlankLines.argumentName: "`--removelines` option is deprecated. Use `--enable blankLinesAtStartOfScope` or `--enable blankLinesAtEndOfScope` or `--disable blankLinesAtStartOfScope` or `--disable blankLinesAtEndOfScope` instead",
         hexLiterals.argumentName: "`--hexliterals` option is deprecated. Use `--hexliteralcase` instead",
         wrapElements.argumentName: "`--wrapelements` option is deprecated. Use `--wrapcollections` instead",
+        experimentalRules.argumentName: "`--experimentalRules` option is deprecated. Use `--enable` to opt-in to rules individually",
     ]
 
     static let insertBlankLines = FormatOptions.Descriptor(

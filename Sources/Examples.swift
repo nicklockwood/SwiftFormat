@@ -54,7 +54,9 @@ private struct Examples {
     + protocol Foo: AnyObject {}
     ```
 
-    **NOTE:** The guideline to use `AnyObject` instead of `class` was only introduced in Swift 4.1, so the `anyObjectProtocol` rule is disabled unless the swift version is set to 4.1 or above.
+    **NOTE:** The guideline to use `AnyObject` instead of `class` was only
+    introduced in Swift 4.1, so the `anyObjectProtocol` rule is disabled unless the
+    swift version is set to 4.1 or above.
     """
 
     let blankLinesAtEndOfScope = """
@@ -429,7 +431,8 @@ private struct Examples {
     +  private let someConstant = "someConstant"
     ```
 
-    In Swift 4 and above, `fileprivate` can also be replaced with `private` for members that are only accessed from extensions in the same file:
+    In Swift 4 and above, `fileprivate` can also be replaced with `private` for
+    members that are only accessed from extensions in the same file:
 
     ```diff
       class Foo {
@@ -563,9 +566,17 @@ private struct Examples {
       }
     ```
 
-    In the rare case of functions with`@autoclosure` arguments, `self` may be required at the call site, but SwiftFormat is unable to detect this automatically. You can use the `--selfrequired` command-line option to specify a list of such methods, and the `redundantSelf` rule will then ignore them. An example of such a method is the `expect()` function in the [Nimble](https://github.com/Quick/Nimble) unit testing framework, which is common enough that it is excluded by default.
+    In the rare case of functions with `@autoclosure` arguments, `self` may be
+    required at the call site, but SwiftFormat is unable to detect this
+    automatically. You can use the `--selfrequired` command-line option to specify
+    a list of such methods, and the `redundantSelf` rule will then ignore them.
 
-    There is also an option to always use explicit `self` but *only* inside `init`, by using `--self init-only`:
+    An example of such a method is the `expect()` function in the Nimble unit
+    testing framework (https://github.com/Quick/Nimble), which is common enough that
+    SwiftFormat excludes it by default.
+
+    There is also an option to always use explicit `self` but *only* inside `init`,
+    by using `--self init-only`:
 
     ```diff
       init(foo: Int, bar: Int) {
@@ -779,11 +790,14 @@ private struct Examples {
     + guard let self = self else { return }
     ```
 
-    **NOTE:** assignment to un-escaped `self` is only supported in Swift 4.2 and above, so the `strongifiedSelf` rule is disabled unless the swift version is set to 4.2 or above.
+    **NOTE:** assignment to un-escaped `self` is only supported in Swift 4.2 and
+    above, so the `strongifiedSelf` rule is disabled unless the swift version is
+    set to 4.2 or above.
     """
 
     let strongOutlets = """
-    As per Apple's recommendation (https://developer.apple.com/videos/play/wwdc2015/407/).
+    As per Apple's recommendation
+    (https://developer.apple.com/videos/play/wwdc2015/407/).
 
     ```diff
     - @IBOutlet weak var label: UILabel!
@@ -802,7 +816,10 @@ private struct Examples {
     + }
     ```
 
-    **NOTE:** Occasionally, using trailing closure syntax makes a function call ambiguous, and the compiler can't understand it. Since SwiftFormat isn't able to detect this in all cases, the `trailingClosures` rule is disabled by default, and must be manually enabled via the `--enable trailingClosures` option.
+    **NOTE:** Occasionally, using trailing closure syntax makes a function call
+    ambiguous, and the compiler can't understand it. Since SwiftFormat isn't able
+    to detect this in all cases, the `trailingClosures` rule is disabled by default,
+    and must be manually enabled via the `--enable trailingClosures` option.
     """
 
     let trailingCommas = """

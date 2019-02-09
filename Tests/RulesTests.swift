@@ -7124,8 +7124,13 @@ class RulesTests: XCTestCase {
 
     func testFileHeaderCreationYearReplacement() {
         let input = "let foo = bar"
-        let output = "// Copyright © 1970\n\nlet foo = bar"
-        let fileInfo = FileInfo(creationDate: Date(timeIntervalSince1970: 0))
+        let date = Date(timeIntervalSince1970: 0)
+        let output: String = {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy"
+            return "// Copyright © \(formatter.string(from: date))\n\nlet foo = bar"
+        }()
+        let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// Copyright © {created.year}", fileInfo: fileInfo)
         XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")

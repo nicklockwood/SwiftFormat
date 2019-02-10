@@ -4460,52 +4460,51 @@ class RulesTests: XCTestCase {
 
     // MARK: trailingClosures
 
-    func testClosureArgumentMadeTrailing() {
-        let input = "foo(foo: 5, bar: { /* some code */ })"
+    func testAnonymousClosureArgumentMadeTrailing() {
+        let input = "foo(foo: 5, { /* some code */ })"
         let output = "foo(foo: 5) { /* some code */ }"
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    func testClosureArgumentInFunctionThatReturnsClosureNotMadeTrailing() {
-        // NOTE: this is actually permitted by the compiler, but harms clarity IMHO
-        let input = "foo(foo: 5, bar: { /* some code */ })()"
-        let output = "foo(foo: 5, bar: { /* some code */ })()"
+    func testNamedClosureArgumentNotMadeTrailing() {
+        let input = "foo(foo: 5, bar: { /* some code */ })"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     func testClosureArgumentPassedToFunctionInArgumentsNotMadeTrailing() {
         let input = "foo(bar { /* some code */ })"
-        let output = "foo(bar { /* some code */ })"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     func testClosureArgumentInFunctionWithOtherClosureArgumentsNotMadeTrailing() {
-        let input = "foo(foo: { /* some code */ }, bar: { /* some code */ })"
-        let output = "foo(foo: { /* some code */ }, bar: { /* some code */ })"
+        let input = "foo(foo: { /* some code */ }, { /* some code */ })"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     func testClosureArgumentInExpressionNotMadeTrailing() {
-        let input = "if let foo = foo(foo: 5, bar: { /* some code */ }) {}"
-        let output = "if let foo = foo(foo: 5, bar: { /* some code */ }) {}"
+        let input = "if let foo = foo(foo: 5, { /* some code */ }) {}"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     func testClosureArgumentInCompoundExpressionNotMadeTrailing() {
-        let input = "if let foo = foo(foo: 5, bar: { /* some code */ }), bar = baz {}"
-        let output = "if let foo = foo(foo: 5, bar: { /* some code */ }), bar = baz {}"
+        let input = "if let foo = foo(foo: 5, { /* some code */ }), let bar = bar(bar: 2, { /* some code */ }) {}"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    func testClosureArgumentAfterLinebreakNotMadeTrailing() {
+    func testClosureArgumentAfterLinebreakInGuardNotMadeTrailing() {
         let input = "guard let foo =\n    bar({ /* some code */ })\nelse { return }"
-        let output = "guard let foo =\n    bar({ /* some code */ })\nelse { return }"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
@@ -4519,31 +4518,84 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    func testParensAroundNamedSolitaryClosureArgumentRemoved() {
+    func testParensAroundNamedSolitaryClosureArgumentNotRemoved() {
         let input = "foo(foo: { /* some code */ })"
-        let output = "foo { /* some code */ }"
-        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
-    }
-
-    func testParensAroundSolitaryClosureArgumentInFunctionThatReturnsClosureNotRemoved() {
-        // NOTE: this is actually permitted by the compiler, but harms clarity IMHO
-        let input = "foo({ /* some code */ })()"
-        let output = "foo({ /* some code */ })()"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     func testParensAroundSolitaryClosureArgumentInExpressionNotRemoved() {
         let input = "if let foo = foo({ /* some code */ }) {}"
-        let output = "if let foo = foo({ /* some code */ }) {}"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     func testParensAroundSolitaryClosureArgumentInCompoundExpressionNotRemoved() {
-        let input = "if let foo = foo({ /* some code */ }), bar = baz {}"
-        let output = "if let foo = foo({ /* some code */ }), bar = baz {}"
+        let input = "if let foo = foo({ /* some code */ }), let bar = bar({ /* some code */ }) {}"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSolitaryClosureMadeTrailingInChain() {
+        let input = "foo.map({ $0.path }).joined()"
+        let output = "foo.map { $0.path }.joined()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    // dispatch methods
+
+    func testDispatchAsyncClosureArgumentMadeTrailing() {
+        let input = "queue.async(execute: { /* some code */ })"
+        let output = "queue.async { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testDispatchAsyncGroupClosureArgumentMadeTrailing() {
+        // TODO: async(group: , qos: , flags: , execute: )
+        let input = "queue.async(group: g, execute: { /* some code */ })"
+        let output = "queue.async(group: g) { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testDispatchAsyncAfterClosureArgumentMadeTrailing() {
+        let input = "queue.asyncAfter(deadline: t, execute: { /* some code */ })"
+        let output = "queue.asyncAfter(deadline: t) { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testDispatchAsyncAfterWallClosureArgumentMadeTrailing() {
+        let input = "queue.asyncAfter(wallDeadline: t, execute: { /* some code */ })"
+        let output = "queue.asyncAfter(wallDeadline: t) { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testDispatchSyncClosureArgumentMadeTrailing() {
+        let input = "queue.sync(execute: { /* some code */ })"
+        let output = "queue.sync { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testDispatchSyncFlagsClosureArgumentMadeTrailing() {
+        let input = "queue.sync(flags: f, execute: { /* some code */ })"
+        let output = "queue.sync(flags: f) { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    // autoreleasepool
+
+    func testAutoreleasepoolMadeTrailing() {
+        let input = "autoreleasepool(invoking: { /* some code */ })"
+        let output = "autoreleasepool { /* some code */ }"
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }

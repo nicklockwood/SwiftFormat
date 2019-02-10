@@ -75,7 +75,7 @@ private func allRules(except rules: [String]) -> [FormatRule] {
 
 private let _allRules = allRules(except: [])
 private let _defaultRules = allRules(except: _disabledByDefault)
-private let _disabledByDefault = ["trailingClosures"]
+private let _disabledByDefault: [String] = []
 
 public extension _FormatRules {
     /// A Dictionary of rules by name
@@ -1529,24 +1529,58 @@ public struct _FormatRules {
     /// NOTE: Parens around trailing closures are sometimes required for disambiguation.
     /// SwiftFormat can't detect those cases, so `trailingClosures` is disabled by default
     public let trailingClosures = FormatRule(
-        help: "Converts the last closure argument in a function call to trailing closure\nsyntax where possible (disabled by default because it can introduce ambiguity\nthat prevents code from compiling)"
+        help: """
+        Converts the last closure argument in a function call to trailing closure
+        syntax where possible. By default this is restricted to anonymous closure
+        arguments, as removing named closures can result in call-site ambiguity.
+        """
     ) { formatter in
+        let whitelist = ["async", "asyncAfter", "sync", "autoreleasepool"]
         func removeParen(at index: Int) {
             if formatter.token(at: index - 1)?.isSpace == true {
                 if formatter.token(at: index + 1)?.isSpace == true {
                     // Need to remove one
                     formatter.removeToken(at: index + 1)
                 }
-            } else if formatter.token(at: index + 1)?.isSpace == false {
+            } else if let next = formatter.token(at: index + 1),
+                !next.isSpace, next != .operator(".", .infix) {
                 // Need to insert one
                 formatter.insertToken(.space(" "), at: index + 1)
             }
             formatter.removeToken(at: index)
         }
 
+        // TODO: extract as utility
+        func isConditionalStatement(at index: Int) -> Bool {
+            guard var index = formatter.index(of: .keyword, before: index) else {
+                return false
+            }
+            var keyword = formatter.tokens[index].string
+            while ["try", "as", "is"].contains(keyword) || keyword.hasPrefix("#") || keyword.hasPrefix("@") {
+                guard let prevIndex = formatter.index(of: .keyword, before: index) else {
+                    return false
+                }
+                index = prevIndex
+                keyword = formatter.tokens[index].string
+            }
+            if ["let", "var"].contains(keyword) {
+                index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index) ?? index
+                switch formatter.tokens[index] {
+                case .delimiter(","):
+                    return true
+                case let .keyword(name):
+                    keyword = name
+                default:
+                    return false
+                }
+            }
+            return ["if", "guard", "while", "for"].contains(keyword)
+        }
+
         formatter.forEach(.startOfScope("(")) { i, _ in
             guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-                case .identifier = prevToken else { // TODO: are trailing closures allowed in other cases?
+                case let .identifier(name) = prevToken, // TODO: are trailing closures allowed in other cases?
+                !isConditionalStatement(at: i) else {
                 return
             }
             guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i), let closingBraceIndex =
@@ -1555,26 +1589,6 @@ public struct _FormatRules {
                 formatter.index(of: .endOfScope("}"), before: openingBraceIndex) == nil else {
                 return
             }
-            if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: closingIndex) {
-                switch formatter.tokens[nextIndex] {
-                case .linebreak:
-                    if let next = formatter.next(.nonSpaceOrComment, after: nextIndex) {
-                        switch next {
-                        case .operator(_, .infix),
-                             .operator(_, .postfix),
-                             .delimiter(","),
-                             .delimiter(":"),
-                             .startOfScope("{"),
-                             .keyword("else"):
-                            return
-                        default:
-                            break
-                        }
-                    }
-                default:
-                    return
-                }
-            }
             guard var startIndex = formatter.index(of: .nonSpaceOrLinebreak, before: openingBraceIndex) else {
                 return
             }
@@ -1582,6 +1596,9 @@ public struct _FormatRules {
             case .delimiter(","), .startOfScope("("):
                 break
             case .delimiter(":"):
+                guard whitelist.contains(name) else {
+                    return
+                }
                 if let commaIndex = formatter.index(of: .delimiter(","), before: openingBraceIndex) {
                     startIndex = commaIndex
                 } else if formatter.index(of: .startOfScope("("), before: openingBraceIndex) == i {

@@ -807,19 +807,14 @@ private struct Examples {
 
     let trailingClosures = """
     ```diff
-    - DispatchQueue.main.async(execute: {
-        // do stuff
-    - })
-
+    - DispatchQueue.main.async(execute: { ... })
     + DispatchQueue.main.async {
-        // do stuff
-    + }
     ```
 
-    **NOTE:** Occasionally, using trailing closure syntax makes a function call
-    ambiguous, and the compiler can't understand it. Since SwiftFormat isn't able
-    to detect this in all cases, the `trailingClosures` rule is disabled by default,
-    and must be manually enabled via the `--enable trailingClosures` option.
+    ```diff
+    - let foo = bar.map({ ... }).joined()
+    + let foo = bar.map { ... }.joined()
+    ```
     """
 
     let trailingCommas = """

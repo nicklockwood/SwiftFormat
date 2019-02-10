@@ -300,7 +300,6 @@ class ArgumentsTests: XCTestCase {
         let rules = allRules
         let config: String = serialize(options: Options(formatOptions: nil, rules: rules))
         XCTAssertFalse(config.contains("--disable"))
-        XCTAssertTrue(config.contains("--enable"))
         XCTAssertNotEqual(config.last, "\n")
     }
 
@@ -325,7 +324,6 @@ class ArgumentsTests: XCTestCase {
         let rules = allRules
         let config: String = serialize(options: Options(formatOptions: .default, rules: rules))
         XCTAssertFalse(config.contains("--disable"))
-        XCTAssertTrue(config.contains("--enable"))
         XCTAssertNotEqual(config.last, "\n")
     }
 

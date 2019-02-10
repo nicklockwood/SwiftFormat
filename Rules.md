@@ -1371,26 +1371,21 @@ Ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon
 ## trailingClosures
 
 Converts the last closure argument in a function call to trailing closure
-syntax where possible (disabled by default because it can introduce ambiguity
-that prevents code from compiling).
+syntax where possible. By default this is restricted to anonymous closure
+arguments, as removing named closures can result in call-site ambiguity..
 
 <details>
 <summary>Examples</summary>
 
 ```diff
-- DispatchQueue.main.async(execute: {
-    // do stuff
-- })
-
+- DispatchQueue.main.async(execute: { ... })
 + DispatchQueue.main.async {
-    // do stuff
-+ }
 ```
 
-**NOTE:** Occasionally, using trailing closure syntax makes a function call
-ambiguous, and the compiler can't understand it. Since SwiftFormat isn't able
-to detect this in all cases, the `trailingClosures` rule is disabled by default,
-and must be manually enabled via the `--enable trailingClosures` option.
+```diff
+- let foo = bar.map({ ... }).joined()
++ let foo = bar.map { ... }.joined()
+```
 
 </details>
 <br/>

@@ -293,7 +293,17 @@ SwiftFormat includes over 50 rules, and new ones are added all the time. An up-t
 
 The list of rules can also be displayed within the command-line app using the `--rules` argument. Rules can be either enabled or disabled. Most are enabled by default. Disabled rules are marked with "(disabled)" when displayed using `--rules`.
 
-You can disable rules individually using `--disable` followed by a list of one or more comma-delimited rule names, or enable additional rules using `--enable` followed by the rule names. 
+You can disable rules individually using `--disable` followed by a list of one or more comma-delimited rule names, or enable opt-in rules using `--enable` followed by the rule names:
+
+```bash
+--disable redundantSelf,trailingClosures
+```
+
+If you prefer to only run a strict subset of rules, you can pass a comma-delimited list to the`--rules` argument, and it will enable only those rules:
+
+```bash
+--rules indent,linebreaks
+```
 
 To see exactly which rules were applied to a given file, you can use the `--verbose` command-line option to force SwiftFormat to print a more detailed log as it applies the formatting. **NOTE:** running in verbose mode is slower than the default mode.
 
@@ -547,6 +557,11 @@ FAQ
 > If the options you want aren't exposed, and disabling the rule doesn't solve the problem, the rules are implemented in the file `Rules.swift`, so you can modify them and build a new version of the command-line tool. If you think your changes might be generally useful, make a pull request.
 
 
+Q. I don't want to be surprised by new rules added when I upgrade SwiftFormat. How can I prevent this?
+
+> A. You can use the `--rules` argument to specify an exclusive list of rules to run. I new rules are added, they won't be enabled if you have specified a `--rules` list in your SwiftFormat configuration.
+
+
 *Q. Why can't I set the indent width or choose between tabs/spaces in the [SwiftFormat for Xcode](#xcode-source-editor-extension) options?*
 
 > Indent width and tabs/spaces can be configured in Xcode on a per project-basis. You'll find the option under "Text Settings" in the right-hand sidebar.
@@ -576,7 +591,7 @@ Known issues
 
 * The `--self insert` option can only recognize locally declared member variables, not ones inherited from superclasses or extensions in other files, so it cannot insert missing `self` references for those. Note that the reverse is not true: `--self remove` should remove *all* redundant `self` references.
 
-* The `trailingClosures` rule will sometimes generate ambiguous code that breaks your program. For this reason, the rule is disabled by default. It is recommended that you apply this rule manually and review the changes, rather than including it in an automated formatting process.
+* The `trailingClosures` rule can generate ambiguous code if a function has multiple optional closure arguments, or if multiple functions have signatures differing only by the name of the closure argument. For this reason, the rule is limited to anonymous closures by default, with a whitelist for exceptions.
 
 * The `isEmpty` rule will convert `count == 0` to `isEmpty` even for types that do not have an `isEmpty` method, such as `NSArray`/`NSDictionary`/etc. Use of Objective-C collections in Swift code is pretty rare however, as the Swift-ObjC bridge converts them automatically.
 

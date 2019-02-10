@@ -33,8 +33,3 @@
 --trimwhitespace always
 --wraparguments preserve
 --wrapcollections preserve
-
-# rules
-
---disable trailingClosures
---enable isEmpty

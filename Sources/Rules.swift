@@ -1529,8 +1529,7 @@ public struct _FormatRules {
     /// NOTE: Parens around trailing closures are sometimes required for disambiguation.
     /// SwiftFormat can't detect those cases, so `trailingClosures` is disabled by default
     public let trailingClosures = FormatRule(
-        help:
-        "Converts the last closure argument in a function call to trailing closure\nsyntax where possible (disabled by default because it can introduce ambiguity\nthat prevents code from compiling)"
+        help: "Converts the last closure argument in a function call to trailing closure\nsyntax where possible (disabled by default because it can introduce ambiguity\nthat prevents code from compiling)"
     ) { formatter in
         func removeParen(at index: Int) {
             if formatter.token(at: index - 1)?.isSpace == true {

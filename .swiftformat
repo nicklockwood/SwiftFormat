@@ -12,7 +12,6 @@
 --decimalgrouping 3,6
 --elseposition same-line
 --empty void
---experimental enabled
 --exponentcase lowercase
 --exponentgrouping disabled
 --fractiongrouping disabled

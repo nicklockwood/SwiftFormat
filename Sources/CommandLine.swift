@@ -167,10 +167,10 @@ func printHelp(as type: CLI.OutputType) {
     most rules are enabled. Use --rules to display all enabled/disabled rules
 
     --rules            The list of rules to apply. Pass nothing to print all rules
-    --disable          A list of format rules to be disabled (comma-delimited)
-    --enable           A list of disabled rules to be re-enabled (comma-delimited)
+    --disable          Comma-delimited list of format rules to be disabled
+    --enable           Comma-delimited list of disabled rules to be re-enabled
 
-    --ruleinfo         Pass a rule name to display detailed help for that rule
+    --ruleinfo         List of rules to display info for. Pass nothing to print all
 
     SwiftFormat's rules can be configured using options. A given option may affect
     multiple rules. Options have no affect if the related rules have been disabled
@@ -267,8 +267,11 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // Show rule info
-        if let name = args["ruleinfo"] {
-            try printRuleInfo(for: name, as: .content)
+        if let names = try args["ruleinfo"].map(parseRules) {
+            let names = names.isEmpty ? allRules.sorted() : names.sorted()
+            for name in names {
+                try printRuleInfo(for: name, as: .content)
+            }
             return .ok
         }
 

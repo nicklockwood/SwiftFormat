@@ -672,6 +672,7 @@ Removes access control level keywords from extension members when the access lev
   
   public extension Foo {
 +   func bar() { ... }
+  }
 ```
 
 </details>

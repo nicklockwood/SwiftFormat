@@ -666,12 +666,12 @@ Removes access control level keywords from extension members when the access lev
 <summary>Examples</summary>
 
 ```diff
-  public extension Foo {
--   public func bar() { ... }
+  public extension URL {
+-   public func queryParameter(_ name: String) -> String { ... }
   }
-  
-  public extension Foo {
-+   func bar() { ... }
+
+  public extension URL {
++   func queryParameter(_ name: String) -> String { ... }
   }
 ```
 
@@ -753,13 +753,9 @@ Removes redundant `let` or `var` from ignored variables in bindings (which is a 
 <summary>Examples</summary>
 
 ```diff
-  public extension URL {
--   public func queryParameter(_ name: String) -> String { ... }
-  }
+- let _ = foo()
 
-  public extension URL {
-+   func queryParameter(_ name: String) -> String { ... }
-  }
++ _ = foo()
 ```
 
 </details>

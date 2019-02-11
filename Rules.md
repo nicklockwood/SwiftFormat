@@ -666,15 +666,12 @@ Removes access control level keywords from extension members when the access lev
 <summary>Examples</summary>
 
 ```diff
-  var foo: Int {
--   get {
--     return 5
--   }
+  public extension Foo {
+-   public func bar() { ... }
   }
-
-  var foo: Int {
-+   return 5
-  }
+  
+  public extension Foo {
++   func bar() { ... }
 ```
 
 </details>

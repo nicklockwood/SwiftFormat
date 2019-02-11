@@ -1653,6 +1653,8 @@ public struct _FormatRules {
             return startIndex ... endIndex
         }
 
+        let conditionals = Set(["in", "while", "if", "case", "switch", "where", "for", "guard"])
+
         formatter.forEach(.startOfScope("(")) { i, _ in
             let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
             guard var closingIndex = formatter.index(of: .endOfScope(")"), after: i) else {
@@ -1669,7 +1671,7 @@ public struct _FormatRules {
             }
             if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex),
                 [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
-                return
+                return // It's a closure type or function declaration
             }
             let token = formatter.token(at: previousIndex) ?? .space("")
             switch token {
@@ -1679,66 +1681,60 @@ public struct _FormatRules {
                     fallthrough
                 }
             case .startOfScope("{"):
-                if formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) == .keyword("in"),
-                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex {
-                    if formatter.index(of: .delimiter(":"), in: i + 1 ..< closingIndex) != nil {
-                        break
-                    }
-                    removeParen(at: closingIndex)
-                    removeParen(at: i)
+                guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) == .keyword("in"),
+                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex,
+                    formatter.index(of: .delimiter(":"), in: i + 1 ..< closingIndex) == nil else {
+                    return
                 }
+                removeParen(at: closingIndex)
+                removeParen(at: i)
             case .stringBody, .operator("?", .postfix), .operator("!", .postfix):
-                break
+                return
             case .identifier, .number: // TODO: are trailing closures allowed in other cases?
                 // Parens before closure
-                if closingIndex == formatter.index(of: .nonSpace, after: i),
-                    let openingIndex = formatter.index(
-                        of: .nonSpaceOrCommentOrLinebreak, after: closingIndex, if: { $0 == .startOfScope("{") }
-                    ), formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousIndex) != .keyword("func") {
-                    if var prevIndex = formatter.index(of: .keyword, before: i) {
-                        var prevKeyword = formatter.tokens[prevIndex]
-                        while prevKeyword.string.hasPrefix("#") || prevKeyword.string.hasPrefix("@") ||
-                            [.keyword("try"), .keyword("is"), .keyword("as")].contains(prevKeyword),
-                            let index = formatter.index(of: .keyword, before: prevIndex) {
-                            prevIndex = index
-                            prevKeyword = formatter.tokens[prevIndex]
-                        }
-                        let disallowed: [Token] = [
-                            .keyword("in"),
-                            .keyword("while"),
-                            .keyword("if"),
-                            .keyword("case"),
-                            .keyword("switch"),
-                            .keyword("import"),
-                            .keyword("where"),
-                        ]
-                        if disallowed.contains(prevKeyword) {
-                            break
-                        }
-                        if [.keyword("var"), .keyword("let")].contains(prevKeyword),
-                            let keyword = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
-                            disallowed.contains(keyword) || keyword == .delimiter(",") {
-                            break
-                        }
-                        if prevKeyword == .keyword("var"),
-                            let token = formatter.next(.nonSpaceOrCommentOrLinebreak, after: openingIndex),
-                            [.identifier("willSet"), .identifier("didSet")].contains(token) {
-                            break
-                        }
+                guard closingIndex == formatter.index(of: .nonSpace, after: i),
+                    let openingIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closingIndex, if: {
+                        $0 == .startOfScope("{")
+                    }),
+                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousIndex) != .keyword("func") else {
+                    return
+                }
+                if var prevIndex = formatter.index(of: .keyword, before: i) {
+                    var prevKeyword = formatter.tokens[prevIndex].string
+                    while prevKeyword.hasPrefix("#") || prevKeyword.hasPrefix("@") ||
+                        ["try", "is", "as"].contains(prevKeyword),
+                        let index = formatter.index(of: .keyword, before: prevIndex) {
+                        prevIndex = index
+                        prevKeyword = formatter.tokens[index].string
                     }
-                    removeParen(at: closingIndex)
-                    removeParen(at: i)
+                    if conditionals.contains(prevKeyword) {
+                        return
+                    }
+                    if ["var", "let"].contains(prevKeyword),
+                        let token = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                        [.delimiter(","), .keyword("import")].contains(token) ||
+                        conditionals.contains(token.string) {
+                        return
+                    }
+                    if prevKeyword == "var",
+                        let token = formatter.next(.nonSpaceOrCommentOrLinebreak, after: openingIndex),
+                        [.identifier("willSet"), .identifier("didSet")].contains(token) {
+                        return
+                    }
                 }
-            case .keyword, .endOfScope:
+                removeParen(at: closingIndex)
+                removeParen(at: i)
+            case let .keyword(name) where !conditionals.contains(name) && !["let", "var"].contains(name):
+                return
+            case .delimiter(","), .endOfScope, .keyword:
+                guard formatter.index(of: .endOfScope("}"), before: closingIndex) == nil,
+                    let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex),
+                    ![.endOfScope("}"), .endOfScope(">")].contains(token) ||
+                    ![.startOfScope("{"), .delimiter(",")].contains(nextToken) else {
+                    return
+                }
                 let string = token.string
-                guard ["if", "while", "switch", "for", "in", "where", "guard", "let", "case"].contains(string),
-                    formatter.index(of: .endOfScope("}"), before: closingIndex) == nil,
-                    let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) else {
-                    break
-                }
-                if nextToken != .startOfScope("{"),
-                    nextToken != .delimiter(","),
-                    nextToken != .startOfScope(":"),
+                if ![.startOfScope("{"), .delimiter(","), .startOfScope(":")].contains(nextToken),
                     !(string == "for" && nextToken == .keyword("in")),
                     !(string == "guard" && nextToken == .keyword("else")) {
                     // TODO: this is confusing - refactor to move fallthrough to end of case
@@ -1747,18 +1743,19 @@ public struct _FormatRules {
                 if formatter.index(of: .delimiter(","), in: i + 1 ..< closingIndex) != nil {
                     // Might be a tuple, so we won't remove the parens
                     // TODO: improve the logic here so we don't misidentify function calls as tuples
-                    break
+                    return
                 }
                 removeParen(at: closingIndex)
                 removeParen(at: i)
             case .operator(_, .infix):
-                if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: i, if: { $0 == .startOfScope("{") }),
-                    let lastIndex = formatter.index(of: .endOfScope("}"), after: nextIndex),
-                    formatter.index(of: .nonSpaceOrComment, before: closingIndex) == lastIndex {
-                    removeParen(at: closingIndex)
-                    removeParen(at: i)
+                guard let nextIndex = formatter.index(of: .nonSpaceOrComment, after: i, if: {
+                    $0 == .startOfScope("{")
+                }), let lastIndex = formatter.index(of: .endOfScope("}"), after: nextIndex),
+                    formatter.index(of: .nonSpaceOrComment, before: closingIndex) == lastIndex else {
+                    fallthrough
                 }
-                fallthrough
+                removeParen(at: closingIndex)
+                removeParen(at: i)
             default:
                 if let range = innerParens {
                     removeParen(at: range.upperBound)
@@ -1766,15 +1763,16 @@ public struct _FormatRules {
                     closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
                     innerParens = nil
                 }
-                if let nextTokenIndex = formatter.index(of: .nonSpace, after: i),
-                    closingIndex == formatter.index(of: .nonSpace, after: nextTokenIndex) {
-                    switch formatter.tokens[nextTokenIndex] {
-                    case .identifier, .number:
-                        removeParen(at: closingIndex)
-                        removeParen(at: i)
-                    default:
-                        break
-                    }
+                guard let nextTokenIndex = formatter.index(of: .nonSpace, after: i),
+                    closingIndex == formatter.index(of: .nonSpace, after: nextTokenIndex) else {
+                    return
+                }
+                switch formatter.tokens[nextTokenIndex] {
+                case .identifier, .number:
+                    removeParen(at: closingIndex)
+                    removeParen(at: i)
+                default:
+                    return
                 }
             }
         }

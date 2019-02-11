@@ -3738,6 +3738,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testRedundantParensRemoved7() {
+        let input = "if x, (y == 2) {}"
+        let output = "if x, y == 2 {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testRequiredParensNotRemoved() {
         let input = "if (x || y) * z {}"
         let output = "if (x || y) * z {}"
@@ -3769,6 +3776,13 @@ class RulesTests: XCTestCase {
     func testCaseLetOuterParensRemoved() {
         let input = "switch foo {\ncase let (Foo.bar(baz)):\n}"
         let output = "switch foo {\ncase let Foo.bar(baz):\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCaseVarOuterParensRemoved() {
+        let input = "switch foo {\ncase var (Foo.bar(baz)):\n}"
+        let output = "switch foo {\ncase var Foo.bar(baz):\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
@@ -3913,6 +3927,48 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["void"])), output + "\n")
     }
 
+    func testRequiredParensNotRemovedAfterClosureArgument() {
+        let input = "foo({ /* code */ }())"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRequiredParensNotRemovedAfterClosureArgument2() {
+        let input = "foo(bar: { /* code */ }())"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRequiredParensNotRemovedAfterClosureArgument3() {
+        let input = "foo(bar: 5, { /* code */ }())"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRequiredParensNotRemovedAfterClosureInsideArray() {
+        let input = "[{ /* code */ }()]"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRequiredParensNotRemovedAfterClosureInsideArrayWithTrailingComma() {
+        let input = "[{ /* code */ }(),]"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["trailingCommas"])), output + "\n")
+    }
+
+    func testRequiredParensNotRemovedAfterClosureInWhereClause() {
+        let input = "case foo where { x == y }():"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // around closure arguments
 
     func testSingleClosureArgumentUnwrapped() {
@@ -3969,6 +4025,13 @@ class RulesTests: XCTestCase {
     func testParensRemovedBeforeTrailingClosure2() {
         let input = "let foo = bar() { /* some code */ }"
         let output = "let foo = bar { /* some code */ }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testParensRemovedBeforeTrailingClosure3() {
+        let input = "var foo = bar() { /* some code */ }"
+        let output = "var foo = bar { /* some code */ }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
@@ -4064,9 +4127,16 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    func testParensNotRemovedAroundTupleArgument() {
-        let input = "foo((bar, baz))"
-        let output = "foo((bar, baz))"
+    func testParensNotRemovedAfterAnonymousClosureInsideIfStatementBody() {
+        let input = "if let foo = bar(), { x == y }() {}"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testParensNotRemovedInGenericInit() {
+        let input = "init<T>(_: T) {}"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
@@ -4190,6 +4260,13 @@ class RulesTests: XCTestCase {
     func testRedundantParensRemovedAroundUnlabelledTupleFunctionTypeAssignment() {
         let input = "foo = ((((Int, String)))) -> Void { _ in }"
         let output = "foo = ((Int, String)) -> Void { _ in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testParensNotRemovedAroundTupleArgument() {
+        let input = "foo((bar, baz))"
+        let output = "foo((bar, baz))"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
@@ -7524,7 +7601,7 @@ class RulesTests: XCTestCase {
         let input = "if true && (true && true) {}"
         let output = "if true, (true && true) {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["redundantParens"])), output + "\n")
     }
 
     func testIfFunctionAndReplaced() {

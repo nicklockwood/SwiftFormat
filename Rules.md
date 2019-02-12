@@ -666,14 +666,12 @@ Removes access control level keywords from extension members when the access lev
 <summary>Examples</summary>
 
 ```diff
-  var foo: Int {
--   get {
--     return 5
--   }
+  public extension URL {
+-   public func queryParameter(_ name: String) -> String { ... }
   }
 
-  var foo: Int {
-+   return 5
+  public extension URL {
++   func queryParameter(_ name: String) -> String { ... }
   }
 ```
 
@@ -755,13 +753,9 @@ Removes redundant `let` or `var` from ignored variables in bindings (which is a 
 <summary>Examples</summary>
 
 ```diff
-  public extension URL {
--   public func queryParameter(_ name: String) -> String { ... }
-  }
+- let _ = foo()
 
-  public extension URL {
-+   func queryParameter(_ name: String) -> String { ... }
-  }
++ _ = foo()
 ```
 
 </details>
@@ -1290,7 +1284,19 @@ Normalizes the order for property/function/class specifiers (public, weak, lazy,
 
 ## strongOutlets
 
-Removes the `weak` specifier from `@IBOutlet` properties, as per Apple's recommendation.
+Removes the `weak` specifier from `@IBOutlet` properties, as per [Apple's recommendation](https://developer.apple.com/videos/play/wwdc2015/407/):
+
+
+<details>
+<summary>Examples</summary>
+  
+```diff
+- @IBOutlet weak var label: UILabel!
++ @IBOutlet var label: UILabel!
+```
+
+</details>
+<br/>
 
 ## strongifiedSelf
 
@@ -1305,13 +1311,6 @@ Replaces `` `self` `` with `self` when using the common ``guard let `self` = sel
 ```
 
 **NOTE:** assignment to un-escaped `self` is only supported in Swift 4.2 and above, so the `strongifiedSelf` rule is disabled unless the swift version is set to 4.2 or above.
-
-let strongOutlets*** - removes the `weak` specifier from `@IBOutlet` properties, as per [Apple's recommendation](https://developer.apple.com/videos/play/wwdc2015/407/):
-
-```diff
-- @IBOutlet weak var label: UILabel!
-+ @IBOutlet var label: UILabel!
-```
 
 </details>
 <br/>

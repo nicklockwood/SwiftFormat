@@ -69,7 +69,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_: NSApplication, openFile file: String) -> Bool {
-        return loadConfiguration(URL(fileURLWithPath: file))
+        let url = URL(fileURLWithPath: file)
+        if loadConfiguration(url) {
+            NSDocumentController.shared.noteNewRecentDocumentURL(url)
+            NotificationCenter.default.post(name: .applicationDidLoadNewConfiguration, object: nil)
+            return true
+        }
+        return false
     }
 
     @IBAction func resetToDefault(_: NSMenuItem) {

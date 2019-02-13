@@ -2362,13 +2362,13 @@ class RulesTests: XCTestCase {
 
     func testSimpleMultilineString() {
         let input = "\"\"\"\n    hello\n    world\n\"\"\""
-        let output = "\"\"\"\n    hello\n    world\n\"\"\""
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     func testIndentIndentedSimpleMultilineString() {
-        let input = "{\n    \"\"\"\n    hello\n    world\n    \"\"\"\n}"
+        let input = "{\n\"\"\"\n    hello\n    world\n    \"\"\"\n}"
         let output = "{\n    \"\"\"\n    hello\n    world\n    \"\"\"\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
@@ -2376,7 +2376,14 @@ class RulesTests: XCTestCase {
 
     func testMultilineStringWithEscapedLinebreak() {
         let input = "\"\"\"\n    hello \\\n    world\n\"\"\""
-        let output = "\"\"\"\n    hello \\\n    world\n\"\"\""
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testIndentMultilineStringWrappedAfter() {
+        let input = "foo(baz:\n    \"\"\"\n    baz\n    \"\"\")"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }

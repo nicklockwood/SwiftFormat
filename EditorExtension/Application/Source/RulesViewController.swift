@@ -37,13 +37,42 @@ extension FormatRule {
     }
 }
 
+extension FormatOptions.Descriptor {
+    // if this extension don't compile have a look at
+    // https://stackoverflow.com/questions/35673290/extension-of-a-nested-type-in-swift
+    // https://bugs.swift.org/browse/SR-631
+
+    var toolTip: String {
+        return stripMarkdown(help) + "."
+    }
+}
+
+typealias OptionName = String
+func rulesPerOption(ruleStore: RulesStore) -> [OptionName: [FormatRule]] {
+    var rulePerOption = [OptionName: [FormatRule]]()
+    ruleStore.rules.forEach {
+        let fullRule = FormatRules.byName[$0.name]!
+        fullRule.options.forEach { optionName in
+            var ar = rulePerOption[optionName] ?? [FormatRule]()
+            ar.append(fullRule)
+            rulePerOption[optionName] = ar
+        }
+    }
+
+    return rulePerOption
+}
+
 final class RulesViewController: NSViewController {
+    private let ruleStore = RulesStore()
+    private let optionStore = OptionsStore()
     private var viewModels = [UserSelectionType]()
 
     @IBOutlet var tableView: NSTableView!
+    @IBOutlet var inferOptionsButton: NSButton!
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        inferOptionsButton.state = optionStore.inferOptions ? .on : .off
         viewModels = buildRules()
         NotificationCenter.default.addObserver(self, selector: #selector(didLoadNewConfiguration), name: .applicationDidLoadNewConfiguration, object: nil)
     }
@@ -53,28 +82,109 @@ final class RulesViewController: NSViewController {
         tableView?.reloadData()
     }
 
+    @IBAction private func toggleInferOptions(_ sender: NSButton) {
+        optionStore.inferOptions = (sender.state == .on)
+        viewModels = buildRules()
+        tableView?.reloadData()
+    }
+
     private func buildRules() -> [UserSelectionType] {
-        let store = RulesStore()
-        let rules: [UserSelectionType] = store
+        var rulesPerOptionMapping = rulesPerOption(ruleStore: ruleStore)
+
+        if !rulesPerOptionMapping.filter({ $0.value.count != 1 }).isEmpty {
+            // WARNING: Some options won't be shown... How should we implement this safe guard ?
+        }
+
+        let optionsByName = Dictionary(uniqueKeysWithValues: optionStore
+            .options
+            .map({ ($0.descriptor.argumentName, $0) }))
+
+        var results = [UserSelectionType]()
+        ruleStore
             .rules
             .sorted()
-            .map { rule in
-                let d = UserSelectionBinary(
-                    identifier: rule.name,
-                    title: rule.name,
-                    description: FormatRules.byName[rule.name]!.toolTip,
-                    isEnabled: true,
-                    selection: rule.isEnabled,
-                    observer: {
-                        var updatedRule = rule
-                        updatedRule.isEnabled = $0
-                        store.save(updatedRule)
+            .forEach { rule in
+                let formatRule = FormatRules.byName[rule.name]!
+
+                let associatedOptions = formatRule
+                    .options
+                    .filter { optionName in rulesPerOptionMapping[optionName]?.count == 1 }
+                    .compactMap { optionName in optionsByName[optionName] }
+                    .sorted { $0.descriptor.displayName < $1.descriptor.displayName }
+                    .compactMap { option -> UserSelectionType? in
+                        guard !option.isDeprecated,
+                            option.descriptor.argumentName != FormatOptions.Descriptor.indentation.argumentName else {
+                            return nil
+                        }
+                        let descriptor = option.descriptor
+                        let selection = option.argumentValue
+                        let saveOption: (String) -> Void = { [weak self] in
+                            var option = option
+                            option.argumentValue = $0
+                            self?.optionStore.save(option)
+                        }
+
+                        let enabled = !optionStore.inferOptions
+
+                        switch descriptor.type {
+                        case let .binary(t, f):
+                            let list = UserSelectionList(
+                                identifier: descriptor.argumentName,
+                                title: descriptor.displayName,
+                                description: descriptor.toolTip,
+                                isEnabled: enabled,
+                                selection: selection,
+                                options: [t[0], f[0]],
+                                observer: saveOption
+                            )
+                            return UserSelectionType.list(list)
+
+                        case let .enum(values):
+                            let list = UserSelectionList(
+                                identifier: descriptor.argumentName,
+                                title: descriptor.displayName,
+                                description: descriptor.toolTip,
+                                isEnabled: enabled,
+                                selection: selection,
+                                options: values,
+                                observer: saveOption
+                            )
+                            return UserSelectionType.list(list)
+
+                        case .text, .set:
+                            let freeText = UserSelectionFreeText(
+                                identifier: descriptor.argumentName,
+                                title: descriptor.displayName,
+                                description: descriptor.toolTip,
+                                isEnabled: enabled,
+                                selection: selection,
+                                observer: { input in
+                                    if descriptor.validateArgument(input) {
+                                        saveOption(input)
+                                    }
+                                },
+                                validationStrategy: descriptor.validateArgument
+                            )
+                            return UserSelectionType.freeText(freeText)
+                        }
                     }
-                )
-                return UserSelectionType.binary(d)
+
+                let d = UserSelectionBinary(identifier: rule.name,
+                                            title: rule.name,
+                                            description: formatRule.toolTip,
+                                            isEnabled: true,
+                                            selection: rule.isEnabled,
+                                            observer: { [weak self] in
+                                                var updatedRule = rule
+                                                updatedRule.isEnabled = $0
+                                                self?.ruleStore.save(updatedRule)
+                })
+
+                results.append(UserSelectionType.binary(d))
+                results.append(contentsOf: associatedOptions)
             }
 
-        return rules
+        return results
     }
 
     func model(forRow row: Int) -> UserSelectionType {
@@ -98,6 +208,27 @@ extension RulesViewController: NSTableViewDataSource {
 
 extension RulesViewController: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
-        return tableView.makeView(withIdentifier: .binarySelectionTableCellView, owner: self)
+        let model = self.model(forRow: row)
+        let id: NSUserInterfaceItemIdentifier
+        let backgroundColor: NSColor
+        switch model {
+        case .binary:
+            id = .binarySelectionTableCellView
+            let gray: CGFloat = 0.97
+            backgroundColor = NSColor(calibratedRed: gray, green: gray, blue: gray, alpha: gray)
+        case .list:
+            id = .listSelectionTableCellView
+            backgroundColor = NSColor.white
+        case .freeText:
+            id = .freeTextTableCellView
+            backgroundColor = NSColor.white
+        }
+
+        let cell = tableView.makeView(withIdentifier: id, owner: self)
+        cell?.wantsLayer = true
+
+        cell?.layer?.backgroundColor = backgroundColor.cgColor
+
+        return cell
     }
 }

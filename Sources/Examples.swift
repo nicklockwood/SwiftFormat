@@ -413,14 +413,12 @@ private struct Examples {
 
     let redundantExtensionACL = """
     ```diff
-      var foo: Int {
-    -   get {
-    -     return 5
-    -   }
+      public extension URL {
+    -   public func queryParameter(_ name: String) -> String { ... }
       }
 
-      var foo: Int {
-    +   return 5
+      public extension URL {
+    +   func queryParameter(_ name: String) -> String { ... }
       }
     ```
     """
@@ -449,13 +447,8 @@ private struct Examples {
 
     let redundantLet = """
     ```diff
-      public extension URL {
-    -   public func queryParameter(_ name: String) -> String { ... }
-      }
-
-      public extension URL {
-    +   func queryParameter(_ name: String) -> String { ... }
-      }
+    - let _ = foo()
+    + _ = foo()
     ```
     """
 
@@ -787,8 +780,10 @@ private struct Examples {
     ```
 
     **NOTE:** assignment to un-escaped `self` is only supported in Swift 4.2 and above, so the `strongifiedSelf` rule is disabled unless the swift version is set to 4.2 or above.
+    """
 
-    let strongOutlets*** - removes the `weak` specifier from `@IBOutlet` properties, as per [Apple's recommendation](https://developer.apple.com/videos/play/wwdc2015/407/):
+    let strongOutlets = """
+    As per Apple's recommendation (https://developer.apple.com/videos/play/wwdc2015/407/).
 
     ```diff
     - @IBOutlet weak var label: UILabel!

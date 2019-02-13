@@ -542,6 +542,7 @@ extension RulesTests {
         ("testIndentInsideWrappedProtocolDefinition", testIndentInsideWrappedProtocolDefinition),
         ("testIndentInsideWrappedVarStatement", testIndentInsideWrappedVarStatement),
         ("testIndentMultilineExpressionAfterReturn", testIndentMultilineExpressionAfterReturn),
+        ("testIndentMultilineStringWrappedAfter", testIndentMultilineStringWrappedAfter),
         ("testIndentMultilineSwitchCaseCommentsCorrectly", testIndentMultilineSwitchCaseCommentsCorrectly),
         ("testIndentMultilineSwitchCaseCommentsWithIndentCaseTrue", testIndentMultilineSwitchCaseCommentsWithIndentCaseTrue),
         ("testIndentMultipleSingleLineSwitchCaseCommentsCorrectly", testIndentMultipleSingleLineSwitchCaseCommentsCorrectly),

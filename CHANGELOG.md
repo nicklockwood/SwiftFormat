@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.39.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.1) (2019-02-12)
+
+- Fixed some cases where `redundantParens` failed to remove redundant parentheses
+- Fixed rare instance where `indent` rule could incorrectly indent multiline string literals
+- Added `Rules.md` file to the repository, providing permalinks to the documentation for each rule
+- Rules documentation is now generated automatically from the SwiftFormat source code
+- The Xcode Extension app now shows tooltips for rules in the Rules tab
+- Fixed unit test failure in certain timezones
+
 ## [0.39.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.0) (2019-02-04)
 
 - Added `redundantFileprivate` rule, which replaces `fileprivate` with `private` where possible

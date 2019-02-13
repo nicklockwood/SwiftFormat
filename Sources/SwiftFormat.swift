@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-public let version = "0.39.0"
+public let version = "0.39.1"
 
 /// The standard SwiftFormat config file name
 public let swiftFormatConfigurationFile = ".swiftformat"
@@ -165,7 +165,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
     }
     let fileOptions = baseOptions.fileOptions ?? .default
     if !fileOptions.followSymlinks,
-        (resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true) {
+        resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true {
         return [FormatError.options("symbolic link or alias was skipped: \(inputURL.path)")]
     }
     if resourceValues.isDirectory == false,
@@ -278,7 +278,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 }
             }
         } else if fileOptions.followSymlinks,
-            (resourceValues.isSymbolicLink == true || resourceValues.isAliasFile == true) {
+            resourceValues.isSymbolicLink == true || resourceValues.isAliasFile == true {
             let resolvedURL = inputURL.resolvingSymlinksInPath()
             enumerate(inputURL: resolvedURL, outputURL: outputURL, options: options)
         }

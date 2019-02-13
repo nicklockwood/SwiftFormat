@@ -637,8 +637,8 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 let token = formatter.tokens[i]
                 if case .identifier = token, let index = argNames.index(of: token.unescaped()),
                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
-                    (formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
-                        formatter.currentScope(at: i) == .startOfScope("[")) {
+                    formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
+                    formatter.currentScope(at: i) == .startOfScope("[") {
                     argNames.remove(at: index)
                     associatedData.remove(at: index)
                     if argNames.isEmpty {

@@ -2016,7 +2016,7 @@ public struct _FormatRules {
             guard let prevIndex = formatter.index(of: .endOfScope(")"), before: i),
                 let startIndex = formatter.index(of: .startOfScope("("), before: prevIndex),
                 let startToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex),
-                (startToken.isIdentifier || [.startOfScope("{"), .endOfScope("]")].contains(startToken)) else {
+                startToken.isIdentifier || [.startOfScope("{"), .endOfScope("]")].contains(startToken) else {
                 return
             }
             formatter.removeTokens(inRange: i ..< formatter.index(of: .nonSpace, after: endIndex)!)
@@ -2495,9 +2495,9 @@ public struct _FormatRules {
                         fallthrough
                     }
                 case .identifier:
-                    guard formatter.isEnabled, !isTypeRoot, (explicitSelf == .insert ||
+                    guard formatter.isEnabled, !isTypeRoot, explicitSelf == .insert ||
                         (explicitSelf == .initOnly && isInit &&
-                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix))) else {
+                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix)) else {
                         break
                     }
                     let name = token.unescaped()
@@ -2644,8 +2644,8 @@ public struct _FormatRules {
                 let token = formatter.tokens[i]
                 if case .identifier = token, let index = argNames.index(of: token.unescaped()),
                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
-                    (formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
-                        formatter.currentScope(at: i) == .startOfScope("[")) {
+                    formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
+                    formatter.currentScope(at: i) == .startOfScope("[") {
                     argNames.remove(at: index)
                     associatedData.remove(at: index)
                     if argNames.isEmpty {
@@ -2881,13 +2881,13 @@ public struct _FormatRules {
             guard let endIndex = formatter.index(of: .endOfScope(")"), after: openParenIndex) else { return }
             if hoist {
                 // Find let/var keyword indices
-                guard let indices: [Int] = ({
+                guard let indices: [Int] = {
                     guard let indices = indicesOf(keyword, in: openParenIndex + 1 ..< endIndex) else {
                         keyword = "var"
                         return indicesOf(keyword, in: openParenIndex + 1 ..< endIndex)
                     }
                     return indices
-                }()) else { return }
+                }() else { return }
                 // Remove keywords inside parens
                 for index in indices.reversed() {
                     if formatter.tokens[index + 1].isSpace {
@@ -3423,7 +3423,7 @@ public struct _FormatRules {
 
     /// Strip unnecessary `weak` from @IBOutlet properties (except delegates and datasources)
     public let strongOutlets = FormatRule(
-        help: "Removes the `weak` specifier from `@IBOutlet` properties, as per Apple's recommendation"
+        help: "Removes the `weak` specifier from `@IBOutlet` properties"
     ) { formatter in
         formatter.forEach(.keyword("@IBOutlet")) { i, _ in
             guard let varIndex = formatter.index(of: .keyword("var"), after: i),

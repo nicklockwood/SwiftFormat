@@ -754,7 +754,6 @@ Removes redundant `let` or `var` from ignored variables in bindings (which is a 
 
 ```diff
 - let _ = foo()
-
 + _ = foo()
 ```
 
@@ -1284,12 +1283,13 @@ Normalizes the order for property/function/class specifiers (public, weak, lazy,
 
 ## strongOutlets
 
-Removes the `weak` specifier from `@IBOutlet` properties, as per [Apple's recommendation](https://developer.apple.com/videos/play/wwdc2015/407/):
-
+Removes the `weak` specifier from `@IBOutlet` properties.
 
 <details>
 <summary>Examples</summary>
-  
+
+As per Apple's recommendation (https://developer.apple.com/videos/play/wwdc2015/407/).
+
 ```diff
 - @IBOutlet weak var label: UILabel!
 + @IBOutlet var label: UILabel!

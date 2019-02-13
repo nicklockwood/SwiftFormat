@@ -108,6 +108,7 @@ class RulesTests: XCTestCase {
                 """
             }
         }
+        result += "\n"
         let outputFile = URL(fileURLWithPath: #file).deletingLastPathComponent()
             .deletingLastPathComponent().appendingPathComponent("Rules.md")
         try result.write(to: outputFile, atomically: true, encoding: .utf8)

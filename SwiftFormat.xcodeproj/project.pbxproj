@@ -45,7 +45,6 @@
 		01BBD85B21DAA2A700457380 /* Globs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01BBD85821DAA2A000457380 /* Globs.swift */; };
 		01BBD85C21DAA2A700457380 /* Globs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01BBD85821DAA2A000457380 /* Globs.swift */; };
 		01BBD85E21DAA30700457380 /* GlobsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01BBD85D21DAA30700457380 /* GlobsTests.swift */; };
-		01E5E0D620EE8C35009E8A4D /* OptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E5E0D420EE8BBC009E8A4D /* OptionsViewController.swift */; };
 		01F17E821E25870700DCD359 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E811E25870700DCD359 /* CommandLine.swift */; };
 		01F17E831E25870700DCD359 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E811E25870700DCD359 /* CommandLine.swift */; };
 		01F17E851E258A4900DCD359 /* CommandLineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E841E258A4900DCD359 /* CommandLineTests.swift */; };
@@ -157,7 +156,6 @@
 		01B3987C1D763493009ADE61 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		01BBD85821DAA2A000457380 /* Globs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Globs.swift; sourceTree = "<group>"; };
 		01BBD85D21DAA30700457380 /* GlobsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobsTests.swift; sourceTree = "<group>"; };
-		01E5E0D420EE8BBC009E8A4D /* OptionsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsViewController.swift; sourceTree = "<group>"; };
 		01F17E811E25870700DCD359 /* CommandLine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandLine.swift; sourceTree = "<group>"; };
 		01F17E841E258A4900DCD359 /* CommandLineTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandLineTests.swift; sourceTree = "<group>"; };
 		01F3DF8B1DB9FD3F00454944 /* Options.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Options.swift; sourceTree = "<group>"; };
@@ -416,7 +414,6 @@
 				E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */,
 				E4872124201D980D0014845E /* BinarySelectionTableCellView.swift */,
 				E487211C201D885A0014845E /* RulesViewController.swift */,
-				01E5E0D420EE8BBC009E8A4D /* OptionsViewController.swift */,
 				E41CB5BE2025761D00C1BEDE /* UserSelection.swift */,
 			);
 			path = Source;
@@ -787,6 +784,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E4083191202C049200CAF11D /* SwiftFormat.swift in Sources */,
+				E4FABAD7202FEF060065716E /* OptionsDescriptor.swift in Sources */,
 				E41CB5C52027700100C1BEDE /* FreeTextTableCellView.swift in Sources */,
 				E4872125201D980D0014845E /* BinarySelectionTableCellView.swift in Sources */,
 				E487211D201D885A0014845E /* RulesViewController.swift in Sources */,
@@ -799,10 +797,8 @@
 				E4E4D3CB2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				01BBD85B21DAA2A700457380 /* Globs.swift in Sources */,
 				01045A93211988F100D2BE3D /* Inference.swift in Sources */,
-				E4FABAD7202FEF060065716E /* OptionsDescriptor.swift in Sources */,
 				E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */,
 				E4872129201E3DD50014845E /* RulesStore.swift in Sources */,
-				01E5E0D620EE8C35009E8A4D /* OptionsViewController.swift in Sources */,
 				E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */,
 				E4872111201D3B830014845E /* Options.swift in Sources */,
 				90C4B6CD1DA4B04A009EB000 /* AppDelegate.swift in Sources */,

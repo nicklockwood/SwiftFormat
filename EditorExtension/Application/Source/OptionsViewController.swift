@@ -33,7 +33,7 @@ import Cocoa
 
 extension FormatOptions.Descriptor {
     var toolTip: String {
-        return stripMarkdown(from: help) + "."
+        return stripMarkdown(help) + "."
     }
 }
 

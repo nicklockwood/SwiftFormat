@@ -239,6 +239,7 @@ extension FormatOptions.Descriptor {
         explicitSelf,
         selfRequired,
         importGrouping,
+        trailingClosures,
 
         // Deprecated
         insertBlankLines,
@@ -534,6 +535,13 @@ extension FormatOptions.Descriptor {
         help: "\"testable-top\", \"testable-bottom\" or \"alphabetized\" (default)",
         keyPath: \FormatOptions.importGrouping,
         options: ["alphabetized", "testable-top", "testable-bottom"]
+    )
+    static let trailingClosures = FormatOptions.Descriptor(
+        argumentName: "trailingclosures",
+        propertyName: "trailingClosures",
+        displayName: "Trailing Closure Functions",
+        help: "Comma-delimited list of functions that use trailing closures",
+        keyPath: \FormatOptions.selfRequired
     )
 
     // MARK: - Internal

@@ -404,6 +404,7 @@ extension RulesTests {
         ("testCurriedFunctionCallNotUnwrapped", testCurriedFunctionCallNotUnwrapped),
         ("testCurriedFunctionCallNotUnwrapped2", testCurriedFunctionCallNotUnwrapped2),
         ("testCustomHexGrouping", testCustomHexGrouping),
+        ("testCustomMethodMadeTrailing", testCustomMethodMadeTrailing),
         ("testCustomOctalGrouping", testCustomOctalGrouping),
         ("testDecimalGroupingThousands", testDecimalGroupingThousands),
         ("testDefaultBinaryGrouping", testDefaultBinaryGrouping),

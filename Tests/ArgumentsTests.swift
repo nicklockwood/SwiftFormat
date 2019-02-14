@@ -159,7 +159,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testCommandLineArgumentsAreCorrect() {
-        let output = ["allman": "false", "wraparguments": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "closingparen": "balanced", "selfrequired": ""]
+        let output = ["allman": "false", "wraparguments": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "comments": "indent", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": ""]
         XCTAssertEqual(argumentsFor(.default), output)
     }
 

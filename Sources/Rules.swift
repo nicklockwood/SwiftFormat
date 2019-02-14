@@ -1065,12 +1065,10 @@ public struct _FormatRules {
                             }
                             // Check if line on which scope ends should be unindented
                             let start = formatter.startOfLine(at: i)
-                            if token == .endOfScope("\"\"\"") ||
-                                formatter.next(.nonSpaceOrComment, after: start) != .endOfScope("\"\"\""),
-                                !isCommentedCode(at: start), formatter.options.indentComments ||
+                            if !isCommentedCode(at: start), formatter.options.indentComments ||
                                 formatter.next(.nonSpace, after: start - 1) != .startOfScope("/*"),
                                 let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
-                                nextToken.isEndOfScope, nextToken != .endOfScope("*/") {
+                                nextToken.isEndOfScope, nextToken != .endOfScope("\"\"\"") {
                                 // Only reduce indent if line begins with a closing scope token
                                 var indent = indentStack.last ?? ""
                                 if [.endOfScope("case"), .endOfScope("default")].contains(token),

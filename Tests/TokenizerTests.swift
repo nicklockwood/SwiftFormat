@@ -930,6 +930,30 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testNumberedTupleVariableMember() {
+        let input = "foo.2"
+        let output: [Token] = [
+            .identifier("foo"),
+            .operator(".", .infix),
+            .identifier("2"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testNumberedTupleExpressionMember() {
+        let input = "(1,2).1"
+        let output: [Token] = [
+            .startOfScope("("),
+            .number("1", .integer),
+            .delimiter(","),
+            .number("2", .integer),
+            .endOfScope(")"),
+            .operator(".", .infix),
+            .identifier("1"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Operators
 
     func testBasicOperator() {

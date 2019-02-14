@@ -1712,7 +1712,7 @@ public struct _FormatRules {
             case .stringBody, .operator("?", .postfix), .operator("!", .postfix),
                  .operator("->", .infix), .keyword("throws"), .keyword("rethrows"):
                 return
-            case .identifier, .number: // TODO: are trailing closures allowed in other cases?
+            case .identifier: // TODO: are trailing closures allowed in other cases?
                 // Parens before closure
                 guard closingIndex == formatter.index(of: .nonSpace, after: i),
                     let openingIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closingIndex, if: {

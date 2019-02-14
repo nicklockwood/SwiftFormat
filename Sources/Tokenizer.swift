@@ -1316,29 +1316,38 @@ public func tokenize(_ source: String) -> [Token] {
 
     func processToken() {
         let token = tokens.last!
+        let count = tokens.count
         switch token {
         case let .keyword(string):
             // Track switch/case statements
-            if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1),
+            if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
                 case .operator(".", _) = tokens[prevIndex] {
                 tokens[tokens.count - 1] = .identifier(string)
                 processToken()
                 return
             }
             fallthrough
-        case .identifier, .number:
-            let count = tokens.count
+        case .identifier:
             if count > 1, case .number = tokens[count - 2] {
                 tokens[count - 1] = .error(token.string)
             }
+        case let .number(string, _) where count > 1:
+            switch tokens[count - 2] {
+            case .number:
+                tokens[count - 1] = .error(string)
+            case .operator(".", _):
+                tokens[count - 1] = .identifier(string)
+            default:
+                break
+            }
         case .operator:
-            stitchOperators(at: tokens.count - 1)
-        case .startOfScope("<"):
-            if tokens.count >= 2, tokens[tokens.count - 2].isOperator,
-                let index = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 2),
+            stitchOperators(at: count - 1)
+        case .startOfScope("<") where count >= 2:
+            if tokens[count - 2].isOperator,
+                let index = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 2),
                 ![.keyword("func"), .keyword("init")].contains(tokens[index]) {
                 tokens[tokens.count - 1] = .operator("<", .none)
-                stitchOperators(at: tokens.count - 1)
+                stitchOperators(at: count - 1)
                 processToken()
                 return
             }
@@ -1349,11 +1358,11 @@ public func tokenize(_ source: String) -> [Token] {
             break
         }
         if !token.isSpaceOrCommentOrLinebreak {
-            if let prevIndex = index(of: .nonSpaceOrComment, before: tokens.count - 1),
+            if let prevIndex = index(of: .nonSpaceOrComment, before: count - 1),
                 case .endOfScope(">") = tokens[prevIndex] {
                 // Fix up misidentified generic that is actually a pair of operators
                 switch token {
-                case .operator("=", _) where prevIndex == tokens.count - 2,
+                case .operator("=", _) where prevIndex == count - 2,
                      .identifier, .number, .startOfScope("\""), .startOfScope("\"\"\""):
                     convertClosingChevronToSymbol(at: prevIndex, andOpeningChevron: true)
                     processToken()
@@ -1362,7 +1371,7 @@ public func tokenize(_ source: String) -> [Token] {
                     break
                 }
             }
-            if let lastSymbolIndex = index(of: .operator, before: tokens.count - 1) {
+            if let lastSymbolIndex = index(of: .operator, before: count - 1) {
                 // Set operator type
                 setSymbolType(at: lastSymbolIndex)
             }
@@ -1392,8 +1401,8 @@ public func tokenize(_ source: String) -> [Token] {
                         processMultilineStringBody()
                     }
                 case .endOfScope(">"):
-                    if scope == .startOfScope("<"), scopeIndex == tokens.count - 2 {
-                        convertOpeningChevronToSymbol(at: tokens.count - 2)
+                    if scope == .startOfScope("<"), scopeIndex == count - 2 {
+                        convertOpeningChevronToSymbol(at: count - 2)
                         processToken()
                         return
                     }
@@ -1412,7 +1421,7 @@ public func tokenize(_ source: String) -> [Token] {
                 case let .operator(string, _):
                     switch string {
                     case ".", "==", "?", "!", "&", "->":
-                        if scopeIndex == tokens.count - 2 {
+                        if scopeIndex == count - 2 {
                             // These are allowed in a generic, but not as the first character
                             fallthrough
                         }
@@ -1439,7 +1448,7 @@ public func tokenize(_ source: String) -> [Token] {
                 }
             } else if token == .delimiter(":"),
                 scope == .startOfScope("(") || scope == .startOfScope("["),
-                let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1),
+                let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
                 tokens[prevIndex].isIdentifierOrKeyword,
                 let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex) {
                 if case let .keyword(name) = tokens[prevIndex] {
@@ -1474,7 +1483,7 @@ public func tokenize(_ source: String) -> [Token] {
                                 break
                             }
                         }
-                        if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: tokens.count - 1) {
+                        if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1) {
                             switch tokens[prevIndex] {
                             case .keyword("if"),
                                  .keyword("guard"),
@@ -1523,7 +1532,7 @@ public func tokenize(_ source: String) -> [Token] {
             }
         case .endOfScope(">"):
             // Misidentified > as closing generic scope
-            convertClosingChevronToSymbol(at: tokens.count - 1, andOpeningChevron: false)
+            convertClosingChevronToSymbol(at: count - 1, andOpeningChevron: false)
             return
         case let .endOfScope(string):
             if ["case", "default"].contains(string), let scopeIndex = scopeIndexStack.last,
@@ -1532,7 +1541,7 @@ public func tokenize(_ source: String) -> [Token] {
                 return
             }
             // Previous scope wasn't closed correctly
-            tokens[tokens.count - 1] = .error(string)
+            tokens[count - 1] = .error(string)
             return
         default:
             break

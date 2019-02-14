@@ -4509,6 +4509,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testClosureMadeTrailingForNumericTupleMember() {
+        let input = "foo.1(5, { bar })"
+        let output = "foo.1(5) { bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // solitary argument
 
     func testParensAroundSolitaryClosureArgumentRemoved() {
@@ -4542,6 +4549,13 @@ class RulesTests: XCTestCase {
     func testSolitaryClosureMadeTrailingInChain() {
         let input = "foo.map({ $0.path }).joined()"
         let output = "foo.map { $0.path }.joined()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSolitaryClosureMadeTrailingForNumericTupleMember() {
+        let input = "foo.1({ bar })"
+        let output = "foo.1 { bar }"
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }

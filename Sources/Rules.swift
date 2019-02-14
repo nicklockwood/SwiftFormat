@@ -3735,6 +3735,13 @@ public struct _FormatRules {
                 let typeEnd = formatter.lastIndex(of: .nonSpaceOrLinebreak, in: i + 1 ..< endIndex) else {
                 return
             }
+            if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex, if: {
+                $0.isOperator(".")
+            }), formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex, if: {
+                ![.identifier("self"), .identifier("Type")].contains($0)
+            }) != nil {
+                return
+            }
             switch formatter.tokens[typeIndex] {
             case .identifier("Array"):
                 formatter.replaceTokens(inRange: typeIndex ... endIndex, with:

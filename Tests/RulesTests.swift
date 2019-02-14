@@ -8327,6 +8327,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testArrayNestedTypeAliasNotConvertedToSugar() {
+        let input = "typealias Indices = Array<Foo>.Indices"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testArrayTypeReferenceConvertedToSugar() {
+        let input = "let type = Array<Foo>.Type"
+        let output = "let type = [Foo].Type"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testArraySelfReferenceConvertedToSugar() {
+        let input = "let type = Array<Foo>.self"
+        let output = "let type = [Foo].self"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // MARK: redundantExtensionACL
 
     func testPublicExtensionMemberACLStripped() {

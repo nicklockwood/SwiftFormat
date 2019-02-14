@@ -4614,6 +4614,16 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    // whitelists
+
+    func testCustomMethodMadeTrailing() {
+        let input = "foo(bar: 1, baz: { /* some code */ })"
+        let output = "foo(bar: 1) { /* some code */ }"
+        let options = FormatOptions(trailingClosures: ["foo"])
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // MARK: redundantGet
 
     func testRemoveSingleLineIsolatedGet() {

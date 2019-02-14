@@ -283,10 +283,11 @@ public struct FormatOptions: CustomStringConvertible {
     public var explicitSelf: SelfMode
     public var selfRequired: [String]
     public var experimentalRules: Bool
-    public var fragment: Bool
     public var importGrouping: ImportGrouping
+    public var trailingClosures: [String]
 
     // Doesn't really belong here, but hard to put elsewhere
+    public var fragment: Bool
     public var ignoreConflictMarkers: Bool
     public var swiftVersion: Version
     public var fileInfo: FileInfo
@@ -325,9 +326,11 @@ public struct FormatOptions: CustomStringConvertible {
                 explicitSelf: SelfMode = .remove,
                 selfRequired: [String] = [],
                 experimentalRules: Bool = false,
+                importGrouping: ImportGrouping = .alphabetized,
+                trailingClosures: [String] = [],
+                // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
-                importGrouping: ImportGrouping = .alphabetized,
                 swiftVersion: Version = .undefined,
                 fileInfo: FileInfo = FileInfo()) {
         self.indent = indent
@@ -362,9 +365,11 @@ public struct FormatOptions: CustomStringConvertible {
         self.explicitSelf = explicitSelf
         self.selfRequired = selfRequired
         self.experimentalRules = experimentalRules
+        self.importGrouping = importGrouping
+        self.trailingClosures = trailingClosures
+        // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers
-        self.importGrouping = importGrouping
         self.swiftVersion = swiftVersion
         self.fileInfo = fileInfo
     }

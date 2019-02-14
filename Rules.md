@@ -1374,6 +1374,10 @@ Converts the last closure argument in a function call to trailing closure
 syntax where possible. By default this is restricted to anonymous closure
 arguments, as removing named closures can result in call-site ambiguity..
 
+Option | Description
+--- | ---
+`--trailingclosures` | Comma-delimited list of functions that use trailing closures
+
 <details>
 <summary>Examples</summary>
 

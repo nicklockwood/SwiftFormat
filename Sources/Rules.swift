@@ -1533,9 +1533,13 @@ public struct _FormatRules {
         Converts the last closure argument in a function call to trailing closure
         syntax where possible. By default this is restricted to anonymous closure
         arguments, as removing named closures can result in call-site ambiguity.
-        """
+        """,
+        options: ["trailingclosures"]
     ) { formatter in
-        let whitelist = ["async", "asyncAfter", "sync", "autoreleasepool"]
+        let whitelist = Set(
+            ["async", "asyncAfter", "sync", "autoreleasepool"] + formatter.options.trailingClosures
+        )
+
         func removeParen(at index: Int) {
             if formatter.token(at: index - 1)?.isSpace == true {
                 if formatter.token(at: index + 1)?.isSpace == true {

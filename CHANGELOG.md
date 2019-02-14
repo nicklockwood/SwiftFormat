@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.39.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.2) (2019-02-14)
+
+- Fixed bug with indenting multi-line strings (introduced in 0.39.1)
+- Fixed `redundantParens` bug (introduced in 0.39.1)
+- Corrected documentation for `specifiers` rule
+
 ## [0.39.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.1) (2019-02-12)
 
 - Fixed some cases where `redundantParens` failed to remove redundant parentheses

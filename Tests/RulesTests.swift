@@ -4510,6 +4510,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testClosureMadeTrailingForNumericTupleMember() {
+        let input = "foo.1(5, { bar })"
+        let output = "foo.1(5) { bar }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // solitary argument
 
     func testParensAroundSolitaryClosureArgumentRemoved() {

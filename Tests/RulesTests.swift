@@ -4321,6 +4321,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testParensNotRemovedAroundClosure3() {
+        let input = "if let foo = (bar.filter { $0 > 1 }).first {}"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // around tuples
 
     func testParensRemovedAroundTuple() {

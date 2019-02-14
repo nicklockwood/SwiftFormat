@@ -1793,7 +1793,7 @@ public struct _FormatRules {
                             default:
                                 return false
                             }
-                        case .delimiter(","), .delimiter(":"), .delimiter(";"):
+                        case .delimiter(","), .delimiter(":"), .delimiter(";"), .startOfScope("{"):
                             return true
                         default:
                             return false

@@ -909,6 +909,7 @@ extension RulesTests {
         ("testParensNotRemovedAfterTupleIndex3", testParensNotRemovedAfterTupleIndex3),
         ("testParensNotRemovedAroundClosure", testParensNotRemovedAroundClosure),
         ("testParensNotRemovedAroundClosure2", testParensNotRemovedAroundClosure2),
+        ("testParensNotRemovedAroundClosure3", testParensNotRemovedAroundClosure3),
         ("testParensNotRemovedAroundTupleArgument", testParensNotRemovedAroundTupleArgument),
         ("testParensNotRemovedAroundTupleFunctionArgument", testParensNotRemovedAroundTupleFunctionArgument),
         ("testParensNotRemovedAroundTupleFunctionArgumentAfterSubscript", testParensNotRemovedAroundTupleFunctionArgumentAfterSubscript),

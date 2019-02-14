@@ -1265,12 +1265,12 @@ Normalizes the order for property/function/class specifiers (public, weak, lazy,
 
 ```diff
 - lazy public weak private(set) var foo: UIView?
-+ private(set) public lazy weak var foo: UIView?
++ public private(set) lazy weak var foo: UIView?
 ```
 
 ```diff
-- public override final func foo()
-+ final override public func foo()
+- override public final func foo()
++ public final override func foo()
 ```
 
 ```diff

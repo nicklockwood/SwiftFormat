@@ -2835,7 +2835,7 @@ public struct _FormatRules {
             if var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) {
                 if case .identifier = formatter.tokens[prevIndex] {
                     prevIndex = formatter.index(before: prevIndex) {
-                        $0.isSpaceOrCommentOrLinebreak || $0.isStartOfScope
+                        $0.isSpaceOrCommentOrLinebreak || $0.isStartOfScope || $0 == .endOfScope("case")
                     } ?? -1
                     startIndex = prevIndex + 1
                     prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) ?? 0

@@ -2930,6 +2930,26 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testCaseEnumValueWithoutSpaces() {
+        let input = "switch x { case.foo:break }"
+        let output: [Token] = [
+            .keyword("switch"),
+            .space(" "),
+            .identifier("x"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .endOfScope("case"),
+            .operator(".", .prefix),
+            .identifier("foo"),
+            .startOfScope(":"),
+            .keyword("break"),
+            .space(" "),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: dot prefix
 
     func testEnumValueInDictionaryLiteral() {

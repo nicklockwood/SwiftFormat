@@ -6719,6 +6719,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: rules), output + "\n")
     }
 
+    func testHoistLetWithNoSpaceAfterCase() {
+        let input = "switch x { case.some(let y): return y }"
+        let output = "switch x { case let .some(y): return y }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // hoist = false
 
     func testUnhoistCaseLet() {

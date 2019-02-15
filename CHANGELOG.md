@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.39.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.3) (2019-02-15)
+
+- Fixed a bug with `hoistPatternLet` rule for switch cases without a space
+- Fixed a bug in the `typeSugar` rule when referencing nested types
+- The `.swiftformat` configuration file type is now associated with the SwiftFormat for Xcode app
+
 ## [0.39.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.2) (2019-02-14)
 
 - Fixed bug with indenting multi-line strings (introduced in 0.39.1)

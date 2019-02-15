@@ -6,6 +6,21 @@
 	<string>17G4015</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>swiftformat</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>swiftformat</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+		</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>SwiftFormat for Xcode</string>
 	<key>CFBundleIdentifier</key>
@@ -17,7 +32,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.39.2</string>
+	<string>0.39.3</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>

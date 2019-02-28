@@ -50,11 +50,13 @@ class RulesTests: XCTestCase {
             optionsByProperty[descriptor.propertyName] = descriptor.argumentName
         }
         let rulesFile = URL(fileURLWithPath: #file).deletingLastPathComponent()
-            .deletingLastPathComponent().appendingPathComponent("Sources").appendingPathComponent("Rules.swift")
+            .deletingLastPathComponent().appendingPathComponent("Sources")
+            .appendingPathComponent("Rules.swift")
         let rulesSource = try String(contentsOf: rulesFile, encoding: .utf8)
         let tokens = tokenize(rulesSource)
         let formatter = Formatter(tokens)
         var referencedOptions = [String]()
+        var rulesByOption = [String: String]()
         formatter.forEach(.identifier("FormatRule")) { i, _ in
             guard formatter.next(.nonSpaceOrLinebreak, after: i) == .startOfScope("("),
                 case let .identifier(name)? = formatter.last(.identifier, before: i),
@@ -63,6 +65,13 @@ class RulesTests: XCTestCase {
                 let rule = FormatRules.byName[name] else {
                 return
             }
+            for option in rule.options {
+                if let oldName = rulesByOption[option] {
+                    XCTFail("\(option) set as (non-shared) option for both \(name) and \(oldName)")
+                }
+                rulesByOption[option] = name
+            }
+            let allOptions = rule.options + rule.sharedOptions
             for index in scopeStart + 1 ..< scopeEnd {
                 guard formatter.tokens[index] == .identifier("options"),
                     formatter.token(at: index - 1) == .operator(".", .infix),
@@ -72,13 +81,15 @@ class RulesTests: XCTestCase {
                     let option = optionsByProperty[property] else {
                     continue
                 }
-                XCTAssert(rule.options.contains(option), "\(option) not listed in \(name) rule")
+                XCTAssert(allOptions.contains(option), "\(option) not listed in \(name) rule")
                 referencedOptions.append(option)
             }
-            for option in rule.options {
+            for option in allOptions {
                 XCTAssert(referencedOptions.contains(option), "\(option) not used in \(name) rule")
             }
         }
+        // TODO: check all options are used
+        // TODO: check all shared options are set as non-shared for at least one rule
     }
 
     func testGenerateRulesDocumentation() throws {

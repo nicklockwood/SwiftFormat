@@ -112,7 +112,7 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    // MARK: hashbang
+    // MARK: Hashbang
 
     func testHashbangOnItsOwnInFile() {
         let input = "#!/usr/bin/swift"
@@ -356,6 +356,193 @@ class TokenizerTests: XCTestCase {
             .linebreak("\n"),
             .space("    "),
             .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    // MARK: Raw strings
+
+    func testEmptyRawString() {
+        let input = "#\"\"#"
+        let output: [Token] = [
+            .startOfScope("#\""),
+            .endOfScope("\"#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testEmptyDoubleRawString() {
+        let input = "##\"\"##"
+        let output: [Token] = [
+            .startOfScope("##\""),
+            .endOfScope("\"##"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testUnbalancedRawString() {
+        let input = "##\"\"#"
+        let output: [Token] = [
+            .startOfScope("##\""),
+            .stringBody("\"#"),
+            .error(""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testUnbalancedRawString2() {
+        let input = "#\"\"##"
+        let output: [Token] = [
+            .startOfScope("#\""),
+            .endOfScope("\"#"),
+            .error("#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testRawStringContainingUnescapedQuote() {
+        let input = "#\" \" \"#"
+        let output: [Token] = [
+            .startOfScope("#\""),
+            .stringBody(" \" "),
+            .endOfScope("\"#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testRawStringContainingJustASingleUnescapedQuote() {
+        let input = "#\"\"\"#"
+        let output: [Token] = [
+            .startOfScope("#\"\"\""),
+            .stringBody("#"),
+            .error(""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testRawStringContainingUnhashedBackslash() {
+        let input = "#\"\\\"#"
+        let output: [Token] = [
+            .startOfScope("#\""),
+            .stringBody("\\"),
+            .endOfScope("\"#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testRawStringContainingHashedEscapeSequence() {
+        let input = "#\"\\#n\"#"
+        let output: [Token] = [
+            .startOfScope("#\""),
+            .stringBody("\\#n"),
+            .endOfScope("\"#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testRawStringContainingUnderhashedEscapeSequence() {
+        let input = "##\"\\#n\"##"
+        let output: [Token] = [
+            .startOfScope("##\""),
+            .stringBody("\\#n"),
+            .endOfScope("\"##"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testRawStringContainingUnhashedInterpolation() {
+        let input = "#\"\\(5)\"#"
+        let output: [Token] = [
+            .startOfScope("#\""),
+            .stringBody("\\(5)"),
+            .endOfScope("\"#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testRawStringContainingHashedInterpolation() {
+        let input = "#\"\\#(5)\"#"
+        let output: [Token] = [
+            .startOfScope("#\""),
+            .stringBody("\\#"),
+            .startOfScope("("),
+            .number("5", .integer),
+            .endOfScope(")"),
+            .endOfScope("\"#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testRawStringContainingUnderhashedInterpolation() {
+        let input = "##\"\\#(5)\"##"
+        let output: [Token] = [
+            .startOfScope("##\""),
+            .stringBody("\\#(5)"),
+            .endOfScope("\"##"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    // MARK: Multiline raw strings
+
+    func testSimpleMultilineRawString() {
+        let input = "#\"\"\"\n    hello\n    world\n    \"\"\"#"
+        let output: [Token] = [
+            .startOfScope("#\"\"\""),
+            .linebreak("\n"),
+            .space("    "),
+            .stringBody("hello"),
+            .linebreak("\n"),
+            .space("    "),
+            .stringBody("world"),
+            .linebreak("\n"),
+            .space("    "),
+            .endOfScope("\"\"\"#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testMultilineRawStringContainingUnhashedInterpolation() {
+        let input = "#\"\"\"\n    \\(5)\n    \"\"\"#"
+        let output: [Token] = [
+            .startOfScope("#\"\"\""),
+            .linebreak("\n"),
+            .space("    "),
+            .stringBody("\\(5)"),
+            .linebreak("\n"),
+            .space("    "),
+            .endOfScope("\"\"\"#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testMultilineRawStringContainingHashedInterpolation() {
+        let input = "#\"\"\"\n    \\#(5)\n    \"\"\"#"
+        let output: [Token] = [
+            .startOfScope("#\"\"\""),
+            .linebreak("\n"),
+            .space("    "),
+            .stringBody("\\#"),
+            .startOfScope("("),
+            .number("5", .integer),
+            .endOfScope(")"),
+            .linebreak("\n"),
+            .space("    "),
+            .endOfScope("\"\"\"#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testMultilineRawStringContainingUnderhashedInterpolation() {
+        let input = "##\"\"\"\n    \\#(5)\n    \"\"\"##"
+        let output: [Token] = [
+            .startOfScope("##\"\"\""),
+            .linebreak("\n"),
+            .space("    "),
+            .stringBody("\\#(5)"),
+            .linebreak("\n"),
+            .space("    "),
+            .endOfScope("\"\"\"##"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

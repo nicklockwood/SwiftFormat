@@ -4990,6 +4990,8 @@ class RulesTests: XCTestCase {
 
     // MARK: redundantRawValues
 
+    // string values
+
     func testRemoveRedundantRawString() {
         let input = "enum Foo: String {\n    case bar = \"bar\"\n    case baz = \"baz\"\n}"
         let output = "enum Foo: String {\n    case bar\n    case baz\n}"
@@ -4998,8 +5000,8 @@ class RulesTests: XCTestCase {
     }
 
     func testRemoveCommaDelimitedCaseRawStringCases() {
-        let input = "enum Foo: String { case bar = \"bar\", baz = \"baz\" }"
-        let output = "enum Foo: String { case bar, baz }"
+        let input = "enum Foo: URL { case bar = \"bar\", baz = \"baz\" }"
+        let output = "enum Foo: URL { case bar, baz }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantRawValues]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
@@ -5007,6 +5009,54 @@ class RulesTests: XCTestCase {
     func testNoRemoveRawStringIfNameDoesntMatch() {
         let input = "enum Foo: String {\n    case bar = \"foo\"\n}"
         let output = "enum Foo: String {\n    case bar = \"foo\"\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantRawValues]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    // index values
+
+    func testRedundantEnumIntsRemoved() {
+        let input = """
+        enum Foo: Int {
+            case bar = 0
+            case baz = 1
+        }
+        """
+        let output = """
+        enum Foo: Int {
+            case bar
+            case baz
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantRawValues]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRedundantEnumFloatsRemoved() {
+        let input = """
+        enum Foo: Double {
+            case bar = 0.0
+            case baz = 1.0
+        }
+        """
+        let output = """
+        enum Foo: Double {
+            case bar
+            case baz
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantRawValues]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testNonRedundantEnumIntsNotRemoved() {
+        let input = """
+        enum Foo: Int {
+            case bar = 1
+            case baz = 2
+        }
+        """
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantRawValues]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }

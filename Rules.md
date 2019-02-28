@@ -897,7 +897,8 @@ Removes redundant pattern matching arguments for ignored variables.
 
 ## redundantRawValues
 
-Removes raw string values from enum cases when they match the case name.
+Removes raw string values from enum cases when they match the case name, and
+removes raw numeric index values when they match the case index.
 
 <details>
 <summary>Examples</summary>

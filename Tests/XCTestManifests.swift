@@ -542,6 +542,7 @@ extension RulesTests {
         ("testIndentIfCase", testIndentIfCase),
         ("testIndentIfCaseCommaCase", testIndentIfCaseCommaCase),
         ("testIndentIndentedSimpleMultilineString", testIndentIndentedSimpleMultilineString),
+        ("testIndentIndentedSimpleRawMultilineString", testIndentIndentedSimpleRawMultilineString),
         ("testIndentInsideWrappedClassDefinition", testIndentInsideWrappedClassDefinition),
         ("testIndentInsideWrappedIfStatementWithClosureCondition", testIndentInsideWrappedIfStatementWithClosureCondition),
         ("testIndentInsideWrappedProtocolDefinition", testIndentInsideWrappedProtocolDefinition),

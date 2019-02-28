@@ -293,9 +293,8 @@ public struct _FormatRules {
         formatter.forEach(.startOfScope("{")) { i, _ in
             if let prevToken = formatter.token(at: i - 1) {
                 switch prevToken {
-                case .space, .linebreak:
-                    break
-                case let .startOfScope(string) where string != "\"":
+                case .space, .linebreak,
+                     .startOfScope where !prevToken.isStringDelimiter:
                     break
                 default:
                     formatter.insertToken(.space(" "), at: i)
@@ -994,9 +993,6 @@ public struct _FormatRules {
                 case "/*":
                     // Comments only indent one space
                     indent += " "
-                case "\"\"\"":
-                    // Don't indent multiline string literals
-                    break
                 case ":":
                     indent += formatter.options.indent
                     if formatter.options.indentCase,
@@ -1043,6 +1039,10 @@ public struct _FormatRules {
                     }
                     fallthrough
                 default:
+                    if token.isMultilineStringDelimiter {
+                        // Don't indent multiline string literals
+                        break
+                    }
                     indent += formatter.options.indent
                 }
                 indentStack.append(indent)
@@ -1068,7 +1068,7 @@ public struct _FormatRules {
                             if !isCommentedCode(at: start), formatter.options.indentComments ||
                                 formatter.next(.nonSpace, after: start - 1) != .startOfScope("/*"),
                                 let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
-                                nextToken.isEndOfScope, nextToken != .endOfScope("\"\"\"") {
+                                nextToken.isEndOfScope, !nextToken.isMultilineStringDelimiter {
                                 // Only reduce indent if line begins with a closing scope token
                                 var indent = indentStack.last ?? ""
                                 if [.endOfScope("case"), .endOfScope("default")].contains(token),
@@ -2383,7 +2383,7 @@ public struct _FormatRules {
                         break
                     }
                     fallthrough
-                case .startOfScope("\""), .startOfScope("#if"):
+                case .startOfScope where token.isStringDelimiter, .startOfScope("#if"):
                     scopeStack.append(token)
                 case .startOfScope(":"):
                     lastKeyword = ""

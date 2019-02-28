@@ -118,10 +118,6 @@ swift version is set to 4.1 or above.
 
 Adds a blank line before and after each `MARK:` comment.
 
-Option | Description
---- | ---
-`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
-
 <details>
 <summary>Examples</summary>
 
@@ -225,10 +221,6 @@ Removes leading blank lines from inside braces, brackets, parens or chevrons.
 Adds a blank line before each class, struct, enum, extension, protocol or
 function.
 
-Option | Description
---- | ---
-`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
-
 <details>
 <summary>Examples</summary>
 
@@ -264,7 +256,6 @@ Implements K&R or Allman-style braces.
 Option | Description
 --- | ---
 `--allman` | Use allman indentation style: "true" or "false" (default)
-`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -362,8 +353,6 @@ the same line.
 Option | Description
 --- | ---
 `--elseposition` | Placement of else/catch: "same-line" (default) or "next-line"
-`--allman` | Use allman indentation style: "true" or "false" (default)
-`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -441,7 +430,6 @@ Allows the replacement or removal of Xcode source file comment headers.
 Option | Description
 --- | ---
 `--header` | Header comments: "strip", "ignore", or the text you wish use
-`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 ## hoistPatternLet
 
@@ -483,8 +471,6 @@ Option | Description
 `--indentcase` | Indent cases inside a switch: "true" or "false" (default)
 `--comments` | Indenting of comment bodies: "indent" (default) or "ignore"
 `--ifdef` | #if indenting: "indent" (default), "no-indent" or "outdent"
-`--trimwhitespace` | Trim trailing space: "always" (default) or "nonblank-lines"
-`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -562,10 +548,6 @@ reason, the rule is disabled by default, and must be manually enabled via the
 ## linebreakAtEndOfFile
 
 Ensures that the last line of the file is empty.
-
-Option | Description
---- | ---
-`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 ## linebreaks
 
@@ -1016,7 +998,6 @@ semicolons with a linebreak.
 Option | Description
 --- | ---
 `--semicolons` | Allow semicolons: "never" or "inline" (default)
-`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -1048,7 +1029,6 @@ Rearranges import statements so that they are sorted.
 Option | Description
 --- | ---
 `--importgrouping` | "testable-top", "testable-bottom" or "alphabetized" (default)
-`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>
@@ -1236,10 +1216,6 @@ Removes the space inside `[ ... ]`.
 ## spaceInsideComments
 
 Adds a space inside `/* ... */` comments and at the start of `//` comments.
-
-Option | Description
---- | ---
-`--comments` | Indenting of comment bodies: "indent" (default) or "ignore"
 
 <details>
 <summary>Examples</summary>
@@ -1548,9 +1524,6 @@ Option | Description
 `--wraparguments` | Wrap function args: "before-first", "after-first", "preserve"
 `--wrapcollections` | Wrap array/dict: "before-first", "after-first", "preserve"
 `--closingparen` | Closing paren position: "balanced" (default) or "same-line"
-`--indent` | Number of spaces to indent, or "tab" to use tabs
-`--trimwhitespace` | Trim trailing space: "always" (default) or "nonblank-lines"
-`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 <details>
 <summary>Examples</summary>

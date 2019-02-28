@@ -36,13 +36,16 @@ public final class FormatRule {
     fileprivate(set) var name: String?
     let help: String
     let options: [String]
+    let sharedOptions: [String]
 
     fileprivate init(help: String,
                      options: [String] = [],
+                     sharedOptions: [String] = [],
                      _ fn: @escaping (Formatter) -> Void) {
         self.fn = fn
         self.help = help
         self.options = options
+        self.sharedOptions = sharedOptions
     }
 
     public func apply(with formatter: Formatter) {
@@ -497,7 +500,7 @@ public struct _FormatRules {
     /// carefully preformatted comments, such as star boxes, etc.
     public let spaceInsideComments = FormatRule(
         help: "Adds a space inside `/* ... */` comments and at the start of `//` comments",
-        options: ["comments"]
+        sharedOptions: ["comments"] // TODO: should this rule even use this option?
     ) { formatter in
         guard formatter.options.indentComments else { return }
         formatter.forEach(.startOfScope("//")) { i, _ in
@@ -691,7 +694,7 @@ public struct _FormatRules {
         Adds a blank line before each class, struct, enum, extension, protocol or
         function
         """,
-        options: ["linebreaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         guard formatter.options.insertBlankLines else { return }
         var spaceableScopeStack = [true]
@@ -754,7 +757,7 @@ public struct _FormatRules {
     /// Adds a blank line around MARK: comments
     public let blankLinesAroundMark = FormatRule(
         help: "Adds a blank line before and after each `MARK:` comment",
-        options: ["linebreaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         guard formatter.options.insertBlankLines else { return }
         formatter.forEachToken { i, token in
@@ -778,7 +781,7 @@ public struct _FormatRules {
     /// http://stackoverflow.com/questions/2287967/why-is-it-recommended-to-have-empty-line-in-the-end-of-file
     public let linebreakAtEndOfFile = FormatRule(
         help: "Ensures that the last line of the file is empty",
-        options: ["linebreaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
         var wasLinebreak = true
@@ -802,7 +805,8 @@ public struct _FormatRules {
     /// indenting can be configured with the `options` parameter of the formatter.
     public let indent = FormatRule(
         help: "Adjusts leading whitespace based on scope and line wrapping",
-        options: ["indent", "indentcase", "comments", "ifdef", "trimwhitespace", "linebreaks"]
+        options: ["indent", "indentcase", "comments", "ifdef"],
+        sharedOptions: ["trimwhitespace", "linebreaks"]
     ) { formatter in
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []
@@ -1248,7 +1252,8 @@ public struct _FormatRules {
     // Implement brace-wrapping rules
     public let braces = FormatRule(
         help: "Implements K&R or Allman-style braces",
-        options: ["allman", "linebreaks"]
+        options: ["allman"],
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, token in
             guard var closingBraceIndex = formatter.endOfScope(at: i) else {
@@ -1341,7 +1346,8 @@ public struct _FormatRules {
         Controls whether an `else`, `catch` or `while` keyword after a `}` appears on
         the same line
         """,
-        options: ["elseposition", "allman", "linebreaks"]
+        options: ["elseposition"],
+        sharedOptions: ["allman", "linebreaks"]
     ) { formatter in
         func bracesContainLinebreak(_ endIndex: Int) -> Bool {
             guard let startIndex = formatter.index(of: .startOfScope("{"), before: endIndex) else {
@@ -1476,7 +1482,8 @@ public struct _FormatRules {
         Removes semicolons at the end of lines, and (optionally) replaces inline
         semicolons with a linebreak
         """,
-        options: ["semicolons", "linebreaks"]
+        options: ["semicolons"],
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.delimiter(";")) { i, _ in
             if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
@@ -3027,7 +3034,8 @@ public struct _FormatRules {
     /// Normalize argument wrapping style
     public let wrapArguments = FormatRule(
         help: "Wraps function arguments and collection literals",
-        options: ["wraparguments", "wrapcollections", "closingparen", "indent", "trimwhitespace", "linebreaks"]
+        options: ["wraparguments", "wrapcollections", "closingparen"],
+        sharedOptions: ["indent", "trimwhitespace", "linebreaks"]
     ) { formatter in
         func removeLinebreakBeforeClosingBrace(at closingBraceIndex: inout Int) {
             if var lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
@@ -3357,7 +3365,8 @@ public struct _FormatRules {
     /// Strip header comments from the file
     public let fileHeader = FormatRule(
         help: "Allows the replacement or removal of Xcode source file comment headers",
-        options: ["header", "linebreaks"]
+        options: ["header"],
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
         let header: String
@@ -3461,7 +3470,8 @@ public struct _FormatRules {
     /// Sort import statements
     public let sortedImports = FormatRule(
         help: "Rearranges import statements so that they are sorted",
-        options: ["importgrouping", "linebreaks"]
+        options: ["importgrouping"],
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         func sortRanges(_ ranges: [ImportRange]) -> [ImportRange] {
             if case .alphabetized = formatter.options.importGrouping {

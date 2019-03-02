@@ -554,7 +554,8 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             print("")
         }
         printWarnings(errors)
-        return printResult(dryrun, lint, time, outputFlags)
+        print("swiftformat completed in \(time)", as: .info)
+        return printResult(dryrun, lint, outputFlags)
     } catch {
         if !verbose {
             // Warnings would be redundant at this point
@@ -566,20 +567,19 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
     }
 }
 
-func printResult(_ dryrun: Bool, _ lint: Bool, _ time: String, _ flags: OutputFlags) -> ExitCode {
-    let (written, checked, _, failed) = flags
-    if dryrun {
-        let result = "swiftformat completed. \(failed)/\(checked) files would have been updated in \(time)"
-        if lint, failed > 0 {
-            print(result, as: .error)
-            return .lintFailure
-        } else {
-            print(result, as: .success)
-        }
+func printResult(_ dryrun: Bool, _ lint: Bool, _ flags: OutputFlags) -> ExitCode {
+    let (written, checked, skipped, failed) = flags
+    let ignored = (skipped == 0) ? "" : ", \(skipped) file\(skipped == 1 ? "" : "s") skipped"
+    if checked == 0 {
+        print("0 files formatted\(ignored)", as: .success)
+    } else if lint {
+        print("\(failed)/\(checked) files require formatting\(ignored)", as: failed > 0 ? .error : .success)
+    } else if dryrun {
+        print("\(failed)/\(checked) files would have been formatted\(ignored)", as: .success)
     } else {
-        print("swiftformat completed. \(written)/\(checked) files updated in \(time)", as: .success)
+        print("\(written)/\(checked) files formatted\(ignored)", as: .success)
     }
-    return .ok
+    return lint && failed > 0 ? .lintFailure : .ok
 }
 
 func inferOptions(from inputURLs: [URL], options: FileOptions) -> (Int, FormatOptions, [Error]) {

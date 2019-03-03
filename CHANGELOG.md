@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.39.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.4) (2019-03-03)
+
+- Added support for Swift 5's new raw string syntax
+- Now correctly detects .swiftformat and .swift-version files placed anywhere in the input path
+- The swiftformat command-line tool will no longer fail with an error if all matched files were ignored
+- Fixed bug where `braces` rule failed to correctly apply Allman indenting to `switch`  statements
+- Disabled the `isEmpty` rule again by default (you can enable it using `--enable isEmpty`)
+
 ## [0.39.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.3) (2019-02-15)
 
 - Fixed a bug with `hoistPatternLet` rule for switch cases without a space

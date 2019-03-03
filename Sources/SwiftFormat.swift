@@ -184,11 +184,62 @@ public func enumerateFiles(withInputURL inputURL: URL,
 
     let queue = concurrent ? DispatchQueue.global(qos: .userInitiated) : completionQueue
 
+    func shouldSkipFile(_ inputURL: URL, with options: Options) -> Bool {
+        guard let excludedGlobs = options.fileOptions?.excludedGlobs else {
+            return false
+        }
+        let path = inputURL.path
+        for excluded in excludedGlobs {
+            guard excluded.matches(path) else {
+                continue
+            }
+            if let handler = skipped {
+                do {
+                    onComplete(try handler(inputURL, inputURL, options))
+                } catch {
+                    onComplete { throw error }
+                }
+            }
+            return true
+        }
+        return false
+    }
+
+    func processDirectory(_ inputURL: URL, with options: inout Options) {
+        options.formatOptions?.fileInfo = FileInfo(
+            fileName: resourceValues.name,
+            creationDate: resourceValues.creationDate
+        )
+        let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
+        if manager.fileExists(atPath: configFile.path) {
+            do {
+                let data = try Data(contentsOf: configFile)
+                let args = try parseConfigFile(data)
+                try options.addArguments(args, in: inputURL.path)
+            } catch {
+                onComplete { throw error }
+                return
+            }
+        }
+        let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
+        if manager.fileExists(atPath: versionFile.path) {
+            do {
+                let versionString = try String(contentsOf: versionFile, encoding: .utf8)
+                guard let version = Version(rawValue: versionString) else {
+                    throw FormatError.options("malformed .swift-format file as \(versionFile.path)")
+                }
+                options.formatOptions?.swiftVersion = version
+            } catch {
+                onComplete { throw error }
+                return
+            }
+        }
+    }
+
     func enumerate(inputURL: URL,
                    outputURL: URL?,
                    options: Options) {
         let inputURL = inputURL.standardizedFileURL
-        let fileOptions = options.fileOptions ?? .default
         let resourceValues: ResourceValues
         do {
             resourceValues = try getResourceValues(for: inputURL)
@@ -196,26 +247,10 @@ public func enumerateFiles(withInputURL inputURL: URL,
             onComplete { throw error }
             return
         }
-        let inputPath = inputURL.path
-        func wasSkipped() -> Bool {
-            for excluded in fileOptions.excludedGlobs {
-                guard excluded.matches(inputPath) else {
-                    continue
-                }
-                if let handler = skipped {
-                    do {
-                        onComplete(try handler(inputURL, outputURL ?? inputURL, options))
-                    } catch {
-                        onComplete { throw error }
-                    }
-                }
-                return true
-            }
-            return false
-        }
+        let fileOptions = options.fileOptions ?? .default
         if resourceValues.isRegularFile == true {
             if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
-                if wasSkipped() {
+                if shouldSkipFile(inputURL, with: options) {
                     return
                 }
                 do {
@@ -225,38 +260,11 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 }
             }
         } else if resourceValues.isDirectory == true {
-            if wasSkipped() {
+            if shouldSkipFile(inputURL, with: options) {
                 return
             }
             var options = options
-            options.formatOptions?.fileInfo = FileInfo(
-                fileName: resourceValues.name,
-                creationDate: resourceValues.creationDate
-            )
-            let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
-            if manager.fileExists(atPath: configFile.path) {
-                do {
-                    let data = try Data(contentsOf: configFile)
-                    let args = try parseConfigFile(data)
-                    try options.addArguments(args, in: inputURL.path)
-                } catch {
-                    onComplete { throw error }
-                    return
-                }
-            }
-            let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
-            if manager.fileExists(atPath: versionFile.path) {
-                do {
-                    let versionString = try String(contentsOf: versionFile, encoding: .utf8)
-                    guard let version = Version(rawValue: versionString) else {
-                        throw FormatError.options("malformed .swift-format file as \(versionFile.path)")
-                    }
-                    options.formatOptions?.swiftVersion = version
-                } catch {
-                    onComplete { throw error }
-                    return
-                }
-            }
+            processDirectory(inputURL, with: &options)
             let enumerationOptions: FileManager.DirectoryEnumerationOptions
             #if os(macOS)
                 enumerationOptions = .skipsHiddenFiles
@@ -289,7 +297,16 @@ public func enumerateFiles(withInputURL inputURL: URL,
             onComplete { throw FormatError.options("file not found at \(inputURL.path)") }
             return
         }
-        enumerate(inputURL: inputURL, outputURL: outputURL, options: baseOptions)
+        var options = baseOptions
+        var directory = URL(fileURLWithPath: inputURL.pathComponents[0])
+        for part in inputURL.pathComponents.dropFirst().dropLast() {
+            directory.appendPathComponent(part)
+            if shouldSkipFile(directory, with: options) {
+                return
+            }
+            processDirectory(directory, with: &options)
+        }
+        enumerate(inputURL: inputURL, outputURL: outputURL, options: options)
     }
     group.wait()
 

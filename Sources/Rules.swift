@@ -1243,17 +1243,26 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, token in
             // Check this isn't an inline block
-            guard let closingBraceIndex = formatter.index(of: .endOfScope("}"), after: i),
-                formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil else { return }
-            guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
+            guard var closingBraceIndex = formatter.index(of: .endOfScope, after: i) else {
+                return
+            }
+            while let token = formatter.token(at: closingBraceIndex), token != .endOfScope("}") {
+                closingBraceIndex += 1
+            }
+            guard formatter.token(at: closingBraceIndex) == .endOfScope("}"),
+                formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil,
+                let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 ![.delimiter(","), .keyword("in")].contains(prevToken),
-                !prevToken.is(.startOfScope) else { return }
+                !prevToken.is(.startOfScope) else {
+                return
+            }
             if formatter.options.allmanBraces {
                 // Implement Allman-style braces, where opening brace appears on the next line
                 if let prevTokenIndex = formatter.index(of: .nonSpace, before: i),
                     let prevToken = formatter.token(at: prevTokenIndex) {
                     switch prevToken {
-                    case .identifier, .keyword, .endOfScope, .operator("?", .postfix), .operator("!", .postfix):
+                    case .identifier, .keyword, .endOfScope,
+                         .operator("?", .postfix), .operator("!", .postfix):
                         formatter.insertToken(.linebreak(formatter.options.linebreak), at: i)
                         if let breakIndex = formatter.index(of: .linebreak, after: i + 1),
                             let nextIndex = formatter.index(of: .nonSpace, after: breakIndex, if: { $0.isLinebreak }) {

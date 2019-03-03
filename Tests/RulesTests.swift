@@ -2959,6 +2959,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testAllmanBraceAfterSwitch() {
+        let input = "switch foo {\ncase bar: break\n}"
+        let output = "switch foo\n{\ncase bar: break\n}"
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // MARK: elseOnSameLine
 
     func testElseOnSameLine() {

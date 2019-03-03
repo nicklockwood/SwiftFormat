@@ -361,6 +361,7 @@ public class Formatter: NSObject {
     }
 
     /// Returns the index of the ending token for the current scope
+    // TODO: should this return the closing `}` for `switch { ...` instead of nested `case`?
     public func endOfScope(at index: Int) -> Int? {
         let startIndex: Int
         guard var startToken = token(at: index) else { return nil }
@@ -372,9 +373,9 @@ public class Formatter: NSObject {
         } else {
             return nil
         }
-        return self.index(after: startIndex) {
+        return self.index(after: startIndex, where: {
             $0.isEndOfScope(startToken)
-        }
+        })
     }
 
     /// Returns the index of the first token of the line containing the specified index

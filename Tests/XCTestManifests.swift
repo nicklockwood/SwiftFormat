@@ -280,6 +280,7 @@ extension RulesTests {
         ("testAfterFirstPreservedNewlineRemoved", testAfterFirstPreservedNewlineRemoved),
         ("testAllmanBlankLineAfterBraceRemoved", testAllmanBlankLineAfterBraceRemoved),
         ("testAllmanBraceAfterCommentIndent", testAllmanBraceAfterCommentIndent),
+        ("testAllmanBraceAfterSwitch", testAllmanBraceAfterSwitch),
         ("testAllmanBraceCatchClauseIndent", testAllmanBraceCatchClauseIndent),
         ("testAllmanBraceDoClauseIndent", testAllmanBraceDoClauseIndent),
         ("testAllmanBraceInsideParensNotConverted", testAllmanBraceInsideParensNotConverted),

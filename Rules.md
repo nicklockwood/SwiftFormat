@@ -543,6 +543,8 @@ Replaces `count == 0` checks with `isEmpty`, which is preferred for performance 
 + if foo?.isEmpty == true {
 ```
 
+***NOTE:*** In rare cases, the `isEmpty` rule may insert an `isEmpty` call for a type that doesn't implement that property, breaking the program. For this reason, the rule is disabled by default, and must be manually enabled via the `--enable isEmpty` option.
+
 </details>
 <br/>
 

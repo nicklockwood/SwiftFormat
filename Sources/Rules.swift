@@ -75,7 +75,7 @@ private func allRules(except rules: [String]) -> [FormatRule] {
 
 private let _allRules = allRules(except: [])
 private let _defaultRules = allRules(except: _disabledByDefault)
-private let _disabledByDefault = ["trailingClosures"]
+private let _disabledByDefault = ["trailingClosures", "isEmpty"]
 
 public extension _FormatRules {
     /// A Dictionary of rules by name

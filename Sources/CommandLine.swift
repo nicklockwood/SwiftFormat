@@ -171,6 +171,13 @@ private func serializeOptions(_ options: Options, to outputURL: URL?) throws {
     }
 }
 
+typealias OutputFlags = (
+    filesWritten: Int,
+    filesChecked: Int,
+    filesSkipped: Int,
+    filesFailed: Int
+)
+
 func processArguments(_ args: [String], in directory: String) -> ExitCode {
     var errors = [Error]()
     var verbose = false
@@ -461,27 +468,29 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         printRunningMessage()
 
         // Format the code
-        var filesWritten = 0, filesFailed = 0, filesChecked = 0
+        var outputFlags: OutputFlags = (0, 0, 0, 0)
         let time = formatTime(timeEvent {
-            var _errors = [Error]()
-            (filesWritten, filesFailed, filesChecked, _errors) = processInput(inputURLs,
-                                                                              andWriteToOutput: outputURL,
-                                                                              options: options,
-                                                                              overrides: overrides,
-                                                                              verbose: verbose,
-                                                                              dryrun: dryrun,
-                                                                              cacheURL: cacheURL)
+            var _errors: [Error]
+            (outputFlags, _errors) = processInput(inputURLs,
+                                                  andWriteToOutput: outputURL,
+                                                  options: options,
+                                                  overrides: overrides,
+                                                  verbose: verbose,
+                                                  dryrun: dryrun,
+                                                  cacheURL: cacheURL)
             errors += _errors
         })
 
-        if filesWritten == 0 {
-            if filesChecked == 0 {
+        if outputFlags.filesWritten == 0 {
+            if outputFlags.filesChecked == 0 {
                 if let error = errors.first {
                     errors.removeAll()
                     throw error
                 }
-                let inputPaths = inputURLs.map({ $0.path }).joined(separator: ", ")
-                throw FormatError.options("no eligible files found at \(inputPaths)")
+                if outputFlags.filesSkipped == 0 {
+                    let inputPaths = inputURLs.map { $0.path }.joined(separator: ", ")
+                    throw FormatError.options("no eligible files found at \(inputPaths)")
+                }
             } else if !dryrun, !errors.isEmpty {
                 throw FormatError.options("failed to format any files")
             }
@@ -490,18 +499,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             print("")
         }
         printWarnings(errors)
-        if dryrun {
-            let result = "swiftformat completed. \(filesFailed)/\(filesChecked) files would have been updated in \(time)"
-            if lint, filesFailed > 0 {
-                print(result, as: .error)
-                return .lintFailure
-            } else {
-                print(result, as: .success)
-            }
-        } else {
-            print("swiftformat completed. \(filesWritten)/\(filesChecked) files updated in \(time)", as: .success)
-        }
-        return .ok
+        return printResult(dryrun, lint, time, outputFlags)
     } catch {
         if !verbose {
             // Warnings would be redundant at this point
@@ -511,6 +509,22 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         print("error: \(error)", as: .error)
         return .error
     }
+}
+
+func printResult(_ dryrun: Bool, _ lint: Bool, _ time: String, _ flags: OutputFlags) -> ExitCode {
+    let (written, checked, _, failed) = flags
+    if dryrun {
+        let result = "swiftformat completed. \(failed)/\(checked) files would have been updated in \(time)"
+        if lint, failed > 0 {
+            print(result, as: .error)
+            return .lintFailure
+        } else {
+            print(result, as: .success)
+        }
+    } else {
+        print("swiftformat completed. \(written)/\(checked) files updated in \(time)", as: .success)
+    }
+    return .ok
 }
 
 func inferOptions(from inputURLs: [URL], options: FileOptions) -> (Int, FormatOptions, [Error]) {
@@ -584,7 +598,7 @@ func processInput(_ inputURLs: [URL],
                   overrides: [String: String],
                   verbose: Bool,
                   dryrun: Bool,
-                  cacheURL: URL?) -> (Int, Int, Int, [Error]) {
+                  cacheURL: URL?) -> (OutputFlags, [Error]) {
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
     var cache: [String: String]?
@@ -592,11 +606,14 @@ func processInput(_ inputURLs: [URL],
         cache = NSDictionary(contentsOf: cacheURL) as? [String: String] ?? [:]
     }
     // Logging skipped files
+    var outputFlags: OutputFlags = (0, 0, 0, 0)
     let skippedHandler: FileEnumerationHandler? = verbose ? { inputURL, _, _ in
         print("skipping \(inputURL.path)", as: .info)
         print("-- ignored", as: .warning)
         return {}
-    } : nil
+    } : { _, _, _ in
+        { outputFlags.filesSkipped += 1 }
+    }
     // Swift version
     var warnedAboutSwiftVersion = false
     func warnAboutSwiftVersion(_ options: Options) {
@@ -608,7 +625,6 @@ func processInput(_ inputURLs: [URL],
     }
     // Format files
     var errors = [Error]()
-    var filesChecked = 0, filesFailed = 0, filesWritten = 0
     for inputURL in inputURLs {
         errors += enumerateFiles(withInputURL: inputURL,
                                  outputURL: outputURL,
@@ -673,7 +689,7 @@ func processInput(_ inputURLs: [URL],
                 } else if output == input {
                     // No changes needed
                     return {
-                        filesChecked += 1
+                        outputFlags.filesChecked += 1
                         cache?[cacheKey] = cacheValue
                         warnAboutSwiftVersion(options)
                     }
@@ -681,8 +697,8 @@ func processInput(_ inputURLs: [URL],
                 if dryrun {
                     print("would have updated \(outputURL.path)", as: .info)
                     return {
-                        filesChecked += 1
-                        filesFailed += 1
+                        outputFlags.filesChecked += 1
+                        outputFlags.filesFailed += 1
                         warnAboutSwiftVersion(options)
                     }
                 } else {
@@ -692,9 +708,9 @@ func processInput(_ inputURLs: [URL],
                         }
                         try output.write(to: outputURL, atomically: true, encoding: .utf8)
                         return {
-                            filesChecked += 1
-                            filesFailed += 1
-                            filesWritten += 1
+                            outputFlags.filesChecked += 1
+                            outputFlags.filesFailed += 1
+                            outputFlags.filesWritten += 1
                             cache?[cacheKey] = cacheValue
                             warnAboutSwiftVersion(options)
                         }
@@ -707,7 +723,7 @@ func processInput(_ inputURLs: [URL],
                     print("-- error: \(error)", as: .error)
                 }
                 return {
-                    filesChecked += 1
+                    outputFlags.filesChecked += 1
                     warnAboutSwiftVersion(options)
                     if case let FormatError.parsing(string) = error {
                         throw FormatError.parsing("\(string) in \(inputURL.path)")
@@ -736,7 +752,7 @@ func processInput(_ inputURLs: [URL],
             errors.append(FormatError.writing("\(errorCount) file\(errorCount == 1 ? "" : "s") could not be formatted"))
         }
     }
-    if filesChecked > 0 {
+    if outputFlags.filesChecked > 0 {
         // Save cache
         if let cache = cache, let cacheURL = cacheURL, let cacheDirectory = cacheDirectory {
             if !(cache as NSDictionary).write(to: cacheURL, atomically: true) {
@@ -748,5 +764,5 @@ func processInput(_ inputURLs: [URL],
             }
         }
     }
-    return (filesWritten, filesFailed, filesChecked, errors)
+    return (outputFlags, errors)
 }

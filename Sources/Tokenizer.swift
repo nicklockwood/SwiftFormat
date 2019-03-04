@@ -1031,39 +1031,24 @@ public func tokenize(_ source: String) -> [Token] {
         let hashes = String(repeating: "#", count: hashCount)
         while let c = characters.popFirst() {
             switch c {
-            case "\\":
-                if !escaped {
-                    if characters.readString(hashes) {
-                        escaped = true
-                        string.append("\\" + hashes)
-                        continue
-                    }
-                } else {
-                    escaped = false
+            case "\\" where !escaped && characters.readString(hashes):
+                escaped = true
+                string.append("\\" + hashes)
+                continue
+            case "\"" where !escaped && characters.readString(hashes):
+                if string != "" {
+                    tokens.append(.stringBody(string))
                 }
-            case "\"":
-                if !escaped {
-                    guard characters.readString(hashes) else {
-                        break
-                    }
-                    if string != "" {
-                        tokens.append(.stringBody(string))
-                    }
-                    tokens.append(.endOfScope("\"" + hashes))
-                    scopeIndexStack.removeLast()
-                    return
+                tokens.append(.endOfScope("\"" + hashes))
+                scopeIndexStack.removeLast()
+                return
+            case "(" where escaped:
+                if string != "" {
+                    tokens.append(.stringBody(string))
                 }
-                escaped = false
-            case "(":
-                if escaped {
-                    if string != "" {
-                        tokens.append(.stringBody(string))
-                    }
-                    scopeIndexStack.append(tokens.count)
-                    tokens.append(.startOfScope("("))
-                    return
-                }
-                escaped = false
+                scopeIndexStack.append(tokens.count)
+                tokens.append(.startOfScope("("))
+                return
             default:
                 escaped = false
             }
@@ -1080,21 +1065,11 @@ public func tokenize(_ source: String) -> [Token] {
         let hashes = String(repeating: "#", count: hashCount)
         while let c = characters.popFirst() {
             switch c {
-            case "\\":
-                if !escaped {
-                    if characters.readString(hashes) {
-                        escaped = true
-                        string.append("\\" + hashes)
-                        continue
-                    }
-                } else {
-                    escaped = false
-                }
-            case "\"":
-                guard characters.readString("\"\"" + hashes) else {
-                    escaped = false
-                    break
-                }
+            case "\\" where !escaped && characters.readString(hashes):
+                escaped = true
+                string.append("\\" + hashes)
+                continue
+            case "\"" where characters.readString("\"\"" + hashes):
                 if !string.isEmpty {
                     tokens.append(.error(string)) // Not permitted by the spec
                 }
@@ -1125,16 +1100,13 @@ public func tokenize(_ source: String) -> [Token] {
                 tokens.append(.endOfScope("\"\"\"" + hashes))
                 scopeIndexStack.removeLast()
                 return
-            case "(":
-                if escaped {
-                    if string != "" {
-                        tokens.append(.stringBody(string))
-                    }
-                    scopeIndexStack.append(tokens.count)
-                    tokens.append(.startOfScope("("))
-                    return
+            case "(" where escaped:
+                if string != "" {
+                    tokens.append(.stringBody(string))
                 }
-                escaped = false
+                scopeIndexStack.append(tokens.count)
+                tokens.append(.startOfScope("("))
+                return
             case "\r", "\n":
                 if string != "" {
                     tokens.append(.stringBody(string))
@@ -1175,35 +1147,46 @@ public func tokenize(_ source: String) -> [Token] {
     }
 
     func processCommentBody() {
+        while let c = characters.readCharacter(where: { !"\r\n".unicodeScalars.contains($0) }) {
+            if c.isSpace {
+                space.append(Character(c))
+                continue
+            }
+            if space != "" {
+                if comment == "" {
+                    tokens.append(.space(space))
+                } else {
+                    comment += space
+                }
+                space = ""
+            }
+            comment.append(Character(c))
+        }
+        flushCommentBodyTokens()
+    }
+
+    func processMultilineCommentBody() {
         while let c = characters.popFirst() {
             switch c {
-            case "/":
-                if characters.read("*") {
-                    flushCommentBodyTokens()
-                    scopeIndexStack.append(tokens.count)
-                    tokens.append(.startOfScope("/*"))
-                    continue
-                }
-            case "*":
-                if characters.read("/") {
-                    flushCommentBodyTokens()
-                    tokens.append(.endOfScope("*/"))
-                    scopeIndexStack.removeLast()
-                    if scopeIndexStack.last == nil || tokens[scopeIndexStack.last!] != .startOfScope("/*") {
-                        return
-                    }
-                    continue
-                }
-            case "\n":
+            case "/" where characters.read("*"):
                 flushCommentBodyTokens()
-                tokens.append(.linebreak("\n"))
+                scopeIndexStack.append(tokens.count)
+                tokens.append(.startOfScope("/*"))
                 continue
-            case "\r":
+            case "*" where characters.read("/"):
                 flushCommentBodyTokens()
-                if characters.read("\n") {
+                tokens.append(.endOfScope("*/"))
+                scopeIndexStack.removeLast()
+                if scopeIndexStack.last == nil || tokens[scopeIndexStack.last!] != .startOfScope("/*") {
+                    return
+                }
+                continue
+            case "\n", "\r":
+                flushCommentBodyTokens()
+                if c == "\r", characters.read("\n") {
                     tokens.append(.linebreak("\r\n"))
                 } else {
-                    tokens.append(.linebreak("\r"))
+                    tokens.append(.linebreak(String(c)))
                 }
                 continue
             default:
@@ -1223,25 +1206,6 @@ public func tokenize(_ source: String) -> [Token] {
             comment.append(Character(c))
         }
         // We shouldn't actually get here, unless code is malformed
-        flushCommentBodyTokens()
-    }
-
-    func processSingleLineCommentBody() {
-        while let c = characters.readCharacter(where: { !"\r\n".unicodeScalars.contains($0) }) {
-            if c.isSpace {
-                space.append(Character(c))
-                continue
-            }
-            if space != "" {
-                if comment == "" {
-                    tokens.append(.space(space))
-                } else {
-                    comment += space
-                }
-                space = ""
-            }
-            comment.append(Character(c))
-        }
         flushCommentBodyTokens()
     }
 
@@ -1614,9 +1578,9 @@ public func tokenize(_ source: String) -> [Token] {
             scopeIndexStack.append(tokens.count - 1)
             switch string {
             case "/*":
-                processCommentBody()
+                processMultilineCommentBody()
             case "//":
-                processSingleLineCommentBody()
+                processCommentBody()
             default:
                 if let delimiterType = token.stringDelimiterType {
                     if delimiterType.isMultiline {
@@ -1648,7 +1612,7 @@ public func tokenize(_ source: String) -> [Token] {
     if source.hasPrefix("#!") {
         characters.removeFirst(2)
         tokens.append(.startOfScope("#!"))
-        processSingleLineCommentBody()
+        processCommentBody()
     }
 
     // Parse tokens

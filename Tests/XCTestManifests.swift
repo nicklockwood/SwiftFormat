@@ -58,8 +58,8 @@ extension ArgumentsTests {
 
 extension CommandLineTests {
     static let __allTests = [
-        ("testAllOptionsInReadme", testAllOptionsInReadme),
-        ("testAllRulesInReadme", testAllRulesInReadme),
+        ("testAllOptionsInRulesFile", testAllOptionsInRulesFile),
+        ("testAllRulesInRulesFile", testAllRulesInRulesFile),
         ("testCacheHit", testCacheHit),
         ("testCacheMiss", testCacheMiss),
         ("testCachePotentialFalsePositive2", testCachePotentialFalsePositive2),
@@ -70,8 +70,8 @@ extension CommandLineTests {
         ("testHelpOptionsDocumented", testHelpOptionsDocumented),
         ("testHelpOptionsImplemented", testHelpOptionsImplemented),
         ("testLinuxTestSuiteIncludesAllTests", testLinuxTestSuiteIncludesAllTests),
-        ("testNoInvalidOptionsInReadme", testNoInvalidOptionsInReadme),
-        ("testNoInvalidRulesInReadme", testNoInvalidRulesInReadme),
+        ("testNoInvalidOptionsInRulesFile", testNoInvalidOptionsInRulesFile),
+        ("testNoInvalidRulesInRulesFile", testNoInvalidRulesInRulesFile),
         ("testPipe", testPipe),
         ("testQuietModeAllowsContent", testQuietModeAllowsContent),
         ("testQuietModeAllowsErrors", testQuietModeAllowsErrors),

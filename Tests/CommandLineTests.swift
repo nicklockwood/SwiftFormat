@@ -115,13 +115,13 @@ class CommandLineTests: XCTestCase {
 
     // MARK: documentation
 
-    func testAllRulesInReadme() {
+    func testAllRulesInRulesFile() {
         for ruleName in FormatRules.byName.keys {
             XCTAssertTrue(rulesFile.contains("## \(ruleName)"), ruleName)
         }
     }
 
-    func testNoInvalidRulesInReadme() {
+    func testNoInvalidRulesInRulesFile() {
         let ruleNames = Set(FormatRules.byName.keys)
         var range = rulesFile.startIndex ..< rulesFile.endIndex
         while let match = rulesFile.range(of: "\\*[a-zA-Z]+\\* - ", options: .regularExpression, range: range, locale: nil) {
@@ -133,14 +133,14 @@ class CommandLineTests: XCTestCase {
         }
     }
 
-    func testAllOptionsInReadme() {
+    func testAllOptionsInRulesFile() {
         let arguments = Set(formattingArguments).subtracting(deprecatedArguments)
         for argument in arguments {
             XCTAssertTrue(rulesFile.contains("`--\(argument)`") || rulesFile.contains("`--\(argument) "), argument)
         }
     }
 
-    func testNoInvalidOptionsInReadme() {
+    func testNoInvalidOptionsInRulesFile() {
         let arguments = Set(commandLineArguments).subtracting(deprecatedArguments)
         var range = rulesFile.startIndex ..< rulesFile.endIndex
         while let match = rulesFile.range(of: "`--[a-zA-Z]+[` ]", options: .regularExpression, range: range, locale: nil) {

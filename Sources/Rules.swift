@@ -838,129 +838,6 @@ public struct _FormatRules {
         var linewrapStack = [false]
         var lineIndex = 0
 
-        func tokenIsEndOfStatement(_ i: Int) -> Bool {
-            guard let token = formatter.token(at: i) else { return true }
-            switch token {
-            case .endOfScope("case"), .endOfScope("default"):
-                return false
-            case let .keyword(string):
-                // TODO: handle in
-                // TODO: handle context-specific keywords
-                // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
-                // lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
-                // precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
-                switch string {
-                case "let", "func", "var", "if", "as", "import", "try", "guard", "case",
-                     "for", "init", "switch", "throw", "where", "subscript", "is",
-                     "while", "associatedtype", "inout":
-                    return false
-                case "return":
-                    guard let nextToken =
-                        formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)
-                    else { return true }
-                    switch nextToken {
-                    case .keyword, .endOfScope("case"), .endOfScope("default"):
-                        return true
-                    default:
-                        return false
-                    }
-                default:
-                    return true
-                }
-            case .delimiter(","):
-                // For arrays or argument lists, we already indent
-                return ["<", "[", "(", "case", "default"].contains(scopeStack.last?.string ?? "")
-            case .delimiter(":"):
-                // For arrays or argument lists, we already indent
-                return ["case", "default", "("].contains(scopeStack.last?.string ?? "")
-            case .operator(_, .infix), .operator(_, .prefix):
-                return false
-            case .operator("?", .postfix), .operator("!", .postfix):
-                if let prevToken = formatter.token(at: i - 1) {
-                    switch prevToken {
-                    case .keyword("as"), .keyword("try"):
-                        return false
-                    default:
-                        return true
-                    }
-                }
-                return true
-            default:
-                return true
-            }
-        }
-
-        func tokenIsStartOfStatement(_ i: Int) -> Bool {
-            guard let token = formatter.token(at: i) else { return true }
-            switch token {
-            case let .keyword(string) where [ // TODO: handle "in"
-                "where", "dynamicType", "rethrows", "throws",
-            ].contains(string):
-                return false
-            case .keyword("as"), .keyword("in"):
-                // For case statements, we already indent
-                return scopeStack.last?.string == "case"
-            case .delimiter(","):
-                if let scope = scopeStack.last?.string, ["<", "[", "(", "case"].contains(scope) {
-                    // For arrays, dictionaries, cases, or argument lists, we already indent
-                    return true
-                }
-                return false
-            case .delimiter(":"), .delimiter("->"), .operator(_, .infix), .operator(_, .postfix):
-                return false
-            default:
-                return true
-            }
-        }
-
-        func tokenIsStartOfClosure(_ i: Int) -> Bool {
-            var i = i - 1
-            var nextTokenIndex = i
-            var foundEquals = false
-            while let token = formatter.token(at: i) {
-                let prevTokenIndex = formatter.index(before: i, where: {
-                    !$0.isSpaceOrComment && (!$0.isEndOfScope || $0 == .endOfScope("}"))
-                }) ?? -1
-                switch token {
-                case let .keyword(string):
-                    switch string {
-                    case "var":
-                        if !foundEquals {
-                            fallthrough
-                        }
-                    case "class", "struct", "enum", "protocol", "func":
-                        return formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .keyword("import")
-                    case "extension", "init", "subscript",
-                         "if", "switch", "guard", "else",
-                         "for", "while", "repeat",
-                         "do", "catch":
-                        return false
-                    default:
-                        break
-                    }
-                case .operator("=", _):
-                    foundEquals = true
-                case .startOfScope:
-                    return true
-                case .linebreak:
-                    var prevTokenIndex = prevTokenIndex
-                    if formatter.token(at: prevTokenIndex)?.isLinebreak == true {
-                        prevTokenIndex = formatter.index(before: prevTokenIndex, where: {
-                            !$0.isSpaceOrCommentOrLinebreak && (!$0.isEndOfScope || $0 == .endOfScope("}"))
-                        }) ?? -1
-                    }
-                    if tokenIsEndOfStatement(prevTokenIndex), tokenIsStartOfStatement(nextTokenIndex) {
-                        return true
-                    }
-                default:
-                    break
-                }
-                nextTokenIndex = i
-                i = prevTokenIndex
-            }
-            return true
-        }
-
         func isCommentedCode(at index: Int) -> Bool {
             if !scopeStack.isEmpty, formatter.token(at: index - 1)?.isSpace != true {
                 switch formatter.token(at: index + 1) {
@@ -983,7 +860,6 @@ public struct _FormatRules {
             formatter.insertSpace("", at: 0)
         }
         formatter.forEachToken { i, token in
-
             func popScope() {
                 if linewrapStack.last == true {
                     indentStack.removeLast()
@@ -999,17 +875,11 @@ public struct _FormatRules {
             switch token {
             case let .startOfScope(string):
                 switch string {
-                case ":":
-                    if scopeStack.last == .endOfScope("case") {
-                        popScope()
-                    }
-                case "{":
-                    if !tokenIsStartOfClosure(i) {
-                        if linewrapStack.last == true {
-                            indentStack.removeLast()
-                            linewrapStack[linewrapStack.count - 1] = false
-                        }
-                    }
+                case ":" where scopeStack.last == .endOfScope("case"):
+                    popScope()
+                case "{" where !formatter.isStartOfClosure(at: i) && linewrapStack.last == true:
+                    indentStack.removeLast()
+                    linewrapStack[linewrapStack.count - 1] = false
                 default:
                     break
                 }
@@ -1189,8 +1059,11 @@ public struct _FormatRules {
                 if token.isLinebreak {
                     // Detect linewrap
                     let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
-                    let linewrapped = !tokenIsEndOfStatement(lastNonSpaceOrLinebreakIndex) ||
-                        !(nextTokenIndex == nil || tokenIsStartOfStatement(nextTokenIndex!))
+                    let linewrapped = !formatter.isEndOfStatement(
+                        at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last
+                    ) || !(nextTokenIndex == nil || formatter.isStartOfStatement(
+                        at: nextTokenIndex!, in: scopeStack.last
+                    ))
                     // Determine current indent
                     var indent = indentStack.last ?? ""
                     if linewrapped, lineIndex == scopeStartLineIndexes.last {
@@ -4028,6 +3901,145 @@ public struct _FormatRules {
             }
         }
     }
+
+    /// Reorders "yoda conditions" where constant is placed on lhs of a comparision
+    public let yodaConditions = FormatRule(
+        help: """
+        Reorders so-called "yoda conditions" where a constant is placed on the
+        left-hand-side of a comparision instead of the right.
+        """
+    ) { formatter in
+        let comparisonOperators = ["==", "!=", "<", "<=", ">", ">="].map {
+            Token.operator($0, .infix)
+        }
+        func valuesInRangeAreConstant(_ range: CountableRange<Int>) -> Bool {
+            var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: range)
+            while var i = index {
+                switch formatter.tokens[i] {
+                case .startOfScope("[") where isConstant(at: i):
+                    guard let endIndex = formatter.index(of: .endOfScope("]"), after: i) else {
+                        return false
+                    }
+                    i = endIndex
+                    fallthrough
+                case _ where isConstant(at: i), .delimiter(","), .delimiter(":"):
+                    index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: i + 1 ..< range.upperBound)
+                default:
+                    return false
+                }
+            }
+            return true
+        }
+        func isConstant(at index: Int) -> Bool {
+            let token = formatter.tokens[index]
+            switch token {
+            case .number, .identifier("true"), .identifier("false"), .identifier("nil"):
+                return true
+            case .endOfScope("]"):
+                guard let startIndex = formatter.index(of: .startOfScope("["), before: index) else {
+                    return false
+                }
+                return valuesInRangeAreConstant(startIndex + 1 ..< index)
+            case .startOfScope("["):
+                guard let endIndex = formatter.index(of: .endOfScope("]"), after: index) else {
+                    return false
+                }
+                return valuesInRangeAreConstant(index + 1 ..< endIndex)
+            case .startOfScope, .endOfScope:
+                // TODO: what if string contains interpolation?
+                return token.isStringDelimiter
+            default:
+                return false
+            }
+        }
+        func isOperator(at index: Int?) -> Bool {
+            guard let index = index else {
+                return false
+            }
+            switch formatter.tokens[index] {
+            case .operator("=", .infix):
+                return false
+            case .operator, .keyword("as"), .keyword("is"):
+                return true
+            default:
+                return false
+            }
+        }
+        func startOfValue(at index: Int) -> Int? {
+            let token = formatter.tokens[index]
+            switch token {
+            case .endOfScope:
+                return formatter.index(of: .startOfScope, before: index)
+            default:
+                return index
+            }
+        }
+        func endOfExpression(at index: Int) -> Int? {
+            var lastIndex = index
+            var index: Int? = index
+            var wasOperator = true
+            while var i = index {
+                let token = formatter.tokens[i]
+                switch token {
+                case .operator(_, .infix):
+                    wasOperator = true
+                case .operator(_, .prefix) where wasOperator, .operator(_, .postfix):
+                    break
+                case .keyword("as"):
+                    wasOperator = true
+                    if case let .operator(name, .postfix)? = formatter.token(at: i + 1),
+                        ["?", "!"].contains(name) {
+                        i += 1
+                    }
+                case .number, .identifier:
+                    guard wasOperator else {
+                        return lastIndex
+                    }
+                    wasOperator = false
+                case .startOfScope where token.isStringDelimiter && wasOperator,
+                     .startOfScope("{") where formatter.isStartOfClosure(at: i),
+                     .startOfScope("("):
+                    wasOperator = false
+                    guard let endIndex = formatter.endOfScope(at: i) else {
+                        return nil
+                    }
+                    i = endIndex
+                default:
+                    return lastIndex
+                }
+                lastIndex = i
+                index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+            }
+            return lastIndex
+        }
+        formatter.forEachToken(where: { comparisonOperators.contains($0) }) { i, token in
+            guard let prevIndex = formatter.index(of: .nonSpace, before: i),
+                isConstant(at: prevIndex), (formatter.token(at: prevIndex - 1)?.isOperator != true) &&
+                !isOperator(at: formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex)),
+                let nextIndex = formatter.index(of: .nonSpace, after: i),
+                !isConstant(at: nextIndex) || (formatter.token(at: nextIndex + 1)?.isOperator != true) ||
+                !isOperator(at: formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex)) else {
+                return
+            }
+            let op: String
+            switch token.string {
+            case ">": op = "<"
+            case ">=": op = "<="
+            case "<": op = ">"
+            case "<=": op = ">="
+            case let _op: op = _op
+            }
+            guard let startIndex = startOfValue(at: prevIndex),
+                let endIndex = endOfExpression(at: nextIndex) else {
+                return
+            }
+            let expression = Array(formatter.tokens[nextIndex ... endIndex])
+            let constant = Array(formatter.tokens[startIndex ... prevIndex])
+            formatter.replaceTokens(inRange: nextIndex ... endIndex, with: constant)
+            formatter.replaceToken(at: i, with: .operator(op, .infix))
+            formatter.replaceTokens(inRange: startIndex ... prevIndex, with: expression)
+        }
+    }
 }
 
 // MARK: shared helper methods
@@ -4129,6 +4141,129 @@ private extension Formatter {
                 break
             }
             index += 1
+        }
+    }
+
+    func isStartOfClosure(at i: Int) -> Bool {
+        assert(tokens[i] == .startOfScope("{"))
+        var i = i - 1
+        var nextTokenIndex = i
+        var foundEquals = false
+        while let token = self.token(at: i) {
+            let prevTokenIndex = index(before: i, where: {
+                !$0.isSpaceOrComment && (!$0.isEndOfScope || $0 == .endOfScope("}"))
+            }) ?? -1
+            switch token {
+            case let .keyword(string):
+                switch string {
+                case "var":
+                    if !foundEquals {
+                        fallthrough
+                    }
+                case "class", "struct", "enum", "protocol", "func":
+                    return last(.nonSpaceOrCommentOrLinebreak, before: i) == .keyword("import")
+                case "extension", "init", "subscript",
+                     "if", "switch", "guard", "else",
+                     "for", "while", "repeat",
+                     "do", "catch":
+                    return false
+                default:
+                    break
+                }
+            case .operator("=", _):
+                foundEquals = true
+            case .startOfScope:
+                return true
+            case .linebreak:
+                var prevTokenIndex = prevTokenIndex
+                if self.token(at: prevTokenIndex)?.isLinebreak == true {
+                    prevTokenIndex = index(before: prevTokenIndex, where: {
+                        !$0.isSpaceOrCommentOrLinebreak && (!$0.isEndOfScope || $0 == .endOfScope("}"))
+                    }) ?? -1
+                }
+                let scope = currentScope(at: i)
+                if isEndOfStatement(at: prevTokenIndex, in: scope),
+                    isStartOfStatement(at: nextTokenIndex, in: scope) {
+                    return true
+                }
+            default:
+                break
+            }
+            nextTokenIndex = i
+            i = prevTokenIndex
+        }
+        return true
+    }
+
+    func isEndOfStatement(at i: Int, in scope: Token?) -> Bool {
+        guard let token = self.token(at: i) else { return true }
+        switch token {
+        case .endOfScope("case"), .endOfScope("default"):
+            return false
+        case let .keyword(string):
+            // TODO: handle in
+            // TODO: handle context-specific keywords
+            // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
+            // lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
+            // precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
+            switch string {
+            case "let", "func", "var", "if", "as", "import", "try", "guard", "case",
+                 "for", "init", "switch", "throw", "where", "subscript", "is",
+                 "while", "associatedtype", "inout":
+                return false
+            case "return":
+                guard let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: i) else {
+                    return true
+                }
+                switch nextToken {
+                case .keyword, .endOfScope("case"), .endOfScope("default"):
+                    return true
+                default:
+                    return false
+                }
+            default:
+                return true
+            }
+        case .delimiter(","):
+            // For arrays or argument lists, we already indent
+            return ["<", "[", "(", "case", "default"].contains(scope?.string ?? "")
+        case .delimiter(":"):
+            // For arrays or argument lists, we already indent
+            return ["case", "default", "("].contains(scope?.string ?? "")
+        case .operator(_, .infix), .operator(_, .prefix):
+            return false
+        case .operator("?", .postfix), .operator("!", .postfix):
+            switch self.token(at: i - 1) {
+            case .keyword("as")?, .keyword("try")?:
+                return false
+            default:
+                return true
+            }
+        default:
+            return true
+        }
+    }
+
+    func isStartOfStatement(at i: Int, in scope: Token?) -> Bool {
+        guard let token = self.token(at: i) else { return true }
+        switch token {
+        case let .keyword(string) where [ // TODO: handle "in"
+            "where", "dynamicType", "rethrows", "throws",
+        ].contains(string):
+            return false
+        case .keyword("as"), .keyword("in"):
+            // For case statements, we already indent
+            return currentScope(at: i)?.string == "case"
+        case .delimiter(","):
+            if ["<", "[", "(", "case"].contains(scope?.string ?? "") {
+                // For arrays, dictionaries, cases, or argument lists, we already indent
+                return true
+            }
+            return false
+        case .delimiter(":"), .delimiter("->"), .operator(_, .infix), .operator(_, .postfix):
+            return false
+        default:
+            return true
         }
     }
 }

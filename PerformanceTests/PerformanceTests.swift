@@ -32,18 +32,25 @@
 import SwiftFormat
 import XCTest
 
-class PerformanceTests: XCTestCase {
-    static let sourceDirectory = URL(fileURLWithPath: #file)
-        .deletingLastPathComponent().deletingLastPathComponent()
+private let sourceDirectory = URL(fileURLWithPath: #file)
+    .deletingLastPathComponent().deletingLastPathComponent()
+    .appendingPathComponent("Sources")
 
+private let rulesFile = "Rules.swift"
+
+class PerformanceTests: XCTestCase {
     static let files: [String] = {
         var files = [String]()
-        _ = enumerateFiles(withInputURL: sourceDirectory) { url, _, _ in
-            {
-                if let source = try? String(contentsOf: url) {
-                    files.append(source)
-                }
-            }
+//        _ = enumerateFiles(withInputURL: projectDirectory) { url, _, _ in
+//            {
+//                if let source = try? String(contentsOf: url) {
+//                    files.append(source)
+//                }
+//            }
+//        }
+        let url = sourceDirectory.appendingPathComponent(rulesFile)
+        if let source = try? String(contentsOf: url) {
+            files.append(source)
         }
         return files
     }()
@@ -59,28 +66,28 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    // TODO: standard deviation is outside valid range - investigate why
-//    func testFormatting() {
-//        let files = PerformanceTests.files
-//        let tokens = files.map { tokenize($0) }
-//        measure {
-//            _ = tokens.map { try! format($0) }
-//        }
-//    }
+    func testFormatting() {
+        let files = PerformanceTests.files
+        let tokens = files.map { tokenize($0) }
+        measure {
+            _ = tokens.map { try! format($0) }
+        }
+    }
 
-    // TODO: for some reason `CLI` isn't found when building locally - investigate why
 //    func testUncachedFormatting() {
 //        CLI.print = { _, _ in }
 //        measure {
-//            XCTAssertEqual(CLI.run(in: PerformanceTests.sourceDirectory.path, with: ". --cache ignore"), .ok)
+//            XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "\(rulesFile) --cache ignore --dryrun"), .ok)
 //        }
 //    }
 //
+//    // Not possible to run in dry mode because it won't werite to cache
+//    // TODO: find a better way to test this
 //    func testCachedFormatting() {
 //        CLI.print = { _, _ in }
-//        _ = CLI.run(in: PerformanceTests.sourceDirectory.path, with: ".") // warm the cache
+//        _ = CLI.run(in: sourceDirectory.path, with: rulesFile) // warm the cache
 //        measure {
-//            XCTAssertEqual(CLI.run(in: PerformanceTests.sourceDirectory.path, with: "."), .ok)
+//            XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "\(rulesFile) --dryrun"), .ok)
 //        }
 //    }
 

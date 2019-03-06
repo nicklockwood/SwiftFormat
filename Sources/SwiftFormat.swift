@@ -206,6 +206,9 @@ public func enumerateFiles(withInputURL inputURL: URL,
     }
 
     func processDirectory(_ inputURL: URL, with options: inout Options) {
+        if options.formatOptions == nil {
+            options.formatOptions = .default
+        }
         options.formatOptions?.fileInfo = FileInfo(
             fileName: resourceValues.name,
             creationDate: resourceValues.creationDate
@@ -226,8 +229,9 @@ public func enumerateFiles(withInputURL inputURL: URL,
             do {
                 let versionString = try String(contentsOf: versionFile, encoding: .utf8)
                 guard let version = Version(rawValue: versionString) else {
-                    throw FormatError.options("malformed .swift-version file at \(versionFile.path)")
+                    throw FormatError.options("malformed \(swiftVersionFile) file at \(versionFile.path)")
                 }
+                assert(options.formatOptions != nil)
                 options.formatOptions?.swiftVersion = version
             } catch {
                 onComplete { throw error }

@@ -42,9 +42,21 @@ class VersionTests: XCTestCase {
         XCTAssertEqual(version, "3.1.5")
     }
 
+    func testParsePreviewVersion() throws {
+        let version = Version(rawValue: "3.0-PREVIEW-4")
+        XCTAssertNotNil(version)
+        XCTAssertEqual(version, "3.0-PREVIEW-4")
+    }
+
     func testComparison() throws {
         let version = Version(rawValue: "3.1.5")
         XCTAssertLessThan(version ?? "0", "3.2")
         XCTAssertGreaterThan(version ?? "0", "3.1.4")
+    }
+
+    func testPreviewComparison() throws {
+        let version = Version(rawValue: "3.0-PREVIEW-4")
+        XCTAssertLessThan(version ?? "0", "4.0")
+        XCTAssertGreaterThan(version ?? "0", "2.0")
     }
 }

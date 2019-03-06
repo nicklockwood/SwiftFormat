@@ -1582,7 +1582,9 @@ extension VersionTests {
         ("testParseEmptyVersion", testParseEmptyVersion),
         ("testParseOrdinaryVersion", testParseOrdinaryVersion),
         ("testParsePaddedVersion", testParsePaddedVersion),
+        ("testParsePreviewVersion", testParsePreviewVersion),
         ("testParseThreePartVersion", testParseThreePartVersion),
+        ("testPreviewComparison", testPreviewComparison),
     ]
 }
 

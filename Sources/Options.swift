@@ -93,7 +93,9 @@ public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral 
 
     public init?(rawValue: String) {
         let rawValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !rawValue.components(separatedBy: ".").contains(where: { Double($0) == nil }) else {
+        guard !rawValue.components(separatedBy: ".").contains(where: {
+            !CharacterSet.decimalDigits.contains($0.unicodeScalars.first ?? " ")
+        }) else {
             return nil
         }
         self.rawValue = rawValue

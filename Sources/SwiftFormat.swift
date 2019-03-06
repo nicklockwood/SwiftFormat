@@ -226,7 +226,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
             do {
                 let versionString = try String(contentsOf: versionFile, encoding: .utf8)
                 guard let version = Version(rawValue: versionString) else {
-                    throw FormatError.options("malformed .swift-format file as \(versionFile.path)")
+                    throw FormatError.options("malformed .swift-version file at \(versionFile.path)")
                 }
                 options.formatOptions?.swiftVersion = version
             } catch {

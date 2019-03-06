@@ -460,7 +460,7 @@ public struct _FormatRules {
 
     /// Add space around comments, except at the start or end of a line
     public let spaceAroundComments = FormatRule(
-        help: "Adds space around `/* ... */` comments and before `//` comments, depending on the `--comments` option (`indent` (default) or `ignore`)"
+        help: "Adds space around `/* ... */` comments and before `//` comments"
     ) { formatter in
         formatter.forEach(.startOfScope("//")) { i, _ in
             if let prevToken = formatter.token(at: i - 1), !prevToken.isSpaceOrLinebreak {

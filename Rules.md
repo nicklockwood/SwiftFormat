@@ -1092,7 +1092,7 @@ Contextually adjusts the space around `[ ... ]`.
 
 ## spaceAroundComments
 
-Adds space around `/* ... */` comments and before `//` comments, depending on the `--comments` option (`indent` (default) or `ignore`).
+Adds space around `/* ... */` comments and before `//` comments.
 
 <details>
 <summary>Examples</summary>

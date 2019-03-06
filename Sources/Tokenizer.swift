@@ -1175,6 +1175,27 @@ public func tokenize(_ source: String) -> [Token] {
                 continue
             case "*" where characters.read("/"):
                 flushCommentBodyTokens()
+                // Fix up indents
+                var baseIndent = ""
+                for index in scopeIndexStack.last! ..< tokens.count - 1 {
+                    if case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak,
+                        tokens.count > index, case .commentBody = tokens[index + 1],
+                        baseIndent.isEmpty || indent.count < baseIndent.count {
+                        baseIndent = indent
+                    }
+                }
+                for index in (scopeIndexStack.last! ..< tokens.count - 1).reversed() {
+                    if case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak,
+                        tokens.count > index, case let .commentBody(body) = tokens[index + 1],
+                        indent.hasPrefix(baseIndent) {
+                        tokens[index + 1] = .commentBody(indent.dropFirst(baseIndent.count) + body)
+                        if baseIndent.isEmpty {
+                            tokens.remove(at: index)
+                        } else {
+                            tokens[index] = .space(baseIndent)
+                        }
+                    }
+                }
                 tokens.append(.endOfScope("*/"))
                 scopeIndexStack.removeLast()
                 if scopeIndexStack.last == nil || tokens[scopeIndexStack.last!] != .startOfScope("/*") {

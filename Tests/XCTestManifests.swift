@@ -170,7 +170,6 @@ extension InferenceTests {
         ("testInferIgnoreHexGrouping", testInferIgnoreHexGrouping),
         ("testInferIgnoreOctalGrouping", testInferIgnoreOctalGrouping),
         ("testInferIndentCase", testInferIndentCase),
-        ("testInferIndentComments", testInferIndentComments),
         ("testInferIndentedIfdefOutdent", testInferIndentedIfdefOutdent),
         ("testInferIndentLevel", testInferIndentLevel),
         ("testInferIndentWithComment", testInferIndentWithComment),
@@ -1491,6 +1490,7 @@ extension TokenizerTests {
         ("testOptionalGenericType", testOptionalGenericType),
         ("testPositiveExponential", testPositiveExponential),
         ("testPrefixMinusBeforeMember", testPrefixMinusBeforeMember),
+        ("testPreformattedMultilineComment", testPreformattedMultilineComment),
         ("testQuestionMarkEqualOperator", testQuestionMarkEqualOperator),
         ("testRawStringContainingHashedEscapeSequence", testRawStringContainingHashedEscapeSequence),
         ("testRawStringContainingHashedInterpolation", testRawStringContainingHashedInterpolation),
@@ -1587,19 +1587,19 @@ extension VersionTests {
 }
 
 #if !os(macOS)
-    public func __allTests() -> [XCTestCaseEntry] {
-        return [
-            testCase(ArgumentsTests.__allTests),
-            testCase(CommandLineTests.__allTests),
-            testCase(EnumAssociableTests.__allTests),
-            testCase(FormatterTests.__allTests),
-            testCase(GlobsTests.__allTests),
-            testCase(InferenceTests.__allTests),
-            testCase(OptionsDescriptorTests.__allTests),
-            testCase(RulesTests.__allTests),
-            testCase(SwiftFormatTests.__allTests),
-            testCase(TokenizerTests.__allTests),
-            testCase(VersionTests.__allTests),
-        ]
-    }
+public func __allTests() -> [XCTestCaseEntry] {
+    return [
+        testCase(ArgumentsTests.__allTests),
+        testCase(CommandLineTests.__allTests),
+        testCase(EnumAssociableTests.__allTests),
+        testCase(FormatterTests.__allTests),
+        testCase(GlobsTests.__allTests),
+        testCase(InferenceTests.__allTests),
+        testCase(OptionsDescriptorTests.__allTests),
+        testCase(RulesTests.__allTests),
+        testCase(SwiftFormatTests.__allTests),
+        testCase(TokenizerTests.__allTests),
+        testCase(VersionTests.__allTests),
+    ]
+}
 #endif

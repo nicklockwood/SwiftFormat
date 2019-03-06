@@ -569,7 +569,7 @@ Q. I don't want to be surprised by new rules added when I upgrade SwiftFormat. H
 
 *Q. After applying SwiftFormat, my code won't compile. Is that a bug?*
 
-> A. SwiftFormat should ideally never break your code. Check the known issues below, and if it's not already listed there, or the suggested workaround doesn't solve your problem, please [raise an issue on Github](https://github.com/nicklockwood/SwiftFormat/issues).
+> A. SwiftFormat should ideally never break your code. Check the [known issues](#known-issues), and if it's not already listed there, or the suggested workaround doesn't solve your problem, please [raise an issue on Github](https://github.com/nicklockwood/SwiftFormat/issues).
 
 
 *Q. Can I use SwiftFormat to lint my code without changing it?*
@@ -609,56 +609,6 @@ Known issues
     ```
 
 * If a file begins with a comment, the `stripHeaders` rule will remove it if it is followed by a blank line. To avoid this, make sure that the first comment is directly followed by a line of code.
-
-* SwiftFormat currently reformats multiline comment blocks without regard for the original indenting. That means
-
-    ```swift
-    /* some documentation
-    
-          func codeExample() {
-              print("Hello World")
-          }
- 
-     */
-    ```
-         
-    Will become
-    
-    ```swift
-    /* some documentation
-    
-     func codeExample() {
-     print("Hello World")
-     }
-     
-     */
-    ```
-         
-    To work around that, you can disable automatic indenting of comments using the `comments` command-line flag.
-    
-    Alternatively, if you prefer to leave the comment indenting feature enabled, you can rewrite your multiline comment as a block of single-line comments...
-    
-    ```swift
-    // some documentation
-    //
-    //    func codeExample() {
-    //        print("Hello World")
-    //    }
-    //
-    //
-    ```
-        
-    Or begin each line with a `*` (or any other non-whitespace character)
-    
-    ```swift
-    /* some documentation
-     *
-     *    func codeExample() {
-     *        print("Hello World")
-     *    }
-     *  
-     */
-    ```
          
 * The formatted file cache is based on a hash of the file contents, so it's possible (though unlikely) that an edited file will have the exact same hash as the previously formatted version, causing SwiftFormat to incorrectly identify it as not having changed, and fail to update it.
 

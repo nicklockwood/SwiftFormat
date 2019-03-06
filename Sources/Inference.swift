@@ -169,58 +169,8 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
         return trailing >= noTrailing
     }()
 
-    options.indentComments = {
-        var shouldIndent = true
-        var nestedComments = 0
-        var prevIndent: Int?
-        var lastTokenWasLinebreak = false
-        for token in formatter.tokens {
-            switch token {
-            case .startOfScope:
-                if token.string == "/*" {
-                    nestedComments += 1
-                }
-                prevIndent = nil
-            case .endOfScope:
-                if token.string == "*/" {
-                    if nestedComments > 0 {
-                        if lastTokenWasLinebreak {
-                            if prevIndent != nil, prevIndent! >= 2 {
-                                shouldIndent = false
-                                break
-                            }
-                            prevIndent = 0
-                        }
-                        nestedComments -= 1
-                    } else {
-                        break // might be fragment, or syntax error
-                    }
-                }
-                prevIndent = nil
-            case .space:
-                if lastTokenWasLinebreak, nestedComments > 0 {
-                    let indent = token.string.count
-                    if prevIndent != nil, abs(prevIndent! - indent) >= 2 {
-                        shouldIndent = false
-                        break
-                    }
-                    prevIndent = indent
-                }
-            case .commentBody:
-                if lastTokenWasLinebreak, nestedComments > 0 {
-                    if prevIndent != nil, prevIndent! >= 2 {
-                        shouldIndent = false
-                        break
-                    }
-                    prevIndent = 0
-                }
-            default:
-                break
-            }
-            lastTokenWasLinebreak = token.isLinebreak
-        }
-        return shouldIndent
-    }()
+    // No way to infer this
+    options.indentComments = true
 
     options.truncateBlankLines = {
         var truncated = 0, untruncated = 0

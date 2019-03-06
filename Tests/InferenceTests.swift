@@ -169,14 +169,6 @@ class InferenceTests: XCTestCase {
         XCTAssertFalse(options.trailingCommas)
     }
 
-    // MARK: indentComments
-
-    func testInferIndentComments() {
-        let input = "  /**\n  hello\n    - world\n  */"
-        let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertFalse(options.indentComments)
-    }
-
     // MARK: truncateBlankLines
 
     func testInferNoTruncateBlanklines() {

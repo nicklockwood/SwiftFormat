@@ -663,6 +663,40 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testPreformattedMultilineComment() {
+        let input = """
+        /*
+         func foo() {
+           if bar {
+             print(baz)
+           }
+         }
+         */
+        """
+        let output: [Token] = [
+            .startOfScope("/*"),
+            .linebreak("\n"),
+            .space(" "),
+            .commentBody("func foo() {"),
+            .linebreak("\n"),
+            .space(" "),
+            .commentBody("  if bar {"),
+            .linebreak("\n"),
+            .space(" "),
+            .commentBody("    print(baz)"),
+            .linebreak("\n"),
+            .space(" "),
+            .commentBody("  }"),
+            .linebreak("\n"),
+            .space(" "),
+            .commentBody("}"),
+            .linebreak("\n"),
+            .space(" "),
+            .endOfScope("*/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Numbers
 
     func testZero() {

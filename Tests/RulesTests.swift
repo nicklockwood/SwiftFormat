@@ -2294,7 +2294,7 @@ class RulesTests: XCTestCase {
         let input = "foobar(baz: { a &&\nb })"
         let output = "foobar(baz: { a &&\n        b })"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["trailingClosures"])), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["trailingClosures", "braces"])), output + "\n")
     }
 
     func testIndentClassDeclarationContainingComment() {
@@ -2880,6 +2880,20 @@ class RulesTests: XCTestCase {
             }
         }
         """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testKnRClosingBraceWrapped() {
+        let input = "func foo() {\n    print(bar) }"
+        let output = "func foo() {\n    print(bar)\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testKnRInlineBracesNotWrapped() {
+        let input = "func foo() { print(bar) }"
         let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.braces]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")

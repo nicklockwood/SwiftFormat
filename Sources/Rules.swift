@@ -1242,19 +1242,38 @@ public struct _FormatRules {
         options: ["allman", "linebreaks"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, token in
-            // Check this isn't an inline block
-            guard var closingBraceIndex = formatter.index(of: .endOfScope, after: i) else {
+            guard var closingBraceIndex = formatter.endOfScope(at: i) else {
                 return
             }
-            while let token = formatter.token(at: closingBraceIndex), token != .endOfScope("}") {
-                closingBraceIndex += 1
+            loop: while let token = formatter.token(at: closingBraceIndex) {
+                switch token {
+                case .endOfScope("}"):
+                    break loop
+                case .endOfScope("case"), .endOfScope("default"):
+                    guard let i = formatter.index(of: .startOfScope(":"), after: closingBraceIndex),
+                        let j = formatter.endOfScope(at: i + 1) else {
+                        return // error
+                    }
+                    closingBraceIndex = j
+                default:
+                    return // error
+                }
             }
+            // Check this isn't an inline block
             guard formatter.token(at: closingBraceIndex) == .endOfScope("}"),
                 formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil,
                 let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 ![.delimiter(","), .keyword("in")].contains(prevToken),
                 !prevToken.is(.startOfScope) else {
                 return
+            }
+            if let penultimateToken = formatter.last(.nonSpaceOrComment, before: closingBraceIndex),
+                !penultimateToken.isLinebreak {
+                formatter.insertSpace(formatter.indentForLine(at: i), at: closingBraceIndex)
+                formatter.insertToken(.linebreak(formatter.options.linebreak), at: closingBraceIndex)
+                if formatter.token(at: closingBraceIndex - 1)?.isSpace == true {
+                    formatter.removeToken(at: closingBraceIndex - 1)
+                }
             }
             if formatter.options.allmanBraces {
                 // Implement Allman-style braces, where opening brace appears on the next line

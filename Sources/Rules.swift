@@ -1001,7 +1001,7 @@ public struct _FormatRules {
                     }
                 case "#if":
                     if let lineIndex = formatter.index(of: .linebreak, after: i),
-                        let nextKeyword = formatter.next(.nonSpaceOrLinebreak, after: lineIndex), [.endOfScope("case"), .endOfScope("default")].contains(nextKeyword) {
+                        let nextKeyword = formatter.next(.nonSpaceOrLinebreak, after: lineIndex), [.endOfScope("case"), .endOfScope("default"), .keyword("@unknown")].contains(nextKeyword) {
                         indent = indentStack[indentStack.count - indentCount - 1]
                         if formatter.options.indentCase {
                             indent += formatter.options.indent
@@ -1068,7 +1068,8 @@ public struct _FormatRules {
                             if !isCommentedCode(at: start), formatter.options.indentComments ||
                                 formatter.next(.nonSpace, after: start - 1) != .startOfScope("/*"),
                                 let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
-                                nextToken.isEndOfScope, !nextToken.isMultilineStringDelimiter {
+                                nextToken.isEndOfScope || nextToken == .keyword("@unknown"),
+                                !nextToken.isMultilineStringDelimiter {
                                 // Only reduce indent if line begins with a closing scope token
                                 var indent = indentStack.last ?? ""
                                 if [.endOfScope("case"), .endOfScope("default")].contains(token),
@@ -1190,7 +1191,7 @@ public struct _FormatRules {
                             formatter.insertSpace("", at: i + 1)
                         case .error:
                             break
-                        case .endOfScope("case"), .endOfScope("default"):
+                        case .endOfScope("case"), .endOfScope("default"), .keyword("@unknown"):
                             formatter.insertSpace(indent, at: i + 1)
                             // TODO: is this the best place to do this?
                             var index = i

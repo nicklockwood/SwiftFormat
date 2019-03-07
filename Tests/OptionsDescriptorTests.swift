@@ -207,7 +207,9 @@ class OptionsDescriptorTests: XCTestCase {
     }
 
     func testDeprecatedPropertyList() {
-        let controlArgumentNames = Set(["insertlines", "removelines", "hexliterals", "wrapelements", "experimental"])
+        let controlArgumentNames = Set([
+            "comments", "insertlines", "removelines", "hexliterals", "wrapelements", "experimental",
+        ])
         let descriptorArgumentNames = Set(FormatOptions.Descriptor.all.compactMap {
             $0.isDeprecated ? $0.argumentName : nil
         })

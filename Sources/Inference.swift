@@ -189,11 +189,6 @@ private struct Inference {
         options.trailingCommas = (trailing >= noTrailing)
     }
 
-    let indentComments = OptionInferrer { _, options in
-        // No way to infer this
-        options.indentComments = true
-    }
-
     let truncateBlankLines = OptionInferrer { formatter, options in
         var truncated = 0, untruncated = 0
         var scopeStack = [Token]()

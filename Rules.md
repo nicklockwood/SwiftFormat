@@ -469,7 +469,6 @@ Option | Description
 --- | ---
 `--indent` | Number of spaces to indent, or "tab" to use tabs
 `--indentcase` | Indent cases inside a switch: "true" or "false" (default)
-`--comments` | Indenting of comment bodies: "indent" (default) or "ignore"
 `--ifdef` | #if indenting: "indent" (default), "no-indent" or "outdent"
 
 <details>

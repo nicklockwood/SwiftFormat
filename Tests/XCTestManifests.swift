@@ -371,8 +371,6 @@ extension RulesTests {
         ("testCommaRemovedFromLastItem", testCommaRemovedFromLastItem),
         ("testCommentedCodeBlocksNotIndented", testCommentedCodeBlocksNotIndented),
         ("testCommentIndenting", testCommentIndenting),
-        ("testCommentIndentingDisabled", testCommentIndentingDisabled),
-        ("testCommentIndentingDisabledInSwitch", testCommentIndentingDisabledInSwitch),
         ("testCommentIndentingWithTrailingClose", testCommentIndentingWithTrailingClose),
         ("testCommentNotRemovedInsideBraces", testCommentNotRemovedInsideBraces),
         ("testCommentsNotDiscardedByElseOnSameLineRule", testCommentsNotDiscardedByElseOnSameLineRule),

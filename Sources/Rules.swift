@@ -522,10 +522,8 @@ public struct _FormatRules {
     /// Add space inside comments, taking care not to mangle headerdoc or
     /// carefully preformatted comments, such as star boxes, etc.
     public let spaceInsideComments = FormatRule(
-        help: "Adds a space inside `/* ... */` comments and at the start of `//` comments",
-        sharedOptions: ["comments"] // TODO: should this rule even use this option?
+        help: "Adds a space inside `/* ... */` comments and at the start of `//` comments"
     ) { formatter in
-        guard formatter.options.indentComments else { return }
         formatter.forEach(.startOfScope("//")) { i, _ in
             guard let nextToken = formatter.token(at: i + 1),
                 case let .commentBody(string) = nextToken else { return }
@@ -828,7 +826,7 @@ public struct _FormatRules {
     /// indenting can be configured with the `options` parameter of the formatter.
     public let indent = FormatRule(
         help: "Adjusts leading whitespace based on scope and line wrapping",
-        options: ["indent", "indentcase", "comments", "ifdef"],
+        options: ["indent", "indentcase", "ifdef"],
         sharedOptions: ["trimwhitespace", "linebreaks"]
     ) { formatter in
         var scopeStack: [Token] = []
@@ -1100,8 +1098,7 @@ public struct _FormatRules {
                             }
                             // Check if line on which scope ends should be unindented
                             let start = formatter.startOfLine(at: i)
-                            if !isCommentedCode(at: start), formatter.options.indentComments ||
-                                formatter.next(.nonSpace, after: start - 1) != .startOfScope("/*"),
+                            if !isCommentedCode(at: start),
                                 let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
                                 nextToken.isEndOfScope || nextToken == .keyword("@unknown"),
                                 !nextToken.isMultilineStringDelimiter {
@@ -1254,8 +1251,6 @@ public struct _FormatRules {
                                 return
                             }
                             formatter.insertSpace(indent, at: i + 1)
-                        case .startOfScope("/*"), .commentBody, .endOfScope("*/"):
-                            if formatter.options.indentComments { fallthrough }
                         default:
                             formatter.insertSpace(indent, at: i + 1)
                         }

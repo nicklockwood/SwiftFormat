@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.39.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.5) (2019-03-06)
+
+- Fixed bug in `braces` rule where closing brace was not wrapped onto a new line
+- Fixed bug with `braces` rule affecting closures inside a `switch` statements
+- Relative indentation is now preserved inside multiline comment blocks
+- Fixed indenting of `switch` cases using Swift 5's new `@unknown` attribute 
+- Fixed some errors in documentation and warning messages
+- The `.swift-version` file parser now permits cases like `3.0-PREVIEW-4`
+- Fixed the performance test target, which was broken in Xcode 10.1
+
 ## [0.39.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.4) (2019-03-03)
 
 - Added support for Swift 5's new raw string syntax

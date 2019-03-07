@@ -143,7 +143,8 @@ public struct _FormatRules {
         func isCaptureList(at i: Int) -> Bool {
             assert(formatter.tokens[i] == .endOfScope("]"))
             guard formatter.lastToken(before: i + 1, where: {
-                !$0.isSpaceOrCommentOrLinebreak && $0 != .endOfScope("]") }) == .startOfScope("{"),
+                !$0.isSpaceOrCommentOrLinebreak && $0 != .endOfScope("]")
+            }) == .startOfScope("{"),
                 let nextToken = formatter.nextToken(after: i, where: {
                     !$0.isSpaceOrCommentOrLinebreak && $0 != .startOfScope("(")
                 }),
@@ -712,7 +713,8 @@ public struct _FormatRules {
                 }
                 var i = i
                 if let nextTokenIndex = formatter.index(of: .nonSpace, after: i, if: {
-                    $0 == .startOfScope("(") }), let closingParenIndex = formatter.index(of:
+                    $0 == .startOfScope("(")
+                }), let closingParenIndex = formatter.index(of:
                     .endOfScope(")"), after: nextTokenIndex) {
                     i = closingParenIndex
                 }
@@ -1840,12 +1842,14 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.identifier("get")) { i, _ in
             if let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
-                $0 == .startOfScope("{") }), let prevKeyword = formatter.last(.keyword, before: previousIndex),
+                $0 == .startOfScope("{")
+            }), let prevKeyword = formatter.last(.keyword, before: previousIndex),
                 [.keyword("var"), .keyword("subscript")].contains(prevKeyword), let openIndex = formatter.index(of:
                     .nonSpaceOrCommentOrLinebreak, after: i, if: { $0 == .startOfScope("{") }),
                 let closeIndex = formatter.index(of: .endOfScope("}"), after: openIndex),
                 let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closeIndex, if: {
-                    $0 == .endOfScope("}") }) {
+                    $0 == .endOfScope("}")
+                }) {
                 formatter.removeTokens(inRange: closeIndex ..< nextIndex)
                 formatter.removeTokens(inRange: previousIndex + 1 ... openIndex)
                 // TODO: fix-up indenting of lines in between removed braces
@@ -1906,7 +1910,8 @@ public struct _FormatRules {
         formatter.forEach(.identifier("_")) { i, _ in
             guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":"),
                 let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
-                    [.keyword("let"), .keyword("var")].contains($0) }),
+                    [.keyword("let"), .keyword("var")].contains($0)
+                }),
                 let nextNonSpaceIndex = formatter.index(of: .nonSpaceOrLinebreak, after: prevIndex) else {
                 return
             }
@@ -3191,7 +3196,8 @@ public struct _FormatRules {
             formatter.forEach(.startOfScope("(")) { i, _ in
                 if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .operator("->", .infix),
                     let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
-                        $0 == .endOfScope(")") }), !isArgumentToken(at: nextIndex) {
+                        $0 == .endOfScope(")")
+                    }), !isArgumentToken(at: nextIndex) {
                     // Replace with Void
                     formatter.replaceTokens(inRange: i ... nextIndex, with: [.identifier("Void")])
                 }

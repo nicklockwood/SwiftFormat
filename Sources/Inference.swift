@@ -33,10 +33,28 @@ import Foundation
 
 /// Infer default options by examining the existing source
 public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
-    let formatter = Formatter(tokens)
     var options = FormatOptions.default
+    inferFormatOptions(Inference.all, from: tokens, into: &options)
+    return options
+}
 
-    options.indent = {
+func inferFormatOptions(_ options: [String], from tokens: [Token], into: inout FormatOptions) {
+    let formatter = Formatter(tokens)
+    for name in options {
+        Inference.byName[name]?.fn(formatter, &into)
+    }
+}
+
+private struct OptionInferrer {
+    let fn: (Formatter, inout FormatOptions) -> Void
+
+    init(_ fn: @escaping (Formatter, inout FormatOptions) -> Void) {
+        self.fn = fn
+    }
+}
+
+private struct Inference {
+    let indent = OptionInferrer { formatter, options in
         var indents = [(indent: String, count: Int)]()
         func increment(_ indent: String) {
             for (i, element) in indents.enumerated() {
@@ -73,14 +91,14 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 }
             }
         }
-        return indents.sorted(by: {
+        if let indent = indents.sorted(by: {
             $0.count > $1.count
-        }).first.map {
-            $0.indent
-        } ?? options.indent
-    }()
+        }).first.map({ $0.indent }) {
+            options.indent = indent
+        }
+    }
 
-    options.linebreak = {
+    let linebreak = OptionInferrer { formatter, options in
         var cr: Int = 0, lf: Int = 0, crlf: Int = 0
         formatter.forEachToken { _, token in
             switch token {
@@ -104,13 +122,15 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
             max = crlf
             linebreak = "\r\n"
         }
-        return linebreak
-    }()
+        options.linebreak = linebreak
+    }
 
-    // No way to infer this
-    options.allowInlineSemicolons = true
+    let allowInlineSemicolons = OptionInferrer { _, options in
+        // No way to infer this
+        options.allowInlineSemicolons = true
+    }
 
-    options.spaceAroundRangeOperators = {
+    let spaceAroundRangeOperators = OptionInferrer { formatter, options in
         var spaced = 0, unspaced = 0
         formatter.forEachToken { i, token in
             if token.isRangeOperator {
@@ -125,10 +145,10 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 }
             }
         }
-        return spaced >= unspaced
-    }()
+        options.spaceAroundRangeOperators = (spaced >= unspaced)
+    }
 
-    options.useVoid = {
+    let useVoid = OptionInferrer { formatter, options in
         var voids = 0, tuples = 0
         formatter.forEach(.identifier("Void")) { i, _ in
             if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
@@ -146,10 +166,10 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 tuples += 1
             }
         }
-        return voids >= tuples
-    }()
+        options.useVoid = (voids >= tuples)
+    }
 
-    options.trailingCommas = {
+    let trailingCommas = OptionInferrer { formatter, options in
         var trailing = 0, noTrailing = 0
         formatter.forEach(.endOfScope("]")) { i, token in
             if let linebreakIndex = formatter.index(of: .nonSpaceOrComment, before: i),
@@ -166,13 +186,15 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 }
             }
         }
-        return trailing >= noTrailing
-    }()
+        options.trailingCommas = (trailing >= noTrailing)
+    }
 
-    // No way to infer this
-    options.indentComments = true
+    let indentComments = OptionInferrer { _, options in
+        // No way to infer this
+        options.indentComments = true
+    }
 
-    options.truncateBlankLines = {
+    let truncateBlankLines = OptionInferrer { formatter, options in
         var truncated = 0, untruncated = 0
         var scopeStack = [Token]()
         formatter.forEachToken { i, token in
@@ -202,10 +224,10 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 }
             }
         }
-        return truncated >= untruncated
-    }()
+        options.truncateBlankLines = (truncated >= untruncated)
+    }
 
-    options.allmanBraces = {
+    let allmanBraces = OptionInferrer { formatter, options in
         var allman = 0, knr = 0
         formatter.forEach(.startOfScope("{")) { i, _ in
             // Check this isn't an inline block
@@ -226,10 +248,10 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 }
             }
         }
-        return allman > knr
-    }()
+        options.allmanBraces = (allman > knr)
+    }
 
-    options.ifdefIndent = {
+    let ifdefIndent = OptionInferrer { formatter, options in
         var indented = 0, notIndented = 0, outdented = 0
         formatter.forEach(.startOfScope("#if")) { i, _ in
             if let indent = formatter.token(at: i - 1), case let .space(string) = indent,
@@ -285,39 +307,21 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
             // Error?
         }
         if notIndented > indented {
-            return outdented > notIndented ? .outdent : .noIndent
+            options.ifdefIndent = outdented > notIndented ? .outdent : .noIndent
         } else {
-            return outdented > indented ? .outdent : .indent
-        }
-    }()
-
-    func wrapMode(for scopes: String...) -> WrapMode {
-        var beforeFirst = 0, afterFirst = 0
-        formatter.forEachToken(where: { $0.isStartOfScope && scopes.contains($0.string) }) { i, _ in
-            guard let closingBraceIndex = formatter.endOfScope(at: i),
-                formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil,
-                formatter.index(of: .delimiter(","), in: i + 1 ..< closingBraceIndex) != nil else {
-                return
-            }
-            // Check if linebreak is after opening paren or first comma
-            if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
-                beforeFirst += 1
-            } else {
-                afterFirst += 1
-            }
-        }
-        if beforeFirst > afterFirst * 3 {
-            return .beforeFirst
-        } else if afterFirst > beforeFirst * 3 {
-            return .afterFirst
-        } else {
-            return .preserve
+            options.ifdefIndent = outdented > indented ? .outdent : .indent
         }
     }
-    options.wrapArguments = wrapMode(for: "(", "<")
-    options.wrapCollections = wrapMode(for: "[")
 
-    options.closingParenOnSameLine = {
+    let wrapArguments = OptionInferrer { formatter, options in
+        options.wrapArguments = formatter.wrapMode(for: "(", "<")
+    }
+
+    let wrapCollections = OptionInferrer { formatter, options in
+        options.wrapCollections = formatter.wrapMode(for: "[")
+    }
+
+    let closingParenOnSameLine = OptionInferrer { formatter, options in
         var balanced = 0, sameLine = 0
         formatter.forEach(.startOfScope("(")) { i, _ in
             guard let closingBraceIndex = formatter.endOfScope(at: i),
@@ -331,10 +335,10 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 sameLine += 1
             }
         }
-        return sameLine > balanced
-    }()
+        options.closingParenOnSameLine = (sameLine > balanced)
+    }
 
-    options.uppercaseHex = {
+    let uppercaseHex = OptionInferrer { formatter, options in
         let prefix = "0x"
         var uppercase = 0, lowercase = 0
         formatter.forEachToken { _, token in
@@ -352,10 +356,10 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 }
             }
         }
-        return uppercase >= lowercase
-    }()
+        options.uppercaseHex = (uppercase >= lowercase)
+    }
 
-    options.uppercaseExponent = {
+    let uppercaseExponent = OptionInferrer { formatter, options in
         var uppercase = 0, lowercase = 0
         formatter.forEachToken { _, token in
             switch token {
@@ -377,150 +381,34 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 break
             }
         }
-        return uppercase > lowercase
-    }()
-
-    func grouping(for numberType: NumberType) -> Grouping {
-        var grouping = [(group: Int, threshold: Int, count: Int)](), lowest = Int.max
-        formatter.forEachToken { _, token in
-            guard case let .number(number, type) = token else {
-                return
-            }
-            guard numberType == type || numberType == .decimal && type == .integer else {
-                return
-            }
-            // Strip prefix/suffix
-            let digits: String
-            let prefix = "0x"
-            switch type {
-            case .integer:
-                digits = number
-            case .binary, .octal:
-                digits = String(number[prefix.endIndex...])
-            case .hex:
-                let endIndex = number.index { [".", "p", "P"].contains($0) } ?? number.endIndex
-                digits = String(number[prefix.endIndex ..< endIndex])
-            case .decimal:
-                let endIndex = number.index { [".", "e", "E"].contains($0) } ?? number.endIndex
-                digits = String(number[..<endIndex])
-            }
-            // Get the group for this number
-            var count = 0
-            var index = digits.endIndex
-            var group = 0
-            repeat {
-                index = digits.index(before: index)
-                if digits[index] == "_" {
-                    if group == 0, count > 0 {
-                        group = count
-                        lowest = min(lowest, group + 1)
-                    }
-                } else {
-                    count += 1
-                }
-            } while index != digits.startIndex
-            // Add To groups list
-            var found = false
-            if group > 0 {
-                for (i, g) in grouping.enumerated() {
-                    if g.group == group {
-                        grouping[i] = (group, min(g.threshold, count), g.count + 1)
-                        found = true
-                        break
-                    }
-                }
-            }
-            if !found {
-                grouping.append((group, count, 1))
-            }
-        }
-        // Only count none values whose threshold > lowest group value
-        var none = 0, maxCount = 0, total = 0
-        var group = (group: 0, threshold: 0, count: 0)
-        grouping = grouping.filter {
-            if $0.group == 0 {
-                if $0.threshold >= lowest {
-                    none += 1
-                }
-                return false
-            }
-            total += $0.count
-            if $0.count > maxCount {
-                maxCount = $0.count
-                group = $0
-            }
-            return true
-        }
-        // Return most common
-        if group.count >= max(1, none) {
-            if group.count > total / 2 {
-                return .group(group.group, group.threshold)
-            }
-            return .ignore
-        }
-        return .none
-    }
-    options.decimalGrouping = grouping(for: .decimal)
-    options.binaryGrouping = grouping(for: .binary)
-    options.octalGrouping = grouping(for: .octal)
-    options.hexGrouping = grouping(for: .hex)
-
-    do {
-        var fractions: (grouped: Int, ungrouped: Int) = (0, 0)
-        var exponents: (grouped: Int, ungrouped: Int) = (0, 0)
-        formatter.forEachToken { _, token in
-            guard case let .number(number, type) = token else {
-                return
-            }
-            // Strip prefix/suffix
-            let digits: String
-            let prefix = "0x"
-            var main = "", fraction = "", exponent = ""
-            let parts: [String]
-            switch type {
-            case .integer, .binary, .octal:
-                return
-            case .hex:
-                parts = number[prefix.endIndex...].components(separatedBy: CharacterSet(charactersIn: ".pP"))
-            case .decimal:
-                parts = number.components(separatedBy: CharacterSet(charactersIn: ".eE"))
-            }
-            switch parts.count {
-            case 2 where number.contains("."):
-                main = parts[0]
-                fraction = parts[1]
-            case 2:
-                main = parts[0]
-                exponent = parts[1]
-            case 3:
-                main = parts[0]
-                fraction = parts[1]
-                exponent = parts[2]
-            default:
-                return
-            }
-            if fraction.contains("_") {
-                fractions.grouped += 1
-            } else if let range = main.range(of: "_") {
-                let threshold = main.distance(from: range.lowerBound, to: main.endIndex)
-                if fraction.count >= threshold {
-                    fractions.ungrouped += 1
-                }
-            }
-            if exponent.contains("_") {
-                exponents.grouped += 1
-            } else if let range = main.range(of: "_") {
-                let threshold = main.distance(from: range.lowerBound, to: main.endIndex)
-                if exponent.count >= threshold {
-                    exponents.ungrouped += 1
-                }
-            }
-        }
-        options.fractionGrouping = fractions.grouped > fractions.ungrouped
-        options.exponentGrouping = exponents.grouped > exponents.ungrouped
+        options.uppercaseExponent = (uppercase > lowercase)
     }
 
-    options.hoistPatternLet = {
+    let decimalGrouping = OptionInferrer { formatter, options in
+        options.decimalGrouping = formatter.grouping(for: .decimal)
+    }
+
+    let binaryGrouping = OptionInferrer { formatter, options in
+        options.binaryGrouping = formatter.grouping(for: .binary)
+    }
+
+    let octalGrouping = OptionInferrer { formatter, options in
+        options.octalGrouping = formatter.grouping(for: .octal)
+    }
+
+    let hexGrouping = OptionInferrer { formatter, options in
+        options.hexGrouping = formatter.grouping(for: .hex)
+    }
+
+    let fractionGrouping = OptionInferrer { formatter, options in
+        options.fractionGrouping = formatter.hasGrouping(for: .fraction)
+    }
+
+    let exponentGrouping = OptionInferrer { formatter, options in
+        options.exponentGrouping = formatter.hasGrouping(for: .exponent)
+    }
+
+    let hoistPatternLet = OptionInferrer { formatter, options in
         var hoisted = 0, unhoisted = 0
 
         func hoistable(_ keyword: String, in range: CountableRange<Int>) -> Bool {
@@ -575,10 +463,10 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 }
             }
         }
-        return hoisted >= unhoisted
-    }()
+        options.hoistPatternLet = (hoisted >= unhoisted)
+    }
 
-    options.stripUnusedArguments = {
+    let stripUnusedArguments = OptionInferrer { formatter, options in
         var functionArgsRemoved = 0, functionArgsKept = 0
         var unnamedFunctionArgsRemoved = 0, unnamedFunctionArgsKept = 0
 
@@ -669,19 +557,18 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
             }
         }
         if functionArgsRemoved >= functionArgsKept {
-            return .all
+            options.stripUnusedArguments = .all
         } else if unnamedFunctionArgsRemoved >= unnamedFunctionArgsKept {
-            return .unnamedOnly
+            options.stripUnusedArguments = .unnamedOnly
         } else {
             // TODO: infer not removing args at all
-            return .closureOnly
+            options.stripUnusedArguments = .closureOnly
         }
-    }()
+    }
 
     // TODO: handle init-only case
-    options.explicitSelf = {
+    let explicitSelf = OptionInferrer { formatter, options in
         var removed = 0, unremoved = 0
-
         var typeStack = [String]()
         var membersByType = [String: Set<String>]()
         var classMembersByType = [String: Set<String>]()
@@ -1115,10 +1002,11 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
         }
         var index = 0
         processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false)
-        return removed >= unremoved ? .remove : .insert // if both zero or equal, should be true
-    }()
+        // if both zero or equal, should be true
+        options.explicitSelf = (removed >= unremoved ? .remove : .insert)
+    }
 
-    options.spaceAroundOperatorDeclarations = {
+    let spaceAroundOperatorDeclarations = OptionInferrer { formatter, options in
         var space = 0, nospace = 0
         formatter.forEach(.operator) { i, token in
             guard case .operator(_, .none) = token,
@@ -1132,10 +1020,10 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 nospace += 1
             }
         }
-        return nospace <= space
-    }()
+        options.spaceAroundOperatorDeclarations = (nospace <= space)
+    }
 
-    options.elseOnNextLine = {
+    let elseOnNextLine = OptionInferrer { formatter, options in
         var sameLine = 0, nextLine = 0
         formatter.forEach(.keyword) { i, token in
             guard ["else", "catch", "while"].contains(token.string) else { return }
@@ -1155,10 +1043,10 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 sameLine += 1
             }
         }
-        return sameLine < nextLine
-    }()
+        options.elseOnNextLine = (sameLine < nextLine)
+    }
 
-    options.indentCase = {
+    let indentCase = OptionInferrer { formatter, options in
         var indent = 0, noindent = 0
         formatter.forEach(.keyword("switch")) { i, _ in
             var switchIndent = ""
@@ -1183,8 +1071,180 @@ public func inferFormatOptions(from tokens: [Token]) -> FormatOptions {
                 break
             }
         }
-        return indent > noindent
+        options.indentCase = (indent > noindent)
+    }
+}
+
+private extension Formatter {
+    func wrapMode(for scopes: String...) -> WrapMode {
+        var beforeFirst = 0, afterFirst = 0
+        forEachToken(where: { $0.isStartOfScope && scopes.contains($0.string) }) { i, _ in
+            guard let closingBraceIndex = endOfScope(at: i),
+                index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil,
+                index(of: .delimiter(","), in: i + 1 ..< closingBraceIndex) != nil else {
+                return
+            }
+            // Check if linebreak is after opening paren or first comma
+            if next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
+                beforeFirst += 1
+            } else {
+                afterFirst += 1
+            }
+        }
+        if beforeFirst > afterFirst * 3 {
+            return .beforeFirst
+        } else if afterFirst > beforeFirst * 3 {
+            return .afterFirst
+        } else {
+            return .preserve
+        }
+    }
+
+    func grouping(for numberType: NumberType) -> Grouping {
+        var grouping = [(group: Int, threshold: Int, count: Int)](), lowest = Int.max
+        forEachToken { _, token in
+            guard case let .number(number, type) = token else {
+                return
+            }
+            guard numberType == type || numberType == .decimal && type == .integer else {
+                return
+            }
+            // Strip prefix/suffix
+            let digits: String
+            let prefix = "0x"
+            switch type {
+            case .integer:
+                digits = number
+            case .binary, .octal:
+                digits = String(number[prefix.endIndex...])
+            case .hex:
+                let endIndex = number.index { [".", "p", "P"].contains($0) } ?? number.endIndex
+                digits = String(number[prefix.endIndex ..< endIndex])
+            case .decimal:
+                let endIndex = number.index { [".", "e", "E"].contains($0) } ?? number.endIndex
+                digits = String(number[..<endIndex])
+            }
+            // Get the group for this number
+            var count = 0
+            var index = digits.endIndex
+            var group = 0
+            repeat {
+                index = digits.index(before: index)
+                if digits[index] == "_" {
+                    if group == 0, count > 0 {
+                        group = count
+                        lowest = min(lowest, group + 1)
+                    }
+                } else {
+                    count += 1
+                }
+            } while index != digits.startIndex
+            // Add To groups list
+            var found = false
+            if group > 0 {
+                for (i, g) in grouping.enumerated() {
+                    if g.group == group {
+                        grouping[i] = (group, min(g.threshold, count), g.count + 1)
+                        found = true
+                        break
+                    }
+                }
+            }
+            if !found {
+                grouping.append((group, count, 1))
+            }
+        }
+        // Only count none values whose threshold > lowest group value
+        var none = 0, maxCount = 0, total = 0
+        var group = (group: 0, threshold: 0, count: 0)
+        grouping = grouping.filter {
+            if $0.group == 0 {
+                if $0.threshold >= lowest {
+                    none += 1
+                }
+                return false
+            }
+            total += $0.count
+            if $0.count > maxCount {
+                maxCount = $0.count
+                group = $0
+            }
+            return true
+        }
+        // Return most common
+        if group.count >= max(1, none) {
+            if group.count > total / 2 {
+                return .group(group.group, group.threshold)
+            }
+            return .ignore
+        }
+        return .none
+    }
+
+    enum NumberPart {
+        case fraction
+        case exponent
+    }
+
+    // TODO: ensure dependent options have been inferred already
+    func hasGrouping(for part: NumberPart) -> Bool {
+        var grouped = 0, ungrouped = 0
+        forEachToken { _, token in
+            guard case let .number(number, type) = token else {
+                return
+            }
+            let exp: String
+            let grouping: Grouping
+            switch type {
+            case .integer, .binary, .octal:
+                return
+            case .hex:
+                exp = "pP"
+                grouping = options.hexGrouping
+            case .decimal:
+                exp = "eE"
+                grouping = options.decimalGrouping
+            }
+            let target: String
+            switch part {
+            case .fraction where number.contains("."):
+                target = number.components(separatedBy: CharacterSet(charactersIn: ".\(exp)"))[1]
+            case .exponent where number.contains(where: { exp.contains($0) }):
+                target = number.components(separatedBy: CharacterSet(charactersIn: ".\(exp)")).last!
+            default:
+                return
+            }
+            if target.contains("_") {
+                grouped += 1
+            } else if case let .group(_, threshold) = grouping, target.count >= threshold {
+                ungrouped += 1
+            }
+        }
+        return grouped > ungrouped
+    }
+}
+
+extension Inference {
+    static let all: [String] = {
+        // Deliberately not sorted alphabetically due to dependencies
+        // TODO: find a proper solution for the dependencies issue
+        var names = [String]()
+        for (label, _) in Mirror(reflecting: Inference()).children {
+            if let name = label {
+                names.append(name)
+            }
+        }
+        return names
     }()
 
-    return options
+    static let byName: [String: OptionInferrer] = {
+        var inferrers = [String: OptionInferrer]()
+        for (label, value) in Mirror(reflecting: Inference()).children {
+            guard let name = label, let inferrer = value as? OptionInferrer else {
+                continue
+            }
+            inferrers[name] = inferrer
+        }
+        return inferrers
+    }()
 }

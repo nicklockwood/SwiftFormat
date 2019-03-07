@@ -383,13 +383,19 @@ public func applyRules(_ rules: [FormatRule],
                        callback: ((Int, [Token]) -> Void)? = nil) throws -> [Token] {
     var tokens = originalTokens
 
-    // Parse
+    // Check for parsing errors
     if let error = parsingError(for: tokens, options: options) {
         throw error
     }
 
-    // Recursively apply rules until no changes are detected
+    // Infer shared options
     var options = options
+    let sharedOptions = FormatRules.sharedOptionsForRules(rules).compactMap {
+        FormatOptions.Descriptor.byName[$0]?.propertyName
+    }
+    inferFormatOptions(sharedOptions, from: tokens, into: &options)
+
+    // Recursively apply rules until no changes are detected
     for _ in 0 ..< 10 {
         let formatter = Formatter(tokens, options: options)
         for (i, rule) in rules.enumerated() {

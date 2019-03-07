@@ -2926,11 +2926,11 @@ class RulesTests: XCTestCase {
     }
 
     func testUnterminatedFragment() {
-        let input = "class Foo {\n  \nfunc foo() {\nbar()\n}"
+        let input = "class Foo {\n\n  func foo() {\nbar()\n}"
         let output = "class Foo {\n\n    func foo() {\n        bar()\n    }"
         let options = FormatOptions(fragment: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: [FormatRules.indent, FormatRules.linebreakAtEndOfFile], options: options), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["blankLinesAtStartOfScope"]), options: options), output + "\n")
     }
 
     func testOverTerminatedFragment() {

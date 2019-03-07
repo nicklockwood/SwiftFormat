@@ -110,6 +110,29 @@ public extension _FormatRules {
     }
 }
 
+extension _FormatRules {
+    /// Get all format options used by a given set of rules
+    func optionsForRules(_ rules: [FormatRule]) -> [String] {
+        var options = Set<String>()
+        for rule in rules {
+            options.formUnion(rule.options + rule.sharedOptions)
+        }
+        return options.sorted()
+    }
+
+    // Get shared-only options for a given set of rules
+    func sharedOptionsForRules(_ rules: [FormatRule]) -> [String] {
+        var options = Set<String>()
+        var sharedOptions = Set<String>()
+        for rule in rules {
+            options.formUnion(rule.options)
+            sharedOptions.formUnion(rule.sharedOptions)
+        }
+        sharedOptions.subtract(options)
+        return sharedOptions.sorted()
+    }
+}
+
 public struct _FormatRules {
     fileprivate init() {}
 

@@ -181,4 +181,12 @@ class SwiftFormatTests: XCTestCase {
             NSString(string: "~/file.swift").expandingTildeInPath
         )
     }
+
+    // MARK: shared option inference
+
+    func testLinebreakInferredForBlankLinesBetweenScopes() {
+        let input = "class Foo {\r  func bar() {\r  }\r  func baz() {\r  }\r}"
+        let output = "class Foo {\r  func bar() {\r  }\r\r  func baz() {\r  }\r}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.blankLinesBetweenScopes]), output)
+    }
 }

@@ -1346,6 +1346,7 @@ extension SwiftFormatTests {
         ("testInputFileNotEnumeratedWhenExcluded", testInputFileNotEnumeratedWhenExcluded),
         ("testInputFilesMatchOutputFilesForNilOutput", testInputFilesMatchOutputFilesForNilOutput),
         ("testInputFilesMatchOutputFilesForSameOutput", testInputFilesMatchOutputFilesForSameOutput),
+        ("testLinebreakInferredForBlankLinesBetweenScopes", testLinebreakInferredForBlankLinesBetweenScopes),
         ("testLinuxTestSuiteIncludesAllTests", testLinuxTestSuiteIncludesAllTests),
         ("testOffsetForToken", testOffsetForToken),
     ]

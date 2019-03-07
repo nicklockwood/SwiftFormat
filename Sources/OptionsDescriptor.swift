@@ -217,7 +217,6 @@ extension FormatOptions.Descriptor {
         useVoid,
         indentCase,
         trailingCommas,
-        indentComments,
         truncateBlankLines,
         allmanBraces,
         fileHeader,
@@ -242,6 +241,7 @@ extension FormatOptions.Descriptor {
         trailingClosures,
 
         // Deprecated
+        indentComments,
         insertBlankLines,
         removeBlankLines,
 
@@ -584,6 +584,7 @@ extension FormatOptions.Descriptor {
     // MARK: - DEPRECATED
 
     static let deprecatedMessage = [
+        indentComments.argumentName: "`--comments` option is deprecated. Relative indent within multiline comments is now preserved by default.",
         insertBlankLines.argumentName: "`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` or `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead.",
         removeBlankLines.argumentName: "`--removelines` option is deprecated. Use `--enable blankLinesAtStartOfScope` or `--enable blankLinesAtEndOfScope` or `--disable blankLinesAtStartOfScope` or `--disable blankLinesAtEndOfScope` instead",
         hexLiterals.argumentName: "`--hexliterals` option is deprecated. Use `--hexliteralcase` instead",

@@ -2396,36 +2396,18 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    func testCommentIndentingDisabled() {
-        let input = "  /**\n  hello\n    - world\n  */"
-        let output = "  /**\n  hello\n    - world\n  */"
-        let options = FormatOptions(indentComments: false, fragment: true)
-        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
-    }
-
-    func testCommentIndentingDisabledInSwitch() {
-        let input = "func foo() {\n    switch bar {\n    /** bar */\n    default: break\n    }\n}"
-        let output = "func foo() {\n    switch bar {\n    /** bar */\n    default: break\n    }\n}"
-        let options = FormatOptions(indentComments: false)
-        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
-    }
-
     func testCommentedCodeBlocksNotIndented() {
         let input = "func foo() {\n//    var foo: Int\n}"
         let output = "func foo() {\n//    var foo: Int\n}"
-        let options = FormatOptions(indentComments: false)
-        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     func testBlankCodeCommentBlockLinesNotIndented() {
         let input = "func foo() {\n//\n}"
         let output = "func foo() {\n//\n}"
-        let options = FormatOptions(indentComments: false)
-        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     // indent multiline strings

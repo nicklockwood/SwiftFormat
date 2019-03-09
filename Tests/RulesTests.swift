@@ -8859,4 +8859,160 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
+
+    // MARK: yodaConditions
+
+    func testNumericLiteralEqualYodaCondition() {
+        let input = "5 == foo"
+        let output = "foo == 5"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testNumericLiteralGreaterYodaCondition() {
+        let input = "5.1 > foo"
+        let output = "foo < 5.1"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testStringLiteralNotEqualYodaCondition() {
+        let input = "\"foo\" != foo"
+        let output = "foo != \"foo\""
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testNilNotEqualYodaCondition() {
+        let input = "nil != foo"
+        let output = "foo != nil"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testTrueNotEqualYodaCondition() {
+        let input = "true != foo"
+        let output = "foo != true"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testEnumCaseNotEqualYodaCondition() {
+        let input = ".foo != foo"
+        let output = "foo != .foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testArrayLiteralNotEqualYodaCondition() {
+        let input = "[5, 6] != foo"
+        let output = "foo != [5, 6]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testNestedArrayLiteralNotEqualYodaCondition() {
+        let input = "[5, [6, 7]] != foo"
+        let output = "foo != [5, [6, 7]]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testYodaConditionInIfStatement() {
+        let input = "if 5 != foo {}"
+        let output = "if foo != 5 {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testYodaConditionInSecondClauseOfIfStatement() {
+        let input = "if foo, 5 != bar {}"
+        let output = "if foo, bar != 5 {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testYodaConditionInExpression() {
+        let input = "let foo = 5 < bar\nbaz()"
+        let output = "let foo = bar > 5\nbaz()"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testYodaConditionInExpressionWithTrailingClosure() {
+        let input = "let foo = 5 < bar { baz() }"
+        let output = "let foo = bar { baz() } > 5"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testYodaConditionInFunctionCall() {
+        let input = "foo(5 < bar)"
+        let output = "foo(bar > 5)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testYodaConditionFollowedByExpression() {
+        let input = "5 == foo + 6"
+        let output = "foo + 6 == 5"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testPrefixExpressionYodaCondition() {
+        let input = "!false == foo"
+        let output = "foo == !false"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testPrefixExpressionYodaCondition2() {
+        let input = "true == !foo"
+        let output = "!foo == true"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testPostfixExpressionYodaCondition() {
+        let input = "5<*> == foo"
+        let output = "foo == 5<*>"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testDoublePostfixExpressionYodaCondition() {
+        let input = "5!! == foo"
+        let output = "foo == 5!!"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testPostfixExpressionNonYodaCondition() {
+        let input = "5 == 5<*>"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testPostfixExpressionNonYodaCondition2() {
+        let input = "5<*> == 5"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testStringEqualsStringNonYodaCondition() {
+        let input = "\"foo\" == \"bar\""
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testConstantAfterNullCoalescingNonYodaCondition() {
+        let input = "foo.last ?? -1 < bar"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
 }

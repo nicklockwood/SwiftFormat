@@ -60,6 +60,7 @@
 * [unusedArguments](#unusedArguments)
 * [void](#void)
 * [wrapArguments](#wrapArguments)
+* [yodaConditions](#yodaConditions)
 
 ----------
 
@@ -1557,3 +1558,8 @@ Or for `--wrapcollections before-first`:
 
 </details>
 <br/>
+
+## yodaConditions
+
+Reorders so-called "yoda conditions" where a constant is placed on the
+left-hand-side of a comparision instead of the right..

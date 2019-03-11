@@ -947,7 +947,17 @@ private struct Examples {
     +   bar,
         baz,
     +   quuz
-    ]
+    + ]
+    ```
+    """
+
+    let leadingDelimiters = """
+    ```diff
+    - guard let foo = maybeFoo // first
+    -     , let bar = maybeBar else { ... }
+
+    + guard let foo = maybeFoo, // first
+    +      let bar = maybeBar else { ... }
     ```
     """
 }

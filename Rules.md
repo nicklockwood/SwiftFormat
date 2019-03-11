@@ -16,6 +16,7 @@
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
 * [isEmpty](#isEmpty)
+* [leadingDelimiters](#leadingDelimiters)
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
 * [numberFormatting](#numberFormatting)
@@ -541,6 +542,25 @@ reasons (especially for Strings where count has O(n) complexity).
 a type that doesn't implement that property, breaking the program. For this
 reason, the rule is disabled by default, and must be manually enabled via the
 `--enable isEmpty` option.
+
+</details>
+<br/>
+
+## leadingDelimiters
+
+Moves delimiters such as : or ; or , placed at the start of a line to the end
+of the previous line instead..
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- guard let foo = maybeFoo // first
+-     , let bar = maybeBar else { ... }
+
++ guard let foo = maybeFoo, // first
++      let bar = maybeBar else { ... }
+```
 
 </details>
 <br/>
@@ -1561,5 +1581,5 @@ Or for `--wrapcollections before-first`:
 
 ## yodaConditions
 
-Reorders so-called "yoda conditions" where a constant is placed on the
-left-hand-side of a comparision instead of the right..
+Reorders so-called "yoda conditions" where the constant is placed on the
+left-hand side of a comparison instead of the right..

@@ -698,7 +698,7 @@ class RulesTests: XCTestCase {
         let input = "foo\n    ,bar"
         let output = "foo\n    , bar"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["leadingDelimiters"])), output + "\n")
     }
 
     func testSpaceAroundInfixMinus() {
@@ -2051,7 +2051,7 @@ class RulesTests: XCTestCase {
         let input = "let a = b\n, b = c"
         let output = "let a = b\n    , b = c"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["leadingDelimiters"])), output + "\n")
     }
 
     func testWrappedLineAfterCommaInsideArray() {
@@ -2066,7 +2066,7 @@ class RulesTests: XCTestCase {
         let output = "[\n    foo\n    , bar,\n]"
         let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["leadingDelimiters"]), options: options), output + "\n")
     }
 
     func testWrappedLineAfterCommaInsideInlineArray() {
@@ -2082,7 +2082,7 @@ class RulesTests: XCTestCase {
         let output = "[foo\n , bar]"
         let options = FormatOptions(wrapCollections: .disabled)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["leadingDelimiters"]), options: options), output + "\n")
     }
 
     func testWrappedLineAfterColonInFunction() {
@@ -2313,14 +2313,14 @@ class RulesTests: XCTestCase {
         let input = "class Foo\n: Bar {\nbaz()\n}"
         let output = "class Foo\n    : Bar {\n    baz()\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["leadingDelimiters"])), output + "\n")
     }
 
     func testIndentInsideWrappedProtocolDefinition() {
         let input = "protocol Foo\n: Bar, Baz {\nbaz()\n}"
         let output = "protocol Foo\n    : Bar, Baz {\n    baz()\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["leadingDelimiters"])), output + "\n")
     }
 
     func testIndentInsideWrappedVarStatement() {
@@ -3434,7 +3434,7 @@ class RulesTests: XCTestCase {
         let output = "for (i = 0 // comment\n    ; i < 5; i++)"
         let options = FormatOptions(allowInlineSemicolons: false)
         XCTAssertEqual(try format(input, rules: [FormatRules.semicolons], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["leadingDelimiters"]), options: options), output + "\n")
     }
 
     func testSemicolonNotReplacedAfterReturn() {
@@ -9013,6 +9013,47 @@ class RulesTests: XCTestCase {
         let input = "foo.last ?? -1 < bar"
         let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    // MARK: leadingDelimiters
+
+    func testLeadingCommaMovedToPreviousLine() {
+        let input = """
+        let foo = 5
+            , bar = 6
+        """
+        let output = """
+        let foo = 5,
+            bar = 6
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.leadingDelimiters]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testLeadingColonFollowedByCommentMovedToPreviousLine() {
+        let input = """
+        let foo
+            : /* string */ String
+        """
+        let output = """
+        let foo:
+            /* string */ String
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.leadingDelimiters]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCommaMovedBeforeCommentIfLineEndsInComment() {
+        let input = """
+        let foo = 5 // first
+            , bar = 6
+        """
+        let output = """
+        let foo = 5, // first
+            bar = 6
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.leadingDelimiters]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 }

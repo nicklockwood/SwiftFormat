@@ -4038,6 +4038,35 @@ public struct _FormatRules {
             formatter.replaceTokens(inRange: startIndex ... prevIndex, with: expression)
         }
     }
+
+    public let leadingDelimiters = FormatRule(
+        help: """
+        Moves delimiters such as : or ; or , placed at the start of a line to the end
+        of the previous line instead.
+        """,
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        formatter.forEach(.delimiter) { i, _ in
+            guard let endOfLine = formatter.index(of: .nonSpace, before: i, if: {
+                $0.isLinebreak
+            }) else {
+                return
+            }
+            let nextIndex = formatter.index(of: .nonSpace, after: i) ?? (i + 1)
+            formatter.insertSpace(formatter.indentForLine(at: i), at: nextIndex)
+            formatter.insertToken(.linebreak(formatter.options.linebreak), at: nextIndex)
+            formatter.removeTokens(inRange: i + 1 ..< nextIndex)
+            guard case .commentBody? = formatter.last(.nonSpace, before: endOfLine) else {
+                formatter.removeTokens(inRange: endOfLine ..< i)
+                return
+            }
+            let startIndex = formatter.index(of: .nonSpaceOrComment, before: endOfLine) ?? -1
+            formatter.removeTokens(inRange: endOfLine ..< i)
+            let comment = Array(formatter.tokens[startIndex + 1 ..< endOfLine])
+            formatter.insertTokens(comment, at: endOfLine + 1)
+            formatter.removeTokens(inRange: startIndex + 1 ..< endOfLine)
+        }
+    }
 }
 
 // MARK: shared helper methods
@@ -4261,7 +4290,7 @@ private extension Formatter {
                 return true
             }
             return false
-        case .delimiter(":"), .delimiter("->"), .operator(_, .infix), .operator(_, .postfix):
+        case .delimiter, .operator(_, .infix), .operator(_, .postfix):
             return false
         default:
             return true

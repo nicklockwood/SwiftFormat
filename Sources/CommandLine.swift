@@ -173,7 +173,7 @@ func printHelp(as type: CLI.OutputType) {
     SwiftFormat's rules can be configured using options. A given option may affect
     multiple rules. Options have no effect if the related rules have been disabled
 
-    --ruleinfo         Display options for a given rule
+    --ruleinfo         Display options for a given rule or rules (comma-delimited)
     --options          Prints a list of all formatting options and their usage
     """, as: type)
     print("")
@@ -273,8 +273,11 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // Show rule info
-        if let name = args["ruleinfo"] {
-            try printRuleInfo(for: name, as: .content)
+        if let names = try args["ruleinfo"].map(parseRules) {
+            let names = names.isEmpty ? allRules.sorted() : names.sorted()
+            for name in names {
+                try printRuleInfo(for: name, as: .content)
+            }
             return .ok
         }
 

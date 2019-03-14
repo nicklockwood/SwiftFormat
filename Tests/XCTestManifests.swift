@@ -58,8 +58,6 @@ extension ArgumentsTests {
 
 extension CommandLineTests {
     static let __allTests = [
-        ("testAllOptionsInRulesFile", testAllOptionsInRulesFile),
-        ("testAllRulesInRulesFile", testAllRulesInRulesFile),
         ("testCacheHit", testCacheHit),
         ("testCacheMiss", testCacheMiss),
         ("testCachePotentialFalsePositive2", testCachePotentialFalsePositive2),
@@ -70,8 +68,6 @@ extension CommandLineTests {
         ("testHelpOptionsDocumented", testHelpOptionsDocumented),
         ("testHelpOptionsImplemented", testHelpOptionsImplemented),
         ("testLinuxTestSuiteIncludesAllTests", testLinuxTestSuiteIncludesAllTests),
-        ("testNoInvalidOptionsInRulesFile", testNoInvalidOptionsInRulesFile),
-        ("testNoInvalidRulesInRulesFile", testNoInvalidRulesInRulesFile),
         ("testPipe", testPipe),
         ("testQuietModeAllowsContent", testQuietModeAllowsContent),
         ("testQuietModeAllowsErrors", testQuietModeAllowsErrors),
@@ -216,6 +212,18 @@ extension InferenceTests {
         ("testInferWrapElementsAfterSecondArgument", testInferWrapElementsAfterSecondArgument),
         ("testInferWrapPreserve", testInferWrapPreserve),
         ("testLinuxTestSuiteIncludesAllTests", testLinuxTestSuiteIncludesAllTests),
+    ]
+}
+
+extension MetadataTests {
+    static let __allTests = [
+        ("testAllExamplesMatchRule", testAllExamplesMatchRule),
+        ("testAllOptionsInRulesFile", testAllOptionsInRulesFile),
+        ("testAllRulesInRulesFile", testAllRulesInRulesFile),
+        ("testGenerateRulesDocumentation", testGenerateRulesDocumentation),
+        ("testNoInvalidOptionsInRulesFile", testNoInvalidOptionsInRulesFile),
+        ("testNoInvalidRulesInRulesFile", testNoInvalidRulesInRulesFile),
+        ("testRulesOptions", testRulesOptions),
     ]
 }
 
@@ -486,7 +494,6 @@ extension RulesTests {
         ("testFunctionThatReturnsAFunction", testFunctionThatReturnsAFunction),
         ("testFunctionThatReturnsAFunctionThatThrows", testFunctionThatReturnsAFunctionThatThrows),
         ("testFuncWithAnonymousVoidArgumentNotStripped", testFuncWithAnonymousVoidArgumentNotStripped),
-        ("testGenerateRulesDocumentation", testGenerateRulesDocumentation),
         ("testGenericEnumCaseIndenting", testGenericEnumCaseIndenting),
         ("testGetNotRemovedInFunction", testGetNotRemovedInFunction),
         ("testGlobalAfterTypeNotTreatedAsMember", testGlobalAfterTypeNotTreatedAsMember),
@@ -1099,7 +1106,6 @@ extension RulesTests {
         ("testRequiredParensNotRemovedAfterClosureInWhereClause", testRequiredParensNotRemovedAfterClosureInWhereClause),
         ("testRequiredParensNotRemovedAroundOptionalClosureType", testRequiredParensNotRemovedAroundOptionalClosureType),
         ("testRequiredParensNotRemovedInIf", testRequiredParensNotRemovedInIf),
-        ("testRulesOptions", testRulesOptions),
         ("testSelfDotTypeInsideClassInitEdgeCase", testSelfDotTypeInsideClassInitEdgeCase),
         ("testSelfInsertedInDidSet", testSelfInsertedInDidSet),
         ("testSelfInsertedInSwitchCaseLet", testSelfInsertedInSwitchCaseLet),
@@ -1640,6 +1646,7 @@ public func __allTests() -> [XCTestCaseEntry] {
         testCase(FormatterTests.__allTests),
         testCase(GlobsTests.__allTests),
         testCase(InferenceTests.__allTests),
+        testCase(MetadataTests.__allTests),
         testCase(OptionsDescriptorTests.__allTests),
         testCase(RulesTests.__allTests),
         testCase(SwiftFormatTests.__allTests),

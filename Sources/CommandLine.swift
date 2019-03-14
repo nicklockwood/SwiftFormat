@@ -107,7 +107,7 @@ func printRuleInfo(for name: String, as type: CLI.OutputType) throws {
     print("")
     print(name, as: type)
     print("", as: type)
-    print(stripMarkdown(rule.help) + ".", as: type)
+    print(stripMarkdown(rule.help), as: type)
     if !rule.options.isEmpty {
         print("\nOptions:\n", as: type)
         print(rule.options.compactMap {

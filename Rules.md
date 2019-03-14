@@ -549,7 +549,7 @@ reason, the rule is disabled by default, and must be manually enabled via the
 ## leadingDelimiters
 
 Moves delimiters such as : or ; or , placed at the start of a line to the end
-of the previous line instead..
+of the previous line instead.
 
 <details>
 <summary>Examples</summary>
@@ -1131,8 +1131,8 @@ Adds space around `/* ... */` comments and before `//` comments.
 ```
 
 ```diff
-- func foo() {/* no-op */}
-+ func foo() { /* no-op */ }
+- func foo() {/* ... */}
++ func foo() { /* ... */ }
 ```
 
 </details>
@@ -1246,8 +1246,8 @@ Adds a space inside `/* ... */` comments and at the start of `//` comments.
 ```
 
 ```diff
-- func foo() { /*no-op*/ }
-+ func foo() { /* no-op */ }
+- func foo() { /*...*/ }
++ func foo() { /* ... */ }
 ```
 
 </details>
@@ -1286,7 +1286,7 @@ Removes the space inside `( ... )`.
 ## specifiers
 
 Normalizes the order for property/function/class specifiers (public, weak,
-lazy, etc.).
+lazy, etc.)
 
 <details>
 <summary>Examples</summary>
@@ -1372,7 +1372,7 @@ Ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon
 
 Converts the last closure argument in a function call to trailing closure
 syntax where possible. By default this is restricted to anonymous closure
-arguments, as removing named closures can result in call-site ambiguity..
+arguments, as removing named closures can result in call-site ambiguity.
 
 Option | Description
 --- | ---
@@ -1480,11 +1480,11 @@ Option | Description
 
 ```diff
 - func foo(_ bar: Int) {
-    // no-op
+    ...
   }
 
 + func foo(_: Int) {
-    // no-op
+    ...
   }
 ```
 
@@ -1551,14 +1551,14 @@ Option | Description
 ```diff
 - func foo(bar: Int,
 -          baz: String) {
-    // foo function
+    ...
   }
 
 + func foo(
 +   bar: Int,
 +   baz: String
 + ) {
-    // foo function
+    ...
   }
 ```
 
@@ -1573,7 +1573,7 @@ Or for `--wrapcollections before-first`:
 +   bar,
     baz,
 +   quuz
-]
++ ]
 ```
 
 </details>
@@ -1582,4 +1582,4 @@ Or for `--wrapcollections before-first`:
 ## yodaConditions
 
 Reorders so-called "yoda conditions" where the constant is placed on the
-left-hand side of a comparison instead of the right..
+left-hand side of a comparison instead of the right.

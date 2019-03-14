@@ -406,7 +406,7 @@ public func applyRules(_ rules: [FormatRule],
                 rule.apply(with: formatter)
             }
             guard group.wait(timeout: .now() + timeout) != .timedOut else {
-                throw FormatError.writing("\(rule.name ?? "Rule") failed to terminate")
+                throw FormatError.writing("\(rule.name ?? "Rule") rule failed to terminate")
             }
             callback?(i, formatter.tokens)
         }

@@ -35,11 +35,6 @@ import XCTest
 private let projectDirectory = URL(fileURLWithPath: #file)
     .deletingLastPathComponent().deletingLastPathComponent()
 
-private let rulesFile: String = {
-    let readmeURL = projectDirectory.appendingPathComponent("Rules.md")
-    return try! String(contentsOf: readmeURL, encoding: .utf8)
-}()
-
 class CommandLineTests: XCTestCase {
     func testLinuxTestSuiteIncludesAllTests() {
         #if os(macOS)
@@ -116,45 +111,6 @@ class CommandLineTests: XCTestCase {
         printHelp(as: .content)
         printOptions(as: .content)
         XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
-    }
-
-    // MARK: documentation
-
-    func testAllRulesInRulesFile() {
-        for ruleName in FormatRules.byName.keys {
-            XCTAssertTrue(rulesFile.contains("## \(ruleName)"), ruleName)
-        }
-    }
-
-    func testNoInvalidRulesInRulesFile() {
-        let ruleNames = Set(FormatRules.byName.keys)
-        var range = rulesFile.startIndex ..< rulesFile.endIndex
-        while let match = rulesFile.range(of: "\\*[a-zA-Z]+\\* - ", options: .regularExpression, range: range, locale: nil) {
-            let lower = rulesFile.index(after: match.lowerBound)
-            let upper = rulesFile.index(match.upperBound, offsetBy: -4)
-            let ruleName: String = String(rulesFile[lower ..< upper])
-            XCTAssertTrue(ruleNames.contains(ruleName), ruleName)
-            range = match.upperBound ..< range.upperBound
-        }
-    }
-
-    func testAllOptionsInRulesFile() {
-        let arguments = Set(formattingArguments).subtracting(deprecatedArguments)
-        for argument in arguments {
-            XCTAssertTrue(rulesFile.contains("`--\(argument)`") || rulesFile.contains("`--\(argument) "), argument)
-        }
-    }
-
-    func testNoInvalidOptionsInRulesFile() {
-        let arguments = Set(commandLineArguments).subtracting(deprecatedArguments)
-        var range = rulesFile.startIndex ..< rulesFile.endIndex
-        while let match = rulesFile.range(of: "`--[a-zA-Z]+[` ]", options: .regularExpression, range: range, locale: nil) {
-            let lower = rulesFile.index(match.lowerBound, offsetBy: 3)
-            let upper = rulesFile.index(before: match.upperBound)
-            let argument: String = String(rulesFile[lower ..< upper])
-            XCTAssertTrue(arguments.contains(argument), argument)
-            range = match.upperBound ..< range.upperBound
-        }
     }
 
     // MARK: cache

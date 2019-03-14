@@ -14,6 +14,12 @@ extension FormatRule {
     }
 }
 
+extension _FormatRules {
+    var examplesByName: [String: String] {
+        return examplesByRuleName
+    }
+}
+
 private let examplesByRuleName: [String: String] = {
     var examples = [String: String]()
     for (label, value) in Mirror(reflecting: Examples()).children {
@@ -691,8 +697,8 @@ private struct Examples {
     ```
 
     ```diff
-    - func foo() {/* no-op */}
-    + func foo() { /* no-op */ }
+    - func foo() {/* ... */}
+    + func foo() { /* ... */ }
     ```
     """
 
@@ -753,8 +759,8 @@ private struct Examples {
     ```
 
     ```diff
-    - func foo() { /*no-op*/ }
-    + func foo() { /* no-op */ }
+    - func foo() { /*...*/ }
+    + func foo() { /* ... */ }
     ```
     """
 
@@ -880,11 +886,11 @@ private struct Examples {
 
     ```diff
     - func foo(_ bar: Int) {
-        // no-op
+        ...
       }
 
     + func foo(_: Int) {
-        // no-op
+        ...
       }
     ```
 
@@ -925,14 +931,14 @@ private struct Examples {
     ```diff
     - func foo(bar: Int,
     -          baz: String) {
-        // foo function
+        ...
       }
 
     + func foo(
     +   bar: Int,
     +   baz: String
     + ) {
-        // foo function
+        ...
       }
     ```
 

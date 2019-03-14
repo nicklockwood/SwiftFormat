@@ -7121,6 +7121,18 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testNoMistakeTernaryExpressionForArguments() {
+        let input = """
+        (foo ?
+            bar :
+            baz)
+        """
+        let output = input
+        let options = FormatOptions(wrapArguments: .beforeFirst)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["redundantParens"]), options: options), output + "\n")
+    }
+
     // closingParenOnSameLine = true
 
     func testParenOnSameLineWhenWrapAfterFirstConvertedToWrapBefore() {

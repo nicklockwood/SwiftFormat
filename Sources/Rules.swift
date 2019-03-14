@@ -3028,11 +3028,18 @@ public struct _FormatRules {
             }
         }
         formatter.forEach(.startOfScope) { i, token in
+            guard let closingBraceIndex = formatter.endOfScope(at: i) else {
+                return
+            }
             let mode: WrapMode
             var checkNestedScopes = true
             var closingBraceOnSameLine = false
             switch token.string {
             case "(":
+                guard formatter.index(of: .delimiter, in: i + 1 ..< closingBraceIndex) != nil else {
+                    // Not an argument list, or only one argument
+                    return
+                }
                 checkNestedScopes = false
                 closingBraceOnSameLine = formatter.options.closingParenOnSameLine
                 fallthrough
@@ -3043,8 +3050,7 @@ public struct _FormatRules {
             default:
                 return
             }
-            guard mode != .disabled, let closingBraceIndex = formatter.endOfScope(at: i),
-                let firstLinebreakIndex = checkNestedScopes ?
+            guard mode != .disabled, let firstLinebreakIndex = checkNestedScopes ?
                 (i ..< closingBraceIndex).first(where: { formatter.tokens[$0].isLinebreak }) :
                 formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) else {
                 return

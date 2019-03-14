@@ -736,6 +736,7 @@ extension RulesTests {
         ("testNoMarkProtocolFunctionArgument", testNoMarkProtocolFunctionArgument),
         ("testNoMarkUnusedArgumentsInProtocolFunction", testNoMarkUnusedArgumentsInProtocolFunction),
         ("testNoMistakeProtocolClassSpecifierForClassFunction", testNoMistakeProtocolClassSpecifierForClassFunction),
+        ("testNoMistakeTernaryExpressionForArguments", testNoMistakeTernaryExpressionForArguments),
         ("testNoNestedHoistLetWithSpecifiedArgs", testNoNestedHoistLetWithSpecifiedArgs),
         ("testNoOverHoistSwitchCaseWithNestedParens", testNoOverHoistSwitchCaseWithNestedParens),
         ("testNoPermanentReductionInScopeAfterWrap", testNoPermanentReductionInScopeAfterWrap),

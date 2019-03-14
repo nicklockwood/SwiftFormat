@@ -124,7 +124,7 @@ class SwiftFormatTests: XCTestCase {
     func testFormattingFailsForFragment() {
         let input = "foo () {"
         XCTAssertThrowsError(try format(input, rules: [])) {
-            XCTAssertEqual("\($0)", "unexpected end of file at 1:8")
+            XCTAssertEqual("\($0)", "Unexpected end of file at 1:8")
         }
     }
 
@@ -139,7 +139,7 @@ class SwiftFormatTests: XCTestCase {
     func testFormattingFailsForConflict() {
         let input = "foo () {\n<<<<<< old\n    bar()\n======\n    baz()\n>>>>>> new\n}"
         XCTAssertThrowsError(try format(input, rules: [])) {
-            XCTAssertEqual("\($0)", "found conflict marker <<<<<< at 2:0")
+            XCTAssertEqual("\($0)", "Found conflict marker <<<<<< at 2:0")
         }
     }
 

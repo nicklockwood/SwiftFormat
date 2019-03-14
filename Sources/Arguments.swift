@@ -96,7 +96,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             // Long argument names
             let key = String(arg.unicodeScalars.dropFirst(2))
             if !names.contains(key) {
-                throw FormatError.options("unknown option --\(key)")
+                throw FormatError.options("Unknown option --\(key)")
             }
             name = key
             namedArgs[name] = ""
@@ -106,9 +106,9 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             let flag = String(arg.unicodeScalars.dropFirst())
             let matches = names.filter { $0.hasPrefix(flag) }
             if matches.count > 1 {
-                throw FormatError.options("ambiguous flag -\(flag)")
+                throw FormatError.options("Ambiguous flag -\(flag)")
             } else if matches.isEmpty {
-                throw FormatError.options("unknown flag -\(flag)")
+                throw FormatError.options("Unknown flag -\(flag)")
             } else {
                 name = matches[0]
                 namedArgs[name] = ""
@@ -139,7 +139,7 @@ let allRules = Set(FormatRules.byName.keys)
 func parseRules(_ rules: String) throws -> [String] {
     let rules = parseCommaDelimitedList(rules)
     try rules.first(where: { !allRules.contains($0) }).map {
-        throw FormatError.options("unknown rule '\($0)'")
+        throw FormatError.options("Unknown rule '\($0)'")
     }
     return rules
 }
@@ -225,7 +225,7 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
 // Parse a configuration file into a dictionary of arguments
 func parseConfigFile(_ data: Data) throws -> [String: String] {
     guard let input = String(data: data, encoding: .utf8) else {
-        throw FormatError.reading("unable to read data for configuration file")
+        throw FormatError.reading("Unable to read data for configuration file")
     }
     let lines = input.components(separatedBy: .newlines)
     let arguments = try lines.flatMap { line -> [String] in
@@ -238,7 +238,7 @@ func parseConfigFile(_ data: Data) throws -> [String: String] {
             return []
         }
         if !key.hasPrefix("-") {
-            throw FormatError.options("unknown option \(key) in configuration file")
+            throw FormatError.options("Unknown option '\(key)' in configuration file")
         }
         return [key, parts.dropFirst().joined(separator: " ")]
     }
@@ -342,7 +342,7 @@ private func processOption(_ key: String,
         guard !value.isEmpty else {
             throw FormatError.options("--\(key) option expects a value")
         }
-        throw FormatError.options("unsupported --\(key) value '\(value)'")
+        throw FormatError.options("Unsupported --\(key) value '\(value)'")
     }
 }
 

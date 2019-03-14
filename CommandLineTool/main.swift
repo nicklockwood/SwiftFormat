@@ -61,7 +61,7 @@ private let stderrIsTTY = isatty(STDERR_FILENO) != 0
 CLI.print = { message, type in
     switch type {
     case .info:
-        print(stderrIsTTY ? message.inDefault : message, to: &stderr)
+        print(message, to: &stderr)
     case .success:
         print(stderrIsTTY ? message.inGreen : message, to: &stderr)
     case .error:

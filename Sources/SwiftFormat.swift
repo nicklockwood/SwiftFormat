@@ -138,9 +138,9 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 )
             }
             if manager.fileExists(atPath: url.path) {
-                throw FormatError.reading("failed to read attributes for \(url.path)")
+                throw FormatError.reading("Failed to read attributes for \(url.path)")
             }
-            throw FormatError.options("file not found at \(url.path)")
+            throw FormatError.options("File not found at \(url.path)")
         #else
             var isDirectory: ObjCBool = false
             if manager.fileExists(atPath: url.path, isDirectory: &isDirectory) {
@@ -153,7 +153,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     name: url.lastPathComponent
                 )
             }
-            throw FormatError.options("file not found at \(url.path)")
+            throw FormatError.options("File not found at \(url.path)")
         #endif
     }
 
@@ -166,11 +166,11 @@ public func enumerateFiles(withInputURL inputURL: URL,
     let fileOptions = baseOptions.fileOptions ?? .default
     if !fileOptions.followSymlinks,
         resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true {
-        return [FormatError.options("symbolic link or alias was skipped: \(inputURL.path)")]
+        return [FormatError.options("Symbolic link or alias was skipped: \(inputURL.path)")]
     }
     if resourceValues.isDirectory == false,
         !fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
-        return [FormatError.options("unsupported file type: \(inputURL.path)")]
+        return [FormatError.options("Unsupported file type: \(inputURL.path)")]
     }
 
     let group = DispatchGroup()
@@ -229,7 +229,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
             do {
                 let versionString = try String(contentsOf: versionFile, encoding: .utf8)
                 guard let version = Version(rawValue: versionString) else {
-                    throw FormatError.options("malformed \(swiftVersionFile) file at \(versionFile.path)")
+                    throw FormatError.options("Malformed \(swiftVersionFile) file at \(versionFile.path)")
                 }
                 assert(options.formatOptions != nil)
                 options.formatOptions?.swiftVersion = version
@@ -278,7 +278,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
             guard let files = try? manager.contentsOfDirectory(
                 at: inputURL, includingPropertiesForKeys: keys, options: enumerationOptions
             ) else {
-                onComplete { throw FormatError.reading("failed to read contents of directory at \(inputURL.path)") }
+                onComplete { throw FormatError.reading("Failed to read contents of directory at \(inputURL.path)") }
                 return
             }
             for url in files where !url.path.hasPrefix(".") {
@@ -298,7 +298,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
 
     queue.async(group: group) {
         if !manager.fileExists(atPath: inputURL.path) {
-            onComplete { throw FormatError.options("file not found at \(inputURL.path)") }
+            onComplete { throw FormatError.options("File not found at \(inputURL.path)") }
             return
         }
         var options = baseOptions
@@ -350,15 +350,15 @@ public func parsingError(for tokens: [Token], options: FormatOptions) -> FormatE
         let message: String
         switch tokens[index] {
         case .error(""):
-            message = "unexpected end of file"
+            message = "Unexpected end of file"
         case let .error(string):
             if string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                message = "inconsistent whitespace in multi-line string literal"
+                message = "Inconsistent whitespace in multi-line string literal"
             } else {
-                message = "unexpected token \(string)"
+                message = "Unexpected token \(string)"
             }
         case let .operator(string, _):
-            message = "found conflict marker \(string)"
+            message = "Found conflict marker \(string)"
         default:
             preconditionFailure()
         }
@@ -408,7 +408,7 @@ public func applyRules(_ rules: [FormatRule],
         tokens = formatter.tokens
         options.fileHeader = .ignore // Prevents infinite recursion
     }
-    throw FormatError.writing("failed to terminate")
+    throw FormatError.writing("Failed to terminate")
 }
 
 /// Format a pre-parsed token array

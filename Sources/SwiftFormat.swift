@@ -396,10 +396,18 @@ public func applyRules(_ rules: [FormatRule],
     inferFormatOptions(sharedOptions, from: tokens, into: &options)
 
     // Recursively apply rules until no changes are detected
+    let group = DispatchGroup()
+    let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
+    let timeout = TimeInterval(tokens.count) / 1000
     for _ in 0 ..< 10 {
         let formatter = Formatter(tokens, options: options)
         for (i, rule) in rules.enumerated() {
-            rule.apply(with: formatter)
+            queue.async(group: group) {
+                rule.apply(with: formatter)
+            }
+            guard group.wait(timeout: .now() + timeout) != .timedOut else {
+                throw FormatError.writing("\(rule.name ?? "Rule") failed to terminate")
+            }
             callback?(i, formatter.tokens)
         }
         if tokens == formatter.tokens {

@@ -33,7 +33,7 @@ import Cocoa
 
 extension FormatOptions.Descriptor {
     var toolTip: String {
-        return (help.first.map { "\($0)" } ?? "").uppercased() + help.dropFirst() + "."
+        return stripMarkdown(help) + "."
     }
 }
 

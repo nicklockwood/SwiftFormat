@@ -2929,28 +2929,24 @@ public struct _FormatRules {
         sharedOptions: ["indent", "trimwhitespace", "linebreaks"]
     ) { formatter in
         func removeLinebreakBeforeClosingBrace(at closingBraceIndex: inout Int) {
-            if var lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
+            guard let lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
                 $0.isLinebreak
+            }) else {
+                return
+            }
+            if case .commentBody? = formatter.last(.nonSpace, before: lastIndex) {
+                return
+            }
+            // Remove linebreak
+            formatter.removeTokens(inRange: lastIndex ..< closingBraceIndex)
+            closingBraceIndex = lastIndex
+            // Remove trailing comma
+            if let prevCommaIndex = formatter.index(of:
+                .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex, if: {
+                    $0 == .delimiter(",")
             }) {
-                if let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: closingBraceIndex),
-                    case .commentBody = formatter.tokens[prevIndex],
-                    let startIndex = formatter.index(of: .startOfScope("//"), before: prevIndex) {
-                    lastIndex = formatter.index(of: .space, before: startIndex) ?? startIndex
-                    formatter.insertToken(formatter.tokens[closingBraceIndex], at: lastIndex)
-                    formatter.removeToken(at: closingBraceIndex + 1)
-                    closingBraceIndex = lastIndex
-                } else {
-                    formatter.removeTokens(inRange: lastIndex ..< closingBraceIndex)
-                    closingBraceIndex = lastIndex
-                }
-                // Remove trailing comma
-                if let prevCommaIndex = formatter.index(of:
-                    .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex, if: {
-                        $0 == .delimiter(",")
-                }) {
-                    formatter.removeToken(at: prevCommaIndex)
-                    closingBraceIndex -= 1
-                }
+                formatter.removeToken(at: prevCommaIndex)
+                closingBraceIndex -= 1
             }
         }
         func wrapArgumentsBeforeFirst(startOfScope i: Int,
@@ -2958,24 +2954,18 @@ public struct _FormatRules {
                                       allowGrouping: Bool,
                                       closingBraceOnSameLine: Bool) {
             // Get indent
-            let start = formatter.startOfLine(at: i)
-            let indent: String
-            if let indentToken = formatter.token(at: start), case let .space(string) = indentToken {
-                indent = string
-            } else {
-                indent = ""
-            }
+            let indent = formatter.indentForLine(at: i)
             var closingBraceIndex = closingBraceIndex
             if closingBraceOnSameLine {
                 removeLinebreakBeforeClosingBrace(at: &closingBraceIndex)
             } else {
                 // Insert linebreak before closing paren
-                if let lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
-                    !$0.isLinebreak
-                }) {
-                    formatter.insertSpace(indent, at: lastIndex + 1)
-                    formatter.insertToken(.linebreak(formatter.options.linebreak), at: lastIndex + 1)
-                    closingBraceIndex += 1
+                if let lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex) {
+                    closingBraceIndex += formatter.insertSpace(indent, at: lastIndex + 1)
+                    if !formatter.tokens[lastIndex].isLinebreak {
+                        formatter.insertToken(.linebreak(formatter.options.linebreak), at: lastIndex + 1)
+                        closingBraceIndex += 1
+                    }
                 }
             }
             // Insert linebreak after each comma

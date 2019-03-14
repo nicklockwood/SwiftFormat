@@ -223,6 +223,7 @@ extension MetadataTests {
         ("testGenerateRulesDocumentation", testGenerateRulesDocumentation),
         ("testNoInvalidOptionsInRulesFile", testNoInvalidOptionsInRulesFile),
         ("testNoInvalidRulesInRulesFile", testNoInvalidRulesInRulesFile),
+        ("testRuleHelpLinesEndInPeriod", testRuleHelpLinesEndInPeriod),
         ("testRulesOptions", testRulesOptions),
     ]
 }
@@ -728,6 +729,7 @@ extension RulesTests {
         ("testNoInsertSpaceBeforeUnlabelledAddressArgument", testNoInsertSpaceBeforeUnlabelledAddressArgument),
         ("testNoInterpretGenericTypesAsMembers", testNoInterpretGenericTypesAsMembers),
         ("testNoLinebreakAtEndOfFragment", testNoLinebreakAtEndOfFragment),
+        ("testNoMangleCommentedLinesWhenWrappingArguments", testNoMangleCommentedLinesWhenWrappingArguments),
         ("testNoMangleLabelWhenIndentCaseTrue", testNoMangleLabelWhenIndentCaseTrue),
         ("testNoMarkFunctionArgument", testNoMarkFunctionArgument),
         ("testNoMarkNamedFunctionArgument", testNoMarkNamedFunctionArgument),
@@ -769,6 +771,7 @@ extension RulesTests {
         ("testNoRemoveLetNilInitAfterVar", testNoRemoveLetNilInitAfterVar),
         ("testNoRemoveLetWithType", testNoRemoveLetWithType),
         ("testNoRemoveLinebreakAfterCommentInArguments", testNoRemoveLinebreakAfterCommentInArguments),
+        ("testNoRemoveLinebreakAfterCommentInArguments2", testNoRemoveLinebreakAfterCommentInArguments2),
         ("testNoRemoveLinebreakAfterCommentInElements", testNoRemoveLinebreakAfterCommentInElements),
         ("testNoRemoveMethodSignature", testNoRemoveMethodSignature),
         ("testNoRemoveMultilineGetSet", testNoRemoveMultilineGetSet),

@@ -6981,10 +6981,23 @@ class RulesTests: XCTestCase {
 
     func testNoRemoveLinebreakAfterCommentInArguments() {
         let input = "a(b // comment\n)"
-        let output = "a(b) // comment\n"
+        let output = input
         let options = FormatOptions(wrapArguments: .afterFirst)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testNoRemoveLinebreakAfterCommentInArguments2() {
+        let input = """
+        foo(bar: bar
+        //  ,
+        //  baz: baz
+            ) {}
+        """
+        let output = input
+        let options = FormatOptions(wrapArguments: .afterFirst)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["indent"]), options: options), output + "\n")
     }
 
     // preserve
@@ -7089,6 +7102,25 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["trailingClosures"]), options: options), output + "\n")
     }
 
+    func testNoMangleCommentedLinesWhenWrappingArguments() {
+        let input = """
+        foo(bar: bar
+        //    ,
+        //    baz: baz
+            ) {}
+        """
+        let output = """
+        foo(
+            bar: bar
+        //    ,
+        //    baz: baz
+        ) {}
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // closingParenOnSameLine = true
 
     func testParenOnSameLineWhenWrapAfterFirstConvertedToWrapBefore() {
@@ -7180,10 +7212,10 @@ class RulesTests: XCTestCase {
 
     func testNoRemoveLinebreakAfterCommentInElements() {
         let input = "[a, // comment\n]"
-        let output = "[a] // comment\n"
+        let output = input
         let options = FormatOptions(wrapCollections: .afterFirst)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
     // MARK: numberFormatting

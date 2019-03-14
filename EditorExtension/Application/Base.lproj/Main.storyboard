@@ -473,15 +473,15 @@
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hfs-ko-uob">
-                                                                    <rect key="frame" x="32" y="7" width="102" height="17"/>
-                                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Ceci est du Text" id="vqw-aY-rHp">
+                                                                    <rect key="frame" x="32" y="7" width="68" height="17"/>
+                                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Rule name" id="vqw-aY-rHp">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                                     </textFieldCell>
                                                                 </textField>
                                                                 <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="3FH-Sx-Hfs">
-                                                                    <rect key="frame" x="140" y="4" width="323" height="22"/>
+                                                                    <rect key="frame" x="106" y="4" width="357" height="22"/>
                                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Mkg-Qi-aiV">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -528,7 +528,7 @@
                                                                 </popUpButton>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8Sj-pm-88d">
                                                                     <rect key="frame" x="32" y="6" width="353" height="17"/>
-                                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Ceci est du Text" id="72m-8i-Mg3">
+                                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Option name" id="72m-8i-Mg3">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -568,11 +568,11 @@
                                 </scroller>
                             </scrollView>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="pHb-Fu-MRN">
-                                <rect key="frame" x="188" y="571" width="101" height="44"/>
+                                <rect key="frame" x="145" y="571" width="186" height="44"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="qEB-fw-FrU"/>
                                 </constraints>
-                                <buttonCell key="cell" type="check" title="Infer Options" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="TeM-iN-9EW">
+                                <buttonCell key="cell" type="check" title="Infer Options Automatically" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="TeM-iN-9EW">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>

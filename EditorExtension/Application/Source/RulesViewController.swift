@@ -33,33 +33,18 @@ import Cocoa
 
 extension FormatRule {
     var toolTip: String {
-        return stripMarkdown(help) + "."
+        return stripMarkdown(help)
     }
 }
 
 extension FormatOptions.Descriptor {
-    // if this extension don't compile have a look at
+    // If this extension won't compile have a look at
     // https://stackoverflow.com/questions/35673290/extension-of-a-nested-type-in-swift
     // https://bugs.swift.org/browse/SR-631
 
     var toolTip: String {
         return stripMarkdown(help) + "."
     }
-}
-
-typealias OptionName = String
-func rulesPerOption(ruleStore: RulesStore) -> [OptionName: [FormatRule]] {
-    var rulePerOption = [OptionName: [FormatRule]]()
-    ruleStore.rules.forEach {
-        let fullRule = FormatRules.byName[$0.name]!
-        fullRule.options.forEach { optionName in
-            var ar = rulePerOption[optionName] ?? [FormatRule]()
-            ar.append(fullRule)
-            rulePerOption[optionName] = ar
-        }
-    }
-
-    return rulePerOption
 }
 
 final class RulesViewController: NSViewController {
@@ -80,6 +65,7 @@ final class RulesViewController: NSViewController {
     @objc private func didLoadNewConfiguration(_: Notification) {
         viewModels = buildRules()
         tableView?.reloadData()
+        inferOptionsButton?.state = (optionStore.inferOptions ? .on : .off)
     }
 
     @IBAction private func toggleInferOptions(_ sender: NSButton) {
@@ -89,15 +75,9 @@ final class RulesViewController: NSViewController {
     }
 
     private func buildRules() -> [UserSelectionType] {
-        var rulesPerOptionMapping = rulesPerOption(ruleStore: ruleStore)
-
-        if !rulesPerOptionMapping.filter({ $0.value.count != 1 }).isEmpty {
-            // WARNING: Some options won't be shown... How should we implement this safe guard ?
-        }
-
         let optionsByName = Dictionary(uniqueKeysWithValues: optionStore
             .options
-            .map({ ($0.descriptor.argumentName, $0) }))
+            .map { ($0.descriptor.argumentName, $0) })
 
         var results = [UserSelectionType]()
         ruleStore
@@ -108,7 +88,6 @@ final class RulesViewController: NSViewController {
 
                 let associatedOptions = formatRule
                     .options
-                    .filter { optionName in rulesPerOptionMapping[optionName]?.count == 1 }
                     .compactMap { optionName in optionsByName[optionName] }
                     .sorted { $0.descriptor.displayName < $1.descriptor.displayName }
                     .compactMap { option -> UserSelectionType? in

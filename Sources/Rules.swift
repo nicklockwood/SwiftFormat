@@ -1917,7 +1917,7 @@ public struct _FormatRules {
             }
             // Was an assignment
             formatter.insertToken(.identifier("_"), at: i)
-            if !(formatter.token(at: i - 1).map({ $0.isSpaceOrLinebreak }) ?? true) {
+            if formatter.token(at: i - 1).map({ $0.isSpaceOrLinebreak }) != true {
                 formatter.insertToken(.space(" "), at: i)
             }
         }

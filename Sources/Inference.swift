@@ -853,7 +853,7 @@ private struct Inference {
                     while let token = formatter.token(at: prevIndex), token != .keyword("var") {
                         if token == .operator("=", .infix) || (token.isLvalue && formatter.nextToken(after: prevIndex, where: {
                             !$0.isSpaceOrCommentOrLinebreak && !$0.isStartOfScope
-                        }).map({ $0.isRvalue && !$0.isOperator(".") }) == true) {
+                        }).map { $0.isRvalue && !$0.isOperator(".") } == true) {
                             // It's a closure
                             fallthrough
                         }

@@ -113,9 +113,17 @@ If you followed the installation instructions above, you can now just type
 $ swiftformat .
 ```
     
-(that's a space and then a period after the command) in the terminal to format any Swift files in the current directory.
+(that's a space and then a period after the command) in the terminal to format any Swift files in the current directory. In place of the `.`, you can instead type an absolute or relative path to the file or directory that you want to format.
 
-**WARNING:** `swiftformat .` will overwrite any Swift files it finds in the current directory, and any subfolders therein. If you run it from your home directory, it will probably reformat every Swift file on your hard drive.
+If you prefer, you can use unix pipes to include SwiftFormat as part of a command chain. For example, this is an alternative way to format a file:
+
+```bash
+$ cat /path/to/file.swift | swiftformat --output /path/to/file.swift
+```
+    
+Omitting the `--output /path/to/file.swift` will print the formatted file to `stdout`.
+
+**WARNING:** `swiftformat .` will overwrite any Swift files it finds in the current directory, and any subfolders therein. If you run it in your home directory, it will probably reformat every Swift file on your hard drive.
 
 To use it safely, do the following:
 
@@ -131,21 +139,13 @@ To use it safely, do the following:
 
     If you used `--inferoptions` to generate a suggested set of options in step 3, you should copy and paste them into the command, either before or after the path(s) to your source files.
     
-    If you have created a [config file](#config-file), you can specify its path using `--config "/path/to/your/config-file/".
+    If you have created a [config file](#config-file), you can specify its path using `--config "/path/to/your/config-file/". Alternatively, if you name the file `.swiftformat` and place it inside the project you are formatting, it will be picked up automatically.
 
 5. Press enter to begin formatting. Once the formatting is complete, use your source control system to check the changes, and verify that no undesirable changes have been introduced. If they have, revert the changes, tweak the options and try again.
 
 6. (Optional) commit the changes.
 
 Following these instructions *should* ensure that you avoid catastrophic data loss, but in the unlikely event that it wipes your hard drive, **please note that I accept no responsibility**.
-
-If you prefer, you can also use unix pipes to include swiftformat as part of a command chain. For example, this is an alternative way to format a file:
-
-```bash
-$ cat /path/to/file.swift | swiftformat --output /path/to/file.swift
-```
-    
-Omitting the `--output /path/to/file.swift` will print the formatted file to `stdout`.
 
 
 Xcode source editor extension
@@ -155,7 +155,7 @@ Xcode source editor extension
 
 You'll find the latest version of the SwiftFormat for Xcode application inside the EditorExtension folder included in the SwiftFormat repository. Drag it into your `Applications` folder, then double-click to launch it, and follow the on-screen instructions.
 
-**NOTE:** The Extension requires Xcode 8 and macOS 10.12 Sierra or higher.
+**NOTE:** The Extension requires Xcode 9.2 and macOS 10.12 (Sierra) or higher.
 
 **Usage:**
 
@@ -193,7 +193,7 @@ To set up SwiftFormat as an Xcode build phase, do the following:
     "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat"
     ```
 	    
-    **NOTE:** Adding this script will slightly increase your build time, and will make changes to your source files as you work on them, which can have annoying side-effects such as clearing the undo buffer. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
+    **NOTE:** Adding this script will overwrite your source files as you work on them, which has the annoying side-effect of clearing the undo history. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 
 Alternatively, you can skip installation of the SwiftFormat pod and configure Xcode to use the locally installed swiftformat command-line tool instead by putting the following in your Run Script build phase:
 
@@ -205,12 +205,13 @@ else
 fi
 ```
 
-This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commits as code gets reformatted inconsistently.
+This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commit history as code gets reformatted inconsistently.
+
 
 Via AppleScript
 ----------------
 
-To run swiftformat on the frontmost Xcode document (project or workspace) you can use the following AppleScript:
+To run SwiftFormat on the frontmost Xcode document (project or workspace) you can use the following AppleScript:
 
 ```applescript
 tell application "Xcode"
@@ -222,6 +223,7 @@ end tell
 
 Some Apps you can trigger this from are [BetterTouchTool](https://folivora.ai), [Alfred](https://www.alfredapp.com) or [Keyboard Maestro](https://www.keyboardmaestro.com/main/). Another option is to define a QuickAction for Xcode via Automator and then assign a keyboard shortcut for it in the System Preferences.
 
+
 VSCode plugin
 --------------
 
@@ -231,7 +233,7 @@ If you prefer to use Microsoft's [VSCode](https://code.visualstudio.com) editor 
 Git pre-commit hook
 ---------------------
 
-1. Follow the instructions for installing the swiftformat command-line tool.
+1. Follow the instructions for installing the SwiftFormat command-line tool.
 
 2. Edit or create a `.git/hooks/pre-commit` file in your project folder. The .git folder is hidden but should already exist if you are using Git with your project, so open in with the terminal, or the Finder's `Go > Go to Folder...` menu.
 
@@ -279,11 +281,11 @@ SwiftFormat's configuration is split between **rules** and **options**. Rules ar
 Options
 -------
 
-The options available in SwiftFormat can be displayed using the `--help` command-line argument. The default value for each option is indicated in the help text.
+The options available in SwiftFormat can be displayed using the `--options` command-line argument. The default value for each option is indicated in the help text.
 
-Rules are configured by adding `--[rulename] [value]` to your command-line arguments, or by creating a [config file](#config-file) as explained below.
+Rules are configured by adding `--[option_name] [value]` to your command-line arguments, or by creating a `.swiftformat` [config file](#config-file) and placing it in your project directory.
 
-A given option may affect multiple rules. See the [Rules](#rules) section below for details about which options affect which rule.
+A given option may affect multiple rules. Use `--ruleinfo [rule_name]` command for details about which options affect a given rule, or see the [Rules.md](https://github.com/nicklockwood/SwiftFormat/blob/master/Rules.md) file.
 
 
 Rules
@@ -291,7 +293,9 @@ Rules
 
 SwiftFormat includes over 50 rules, and new ones are added all the time. An up-to-date list can be found in [Rules.md](https://github.com/nicklockwood/SwiftFormat/blob/master/Rules.md) along with documentation for how they are used.
 
-The list of rules can also be displayed within the command-line app using the `--rules` argument. Rules can be either enabled or disabled. Most are enabled by default. Disabled rules are marked with "(disabled)" when displayed using `--rules`.
+The list of available rules can be displayed within the command-line app using the `--rules` argument. Rules can be either enabled or disabled. Most are enabled by default. Disabled rules are marked with "(disabled)" when displayed using `--rules`.
+
+You can use the `--ruleinfo [rule_name]` command to get information about a specific rule. Pass a comma-delimited list of rule names to get information for multiple rules at once, or use `--ruleinfo` with no argument for info on all rules.
 
 You can disable rules individually using `--disable` followed by a list of one or more comma-delimited rule names, or enable opt-in rules using `--enable` followed by the rule names:
 
@@ -347,11 +351,13 @@ There is no need to manually re-enable a rule after using the `next` directive.
 Swift version
 -------------
 
-Most SwiftFormat rules are version-agnostic, but some apply only to certain Swift versions. These rules will be disabled automatically if the Swift version is not specified, so to make sure that the full functionality is available, you should specify the version of Swift that is used by your project.
+Most SwiftFormat rules are version-agnostic, but some are applicable only to newer Swift versions. These rules will be disabled automatically if the Swift version is not specified, so to make sure that the full functionality is available you should specify the version of Swift that is used by your project.
 
-You can specify the Swift version one of two ways:
+You can specify the Swift version in one of two ways:
 
-The preferred option is to add a `.swift-version` file to your project directory. This is a text file that should contain the minimum Swift version supported by your project. This file applies hierarchically. If you have submodules in your project that use a different Swift version, you can add separate `.swift-version` files to those directories.
+The preferred option is to add a `.swift-version` file to your project directory. This is a text file that should contain the minimum Swift version supported by your project, and is a standard already used by other tools.
+
+The `.swift-version` file applies hierarchically; If you have submodules in your project that use a different Swift version, you can add separate `.swift-version` files to those directories.
 
 The other option to specify the Swift version using the `--swiftversion` command line argument. Note that this will be overridden by any `.swift-version` files encountered while processing.
 
@@ -381,7 +387,7 @@ The `--exclude` option takes a comma-delimited list of file or directory paths t
 
 Config files named ".swiftformat" will be processed automatically, however you can select an additional configuration file to use for formatting using the `--config "path/to/config/file"` command-line argument. A configuration file selected using `--config` does not need to be named ".swiftformat", and can be located outside of the project directory.
 
-The config file format is designed to be human editable. You may include blank lines for readability, and can also add comments using a hash prefix (#), e.g.
+The config file format is designed to be edited by hand. You may include blank lines for readability, and can also add comments using a hash prefix (#), e.g.
 
 ```
 # format options
@@ -395,7 +401,7 @@ The config file format is designed to be human editable. You may include blank l
 --disable elseOnSameLine,semicolons
 ```
 
-If you would prefer not to edit the configuration file by hand, you can use the [SwiftFormat for Xcode](#xcode-source-editor-extension) app to edit the configuration and export a configuration file. Alternatively, you can use the swiftformat command-line-tool's `--inferoptions` command to generate a config file from your existing project, like this:
+If you would prefer not to edit the configuration file by hand, you can use the [SwiftFormat for Xcode](#xcode-source-editor-extension) app to edit the configuration and export a configuration file. You can also use the swiftformat command-line-tool's `--inferoptions` command to generate a config file from your existing project, like this:
 
 ```bash
 $ cd /path/to/project
@@ -451,7 +457,7 @@ In order to run SwiftFormat as a linter, you can use the `--lint` command-line o
 $ swiftformat --lint path/to/project
 ```
 
-This works exactly the same way as when running in format mode, and all the same configuration options apply, however no files will be modified. SwiftFormat will simply format each file in memory and then compare the result against the input. If any formatting changes would have been applied, it will report an error.
+This works exactly the same way as when running in format mode, and all the same configuration options apply, however no files will be modified. SwiftFormat will simply format each file in memory and then compare the result against the input and report the files that required changes.
 
 The `--lint` option is very similar to `--dryrun`, except that `--lint` will return a nonzero error code if any changes are detected, which is useful if you want it to fail a build step on your CI server.
 
@@ -523,22 +529,22 @@ FAQ
 
 *Q. How is this different from SwiftLint?*
 
-> A. SwiftLint is primarily designed to find and report code smells and style violations in your code. SwiftFormat is designed to fix them. While SwiftLint can autocorrect some issues, and SwiftFormat has some support for [linting](#linting), their primary goals are different.
+> A. SwiftLint is primarily designed to find and report code smells and style violations in your code. SwiftFormat is designed to fix them. While SwiftLint can autocorrect some issues, and SwiftFormat has some support for [linting](#linting), their primary functions are different.
 
 
 *Q. Can SwiftFormat and SwiftLint be used together?*
 
-> A. Absolutely! The style rules encouraged by both tools are quite similar, and SwiftFormat even fixes some style violations that SwiftLint warns about, but can't currently autocorrect.
+> A. Absolutely! The style rules encouraged by both tools are quite similar, and SwiftFormat even fixes some style violations that SwiftLint warns about but can't currently autocorrect.
 
 
 *Q. What platforms does SwiftFormat support?*
 
-> A. Swiftformat works on macOS 10.12 (Sierra) and above, and also runs on Ubuntu Linux.
+> A. SwiftFormat works on macOS 10.12 (Sierra) and above, and also runs on Ubuntu Linux.
 
 
 *Q. What versions of Swift are supported?*
 
-> A. The SwiftFormat framework and command-line tool can be compiled using Swift 4.0 and above, and can format programs written in Swift 3.x or 4.x. Swift 2.x is no longer actively supported. If you are still using Swift 2.x, and find that SwiftFormat breaks your code, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a small subset of rules.
+> A. The SwiftFormat framework and command-line tool can be compiled using Swift 4.0 and above, and can format programs written in Swift 3.x, 4.x or 5. Swift 2.x is no longer actively supported. If you are still using Swift 2.x, and find that SwiftFormat breaks your code, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a small subset of rules.
 
 
 *Q. SwiftFormat made changes I didn't want it to. How can I find out which rules to disable?*
@@ -559,7 +565,7 @@ FAQ
 
 Q. I don't want to be surprised by new rules added when I upgrade SwiftFormat. How can I prevent this?
 
-> A. You can use the `--rules` argument to specify an exclusive list of rules to run. I new rules are added, they won't be enabled if you have specified a `--rules` list in your SwiftFormat configuration.
+> A. You can use the `--rules` argument to specify an exclusive list of rules to run. If new rules are added, they won't be enabled if you have specified a `--rules` list in your SwiftFormat configuration.
 
 
 *Q. Why can't I set the indent width or choose between tabs/spaces in the [SwiftFormat for Xcode](#xcode-source-editor-extension) options?*
@@ -569,7 +575,7 @@ Q. I don't want to be surprised by new rules added when I upgrade SwiftFormat. H
 
 *Q. After applying SwiftFormat, my code won't compile. Is that a bug?*
 
-> A. SwiftFormat should ideally never break your code. Check the [known issues](#known-issues), and if it's not already listed there, or the suggested workaround doesn't solve your problem, please [raise an issue on Github](https://github.com/nicklockwood/SwiftFormat/issues).
+> A. SwiftFormat should ideally never break your code. Check the [known issues](#known-issues), and if it's not already listed there, or the suggested workaround doesn't solve your problem, please [open an issue on Github](https://github.com/nicklockwood/SwiftFormat/issues).
 
 
 *Q. Can I use SwiftFormat to lint my code without changing it?*
@@ -614,7 +620,7 @@ Known issues
 
     To fix this, you can use the command-line option `--cache ignore` to force SwiftFormat to ignore the cache for this run, or just type an extra space in the file (which SwiftFormat will then remove again when it applies the correct formatting).
     
-* When running on Linux, the `--symlinks` option has no effect.
+* When running on Linux, the `--symlinks` option has no effect, and some of the `fileHeader` placeholders are not supported.
 
 
 Credits

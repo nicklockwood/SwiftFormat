@@ -385,9 +385,9 @@ public struct FormatOptions: CustomStringConvertible {
 
     public var description: String {
         let allowedCharacters = CharacterSet.newlines.inverted
-        return Mirror(reflecting: self).children.map({
+        return Mirror(reflecting: self).children.map {
             "\($0.value);".addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? ""
-        }).joined()
+        }.joined()
     }
 }
 

@@ -1,5 +1,20 @@
 # Change Log
 
+## [0.40.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.0) (2019-03-14)
+
+- Added `--trailingclosures` option for whitelisting functions that should use trailing closure syntax
+- The `trailingClosures` rule now only applies to a safe subset of methods by default
+- Enabled `trailingClosures`  rule by default (use `--disable trailingClosures` to opt out)
+- SwiftFormat now infers values to use for indentation, linebreaks, etc. if the associated rules are disabled
+- Added new `yodaConditions` rule that moves constant values to the right-hand-side of expressions
+- The `--dryrun` and `--lint` modes now only list modified files when running in `--verbose` mode
+- Added an automatic timeout for buggy rules, or if a rule gets stuck when processing malformed input
+- Fixed a bug in the `wrapArguments` that could corrupt argument lists containing commented lines
+- Fixed bug where `wrapArguments` sometimes rewrapped parenthesized expressions
+- Rule documentation is now available programmatically via the command-line
+- Improved command-line UI, providing additional feedback and more detail in error messages
+- Simplified SwiftFormat for Xcode app interface (big thanks to @VinceBurn for the UI implementation)
+
 ## [0.39.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.5) (2019-03-06)
 
 - Fixed bug in `braces` rule where closing brace was not wrapped onto a new line

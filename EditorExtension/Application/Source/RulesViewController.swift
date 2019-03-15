@@ -189,25 +189,40 @@ extension RulesViewController: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
         let model = self.model(forRow: row)
         let id: NSUserInterfaceItemIdentifier
-        let backgroundColor: NSColor
         switch model {
         case .binary:
             id = .binarySelectionTableCellView
-            let gray: CGFloat = 0.97
-            backgroundColor = NSColor(calibratedRed: gray, green: gray, blue: gray, alpha: gray)
         case .list:
             id = .listSelectionTableCellView
-            backgroundColor = NSColor.white
         case .freeText:
             id = .freeTextTableCellView
-            backgroundColor = NSColor.white
         }
 
-        let cell = tableView.makeView(withIdentifier: id, owner: self)
-        cell?.wantsLayer = true
+        return tableView.makeView(withIdentifier: id, owner: self)
+    }
 
-        cell?.layer?.backgroundColor = backgroundColor.cgColor
+    func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
+        if let rowView = tableView.makeView(withIdentifier: .ruleRowView, owner: self) as? NSTableRowView {
+            return rowView
+        }
 
-        return cell
+        let rowView = NSTableRowView(frame: .zero)
+        rowView.identifier = .ruleRowView
+        return rowView
+    }
+
+    func tableView(_ tableView: NSTableView, didAdd rowView: NSTableRowView, forRow row: Int) {
+        switch self.model(forRow: row) {
+        case .binary:
+            rowView.backgroundColor = NSColor.controlAlternatingRowBackgroundColors[1]
+        case .list, .freeText:
+            rowView.backgroundColor = NSColor.controlAlternatingRowBackgroundColors[0]
+        }
     }
 }
+
+private extension NSUserInterfaceItemIdentifier {
+    static let ruleRowView = NSUserInterfaceItemIdentifier(rawValue: "RuleRowView")
+}
+
+

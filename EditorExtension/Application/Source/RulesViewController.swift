@@ -201,7 +201,15 @@ extension RulesViewController: NSTableViewDelegate {
         return tableView.makeView(withIdentifier: id, owner: self)
     }
 
+    func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
+        if let rowView = tableView.makeView(withIdentifier: .ruleRowView, owner: self) as? NSTableRowView {
+            return rowView
+        }
 
+        let rowView = NSTableRowView(frame: .zero)
+        rowView.identifier = .ruleRowView
+        return rowView
+    }
 
     func tableView(_ tableView: NSTableView, didAdd rowView: NSTableRowView, forRow row: Int) {
         switch self.model(forRow: row) {
@@ -212,3 +220,9 @@ extension RulesViewController: NSTableViewDelegate {
         }
     }
 }
+
+private extension NSUserInterfaceItemIdentifier {
+    static let ruleRowView = NSUserInterfaceItemIdentifier(rawValue: "RuleRowView")
+}
+
+

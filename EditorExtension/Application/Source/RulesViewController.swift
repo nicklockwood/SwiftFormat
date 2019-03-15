@@ -199,7 +199,16 @@ extension RulesViewController: NSTableViewDelegate {
         }
 
         return tableView.makeView(withIdentifier: id, owner: self)
+    }
 
 
+
+    func tableView(_ tableView: NSTableView, didAdd rowView: NSTableRowView, forRow row: Int) {
+        switch self.model(forRow: row) {
+        case .binary:
+            rowView.backgroundColor = NSColor.controlAlternatingRowBackgroundColors[1]
+        case .list, .freeText:
+            rowView.backgroundColor = NSColor.controlAlternatingRowBackgroundColors[0]
+        }
     }
 }

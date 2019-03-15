@@ -417,21 +417,24 @@
                         <rect key="frame" x="0.0" y="0.0" width="476" height="613"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <scrollView autohidesScrollers="YES" horizontalLineScroll="33" horizontalPageScroll="10" verticalLineScroll="33" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="vVz-rA-tRS">
+                            <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="RZx-Ps-pFP">
+                                <rect key="frame" x="0.0" y="571" width="476" height="5"/>
+                            </box>
+                            <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="33" horizontalPageScroll="10" verticalLineScroll="33" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="vVz-rA-tRS">
                                 <rect key="frame" x="0.0" y="0.0" width="476" height="573"/>
-                                <clipView key="contentView" id="1nY-Z5-cvR">
-                                    <rect key="frame" x="1" y="1" width="474" height="571"/>
+                                <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="1nY-Z5-cvR">
+                                    <rect key="frame" x="0.0" y="0.0" width="476" height="573"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" selectionHighlightStyle="none" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="30" rowSizeStyle="automatic" usesAutomaticRowHeights="YES" viewBased="YES" id="JTc-wy-tJT">
-                                            <rect key="frame" x="0.0" y="0.0" width="474" height="571"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="476" height="573"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="3"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                            <tableViewGridLines key="gridStyleMask" horizontal="YES"/>
+                                            <tableViewGridLines key="gridStyleMask" dashed="YES"/>
                                             <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                             <tableColumns>
-                                                <tableColumn editable="NO" width="471" minWidth="40" maxWidth="1000" id="jXL-aR-Mks">
+                                                <tableColumn editable="NO" width="473" minWidth="40" maxWidth="1000" id="jXL-aR-Mks">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
                                                         <font key="font" metaFont="smallSystem"/>
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -444,12 +447,12 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView identifier="BinarySelectionTableCellView" id="CZN-za-xvO" customClass="BinarySelectionTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
-                                                            <rect key="frame" x="1" y="1" width="471" height="26"/>
+                                                            <rect key="frame" x="1" y="1" width="473" height="26"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <button verticalHuggingPriority="750" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Mfi-uR-j8t">
-                                                                    <rect key="frame" x="2" y="4" width="467" height="18"/>
-                                                                    <buttonCell key="cell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="aQA-fV-2dz">
+                                                                    <rect key="frame" x="2" y="4" width="469" height="18"/>
+                                                                    <buttonCell key="cell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="leading" state="on" inset="2" id="aQA-fV-2dz">
                                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                                         <font key="font" metaFont="system"/>
                                                                     </buttonCell>
@@ -469,7 +472,7 @@
                                                             </connections>
                                                         </tableCellView>
                                                         <tableCellView identifier="FreeTextTableCellView" id="ISi-9v-fr9" customClass="FreeTextTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
-                                                            <rect key="frame" x="1" y="30" width="471" height="30"/>
+                                                            <rect key="frame" x="1" y="30" width="473" height="30"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hfs-ko-uob">
@@ -481,7 +484,7 @@
                                                                     </textFieldCell>
                                                                 </textField>
                                                                 <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="3FH-Sx-Hfs">
-                                                                    <rect key="frame" x="106" y="4" width="357" height="22"/>
+                                                                    <rect key="frame" x="106" y="4" width="359" height="22"/>
                                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Mkg-Qi-aiV">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -506,11 +509,11 @@
                                                             </connections>
                                                         </tableCellView>
                                                         <tableCellView identifier="ListSelectionTableCellView" id="gu5-aI-ODU" customClass="ListSelectionTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
-                                                            <rect key="frame" x="1" y="63" width="471" height="29"/>
+                                                            <rect key="frame" x="1" y="63" width="473" height="29"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <popUpButton horizontalHuggingPriority="500" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="uIw-Th-pkZ">
-                                                                    <rect key="frame" x="389" y="1" width="77" height="25"/>
+                                                                    <rect key="frame" x="391" y="1" width="77" height="25"/>
                                                                     <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="oEo-Ud-RHl" id="99Z-zT-syJ">
                                                                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                         <font key="font" metaFont="menu"/>
@@ -527,7 +530,7 @@
                                                                     </connections>
                                                                 </popUpButton>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8Sj-pm-88d">
-                                                                    <rect key="frame" x="32" y="6" width="353" height="17"/>
+                                                                    <rect key="frame" x="32" y="6" width="355" height="17"/>
                                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Option name" id="72m-8i-Mg3">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -557,6 +560,7 @@
                                             </connections>
                                         </tableView>
                                     </subviews>
+                                    <nil key="backgroundColor"/>
                                 </clipView>
                                 <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="xtf-EX-hPz">
                                     <rect key="frame" x="-100" y="-100" width="223" height="15"/>
@@ -584,10 +588,13 @@
                         <constraints>
                             <constraint firstItem="pHb-Fu-MRN" firstAttribute="centerX" secondItem="iDF-FY-6tf" secondAttribute="centerX" id="KMc-9S-niI"/>
                             <constraint firstItem="vVz-rA-tRS" firstAttribute="leading" secondItem="iDF-FY-6tf" secondAttribute="leading" id="b3G-xy-WS8"/>
+                            <constraint firstItem="RZx-Ps-pFP" firstAttribute="leading" secondItem="vVz-rA-tRS" secondAttribute="leading" id="bxG-eX-JCO"/>
                             <constraint firstItem="vVz-rA-tRS" firstAttribute="top" secondItem="pHb-Fu-MRN" secondAttribute="bottom" id="dY0-w7-cRt"/>
+                            <constraint firstItem="RZx-Ps-pFP" firstAttribute="trailing" secondItem="vVz-rA-tRS" secondAttribute="trailing" id="eTh-8E-Cyf"/>
                             <constraint firstAttribute="bottom" secondItem="vVz-rA-tRS" secondAttribute="bottom" id="k1r-sg-eQJ"/>
                             <constraint firstItem="pHb-Fu-MRN" firstAttribute="top" secondItem="iDF-FY-6tf" secondAttribute="top" id="npV-YY-FNN"/>
                             <constraint firstAttribute="trailing" secondItem="vVz-rA-tRS" secondAttribute="trailing" id="pOR-wA-uLW"/>
+                            <constraint firstItem="RZx-Ps-pFP" firstAttribute="bottom" secondItem="vVz-rA-tRS" secondAttribute="top" id="uev-MI-Uhh"/>
                         </constraints>
                     </view>
                     <connections>

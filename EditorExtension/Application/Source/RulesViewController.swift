@@ -189,25 +189,17 @@ extension RulesViewController: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
         let model = self.model(forRow: row)
         let id: NSUserInterfaceItemIdentifier
-        let backgroundColor: NSColor
         switch model {
         case .binary:
             id = .binarySelectionTableCellView
-            let gray: CGFloat = 0.97
-            backgroundColor = NSColor(calibratedRed: gray, green: gray, blue: gray, alpha: gray)
         case .list:
             id = .listSelectionTableCellView
-            backgroundColor = NSColor.white
         case .freeText:
             id = .freeTextTableCellView
-            backgroundColor = NSColor.white
         }
 
-        let cell = tableView.makeView(withIdentifier: id, owner: self)
-        cell?.wantsLayer = true
+        return tableView.makeView(withIdentifier: id, owner: self)
 
-        cell?.layer?.backgroundColor = backgroundColor.cgColor
 
-        return cell
     }
 }

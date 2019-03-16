@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.40.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.1) (2019-03-16)
+
+- Fixed bug where `--trailingclosures` would incorrectly remove parentheses before an opening brace
+- Fixed SwiftFormat for Xcode appearance when running in dark mode on macOS 10.14 (Mojave)
+
 ## [0.40.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.0) (2019-03-14)
 
 - Added `--trailingclosures` option for whitelisting functions that should use trailing closure syntax

@@ -201,7 +201,7 @@ extension RulesViewController: NSTableViewDelegate {
         return tableView.makeView(withIdentifier: id, owner: self)
     }
 
-    func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
+    func tableView(_ tableView: NSTableView, rowViewForRow _: Int) -> NSTableRowView? {
         if let rowView = tableView.makeView(withIdentifier: .ruleRowView, owner: self) as? NSTableRowView {
             return rowView
         }
@@ -211,8 +211,8 @@ extension RulesViewController: NSTableViewDelegate {
         return rowView
     }
 
-    func tableView(_ tableView: NSTableView, didAdd rowView: NSTableRowView, forRow row: Int) {
-        switch self.model(forRow: row) {
+    func tableView(_: NSTableView, didAdd rowView: NSTableRowView, forRow row: Int) {
+        switch model(forRow: row) {
         case .binary:
             rowView.backgroundColor = NSColor.controlAlternatingRowBackgroundColors[1]
         case .list, .freeText:
@@ -224,5 +224,3 @@ extension RulesViewController: NSTableViewDelegate {
 private extension NSUserInterfaceItemIdentifier {
     static let ruleRowView = NSUserInterfaceItemIdentifier(rawValue: "RuleRowView")
 }
-
-

@@ -1543,7 +1543,8 @@ public struct _FormatRules {
                 formatter.index(of: .endOfScope("}"), before: openingBraceIndex) == nil else {
                 return
             }
-            guard var startIndex = formatter.index(of: .nonSpaceOrLinebreak, before: openingBraceIndex) else {
+            guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) != .startOfScope("{"),
+                var startIndex = formatter.index(of: .nonSpaceOrLinebreak, before: openingBraceIndex) else {
                 return
             }
             switch formatter.tokens[startIndex] {

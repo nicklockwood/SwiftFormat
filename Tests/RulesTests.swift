@@ -4575,6 +4575,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testNoRemoveParensAroundClosureFollowedByOpeningBrace() {
+        let input = "foo({ bar }) { baz }"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // solitary argument
 
     func testParensAroundSolitaryClosureArgumentRemoved() {

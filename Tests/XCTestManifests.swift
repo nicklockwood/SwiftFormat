@@ -781,6 +781,7 @@ extension RulesTests {
         ("testNoRemoveNonRedundantNestedFunctionSelf2", testNoRemoveNonRedundantNestedFunctionSelf2),
         ("testNoRemoveNonRedundantNestedFunctionSelf3", testNoRemoveNonRedundantNestedFunctionSelf3),
         ("testNoRemoveOverlappingImports", testNoRemoveOverlappingImports),
+        ("testNoRemoveParensAroundClosureFollowedByOpeningBrace", testNoRemoveParensAroundClosureFollowedByOpeningBrace),
         ("testNoRemoveRawStringIfNameDoesntMatch", testNoRemoveRawStringIfNameDoesntMatch),
         ("testNoRemoveRedundantVoidInClosureArguments", testNoRemoveRedundantVoidInClosureArguments),
         ("testNoRemoveRequiredPatternInIfCase", testNoRemoveRequiredPatternInIfCase),

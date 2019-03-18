@@ -955,6 +955,8 @@ extension RulesTests {
         ("testParensAroundSolitaryClosureArgumentInExpressionNotRemoved", testParensAroundSolitaryClosureArgumentInExpressionNotRemoved),
         ("testParensAroundSolitaryClosureArgumentRemoved", testParensAroundSolitaryClosureArgumentRemoved),
         ("testParensAroundTrailingClosureInGuardCaseLetNotRemoved", testParensAroundTrailingClosureInGuardCaseLetNotRemoved),
+        ("testParensAroundTrailingClosureInSwitchNotRemoved", testParensAroundTrailingClosureInSwitchNotRemoved),
+        ("testParensAroundTrailingClosureInWhereClauseLetNotRemoved", testParensAroundTrailingClosureInWhereClauseLetNotRemoved),
         ("testParensContainingCommentNotConvertedToVoid", testParensContainingCommentNotConvertedToVoid),
         ("testParensForLoopWhereClauseMethodNotRemoved", testParensForLoopWhereClauseMethodNotRemoved),
         ("testParensInStringNotRemoved", testParensInStringNotRemoved),

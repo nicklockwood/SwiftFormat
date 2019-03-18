@@ -4668,6 +4668,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testParensAroundTrailingClosureInWhereClauseLetNotRemoved() {
+        let input = "for foo in bar where baz.filter({ $0 == quux }).isEmpty {}"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testParensAroundTrailingClosureInSwitchNotRemoved() {
+        let input = "switch foo({ $0 == bar }).count {}"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testSolitaryClosureMadeTrailingInChain() {
         let input = "foo.map({ $0.path }).joined()"
         let output = "foo.map { $0.path }.joined()"

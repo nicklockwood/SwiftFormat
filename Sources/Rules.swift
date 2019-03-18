@@ -1529,7 +1529,8 @@ public struct _FormatRules {
                     return false
                 }
             }
-            return ["if", "guard", "while", "for", "case"].contains(keyword)
+            // TODO: unify with conditionals logic in redundantParens
+            return ["if", "guard", "while", "for", "case", "where", "switch"].contains(keyword)
         }
 
         formatter.forEach(.startOfScope("(")) { i, _ in
@@ -1626,6 +1627,7 @@ public struct _FormatRules {
             return startIndex ... endIndex
         }
 
+        // TODO: unify with conditionals logic in trailingClosures
         let conditionals = Set(["in", "while", "if", "case", "switch", "where", "for", "guard"])
 
         formatter.forEach(.startOfScope("(")) { i, _ in

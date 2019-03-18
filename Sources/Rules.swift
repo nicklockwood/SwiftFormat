@@ -3934,12 +3934,14 @@ public struct _FormatRules {
                  .identifier where formatter.token(at: index - 1) == .operator(".", .prefix):
                 return true
             case .endOfScope("]"):
-                guard let startIndex = formatter.index(of: .startOfScope("["), before: index) else {
+                guard let startIndex = formatter.index(of: .startOfScope("["), before: index),
+                    !formatter.openingBracketIsSubscript(at: startIndex) else {
                     return false
                 }
                 return valuesInRangeAreConstant(startIndex + 1 ..< index)
             case .startOfScope("["):
-                guard let endIndex = formatter.index(of: .endOfScope("]"), after: index) else {
+                guard !formatter.openingBracketIsSubscript(at: index),
+                    let endIndex = formatter.index(of: .endOfScope("]"), after: index) else {
                     return false
                 }
                 return valuesInRangeAreConstant(index + 1 ..< endIndex)
@@ -4299,6 +4301,21 @@ private extension Formatter {
             return false
         default:
             return true
+        }
+    }
+
+    func openingBracketIsSubscript(at index: Int) -> Bool {
+        assert(tokens[index] == .startOfScope("["))
+        guard let prevToken = last(.nonSpaceOrComment, before: index) else {
+            return false
+        }
+        switch prevToken {
+        case .identifier, .operator(_, .postfix),
+             .endOfScope("]"), .endOfScope(")"), .endOfScope("}"),
+             .endOfScope where prevToken.isStringDelimiter:
+            return true
+        default:
+            return false
         }
     }
 }

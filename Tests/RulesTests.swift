@@ -8928,6 +8928,48 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testSubscriptNotTreatedAsYodaCondition() {
+        let input = "foo[5] != bar"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSubscriptOfParenthesizedExpressionNotTreatedAsYodaCondition() {
+        let input = "(foo + bar)[5] != baz"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSubscriptOfUnwrappedValueNotTreatedAsYodaCondition() {
+        let input = "foo![5] != bar"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSubscriptOfExpressionWithInlineCommentNotTreatedAsYodaCondition() {
+        let input = "foo /* foo */ [5] != bar"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSubscriptOfCollectionNotTreatedAsYodaCondition() {
+        let input = "[foo][5] != bar"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSubscriptOfTrailingClosureNotTreatedAsYodaCondition() {
+        let input = "foo { [5] }[0] != bar"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testYodaConditionInIfStatement() {
         let input = "if 5 != foo {}"
         let output = "if foo != 5 {}"

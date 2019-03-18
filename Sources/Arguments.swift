@@ -302,15 +302,17 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
         assert(arguments.isEmpty)
     }
     if let formatOptions = options.formatOptions {
-        for descriptor in FormatOptions.Descriptor.formatting where !descriptor.isDeprecated {
+        for descriptor in FormatOptions.Descriptor.all where !descriptor.isDeprecated {
             let value = descriptor.fromOptions(formatOptions)
             if !excludingDefaults || value != descriptor.fromOptions(.default) {
+                // Special case for swiftVersion
+                // TODO: find a better solution for this
+                if descriptor.argumentName == FormatOptions.Descriptor.swiftVersion.argumentName,
+                    value == Version.undefined.rawValue {
+                    continue
+                }
                 args[descriptor.argumentName] = value
             }
-        }
-        // Special case for swiftVersion
-        if formatOptions.swiftVersion != .undefined {
-            args[FormatOptions.Descriptor.swiftVersion.argumentName] = formatOptions.swiftVersion.rawValue
         }
     }
     if let rules = options.rules {

@@ -1745,6 +1745,14 @@ public struct _FormatRules {
                     closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
                     innerParens = nil
                 }
+                if let nextNonLinebreak = formatter.next(.nonSpaceOrComment, after: closingIndex) {
+                    switch nextNonLinebreak {
+                    case .startOfScope("["), .startOfScope("("), .operator(_, .postfix):
+                        return
+                    default:
+                        break
+                    }
+                }
                 guard formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex,
                     formatter.index(in: i + 1 ..< closingIndex, where: {
                         switch $0 {

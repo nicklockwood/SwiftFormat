@@ -3833,6 +3833,48 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testRequiredParensNotRemovedBeforeSubscript() {
+        let input = "(foo + bar)[baz]"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRedundantParensRemovedBeforeCollectionLiteral() {
+        let input = "(foo + bar)\n[baz]"
+        let output = "foo + bar\n[baz]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRequiredParensNotRemovedBeforeFunctionInvocation() {
+        let input = "(foo + bar)(baz)"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRedundantParensRemovedBeforeTuple() {
+        let input = "(foo + bar)\n(baz, quux).0"
+        let output = "foo + bar\n(baz, quux).0"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRequiredParensNotRemovedBeforePostfixOperator() {
+        let input = "(foo + bar)!"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRequiredParensNotRemovedBeforeInfixOperator() {
+        let input = "(foo + bar) * baz"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // around conditions
 
     func testRedundantParensRemovedInIf() {

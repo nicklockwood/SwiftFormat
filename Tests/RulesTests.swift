@@ -4654,6 +4654,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testParensAroundOptionalTrailingClosureInForLoopNotRemoved() {
+        let input = "for foo in bar?.map({ $0.baz }) ?? [] {}"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testSolitaryClosureMadeTrailingInChain() {
         let input = "foo.map({ $0.path }).joined()"
         let output = "foo.map { $0.path }.joined()"

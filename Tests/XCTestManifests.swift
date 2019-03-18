@@ -949,6 +949,7 @@ extension RulesTests {
         ("testParensAroundClosureInCompoundExpressionRemoved", testParensAroundClosureInCompoundExpressionRemoved),
         ("testParensAroundClosureRemoved", testParensAroundClosureRemoved),
         ("testParensAroundNamedSolitaryClosureArgumentNotRemoved", testParensAroundNamedSolitaryClosureArgumentNotRemoved),
+        ("testParensAroundOptionalTrailingClosureInForLoopNotRemoved", testParensAroundOptionalTrailingClosureInForLoopNotRemoved),
         ("testParensAroundRangeNotRemoved", testParensAroundRangeNotRemoved),
         ("testParensAroundSolitaryClosureArgumentInCompoundExpressionNotRemoved", testParensAroundSolitaryClosureArgumentInCompoundExpressionNotRemoved),
         ("testParensAroundSolitaryClosureArgumentInExpressionNotRemoved", testParensAroundSolitaryClosureArgumentInExpressionNotRemoved),

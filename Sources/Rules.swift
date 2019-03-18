@@ -1510,7 +1510,8 @@ public struct _FormatRules {
                 return false
             }
             var keyword = formatter.tokens[index].string
-            while ["try", "as", "is"].contains(keyword) || keyword.hasPrefix("#") || keyword.hasPrefix("@") {
+            while ["try", "as", "is", "in"].contains(keyword) ||
+                keyword.hasPrefix("#") || keyword.hasPrefix("@") {
                 guard let prevIndex = formatter.index(of: .keyword, before: index) else {
                     return false
                 }

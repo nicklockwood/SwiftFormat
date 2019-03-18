@@ -308,6 +308,10 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
                 args[descriptor.argumentName] = value
             }
         }
+        // Special case for swiftVersion
+        if formatOptions.swiftVersion != .undefined {
+            args[FormatOptions.Descriptor.swiftVersion.argumentName] = formatOptions.swiftVersion.rawValue
+        }
     }
     if let rules = options.rules {
         let defaultRules = allRules.subtracting(FormatRules.disabledByDefault)

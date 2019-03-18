@@ -432,6 +432,32 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(selfRequired, ["assert", "expect", "log"])
     }
 
+    // MARK: Add arguments
+
+    func testAddFormatArguments() throws {
+        var options = Options(
+            formatOptions: FormatOptions(indent: " ", allowInlineSemicolons: true)
+        )
+        try options.addArguments(["indent": "2", "linebreaks": "crlf"], in: "")
+        guard let formatOptions = options.formatOptions else {
+            XCTFail()
+            return
+        }
+        XCTAssertEqual(formatOptions.indent, "  ")
+        XCTAssertEqual(formatOptions.linebreak, "\r\n")
+        XCTAssertTrue(formatOptions.allowInlineSemicolons)
+    }
+
+    func testAddArgumentsDoesntBreakSwiftVersion() throws {
+        var options = Options(formatOptions: FormatOptions(swiftVersion: "4.2"))
+        try options.addArguments(["indent": "2"], in: "")
+        guard let formatOptions = options.formatOptions else {
+            XCTFail()
+            return
+        }
+        XCTAssertEqual(formatOptions.swiftVersion, "4.2")
+    }
+
     // MARK: Options parsing
 
     func testParseEmptyOptions() throws {

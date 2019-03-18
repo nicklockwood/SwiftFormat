@@ -8293,6 +8293,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testClassReplacedByAnyObjectImmediatelyAfterImport() {
+        let input = "import Foundation\nprotocol Foo: class {}"
+        let output = "import Foundation\nprotocol Foo: AnyObject {}"
+        let options = FormatOptions(swiftVersion: "4.1")
+        XCTAssertEqual(try format(input, rules: [FormatRules.anyObjectProtocol], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testClassDeclarationNotReplacedByAnyObject() {
         let input = "class Foo: Codable {}"
         let output = "class Foo: Codable {}"

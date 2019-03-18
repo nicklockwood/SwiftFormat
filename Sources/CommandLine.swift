@@ -677,7 +677,7 @@ func processInput(_ inputURLs: [URL],
     var warnedAboutSwiftVersion = false
     func warnAboutSwiftVersion(_ options: Options) {
         let formatOptions = options.formatOptions ?? .default
-        guard !warnedAboutSwiftVersion, formatOptions.swiftVersion != .undefined else {
+        guard !warnedAboutSwiftVersion, formatOptions.swiftVersion == .undefined else {
             return
         }
         print("warning: No swift version was specified, so some formatting features were disabled. Specify the version of swift you are using with the --swiftversion command line option, or by adding a \(swiftVersionFile) file to your project.", as: .warning)

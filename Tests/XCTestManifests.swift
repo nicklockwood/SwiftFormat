@@ -2,6 +2,8 @@ import XCTest
 
 extension ArgumentsTests {
     static let __allTests = [
+        ("testAddArgumentsDoesntBreakSwiftVersion", testAddArgumentsDoesntBreakSwiftVersion),
+        ("testAddFormatArguments", testAddFormatArguments),
         ("testCommandLineArgumentsAreCorrect", testCommandLineArgumentsAreCorrect),
         ("testCommandLineArgumentsHaveValidNames", testCommandLineArgumentsHaveValidNames),
         ("testCommentAfterSpace", testCommentAfterSpace),
@@ -359,6 +361,7 @@ extension RulesTests {
         ("testClassImportNotReplacedByAnyObject", testClassImportNotReplacedByAnyObject),
         ("testClassNotReplacedByAnyObjectIfSwiftVersionLessThan4_1", testClassNotReplacedByAnyObjectIfSwiftVersionLessThan4_1),
         ("testClassReplacedByAnyObject", testClassReplacedByAnyObject),
+        ("testClassReplacedByAnyObjectImmediatelyAfterImport", testClassReplacedByAnyObjectImmediatelyAfterImport),
         ("testClassReplacedByAnyObjectWithOtherProtocols", testClassReplacedByAnyObjectWithOtherProtocols),
         ("testClosingNestedScopeAfterContent", testClosingNestedScopeAfterContent),
         ("testClosingScopeAfterContent", testClosingScopeAfterContent),

@@ -8928,6 +8928,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testDictionaryLiteralNotEqualYodaCondition() {
+        let input = "[foo: 5, bar: 6] != foo"
+        let output = "foo != [foo: 5, bar: 6]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testSubscriptNotTreatedAsYodaCondition() {
         let input = "foo[5] != bar"
         let output = input
@@ -8965,6 +8972,55 @@ class RulesTests: XCTestCase {
 
     func testSubscriptOfTrailingClosureNotTreatedAsYodaCondition() {
         let input = "foo { [5] }[0] != bar"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testTupleYodaCondition() {
+        let input = "(5, 6) != bar"
+        let output = "bar != (5, 6)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testLabeledTupleYodaCondition() {
+        let input = "(foo: 5, bar: 6) != baz"
+        let output = "baz != (foo: 5, bar: 6)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testNestedTupleYodaCondition() {
+        let input = "(5, (6, 7)) != baz"
+        let output = "baz != (5, (6, 7))"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testFunctionCallNotTreatedAsYodaCondition() {
+        let input = "foo(5) != bar"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCallOfParenthesizedExpressionNotTreatedAsYodaCondition() {
+        let input = "(foo + bar)(5) != baz"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCallOfUnwrappedValueNotTreatedAsYodaCondition() {
+        let input = "foo!(5) != bar"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCallOfExpressionWithInlineCommentNotTreatedAsYodaCondition() {
+        let input = "foo /* foo */ (5) != bar"
         let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")

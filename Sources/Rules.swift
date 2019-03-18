@@ -3907,14 +3907,22 @@ public struct _FormatRules {
             var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: range)
             while var i = index {
                 switch formatter.tokens[i] {
-                case .startOfScope("[") where isConstant(at: i):
-                    guard let endIndex = formatter.index(of: .endOfScope("]"), after: i) else {
+                case .startOfScope where isConstant(at: i):
+                    guard let endIndex = formatter.index(of: .endOfScope, after: i) else {
                         return false
                     }
                     i = endIndex
                     fallthrough
                 case _ where isConstant(at: i), .delimiter(","), .delimiter(":"):
                     index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: i + 1 ..< range.upperBound)
+                case .identifier:
+                    guard let nextIndex =
+                        formatter.index(of: .nonSpaceOrComment, in: i + 1 ..< range.upperBound),
+                        formatter.tokens[nextIndex] == .delimiter(":") else {
+                        return false
+                    }
+                    // Identifier is a label
+                    index = nextIndex
                 default:
                     return false
                 }
@@ -3933,15 +3941,15 @@ public struct _FormatRules {
             case .number, .identifier("true"), .identifier("false"), .identifier("nil"),
                  .identifier where formatter.token(at: index - 1) == .operator(".", .prefix):
                 return true
-            case .endOfScope("]"):
-                guard let startIndex = formatter.index(of: .startOfScope("["), before: index),
-                    !formatter.openingBracketIsSubscript(at: startIndex) else {
+            case .endOfScope("]"), .endOfScope(")"):
+                guard let startIndex = formatter.index(of: .startOfScope, before: index),
+                    !formatter.isSubscriptOrFunctionCall(at: startIndex) else {
                     return false
                 }
                 return valuesInRangeAreConstant(startIndex + 1 ..< index)
-            case .startOfScope("["):
-                guard !formatter.openingBracketIsSubscript(at: index),
-                    let endIndex = formatter.index(of: .endOfScope("]"), after: index) else {
+            case .startOfScope("["), .startOfScope("("):
+                guard !formatter.isSubscriptOrFunctionCall(at: index),
+                    let endIndex = formatter.index(of: .endOfScope, after: index) else {
                     return false
                 }
                 return valuesInRangeAreConstant(index + 1 ..< endIndex)
@@ -4304,9 +4312,9 @@ private extension Formatter {
         }
     }
 
-    func openingBracketIsSubscript(at index: Int) -> Bool {
-        assert(tokens[index] == .startOfScope("["))
-        guard let prevToken = last(.nonSpaceOrComment, before: index) else {
+    func isSubscriptOrFunctionCall(at i: Int) -> Bool {
+        guard case let .startOfScope(string)? = token(at: i), ["[", "("].contains(string),
+            let prevToken = last(.nonSpaceOrComment, before: i) else {
             return false
         }
         switch prevToken {

@@ -1529,7 +1529,7 @@ public struct _FormatRules {
                     return false
                 }
             }
-            return ["if", "guard", "while", "for"].contains(keyword)
+            return ["if", "guard", "while", "for", "case"].contains(keyword)
         }
 
         formatter.forEach(.startOfScope("(")) { i, _ in

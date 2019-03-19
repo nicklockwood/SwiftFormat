@@ -4013,7 +4013,8 @@ public struct _FormatRules {
                     wasOperator = false
                 case .startOfScope where token.isStringDelimiter && wasOperator,
                      .startOfScope("{") where formatter.isStartOfClosure(at: i),
-                     .startOfScope("("):
+                     .startOfScope("(") where formatter.isSubscriptOrFunctionCall(at: i),
+                     .startOfScope("[") where formatter.isSubscriptOrFunctionCall(at: i):
                     wasOperator = false
                     guard let endIndex = formatter.endOfScope(at: i) else {
                         return nil

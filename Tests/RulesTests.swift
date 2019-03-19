@@ -8977,6 +8977,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testSubscriptOfRhsNotMangledInYodaCondition() {
+        let input = "[1] == foo[0]"
+        let output = "foo[0] == [1]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testTupleYodaCondition() {
         let input = "(5, 6) != bar"
         let output = "bar != (5, 6)"
@@ -9022,6 +9029,20 @@ class RulesTests: XCTestCase {
     func testCallOfExpressionWithInlineCommentNotTreatedAsYodaCondition() {
         let input = "foo /* foo */ (5) != bar"
         let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testCallOfRhsNotMangledInYodaCondition() {
+        let input = "(1, 2) == foo(0)"
+        let output = "foo(0) == (1, 2)"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testTrailingClosureOnRhsNotMangledInYodaCondition() {
+        let input = "(1, 2) == foo { $0 }"
+        let output = "foo { $0 } == (1, 2)"
         XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }

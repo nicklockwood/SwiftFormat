@@ -8538,6 +8538,17 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testObjcNotRemovedOnNestedEnum() {
+        let input = """
+        @objcMembers class Foo: NSObject {
+            @objc enum Bar: Int {}
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testObjcRemovedOnObjcExtensionVar() {
         let input = """
         @objc extension Foo {

@@ -3691,7 +3691,9 @@ public struct _FormatRules {
             var index = i
             loop: while var nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
                 switch formatter.tokens[nextIndex] {
-                case .keyword("class"):
+                case .keyword("class"), .keyword("enum"),
+                     // Not actually allowed currently, but: future-proofing!
+                     .keyword("protocol"), .keyword("struct"):
                     return
                 case let token where token.isAttribute:
                     if let startIndex = formatter.index(of: .startOfScope("("), after: nextIndex),

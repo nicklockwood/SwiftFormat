@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.40.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.3) (2019-03-19)
+
+- Fixed some bugs with the `redundantFileprivate` rule relating to struct members
+- The `redundantFileprivate` rule no longer affects members required for protocol conformance
+- Fixed a bug with `yodaConditions` rule inside ternary expressions
+
 ## [0.40.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.2) (2019-03-19)
 
 - Fixed a bug where the `redundantParens` rule incorrectly removed parens in a subscript or function invocation

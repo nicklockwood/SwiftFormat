@@ -3974,7 +3974,10 @@ public struct _FormatRules {
                 return false
             }
             switch formatter.tokens[index] {
-            case .operator("=", .infix):
+            // Discount operators with higher precedence than ==
+            case .operator("=", .infix),
+                 .operator("&&", .infix), .operator("||", .infix),
+                 .operator("?", .infix), .operator(":", .infix):
                 return false
             case .operator(_, .infix), .keyword("as"), .keyword("is"):
                 return true
@@ -4005,7 +4008,8 @@ public struct _FormatRules {
             while var i = index {
                 let token = formatter.tokens[i]
                 switch token {
-                case .operator("&&", .infix), .operator("||", .infix):
+                case .operator("&&", .infix), .operator("||", .infix),
+                     .operator("?", .infix), .operator(":", .infix):
                     return lastIndex
                 case .operator(_, .infix):
                     wasOperator = true

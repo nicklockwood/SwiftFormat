@@ -9227,6 +9227,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testNoMangleYodaConditionInTernary() {
+        let input = "let z = 0 < y ? 3 : 4"
+        let output = "let z = y > 0 ? 3 : 4"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testNoMangleYodaConditionInTernary2() {
+        let input = "let z = y > 0 ? 0 < x : 4"
+        let output = "let z = y > 0 ? x > 0 : 4"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testNoMangleYodaConditionInTernary3() {
+        let input = "let z = y > 0 ? 3 : 0 < x"
+        let output = "let z = y > 0 ? 3 : x > 0"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // MARK: leadingDelimiters
 
     func testLeadingCommaMovedToPreviousLine() {

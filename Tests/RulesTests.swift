@@ -9199,6 +9199,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testNoMangleYodaConditionFollowedByAndOperator() {
+        let input = "5 <= foo && foo <= 7"
+        let output = "foo >= 5 && foo <= 7"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["andOperator"])), output + "\n")
+    }
+
+    func testNoMangleYodaConditionFollowedByOrOperator() {
+        let input = "5 <= foo || foo <= 7"
+        let output = "foo >= 5 || foo <= 7"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // MARK: leadingDelimiters
 
     func testLeadingCommaMovedToPreviousLine() {

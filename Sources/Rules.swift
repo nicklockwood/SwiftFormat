@@ -4001,6 +4001,8 @@ public struct _FormatRules {
             while var i = index {
                 let token = formatter.tokens[i]
                 switch token {
+                case .operator("&&", .infix), .operator("||", .infix):
+                    return lastIndex
                 case .operator(_, .infix):
                     wasOperator = true
                 case .operator(_, .prefix) where wasOperator, .operator(_, .postfix):

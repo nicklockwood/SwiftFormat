@@ -743,6 +743,8 @@ extension RulesTests {
         ("testNoLinebreakAtEndOfFragment", testNoLinebreakAtEndOfFragment),
         ("testNoMangleCommentedLinesWhenWrappingArguments", testNoMangleCommentedLinesWhenWrappingArguments),
         ("testNoMangleLabelWhenIndentCaseTrue", testNoMangleLabelWhenIndentCaseTrue),
+        ("testNoMangleYodaConditionFollowedByAndOperator", testNoMangleYodaConditionFollowedByAndOperator),
+        ("testNoMangleYodaConditionFollowedByOrOperator", testNoMangleYodaConditionFollowedByOrOperator),
         ("testNoMarkFunctionArgument", testNoMarkFunctionArgument),
         ("testNoMarkNamedFunctionArgument", testNoMarkNamedFunctionArgument),
         ("testNoMarkProtocolFunctionArgument", testNoMarkProtocolFunctionArgument),

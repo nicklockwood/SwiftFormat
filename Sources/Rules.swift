@@ -3858,7 +3858,21 @@ public struct _FormatRules {
             }
             return false
         }
-        func isReferenced(_ name: String, in range: CountableRange<Int>) -> Bool {
+        func isTypeInitialized(_ name: String, in range: CountableRange<Int>) -> Bool {
+            for i in range {
+                let token = formatter.tokens[i]
+                guard case .identifier(name) = token else { continue }
+                if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                    $0 == .operator(".", .infix)
+                }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: dotIndex) == .identifier("init") {
+                    return true
+                } else if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .startOfScope("(") {
+                    return true
+                }
+            }
+            return false
+        }
+        func isMemberReferenced(_ name: String, in range: CountableRange<Int>) -> Bool {
             for i in range {
                 let token = formatter.tokens[i]
                 guard case .identifier(name) = token else { continue }
@@ -3878,7 +3892,8 @@ public struct _FormatRules {
             }), let typeIndex = formatter.index(of: .keyword, before: scopeIndex, if: {
                 ["class", "struct", "enum"].contains($0.string)
             }), formatter.currentScope(at: typeIndex) == nil,
-                let endIndex = formatter.index(of: .endOfScope, after: scopeIndex) else {
+                let endIndex = formatter.index(of: .endOfScope, after: scopeIndex),
+                case let .identifier(typeName)? = formatter.next(.identifier, after: typeIndex) else {
                 return
             }
             // check that type doesn't (potentially) conform to a protocol
@@ -3896,11 +3911,16 @@ public struct _FormatRules {
                 formatter.replaceToken(at: i, with: .keyword("private"))
                 return
             }
+            // check if type name is initialized outside type
+            if isTypeInitialized(typeName, in: 0 ..< startIndex) ||
+                isTypeInitialized(typeName, in: endIndex + 1 ..< formatter.tokens.count) {
+                return
+            }
             // check if member is referenced outside type
             if let keywordIndex = formatter.index(of: .keyword, in: i + 1 ..< endIndex),
                 let names = formatter.namesInDeclaration(at: keywordIndex), !names.contains(where: {
-                    isReferenced($0, in: 0 ..< startIndex) ||
-                        isReferenced($0, in: endIndex + 1 ..< formatter.tokens.count)
+                    isMemberReferenced($0, in: 0 ..< startIndex) ||
+                        isMemberReferenced($0, in: endIndex + 1 ..< formatter.tokens.count)
                 }) {
                 formatter.replaceToken(at: i, with: .keyword("private"))
             }

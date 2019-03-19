@@ -1161,6 +1161,8 @@ extension RulesTests {
         ("testSimpleRemoveRedundantSelf", testSimpleRemoveRedundantSelf),
         ("testSimpleScope", testSimpleScope),
         ("testSimplifyLetPattern", testSimplifyLetPattern),
+        ("testSingleAnonymousClosureArgumentNotUnwrapped", testSingleAnonymousClosureArgumentNotUnwrapped),
+        ("testSingleAnonymousClosureArgumentUnwrapped", testSingleAnonymousClosureArgumentUnwrapped),
         ("testSingleClosureArgumentAfterCaptureListUnwrapped", testSingleClosureArgumentAfterCaptureListUnwrapped),
         ("testSingleClosureArgumentUnwrapped", testSingleClosureArgumentUnwrapped),
         ("testSolitaryClosureMadeTrailingForNumericTupleMember", testSolitaryClosureMadeTrailingForNumericTupleMember),

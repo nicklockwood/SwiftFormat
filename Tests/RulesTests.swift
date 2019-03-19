@@ -4174,10 +4174,24 @@ class RulesTests: XCTestCase {
     // around closure arguments
 
     func testSingleClosureArgumentUnwrapped() {
+        let input = "{ (foo) in }"
+        let output = "{ foo in }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"])), output + "\n")
+    }
+
+    func testSingleAnonymousClosureArgumentUnwrapped() {
         let input = "{ (_) in }"
         let output = "{ _ in }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSingleAnonymousClosureArgumentNotUnwrapped() {
+        let input = "{ (_ foo) in }"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"])), output + "\n")
     }
 
     func testTypedClosureArgumentNotUnwrapped() {

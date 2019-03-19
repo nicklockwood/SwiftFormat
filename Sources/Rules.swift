@@ -1665,6 +1665,10 @@ public struct _FormatRules {
                     }
                     fallthrough
                 }
+                if let index = formatter.index(of: .identifier("_"), in: i + 1 ..< closingIndex),
+                    formatter.next(.nonSpaceOrComment, after: index)?.isIdentifier == true {
+                    return
+                }
                 removeParen(at: closingIndex)
                 removeParen(at: i)
             case .stringBody, .operator("?", .postfix), .operator("!", .postfix),

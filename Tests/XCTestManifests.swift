@@ -478,6 +478,7 @@ extension RulesTests {
         ("testFileHeaderCreationYearReplacement", testFileHeaderCreationYearReplacement),
         ("testFileHeaderFileReplacement", testFileHeaderFileReplacement),
         ("testFileHeaderYearReplacement", testFileHeaderYearReplacement),
+        ("testFileprivateExtensionFuncNotChangedToPrivateIfPartOfProtocolConformance", testFileprivateExtensionFuncNotChangedToPrivateIfPartOfProtocolConformance),
         ("testFileprivateMultiLetNotChangedToPrivateIfAccessedOutsideType", testFileprivateMultiLetNotChangedToPrivateIfAccessedOutsideType),
         ("testFileprivateVarChangedToPrivateIfAccessedFromAnExtensionOnSameType", testFileprivateVarChangedToPrivateIfAccessedFromAnExtensionOnSameType),
         ("testFileprivateVarChangedToPrivateIfAccessedViaSelfFromAnExtensionOnSameType", testFileprivateVarChangedToPrivateIfAccessedViaSelfFromAnExtensionOnSameType),

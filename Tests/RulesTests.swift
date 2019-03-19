@@ -8931,6 +8931,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testFileprivateExtensionFuncNotChangedToPrivateIfPartOfProtocolConformance() {
+        let input = """
+        private class Foo: Equatable {
+            fileprivate static func == (_: Foo, _: Foo) -> Bool {
+                return true
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // MARK: yodaConditions
 
     func testNumericLiteralEqualYodaCondition() {

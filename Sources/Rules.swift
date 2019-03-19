@@ -3881,6 +3881,11 @@ public struct _FormatRules {
                 let endIndex = formatter.index(of: .endOfScope, after: scopeIndex) else {
                 return
             }
+            // check that type doesn't (potentially) conform to a protocol
+            // TODO: use a whitelist of known protocols to make this check less blunt
+            guard !formatter.tokens[typeIndex ..< scopeIndex].contains(.delimiter(":")) else {
+                return
+            }
             // check for code outside of main type definition
             let startIndex = formatter.startOfSpecifiers(at: typeIndex)
             if fileJustContainsOneType == nil {

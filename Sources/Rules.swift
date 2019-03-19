@@ -4228,6 +4228,11 @@ private extension Formatter {
                         !$0.isSpaceOrCommentOrLinebreak && (!$0.isEndOfScope || $0 == .endOfScope("}"))
                     }) ?? -1
                 }
+                // TODO: combine with keyword logic above and in redundantParens, etc
+                if let keyword = lastSignificantKeyword(at: i),
+                    ["in", "while", "if", "case", "switch", "where", "for", "guard"].contains(keyword) {
+                    break
+                }
                 if isEndOfStatement(at: prevTokenIndex, in: scope),
                     isStartOfStatement(at: nextTokenIndex, in: scope) {
                     return true
@@ -4239,6 +4244,21 @@ private extension Formatter {
             i = prevTokenIndex
         }
         return true
+    }
+
+    func lastSignificantKeyword(at i: Int) -> String? {
+        guard let index = self.index(of: .keyword, before: i + 1),
+            case let .keyword(keyword) = tokens[index] else {
+            return nil
+        }
+        switch keyword {
+        case let name where name.hasPrefix("#") || name.hasPrefix("@"):
+            fallthrough
+        case "in", "as", "is", "try":
+            return lastSignificantKeyword(at: index - 1)
+        case let name:
+            return name
+        }
     }
 
     func isEndOfStatement(at i: Int, in scope: Token?) -> Bool {

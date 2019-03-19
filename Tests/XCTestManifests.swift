@@ -1268,6 +1268,7 @@ extension RulesTests {
         ("testSubscriptOfTrailingClosureNotTreatedAsYodaCondition", testSubscriptOfTrailingClosureNotTreatedAsYodaCondition),
         ("testSubscriptOfUnwrappedValueNotTreatedAsYodaCondition", testSubscriptOfUnwrappedValueNotTreatedAsYodaCondition),
         ("testSubscriptRemoveSpacing", testSubscriptRemoveSpacing),
+        ("testSubscriptYodaConditionInIfStatementWithBraceOnNextLine", testSubscriptYodaConditionInIfStatementWithBraceOnNextLine),
         ("testSwitchCaseHoistedLetVarRecognized", testSwitchCaseHoistedLetVarRecognized),
         ("testSwitchCaseIndenting", testSwitchCaseIndenting),
         ("testSwitchCaseIsDictionaryIndenting", testSwitchCaseIsDictionaryIndenting),

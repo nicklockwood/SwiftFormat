@@ -9054,6 +9054,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testSubscriptYodaConditionInIfStatementWithBraceOnNextLine() {
+        let input = "if [0] == foo.bar[0]\n{ baz() }"
+        let output = "if foo.bar[0] == [0]\n{ baz() }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testYodaConditionInSecondClauseOfIfStatement() {
         let input = "if foo, 5 != bar {}"
         let output = "if foo, bar != 5 {}"

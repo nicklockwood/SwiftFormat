@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.40.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.2) (2019-03-19)
+
+- Fixed a bug where the `redundantParens` rule incorrectly removed parens in a subscript or function invocation
+- Fixed a bug with the `trailingClosures` rule removing parens inside some conditional expressions
+- Fixed a bug in the `yodaConditions` rule that broke expressions containing subscripts
+- Fixed the `--swiftversion` option, which was being ignored under some circumstances
+- Fixed bug that caused the `--fragment` and `--conflictmarkers` options to be ignored
+- Fixed a bug in the `redundantObjc` rule that incorrectly stripped `@objc` from nested enum types
+
 ## [0.40.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.1) (2019-03-16)
 
 - Fixed bug where `--trailingclosures` would incorrectly remove parentheses before an opening brace

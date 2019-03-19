@@ -3886,7 +3886,7 @@ public struct _FormatRules {
             return false
         }
         formatter.forEach(.keyword("fileprivate")) { i, _ in
-            // check if definition is a member of a file-scope type
+            // Check if definition is a member of a file-scope type
             guard let scopeIndex = formatter.index(of: .startOfScope, before: i, if: {
                 $0 == .startOfScope("{")
             }), let typeIndex = formatter.index(of: .keyword, before: scopeIndex, if: {
@@ -3896,12 +3896,12 @@ public struct _FormatRules {
                 case let .identifier(typeName)? = formatter.next(.identifier, after: typeIndex) else {
                 return
             }
-            // check that type doesn't (potentially) conform to a protocol
+            // Check that type doesn't (potentially) conform to a protocol
             // TODO: use a whitelist of known protocols to make this check less blunt
             guard !formatter.tokens[typeIndex ..< scopeIndex].contains(.delimiter(":")) else {
                 return
             }
-            // check for code outside of main type definition
+            // Check for code outside of main type definition
             let startIndex = formatter.startOfSpecifiers(at: typeIndex)
             if fileJustContainsOneType == nil {
                 fileJustContainsOneType = !ifCodeInRange(0 ..< startIndex) &&
@@ -3911,18 +3911,28 @@ public struct _FormatRules {
                 formatter.replaceToken(at: i, with: .keyword("private"))
                 return
             }
-            // check if type name is initialized outside type
-            if isTypeInitialized(typeName, in: 0 ..< startIndex) ||
+            // Check if type name is initialized outside type, and if so don't
+            // change any fileprivate members in case we break memberwise initializer
+            // TODO: check if struct contains an overridden init; if so we can skip this check
+            if formatter.tokens[typeIndex] == .keyword("struct"),
+                isTypeInitialized(typeName, in: 0 ..< startIndex) ||
                 isTypeInitialized(typeName, in: endIndex + 1 ..< formatter.tokens.count) {
                 return
             }
-            // check if member is referenced outside type
-            if let keywordIndex = formatter.index(of: .keyword, in: i + 1 ..< endIndex),
-                let names = formatter.namesInDeclaration(at: keywordIndex), !names.contains(where: {
+            // Check if member is referenced outside type
+            if let keywordIndex = formatter.index(of: .keyword, in: i + 1 ..< endIndex) {
+                if formatter.tokens[keywordIndex] == .identifier("init") {
+                    // Make initializer private if it's not called anywhere
+                    if !isTypeInitialized(typeName, in: 0 ..< startIndex),
+                        isTypeInitialized(typeName, in: endIndex + 1 ..< formatter.tokens.count) {
+                        formatter.replaceToken(at: i, with: .keyword("private"))
+                    }
+                } else if let names = formatter.namesInDeclaration(at: keywordIndex), !names.contains(where: {
                     isMemberReferenced($0, in: 0 ..< startIndex) ||
                         isMemberReferenced($0, in: endIndex + 1 ..< formatter.tokens.count)
                 }) {
-                formatter.replaceToken(at: i, with: .keyword("private"))
+                    formatter.replaceToken(at: i, with: .keyword("private"))
+                }
             }
         }
     }

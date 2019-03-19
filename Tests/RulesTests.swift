@@ -8931,6 +8931,36 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testFileprivateInitChangedToPrivateIfConstructorNotCalledOutsideType() {
+        let input = """
+        struct Foo {
+            fileprivate init() {}
+        }
+        """
+        let output = """
+        struct Foo {
+            private init() {}
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateInitNotChangedToPrivateIfConstructorCalledOutsideType() {
+        let input = """
+        struct Foo {
+            fileprivate init() {}
+        }
+
+        let foo = Foo()
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testFileprivateStructMemberNotChangedToPrivateIfConstructorCalledOutsideType() {
         let input = """
         struct Foo {
@@ -8940,6 +8970,26 @@ class RulesTests: XCTestCase {
         let foo = Foo(bar: "test")
         """
         let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateClassMemberChangedToPrivateEvenIfConstructorCalledOutsideType() {
+        let input = """
+        class Foo {
+            fileprivate let bar: String
+        }
+
+        let foo = Foo()
+        """
+        let output = """
+        class Foo {
+            private let bar: String
+        }
+
+        let foo = Foo()
+        """
         let options = FormatOptions(swiftVersion: "4")
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")

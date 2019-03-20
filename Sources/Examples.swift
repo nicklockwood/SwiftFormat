@@ -808,7 +808,7 @@ private struct Examples {
 
     let strongOutlets = """
     As per Apple's recommendation
-    (https://developer.apple.com/videos/play/wwdc2015/407/).
+    (https://developer.apple.com/videos/play/wwdc2015/407/ @ 32:30).
 
     ```diff
     - @IBOutlet weak var label: UILabel!

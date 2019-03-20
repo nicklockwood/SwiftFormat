@@ -4764,7 +4764,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    // whitelists
+    // whitelisted methods
 
     func testCustomMethodMadeTrailing() {
         let input = "foo(bar: 1, baz: { /* some code */ })"
@@ -4772,6 +4772,15 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(trailingClosures: ["foo"])
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    // blacklisted methods
+
+    func testPerformBatchUpdatesNotMadeTrailing() {
+        let input = "self.collectionView.performBatchUpdates({ /* some code */ })"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     // MARK: redundantGet

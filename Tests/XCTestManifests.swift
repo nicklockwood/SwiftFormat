@@ -1019,6 +1019,7 @@ extension RulesTests {
         ("testParensRemovedBeforeTrailingClosure2", testParensRemovedBeforeTrailingClosure2),
         ("testParensRemovedBeforeTrailingClosure3", testParensRemovedBeforeTrailingClosure3),
         ("testParensRemovedBeforeTrailingClosureInsideHashIf", testParensRemovedBeforeTrailingClosureInsideHashIf),
+        ("testPerformBatchUpdatesNotMadeTrailing", testPerformBatchUpdatesNotMadeTrailing),
         ("testPInExponentialNotConvertedToLower", testPInExponentialNotConvertedToLower),
         ("testPInExponentialNotConvertedToUpper", testPInExponentialNotConvertedToUpper),
         ("testPostfixExpressionNonYodaCondition", testPostfixExpressionNonYodaCondition),

@@ -1489,6 +1489,7 @@ public struct _FormatRules {
         let whitelist = Set(
             ["async", "asyncAfter", "sync", "autoreleasepool"] + formatter.options.trailingClosures
         )
+        let blacklist = Set(["performBatchUpdates"])
 
         func removeParen(at index: Int) {
             if formatter.token(at: index - 1)?.isSpace == true {
@@ -1536,7 +1537,7 @@ public struct _FormatRules {
         formatter.forEach(.startOfScope("(")) { i, _ in
             guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 case let .identifier(name) = prevToken, // TODO: are trailing closures allowed in other cases?
-                !isConditionalStatement(at: i) else {
+                !blacklist.contains(name), !isConditionalStatement(at: i) else {
                 return
             }
             guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i), let closingBraceIndex =

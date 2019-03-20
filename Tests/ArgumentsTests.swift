@@ -150,6 +150,38 @@ class ArgumentsTests: XCTestCase {
         ]), output)
     }
 
+    func testDuplicateDisableArgumentsAreMerged() {
+        let input = ["", "--disable", "foo", "--disable", "bar"]
+        let output = ["0": "", "disable": "foo,bar"]
+        XCTAssertEqual(try preprocessArguments(input, [
+            "disable",
+        ]), output)
+    }
+
+    func testDuplicateExcludeArgumentsAreMerged() {
+        let input = ["", "--exclude", "foo", "--exclude", "bar"]
+        let output = ["0": "", "exclude": "foo,bar"]
+        XCTAssertEqual(try preprocessArguments(input, [
+            "exclude",
+        ]), output)
+    }
+
+    func testDuplicateSelfrequiredArgumentsAreMerged() {
+        let input = ["", "--selfrequired", "foo", "--selfrequired", "bar"]
+        let output = ["0": "", "selfrequired": "foo,bar"]
+        XCTAssertEqual(try preprocessArguments(input, [
+            "selfrequired",
+        ]), output)
+    }
+
+    func testDuplicateRangesArgumentsAreNotMerged() {
+        let input = ["", "--ranges", "spaced", "--ranges", "no-space"]
+        let output = ["0": "", "ranges": "no-space"]
+        XCTAssertEqual(try preprocessArguments(input, [
+            "ranges",
+        ]), output)
+    }
+
     // MARK: format options to arguments
 
     func testCommandLineArgumentsHaveValidNames() {

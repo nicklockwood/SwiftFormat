@@ -99,7 +99,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
                 throw FormatError.options("Unknown option --\(key)")
             }
             name = key
-            namedArgs[name] = ""
+            namedArgs[name] = namedArgs[name] ?? ""
             continue
         } else if arg.hasPrefix("-") {
             // Short argument names
@@ -111,7 +111,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
                 throw FormatError.options("Unknown flag -\(flag)")
             } else {
                 name = matches[0]
-                namedArgs[name] = ""
+                namedArgs[name] = namedArgs[name] ?? ""
             }
             continue
         }
@@ -120,7 +120,16 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             name = String(anonymousArgs)
             anonymousArgs += 1
         }
-        namedArgs[name] = arg
+        if let existing = namedArgs[name], !existing.isEmpty,
+            // TODO: find a more general way to represent merge-able options
+            ["exclude", "disable", "enable", "rules"].contains(name) ||
+            FormatOptions.Descriptor.all.contains(where: {
+                $0.argumentName == name && $0.isSetType
+            }) {
+            namedArgs[name] = existing + "," + arg
+        } else {
+            namedArgs[name] = arg
+        }
         name = ""
     }
     return namedArgs

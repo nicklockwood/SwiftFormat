@@ -9326,6 +9326,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testKeyPathNotMangledAndNotTreatedAsYodaCondition() {
+        let input = "\\.foo == bar"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // MARK: leadingDelimiters
 
     func testLeadingCommaMovedToPreviousLine() {

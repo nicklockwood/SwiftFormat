@@ -612,6 +612,7 @@ extension RulesTests {
         ("testInsertSelfInsideClassInit", testInsertSelfInsideClassInit),
         ("testInsertSelfInsideStringInterpolation", testInsertSelfInsideStringInterpolation),
         ("testIsArrayTestingSpacing", testIsArrayTestingSpacing),
+        ("testKeyPathNotMangledAndNotTreatedAsYodaCondition", testKeyPathNotMangledAndNotTreatedAsYodaCondition),
         ("testKeywordAsIdentifierBracketSpacing", testKeywordAsIdentifierBracketSpacing),
         ("testKeywordAsIdentifierParensSpacing", testKeywordAsIdentifierParensSpacing),
         ("testKnRBracesAfterComment", testKnRBracesAfterComment),

@@ -3983,7 +3983,8 @@ public struct _FormatRules {
             }
             switch token {
             case .number, .identifier("true"), .identifier("false"), .identifier("nil"),
-                 .identifier where formatter.token(at: index - 1) == .operator(".", .prefix):
+                 .identifier where formatter.token(at: index - 1) == .operator(".", .prefix) &&
+                     formatter.token(at: index - 2) != .operator("\\", .prefix):
                 return true
             case .endOfScope("]"), .endOfScope(")"):
                 guard let startIndex = formatter.index(of: .startOfScope, before: index),
@@ -4031,7 +4032,7 @@ public struct _FormatRules {
                 }
                 index = i
             }
-            if case .operator(_, .prefix)? = formatter.token(at: index - 1) {
+            while case .operator(_, .prefix)? = formatter.token(at: index - 1) {
                 index -= 1
             }
             return index

@@ -3875,6 +3875,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testMeaningfulParensNotRemovedAroundSelectorStringLiteral() {
+        let input = "Selector((\"foo\"))"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testParensRemovedOnLineAfterSelectorIdentifier() {
+        let input = "Selector\n((\"foo\"))"
+        let output = "Selector\n(\"foo\")"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // around conditions
 
     func testRedundantParensRemovedInIf() {

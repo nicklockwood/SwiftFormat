@@ -1712,7 +1712,7 @@ public struct _FormatRules {
             case let .keyword(name) where !conditionals.contains(name) && !["let", "var"].contains(name):
                 return
             case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"), .endOfScope(">"):
-                if formatter.index(of: .nonSpaceOrComment, before: i) != previousIndex {
+                if formatter.tokens[previousIndex + 1 ..< i].contains(where: { $0.isLinebreak }) {
                     fallthrough
                 }
                 return // Probably a method invocation
@@ -1752,6 +1752,10 @@ public struct _FormatRules {
                     removeParen(at: range.lowerBound)
                     closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
                     innerParens = nil
+                }
+                if token == .startOfScope("("),
+                    formatter.last(.nonSpaceOrComment, before: previousIndex) == .identifier("Selector") {
+                    return
                 }
                 if let nextNonLinebreak = formatter.next(.nonSpaceOrComment, after: closingIndex) {
                     switch nextNonLinebreak {

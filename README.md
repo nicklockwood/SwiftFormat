@@ -301,9 +301,18 @@ You can disable rules individually using `--disable` followed by a list of one o
 
 ```bash
 --disable redundantSelf,trailingClosures
+--enable isEmpty
 ```
 
-If you prefer to only run a strict subset of rules, you can pass a comma-delimited list to the`--rules` argument, and it will enable only those rules:
+If you prefer, you can place your enabled/disabled rules on separate lines instead of using commas:
+
+```bash
+--disable indent
+--disable linebreaks
+--disable redundantSelf
+```
+
+To avoid automatically opting-in to new rules when SwiftFormat is updated, you can use the`--rules` argument to *only* enable the rules you specify:
 
 ```bash
 --rules indent,linebreaks

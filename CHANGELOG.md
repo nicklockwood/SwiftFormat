@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.40.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.4) (2019-03-23)
+
+- Multiple instances of `--disable` or other comma-delimited config options are now merged instead of replacing previous
+- The `redundantParens` rule no longer removes explicit double-parens used to suppress warnings inside `Selector(...)`
+- The `trailingCommas` rule no longer breaks calls to `UICollectionView.performBatchUpdates()` 
+- Fixed bug in `yodaConditions` rule that broke KeyPaths
+
 ## [0.40.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.3) (2019-03-19)
 
 - Fixed some bugs with the `redundantFileprivate` rule relating to struct members

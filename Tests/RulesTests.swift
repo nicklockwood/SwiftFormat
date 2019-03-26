@@ -8017,6 +8017,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testCaseInsensitiveCaseDifferingSortedImports() {
+        let input = "import c\nimport B\nimport A.a\nimport A.A"
+        let output = "import A.A\nimport A.a\nimport B\nimport c"
+        XCTAssertEqual(try format(input, rules: [FormatRules.sortedImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testNoDeleteCodeBetweenImports() {
         let input = "import Foo\nfunc bar() {}\nimport Bar"
         let output = "import Foo\nfunc bar() {}\nimport Bar"
@@ -8075,6 +8082,13 @@ class RulesTests: XCTestCase {
         let input = "import MyModule\nimport MyModule.Private"
         let output = "import MyModule\nimport MyModule.Private"
         XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
+    }
+
+    func testNoRemoveCaseDifferingImports() {
+        let input = "import Auth0.Authentication\nimport Auth0.authentication"
+        let output = "import Auth0.Authentication\nimport Auth0.authentication"
+        XCTAssertEqual(try format(input, rules: [FormatRules.duplicateImports]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     func testRemoveDuplicateImportFunc() {

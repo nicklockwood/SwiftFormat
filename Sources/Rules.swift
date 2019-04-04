@@ -954,163 +954,107 @@ public struct _FormatRules {
                 linewrapStack.append(false)
             case .space:
                 break
-            default:
-                if let scope = scopeStack.last {
-                    // Handle end of scope
-                    if token.isEndOfScope(scope) {
-                        let indentCount = indentCounts.last! - 1
-                        popScope()
-                        if !token.isLinebreak, lineIndex > scopeStartLineIndexes.last ?? -1 {
-                            // If indentCount > 0, drop back to previous indent level
-                            if indentCount > 0 {
-                                indentStack.removeLast()
-                                indentStack.append(indentStack.last ?? "")
-                            }
-                            // Check if line on which scope ends should be unindented
-                            let start = formatter.startOfLine(at: i)
-                            if !isCommentedCode(at: start),
-                                let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
-                                nextToken.isEndOfScope || nextToken == .keyword("@unknown"),
-                                !nextToken.isMultilineStringDelimiter {
-                                // Only reduce indent if line begins with a closing scope token
-                                var indent = indentStack.last ?? ""
-                                if [.endOfScope("case"), .endOfScope("default")].contains(token),
-                                    formatter.options.indentCase, scopeStack.last != .startOfScope("#if") {
-                                    indent += formatter.options.indent
-                                }
-                                i += formatter.insertSpace(indent, at: start)
-                            }
+            case .error("}"), .error("]"), .error(")"), .error(">"):
+                // Handled over-terminated fragment
+                if let prevToken = formatter.token(at: i - 1) {
+                    if case let .space(string) = prevToken {
+                        let prevButOneToken = formatter.token(at: i - 2)
+                        if prevButOneToken == nil || prevButOneToken!.isLinebreak {
+                            indentStack[0] = string
                         }
-                    } else if [.keyword("#else"), .keyword("#elseif")].contains(token) {
-                        var indent = indentStack[indentStack.count - 2]
-                        if scope == .startOfScope(":") {
-                            indent = indentStack[indentStack.count - 4]
-                            if formatter.options.indentCase {
-                                indent += formatter.options.indent
-                            }
-                        }
-                        let start = formatter.startOfLine(at: i)
-                        switch formatter.options.ifdefIndent {
-                        case .indent, .noIndent:
-                            i += formatter.insertSpace(indent, at: start)
-                        case .outdent:
-                            i += formatter.insertSpace("", at: start)
-                        }
-                    } else if token == .endOfScope("#endif") {
-                        var indent = indentStack[indentStack.count - 2]
-                        if scope == .startOfScope(":") {
-                            indent = indentStack[indentStack.count - 4]
-                            if formatter.options.indentCase {
-                                indent += formatter.options.indent
-                            }
-                            popScope()
-                        }
-                        switch formatter.options.ifdefIndent {
-                        case .indent, .noIndent:
-                            i += formatter.insertSpace(indent, at: formatter.startOfLine(at: i))
-                        case .outdent:
-                            i += formatter.insertSpace("", at: formatter.startOfLine(at: i))
-                        }
-                        if scopeStack.last == .startOfScope("#if") {
-                            popScope()
-                        }
+                    } else if prevToken.isLinebreak {
+                        indentStack[0] = ""
                     }
-                    switch token {
-                    case .endOfScope("case"):
-                        scopeStack.append(token)
-                        var indent = (indentStack.last ?? "")
-                        if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
-                            indent += formatter.options.indent
-                        } else {
-                            // Align indent with previous case value
-                            indent += "     "
-                            if formatter.options.indentCase {
-                                indent += formatter.options.indent
-                            }
-                        }
-                        indentStack.append(indent)
-                        indentCounts.append(1)
-                        scopeStartLineIndexes.append(lineIndex)
-                        linewrapStack.append(false)
-                    case .endOfScope("#endif"):
-                        switch formatter.options.ifdefIndent {
-                        case .indent, .noIndent:
-                            break
-                        case .outdent:
-                            i += formatter.insertSpace("", at: formatter.startOfLine(at: i))
-                        }
-                    default:
-                        break
-                    }
-                } else if [.error("}"), .error("]"), .error(")"), .error(">")].contains(token) {
-                    // Handled over-terminated fragment
-                    if let prevToken = formatter.token(at: i - 1) {
-                        if case let .space(string) = prevToken {
-                            let prevButOneToken = formatter.token(at: i - 2)
-                            if prevButOneToken == nil || prevButOneToken!.isLinebreak {
-                                indentStack[0] = string
-                            }
-                        } else if prevToken.isLinebreak {
-                            indentStack[0] = ""
-                        }
-                    }
-                    return
                 }
-                // Indent each new line
-                if token.isLinebreak {
-                    // Detect linewrap
-                    let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
-                    let linewrapped = !formatter.isEndOfStatement(
-                        at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last
-                    ) || !(nextTokenIndex == nil || formatter.isStartOfStatement(
-                        at: nextTokenIndex!, in: scopeStack.last
-                    ))
-                    // Determine current indent
-                    var indent = indentStack.last ?? ""
-                    if linewrapped, lineIndex == scopeStartLineIndexes.last {
-                        indent = indentStack.count > 1 ? indentStack[indentStack.count - 2] : ""
+                return
+            case .keyword("#else"), .keyword("#elseif"):
+                var indent = indentStack[indentStack.count - 2]
+                if scopeStack.last == .startOfScope(":") {
+                    indent = indentStack[indentStack.count - 4]
+                    if formatter.options.indentCase {
+                        indent += formatter.options.indent
                     }
-                    lineIndex += 1
-                    // Begin wrap scope
-                    if linewrapStack.last == true {
-                        if !linewrapped {
+                }
+                let start = formatter.startOfLine(at: i)
+                switch formatter.options.ifdefIndent {
+                case .indent, .noIndent:
+                    i += formatter.insertSpace(indent, at: start)
+                case .outdent:
+                    i += formatter.insertSpace("", at: start)
+                }
+            default:
+                // Handle end of scope
+                if let scope = scopeStack.last, token.isEndOfScope(scope) {
+                    let indentCount = indentCounts.last! - 1
+                    popScope()
+                    if !token.isLinebreak, lineIndex > scopeStartLineIndexes.last ?? -1 {
+                        // If indentCount > 0, drop back to previous indent level
+                        if indentCount > 0 {
                             indentStack.removeLast()
-                            linewrapStack[linewrapStack.count - 1] = false
-                            indent = indentStack.last!
+                            indentStack.append(indentStack.last ?? "")
                         }
-                    } else if linewrapped {
-                        linewrapStack[linewrapStack.count - 1] = true
-                        // Don't indent line starting with dot if previous line was just a closing scope
-                        let lastToken = formatter.token(at: lastNonSpaceOrLinebreakIndex)
-                        if formatter.token(at: nextTokenIndex ?? -1) != .operator(".", .infix) ||
-                            !(lastToken?.isEndOfScope == true && lastToken != .endOfScope("case") &&
-                                formatter.last(.nonSpace, before:
-                                    lastNonSpaceOrLinebreakIndex)?.isLinebreak == true) {
+                        // Check if line on which scope ends should be unindented
+                        let start = formatter.startOfLine(at: i)
+                        if !isCommentedCode(at: start),
+                            let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
+                            nextToken.isEndOfScope || nextToken == .keyword("@unknown"),
+                            !nextToken.isMultilineStringDelimiter {
+                            // Only reduce indent if line begins with a closing scope token
+                            var indent = indentStack.last ?? ""
+                            if [.endOfScope("case"), .endOfScope("default")].contains(token),
+                                formatter.options.indentCase, scopeStack.last != .startOfScope("#if") {
+                                indent += formatter.options.indent
+                            }
+                            i += formatter.insertSpace(indent, at: start)
+                        }
+                    }
+                    if token == .endOfScope("#endif") {
+                        switch formatter.options.ifdefIndent {
+                        case .indent, .noIndent:
+                            break
+                        case .outdent:
+                            i += formatter.insertSpace("", at: formatter.startOfLine(at: i))
+                        }
+                    }
+                } else if token == .endOfScope("#endif"), indentStack.count > 1 {
+                    var indent = indentStack[indentStack.count - 2]
+                    if scopeStack.last == .startOfScope(":"), indentStack.count > 1 {
+                        indent = indentStack[indentStack.count - 4]
+                        if formatter.options.indentCase {
                             indent += formatter.options.indent
                         }
-                        indentStack.append(indent)
+                        popScope()
                     }
-                    // Apply indent
-                    if let nextTokenIndex = formatter.index(of: .nonSpace, after: i) {
-                        switch formatter.tokens[nextTokenIndex] {
-                        case .linebreak where formatter.options.truncateBlankLines:
-                            formatter.insertSpace("", at: i + 1)
-                        case .error:
-                            break
-                        case .startOfScope("//"):
-                            // Avoid indenting commented code
-                            if isCommentedCode(at: nextTokenIndex) {
-                                return
-                            }
-                            formatter.insertSpace(indent, at: i + 1)
-                        default:
-                            formatter.insertSpace(indent, at: i + 1)
-                        }
+                    switch formatter.options.ifdefIndent {
+                    case .indent, .noIndent:
+                        i += formatter.insertSpace(indent, at: formatter.startOfLine(at: i))
+                    case .outdent:
+                        i += formatter.insertSpace("", at: formatter.startOfLine(at: i))
+                    }
+                    if scopeStack.last == .startOfScope("#if") {
+                        popScope()
                     }
                 }
             }
             switch token {
-            case .endOfScope("case"), .endOfScope("default"), .keyword("@unknown"),
+            case .endOfScope("case"):
+                scopeStack.append(token)
+                var indent = (indentStack.last ?? "")
+                if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
+                    indent += formatter.options.indent
+                } else {
+                    // Align indent with previous case value
+                    indent += "     "
+                    if formatter.options.indentCase {
+                        indent += formatter.options.indent
+                    }
+                }
+                indentStack.append(indent)
+                indentCounts.append(1)
+                scopeStartLineIndexes.append(lineIndex)
+                linewrapStack.append(false)
+                fallthrough
+            case .endOfScope("default"), .keyword("@unknown"),
                  .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"):
                 var index = formatter.startOfLine(at: i)
                 if index == i || index == i - 1 {
@@ -1136,6 +1080,56 @@ public struct _FormatRules {
                             }
                         }
                         index = startIndex
+                    }
+                }
+            case .linebreak:
+                // Detect linewrap
+                let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+                let linewrapped = !formatter.isEndOfStatement(
+                    at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last
+                ) || !(nextTokenIndex == nil || formatter.isStartOfStatement(
+                    at: nextTokenIndex!, in: scopeStack.last
+                ))
+                // Determine current indent
+                var indent = indentStack.last ?? ""
+                if linewrapped, lineIndex == scopeStartLineIndexes.last {
+                    indent = indentStack.count > 1 ? indentStack[indentStack.count - 2] : ""
+                }
+                lineIndex += 1
+                // Begin wrap scope
+                if linewrapStack.last == true {
+                    if !linewrapped {
+                        indentStack.removeLast()
+                        linewrapStack[linewrapStack.count - 1] = false
+                        indent = indentStack.last!
+                    }
+                } else if linewrapped {
+                    linewrapStack[linewrapStack.count - 1] = true
+                    // Don't indent line starting with dot if previous line was just a closing scope
+                    let lastToken = formatter.token(at: lastNonSpaceOrLinebreakIndex)
+                    if formatter.token(at: nextTokenIndex ?? -1) != .operator(".", .infix) ||
+                        !(lastToken?.isEndOfScope == true && lastToken != .endOfScope("case") &&
+                            formatter.last(.nonSpace, before:
+                                lastNonSpaceOrLinebreakIndex)?.isLinebreak == true) {
+                        indent += formatter.options.indent
+                    }
+                    indentStack.append(indent)
+                }
+                // Apply indent
+                if let nextTokenIndex = formatter.index(of: .nonSpace, after: i) {
+                    switch formatter.tokens[nextTokenIndex] {
+                    case .linebreak where formatter.options.truncateBlankLines:
+                        formatter.insertSpace("", at: i + 1)
+                    case .error:
+                        break
+                    case .startOfScope("//"):
+                        // Avoid indenting commented code
+                        if isCommentedCode(at: nextTokenIndex) {
+                            return
+                        }
+                        formatter.insertSpace(indent, at: i + 1)
+                    default:
+                        formatter.insertSpace(indent, at: i + 1)
                     }
                 }
             default:

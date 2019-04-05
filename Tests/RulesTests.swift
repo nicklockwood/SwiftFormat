@@ -2383,15 +2383,15 @@ class RulesTests: XCTestCase {
     }
 
     func testIndentedIfEndifIndenting() {
-        let input = "{\n#if x\n// foo\n#endif\n}"
-        let output = "{\n    #if x\n        // foo\n    #endif\n}"
+        let input = "{\n#if x\n// foo\nfoo()\n#endif\n}"
+        let output = "{\n    #if x\n        // foo\n        foo()\n    #endif\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
     func testIfElseEndifIndenting() {
-        let input = "#if x\n    // foo\n#else\n    // bar\n#endif"
-        let output = "#if x\n    // foo\n#else\n    // bar\n#endif"
+        let input = "#if x\n    // foo\nfoo()\n#else\n    // bar\n#endif"
+        let output = "#if x\n    // foo\n    foo()\n#else\n    // bar\n#endif"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
@@ -2519,6 +2519,45 @@ class RulesTests: XCTestCase {
             #if x
                 case baz
             #endif // ends
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testNoIndentCommentBeforeIfdefAroundCase() {
+        let input = """
+        switch x {
+        // foo
+        case .foo:
+            break
+        // conditional
+        // bar
+        #if BAR
+            case .bar:
+                break
+        // baz
+        #else
+            case .baz:
+                break
+        #endif
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testNoIndentCommentedCodeBeforeIfdefAroundCase() {
+        let input = """
+        func foo() {
+        //    foo()
+            #if BAR
+        //        bar()
+            #else
+        //        baz()
+            #endif
         }
         """
         let output = input
@@ -2671,8 +2710,8 @@ class RulesTests: XCTestCase {
     }
 
     func testIndentedIfElseEndifOutdenting() {
-        let input = "{\n#if x\n// foo\n#else\n// bar\n#endif\n}"
-        let output = "{\n#if x\n    // foo\n#else\n    // bar\n#endif\n}"
+        let input = "{\n#if x\n// foo\nfoo()\n#else\n// bar\n#endif\n}"
+        let output = "{\n#if x\n    // foo\n    foo()\n#else\n    // bar\n#endif\n}"
         let options = FormatOptions(ifdefIndent: .outdent)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
@@ -2687,24 +2726,24 @@ class RulesTests: XCTestCase {
     }
 
     func testIndentedIfElseifEndifOutdenting() {
-        let input = "{\n#if x\n// foo\n#elseif y\n// bar\n#endif\n}"
-        let output = "{\n#if x\n    // foo\n#elseif y\n    // bar\n#endif\n}"
+        let input = "{\n#if x\n// foo\nfoo()\n#elseif y\n// bar\n#endif\n}"
+        let output = "{\n#if x\n    // foo\n    foo()\n#elseif y\n    // bar\n#endif\n}"
         let options = FormatOptions(ifdefIndent: .outdent)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
     func testNestedIndentedIfElseifEndifOutdenting() {
-        let input = "{\n#if x\n#if y\n// foo\n#elseif y\n// bar\n#endif\n#endif\n}"
-        let output = "{\n#if x\n#if y\n    // foo\n#elseif y\n    // bar\n#endif\n#endif\n}"
+        let input = "{\n#if x\n#if y\n// foo\nfoo()\n#elseif y\n// bar\n#endif\n#endif\n}"
+        let output = "{\n#if x\n#if y\n    // foo\n    foo()\n#elseif y\n    // bar\n#endif\n#endif\n}"
         let options = FormatOptions(ifdefIndent: .outdent)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
     func testDoubleNestedIndentedIfElseifEndifOutdenting() {
-        let input = "{\n#if x\n#if y\n#if z\n// foo\n#elseif y\n// bar\n#endif\n#endif\n#endif\n}"
-        let output = "{\n#if x\n#if y\n#if z\n    // foo\n#elseif y\n    // bar\n#endif\n#endif\n#endif\n}"
+        let input = "{\n#if x\n#if y\n#if z\n// foo\nfoo()\n#elseif y\n// bar\n#endif\n#endif\n#endif\n}"
+        let output = "{\n#if x\n#if y\n#if z\n    // foo\n    foo()\n#elseif y\n    // bar\n#endif\n#endif\n#endif\n}"
         let options = FormatOptions(ifdefIndent: .outdent)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")

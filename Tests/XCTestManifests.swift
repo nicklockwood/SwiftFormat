@@ -728,6 +728,8 @@ extension RulesTests {
         ("testNoIndentAfterDefaultAsIdentifier", testNoIndentAfterDefaultAsIdentifier),
         ("testNoIndentAfterOperatorDeclaration", testNoIndentAfterOperatorDeclaration),
         ("testNoIndentBlankLines", testNoIndentBlankLines),
+        ("testNoIndentCommentBeforeIfdefAroundCase", testNoIndentCommentBeforeIfdefAroundCase),
+        ("testNoIndentCommentedCodeBeforeIfdefAroundCase", testNoIndentCommentedCodeBeforeIfdefAroundCase),
         ("testNoIndentWrappedSpecifiersForProtocol", testNoIndentWrappedSpecifiersForProtocol),
         ("testNoInsertBlankLineAfterMarkAtEndOfScope", testNoInsertBlankLineAfterMarkAtEndOfScope),
         ("testNoInsertBlankLineBeforeMarkAtStartOfScope", testNoInsertBlankLineBeforeMarkAtStartOfScope),

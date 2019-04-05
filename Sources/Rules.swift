@@ -989,11 +989,12 @@ public struct _FormatRules {
                                 indent += formatter.options.indent
                             }
                         }
+                        let start = formatter.startOfLine(at: i)
                         switch formatter.options.ifdefIndent {
                         case .indent, .noIndent:
-                            i += formatter.insertSpace(indent, at: formatter.startOfLine(at: i))
+                            i += formatter.insertSpace(indent, at: start)
                         case .outdent:
-                            i += formatter.insertSpace("", at: formatter.startOfLine(at: i))
+                            i += formatter.insertSpace("", at: start)
                         }
                     } else if token == .endOfScope("#endif") {
                         var indent = indentStack[indentStack.count - 2]
@@ -1096,28 +1097,6 @@ public struct _FormatRules {
                             formatter.insertSpace("", at: i + 1)
                         case .error:
                             break
-                        case .endOfScope("case"), .endOfScope("default"), .keyword("@unknown"):
-                            formatter.insertSpace(indent, at: i + 1)
-                            // TODO: is this the best place to do this?
-                            var index = i
-                            while let prevToken = formatter.token(at: index - 1), prevToken.isComment,
-                                let startIndex = formatter.index(of: .nonSpaceOrComment, before: index),
-                                formatter.tokens[startIndex].isLinebreak {
-                                // Set indent for comment immediately before case to match the case
-                                var indent = indentStack.count > 1 ? indentStack[indentStack.count - 2] : ""
-                                if formatter.options.indentCase {
-                                    indent += formatter.options.indent
-                                }
-                                formatter.insertSpace(indent, at: startIndex + 1)
-                                if case .endOfScope("*/") = prevToken,
-                                    var index = formatter.index(of: .startOfScope("/*"), after: startIndex) {
-                                    while let linebreakIndex = formatter.index(of: .linebreak, after: index) {
-                                        formatter.insertSpace(indent + " ", at: linebreakIndex + 1)
-                                        index = linebreakIndex
-                                    }
-                                }
-                                index = startIndex
-                            }
                         case .startOfScope("//"):
                             // Avoid indenting commented code
                             if isCommentedCode(at: nextTokenIndex) {
@@ -1129,6 +1108,38 @@ public struct _FormatRules {
                         }
                     }
                 }
+            }
+            switch token {
+            case .endOfScope("case"), .endOfScope("default"), .keyword("@unknown"),
+                 .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"):
+                var index = formatter.startOfLine(at: i)
+                if index == i || index == i - 1 {
+                    let indent: String
+                    if case let .space(space) = formatter.tokens[index] {
+                        indent = space
+                    } else {
+                        indent = ""
+                    }
+                    index -= 1
+                    while let prevToken = formatter.token(at: index - 1), prevToken.isComment,
+                        let startIndex = formatter.index(of: .nonSpaceOrComment, before: index),
+                        formatter.tokens[startIndex].isLinebreak {
+                        // Set indent for comment immediately before this line to match this line
+                        if !isCommentedCode(at: startIndex + 1) {
+                            formatter.insertSpace(indent, at: startIndex + 1)
+                        }
+                        if case .endOfScope("*/") = prevToken,
+                            var index = formatter.index(of: .startOfScope("/*"), after: startIndex) {
+                            while let linebreakIndex = formatter.index(of: .linebreak, after: index) {
+                                formatter.insertSpace(indent + " ", at: linebreakIndex + 1)
+                                index = linebreakIndex
+                            }
+                        }
+                        index = startIndex
+                    }
+                }
+            default:
+                break
             }
             // Track token for line wraps
             if !token.isSpaceOrComment {

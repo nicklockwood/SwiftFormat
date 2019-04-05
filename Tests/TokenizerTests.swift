@@ -1541,6 +1541,37 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testLessThanGreaterThanFollowedByOperator() {
+        let input = "a > -x, a<x, b > -y, b<y"
+        let output: [Token] = [
+            .identifier("a"),
+            .space(" "),
+            .operator(">", .infix),
+            .space(" "),
+            .operator("-", .prefix),
+            .identifier("x"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("a"),
+            .operator("<", .infix),
+            .identifier("x"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("b"),
+            .space(" "),
+            .operator(">", .infix),
+            .space(" "),
+            .operator("-", .prefix),
+            .identifier("y"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("b"),
+            .operator("<", .infix),
+            .identifier("y"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testCustomChevronOperatorFollowedByParen() {
         let input = "foo <?> (bar)"
         let output: [Token] = [
@@ -2347,24 +2378,6 @@ class TokenizerTests: XCTestCase {
             .operator("==", .infix),
             .space(" "),
             .identifier("C"),
-            .endOfScope(">"),
-        ]
-        XCTAssertEqual(tokenize(input), output)
-    }
-
-    func testGenericsWithInfixOperator() {
-        let input = "Foo<Bar> || Foo<Baz>"
-        let output: [Token] = [
-            .identifier("Foo"),
-            .startOfScope("<"),
-            .identifier("Bar"),
-            .endOfScope(">"),
-            .space(" "),
-            .operator("||", .infix),
-            .space(" "),
-            .identifier("Foo"),
-            .startOfScope("<"),
-            .identifier("Baz"),
             .endOfScope(">"),
         ]
         XCTAssertEqual(tokenize(input), output)

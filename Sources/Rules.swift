@@ -904,7 +904,9 @@ public struct _FormatRules {
                     }
                 case "#if":
                     if let lineIndex = formatter.index(of: .linebreak, after: i),
-                        let nextKeyword = formatter.next(.nonSpaceOrLinebreak, after: lineIndex), [.endOfScope("case"), .endOfScope("default"), .keyword("@unknown")].contains(nextKeyword) {
+                        let nextKeyword = formatter.next(.nonSpaceOrCommentOrLinebreak, after: lineIndex), [
+                            .endOfScope("case"), .endOfScope("default"), .keyword("@unknown"),
+                        ].contains(nextKeyword) {
                         indent = indentStack[indentStack.count - indentCount - 1]
                         if formatter.options.indentCase {
                             indent += formatter.options.indent

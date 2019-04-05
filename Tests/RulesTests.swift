@@ -2565,6 +2565,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testNoIndentIfdefFollowedByCommentAroundCase() {
+        let input = """
+        switch x {
+        case .foo:
+            break
+        #if BAR
+            // bar
+            case .bar:
+                break
+        #else
+            // baz
+            case .baz:
+                break
+        #endif
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // indent #if/#else/#elseif/#endif (mode: noindent)
 
     func testIfEndifNoIndenting() {

@@ -1506,6 +1506,7 @@ extension TokenizerTests {
         ("testGenericContainingTupleType", testGenericContainingTupleType),
         ("testGenericCustomOperatorFunction", testGenericCustomOperatorFunction),
         ("testGenericDeclarationThatLooksLikeTwoExpressions", testGenericDeclarationThatLooksLikeTwoExpressions),
+        ("testGenericDeclarationWithoutSpace", testGenericDeclarationWithoutSpace),
         ("testGenericEnumCase", testGenericEnumCase),
         ("testGenericFollowedByAssign", testGenericFollowedByAssign),
         ("testGenericFollowedByDot", testGenericFollowedByDot),

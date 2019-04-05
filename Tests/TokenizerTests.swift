@@ -1863,6 +1863,27 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testGenericDeclarationWithoutSpace() {
+        let input = "let foo: Foo<String,Int>=[]"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .identifier("String"),
+            .delimiter(","),
+            .identifier("Int"),
+            .endOfScope(">"),
+            .operator("=", .infix),
+            .startOfScope("["),
+            .endOfScope("]"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testGenericClassInitThatLooksLikeTuple() {
         let input = "(Foo<String,Int>(Bar))"
         let output: [Token] = [

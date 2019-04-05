@@ -1447,6 +1447,15 @@ public func tokenize(_ source: String) -> [Token] {
                      .operator(".", _), .operator("...", _), .operator("->", _),
                      .operator("=", _) where prevIndex != count - 2:
                     break
+                case .operator("=", _) where prevIndex == count - 2:
+                    guard let startIndex = index(of: .startOfScope, before: count - 1),
+                        tokens[startIndex] == .startOfScope("<"),
+                        let prevIndex = index(of: .nonSpaceOrComment, before: startIndex),
+                        case .identifier = tokens[prevIndex],
+                        let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                        tokens[prevPrevIndex] == .delimiter(":") else {
+                        fallthrough
+                    }
                 case .operator, .identifier, .number, .startOfScope("\""), .startOfScope("\"\"\""):
                     convertClosingChevronToSymbol(at: prevIndex, andOpeningChevron: true)
                     processToken()

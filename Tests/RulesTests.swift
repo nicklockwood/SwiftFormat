@@ -6074,6 +6074,82 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testRedundantSelfRemovedWhenFollowedBySwitchContainingIfdef() {
+        let input = """
+        struct Foo {
+            func bar() {
+                self.method(self.value)
+                switch x {
+                #if BAZ
+                    case .baz:
+                        break
+                #endif
+                default:
+                    break
+                }
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            func bar() {
+                method(value)
+                switch x {
+                #if BAZ
+                    case .baz:
+                        break
+                #endif
+                default:
+                    break
+                }
+            }
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRedundantSelfRemovedInsideConditionalCase() {
+        let input = """
+        struct Foo {
+            func bar() {
+                let method2 = () -> Void
+                switch x {
+                #if BAZ
+                    case .baz:
+                        self.method1(self.value)
+                #else
+                    case .quux:
+                        self.method2(self.value)
+                #endif
+                default:
+                    break
+                }
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            func bar() {
+                let method2 = () -> Void
+                switch x {
+                #if BAZ
+                    case .baz:
+                        method1(value)
+                #else
+                    case .quux:
+                        self.method2(value)
+                #endif
+                default:
+                    break
+                }
+            }
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testRedundantSelfDoesntGetStuckIfNoParensFound() {
         let input = "init<T>_ foo: T {}"
         let output = input

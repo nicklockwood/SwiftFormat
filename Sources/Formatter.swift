@@ -237,11 +237,20 @@ public class Formatter: NSObject {
         var scopeStack: [Token] = []
         for i in range {
             let token = tokens[i]
+            // TODO: find a better way to deal with this special case
+            if token == .endOfScope("#endif") {
+                while let scope = scopeStack.last, scope != .startOfScope("#if") {
+                    scopeStack.removeLast()
+                }
+            }
             if let scope = scopeStack.last, token.isEndOfScope(scope) {
                 scopeStack.removeLast()
                 if case .linebreak = token, scopeStack.isEmpty, matches(token) {
                     return i
                 }
+            } else if token == .endOfScope("case") || token == .endOfScope("default"),
+                scopeStack.last == .startOfScope("#if") {
+                continue
             } else if scopeStack.isEmpty, matches(token) {
                 return i
             } else if token.isEndOfScope {

@@ -2181,7 +2181,7 @@ public struct _FormatRules {
             let currentScope = formatter.currentScope(at: index)
             let isWhereClause = index > 0 && formatter.tokens[index - 1] == .keyword("where")
             assert(isWhereClause || currentScope.map { token -> Bool in
-                [.startOfScope("{"), .startOfScope(":")].contains(token)
+                [.startOfScope("{"), .startOfScope(":"), .startOfScope("#if")].contains(token)
             } ?? true)
             if explicitSelf == .remove {
                 // Check if scope actually includes self before we waste a bunch of time
@@ -2433,10 +2433,7 @@ public struct _FormatRules {
                     return
                 case .startOfScope("{") where lastKeyword == "switch":
                     lastKeyword = ""
-                    guard let i = formatter.index(of: .endOfScope, after: index) else {
-                        return
-                    }
-                    index = i
+                    index += 1
                     loop: while let token = formatter.token(at: index) {
                         index += 1
                         switch token {
@@ -2528,7 +2525,14 @@ public struct _FormatRules {
                 case .endOfScope("case"), .endOfScope("default"):
                     return
                 case .endOfScope:
-                    if let scope = scopeStack.last {
+                    if token == .endOfScope("#endif") {
+                        while let scope = scopeStack.last {
+                            scopeStack.removeLast()
+                            if scope != .startOfScope("#if") {
+                                break
+                            }
+                        }
+                    } else if let scope = scopeStack.last {
                         assert(token.isEndOfScope(scope))
                         scopeStack.removeLast()
                     } else {

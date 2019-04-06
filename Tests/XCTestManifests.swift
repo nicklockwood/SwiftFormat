@@ -1070,6 +1070,8 @@ extension RulesTests {
         ("testRedundantParensRemovedInIf8", testRedundantParensRemovedInIf8),
         ("testRedundantParensRemovedInsideClosure", testRedundantParensRemovedInsideClosure),
         ("testRedundantSelfDoesntGetStuckIfNoParensFound", testRedundantSelfDoesntGetStuckIfNoParensFound),
+        ("testRedundantSelfRemovedInsideConditionalCase", testRedundantSelfRemovedInsideConditionalCase),
+        ("testRedundantSelfRemovedWhenFollowedBySwitchContainingIfdef", testRedundantSelfRemovedWhenFollowedBySwitchContainingIfdef),
         ("testRemoveBackticksAroundGetArgument", testRemoveBackticksAroundGetArgument),
         ("testRemoveBackticksAroundKeypathProperty", testRemoveBackticksAroundKeypathProperty),
         ("testRemoveBackticksAroundKeywordProperty", testRemoveBackticksAroundKeywordProperty),

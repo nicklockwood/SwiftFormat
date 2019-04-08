@@ -35,6 +35,8 @@
 		01A0EAD41D5DC08A00A0A8E3 /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
 		01A0EAD51D5DC08A00A0A8E3 /* Rules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */; };
 		01A0EAD61D5DC08A00A0A8E3 /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
+		01A95BD2225BEDE300744931 /* ParsingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */; };
+		01A95BD3225BEDE400744931 /* ParsingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */; };
 		01ACAE05220CD90F003F3CCF /* Examples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01ACAE04220CD90F003F3CCF /* Examples.swift */; };
 		01ACAE06220CD914003F3CCF /* Examples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01ACAE04220CD90F003F3CCF /* Examples.swift */; };
 		01ACAE07220CD915003F3CCF /* Examples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01ACAE04220CD90F003F3CCF /* Examples.swift */; };
@@ -811,6 +813,7 @@
 				E4872129201E3DD50014845E /* RulesStore.swift in Sources */,
 				E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */,
 				E4872111201D3B830014845E /* Options.swift in Sources */,
+				01A95BD3225BEDE400744931 /* ParsingHelpers.swift in Sources */,
 				90C4B6CD1DA4B04A009EB000 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -822,6 +825,7 @@
 				01045AA0211A1EE300D2BE3D /* Arguments.swift in Sources */,
 				01BBD85C21DAA2A700457380 /* Globs.swift in Sources */,
 				01045A9F2119D30D00D2BE3D /* Inference.swift in Sources */,
+				01A95BD2225BEDE300744931 /* ParsingHelpers.swift in Sources */,
 				90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */,
 				E4E4D3CC2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				E4FABAD8202FEF060065716E /* OptionsDescriptor.swift in Sources */,

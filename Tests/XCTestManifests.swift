@@ -157,6 +157,7 @@ extension InferenceTests {
     static let __allTests = [
         ("testIgnoreInlineIfElse", testIgnoreInlineIfElse),
         ("testInferAllmanComments", testInferAllmanComments),
+        ("testInferAllowInlineSemicolons", testInferAllowInlineSemicolons),
         ("testInferByteGrouping", testInferByteGrouping),
         ("testInferDontUseVoid", testInferDontUseVoid),
         ("testInferElseOnNextLine", testInferElseOnNextLine),
@@ -184,6 +185,7 @@ extension InferenceTests {
         ("testInferLowercaseHexExponent", testInferLowercaseHexExponent),
         ("testInferMillions", testInferMillions),
         ("testInferNibbleGrouping", testInferNibbleGrouping),
+        ("testInferNoAllowInlineSemicolons", testInferNoAllowInlineSemicolons),
         ("testInferNoBinaryGrouping", testInferNoBinaryGrouping),
         ("testInferNoDecimalGrouping", testInferNoDecimalGrouping),
         ("testInferNoFractionGrouping", testInferNoFractionGrouping),
@@ -219,6 +221,7 @@ extension InferenceTests {
         ("testInferWrapElementsAfterSecondArgument", testInferWrapElementsAfterSecondArgument),
         ("testInferWrapPreserve", testInferWrapPreserve),
         ("testLinuxTestSuiteIncludesAllTests", testLinuxTestSuiteIncludesAllTests),
+        ("testNoInferAllowInlineSemicolonsFromTerminatingSemicolon", testNoInferAllowInlineSemicolonsFromTerminatingSemicolon),
     ]
 }
 

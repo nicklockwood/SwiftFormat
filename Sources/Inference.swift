@@ -125,9 +125,18 @@ private struct Inference {
         options.linebreak = linebreak
     }
 
-    let allowInlineSemicolons = OptionInferrer { _, options in
-        // No way to infer this
-        options.allowInlineSemicolons = true
+    let allowInlineSemicolons = OptionInferrer { formatter, options in
+        var allow = false
+        for (i, token) in formatter.tokens.enumerated() {
+            guard case .delimiter(";") = token else {
+                continue
+            }
+            if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == false {
+                allow = true
+                break
+            }
+        }
+        options.allowInlineSemicolons = allow
     }
 
     let spaceAroundRangeOperators = OptionInferrer { formatter, options in

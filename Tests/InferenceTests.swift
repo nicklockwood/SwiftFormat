@@ -62,7 +62,7 @@ class InferenceTests: XCTestCase {
         let tokens = files.flatMap { tokenize($0) }
         let options = Options(formatOptions: inferFormatOptions(from: tokens))
         let arguments = serialize(options: options, excludingDefaults: true, separator: " ")
-        XCTAssertEqual(arguments, "--binarygrouping none --decimalgrouping none --hexgrouping none --octalgrouping none --wrapcollections before-first")
+        XCTAssertEqual(arguments, "--binarygrouping none --decimalgrouping none --hexgrouping none --octalgrouping none --semicolons never --wrapcollections before-first")
     }
 
     // MARK: indent
@@ -125,6 +125,26 @@ class InferenceTests: XCTestCase {
         let output = "\r\n"
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.linebreak, output)
+    }
+
+    // MARK: allowInlineSemicolons
+
+    func testInferAllowInlineSemicolons() {
+        let input = "let foo = 5; let bar = 6"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertTrue(options.allowInlineSemicolons)
+    }
+
+    func testInferNoAllowInlineSemicolons() {
+        let input = "let foo = 5\nlet bar = 6"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertFalse(options.allowInlineSemicolons)
+    }
+
+    func testNoInferAllowInlineSemicolonsFromTerminatingSemicolon() {
+        let input = "let foo = 5;\nlet bar = 6"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertFalse(options.allowInlineSemicolons)
     }
 
     // MARK: spaceAroundRangeOperators

@@ -206,6 +206,7 @@ extension InferenceTests {
         ("testInferQuadOctalGrouping", testInferQuadOctalGrouping),
         ("testInferRemoveSelf", testInferRemoveSelf),
         ("testInferRemoveSelf2", testInferRemoveSelf2),
+        ("testInferSelfInInitOnly", testInferSelfInInitOnly),
         ("testInferSpaceAfterOperatorFunc", testInferSpaceAfterOperatorFunc),
         ("testInferSpaceAroundRangeOperators", testInferSpaceAroundRangeOperators),
         ("testInferThousands", testInferThousands),

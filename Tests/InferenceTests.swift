@@ -521,6 +521,25 @@ class InferenceTests: XCTestCase {
         XCTAssertEqual(options.explicitSelf, .remove)
     }
 
+    func testInferSelfInInitOnly() {
+        let input = """
+        struct Foo {
+            var foo: Int
+            var bar: Int
+            init() {
+                self.foo = 5
+                self.bar = 6
+            }
+            func baz() {
+                foo()
+                bar()
+            }
+        }
+        """
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.explicitSelf, .initOnly)
+    }
+
     // MARK: spaceAroundOperatorDeclarations
 
     func testInferSpaceAfterOperatorFunc() {

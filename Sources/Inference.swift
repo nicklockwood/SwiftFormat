@@ -141,17 +141,15 @@ private struct Inference {
 
     let spaceAroundRangeOperators = OptionInferrer { formatter, options in
         var spaced = 0, unspaced = 0
-        formatter.forEachToken { i, token in
-            if token.isRangeOperator {
-                if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
-                    if nextToken.string != ")", nextToken.string != "," {
-                        if formatter.token(at: i + 1)?.isSpaceOrLinebreak == true {
-                            spaced += 1
-                        } else {
-                            unspaced += 1
-                        }
-                    }
-                }
+        formatter.forEach(.rangeOperator) { i, _ in
+            guard let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
+                nextToken.string != ")", nextToken.string != "," else {
+                return
+            }
+            if formatter.token(at: i + 1)?.isSpaceOrLinebreak == true {
+                spaced += 1
+            } else {
+                unspaced += 1
             }
         }
         options.spaceAroundRangeOperators = (spaced >= unspaced)
@@ -181,18 +179,19 @@ private struct Inference {
     let trailingCommas = OptionInferrer { formatter, options in
         var trailing = 0, noTrailing = 0
         formatter.forEach(.endOfScope("]")) { i, token in
-            if let linebreakIndex = formatter.index(of: .nonSpaceOrComment, before: i),
-                case .linebreak = formatter.tokens[linebreakIndex] {
-                if let prevTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: linebreakIndex + 1), let token = formatter.token(at: prevTokenIndex) {
-                    switch token.string {
-                    case "[", ":":
-                        break // do nothing
-                    case ",":
-                        trailing += 1
-                    default:
-                        noTrailing += 1
-                    }
-                }
+            guard let linebreakIndex = formatter.index(of: .nonSpaceOrComment, before: i),
+                case .linebreak = formatter.tokens[linebreakIndex],
+                let prevTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: linebreakIndex + 1),
+                let token = formatter.token(at: prevTokenIndex) else {
+                return
+            }
+            switch token.string {
+            case "[", ":":
+                break // do nothing
+            case ",":
+                trailing += 1
+            default:
+                noTrailing += 1
             }
         }
         options.trailingCommas = (trailing >= noTrailing)
@@ -206,21 +205,19 @@ private struct Inference {
             case .startOfScope:
                 scopeStack.append(token)
             case .linebreak:
-                if let nextToken = formatter.token(at: i + 1) {
-                    switch nextToken {
-                    case .space:
-                        if let nextToken = formatter.token(at: i + 2) {
-                            if case .linebreak = nextToken {
-                                untruncated += 1
-                            }
-                        } else {
+                switch formatter.token(at: i + 1) {
+                case .space?:
+                    if let nextToken = formatter.token(at: i + 2) {
+                        if case .linebreak = nextToken {
                             untruncated += 1
                         }
-                    case .linebreak:
-                        truncated += 1
-                    default:
-                        break
+                    } else {
+                        untruncated += 1
                     }
+                case .linebreak?, nil:
+                    truncated += 1
+                default:
+                    break
                 }
             default:
                 if let scope = scopeStack.last, token.isEndOfScope(scope) {
@@ -572,46 +569,16 @@ private struct Inference {
 
     // TODO: handle init-only case
     let explicitSelf = OptionInferrer { formatter, options in
+        let selfRequired = formatter.options.selfRequired + [
+            "expect", // Special case to support autoclosure arguments in the Nimble framework
+        ]
         var removed = 0, unremoved = 0
+        var initRemoved = 0, initUnremoved = 0
         var typeStack = [String]()
         var membersByType = [String: Set<String>]()
         var classMembersByType = [String: Set<String>]()
-        func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
-            while let token = formatter.token(at: index) {
-                switch token {
-                case .identifier where
-                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false:
-                    let name = token.unescaped()
-                    if name != "_" {
-                        names.insert(name)
-                    }
-                    inner: while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
-                        switch formatter.tokens[nextIndex] {
-                        case .keyword("as"), .keyword("is"), .keyword("try"):
-                            break
-                        case .startOfScope("<"), .startOfScope("["), .startOfScope("("):
-                            guard let endIndex = formatter.endOfScope(at: nextIndex) else {
-                                return // error
-                            }
-                            index = endIndex
-                            continue
-                        case .keyword, .startOfScope("{"), .endOfScope("}"), .startOfScope(":"):
-                            return
-                        case .delimiter(","):
-                            index = nextIndex
-                            break inner
-                        default:
-                            break
-                        }
-                        index = nextIndex
-                    }
-                default:
-                    break
-                }
-                index += 1
-            }
-        }
-        func processBody(at index: inout Int, localNames: Set<String>, members: Set<String>, isTypeRoot: Bool) {
+        func processBody(at index: inout Int, localNames: Set<String>, members: Set<String>, isTypeRoot: Bool,
+                         isInit: Bool) {
             let currentScope = formatter.currentScope(at: index)
             let isWhereClause = index > 0 && formatter.tokens[index - 1] == .keyword("where")
             assert(isWhereClause || currentScope.map { token -> Bool in
@@ -627,6 +594,11 @@ private struct Inference {
                 var classOrStatic = false
                 outer: while let token = formatter.token(at: i) {
                     switch token {
+                    case .keyword("import"):
+                        guard let nextIndex = formatter.index(of: .identifier, after: i) else {
+                            return // error
+                        }
+                        i = nextIndex
                     case .keyword("class"), .keyword("static"):
                         classOrStatic = true
                     case .keyword("repeat"):
@@ -657,30 +629,29 @@ private struct Inference {
                         i += 1
                         if isTypeRoot {
                             if classOrStatic {
-                                processDeclaredVariables(at: &i, names: &classMembers)
+                                formatter.processDeclaredVariables(at: &i, names: &classMembers)
                                 classOrStatic = false
                             } else {
-                                processDeclaredVariables(at: &i, names: &members)
+                                formatter.processDeclaredVariables(at: &i, names: &members)
                             }
                         } else {
-                            processDeclaredVariables(at: &i, names: &localNames)
+                            formatter.processDeclaredVariables(at: &i, names: &localNames)
                         }
                     case .keyword("func"):
-                        if let nameToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
-                            if isTypeRoot {
-                                if classOrStatic {
-                                    classMembers.insert(nameToken.unescaped())
-                                    classOrStatic = false
-                                } else {
-                                    members.insert(nameToken.unescaped())
-                                }
-                            } else {
-                                localNames.insert(nameToken.unescaped())
-                            }
+                        guard let nameToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) else {
+                            break
                         }
-                    case .startOfScope("("), .endOfScope(")"):
-                        break
-                    case .startOfScope(":"):
+                        if isTypeRoot {
+                            if classOrStatic {
+                                classMembers.insert(nameToken.unescaped())
+                                classOrStatic = false
+                            } else {
+                                members.insert(nameToken.unescaped())
+                            }
+                        } else {
+                            localNames.insert(nameToken.unescaped())
+                        }
+                    case .startOfScope("("), .startOfScope("#if"), .startOfScope(":"):
                         break
                     case .startOfScope:
                         classOrStatic = false
@@ -705,7 +676,8 @@ private struct Inference {
                 switch token {
                 case .keyword("is"), .keyword("as"), .keyword("try"):
                     break
-                case .keyword("func"), .keyword("init"), .keyword("subscript"):
+                case .keyword("init"), .keyword("subscript"),
+                     .keyword("func") where lastKeyword != "import":
                     lastKeyword = ""
                     if classOrStatic {
                         if !isTypeRoot {
@@ -736,7 +708,7 @@ private struct Inference {
                     }
                     index = scopeStart + 1
                     typeStack.append(name)
-                    processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: true)
+                    processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: true, isInit: false)
                     typeStack.removeLast()
                 case .keyword("var"), .keyword("let"):
                     index += 1
@@ -759,12 +731,12 @@ private struct Inference {
                         assert(!isTypeRoot)
                         // Guard is included because it's an error to reference guard vars in body
                         var scopedNames = localNames
-                        processDeclaredVariables(at: &index, names: &scopedNames)
+                        formatter.processDeclaredVariables(at: &index, names: &scopedNames)
                         guard let startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
                             return // error
                         }
                         index = startIndex + 1
-                        processBody(at: &index, localNames: scopedNames, members: members, isTypeRoot: false)
+                        processBody(at: &index, localNames: scopedNames, members: members, isTypeRoot: false, isInit: isInit)
                         lastKeyword = ""
                     default:
                         lastKeyword = token.string
@@ -783,20 +755,28 @@ private struct Inference {
                         }
                     }
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
                     continue
                 case .keyword("while") where lastKeyword == "repeat":
                     lastKeyword = ""
                 case let .keyword(name):
                     lastKeyword = name
+                case .startOfScope("//"), .startOfScope("/*"):
+                    if case let .commentBody(comment)? = formatter.next(.nonSpace, after: index) {
+                        formatter.processCommentBody(comment)
+                        if token == .startOfScope("//") {
+                            formatter.processLinebreak()
+                        }
+                    }
+                    index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .startOfScope("("):
-                    // Special case to support autoclosure arguments in the Nimble framework
-                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("expect") {
+                    if case let .identifier(fn)? = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
+                        selfRequired.contains(fn) {
                         index = formatter.index(of: .endOfScope(")"), after: index) ?? index
                         break
                     }
                     fallthrough
-                case .startOfScope("\""), .startOfScope("#if"):
+                case .startOfScope where token.isStringDelimiter, .startOfScope("#if"):
                     scopeStack.append(token)
                 case .startOfScope(":"):
                     lastKeyword = ""
@@ -805,7 +785,7 @@ private struct Inference {
                     var localNames = localNames
                     localNames.insert("error") // Implicit error argument
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where lastKeyword == "in":
                     lastKeyword = ""
@@ -822,26 +802,23 @@ private struct Inference {
                     index += 1
                     if classOrStatic {
                         assert(isTypeRoot)
-                        processBody(at: &index, localNames: localNames, members: classMembers, isTypeRoot: false)
+                        processBody(at: &index, localNames: localNames, members: classMembers, isTypeRoot: false, isInit: false)
                         classOrStatic = false
                     } else {
-                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
                     }
                     continue
                 case .startOfScope("{") where isWhereClause:
                     return
                 case .startOfScope("{") where lastKeyword == "switch":
                     lastKeyword = ""
-                    guard let i = formatter.index(of: .endOfScope, after: index) else {
-                        return
-                    }
-                    index = i
+                    index += 1
                     loop: while let token = formatter.token(at: index) {
                         index += 1
                         switch token {
                         case .endOfScope("case"), .endOfScope("default"):
                             let localNames = localNames
-                            processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                            processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
                             index -= 1
                         case .endOfScope("}"):
                             break loop
@@ -854,21 +831,34 @@ private struct Inference {
                     fallthrough
                 case .startOfScope("{") where lastKeyword == "repeat":
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
                     lastKeyword = ""
+                    if let token = formatter.last(.nonSpaceOrLinebreak, before: index),
+                        token.is(.startOfScope) || token == .operator("=", .infix) {
+                        // It's a closure
+                        fallthrough
+                    }
                     var prevIndex = index - 1
+                    var name: String?
                     while let token = formatter.token(at: prevIndex), token != .keyword("var") {
-                        if token == .operator("=", .infix) || (token.isLvalue && formatter.nextToken(after: prevIndex, where: {
+                        if token.isLvalue, let nextToken = formatter.nextToken(after: prevIndex, where: {
                             !$0.isSpaceOrCommentOrLinebreak && !$0.isStartOfScope
-                        }).map { $0.isRvalue && !$0.isOperator(".") } == true) {
+                        }), nextToken.isRvalue, !nextToken.isOperator(".") {
                             // It's a closure
                             fallthrough
                         }
+                        if case let .identifier(_name) = token {
+                            // Is the declared variable
+                            name = _name
+                        }
                         prevIndex -= 1
                     }
-                    processAccessors(["get", "set", "willSet", "didSet"], at: &index, localNames: localNames, members: members)
+                    if let name = name {
+                        processAccessors(["get", "set", "willSet", "didSet"], for: name,
+                                         at: &index, localNames: localNames, members: members)
+                    }
                     continue
                 case .startOfScope:
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
@@ -881,7 +871,11 @@ private struct Inference {
                         }) != nil {
                         let name = token.unescaped()
                         if !localNames.contains(name) {
-                            unremoved += 1
+                            if isInit {
+                                initUnremoved += 1
+                            } else {
+                                unremoved += 1
+                            }
                         }
                     }
                 case .identifier("type"): // Special case for type(of:)
@@ -901,14 +895,25 @@ private struct Inference {
                             nextToken.isIdentifierOrKeyword || nextToken == .delimiter(":") {
                             break
                         }
-                        removed += 1
+                        if isInit {
+                            initRemoved += 1
+                        } else {
+                            removed += 1
+                        }
                         index += 1
                         continue
                     }
                 case .endOfScope("case"), .endOfScope("default"):
                     return
                 case .endOfScope:
-                    if let scope = scopeStack.last {
+                    if token == .endOfScope("#endif") {
+                        while let scope = scopeStack.last {
+                            scopeStack.removeLast()
+                            if scope != .startOfScope("#if") {
+                                break
+                            }
+                        }
+                    } else if let scope = scopeStack.last {
                         assert(token.isEndOfScope(scope))
                         scopeStack.removeLast()
                     } else {
@@ -916,27 +921,37 @@ private struct Inference {
                         index += 1
                         return
                     }
+                case .linebreak:
+                    formatter.processLinebreak()
                 default:
                     break
                 }
                 index += 1
             }
         }
-        func processAccessors(_ names: [String], at index: inout Int, localNames: Set<String>, members: Set<String>) {
+        func processAccessors(
+            _ names: [String], for name: String, at index: inout Int,
+            localNames: Set<String>, members: Set<String>
+        ) {
             var foundAccessors = false
+            var localNames = localNames
             while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
                 if case let .identifier(name) = $0, names.contains(name) { return true } else { return false }
             }), let startIndex = formatter.index(of: .startOfScope("{"), after: nextIndex) {
                 foundAccessors = true
                 index = startIndex + 1
-                var localNames = localNames
                 if let parenStart = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex, if: {
                     $0 == .startOfScope("(")
                 }), let varToken = formatter.next(.identifier, after: parenStart) {
                     localNames.insert(varToken.unescaped())
                 } else {
                     switch formatter.tokens[nextIndex].string {
-                    case "set", "willSet":
+                    case "get":
+                        localNames.insert(name)
+                    case "set":
+                        localNames.insert(name)
+                        localNames.insert("newValue")
+                    case "willSet":
                         localNames.insert("newValue")
                     case "didSet":
                         localNames.insert("oldValue")
@@ -944,21 +959,25 @@ private struct Inference {
                         break
                     }
                 }
-                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: false)
             }
             if foundAccessors {
                 guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
                 index = endIndex + 1
             } else {
                 index += 1
-                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                localNames.insert(name)
+                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: false)
             }
         }
         func processFunction(at index: inout Int, localNames: Set<String>, members: Set<String>) {
-            let isSubscript = (formatter.tokens[index] == .keyword("subscript"))
+            let startToken = formatter.tokens[index]
             var localNames = localNames
             guard let startIndex = formatter.index(of: .startOfScope("("), after: index),
-                let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
+                let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else {
+                index += 1 // Prevent endless loop
+                return
+            }
             // Get argument names
             index = startIndex
             while index < endIndex {
@@ -996,18 +1015,26 @@ private struct Inference {
             }), formatter.tokens[bodyStartIndex] == .startOfScope("{") else {
                 return
             }
-            if isSubscript {
+            if startToken == .keyword("subscript") {
                 index = bodyStartIndex
-                processAccessors(["get", "set"], at: &index, localNames: localNames, members: members)
+                processAccessors(["get", "set"], for: "", at: &index, localNames: localNames, members: members)
             } else {
                 index = bodyStartIndex + 1
-                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false)
+                processBody(at: &index,
+                            localNames: localNames,
+                            members: members,
+                            isTypeRoot: false,
+                            isInit: startToken == .keyword("init"))
             }
         }
         var index = 0
-        processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false)
+        processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false, isInit: false)
         // if both zero or equal, should be true
-        options.explicitSelf = (removed >= unremoved ? .remove : .insert)
+        if removed >= unremoved {
+            options.explicitSelf = (initRemoved >= initUnremoved ? .remove : .initOnly)
+        } else {
+            options.explicitSelf = .insert
+        }
     }
 
     let spaceAroundOperatorDeclarations = OptionInferrer { formatter, options in

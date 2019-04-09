@@ -87,7 +87,8 @@ extension Formatter {
                     switch tokens[nextIndex] {
                     case .keyword("as"), .keyword("is"), .keyword("try"):
                         break
-                    case .startOfScope("<"), .startOfScope("["), .startOfScope("("):
+                    case .startOfScope("<"), .startOfScope("["), .startOfScope("("),
+                         .startOfScope where token.isStringDelimiter:
                         guard let endIndex = endOfScope(at: nextIndex) else {
                             return // error
                         }

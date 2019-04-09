@@ -2503,20 +2503,28 @@ public struct _FormatRules {
                     }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: parenIndex) == .identifier("of") else {
                         fallthrough
                     }
-                case .identifier where formatter.isEnabled && !isTypeRoot:
-                    guard explicitSelf == .insert ||
-                        (explicitSelf == .initOnly && isInit &&
-                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix)) else {
+                case .identifier where !isTypeRoot:
+                    guard formatter.isEnabled, explicitSelf == .insert || (explicitSelf == .initOnly && isInit &&
+                        formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix)) else {
                         break
                     }
-                    let name = token.unescaped()
-                    if members.contains(name), !localNames.contains(name), !["for", "var", "let"].contains(lastKeyword) {
-                        if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                            lastToken.isOperator(".") {
+                    let isAssignmentKeyword = ["for", "var", "let"].contains(lastKeyword)
+                    if isAssignmentKeyword,
+                        let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) {
+                        switch prevToken {
+                        case .identifier, .number,
+                             .operator where token != .operator("=", .infix),
+                             .endOfScope where prevToken.isStringDelimiter:
+                            lastKeyword = ""
+                        default:
                             break
                         }
-                        if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index),
-                            nextToken.isIdentifierOrKeyword || nextToken == .delimiter(":") {
+                    }
+                    let name = token.unescaped()
+                    if members.contains(name), !localNames.contains(name), !isAssignmentKeyword ||
+                        formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .operator("=", .infix) {
+                        if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
+                            lastToken.isOperator(".") {
                             break
                         }
                         formatter.insertTokens([.identifier("self"), .operator(".", .infix)], at: index)

@@ -885,17 +885,26 @@ private struct Inference {
                         fallthrough
                     }
                 case .identifier where !isTypeRoot:
+                    let isAssignmentKeyword = ["for", "var", "let"].contains(lastKeyword)
+                    if isAssignmentKeyword,
+                        let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) {
+                        switch prevToken {
+                        case .identifier, .number,
+                             .operator where token != .operator("=", .infix),
+                             .endOfScope where prevToken.isStringDelimiter:
+                            lastKeyword = ""
+                        default:
+                            break
+                        }
+                    }
                     let name = token.unescaped()
-                    if members.contains(name), !localNames.contains(name), !["for", "var", "let"].contains(lastKeyword) {
+                    if members.contains(name), !localNames.contains(name), !isAssignmentKeyword ||
+                        formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .operator("=", .infix) {
                         if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
                             lastToken.isOperator(".") {
                             break
                         }
-                        if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index),
-                            nextToken.isIdentifierOrKeyword || nextToken == .delimiter(":") {
-                            break
-                        }
-                        if isInit {
+                        if isInit, formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix) {
                             initRemoved += 1
                         } else {
                             removed += 1

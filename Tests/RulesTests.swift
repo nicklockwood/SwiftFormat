@@ -6524,6 +6524,34 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testSelfInsertedAfterLet() {
+        let input = """
+        struct Foo {
+            let foo = "foo"
+            func bar() {
+                let x = foo
+                baz(x)
+            }
+
+            func baz(_: String) {}
+        }
+        """
+        let output = """
+        struct Foo {
+            let foo = "foo"
+            func bar() {
+                let x = self.foo
+                self.baz(x)
+            }
+
+            func baz(_: String) {}
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // explicitSelf = .initOnly
 
     func testPreserveSelfInsideClassInit() {

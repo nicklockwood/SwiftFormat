@@ -1443,7 +1443,7 @@ public func tokenize(_ source: String) -> [Token] {
                 case .endOfScope(">") = tokens[prevIndex] {
                 // Fix up misidentified generic that is actually a pair of operators
                 switch token {
-                case .operator("?", _), .operator("!", _),
+                case .operator("?", _), .operator("!", _), .operator("&", _),
                      .operator(".", _), .operator("...", _), .operator("->", _),
                      .operator("=", _) where prevIndex != count - 2:
                     break

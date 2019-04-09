@@ -1528,6 +1528,7 @@ extension TokenizerTests {
         ("testGenericOperatorFunction", testGenericOperatorFunction),
         ("testGenericSubclassDeclaration", testGenericSubclassDeclaration),
         ("testGenericsWithWhereClause", testGenericsWithWhereClause),
+        ("testGenericTypeAmpersandProtocol", testGenericTypeAmpersandProtocol),
         ("testGenericTypeContainingAmpersand", testGenericTypeContainingAmpersand),
         ("testGreaterThanLessThanOperator", testGreaterThanLessThanOperator),
         ("testHalfOpenRangeFollowedByComment", testHalfOpenRangeFollowedByComment),

@@ -2532,8 +2532,9 @@ public struct _FormatRules {
                                 break
                             }
                         }
-                    } else if let scope = scopeStack.last {
-                        assert(token.isEndOfScope(scope))
+                    } else if let _ /* scope */ = scopeStack.last {
+                        // TODO: fix this bug
+//                        assert(token.isEndOfScope(scope))
                         scopeStack.removeLast()
                     } else {
                         assert(token.isEndOfScope(formatter.currentScope(at: index)!))

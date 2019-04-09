@@ -210,4 +210,14 @@ class CommandLineTests: XCTestCase {
         }
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Sources --dryrun Tests --rules indent"), .error)
     }
+
+    // MARK: snapshot/regression tests
+
+    func testRegressionSuite() {
+        CLI.print = { message, _ in
+            Swift.print(message)
+            XCTAssertFalse(message.contains(" skipped"))
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --lint --unexclude Snapshots"), .ok)
+    }
 }

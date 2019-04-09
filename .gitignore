@@ -19,3 +19,5 @@ DerivedData
 *.ipa
 *.dot
 .build
+
+/Snapshots/Private

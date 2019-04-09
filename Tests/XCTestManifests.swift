@@ -82,6 +82,7 @@ extension CommandLineTests {
         ("testQuietModeAllowsContent", testQuietModeAllowsContent),
         ("testQuietModeAllowsErrors", testQuietModeAllowsErrors),
         ("testQuietModeNoOutput", testQuietModeNoOutput),
+        ("testRegressionSuite", testRegressionSuite),
         ("testRulesNotMarkedAsDisabled", testRulesNotMarkedAsDisabled),
         ("testSplitInputPaths", testSplitInputPaths),
     ]

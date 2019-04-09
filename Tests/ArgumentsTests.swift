@@ -166,6 +166,14 @@ class ArgumentsTests: XCTestCase {
         ]), output)
     }
 
+    func testDuplicateUnexcludeArgumentsAreMerged() {
+        let input = ["", "--unexclude", "foo", "--unexclude", "bar"]
+        let output = ["0": "", "unexclude": "foo,bar"]
+        XCTAssertEqual(try preprocessArguments(input, [
+            "unexclude",
+        ]), output)
+    }
+
     func testDuplicateSelfrequiredArgumentsAreMerged() {
         let input = ["", "--selfrequired", "foo", "--selfrequired", "bar"]
         let output = ["0": "", "selfrequired": "foo,bar"]
@@ -390,6 +398,13 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(result["exclude"], "bar,baz,foo")
     }
 
+    func testMergeUnexcludedURLs() throws {
+        let args = ["unexclude": "foo,bar"]
+        let config = ["unexclude": "bar,baz"]
+        let result = try mergeArguments(args, into: config)
+        XCTAssertEqual(result["unexclude"], "bar,baz,foo")
+    }
+
     func testMergeRules() throws {
         let args = ["rules": "braces,fileHeader"]
         let config = ["rules": "consecutiveSpaces,braces"]
@@ -509,9 +524,15 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(options.rules, allRules.subtracting(FormatRules.disabledByDefault))
     }
 
-    func testParseExcludesURLsFileOption() throws {
+    func testParseExcludedURLsFileOption() throws {
         let options = try Options(["exclude": "foo bar, baz"], in: "/dir")
         let paths = options.fileOptions?.excludedGlobs.map { $0.description } ?? []
+        XCTAssertEqual(paths, ["/dir/foo bar", "/dir/baz"])
+    }
+
+    func testParseUnexcludedURLsFileOption() throws {
+        let options = try Options(["unexclude": "foo bar, baz"], in: "/dir")
+        let paths = options.fileOptions?.unexcludedGlobs.map { $0.description } ?? []
         XCTAssertEqual(paths, ["/dir/foo bar", "/dir/baz"])
     }
 }

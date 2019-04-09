@@ -153,6 +153,7 @@ func printHelp(as type: CLI.OutputType) {
     --inferoptions     Instead of formatting input, use it to infer format options
     --output           Output path for formatted file(s) (defaults to input path)
     --exclude          Comma-delimited list of ignored paths (supports glob syntax)
+    --unexclude        Paths to not exclude, even if excluded elsewhere in config
     --symlinks         How symlinks are handled: "follow" or "ignore" (default)
     --fragment         \(stripMarkdown(FormatOptions.Descriptor.fragment.help))
     --conflictmarkers  \(stripMarkdown(FormatOptions.Descriptor.ignoreConflictMarkers.help))
@@ -315,6 +316,15 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                     config["exclude"] = nil
                 } else {
                     config["exclude"] = excluded.map { $0.description }.sorted().joined(separator: ",")
+                }
+            }
+            if let unexclude = config["unexclude"] {
+                let unexcluded = expandGlobs(unexclude, in: directory)
+                if unexcluded.isEmpty {
+                    print("warning: --unexclude value '\(unexclude)' did not match any files in \(directory).", as: .warning)
+                    config["unexclude"] = nil
+                } else {
+                    config["unexclude"] = unexcluded.map { $0.description }.sorted().joined(separator: ",")
                 }
             }
             args = try mergeArguments(args, into: config)

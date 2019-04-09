@@ -103,14 +103,14 @@ class CommandLineTests: XCTestCase {
                 .forEach { message in
                     if message.hasPrefix("--") {
                         let name = String(message["--".endIndex ..< message.endIndex]).components(separatedBy: " ")[0]
-                        XCTAssert(arguments.contains(name), name)
+                        XCTAssert(arguments.contains(name), "Unknown option --\(name) in help")
                         arguments.remove(name)
                     }
                 }
         }
         printHelp(as: .content)
         printOptions(as: .content)
-        XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
+        XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ",")) not listed in help")
     }
 
     // MARK: cache

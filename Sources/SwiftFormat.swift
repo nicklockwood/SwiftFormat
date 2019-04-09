@@ -193,6 +193,10 @@ public func enumerateFiles(withInputURL inputURL: URL,
             guard excluded.matches(path) else {
                 continue
             }
+            if let unexcluded = options.fileOptions?.unexcludedGlobs,
+                unexcluded.contains(where: { $0.matches(path) }) {
+                return false
+            }
             if let handler = skipped {
                 do {
                     onComplete(try handler(inputURL, inputURL, options))

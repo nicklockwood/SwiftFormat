@@ -396,6 +396,7 @@ public struct FileOptions {
     public var followSymlinks: Bool
     public var supportedFileExtensions: [String]
     public var excludedGlobs: [Glob]
+    public var unexcludedGlobs: [Glob]
 
     @available(*, deprecated, message: "Use excludedGlobs property instead")
     public var excludedURLs: [URL] {
@@ -420,10 +421,12 @@ public struct FileOptions {
 
     public init(followSymlinks: Bool = false,
                 supportedFileExtensions: [String] = ["swift"],
-                excludedGlobs: [Glob] = []) {
+                excludedGlobs: [Glob] = [],
+                unexcludedGlobs: [Glob] = []) {
         self.followSymlinks = followSymlinks
         self.supportedFileExtensions = supportedFileExtensions
         self.excludedGlobs = excludedGlobs
+        self.unexcludedGlobs = unexcludedGlobs
     }
 }
 

@@ -1,6 +1,5 @@
 # file options
 
---symlinks ignore
 --exclude Tests/XCTestManifests.swift,Snapshots
 
 # format options

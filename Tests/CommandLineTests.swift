@@ -216,8 +216,7 @@ class CommandLineTests: XCTestCase {
     func testRegressionSuite() {
         CLI.print = { message, _ in
             Swift.print(message)
-            XCTAssertFalse(message.contains(" skipped"))
         }
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --lint --unexclude Snapshots"), .ok)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --verbose --symlinks follow --lint"), .ok)
     }
 }

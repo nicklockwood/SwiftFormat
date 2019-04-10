@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.40.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.6) (2019-04-10)
+
+- Fixed a regression when parsing a generic type followed by `& SomeProtocol`
+- Fixed bug where `--self insert` option failed to insert `self` in the line after a `let` or `var` statement
+- Added `--unexclude` file paths option
+- Added regression test project suite
+
 ## [0.40.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.5) (2019-04-08)
 
 - Fixed indenting of comments before an `#if`/`#else` clause inside a `switch` statement

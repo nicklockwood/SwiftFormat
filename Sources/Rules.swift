@@ -2527,8 +2527,10 @@ public struct _FormatRules {
                             lastToken.isOperator(".") {
                             break
                         }
-                        formatter.insertTokens([.identifier("self"), .operator(".", .infix)], at: index)
-                        index += 2
+                        if formatter.nextToken(after: index) != .delimiter(":") {
+                            formatter.insertTokens([.identifier("self"), .operator(".", .infix)], at: index)
+                            index += 2
+                        }
                     }
                 case .endOfScope("case"), .endOfScope("default"):
                     return

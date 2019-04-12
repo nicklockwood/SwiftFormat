@@ -3404,8 +3404,16 @@ public struct _FormatRules {
         sharedOptions: ["linebreaks"]
     ) { formatter in
         func sortRanges(_ ranges: [ImportRange]) -> [ImportRange] {
+            func isCaseInsensitiveLessThan(_ a: ImportRange, _ b: ImportRange) -> Bool {
+                let la = a.0.lowercased()
+                let lb = b.0.lowercased()
+                if la == lb {
+                    return a.0 < b.0
+                }
+                return la < lb
+            }
             if case .alphabetized = formatter.options.importGrouping {
-                return ranges.sorted { $0.0 < $1.0 }
+                return ranges.sorted(by: isCaseInsensitiveLessThan)
             }
             // Group @testable imports at the top or bottom
             return ranges.sorted {
@@ -3413,7 +3421,7 @@ public struct _FormatRules {
                 let isRhsTestable = formatter.tokens[$1.1].contains(.keyword("@testable"))
                 // If both have a @testable keyword, or neither has one, just sort alphabetically
                 guard isLhsTestable != isRhsTestable else {
-                    return $0.0 < $1.0
+                    return isCaseInsensitiveLessThan($0, $1)
                 }
                 return formatter.options.importGrouping == .testableTop ? isLhsTestable : isRhsTestable
             }

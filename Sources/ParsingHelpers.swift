@@ -350,7 +350,7 @@ extension _FormatRules {
                     }
                     partIndex = nextPartIndex
                 }
-                importRanges.append((name.lowercased(), startIndex ..< endIndex as Range))
+                importRanges.append((name, startIndex ..< endIndex as Range))
             } else {
                 // Error
                 pushStack()

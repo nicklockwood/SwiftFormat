@@ -1170,6 +1170,7 @@ extension RulesTests {
         ("testSelfInsertedInDidSet", testSelfInsertedInDidSet),
         ("testSelfInsertedInSwitchCaseLet", testSelfInsertedInSwitchCaseLet),
         ("testSelfInsertedInSwitchCaseWhere", testSelfInsertedInSwitchCaseWhere),
+        ("testSelfNotInsertedInParameterNames", testSelfNotInsertedInParameterNames),
         ("testSelfNotRemovedInClosureAfterSwitch", testSelfNotRemovedInClosureAfterSwitch),
         ("testSelfNotRemovedInClosureInCaseWithWhereClause", testSelfNotRemovedInClosureInCaseWithWhereClause),
         ("testSelfNotRemovedInGetter", testSelfNotRemovedInGetter),

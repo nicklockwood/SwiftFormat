@@ -2521,17 +2521,17 @@ public struct _FormatRules {
                         }
                     }
                     let name = token.unescaped()
-                    if members.contains(name), !localNames.contains(name), !isAssignmentKeyword ||
-                        formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .operator("=", .infix) {
-                        if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                            lastToken.isOperator(".") {
-                            break
-                        }
-                        if formatter.nextToken(after: index) != .delimiter(":") {
-                            formatter.insertTokens([.identifier("self"), .operator(".", .infix)], at: index)
-                            index += 2
-                        }
+                    guard members.contains(name), !localNames.contains(name), !isAssignmentKeyword ||
+                        formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .operator("=", .infix),
+                        formatter.next(.nonSpaceOrComment, after: index) != .delimiter(":") else {
+                        break
                     }
+                    if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
+                        lastToken.isOperator(".") {
+                        break
+                    }
+                    formatter.insertTokens([.identifier("self"), .operator(".", .infix)], at: index)
+                    index += 2
                 case .endOfScope("case"), .endOfScope("default"):
                     return
                 case .endOfScope:

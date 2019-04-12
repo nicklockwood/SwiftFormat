@@ -898,19 +898,19 @@ private struct Inference {
                         }
                     }
                     let name = token.unescaped()
-                    if members.contains(name), !localNames.contains(name), !isAssignmentKeyword ||
-                        formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .operator("=", .infix) {
-                        if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                            lastToken.isOperator(".") {
-                            break
-                        }
-                        if isInit, formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix) {
-                            initRemoved += 1
-                        } else {
-                            removed += 1
-                        }
-                        index += 1
-                        continue
+                    guard members.contains(name), !localNames.contains(name), !isAssignmentKeyword ||
+                        formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .operator("=", .infix),
+                        formatter.next(.nonSpaceOrComment, after: index) != .delimiter(":") else {
+                        break
+                    }
+                    if let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
+                        lastToken.isOperator(".") {
+                        break
+                    }
+                    if isInit, formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix) {
+                        initRemoved += 1
+                    } else {
+                        removed += 1
                     }
                 case .endOfScope("case"), .endOfScope("default"):
                     return

@@ -6554,22 +6554,22 @@ class RulesTests: XCTestCase {
 
     func testSelfNotInsertedInParameterNames() {
         let input = """
-        func foo(a: String) {}
+        func foo(a _: String) {}
         class Bar {
             let a: String
-                    
+
             func hoge() {
-                foo(a:a)
+                foo(a: a)
             }
         }
         """
         let output = """
-        func foo(a: String) {}
+        func foo(a _: String) {}
         class Bar {
             let a: String
-                    
+
             func hoge() {
-                foo(a:self.a)
+                foo(a: self.a)
             }
         }
         """

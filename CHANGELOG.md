@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.40.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.7) (2019-04-12)
+
+- Fixed postfix operator followed by `.` being incorrectly interpreted as infix
+- Fixed bug with `andOperator` in repeat/while loops
+- Fixed bug with `redundantFileprivate` affecting local subclasses
+- Fixed regression with `--self inert` adding `self` to function parameter labels
+
 ## [0.40.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.6) (2019-04-10)
 
 - Fixed a regression when parsing a generic type followed by `& SomeProtocol`

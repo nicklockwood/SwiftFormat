@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.40.4
+//  Version 0.40.7
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -467,8 +467,6 @@ public enum Token: Equatable {
 
     var isRvalue: Bool {
         switch self {
-        case .operator(".", _):
-            return true
         case .operator(_, .infix), .operator(_, .postfix):
             return false
         case .identifier, .number, .operator,
@@ -1443,7 +1441,7 @@ public func tokenize(_ source: String) -> [Token] {
                 case .endOfScope(">") = tokens[prevIndex] {
                 // Fix up misidentified generic that is actually a pair of operators
                 switch token {
-                case .operator("?", _), .operator("!", _),
+                case .operator("?", _), .operator("!", _), .operator("&", _),
                      .operator(".", _), .operator("...", _), .operator("->", _),
                      .operator("=", _) where prevIndex != count - 2:
                     break

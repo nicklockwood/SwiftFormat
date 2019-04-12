@@ -452,7 +452,7 @@
                                                             <subviews>
                                                                 <button verticalHuggingPriority="750" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Mfi-uR-j8t">
                                                                     <rect key="frame" x="2" y="4" width="469" height="18"/>
-                                                                    <buttonCell key="cell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="leading" state="on" inset="2" id="aQA-fV-2dz">
+                                                                    <buttonCell key="cell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="aQA-fV-2dz">
                                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                                         <font key="font" metaFont="system"/>
                                                                     </buttonCell>

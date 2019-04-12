@@ -1,0 +1,8 @@
+# format options
+
+--patternlet inline
+--self insert
+
+# rules
+
+--disable trailingClosures, blankLinesAtStartOfScope, sortedImports

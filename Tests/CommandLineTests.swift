@@ -103,14 +103,14 @@ class CommandLineTests: XCTestCase {
                 .forEach { message in
                     if message.hasPrefix("--") {
                         let name = String(message["--".endIndex ..< message.endIndex]).components(separatedBy: " ")[0]
-                        XCTAssert(arguments.contains(name), name)
+                        XCTAssert(arguments.contains(name), "Unknown option --\(name) in help")
                         arguments.remove(name)
                     }
                 }
         }
         printHelp(as: .content)
         printOptions(as: .content)
-        XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
+        XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ",")) not listed in help")
     }
 
     // MARK: cache
@@ -209,5 +209,14 @@ class CommandLineTests: XCTestCase {
             XCTAssertEqual(type, .error, message)
         }
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Sources --dryrun Tests --rules indent"), .error)
+    }
+
+    // MARK: snapshot/regression tests
+
+    func testRegressionSuite() {
+        CLI.print = { message, _ in
+            Swift.print(message)
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --verbose --symlinks follow --lint"), .ok)
     }
 }

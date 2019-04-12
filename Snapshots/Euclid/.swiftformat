@@ -1,0 +1,4 @@
+--hexgrouping ignore
+--decimalgrouping ignore
+--enable isEmpty
+--ifdef no-indent

@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-public let version = "0.40.4"
+public let version = "0.40.7"
 
 /// The standard SwiftFormat config file name
 public let swiftFormatConfigurationFile = ".swiftformat"
@@ -192,6 +192,10 @@ public func enumerateFiles(withInputURL inputURL: URL,
         for excluded in excludedGlobs {
             guard excluded.matches(path) else {
                 continue
+            }
+            if let unexcluded = options.fileOptions?.unexcludedGlobs,
+                unexcluded.contains(where: { $0.matches(path) }) {
+                return false
             }
             if let handler = skipped {
                 do {

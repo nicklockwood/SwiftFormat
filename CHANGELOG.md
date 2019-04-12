@@ -1,5 +1,29 @@
 # Change Log
 
+## [0.40.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.7) (2019-04-12)
+
+- Fixed postfix operator followed by `.` being incorrectly interpreted as infix
+- Fixed bug with `andOperator` in repeat/while loops
+- Fixed bug with `redundantFileprivate` affecting local subclasses
+- Fixed regression with `--self inert` adding `self` to function parameter labels
+
+## [0.40.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.6) (2019-04-10)
+
+- Fixed a regression when parsing a generic type followed by `& SomeProtocol`
+- Fixed bug where `--self insert` option failed to insert `self` in the line after a `let` or `var` statement
+- Added `--unexclude` file paths option
+- Added regression test project suite
+
+## [0.40.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.5) (2019-04-08)
+
+- Fixed indenting of comments before an `#if`/`#else` clause inside a `switch` statement
+- Fixed indenting of `#if` statement followed by comment inside a `switch` statement
+- Fixed bug in `self` removal when followed by a `switch` containing an `#ifdef`
+- Fixed bug when tokenizing chevron operators
+- Fixed bug when tokenizing generic declarations
+- Added `init-only` support to explicitSelf inference
+- Added inference for inline semicolons
+
 ## [0.40.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.4) (2019-03-23)
 
 - Multiple instances of `--disable` or other comma-delimited config options are now merged instead of replacing previous

@@ -865,9 +865,9 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    func testInfixMinusBeforeMember() {
+    func testPostfixMinusBeforeMember() {
         let input = "foo-.bar"
-        let output = "foo - .bar"
+        let output = "foo-.bar"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
@@ -6524,6 +6524,58 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testSelfInsertedAfterLet() {
+        let input = """
+        struct Foo {
+            let foo = "foo"
+            func bar() {
+                let x = foo
+                baz(x)
+            }
+
+            func baz(_: String) {}
+        }
+        """
+        let output = """
+        struct Foo {
+            let foo = "foo"
+            func bar() {
+                let x = self.foo
+                self.baz(x)
+            }
+
+            func baz(_: String) {}
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testSelfNotInsertedInParameterNames() {
+        let input = """
+        class Foo {
+            let a: String
+
+            func bar() {
+                foo(a: a)
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            let a: String
+
+            func bar() {
+                foo(a: self.a)
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // explicitSelf = .initOnly
 
     func testPreserveSelfInsideClassInit() {
@@ -8259,6 +8311,16 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testNoReplaceRepeatWhileAnd() {
+        let input = """
+        repeat {} while true && !false
+        foo {}
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testNoReplaceIfLetAndLetAnd() {
         let input = "if let a = b && c, let d = e && f {}"
         let output = "if let a = b && c, let d = e && f {}"
@@ -8925,6 +8987,24 @@ class RulesTests: XCTestCase {
         struct Bar {
             func bar() {
                 print(Foo().foo)
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateVarNotChangedToPrivateIfAccessedFromSubclass() {
+        let input = """
+        class Foo {
+            fileprivate func foo() {}
+        }
+
+        class Bar: Foo {
+            func bar() {
+                return foo()
             }
         }
         """

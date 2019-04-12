@@ -1457,11 +1457,24 @@ class TokenizerTests: XCTestCase {
     }
 
     func testInfixMinusBeforeMember() {
-        let input = "foo-.bar"
+        let input = "foo - .bar"
         let output: [Token] = [
             .identifier("foo"),
+            .space(" "),
             .operator("-", .infix),
+            .space(" "),
             .operator(".", .prefix),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testPostfixOperatorBeforeMember() {
+        let input = "foo′.bar"
+        let output: [Token] = [
+            .identifier("foo"),
+            .operator("′", .postfix),
+            .operator(".", .infix),
             .identifier("bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
@@ -1568,6 +1581,21 @@ class TokenizerTests: XCTestCase {
             .identifier("b"),
             .operator("<", .infix),
             .identifier("y"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testGenericTypeAmpersandProtocol() {
+        let input = "Foo<Int> & Bar"
+        let output: [Token] = [
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .identifier("Int"),
+            .endOfScope(">"),
+            .space(" "),
+            .operator("&", .infix),
+            .space(" "),
+            .identifier("Bar"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

@@ -122,7 +122,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
         }
         if let existing = namedArgs[name], !existing.isEmpty,
             // TODO: find a more general way to represent merge-able options
-            ["exclude", "disable", "enable", "rules"].contains(name) ||
+            ["exclude", "unexclude", "disable", "enable", "rules"].contains(name) ||
             FormatOptions.Descriptor.all.contains(where: {
                 $0.argumentName == name && $0.isSetType
             }) {
@@ -183,6 +183,12 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
         var excluded = input["exclude"].map({ Set(parseCommaDelimitedList($0)) }) {
         excluded.formUnion(exclude)
         output["exclude"] = Array(excluded).sorted().joined(separator: ",")
+    }
+    // Merge unexcluded urls
+    if let unexclude = output["unexclude"].map(parseCommaDelimitedList),
+        var unexcluded = input["unexclude"].map({ Set(parseCommaDelimitedList($0)) }) {
+        unexcluded.formUnion(unexclude)
+        output["unexclude"] = Array(unexcluded).sorted().joined(separator: ",")
     }
     // Merge rules
     if let rules = try output["rules"].map(parseRules) {
@@ -308,6 +314,13 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             }
             arguments.remove("exclude")
         }
+        do {
+            if !fileOptions.unexcludedGlobs.isEmpty {
+                // TODO: find a better alternative to stringifying url
+                args["unexclude"] = fileOptions.unexcludedGlobs.map { $0.description }.sorted().joined(separator: ",")
+            }
+            arguments.remove("unexclude")
+        }
         assert(arguments.isEmpty)
     }
     if let formatOptions = options.formatOptions {
@@ -397,6 +410,10 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
         containsFileOption = true
         options.excludedGlobs += expandGlobs($0, in: directory)
     }
+    try processOption("unexclude", in: args, from: &arguments) {
+        containsFileOption = true
+        options.unexcludedGlobs += expandGlobs($0, in: directory)
+    }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return containsFileOption ? options : nil
 }
@@ -432,6 +449,7 @@ func warningsForArguments(_ args: [String: String]) -> [String] {
 let fileArguments = [
     "symlinks",
     "exclude",
+    "unexclude",
 ]
 
 let rulesArguments = [

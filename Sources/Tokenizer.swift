@@ -467,8 +467,6 @@ public enum Token: Equatable {
 
     var isRvalue: Bool {
         switch self {
-        case .operator(".", _):
-            return true
         case .operator(_, .infix), .operator(_, .postfix):
             return false
         case .identifier, .number, .operator,

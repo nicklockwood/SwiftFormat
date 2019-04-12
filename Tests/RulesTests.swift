@@ -865,9 +865,9 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    func testInfixMinusBeforeMember() {
+    func testPostfixMinusBeforeMember() {
         let input = "foo-.bar"
-        let output = "foo - .bar"
+        let output = "foo-.bar"
         XCTAssertEqual(try format(input, rules: [FormatRules.spaceAroundOperators]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }

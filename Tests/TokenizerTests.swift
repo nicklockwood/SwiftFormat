@@ -1457,11 +1457,24 @@ class TokenizerTests: XCTestCase {
     }
 
     func testInfixMinusBeforeMember() {
-        let input = "foo-.bar"
+        let input = "foo - .bar"
         let output: [Token] = [
             .identifier("foo"),
+            .space(" "),
             .operator("-", .infix),
+            .space(" "),
             .operator(".", .prefix),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testPostfixOperatorBeforeMember() {
+        let input = "foo′.bar"
+        let output: [Token] = [
+            .identifier("foo"),
+            .operator("′", .postfix),
+            .operator(".", .infix),
             .identifier("bar"),
         ]
         XCTAssertEqual(tokenize(input), output)

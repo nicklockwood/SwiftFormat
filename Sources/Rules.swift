@@ -3498,8 +3498,14 @@ public struct _FormatRules {
         """
     ) { formatter in
         formatter.forEachToken { i, token in
-            guard [.keyword("if"), .keyword("guard"), .keyword("while")].contains(token),
-                var endIndex = formatter.index(of: .startOfScope("{"), after: i) else {
+            switch token {
+            case .keyword("if"), .keyword("guard"),
+                 .keyword("while") where formatter.last(.keyword, before: i) != .keyword("repeat"):
+                break
+            default:
+                return
+            }
+            guard var endIndex = formatter.index(of: .startOfScope("{"), after: i) else {
                 return
             }
             var index = i + 1

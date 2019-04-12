@@ -8297,6 +8297,16 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testNoReplaceRepeatWhileAnd() {
+        let input = """
+        repeat {} while true && !false
+        foo {}
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testNoReplaceIfLetAndLetAnd() {
         let input = "if let a = b && c, let d = e && f {}"
         let output = "if let a = b && c, let d = e && f {}"

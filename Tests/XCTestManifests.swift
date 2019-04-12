@@ -904,6 +904,7 @@ extension RulesTests {
         ("testNoReplaceIfLetAndLetAnd", testNoReplaceIfLetAndLetAnd),
         ("testNoReplaceIfOrAnd", testNoReplaceIfOrAnd),
         ("testNoReplaceIfTryAnd", testNoReplaceIfTryAnd),
+        ("testNoReplaceRepeatWhileAnd", testNoReplaceRepeatWhileAnd),
         ("testNoReplaceWhileCaseLetAnd", testNoReplaceWhileCaseLetAnd),
         ("testNoSpaceAddedAfterColonInSelector", testNoSpaceAddedAfterColonInSelector),
         ("testNoSpaceAddedAroundSplitLineVariadic", testNoSpaceAddedAroundSplitLineVariadic),

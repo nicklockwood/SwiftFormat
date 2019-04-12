@@ -507,6 +507,7 @@ extension RulesTests {
         ("testFileprivateVarNotChangedToPrivateIfAccessedFromAnotherType", testFileprivateVarNotChangedToPrivateIfAccessedFromAnotherType),
         ("testFileprivateVarNotChangedToPrivateIfAccessedFromAVar", testFileprivateVarNotChangedToPrivateIfAccessedFromAVar),
         ("testFileprivateVarNotChangedToPrivateIfAccessedFromCode", testFileprivateVarNotChangedToPrivateIfAccessedFromCode),
+        ("testFileprivateVarNotChangedToPrivateIfAccessedFromSubclass", testFileprivateVarNotChangedToPrivateIfAccessedFromSubclass),
         ("testFileScopeFileprivateVarChangedToPrivate", testFileScopeFileprivateVarChangedToPrivate),
         ("testFileScopeFileprivateVarNotChangedToPrivateIfFragment", testFileScopeFileprivateVarNotChangedToPrivateIfFragment),
         ("testFixmeIsUpdated", testFixmeIsUpdated),

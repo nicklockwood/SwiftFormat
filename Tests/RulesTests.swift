@@ -8972,6 +8972,24 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testFileprivateVarNotChangedToPrivateIfAccessedFromSubclass() {
+        let input = """
+        class Foo {
+            fileprivate func foo() {}
+        }
+
+        class Bar: Foo {
+            func bar() {
+                return foo()
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testFileprivateVarNotChangedToPrivateIfAccessedFromAFunction() {
         let input = """
         struct Foo {

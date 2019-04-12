@@ -3912,6 +3912,23 @@ public struct _FormatRules {
             }
             return false
         }
+        func membersAreReferenced(_: Set<String> /* unused */, inSubclassOf className: String) -> Bool {
+            for i in 0 ..< formatter.tokens.count where formatter.tokens[i] == .keyword("class") {
+                guard let nameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                    $0.isIdentifier
+                }), let openBraceIndex = formatter.index(of: .startOfScope("{"), after: nameIndex),
+                    let colonIndex =
+                    formatter.index(of: .delimiter(":"), in: nameIndex + 1 ..< openBraceIndex),
+                    formatter.index(of: .identifier(className), in: colonIndex + 1 ..< openBraceIndex)
+                    != nil else {
+                    continue
+                }
+                // TODO: check if member names are actually referenced
+                // this is complicated by the need to check if there are extensions on the subclass
+                return true
+            }
+            return false
+        }
         formatter.forEach(.keyword("fileprivate")) { i, _ in
             // Check if definition is a member of a file-scope type
             guard let scopeIndex = formatter.index(of: .startOfScope, before: i, if: {
@@ -3957,7 +3974,8 @@ public struct _FormatRules {
                 } else if let names = formatter.namesInDeclaration(at: keywordIndex), !names.contains(where: {
                     isMemberReferenced($0, in: 0 ..< startIndex) ||
                         isMemberReferenced($0, in: endIndex + 1 ..< formatter.tokens.count)
-                }) {
+                }), formatter.tokens[typeIndex] != .keyword("class") ||
+                    !membersAreReferenced(names, inSubclassOf: typeName) {
                     formatter.replaceToken(at: i, with: .keyword("private"))
                 }
             }

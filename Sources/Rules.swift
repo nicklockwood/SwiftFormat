@@ -2483,29 +2483,52 @@ public struct _FormatRules {
                     continue
                 case .startOfScope:
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
-                case .identifier("self") where !isTypeRoot:
-                    if formatter.isEnabled, explicitSelf == .remove || (explicitSelf == .initOnly && !isInit),
-                        formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
+                case .identifier("self"):
+                    guard formatter.isEnabled, !isTypeRoot,
                         let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
                             $0 == .operator(".", .infix)
                         }), let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {
                             $0.isIdentifier && !localNames.contains($0.unescaped())
-                        }) {
-                        if case let .identifier(name) = formatter.tokens[nextIndex], name.isContextualKeyword {
-                            // May be unnecessary, but will be reverted by `redundantBackticks` rule if so
-                            formatter.replaceToken(at: nextIndex, with: .identifier("`\(name)`"))
-                        }
-                        formatter.removeTokens(inRange: index ..< nextIndex)
+                        }) else {
+                        break
                     }
+                    if explicitSelf == .insert {
+                        break
+                    } else if explicitSelf == .initOnly, isInit {
+                        if formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .operator("=", .infix) {
+                            break
+                        } else if let scopeEnd = formatter.index(of: .endOfScope(")"), after: nextIndex),
+                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: scopeEnd) == .operator("=", .infix) {
+                            break
+                        }
+                    }
+                    if case let .identifier(name) = formatter.tokens[nextIndex], name.isContextualKeyword {
+                        // May be unnecessary, but will be reverted by `redundantBackticks` rule if so
+                        formatter.replaceToken(at: nextIndex, with: .identifier("`\(name)`"))
+                    }
+                    formatter.removeTokens(inRange: index ..< nextIndex)
                 case .identifier("type"): // Special case for type(of:)
                     guard let parenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
                         $0 == .startOfScope("(")
                     }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: parenIndex) == .identifier("of") else {
                         fallthrough
                     }
-                case .identifier where !isTypeRoot:
-                    guard formatter.isEnabled, explicitSelf == .insert || (explicitSelf == .initOnly && isInit &&
-                        formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix)) else {
+                case .identifier:
+                    guard formatter.isEnabled && !isTypeRoot else {
+                        break
+                    }
+                    if explicitSelf == .insert {
+                        // continue
+                    } else if explicitSelf == .initOnly, isInit {
+                        if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix) {
+                            // continue
+                        } else if let scopeEnd = formatter.index(of: .endOfScope(")"), after: index),
+                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: scopeEnd) == .operator("=", .infix) {
+                            // continue
+                        } else {
+                            break
+                        }
+                    } else {
                         break
                     }
                     let isAssignmentKeyword = ["for", "var", "let"].contains(lastKeyword)
@@ -2513,7 +2536,7 @@ public struct _FormatRules {
                         let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) {
                         switch prevToken {
                         case .identifier, .number,
-                             .operator where token != .operator("=", .infix),
+                             .operator where ![.operator("=", .infix), .operator(".", .prefix)].contains(prevToken),
                              .endOfScope where prevToken.isStringDelimiter:
                             lastKeyword = ""
                         default:

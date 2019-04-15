@@ -4851,7 +4851,7 @@ class RulesTests: XCTestCase {
     // blacklisted methods
 
     func testPerformBatchUpdatesNotMadeTrailing() {
-        let input = "self.collectionView.performBatchUpdates({ /* some code */ })"
+        let input = "collectionView.performBatchUpdates({ /* some code */ })"
         let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.trailingClosures]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
@@ -6593,6 +6593,66 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testSelfNotInsertedInCaseLet2() {
+        let input = """
+        class Foo {
+            let a: String?
+            let b: String
+
+            func baz() {
+                if case let .foos(a, b) = foo, case let .bars(a, b) = bar {}
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(explicitSelf: .insert)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testSelfInsertedInTupleAssignment() {
+        let input = """
+        class Foo {
+            let a: String?
+            let b: String
+
+            func bar() {
+                (a, b) = ("foo", "bar")
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            let a: String?
+            let b: String
+
+            func bar() {
+                (self.a, self.b) = ("foo", "bar")
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testSelfNotInsertedInTupleAssignment() {
+        let input = """
+        class Foo {
+            let a: String?
+            let b: String
+
+            func bar() {
+                let (a, b) = (self.a, self.b)
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(explicitSelf: .insert)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // explicitSelf = .initOnly
 
     func testPreserveSelfInsideClassInit() {
@@ -6678,6 +6738,30 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testRemoveSelfInsideClassInitIfNotLvalue() {
+        let input = """
+        class Foo {
+            var bar = 5
+            let baz = 6
+            init() {
+                self.bar = self.baz
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar = 5
+            let baz = 6
+            init() {
+                self.bar = baz
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testSelfDotTypeInsideClassInitEdgeCase() {
         let input = """
         class Foo {
@@ -6694,6 +6778,32 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(explicitSelf: .initOnly)
         XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf], options: options))
+    }
+
+    func testSelfInsertedInTupleInInit() {
+        let input = """
+        class Foo {
+            let a: String?
+            let b: String
+
+            init() {
+                (a, b) = ("foo", "bar")
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            let a: String?
+            let b: String
+
+            init() {
+                (self.a, self.b) = ("foo", "bar")
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
     // enable/disable

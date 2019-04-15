@@ -862,21 +862,30 @@ private struct Inference {
                     continue
                 case .startOfScope:
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
-                case .identifier("self") where !isTypeRoot:
-                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false,
+                case .identifier("self"):
+                    guard !isTypeRoot,
                         let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
                             $0 == .operator(".", .infix)
-                        }), formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {
+                        }), let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {
                             $0.isIdentifier && !localNames.contains($0.unescaped())
-                        }) != nil {
-                        let name = token.unescaped()
-                        if !localNames.contains(name) {
-                            if isInit {
-                                initUnremoved += 1
-                            } else {
-                                unremoved += 1
-                            }
+                        }) else {
+                        break
+                    }
+                    let name = formatter.tokens[nextIndex].unescaped()
+                    guard !localNames.contains(name) else {
+                        break
+                    }
+                    if isInit {
+                        if formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .operator("=", .infix) {
+                            initUnremoved += 1
+                        } else if let scopeEnd = formatter.index(of: .endOfScope(")"), after: nextIndex),
+                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: scopeEnd) == .operator("=", .infix) {
+                            initUnremoved += 1
+                        } else {
+                            unremoved += 1
                         }
+                    } else {
+                        unremoved += 1
                     }
                 case .identifier("type"): // Special case for type(of:)
                     guard let parenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
@@ -884,13 +893,16 @@ private struct Inference {
                     }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: parenIndex) == .identifier("of") else {
                         fallthrough
                     }
-                case .identifier where !isTypeRoot:
+                case .identifier:
+                    guard !isTypeRoot else {
+                        break
+                    }
                     let isAssignmentKeyword = ["for", "var", "let"].contains(lastKeyword)
                     if isAssignmentKeyword,
                         let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) {
                         switch prevToken {
                         case .identifier, .number,
-                             .operator where token != .operator("=", .infix),
+                             .operator where ![.operator("=", .infix), .operator(".", .prefix)].contains(prevToken),
                              .endOfScope where prevToken.isStringDelimiter:
                             lastKeyword = ""
                         default:
@@ -907,8 +919,15 @@ private struct Inference {
                         lastToken.isOperator(".") {
                         break
                     }
-                    if isInit, formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix) {
-                        initRemoved += 1
+                    if isInit {
+                        if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator("=", .infix) {
+                            initRemoved += 1
+                        } else if let scopeEnd = formatter.index(of: .endOfScope(")"), after: index),
+                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: scopeEnd) == .operator("=", .infix) {
+                            initRemoved += 1
+                        } else {
+                            removed += 1
+                        }
                     } else {
                         removed += 1
                     }

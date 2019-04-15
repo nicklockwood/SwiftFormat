@@ -6580,20 +6580,20 @@ class RulesTests: XCTestCase {
         let input = """
         class Foo {
             let a: String?
+            let b: String
 
             func bar() {
-                if case let .some(a) = self.a {
-                }
+                if case let .some(a) = self.a, case var .some(b) = self.b {}
             }
         }
         """
         let output = """
         class Foo {
             let a: String?
+            let b: String
 
             func bar() {
-                if case let .some(a) = self.a {
-                }
+                if case let .some(a) = self.a, case var .some(b) = self.b {}
             }
         }
         """

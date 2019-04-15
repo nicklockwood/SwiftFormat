@@ -6576,6 +6576,23 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testSelfNotInsertedInCaseLet() {
+        let input = """
+        class Foo {
+            let a: String?
+            let b: String
+
+            func bar() {
+                if case let .some(a) = self.a, case var .some(b) = self.b {}
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(explicitSelf: .insert)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // explicitSelf = .initOnly
 
     func testPreserveSelfInsideClassInit() {

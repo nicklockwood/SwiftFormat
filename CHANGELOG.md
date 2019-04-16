@@ -1,11 +1,15 @@
 # Change Log
 
+## [0.40.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.8) (2019-04-16)
+
+- Fixed several bugs when using the `--self insert` option
+
 ## [0.40.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.7) (2019-04-12)
 
 - Fixed postfix operator followed by `.` being incorrectly interpreted as infix
 - Fixed bug with `andOperator` in repeat/while loops
 - Fixed bug with `redundantFileprivate` affecting local subclasses
-- Fixed regression with `--self inert` adding `self` to function parameter labels
+- Fixed regression with `--self insert` adding `self` to function parameter labels
 - Case-differing imports are now preserved
 
 ## [0.40.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.6) (2019-04-10)

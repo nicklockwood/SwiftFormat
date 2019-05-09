@@ -179,6 +179,11 @@ public struct FileInfo: Equatable {
         self.fileName = fileName
         self.creationDate = creationDate
     }
+
+    public static func == (lhs: FileInfo, rhs: FileInfo) -> Bool {
+        return lhs.fileName == rhs.fileName &&
+            lhs.creationDate == rhs.creationDate
+    }
 }
 
 /// Grouping for numeric literals

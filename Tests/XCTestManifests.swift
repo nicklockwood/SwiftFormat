@@ -2,6 +2,7 @@ import XCTest
 
 extension ArgumentsTests {
     static let __allTests = [
+        ("testAddArgumentsDoesntBreakFileInfo", testAddArgumentsDoesntBreakFileInfo),
         ("testAddArgumentsDoesntBreakFragment", testAddArgumentsDoesntBreakFragment),
         ("testAddArgumentsDoesntBreakSwiftVersion", testAddArgumentsDoesntBreakSwiftVersion),
         ("testAddFormatArguments", testAddFormatArguments),

@@ -171,13 +171,18 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
 }
 
 /// File info, used for constructing header comments
-public struct FileInfo {
+public struct FileInfo: Equatable {
     var fileName: String?
     var creationDate: Date?
 
     public init(fileName: String? = nil, creationDate: Date? = nil) {
         self.fileName = fileName
         self.creationDate = creationDate
+    }
+
+    public static func == (lhs: FileInfo, rhs: FileInfo) -> Bool {
+        return lhs.fileName == rhs.fileName &&
+            lhs.creationDate == rhs.creationDate
     }
 }
 

@@ -69,7 +69,7 @@ CLI.print = { message, type in
     case .warning:
         print(stderrIsTTY ? message.inYellow : message, to: &stderr)
     case .content:
-        print(message)
+        print(message, terminator: "")
     }
 }
 

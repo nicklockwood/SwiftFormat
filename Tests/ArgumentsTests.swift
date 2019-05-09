@@ -515,6 +515,17 @@ class ArgumentsTests: XCTestCase {
         XCTAssertTrue(formatOptions.fragment)
     }
 
+    func testAddArgumentsDoesntBreakFileInfo() throws {
+        let fileInfo = FileInfo(fileName: "Foo.swift", creationDate: Date())
+        var options = Options(formatOptions: FormatOptions(fileInfo: fileInfo))
+        try options.addArguments(["indent": "2"], in: "")
+        guard let formatOptions = options.formatOptions else {
+            XCTFail()
+            return
+        }
+        XCTAssertEqual(formatOptions.fileInfo, fileInfo)
+    }
+
     // MARK: Options parsing
 
     func testParseEmptyOptions() throws {

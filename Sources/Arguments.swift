@@ -41,7 +41,11 @@ extension Options {
     mutating func addArguments(_ args: [String: String], in directory: String) throws {
         let oldArguments = argumentsFor(self)
         let newArguments = try mergeArguments(args, into: oldArguments)
-        self = try Options(newArguments, in: directory)
+        var newOptions = try Options(newArguments, in: directory)
+        if let fileInfo = self.formatOptions?.fileInfo {
+            newOptions.formatOptions?.fileInfo = fileInfo
+        }
+        self = newOptions
     }
 }
 

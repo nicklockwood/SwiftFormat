@@ -171,7 +171,7 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
 }
 
 /// File info, used for constructing header comments
-public struct FileInfo {
+public struct FileInfo: Equatable {
     var fileName: String?
     var creationDate: Date?
 

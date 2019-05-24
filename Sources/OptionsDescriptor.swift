@@ -239,6 +239,7 @@ extension FormatOptions.Descriptor {
         selfRequired,
         importGrouping,
         trailingClosures,
+        xcodeIndentation,
 
         // Deprecated
         indentComments,
@@ -542,6 +543,15 @@ extension FormatOptions.Descriptor {
         displayName: "Trailing Closure Functions",
         help: "Comma-delimited list of functions that use trailing closures",
         keyPath: \FormatOptions.selfRequired
+    )
+    static let xcodeIndentation = FormatOptions.Descriptor(
+        argumentName: "xcodeindentation",
+        propertyName: "xcodeIndentation",
+        displayName: "Xcode Indentation",
+        help: "Xcode indentation style for guards and enums: \"enabled\" or \"disabled\" (default)",
+        keyPath: \.xcodeIndentation,
+        trueValues: ["enabled", "true"],
+        falseValues: ["disabled", "false"]
     )
 
     // MARK: - Internal

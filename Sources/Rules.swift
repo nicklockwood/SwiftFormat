@@ -826,7 +826,7 @@ public struct _FormatRules {
     /// indenting can be configured with the `options` parameter of the formatter.
     public let indent = FormatRule(
         help: "Adjusts leading whitespace based on scope and line wrapping.",
-        options: ["indent", "indentcase", "ifdef"],
+        options: ["indent", "indentcase", "ifdef", "xcodeindentation"],
         sharedOptions: ["trimwhitespace", "linebreaks"]
     ) { formatter in
         var scopeStack: [Token] = []
@@ -1107,9 +1107,12 @@ public struct _FormatRules {
                     }
                 } else if linewrapped {
                     linewrapStack[linewrapStack.count - 1] = true
+                    // Don't indent enum cases if Xcode indentation is set
                     // Don't indent line starting with dot if previous line was just a closing scope
                     let lastToken = formatter.token(at: lastNonSpaceOrLinebreakIndex)
-                    if formatter.token(at: nextTokenIndex ?? -1) != .operator(".", .infix) ||
+                    if !formatter.options.xcodeIndentation ||
+                        formatter.token(at: lastNonSpaceOrLinebreakIndex - 3) != .keyword("case"),
+                        formatter.token(at: nextTokenIndex ?? -1) != .operator(".", .infix) ||
                         !(lastToken?.isEndOfScope == true && lastToken != .endOfScope("case") &&
                             formatter.last(.nonSpace, before:
                                 lastNonSpaceOrLinebreakIndex)?.isLinebreak == true) {

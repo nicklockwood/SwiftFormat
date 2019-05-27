@@ -2290,6 +2290,7 @@ public struct _FormatRules {
             // Remove or add `self`
             var scopeStack = [Token]()
             var lastKeyword = ""
+            var lastKeywordIndex = 0
             var classOrStatic = false
             while let token = formatter.token(at: index) {
                 switch token {
@@ -2382,6 +2383,7 @@ public struct _FormatRules {
                     lastKeyword = ""
                 case let .keyword(name):
                     lastKeyword = name
+                    lastKeywordIndex = index
                 case .startOfScope("//"), .startOfScope("/*"):
                     if case let .commentBody(comment)? = formatter.next(.nonSpace, after: index) {
                         formatter.processCommentBody(comment)
@@ -2448,6 +2450,10 @@ public struct _FormatRules {
                         }
                     }
                 case .startOfScope("{") where ["for", "where", "if", "else", "while", "do"].contains(lastKeyword):
+                    if let scopeIndex = formatter.index(of: .startOfScope, before: index), scopeIndex > lastKeywordIndex {
+                        index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
+                        break
+                    }
                     lastKeyword = ""
                     fallthrough
                 case .startOfScope("{") where lastKeyword == "repeat":

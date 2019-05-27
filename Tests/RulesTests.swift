@@ -6212,6 +6212,19 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testNoRemoveSelfInClosureInIfCondition() {
+        let input = """
+        class Foo {
+            func foo() {
+                if bar({ self.baz() }) {}
+            }
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {

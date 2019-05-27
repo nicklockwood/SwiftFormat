@@ -883,6 +883,7 @@ extension RulesTests {
         ("testNoRemoveSelfInClosureAfterNamespacedVar", testNoRemoveSelfInClosureAfterNamespacedVar),
         ("testNoRemoveSelfInClosureAfterOptionalVar", testNoRemoveSelfInClosureAfterOptionalVar),
         ("testNoRemoveSelfInClosureAfterVar", testNoRemoveSelfInClosureAfterVar),
+        ("testNoRemoveSelfInClosureInIfCondition", testNoRemoveSelfInClosureInIfCondition),
         ("testNoRemoveSelfInClosureInsideIf", testNoRemoveSelfInClosureInsideIf),
         ("testNoRemoveSelfInExcludedFunction", testNoRemoveSelfInExcludedFunction),
         ("testNoRemoveSelfInExpectFunction", testNoRemoveSelfInExpectFunction),

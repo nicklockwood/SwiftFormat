@@ -429,6 +429,7 @@ extension RulesTests {
         ("testCountEqualsZeroAfterOptionalCallOnPreviousLine", testCountEqualsZeroAfterOptionalCallOnPreviousLine),
         ("testCountEqualsZeroAfterOptionalOnPreviousLine", testCountEqualsZeroAfterOptionalOnPreviousLine),
         ("testCountEqualsZeroAfterTrailingCommentOnPreviousLine", testCountEqualsZeroAfterTrailingCommentOnPreviousLine),
+        ("testCountExpressionGreaterThanZero", testCountExpressionGreaterThanZero),
         ("testCountGreaterThanZero", testCountGreaterThanZero),
         ("testCountGreaterThanZeroAfterArgumentLabel", testCountGreaterThanZeroAfterArgumentLabel),
         ("testCountGreaterThanZeroAfterOpenParen", testCountGreaterThanZeroAfterOpenParen),

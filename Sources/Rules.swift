@@ -3604,14 +3604,19 @@ public struct _FormatRules {
                     break
                 }
                 switch formatter.tokens[prev] {
+                case .operator("!", _), .operator(".", _):
+                    break // Ignored
                 case .operator("?", _):
                     if formatter.tokens[prev - 1].isSpace {
                         break loop
                     }
                     isOptional = true
-                case .operator("!", _), .operator(".", _):
-                    break // Ignored
-                case .operator, .keyword, .delimiter, .startOfScope:
+                case let .operator(op, .infix):
+                    guard ["||", "&&", ":"].contains(op) else {
+                        return
+                    }
+                    break loop
+                case .keyword, .delimiter, .startOfScope:
                     break loop
                 case .identifier:
                     if wasIdentifier {

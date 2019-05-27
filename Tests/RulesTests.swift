@@ -8575,6 +8575,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testCountExpressionGreaterThanZero() {
+        let input = "if a.count - b.count > 0 {}"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.isEmpty]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // optional count
 
     func testOptionalCountNotEqualToZero() {

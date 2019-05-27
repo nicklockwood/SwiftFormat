@@ -3768,6 +3768,9 @@ public struct _FormatRules {
                      // Not actually allowed currently, but: future-proofing!
                      .keyword("protocol"), .keyword("struct"):
                     return
+                case .keyword("private"):
+                    // Can't safely remove objc from private members
+                    return
                 case let token where token.isAttribute:
                     if let startIndex = formatter.index(of: .startOfScope("("), after: nextIndex),
                         let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) {

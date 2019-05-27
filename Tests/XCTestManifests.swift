@@ -963,6 +963,7 @@ extension RulesTests {
         ("testObjcNotRemovedFromNSCopying", testObjcNotRemovedFromNSCopying),
         ("testObjcNotRemovedOnNestedClass", testObjcNotRemovedOnNestedClass),
         ("testObjcNotRemovedOnNestedEnum", testObjcNotRemovedOnNestedEnum),
+        ("testObjcNotRemovedOnPrivateFunc", testObjcNotRemovedOnPrivateFunc),
         ("testObjcNotRemovedOnRenamedPrivateNestedClass", testObjcNotRemovedOnRenamedPrivateNestedClass),
         ("testObjcRemovedOnObjcExtensionFunc", testObjcRemovedOnObjcExtensionFunc),
         ("testObjcRemovedOnObjcExtensionVar", testObjcRemovedOnObjcExtensionVar),

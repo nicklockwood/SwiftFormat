@@ -6156,6 +6156,62 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
     }
 
+    func testNoRemoveSelfInIfLetSelf() {
+        let input = """
+        func foo() {
+            if let self = self as? Foo {
+                self.bar()
+            }
+            self.bar()
+        }
+        """
+        let output = """
+        func foo() {
+            if let self = self as? Foo {
+                self.bar()
+            }
+            bar()
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testNoRemoveSelfInIfLetEscapedSelf() {
+        let input = """
+        func foo() {
+            if let `self` = self as? Foo {
+                self.bar()
+            }
+            self.bar()
+        }
+        """
+        let output = """
+        func foo() {
+            if let `self` = self as? Foo {
+                self.bar()
+            }
+            bar()
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testNoRemoveSelfAfterGuardLetSelf() {
+        let input = """
+        func foo() {
+            guard let self = self as? Foo else {
+                return
+            }
+            self.bar()
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {

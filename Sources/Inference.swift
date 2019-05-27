@@ -863,7 +863,7 @@ private struct Inference {
                 case .startOfScope:
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .identifier("self"):
-                    guard !isTypeRoot,
+                    guard !isTypeRoot, !localNames.contains("self"),
                         let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
                             $0 == .operator(".", .infix)
                         }), let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {

@@ -541,7 +541,7 @@ extension FormatOptions.Descriptor {
         propertyName: "trailingClosures",
         displayName: "Trailing Closure Functions",
         help: "Comma-delimited list of functions that use trailing closures",
-        keyPath: \FormatOptions.selfRequired
+        keyPath: \FormatOptions.trailingClosures
     )
 
     // MARK: - Internal

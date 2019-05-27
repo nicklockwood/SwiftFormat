@@ -6875,6 +6875,30 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testSelfInsertedAfterLetInInit() {
+        let input = """
+        class Foo {
+            var foo: String
+            init(bar: Bar) {
+                let baz = bar.quux
+                foo = baz
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var foo: String
+            init(bar: Bar) {
+                let baz = bar.quux
+                self.foo = baz
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantSelf], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // enable/disable
 
     func testDisableRemoveSelf() {

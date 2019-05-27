@@ -2537,20 +2537,23 @@ public struct _FormatRules {
                     } else {
                         break
                     }
-                    let isAssignmentKeyword = ["for", "var", "let"].contains(lastKeyword)
-                    if isAssignmentKeyword,
+                    let isAssignment: Bool
+                    if ["for", "var", "let"].contains(lastKeyword),
                         let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) {
                         switch prevToken {
                         case .identifier, .number,
                              .operator where ![.operator("=", .infix), .operator(".", .prefix)].contains(prevToken),
                              .endOfScope where prevToken.isStringDelimiter:
+                            isAssignment = false
                             lastKeyword = ""
                         default:
-                            break
+                            isAssignment = true
                         }
+                    } else {
+                        isAssignment = false
                     }
                     let name = token.unescaped()
-                    guard members.contains(name), !localNames.contains(name), !isAssignmentKeyword ||
+                    guard members.contains(name), !localNames.contains(name), !isAssignment ||
                         formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .operator("=", .infix),
                         formatter.next(.nonSpaceOrComment, after: index) != .delimiter(":") else {
                         break

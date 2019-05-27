@@ -1179,6 +1179,7 @@ extension RulesTests {
         ("testRequiredParensNotRemovedInIf", testRequiredParensNotRemovedInIf),
         ("testSelfDotTypeInsideClassInitEdgeCase", testSelfDotTypeInsideClassInitEdgeCase),
         ("testSelfInsertedAfterLet", testSelfInsertedAfterLet),
+        ("testSelfInsertedAfterLetInInit", testSelfInsertedAfterLetInInit),
         ("testSelfInsertedInDidSet", testSelfInsertedInDidSet),
         ("testSelfInsertedInSwitchCaseLet", testSelfInsertedInSwitchCaseLet),
         ("testSelfInsertedInSwitchCaseWhere", testSelfInsertedInSwitchCaseWhere),

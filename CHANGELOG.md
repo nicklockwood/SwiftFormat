@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.40.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.9) (2019-05-27)
+
+- Fixed another case of `redundantSelf` removing required `self` in closures
+- Fixed behavior of `redundantSelf` in cases where `self` is shadowed
+- The `redundantObjc` rule no longer strips `@objc` annotation from private members
+- Fixed bug where `isEmpty` rule mangled expressions containing an array count
+- The `redundantSelf` rule now correctly inserts `self` in code following a declaration
+- Fixed bug where `—trailingclosures` option was being ignored
+- Removed extra newline when printing content to stdout
+- Fixed some bugs in the `fileHeader` rule
+
 ## [0.40.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.8) (2019-04-16)
 
 - Fixed several bugs when using the `--self insert` option

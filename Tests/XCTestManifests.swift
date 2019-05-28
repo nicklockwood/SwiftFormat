@@ -1430,6 +1430,7 @@ extension RulesTests {
         ("testWrappedLineBeforeCommaInsideInlineArray", testWrappedLineBeforeCommaInsideInlineArray),
         ("testWrappedLineBeforeDot", testWrappedLineBeforeDot),
         ("testWrappedLineBeforeGuardElse", testWrappedLineBeforeGuardElse),
+        ("testWrappedLineBeforeGuardElseWithXcodeStyle", testWrappedLineBeforeGuardElseWithXcodeStyle),
         ("testWrappedLineBeforeOperator", testWrappedLineBeforeOperator),
         ("testWrappedLineBeforeWhere", testWrappedLineBeforeWhere),
         ("testWrappedLineInClosure", testWrappedLineInClosure),

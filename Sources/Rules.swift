@@ -1091,7 +1091,8 @@ public struct _FormatRules {
                     at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last
                 ) || !(nextTokenIndex == nil || formatter.isStartOfStatement(
                     at: nextTokenIndex!, in: scopeStack.last
-                ))
+                )) || (formatter.options.xcodeIndentation &&
+                    formatter.index(of: .keyword("guard"), before: i) != nil)
                 // Determine current indent
                 var indent = indentStack.last ?? ""
                 if linewrapped, lineIndex == scopeStartLineIndexes.last {
@@ -1111,7 +1112,7 @@ public struct _FormatRules {
                     // Don't indent line starting with dot if previous line was just a closing scope
                     let lastToken = formatter.token(at: lastNonSpaceOrLinebreakIndex)
                     if !formatter.options.xcodeIndentation ||
-                        formatter.token(at: lastNonSpaceOrLinebreakIndex - 3) != .keyword("case"),
+                        formatter.index(of: .keyword("case"), before: i) == nil,
                         formatter.token(at: nextTokenIndex ?? -1) != .operator(".", .infix) ||
                         !(lastToken?.isEndOfScope == true && lastToken != .endOfScope("case") &&
                             formatter.last(.nonSpace, before:

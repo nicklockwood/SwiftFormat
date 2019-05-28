@@ -548,7 +548,7 @@ extension FormatOptions.Descriptor {
         argumentName: "xcodeindentation",
         propertyName: "xcodeIndentation",
         displayName: "Xcode Indentation",
-        help: "Xcode indentation style for guards and enums: \"enabled\" or \"disabled\" (default)",
+        help: "Xcode indent guard/enum: \"enabled\" or \"disabled\" (default)",
         keyPath: \.xcodeIndentation,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]

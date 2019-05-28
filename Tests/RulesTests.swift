@@ -2108,6 +2108,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testWrappedLineBeforeGuardElseWithXcodeStyle() {
+        let input = "guard let foo = bar\nelse { return }"
+        let output = "guard let foo = bar\n    else { return }"
+        let options = FormatOptions(xcodeIndentation: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testWrappedLineAfterGuardElse() {
         // Don't indent because this case is handled by braces rule
         let input = "guard let foo = bar else\n{ return }"

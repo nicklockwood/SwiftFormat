@@ -1431,6 +1431,7 @@ extension RulesTests {
         ("testWrappedLineBeforeDot", testWrappedLineBeforeDot),
         ("testWrappedLineBeforeGuardElse", testWrappedLineBeforeGuardElse),
         ("testWrappedLineBeforeGuardElseWithXcodeStyle", testWrappedLineBeforeGuardElseWithXcodeStyle),
+        ("testWrappedLineBeforeGuardElseAndReturnWithXcodeStyle", testWrappedLineBeforeGuardElseAndReturnWithXcodeStyle),
         ("testWrappedLineBeforeOperator", testWrappedLineBeforeOperator),
         ("testWrappedLineBeforeWhere", testWrappedLineBeforeWhere),
         ("testWrappedLineInClosure", testWrappedLineInClosure),

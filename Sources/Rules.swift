@@ -867,8 +867,8 @@ public struct _FormatRules {
                 indentStack.removeLast()
                 indentCounts.removeLast()
                 linewrapStack.removeLast()
-                scopeStartLineIndexes.removeLast()
-                scopeStack.removeLast()
+                _ = scopeStartLineIndexes.popLast()
+                _ = scopeStack.popLast()
             }
 
             var i = i
@@ -877,7 +877,8 @@ public struct _FormatRules {
                 switch string {
                 case ":" where scopeStack.last == .endOfScope("case"):
                     popScope()
-                case "{" where !formatter.isStartOfClosure(at: i, in: scopeStack.last) && linewrapStack.last == true:
+                case "{" where !formatter.isStartOfClosure(at: i, in: scopeStack.last) && linewrapStack.last == true &&
+                    (!formatter.options.xcodeIndentation || formatter.index(of: .keyword("guard"), before: lastNonSpaceOrLinebreakIndex) == nil):
                     indentStack.removeLast()
                     linewrapStack[linewrapStack.count - 1] = false
                 default:
@@ -1001,6 +1002,11 @@ public struct _FormatRules {
                             let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
                             nextToken.isEndOfScope || nextToken == .keyword("@unknown"),
                             !nextToken.isMultilineStringDelimiter {
+                            // Reduce indent for closing scope of guard else
+                            if formatter.options.xcodeIndentation, let startIndex = formatter.index(of: scope, before: lastNonSpaceOrLinebreakIndex),
+                                formatter.index(of: .keyword("guard"), before: startIndex) != nil {
+                                popScope()
+                            }
                             // Only reduce indent if line begins with a closing scope token
                             var indent = indentStack.last ?? ""
                             if [.endOfScope("case"), .endOfScope("default")].contains(token),
@@ -1092,7 +1098,7 @@ public struct _FormatRules {
                 ) || !(nextTokenIndex == nil || formatter.isStartOfStatement(
                     at: nextTokenIndex!, in: scopeStack.last
                 )) || (formatter.options.xcodeIndentation &&
-                    formatter.index(of: .keyword("guard"), before: i) != nil)
+                    formatter.index(of: .keyword("guard"), before: lastNonSpaceOrLinebreakIndex) != nil)
                 // Determine current indent
                 var indent = indentStack.last ?? ""
                 if linewrapped, lineIndex == scopeStartLineIndexes.last {

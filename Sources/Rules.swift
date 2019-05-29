@@ -867,8 +867,8 @@ public struct _FormatRules {
                 indentStack.removeLast()
                 indentCounts.removeLast()
                 linewrapStack.removeLast()
-                _ = scopeStartLineIndexes.popLast()
-                _ = scopeStack.popLast()
+                scopeStartLineIndexes.removeLast()
+                scopeStack.removeLast()
             }
 
             var i = i
@@ -1003,9 +1003,13 @@ public struct _FormatRules {
                             nextToken.isEndOfScope || nextToken == .keyword("@unknown"),
                             !nextToken.isMultilineStringDelimiter {
                             // Reduce indent for closing scope of guard else
-                            if formatter.options.xcodeIndentation, let startIndex = formatter.index(of: scope, before: lastNonSpaceOrLinebreakIndex),
+                            if formatter.options.xcodeIndentation,
+                                let startIndex = formatter.index(of: scope, before: lastNonSpaceOrLinebreakIndex) ??
+                                formatter.index(of: scope, before: i),
                                 formatter.index(of: .keyword("guard"), before: startIndex) != nil {
-                                popScope()
+                                indentStack.removeLast()
+                                indentCounts.removeLast()
+                                linewrapStack.removeLast()
                             }
                             // Only reduce indent if line begins with a closing scope token
                             var indent = indentStack.last ?? ""

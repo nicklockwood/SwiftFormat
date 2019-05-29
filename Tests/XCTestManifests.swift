@@ -1432,6 +1432,7 @@ extension RulesTests {
         ("testWrappedLineBeforeGuardElse", testWrappedLineBeforeGuardElse),
         ("testWrappedLineBeforeGuardElseWithXcodeStyle", testWrappedLineBeforeGuardElseWithXcodeStyle),
         ("testWrappedLineBeforeGuardElseAndReturnWithXcodeStyle", testWrappedLineBeforeGuardElseAndReturnWithXcodeStyle),
+        ("testNestedScopesForXcodeGuardIndentation", testNestedScopesForXcodeGuardIndentation),
         ("testWrappedLineBeforeOperator", testWrappedLineBeforeOperator),
         ("testWrappedLineBeforeWhere", testWrappedLineBeforeWhere),
         ("testWrappedLineInClosure", testWrappedLineInClosure),

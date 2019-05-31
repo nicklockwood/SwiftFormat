@@ -1002,14 +1002,13 @@ public struct _FormatRules {
                             let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
                             nextToken.isEndOfScope || nextToken == .keyword("@unknown"),
                             !nextToken.isMultilineStringDelimiter {
-                            // Reduce indent for closing scope of guard else
-                            if formatter.options.xcodeIndentation,
+                            // Reduce indent for closing scope of guard else back to normal
+                            if formatter.options.xcodeIndentation, linewrapStack.last == true,
                                 let startIndex = formatter.index(of: scope, before: lastNonSpaceOrLinebreakIndex) ??
                                 formatter.index(of: scope, before: i),
                                 formatter.index(of: .keyword("guard"), before: startIndex) != nil {
                                 indentStack.removeLast()
-                                indentCounts.removeLast()
-                                linewrapStack.removeLast()
+                                linewrapStack[linewrapStack.count - 1] = false
                             }
                             // Only reduce indent if line begins with a closing scope token
                             var indent = indentStack.last ?? ""

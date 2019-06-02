@@ -261,6 +261,12 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 if shouldSkipFile(inputURL, with: options) {
                     return
                 }
+                let fileInfo = FileInfo(
+                    fileName: resourceValues.name,
+                    creationDate: resourceValues.creationDate
+                )
+                var options = options
+                options.formatOptions?.fileInfo = fileInfo
                 do {
                     onComplete(try handler(inputURL, outputURL ?? inputURL, options))
                 } catch {

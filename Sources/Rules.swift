@@ -854,16 +854,17 @@ public struct _FormatRules {
 
         func isGuardElseClause(at index: Int, token: Token) -> Bool {
             if formatter.index(of: .keyword("guard"), after: formatter.startOfLine(at: index) - 1) ?? index < index {
-                return true
+                return (formatter.index(of: .endOfScope("}"), before: index) ?? -1) < formatter.startOfLine(at: index)
             }
 
             let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)
             let startIndex = token.isStartOfScope ||
                 nextToken == .keyword("else") ? index :
                 formatter.index(of: formatter.currentScope(at: index) ?? token, before: index) ?? index
-            let lastGuardIndex = formatter.index(of: .keyword("guard"), before: startIndex) ?? -1
+            guard let lastGuardIndex = formatter.index(of: .keyword("guard"), before: startIndex) else { return false }
             let lastStartIndex = formatter.index(of: .startOfScope("{"), before: startIndex - 1) ?? -1
-            return lastGuardIndex > lastStartIndex && linewrapStack.last == true
+            let lastEndIndex = formatter.index(of: .endOfScope("}"), before: startIndex) ?? -1
+            return lastGuardIndex > lastStartIndex && linewrapStack.last == true && lastEndIndex < lastGuardIndex
         }
 
         if formatter.options.fragment,

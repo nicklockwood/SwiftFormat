@@ -965,6 +965,7 @@ extension RulesTests {
         ("testNumericLiteralEqualYodaCondition", testNumericLiteralEqualYodaCondition),
         ("testNumericLiteralGreaterYodaCondition", testNumericLiteralGreaterYodaCondition),
         ("testObjcNotRemovedFromNSCopying", testObjcNotRemovedFromNSCopying),
+        ("testObjcNotRemovedOnFileprivateFunc", testObjcNotRemovedOnFileprivateFunc),
         ("testObjcNotRemovedOnNestedClass", testObjcNotRemovedOnNestedClass),
         ("testObjcNotRemovedOnNestedEnum", testObjcNotRemovedOnNestedEnum),
         ("testObjcNotRemovedOnPrivateFunc", testObjcNotRemovedOnPrivateFunc),

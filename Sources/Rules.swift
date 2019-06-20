@@ -3777,7 +3777,7 @@ public struct _FormatRules {
                      // Not actually allowed currently, but: future-proofing!
                      .keyword("protocol"), .keyword("struct"):
                     return
-                case .keyword("private"):
+                case .keyword("private"), .keyword("fileprivate"):
                     // Can't safely remove objc from private members
                     return
                 case let token where token.isAttribute:

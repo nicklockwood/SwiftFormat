@@ -9113,6 +9113,17 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testObjcNotRemovedOnFileprivateFunc() {
+        let input = """
+        @objcMembers class Foo: NSObject {
+            @objc fileprivate func bar() {}
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantObjc]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // MARK: typeSugar
 
     func testArrayTypeConvertedToSugar() {

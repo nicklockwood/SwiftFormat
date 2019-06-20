@@ -1763,6 +1763,29 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testEnumCaseIndentingCommas() {
+        let input = "enum Foo {\ncase Bar,\nBaz\n}"
+        let output = "enum Foo {\n    case Bar,\n        Baz\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testEnumCaseIndentingCommasWithXcodeStyle() {
+        let input = "enum Foo {\ncase Bar,\nBaz\n}"
+        let output = "enum Foo {\n    case Bar,\n    Baz\n}"
+        let options = FormatOptions(xcodeIndentation: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testEnumCaseWrappedIfWithXcodeStyle() {
+        let input = "if case .foo = foo,\ntrue {\nreturn false\n}"
+        let output = "if case .foo = foo,\n    true {\n    return false\n}"
+        let options = FormatOptions(xcodeIndentation: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testGenericEnumCaseIndenting() {
         let input = "enum Foo<T> {\ncase Bar\ncase Baz\n}"
         let output = "enum Foo<T> {\n    case Bar\n    case Baz\n}"
@@ -1839,6 +1862,8 @@ class RulesTests: XCTestCase {
         let output = "{\n    if case let .foo(msg) = a,\n        case let .bar(msg) = b {}\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]),
+                       try format(input, rules: [FormatRules.indent], options: FormatOptions(xcodeIndentation: true)))
     }
 
     func testIndentGuardCase() {
@@ -2098,6 +2123,54 @@ class RulesTests: XCTestCase {
         let output = "guard let foo = bar\nelse { return }"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSingleLineGuardFollowingLine() {
+        let input = "guard let foo = bar else { return }\nreturn"
+        let output = "guard let foo = bar else { return }\nreturn"
+        let options = FormatOptions(xcodeIndentation: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testWrappedLineBeforeGuardElseWithXcodeStyle() {
+        let input = "guard let foo = bar\nelse { return }"
+        let output = "guard let foo = bar\n    else { return }"
+        let options = FormatOptions(xcodeIndentation: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testWrappedLineAfterGuardElseWithXcodeStyleNotIndented() {
+        let input = "guard let foo = bar else\n{ return }"
+        let output = "guard let foo = bar else\n{ return }"
+        let options = FormatOptions(xcodeIndentation: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testWrappedLineBeforeGuardElseAndReturnWithXcodeStyle() {
+        let input = "guard let foo = foo\nelse {\nreturn\n}"
+        let output = "guard let foo = foo\n    else {\n        return\n}"
+        let options = FormatOptions(xcodeIndentation: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testXcodeIndentationGuardClosure() {
+        let input = "guard let foo = bar(baz, completion: {\nfalse\n}) else { return }"
+        let output = "guard let foo = bar(baz, completion: {\n    false\n}) else { return }"
+        let options = FormatOptions(xcodeIndentation: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testNestedScopesForXcodeGuardIndentation() {
+        let input = "enum Foo {\ncase bar\n\nvar foo: String {\nguard self == .bar\nelse {\nreturn \"\"\n}\nreturn \"bar\"\n}\n}"
+        let output = "enum Foo {\n    case bar\n\n    var foo: String {\n        guard self == .bar\n            else {\n                return \"\"\n        }\n        return \"bar\"\n    }\n}"
+        let options = FormatOptions(xcodeIndentation: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
     func testWrappedLineAfterGuardElse() {
@@ -3092,7 +3165,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    func testGuardNotAffectedByelseOnSameLine() {
+    func testGuardNotAffectedByElseOnSameLine() {
         let input = "guard true\nelse { return }"
         let output = "guard true\nelse { return }"
         XCTAssertEqual(try format(input, rules: [FormatRules.elseOnSameLine]), output)
@@ -3122,7 +3195,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
-    func testGuardNotAffectedByelseOnSameLineForAllman() {
+    func testGuardNotAffectedByElseOnSameLineForAllman() {
         let input = "guard true else { return }"
         let output = "guard true else { return }"
         let options = FormatOptions(allmanBraces: true)
@@ -3138,7 +3211,7 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
-    func testWhileNotAffectedByelseOnSameLineIfNotRepeatWhile() {
+    func testWhileNotAffectedByElseOnSameLineIfNotRepeatWhile() {
         let input = "func foo(x) {}\n\nwhile true {}"
         let output = "func foo(x) {}\n\nwhile true {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.elseOnSameLine]), output)

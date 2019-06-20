@@ -472,6 +472,7 @@ Option | Description
 `--indent` | Number of spaces to indent, or "tab" to use tabs
 `--indentcase` | Indent cases inside a switch: "true" or "false" (default)
 `--ifdef` | #if indenting: "indent" (default), "no-indent" or "outdent"
+`--xcodeindentation` | Xcode indent guard/enum: "enabled" or "disabled" (default)
 
 <details>
 <summary>Examples</summary>

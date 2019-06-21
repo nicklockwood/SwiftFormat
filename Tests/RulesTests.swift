@@ -1847,6 +1847,8 @@ class RulesTests: XCTestCase {
         let output = "{\n    if case let .foo(msg) = a,\n        case let .bar(msg) = b {}\n}"
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]),
+                       try format(input, rules: [FormatRules.indent], options: FormatOptions(xcodeIndentation: true)))
     }
 
     func testIndentGuardCase() {

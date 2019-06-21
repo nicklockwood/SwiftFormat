@@ -1130,11 +1130,24 @@ public struct _FormatRules {
                     }
                 } else if linewrapped {
                     linewrapStack[linewrapStack.count - 1] = true
+
+                    func isWrappedEnumCase() -> Bool {
+                        guard let caseIndex = formatter.index(of: .keyword("case"), before: i) else { return false }
+
+                        let start: Int
+                        if let currentScope = formatter.currentScope(at: i) {
+                            start = formatter.index(of: currentScope, before: i) ?? formatter.startOfLine(at: i) - 1
+                        } else {
+                            start = formatter.startOfLine(at: i) - 1
+                        }
+
+                        return caseIndex > formatter.index(of: .startOfScope, before: i) ?? -1 &&
+                            caseIndex <= formatter.index(of: .keyword, after: start) ?? i
+                    }
                     // Don't indent enum cases if Xcode indentation is set
                     // Don't indent line starting with dot if previous line was just a closing scope
                     let lastToken = formatter.token(at: lastNonSpaceOrLinebreakIndex)
-                    if !formatter.options.xcodeIndentation ||
-                        formatter.index(of: .keyword("case"), before: i) ?? -1 <= formatter.index(of: .startOfScope, before: i) ?? -1,
+                    if !formatter.options.xcodeIndentation || !isWrappedEnumCase(),
                         formatter.token(at: nextTokenIndex ?? -1) != .operator(".", .infix) ||
                         !(lastToken?.isEndOfScope == true && lastToken != .endOfScope("case") &&
                             formatter.last(.nonSpace, before:

@@ -40,6 +40,7 @@ public struct CLI {
         case error
         case warning
         case content
+        case raw
     }
 
     /// Output handler - override this to intercept output from the CLI
@@ -506,7 +507,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                         } else {
                             // Write to stdout
                             let output = try format(input, options: options, verbose: false)
-                            print(output, as: .content)
+                            print(output, as: .raw)
                         }
                     } catch {
                         fatalError = error

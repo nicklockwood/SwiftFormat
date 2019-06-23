@@ -186,8 +186,8 @@ public enum Token: Equatable {
                                 input.read("}"),
                                 let codepoint = Int(hex, radix: 16),
                                 let c = UnicodeScalar(codepoint) else {
-                                // Invalid. Recover and continue
-                                continue
+                                    // Invalid. Recover and continue
+                                    continue
                             }
                             output.append(c)
                         default:
@@ -210,7 +210,7 @@ public enum Token: Equatable {
         case .number(_, .binary), .number(_, .octal), .number(_, .hex):
             var characters = UnicodeScalarView(string.unicodeScalars)
             guard characters.read("0"), characters.readCharacter(where: {
-                "oxb".unicodeScalars.contains($0)
+                    "oxb".unicodeScalars.contains($0)
             }) != nil else {
                 return string.replacingOccurrences(of: "_", with: "")
             }
@@ -1312,10 +1312,10 @@ public func tokenize(_ source: String) -> [Token] {
         }
         guard let prevNonSpaceToken =
             index(of: .nonSpaceOrCommentOrLinebreak, before: i).map({ tokens[$0] }) else {
-            if tokens.count > i + 1 {
-                tokens[i] = .operator(string, .prefix)
-            }
-            return
+                if tokens.count > i + 1 {
+                    tokens[i] = .operator(string, .prefix)
+                }
+                return
         }
         switch prevNonSpaceToken {
         case .keyword("func"), .keyword("operator"):
@@ -1349,11 +1349,11 @@ public func tokenize(_ source: String) -> [Token] {
         default:
             guard let nextNonSpaceToken =
                 index(of: .nonSpaceOrCommentOrLinebreak, after: i).map({ tokens[$0] }) else {
-                if prevToken.isLvalue {
-                    type = .postfix
-                    break
-                }
-                return
+                    if prevToken.isLvalue {
+                        type = .postfix
+                        break
+                    }
+                    return
             }
             let nextToken: Token = tokens[i + 1]
             if nextToken.isRvalue {
@@ -1452,7 +1452,7 @@ public func tokenize(_ source: String) -> [Token] {
                         case .identifier = tokens[prevIndex],
                         let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
                         tokens[prevPrevIndex] == .delimiter(":") else {
-                        fallthrough
+                            fallthrough
                     }
                 case .operator, .identifier, .number, .startOfScope("\""), .startOfScope("\"\"\""):
                     convertClosingChevronToSymbol(at: prevIndex, andOpeningChevron: true)

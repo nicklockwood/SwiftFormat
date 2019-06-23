@@ -94,7 +94,7 @@ public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral 
     public init?(rawValue: String) {
         let rawValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !rawValue.components(separatedBy: ".").contains(where: {
-            !CharacterSet.decimalDigits.contains($0.unicodeScalars.first ?? " ")
+                !CharacterSet.decimalDigits.contains($0.unicodeScalars.first ?? " ")
         }) else {
             return nil
         }
@@ -205,7 +205,7 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
             guard (1 ... 2).contains(parts.count),
                 let group = parts.first.flatMap(Int.init),
                 let threshold = parts.last.flatMap(Int.init) else {
-                return nil
+                    return nil
             }
             self = (group == 0) ? .none : .group(group, threshold)
         }

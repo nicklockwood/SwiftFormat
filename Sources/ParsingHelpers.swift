@@ -23,7 +23,7 @@ extension Formatter {
                     let index = self.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
                         $0.isAttribute || _FormatRules.aclSpecifiers.contains($0.string)
                     }) else {
-                    return false
+                        return false
                 }
                 prevIndex = index
             case let .keyword(name), let .identifier(name):
@@ -173,7 +173,7 @@ extension Formatter {
     func lastSignificantKeyword(at i: Int) -> String? {
         guard let index = self.index(of: .keyword, before: i + 1),
             case let .keyword(keyword) = tokens[index] else {
-            return nil
+                return nil
         }
         switch keyword {
         case let name where name.hasPrefix("#") || name.hasPrefix("@"):
@@ -260,7 +260,7 @@ extension Formatter {
     func isSubscriptOrFunctionCall(at i: Int) -> Bool {
         guard case let .startOfScope(string)? = token(at: i), ["[", "("].contains(string),
             let prevToken = last(.nonSpaceOrComment, before: i) else {
-            return false
+                return false
         }
         switch prevToken {
         case .identifier, .operator(_, .postfix),

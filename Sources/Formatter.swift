@@ -62,7 +62,7 @@ public class Formatter: NSObject {
         guard let rule = currentRule, comment.hasPrefix(prefix),
             let directive = ["disable", "enable"].first(where: { comment.hasPrefix("\(prefix)\($0)") }),
             comment.range(of: "\\b(\(rule)|all)\\b", options: .regularExpression) != nil else {
-            return
+                return
         }
         wasNextDirective = comment.hasPrefix("\(prefix)\(directive):next")
         switch directive {

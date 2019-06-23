@@ -93,7 +93,7 @@ final class RulesViewController: NSViewController {
                     .compactMap { option -> UserSelectionType? in
                         guard !option.isDeprecated,
                             option.descriptor.argumentName != FormatOptions.Descriptor.indentation.argumentName else {
-                            return nil
+                                return nil
                         }
                         let descriptor = option.descriptor
                         let selection = option.argumentValue

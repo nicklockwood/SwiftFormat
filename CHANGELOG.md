@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.40.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.10) (2019-06-23)
+
+- The `emptyBraces` rule no longer removes linebreaks in chained `else`/`catch` blocks
+- Fixed duplicate `fileHeader` insertion when comment isn't followed by blank line
+- SwiftFormat command-line tool no longer times out when encountering an empty file
+- Fixed bug in `yodaConditions` rule affecting parenthesized subexpressions
+- The `consecutiveBlankLines` rule no longer strips blank lines inside multiline string literals
+- The `redundantObjc` rule no longer strips `@objc` annotation from `fileprivate` members
+- The `{file}` placeholder in `fileHeader` templates now works correctly
+
 ## [0.40.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.9) (2019-05-27)
 
 - Fixed another case of `redundantSelf` removing required `self` in closures

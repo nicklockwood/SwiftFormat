@@ -1269,6 +1269,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testConsecutiveBlankLinesInsideStringLiteral() {
+        let input = "\"\"\"\nhello\n\n\nworld\n\"\"\""
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.consecutiveBlankLines]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testFragmentWithTrailingLinebreaks() {
         let input = "func foo() {}\n\n\n"
         let output = "func foo() {}\n\n"

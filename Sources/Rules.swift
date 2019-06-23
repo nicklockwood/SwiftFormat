@@ -634,7 +634,8 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.linebreak) { i, _ in
             if let prevIndex = formatter.index(of: .nonSpace, before: i, if: { $0.isLinebreak }),
-                formatter.next(.nonSpace, after: i)?.isLinebreak ?? !formatter.options.fragment {
+                formatter.next(.nonSpace, after: i)?.isLinebreak ?? !formatter.options.fragment,
+                formatter.currentScope(at: prevIndex)?.isStringDelimiter != true {
                 formatter.removeTokens(inRange: prevIndex ..< i)
             }
         }

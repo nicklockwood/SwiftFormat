@@ -415,6 +415,7 @@ extension RulesTests {
         ("testConsecutiveBlankLines", testConsecutiveBlankLines),
         ("testConsecutiveBlankLinesAtEndOfFile", testConsecutiveBlankLinesAtEndOfFile),
         ("testConsecutiveBlankLinesAtStartOfFile", testConsecutiveBlankLinesAtStartOfFile),
+        ("testConsecutiveBlankLinesInsideStringLiteral", testConsecutiveBlankLinesInsideStringLiteral),
         ("testConsecutiveSpaces", testConsecutiveSpaces),
         ("testConsecutiveSpacesAfterComment", testConsecutiveSpacesAfterComment),
         ("testConsecutiveSpacesDoesntAffectMultilineComments", testConsecutiveSpacesDoesntAffectMultilineComments),

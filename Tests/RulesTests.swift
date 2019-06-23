@@ -8467,6 +8467,30 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.all, options: options), output)
     }
 
+    func testEmptyBracesNotRemovedInDoCatch() {
+        let input = """
+        do {
+        } catch is FooError {
+        } catch {}
+        """
+        let output = input
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.emptyBraces], options: options), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.all, options: options), output)
+    }
+
+    func testEmptyBracesNotRemovedInIfElse() {
+        let input = """
+        if {
+        } else if foo {
+        } else {}
+        """
+        let output = input
+        let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.emptyBraces], options: options), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.all, options: options), output)
+    }
+
     // MARK: andOperator
 
     func testIfAndReplaced() {

@@ -480,6 +480,8 @@ extension RulesTests {
         ("testElseOnSameLine", testElseOnSameLine),
         ("testElseOnSameLineDoesntEatPreviousStatement", testElseOnSameLineDoesntEatPreviousStatement),
         ("testElseOnSameLineOnlyAppliedToDanglingBrace", testElseOnSameLineOnlyAppliedToDanglingBrace),
+        ("testEmptyBracesNotRemovedInDoCatch", testEmptyBracesNotRemovedInDoCatch),
+        ("testEmptyBracesNotRemovedInIfElse", testEmptyBracesNotRemovedInIfElse),
         ("testEmptyClosureArgsNotMangled", testEmptyClosureArgsNotMangled),
         ("testEmptyClosureArgsNotUnwrapped", testEmptyClosureArgsNotUnwrapped),
         ("testEmptyClosureReturnValueConvertedToVoid", testEmptyClosureReturnValueConvertedToVoid),

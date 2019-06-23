@@ -3526,11 +3526,16 @@ public struct _FormatRules {
         help: "Removes all white space between otherwise empty braces."
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
-            if let closingIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
+            guard let closingIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
                 $0 == .endOfScope("}")
-            }) {
-                formatter.removeTokens(inRange: i + 1 ..< closingIndex)
+            }) else {
+                return
             }
+            if let token = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex),
+                [.keyword("else"), .keyword("catch")].contains(token) {
+                return
+            }
+            formatter.removeTokens(inRange: i + 1 ..< closingIndex)
         }
     }
 

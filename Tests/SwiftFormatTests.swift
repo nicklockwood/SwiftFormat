@@ -149,6 +149,13 @@ class SwiftFormatTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [], options: options), input)
     }
 
+    // MARK: empty file
+
+    func testNoTimeoutForEmptyFile() {
+        let input = ""
+        XCTAssertEqual(try format(input), input)
+    }
+
     // MARK: offsetForToken
 
     func testOffsetForToken() {

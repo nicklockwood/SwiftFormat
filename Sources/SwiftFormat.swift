@@ -408,7 +408,7 @@ public func applyRules(_ rules: [FormatRule],
     // Recursively apply rules until no changes are detected
     let group = DispatchGroup()
     let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
-    let timeout = TimeInterval(tokens.count) / 1000
+    let timeout = 1 + TimeInterval(tokens.count) / 1000
     for _ in 0 ..< 10 {
         let formatter = Formatter(tokens, options: options)
         for (i, rule) in rules.enumerated() {

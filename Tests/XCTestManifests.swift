@@ -771,6 +771,7 @@ extension RulesTests {
         ("testNoMangleLabelWhenIndentCaseTrue", testNoMangleLabelWhenIndentCaseTrue),
         ("testNoMangleYodaConditionFollowedByAndOperator", testNoMangleYodaConditionFollowedByAndOperator),
         ("testNoMangleYodaConditionFollowedByOrOperator", testNoMangleYodaConditionFollowedByOrOperator),
+        ("testNoMangleYodaConditionFollowedByParentheses", testNoMangleYodaConditionFollowedByParentheses),
         ("testNoMangleYodaConditionInTernary", testNoMangleYodaConditionInTernary),
         ("testNoMangleYodaConditionInTernary2", testNoMangleYodaConditionInTernary2),
         ("testNoMangleYodaConditionInTernary3", testNoMangleYodaConditionInTernary3),

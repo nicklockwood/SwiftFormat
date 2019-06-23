@@ -9814,6 +9814,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testNoMangleYodaConditionFollowedByParentheses() {
+        let input = "0 <= (foo + bar)"
+        let output = "(foo + bar) >= 0"
+        XCTAssertEqual(try format(input, rules: [FormatRules.yodaConditions]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testNoMangleYodaConditionInTernary() {
         let input = "let z = 0 < y ? 3 : 4"
         let output = "let z = y > 0 ? 3 : 4"

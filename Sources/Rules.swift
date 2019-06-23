@@ -4162,7 +4162,7 @@ public struct _FormatRules {
                         return lastIndex
                     }
                     wasOperator = false
-                case .startOfScope where token.isStringDelimiter && wasOperator,
+                case .startOfScope where wasOperator,
                      .startOfScope("{") where formatter.isStartOfClosure(at: i),
                      .startOfScope("(") where formatter.isSubscriptOrFunctionCall(at: i),
                      .startOfScope("[") where formatter.isSubscriptOrFunctionCall(at: i):

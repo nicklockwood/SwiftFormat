@@ -3402,11 +3402,14 @@ public struct _FormatRules {
             }
         }
         guard !header.isEmpty else { return }
+        let headerTokens = tokenize(header)
+        if Array(formatter.tokens.prefix(headerTokens.count)) == headerTokens {
+            formatter.removeTokens(inRange: 0 ..< headerTokens.count)
+        }
         if formatter.tokens.first?.isSpaceOrLinebreak == false {
             formatter.insertToken(.linebreak(formatter.options.linebreak), at: 0)
         }
         formatter.insertToken(.linebreak(formatter.options.linebreak), at: 0)
-        let headerTokens = tokenize(header)
         formatter.insertTokens(headerTokens, at: 0)
     }
 

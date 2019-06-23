@@ -8065,6 +8065,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testNoDuplicateHeaderIfMissingTrailingBlankLine() {
+        let input = "// Header comment\nclass Foo {}"
+        let output = "// Header comment\n\nclass Foo {}"
+        let options = FormatOptions(fileHeader: "Header comment")
+        XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testFileHeaderYearReplacement() {
         let input = "let foo = bar"
         let output: String = {

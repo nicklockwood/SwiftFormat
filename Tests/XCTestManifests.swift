@@ -718,6 +718,7 @@ extension RulesTests {
         ("testNoDoubleSpaceAddedToWrappedArray", testNoDoubleSpaceAddedToWrappedArray),
         ("testNoDoubleSpaceWhenRemovingParens", testNoDoubleSpaceWhenRemovingParens),
         ("testNoDoubleSpaceWhenRemovingParens2", testNoDoubleSpaceWhenRemovingParens2),
+        ("testNoDuplicateHeaderIfMissingTrailingBlankLine", testNoDuplicateHeaderIfMissingTrailingBlankLine),
         ("testNoExtraBlankLineAfterMultilineComment", testNoExtraBlankLineAfterMultilineComment),
         ("testNoExtraBlankLineAfterSingleLineComment", testNoExtraBlankLineAfterSingleLineComment),
         ("testNoExtraBlankLineBetweenFunctions", testNoExtraBlankLineBetweenFunctions),

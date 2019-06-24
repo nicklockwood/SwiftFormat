@@ -854,11 +854,21 @@ public struct _FormatRules {
         }
 
         func isGuardElseClause(at index: Int, token: Token) -> Bool {
-            if formatter.index(of: .keyword("guard"), after: formatter.startOfLine(at: index) - 1) ?? index < index {
+            func hasKeyword(_ string: String) -> Bool {
+                return formatter.index(of: .keyword(string), after: formatter.startOfLine(at: index) - 1) ?? index < index
+            }
+            let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)
+
+            // Handle `{ return }` on its own line
+            guard nextToken != .startOfScope("{") else { return false }
+
+            // Make sure `else` on the line following a single-clause `guard` gets indented extra
+            // example: `guard true\nelse { return }`
+            if hasKeyword("guard"), hasKeyword("else") || nextToken == .keyword("else") {
+                // Avoid over-indenting the line following a single-line guard, like `guard true else { return }`
                 return (formatter.index(of: .endOfScope("}"), before: index) ?? -1) < formatter.startOfLine(at: index)
             }
 
-            let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)
             let startIndex = token.isStartOfScope ||
                 nextToken == .keyword("else") ? index :
                 formatter.index(of: formatter.currentScope(at: index) ?? token, before: index) ?? index

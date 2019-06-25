@@ -397,13 +397,14 @@ public func sourceCode(for tokens: [Token]) -> String {
 /// Apply specified rules to a token array with optional callback
 /// Useful for perfoming additional logic after each rule is applied
 public func applyRules(_ rules: [FormatRule],
-                       to originalTokens: [Token],
+                       to originalTokens: [TokenWL],
                        with options: FormatOptions,
-                       callback: ((Int, [Token]) -> Void)? = nil) throws -> [Token] {
+                       callback: ((Int, [TokenWL]) -> Void)? = nil) throws -> [TokenWL] {
     var tokens = originalTokens
+    let pureTokens = originalTokens.map { $0.token }
 
     // Check for parsing errors
-    if let error = parsingError(for: tokens, options: options) {
+    if let error = parsingError(for: pureTokens, options: options) {
         throw error
     }
 
@@ -440,9 +441,9 @@ public func applyRules(_ rules: [FormatRule],
 
 /// Format a pre-parsed token array
 /// Returns the formatted token array, and the number of edits made
-public func format(_ tokens: [Token],
+public func format(_ tokens: [TokenWL],
                    rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = .default) throws -> [Token] {
+                   options: FormatOptions = .default) throws -> [TokenWL] {
     return try applyRules(rules, to: tokens, with: options)
 }
 
@@ -450,7 +451,7 @@ public func format(_ tokens: [Token],
 public func format(_ source: String,
                    rules: [FormatRule] = FormatRules.default,
                    options: FormatOptions = .default) throws -> String {
-    return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
+    return sourceCode(for: try format(tokenize(source), rules: rules, options: options).map { $0.token })
 }
 
 // MARK: Path utilities

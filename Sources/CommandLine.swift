@@ -637,11 +637,14 @@ func format(_ source: String, options: Options, verbose: Bool) throws -> String 
     let ruleNames = Array(options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)).sorted()
     let rules = ruleNames.compactMap { rulesByName[$0] }
     var rulesApplied = Set<String>()
-    let callback: ((Int, [TokenWL]) -> Void)? = verbose ? { i, updatedTokens in
-        if updatedTokens != tokens {
-            rulesApplied.insert(ruleNames[i])
-            tokens = updatedTokens
+    let callback: ((Int, [TokenWL], [String]) -> Void)? = verbose ? { i, updatedTokens, warnings in
+        guard updatedTokens != tokens else { return }
+
+        rulesApplied.insert(ruleNames[i])
+        warnings.forEach {
+            print($0)
         }
+        tokens = updatedTokens
     } : nil
 
     // Apply rules

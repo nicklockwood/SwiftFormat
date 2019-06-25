@@ -98,6 +98,11 @@ public class Formatter: NSObject {
     /// The token array managed by the formatter (read-only)
     public private(set) var tokens: [TokenWL]
 
+    /// The warning strings of the applyed tokens.
+    public private(set) var warnings = [String]()
+    private var _prevLineNum = -1
+    private var _prevRule: FormatRule?
+
     /// Create a new formatter instance from a token array
     public init(_ tokens: [TokenWL], options: FormatOptions = FormatOptions()) {
         self.tokens = tokens
@@ -117,6 +122,7 @@ public class Formatter: NSObject {
         if tokens.isEmpty {
             removeToken(at: index)
         } else {
+            _printWarning(self.tokens[index].lineNum)
             self.tokens[index].token = tokens[0]
             for (i, token) in tokens.dropFirst().enumerated() {
                 insertToken(token, at: index + i + 1)
@@ -128,6 +134,7 @@ public class Formatter: NSObject {
     public func replaceTokens(inRange range: Range<Int>, with tokens: [Token]) {
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
+            _printWarning(self.tokens[range.lowerBound + i].lineNum)
             self.tokens[range.lowerBound + i].token = tokens[i]
         }
         if range.count > max {
@@ -148,6 +155,7 @@ public class Formatter: NSObject {
 
     /// Removes the token at the specified index
     public func removeToken(at index: Int) {
+        _printWarning(tokens[index].lineNum)
         tokens.remove(at: index)
         if enumerationIndex >= index {
             enumerationIndex -= 1
@@ -166,6 +174,7 @@ public class Formatter: NSObject {
 
     /// Removes the last token
     public func removeLastToken() {
+        _printWarning(tokens.last!.lineNum)
         tokens.removeLast()
     }
 
@@ -173,6 +182,7 @@ public class Formatter: NSObject {
     public func insertTokens(_ tokens: [Token], at index: Int) {
         let ln = index > 0 ? self.tokens[index - 1].lineNum : 0
         for token in tokens.reversed() {
+            _printWarning(ln)
             self.tokens.insert((token, ln), at: index)
         }
         if enumerationIndex >= index {
@@ -183,6 +193,22 @@ public class Formatter: NSObject {
     /// Inserts a single token at the specified index
     public func insertToken(_ token: Token, at index: Int) {
         insertTokens([token], at: index)
+    }
+
+    // MARK: warnings
+
+    private func _printWarning(_ lineNumber: Int) {
+        defer {
+            _prevLineNum = lineNumber
+            _prevRule = currentRule
+        }
+        guard let rule = currentRule, !rule.isSilent,
+            lineNumber != _prevLineNum || rule !== _prevRule else { return }
+        warnings.append("\(options.fileInfo.filePath ?? ""):\(lineNumber):1: warning: \(rule.help)")
+    }
+
+    public func resetWarnings() {
+        warnings = []
     }
 
     // MARK: enumeration

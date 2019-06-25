@@ -399,7 +399,7 @@ public func sourceCode(for tokens: [Token]) -> String {
 public func applyRules(_ rules: [FormatRule],
                        to originalTokens: [TokenWL],
                        with options: FormatOptions,
-                       callback: ((Int, [TokenWL]) -> Void)? = nil) throws -> [TokenWL] {
+                       callback: ((Int, [TokenWL], [String]) -> Void)? = nil) throws -> [TokenWL] {
     var tokens = originalTokens
     let pureTokens = originalTokens.map { $0.token }
 
@@ -428,7 +428,8 @@ public func applyRules(_ rules: [FormatRule],
             guard group.wait(timeout: .now() + timeout) != .timedOut else {
                 throw FormatError.writing("\(rule.name) rule timed out")
             }
-            callback?(i, formatter.tokens)
+            callback?(i, formatter.tokens, formatter.warnings)
+            formatter.resetWarnings()
         }
         if tokens == formatter.tokens {
             return tokens

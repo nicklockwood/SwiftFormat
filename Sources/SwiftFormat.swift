@@ -399,7 +399,8 @@ public func sourceCode(for tokens: [Token]) -> String {
 public func applyRules(_ rules: [FormatRule],
                        to originalTokens: [TokenWL],
                        with options: FormatOptions,
-                       callback: ((Int, [TokenWL]) -> Void)? = nil) throws -> [TokenWL] {
+                       fileName: String = "",
+                       callback: ((Int, [TokenWL], [String]) -> Void)? = nil) throws -> [TokenWL] {
     var tokens = originalTokens
     let pureTokens = originalTokens.map { $0.token }
 
@@ -418,18 +419,21 @@ public func applyRules(_ rules: [FormatRule],
     // Recursively apply rules until no changes are detected
     let group = DispatchGroup()
     let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
-    let timeout = 1 + TimeInterval(tokens.count) / 1000
+    let timeout = TimeInterval(tokens.count) / 1000
     for _ in 0 ..< 10 {
-        let formatter = Formatter(tokens, options: options)
+        let formatter = Formatter(tokens, fileName: fileName, options: options)
         for (i, rule) in rules.enumerated() {
             queue.async(group: group) {
                 formatter.help = rule.help
+                formatter.isSilent = rule.isSilent
+                formatter.ruleIndex = i
                 rule.apply(with: formatter)
             }
             guard group.wait(timeout: .now() + timeout) != .timedOut else {
                 throw FormatError.writing("\(rule.name ?? "Rule") rule timed out")
             }
-            callback?(i, formatter.tokens)
+            callback?(i, formatter.tokens, formatter.warnings)
+            formatter.resetWarnings()
         }
         if tokens == formatter.tokens {
             return tokens

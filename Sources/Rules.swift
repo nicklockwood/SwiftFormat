@@ -37,15 +37,18 @@ public final class FormatRule {
     let help: String
     let options: [String]
     let sharedOptions: [String]
+    let isSilent: Bool
 
     fileprivate init(help: String,
                      options: [String] = [],
                      sharedOptions: [String] = [],
+                     isSilent: Bool = false,
                      _ fn: @escaping (Formatter) -> Void) {
         self.fn = fn
         self.help = help
         self.options = options
         self.sharedOptions = sharedOptions
+        self.isSilent = isSilent
     }
 
     public func apply(with formatter: Formatter) {
@@ -167,7 +170,7 @@ public struct _FormatRules {
         }
 
         func isCaptureList(at i: Int) -> Bool {
-            assert(formatter.tokens[i] == .endOfScope("].token"))
+            assert(formatter.tokens[i] == .endOfScope("]"))
             guard formatter.lastToken(before: i + 1, where: {
                 !$0.isSpaceOrCommentOrLinebreak && $0 != .endOfScope("]")
             }) == .startOfScope("{"),
@@ -828,7 +831,8 @@ public struct _FormatRules {
     public let indent = FormatRule(
         help: "Adjusts leading whitespace based on scope and line wrapping.",
         options: ["indent", "tabwidth", "indentcase", "ifdef", "xcodeindentation"],
-        sharedOptions: ["trimwhitespace", "linebreaks"]
+        sharedOptions: ["trimwhitespace", "linebreaks"],
+        isSilent: true
     ) { formatter in
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []
@@ -1462,7 +1466,8 @@ public struct _FormatRules {
     /// Standardise linebreak characters as whatever is specified in the options (\n by default)
     public let linebreaks = FormatRule(
         help: "Normalizes all linebreaks to use the same character.",
-        options: ["linebreaks"]
+        options: ["linebreaks"],
+        isSilent: true
     ) { formatter in
         formatter.forEach(.linebreak) { i, _ in
             formatter.replaceToken(at: i, with: .linebreak(formatter.options.linebreak))
@@ -1474,7 +1479,8 @@ public struct _FormatRules {
         help: """
         Normalizes the order for property/function/class specifiers (public, weak,
         lazy, etc.)
-        """
+        """,
+        isSilent: true
     ) { formatter in
         formatter.forEach(.keyword) { i, token in
             switch token.string {

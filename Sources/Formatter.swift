@@ -45,6 +45,8 @@ public class Formatter: NSObject {
     private var disabledNext = 0
     private var wasNextDirective = false
     public var help = ""
+    public var isSilent = false
+    public var ruleIndex = 0
 
     // Current rule, used for handling comment directives
     var currentRule: String? {
@@ -96,13 +98,21 @@ public class Formatter: NSObject {
     /// The options that the formatter was initialized with
     public let options: FormatOptions
 
+    private let _fileName: String
+
     /// The token array managed by the formatter (read-only)
     public private(set) var tokens: [TokenWL]
 
+    /// The warning strings of the applyed tokens.
+    public private(set) var warnings = [String]()
+    private var _prevLineNum = -1
+    private var _prevRuleIndex = -1
+
     /// Create a new formatter instance from a token array
-    public init(_ tokens: [TokenWL], options: FormatOptions = FormatOptions()) {
+    public init(_ tokens: [TokenWL], fileName: String = "", options: FormatOptions = FormatOptions()) {
         self.tokens = tokens
         self.options = options
+        _fileName = fileName
     }
 
     // MARK: access and mutation
@@ -118,6 +128,7 @@ public class Formatter: NSObject {
         if tokens.isEmpty {
             removeToken(at: index)
         } else {
+            _printWarning(self.tokens[index].lineNum)
             self.tokens[index].token = tokens[0]
             for (i, token) in tokens.dropFirst().enumerated() {
                 insertToken(token, at: index + i + 1)
@@ -129,6 +140,7 @@ public class Formatter: NSObject {
     public func replaceTokens(inRange range: Range<Int>, with tokens: [Token]) {
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
+            _printWarning(self.tokens[range.lowerBound + i].lineNum)
             self.tokens[range.lowerBound + i].token = tokens[i]
         }
         if range.count > max {
@@ -149,6 +161,7 @@ public class Formatter: NSObject {
 
     /// Removes the token at the specified index
     public func removeToken(at index: Int) {
+        _printWarning(tokens[index].lineNum)
         tokens.remove(at: index)
         if enumerationIndex >= index {
             enumerationIndex -= 1
@@ -167,6 +180,7 @@ public class Formatter: NSObject {
 
     /// Removes the last token
     public func removeLastToken() {
+        _printWarning(tokens.last!.lineNum)
         tokens.removeLast()
     }
 
@@ -174,6 +188,7 @@ public class Formatter: NSObject {
     public func insertTokens(_ tokens: [Token], at index: Int) {
         let ln = self.tokens[index - 1].lineNum
         for token in tokens.reversed() {
+            _printWarning(ln)
             self.tokens.insert((token, ln), at: index)
         }
         if enumerationIndex >= index {
@@ -186,7 +201,19 @@ public class Formatter: NSObject {
         insertTokens([token], at: index)
     }
 
-    // MARK: enumeration
+    // MARK: - Show warnings
+
+    private func _printWarning(_ lineNumber: Int) {
+        defer { _prevLineNum = lineNumber; _prevRuleIndex = ruleIndex }
+        guard !isSilent, lineNumber != _prevLineNum || ruleIndex != _prevRuleIndex else { return }
+        warnings.append("\(_fileName):\(lineNumber):1: warning: \(help)")
+    }
+
+    public func resetWarnings() {
+        warnings = []
+    }
+
+    // MARK: - Enumeration
 
     /// Loops through each token in the array. It is safe to mutate the token
     /// array inside the body block, but note that the index and token arguments
@@ -231,7 +258,7 @@ public class Formatter: NSObject {
         forEachToken(where: { $0.is(type) }, body)
     }
 
-    // MARK: utilities
+    // MARK: - Utilities
 
     /// Returns the index of the next token in the specified range that matches the block
     public func index(in range: CountableRange<Int>, where matches: (Token) -> Bool) -> Int? {

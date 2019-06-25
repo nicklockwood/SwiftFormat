@@ -627,7 +627,7 @@ func computeHash(_ source: String) -> String {
     return "\(count)\(hash)"
 }
 
-func format(_ source: String, options: Options, verbose: Bool) throws -> String {
+func format(_ source: String, options: Options, verbose: Bool, filename: String = "") throws -> String {
     // Parse source
     let originalTokens = tokenize(source)
     var tokens = originalTokens
@@ -637,16 +637,19 @@ func format(_ source: String, options: Options, verbose: Bool) throws -> String 
     let ruleNames = Array(options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)).sorted()
     let rules = ruleNames.compactMap { rulesByName[$0] }
     var rulesApplied = Set<String>()
-    let callback: ((Int, [TokenWL]) -> Void)? = verbose ? { i, updatedTokens in
-        if updatedTokens != tokens {
-            rulesApplied.insert(ruleNames[i])
-            tokens = updatedTokens
+    let callback: ((Int, [TokenWL], [String]) -> Void)? = verbose ? { i, updatedTokens, warnings in
+        guard updatedTokens != tokens else { return }
+
+        rulesApplied.insert(ruleNames[i])
+        warnings.forEach {
+            print($0)
         }
+        tokens = updatedTokens
     } : nil
 
     // Apply rules
     let formatOptions = options.formatOptions ?? .default
-    tokens = try applyRules(rules, to: tokens, with: formatOptions, callback: callback)
+    tokens = try applyRules(rules, to: tokens, with: formatOptions, fileName: filename, callback: callback)
 
     // Display info
     if verbose {
@@ -747,7 +750,7 @@ func processInput(_ inputURLs: [URL],
                         print("-- no changes (cached)", as: .success)
                     }
                 } else {
-                    output = try format(input, options: options, verbose: verbose)
+                    output = try format(input, options: options, verbose: verbose, filename: inputURL.path)
                     if output != input {
                         sourceHash = nil
                     }

@@ -141,7 +141,7 @@ To use it safely, do the following:
 
     If you used `--inferoptions` to generate a suggested set of options in step 3, you should copy and paste them into the command, either before or after the path(s) to your source files.
     
-    If you have created a [config file](#config-file), you can specify its path using `--config "/path/to/your/config-file/". Alternatively, if you name the file `.swiftformat` and place it inside the project you are formatting, it will be picked up automatically.
+    If you have created a [config file](#config-file), you can specify its path using `--config "/path/to/your/config-file/"`. Alternatively, if you name the file `.swiftformat` and place it inside the project you are formatting, it will be picked up automatically.
 
 5. Press enter to begin formatting. Once the formatting is complete, use your source control system to check the changes, and verify that no undesirable changes have been introduced. If they have, revert the changes, tweak the options and try again.
 

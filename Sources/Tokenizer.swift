@@ -1051,6 +1051,10 @@ private extension UnicodeScalarView {
     }
 }
 
+public func pureTokenize(_ source: String) -> [Token] {
+    return tokenize(source).map { $0.token }
+}
+
 public func tokenize(_ source: String) -> [TokenWL] {
     var scopeIndexStack: [Int] = []
     var tokens: [TokenWL] = []

@@ -3555,7 +3555,7 @@ public struct _FormatRules {
         }
         guard !header.isEmpty else { return }
         let headerTokens = tokenize(header).map { $0.token }
-        if formatter.tokens.prefix(headerTokens.count).map({ $0.token }) == headerTokens {
+        if formatter.tokens.prefix(upTo: headerTokens.count).map({ $0.token }) == headerTokens {
             formatter.removeTokens(inRange: 0 ..< headerTokens.count)
         }
         if formatter.tokens.first?.token.isSpaceOrLinebreak == false {

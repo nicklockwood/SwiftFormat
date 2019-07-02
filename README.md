@@ -71,6 +71,9 @@ You can install the `swiftformat` command-line tool on macOS using [Homebrew](ht
 ```bash
 $ brew update
 $ brew install swiftformat
+
+// To update to the latest version once installed
+$ brew upgrade swiftformat
 ```
 
 Alternatively, you can install the tool on macOS or Linux by using [Mint](https://github.com/yonaskolb/Mint) as follows:

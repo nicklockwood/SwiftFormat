@@ -419,14 +419,14 @@ public func applyRules(_ rules: [FormatRule],
     // Recursively apply rules until no changes are detected
     let group = DispatchGroup()
     let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
-    let timeout = TimeInterval(tokens.count) / 1000
+    let timeout = !tokens.isEmpty ? TimeInterval(tokens.count) / 1000 : TimeInterval(1)
     for _ in 0 ..< 10 {
         let formatter = Formatter(tokens, fileName: fileName, options: options)
         for (i, rule) in rules.enumerated() {
+            formatter.help = rule.help
+            formatter.isSilent = rule.isSilent
+            formatter.ruleIndex = i
             queue.async(group: group) {
-                formatter.help = rule.help
-                formatter.isSilent = rule.isSilent
-                formatter.ruleIndex = i
                 rule.apply(with: formatter)
             }
             guard group.wait(timeout: .now() + timeout) != .timedOut else {

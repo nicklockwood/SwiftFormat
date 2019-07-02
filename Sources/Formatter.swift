@@ -186,7 +186,7 @@ public class Formatter: NSObject {
 
     /// Inserts an array of tokens at the specified index
     public func insertTokens(_ tokens: [Token], at index: Int) {
-        let ln = self.tokens[index - 1].lineNum
+        let ln = index > 0 ? self.tokens[index - 1].lineNum : 0
         for token in tokens.reversed() {
             _printWarning(ln)
             self.tokens.insert((token, ln), at: index)

@@ -1686,6 +1686,8 @@ public func tokenize(_ source: String) -> [TokenWL] {
         }
     }
 
+    _resetLine()
+
     // Ignore hashbang at start of file
     if source.hasPrefix("#!") {
         characters.removeFirst(2)

@@ -204,7 +204,10 @@ public class Formatter: NSObject {
     // MARK: - Show warnings
 
     private func _printWarning(_ lineNumber: Int) {
-        defer { _prevLineNum = lineNumber; _prevRuleIndex = ruleIndex }
+        defer {
+            _prevLineNum = lineNumber
+            _prevRuleIndex = ruleIndex
+        }
         guard !isSilent, lineNumber != _prevLineNum || ruleIndex != _prevRuleIndex else { return }
         warnings.append("\(_fileName):\(lineNumber):1: warning: \(help)")
     }

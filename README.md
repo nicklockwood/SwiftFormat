@@ -73,6 +73,12 @@ $ brew update
 $ brew install swiftformat
 ```
 
+To update to the latest version once installed:
+
+```bash
+$ brew upgrade swiftformat
+```
+
 Alternatively, you can install the tool on macOS or Linux by using [Mint](https://github.com/yonaskolb/Mint) as follows:
 
 ```bash

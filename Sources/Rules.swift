@@ -1901,7 +1901,10 @@ public struct _FormatRules {
 
         // Check specifiers don't include `lazy`
         formatter.forEach(.keyword("var")) { i, _ in
-            if formatter.specifiersForType(at: i, contains: "lazy") {
+            if formatter.specifiersForType(at: i, contains: {
+                let string = $1.string
+                return string == "lazy" || (string != "@objc" && string.hasPrefix("@"))
+            }) {
                 return // Can't remove the init
             }
             // Check this isn't a Codable

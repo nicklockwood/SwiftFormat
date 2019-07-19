@@ -5039,6 +5039,20 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testNoRemoveNilInitWithCustomAttribute() {
+        let input = "@Foo var foo: Int? = nil"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantNilInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRemoveNilInitWithObjcAttributes() {
+        let input = "@objc var foo: Int? = nil"
+        let output = "@objc var foo: Int?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantNilInit]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // MARK: redundantLet
 
     func testRemoveRedundantLet() {

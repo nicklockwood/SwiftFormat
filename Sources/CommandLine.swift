@@ -550,10 +550,6 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
 
         if outputFlags.filesWritten == 0 {
             if outputFlags.filesChecked == 0 {
-                if let error = errors.first {
-                    errors.removeAll()
-                    throw error
-                }
                 if outputFlags.filesSkipped == 0 {
                     let inputPaths = inputURLs.map { $0.path }.joined(separator: ", ")
                     throw FormatError.options("No eligible files found at \(inputPaths)")

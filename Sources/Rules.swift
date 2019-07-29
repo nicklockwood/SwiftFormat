@@ -3276,16 +3276,23 @@ public struct _FormatRules {
                 formatter.insertToken(.startOfScope("("), at: i)
             }
         }
-        if formatter.options.useVoid {
-            formatter.forEach(.startOfScope("(")) { i, _ in
-                if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .operator("->", .infix),
-                    let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
-                        $0 == .endOfScope(")")
-                    }), !isArgumentToken(at: nextIndex) {
-                    // Replace with Void
-                    formatter.replaceTokens(inRange: i ... nextIndex, with: [.identifier("Void")])
-                }
+        guard formatter.options.useVoid else {
+            return
+        }
+        formatter.forEach(.startOfScope("(")) { i, _ in
+            guard let endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
+                $0 == .endOfScope(")")
+            }), let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
+                !isArgumentToken(at: endIndex) else {
+                return
             }
+            if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .operator("->", .infix) {
+                formatter.replaceTokens(inRange: i ... endIndex, with: [.identifier("Void")])
+            } else if prevToken == .startOfScope("<") ||
+                (prevToken == .delimiter(",") && formatter.currentScope(at: i) == .startOfScope("<")) {
+                formatter.replaceTokens(inRange: i ... endIndex, with: [.identifier("Void")])
+            }
+            // TODO: other cases
         }
     }
 

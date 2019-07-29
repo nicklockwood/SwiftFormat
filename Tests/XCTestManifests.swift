@@ -485,6 +485,7 @@ extension RulesTests {
         ("testEmptyClosureArgsNotMangled", testEmptyClosureArgsNotMangled),
         ("testEmptyClosureArgsNotUnwrapped", testEmptyClosureArgsNotUnwrapped),
         ("testEmptyClosureReturnValueConvertedToVoid", testEmptyClosureReturnValueConvertedToVoid),
+        ("testEmptyParensInGenericsConvertedToVoid", testEmptyParensInGenericsConvertedToVoid),
         ("testEmptyParensReturnValueConvertedToVoid", testEmptyParensReturnValueConvertedToVoid),
         ("testEnumCaseIndenting", testEnumCaseIndenting),
         ("testEnumCaseIndentingCommas", testEnumCaseIndentingCommas),

@@ -3864,6 +3864,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
     }
 
+    func testEmptyParensInGenericsConvertedToVoid() {
+        let input = "Foo<(), ()>"
+        let output = "Foo<Void, Void>"
+        XCTAssertEqual(try format(input, rules: [FormatRules.void]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // useVoid = false
 
     func testUseVoidOptionFalse() {
@@ -4701,21 +4708,21 @@ class RulesTests: XCTestCase {
         let input = "let foo = Foo<Bar, (), ()>"
         let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["void"])), output + "\n")
     }
 
     func testParensNotRemovedAroundTupleGenerics() {
         let input = "let foo = Foo<Bar, (Int, String), ()>"
         let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["void"])), output + "\n")
     }
 
     func testParensNotRemovedAroundLabeledTupleGenerics() {
         let input = "let foo = Foo<Bar, (a: Int, b: String), ()>"
         let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["void"])), output + "\n")
     }
 
     // after indexed tuple

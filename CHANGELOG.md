@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.40.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.11) (2019-07-29)
+
+- Added `--xcodeindentation` option to use Xcode-style indentation for guards and enums
+- The `redundantNilInit` rule no longer removes `nil` for properties using property wrappers
+- Fixed bug where `redundantParens` rule incorrectly stripped Void generic arguments
+- The `void` rule is now correctly applied to generic type parameters
+
 ## [0.40.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.10) (2019-06-23)
 
 - The `emptyBraces` rule no longer removes linebreaks in chained `else`/`catch` blocks

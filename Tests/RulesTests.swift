@@ -4697,6 +4697,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testParensNotRemovedAroundVoidGenerics() {
+        let input = "let foo = Foo<Bar, (), ()>"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testParensNotRemovedAroundTupleGenerics() {
+        let input = "let foo = Foo<Bar, (Int, String), ()>"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testParensNotRemovedAroundLabeledTupleGenerics() {
+        let input = "let foo = Foo<Bar, (a: Int, b: String), ()>"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantParens]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // after indexed tuple
 
     func testParensNotRemovedAfterTupleIndex() {

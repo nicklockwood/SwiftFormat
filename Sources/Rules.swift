@@ -1787,7 +1787,8 @@ public struct _FormatRules {
                     // TODO: this is confusing - refactor to move fallthrough to end of case
                     fallthrough
                 }
-                if formatter.index(of: .delimiter(","), in: i + 1 ..< closingIndex) != nil {
+                if formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: i + 1 ..< closingIndex) == nil ||
+                    formatter.index(of: .delimiter(","), in: i + 1 ..< closingIndex) != nil {
                     // Might be a tuple, so we won't remove the parens
                     // TODO: improve the logic here so we don't misidentify function calls as tuples
                     return

@@ -67,7 +67,7 @@ public struct CLI {
 
 private var quietMode = false
 private func print(_ message: String, as type: CLI.OutputType = .info) {
-    if !quietMode || [.content, .error].contains(type) {
+    if !quietMode || [.raw, .content, .error].contains(type) {
         CLI.print(message, type)
     }
 }

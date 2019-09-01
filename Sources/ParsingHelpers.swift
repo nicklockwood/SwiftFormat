@@ -52,6 +52,26 @@ extension Formatter {
         return startIndex
     }
 
+    // get type of declaratiob starting at index of declaration keyword
+    func declarationType(at index: Int) -> String? {
+        guard case let .keyword(keyword)? = token(at: index) else {
+            return nil
+        }
+        switch keyword {
+        case "let", "var", "func", "init", "subscript", "struct", "enum":
+            return keyword
+        case "class":
+            if let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
+                $0.isKeyword
+            }) {
+                return declarationType(at: nextIndex)
+            }
+            return keyword
+        default:
+            return nil
+        }
+    }
+
     // gather declared name(s), starting at index of declaration keyword
     func namesInDeclaration(at index: Int) -> Set<String>? {
         guard case let .keyword(keyword)? = token(at: index) else {

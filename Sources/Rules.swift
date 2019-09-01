@@ -4104,6 +4104,13 @@ public struct _FormatRules {
                 case let .identifier(typeName)? = formatter.next(.identifier, after: typeIndex) else {
                 return
             }
+            // Get member type
+            guard let keywordIndex = formatter.index(of: .keyword, in: i + 1 ..< endIndex),
+                let memberType = formatter.declarationType(at: keywordIndex),
+                // TODO: check if member types are exposed in the interface, otherwise convert them too
+                ["let", "var", "func", "init"].contains(memberType) else {
+                return
+            }
             // Check that type doesn't (potentially) conform to a protocol
             // TODO: use a whitelist of known protocols to make this check less blunt
             guard !formatter.tokens[typeIndex ..< scopeIndex].contains(.delimiter(":")) else {
@@ -4128,20 +4135,18 @@ public struct _FormatRules {
                 return
             }
             // Check if member is referenced outside type
-            if let keywordIndex = formatter.index(of: .keyword, in: i + 1 ..< endIndex) {
-                if formatter.tokens[keywordIndex] == .identifier("init") {
-                    // Make initializer private if it's not called anywhere
-                    if !isTypeInitialized(typeName, in: 0 ..< startIndex),
-                        isTypeInitialized(typeName, in: endIndex + 1 ..< formatter.tokens.count) {
-                        formatter.replaceToken(at: i, with: .keyword("private"))
-                    }
-                } else if let names = formatter.namesInDeclaration(at: keywordIndex), !names.contains(where: {
-                    isMemberReferenced($0, in: 0 ..< startIndex) ||
-                        isMemberReferenced($0, in: endIndex + 1 ..< formatter.tokens.count)
-                }), formatter.tokens[typeIndex] != .keyword("class") ||
-                    !membersAreReferenced(names, inSubclassOf: typeName) {
+            if memberType == "init" {
+                // Make initializer private if it's not called anywhere
+                if !isTypeInitialized(typeName, in: 0 ..< startIndex),
+                    !isTypeInitialized(typeName, in: endIndex + 1 ..< formatter.tokens.count) {
                     formatter.replaceToken(at: i, with: .keyword("private"))
                 }
+            } else if let names = formatter.namesInDeclaration(at: keywordIndex), !names.contains(where: {
+                isMemberReferenced($0, in: 0 ..< startIndex) ||
+                    isMemberReferenced($0, in: endIndex + 1 ..< formatter.tokens.count)
+            }), formatter.tokens[typeIndex] != .keyword("class") ||
+                !membersAreReferenced(names, inSubclassOf: typeName) {
+                formatter.replaceToken(at: i, with: .keyword("private"))
             }
         }
     }

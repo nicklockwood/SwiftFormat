@@ -9617,6 +9617,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testFileprivateInitNotChangedToPrivateIfConstructorCalledOutsideType2() {
+        let input = """
+        class Foo {
+            fileprivate init() {}
+        }
+
+        struct Bar {
+            let foo = Foo()
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testFileprivateStructMemberNotChangedToPrivateIfConstructorCalledOutsideType() {
         let input = """
         struct Foo {
@@ -9657,6 +9673,42 @@ class RulesTests: XCTestCase {
             fileprivate static func == (_: Foo, _: Foo) -> Bool {
                 return true
             }
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateInnerTypeNotChangedToPrivate() {
+        let input = """
+        struct Foo {
+            fileprivate enum Bar {
+                case a, b
+            }
+
+            fileprivate let bar: Bar
+        }
+
+        func foo(foo: Foo) {
+            print(foo.bar)
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testFileprivateClassTypeMemberNotChangedToPrivate() {
+        let input = """
+        class Foo {
+            fileprivate class var bar = "bar"
+        }
+
+        func foo() {
+            print(Foo.bar)
         }
         """
         let output = input

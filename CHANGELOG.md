@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.40.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.12) (2019-09-20)
+
+- Fixed crash when compiling with Xcode 11
+- Fixed `redundantFileprivate` rule breaking inner types
+- Fixed `--quiet` option preventing formatting code to stdout
+
 ## [0.40.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.11) (2019-07-29)
 
 - Added `--xcodeindentation` option to use Xcode-style indentation for guards and enums

@@ -2220,18 +2220,18 @@ public struct _FormatRules {
         """,
         options: ["self", "selfrequired"]
     ) { formatter in
-        let selfRequired = formatter.options.selfRequired + [
-            "expect", // Special case to support autoclosure arguments in the Nimble framework
-        ]
-        var typeStack = [String]()
-        var membersByType = [String: Set<String>]()
-        var classMembersByType = [String: Set<String>]()
-        let explicitSelf = formatter.options.explicitSelf
         func processBody(at index: inout Int,
                          localNames: Set<String>,
                          members: Set<String>,
+                         typeStack: inout [String],
+                         membersByType: inout [String: Set<String>],
+                         classMembersByType: inout [String: Set<String>],
                          isTypeRoot: Bool,
                          isInit: Bool) {
+            let selfRequired = formatter.options.selfRequired + [
+                "expect", // Special case to support autoclosure arguments in the Nimble framework
+            ]
+            let explicitSelf = formatter.options.explicitSelf
             let currentScope = formatter.currentScope(at: index)
             let isWhereClause = index > 0 && formatter.tokens[index - 1] == .keyword("where")
             assert(isWhereClause || currentScope.map { token -> Bool in
@@ -2357,10 +2357,14 @@ public struct _FormatRules {
                         if !isTypeRoot {
                             return // error unless formatter.options.fragment = true
                         }
-                        processFunction(at: &index, localNames: localNames, members: classMembers)
+                        processFunction(at: &index, localNames: localNames, members: classMembers,
+                                        typeStack: &typeStack, membersByType: &membersByType,
+                                        classMembersByType: &classMembersByType)
                         classOrStatic = false
                     } else {
-                        processFunction(at: &index, localNames: localNames, members: members)
+                        processFunction(at: &index, localNames: localNames, members: members,
+                                        typeStack: &typeStack, membersByType: &membersByType,
+                                        classMembersByType: &classMembersByType)
                     }
                     assert(formatter.token(at: index) != .endOfScope("}"))
                     continue
@@ -2382,7 +2386,9 @@ public struct _FormatRules {
                     }
                     index = scopeStart + 1
                     typeStack.append(name)
-                    processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: true, isInit: false)
+                    processBody(at: &index, localNames: ["init"], members: [], typeStack: &typeStack,
+                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                isTypeRoot: true, isInit: false)
                     typeStack.removeLast()
                 case .keyword("var"), .keyword("let"):
                     index += 1
@@ -2410,7 +2416,9 @@ public struct _FormatRules {
                             return // error
                         }
                         index = startIndex + 1
-                        processBody(at: &index, localNames: scopedNames, members: members, isTypeRoot: false, isInit: isInit)
+                        processBody(at: &index, localNames: scopedNames, members: members, typeStack: &typeStack,
+                                    membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                    isTypeRoot: false, isInit: isInit)
                         lastKeyword = ""
                     default:
                         lastKeyword = token.string
@@ -2431,7 +2439,9 @@ public struct _FormatRules {
                         }
                     }
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
+                    processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                isTypeRoot: false, isInit: isInit)
                     continue
                 case .keyword("while") where lastKeyword == "repeat":
                     lastKeyword = ""
@@ -2462,7 +2472,9 @@ public struct _FormatRules {
                     var localNames = localNames
                     localNames.insert("error") // Implicit error argument
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
+                    processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where lastKeyword == "in":
                     lastKeyword = ""
@@ -2479,10 +2491,14 @@ public struct _FormatRules {
                     index += 1
                     if classOrStatic {
                         assert(isTypeRoot)
-                        processBody(at: &index, localNames: localNames, members: classMembers, isTypeRoot: false, isInit: false)
+                        processBody(at: &index, localNames: localNames, members: classMembers, typeStack: &typeStack,
+                                    membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                    isTypeRoot: false, isInit: false)
                         classOrStatic = false
                     } else {
-                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
+                        processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                                    membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                    isTypeRoot: false, isInit: isInit)
                     }
                     continue
                 case .startOfScope("{") where isWhereClause:
@@ -2495,7 +2511,9 @@ public struct _FormatRules {
                         switch token {
                         case .endOfScope("case"), .endOfScope("default"):
                             let localNames = localNames
-                            processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
+                            processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                                        membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                        isTypeRoot: false, isInit: isInit)
                             index -= 1
                         case .endOfScope("}"):
                             break loop
@@ -2512,7 +2530,9 @@ public struct _FormatRules {
                     fallthrough
                 case .startOfScope("{") where lastKeyword == "repeat":
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
+                    processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
                     lastKeyword = ""
@@ -2538,7 +2558,9 @@ public struct _FormatRules {
                     }
                     if let name = name {
                         processAccessors(["get", "set", "willSet", "didSet"], for: name,
-                                         at: &index, localNames: localNames, members: members)
+                                         at: &index, localNames: localNames, members: members,
+                                         typeStack: &typeStack, membersByType: &membersByType,
+                                         classMembersByType: &classMembersByType)
                     }
                     continue
                 case .startOfScope:
@@ -2630,7 +2652,7 @@ public struct _FormatRules {
                         }
                     } else if let _ /* scope */ = scopeStack.last {
                         // TODO: fix this bug
-//                        assert(token.isEndOfScope(scope))
+                        //                        assert(token.isEndOfScope(scope))
                         scopeStack.removeLast()
                     } else {
                         assert(token.isEndOfScope(formatter.currentScope(at: index)!))
@@ -2645,10 +2667,11 @@ public struct _FormatRules {
                 index += 1
             }
         }
-        func processAccessors(
-            _ names: [String], for name: String, at index: inout Int,
-            localNames: Set<String>, members: Set<String>
-        ) {
+        func processAccessors(_ names: [String], for name: String, at index: inout Int,
+                              localNames: Set<String>, members: Set<String>,
+                              typeStack: inout [String],
+                              membersByType: inout [String: Set<String>],
+                              classMembersByType: inout [String: Set<String>]) {
             var foundAccessors = false
             var localNames = localNames
             while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
@@ -2675,7 +2698,9 @@ public struct _FormatRules {
                         break
                     }
                 }
-                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: false)
+                processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                            membersByType: &membersByType, classMembersByType: &classMembersByType,
+                            isTypeRoot: false, isInit: false)
             }
             if foundAccessors {
                 guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
@@ -2683,10 +2708,15 @@ public struct _FormatRules {
             } else {
                 index += 1
                 localNames.insert(name)
-                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: false)
+                processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                            membersByType: &membersByType, classMembersByType: &classMembersByType,
+                            isTypeRoot: false, isInit: false)
             }
         }
-        func processFunction(at index: inout Int, localNames: Set<String>, members: Set<String>) {
+        func processFunction(at index: inout Int, localNames: Set<String>, members: Set<String>,
+                             typeStack: inout [String],
+                             membersByType: inout [String: Set<String>],
+                             classMembersByType: inout [String: Set<String>]) {
             let startToken = formatter.tokens[index]
             var localNames = localNames
             guard let startIndex = formatter.index(of: .startOfScope("("), after: index),
@@ -2733,18 +2763,29 @@ public struct _FormatRules {
             }
             if startToken == .keyword("subscript") {
                 index = bodyStartIndex
-                processAccessors(["get", "set"], for: "", at: &index, localNames: localNames, members: members)
+                processAccessors(["get", "set"], for: "", at: &index, localNames: localNames,
+                                 members: members, typeStack: &typeStack, membersByType: &membersByType,
+                                 classMembersByType: &classMembersByType)
+                return
             } else {
                 index = bodyStartIndex + 1
                 processBody(at: &index,
                             localNames: localNames,
                             members: members,
+                            typeStack: &typeStack,
+                            membersByType: &membersByType,
+                            classMembersByType: &classMembersByType,
                             isTypeRoot: false,
                             isInit: startToken == .keyword("init"))
             }
         }
+        var typeStack = [String]()
+        var membersByType = [String: Set<String>]()
+        var classMembersByType = [String: Set<String>]()
         var index = 0
-        processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false, isInit: false)
+        processBody(at: &index, localNames: ["init"], members: [], typeStack: &typeStack,
+                    membersByType: &membersByType, classMembersByType: &classMembersByType,
+                    isTypeRoot: false, isInit: false)
     }
 
     /// Replace unused arguments with an underscore

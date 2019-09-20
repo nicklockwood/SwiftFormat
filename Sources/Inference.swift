@@ -569,16 +569,17 @@ private struct Inference {
 
     // TODO: handle init-only case
     let explicitSelf = OptionInferrer { formatter, options in
-        let selfRequired = formatter.options.selfRequired + [
-            "expect", // Special case to support autoclosure arguments in the Nimble framework
-        ]
-        var removed = 0, unremoved = 0
-        var initRemoved = 0, initUnremoved = 0
-        var typeStack = [String]()
-        var membersByType = [String: Set<String>]()
-        var classMembersByType = [String: Set<String>]()
-        func processBody(at index: inout Int, localNames: Set<String>, members: Set<String>, isTypeRoot: Bool,
+        func processBody(at index: inout Int, localNames: Set<String>, members: Set<String>,
+                         typeStack: inout [String],
+                         membersByType: inout [String: Set<String>],
+                         classMembersByType: inout [String: Set<String>],
+                         removed: inout Int, unremoved: inout Int,
+                         initRemoved: inout Int, initUnremoved: inout Int,
+                         isTypeRoot: Bool,
                          isInit: Bool) {
+            let selfRequired = formatter.options.selfRequired + [
+                "expect", // Special case to support autoclosure arguments in the Nimble framework
+            ]
             let currentScope = formatter.currentScope(at: index)
             let isWhereClause = index > 0 && formatter.tokens[index - 1] == .keyword("where")
             assert(isWhereClause || currentScope.map { token -> Bool in
@@ -684,10 +685,18 @@ private struct Inference {
                         if !isTypeRoot {
                             return // error
                         }
-                        processFunction(at: &index, localNames: localNames, members: classMembers)
+                        processFunction(at: &index, localNames: localNames, members: classMembers,
+                                        typeStack: &typeStack, membersByType: &membersByType,
+                                        classMembersByType: &classMembersByType,
+                                        removed: &removed, unremoved: &unremoved,
+                                        initRemoved: &initRemoved, initUnremoved: &initUnremoved)
                         classOrStatic = false
                     } else {
-                        processFunction(at: &index, localNames: localNames, members: members)
+                        processFunction(at: &index, localNames: localNames, members: members,
+                                        typeStack: &typeStack, membersByType: &membersByType,
+                                        classMembersByType: &classMembersByType,
+                                        removed: &removed, unremoved: &unremoved,
+                                        initRemoved: &initRemoved, initUnremoved: &initUnremoved)
                     }
                     assert(formatter.token(at: index) != .endOfScope("}"))
                     continue
@@ -709,7 +718,11 @@ private struct Inference {
                     }
                     index = scopeStart + 1
                     typeStack.append(name)
-                    processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: true, isInit: false)
+                    processBody(at: &index, localNames: ["init"], members: [], typeStack: &typeStack,
+                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                removed: &removed, unremoved: &unremoved,
+                                initRemoved: &initRemoved, initUnremoved: &initUnremoved,
+                                isTypeRoot: true, isInit: false)
                     typeStack.removeLast()
                 case .keyword("var"), .keyword("let"):
                     index += 1
@@ -737,7 +750,11 @@ private struct Inference {
                             return // error
                         }
                         index = startIndex + 1
-                        processBody(at: &index, localNames: scopedNames, members: members, isTypeRoot: false, isInit: isInit)
+                        processBody(at: &index, localNames: scopedNames, members: members, typeStack: &typeStack,
+                                    membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                    removed: &removed, unremoved: &unremoved,
+                                    initRemoved: &initRemoved, initUnremoved: &initUnremoved,
+                                    isTypeRoot: false, isInit: isInit)
                         lastKeyword = ""
                     default:
                         lastKeyword = token.string
@@ -756,7 +773,11 @@ private struct Inference {
                         }
                     }
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
+                    processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                removed: &removed, unremoved: &unremoved,
+                                initRemoved: &initRemoved, initUnremoved: &initUnremoved,
+                                isTypeRoot: false, isInit: isInit)
                     continue
                 case .keyword("while") where lastKeyword == "repeat":
                     lastKeyword = ""
@@ -787,7 +808,11 @@ private struct Inference {
                     var localNames = localNames
                     localNames.insert("error") // Implicit error argument
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
+                    processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                removed: &removed, unremoved: &unremoved,
+                                initRemoved: &initRemoved, initUnremoved: &initUnremoved,
+                                isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where lastKeyword == "in":
                     lastKeyword = ""
@@ -804,10 +829,18 @@ private struct Inference {
                     index += 1
                     if classOrStatic {
                         assert(isTypeRoot)
-                        processBody(at: &index, localNames: localNames, members: classMembers, isTypeRoot: false, isInit: false)
+                        processBody(at: &index, localNames: localNames, members: classMembers, typeStack: &typeStack,
+                                    membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                    removed: &removed, unremoved: &unremoved,
+                                    initRemoved: &initRemoved, initUnremoved: &initUnremoved,
+                                    isTypeRoot: false, isInit: false)
                         classOrStatic = false
                     } else {
-                        processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
+                        processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                                    membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                    removed: &removed, unremoved: &unremoved,
+                                    initRemoved: &initRemoved, initUnremoved: &initUnremoved,
+                                    isTypeRoot: false, isInit: isInit)
                     }
                     continue
                 case .startOfScope("{") where isWhereClause:
@@ -820,7 +853,11 @@ private struct Inference {
                         switch token {
                         case .endOfScope("case"), .endOfScope("default"):
                             let localNames = localNames
-                            processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
+                            processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                                        membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                        removed: &removed, unremoved: &unremoved,
+                                        initRemoved: &initRemoved, initUnremoved: &initUnremoved,
+                                        isTypeRoot: false, isInit: isInit)
                             index -= 1
                         case .endOfScope("}"):
                             break loop
@@ -837,7 +874,11 @@ private struct Inference {
                     fallthrough
                 case .startOfScope("{") where lastKeyword == "repeat":
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: isInit)
+                    processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                removed: &removed, unremoved: &unremoved,
+                                initRemoved: &initRemoved, initUnremoved: &initUnremoved,
+                                isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
                     lastKeyword = ""
@@ -863,7 +904,11 @@ private struct Inference {
                     }
                     if let name = name {
                         processAccessors(["get", "set", "willSet", "didSet"], for: name,
-                                         at: &index, localNames: localNames, members: members)
+                                         at: &index, localNames: localNames, members: members,
+                                         typeStack: &typeStack, membersByType: &membersByType,
+                                         classMembersByType: &classMembersByType,
+                                         removed: &removed, unremoved: &unremoved,
+                                         initRemoved: &initRemoved, initUnremoved: &initUnremoved)
                     }
                     continue
                 case .startOfScope:
@@ -966,10 +1011,13 @@ private struct Inference {
                 index += 1
             }
         }
-        func processAccessors(
-            _ names: [String], for name: String, at index: inout Int,
-            localNames: Set<String>, members: Set<String>
-        ) {
+        func processAccessors(_ names: [String], for name: String, at index: inout Int,
+                              localNames: Set<String>, members: Set<String>,
+                              typeStack: inout [String],
+                              membersByType: inout [String: Set<String>],
+                              classMembersByType: inout [String: Set<String>],
+                              removed: inout Int, unremoved: inout Int,
+                              initRemoved: inout Int, initUnremoved: inout Int) {
             var foundAccessors = false
             var localNames = localNames
             while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
@@ -996,7 +1044,11 @@ private struct Inference {
                         break
                     }
                 }
-                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: false)
+                processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                            membersByType: &membersByType, classMembersByType: &classMembersByType,
+                            removed: &removed, unremoved: &unremoved,
+                            initRemoved: &initRemoved, initUnremoved: &initUnremoved,
+                            isTypeRoot: false, isInit: false)
             }
             if foundAccessors {
                 guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
@@ -1004,10 +1056,19 @@ private struct Inference {
             } else {
                 index += 1
                 localNames.insert(name)
-                processBody(at: &index, localNames: localNames, members: members, isTypeRoot: false, isInit: false)
+                processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                            membersByType: &membersByType, classMembersByType: &classMembersByType,
+                            removed: &removed, unremoved: &unremoved,
+                            initRemoved: &initRemoved, initUnremoved: &initUnremoved,
+                            isTypeRoot: false, isInit: false)
             }
         }
-        func processFunction(at index: inout Int, localNames: Set<String>, members: Set<String>) {
+        func processFunction(at index: inout Int, localNames: Set<String>, members: Set<String>,
+                             typeStack: inout [String],
+                             membersByType: inout [String: Set<String>],
+                             classMembersByType: inout [String: Set<String>],
+                             removed: inout Int, unremoved: inout Int,
+                             initRemoved: inout Int, initUnremoved: inout Int) {
             let startToken = formatter.tokens[index]
             var localNames = localNames
             guard let startIndex = formatter.index(of: .startOfScope("("), after: index),
@@ -1054,18 +1115,35 @@ private struct Inference {
             }
             if startToken == .keyword("subscript") {
                 index = bodyStartIndex
-                processAccessors(["get", "set"], for: "", at: &index, localNames: localNames, members: members)
+                processAccessors(["get", "set"], for: "", at: &index, localNames: localNames,
+                                 members: members, typeStack: &typeStack, membersByType: &membersByType,
+                                 classMembersByType: &classMembersByType,
+                                 removed: &removed, unremoved: &unremoved,
+                                 initRemoved: &initRemoved, initUnremoved: &initUnremoved)
             } else {
                 index = bodyStartIndex + 1
                 processBody(at: &index,
                             localNames: localNames,
                             members: members,
+                            typeStack: &typeStack,
+                            membersByType: &membersByType,
+                            classMembersByType: &classMembersByType,
+                            removed: &removed, unremoved: &unremoved,
+                            initRemoved: &initRemoved, initUnremoved: &initUnremoved,
                             isTypeRoot: false,
                             isInit: startToken == .keyword("init"))
             }
         }
+        var removed = 0, unremoved = 0
+        var initRemoved = 0, initUnremoved = 0
+        var typeStack = [String]()
+        var membersByType = [String: Set<String>]()
+        var classMembersByType = [String: Set<String>]()
         var index = 0
-        processBody(at: &index, localNames: ["init"], members: [], isTypeRoot: false, isInit: false)
+        processBody(at: &index, localNames: ["init"], members: [], typeStack: &typeStack,
+                    membersByType: &membersByType, classMembersByType: &classMembersByType,
+                    removed: &removed, unremoved: &unremoved, initRemoved: &initRemoved,
+                    initUnremoved: &initUnremoved, isTypeRoot: false, isInit: false)
         // if both zero or equal, should be true
         if removed >= unremoved {
             options.explicitSelf = (initRemoved >= initUnremoved ? .remove : .initOnly)

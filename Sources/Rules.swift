@@ -2104,7 +2104,11 @@ public struct _FormatRules {
                 if formatter.tokens[prevIndex] == .endOfScope(")"),
                     let j = formatter.index(of: .startOfScope("("), before: prevIndex) {
                     prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: j) ?? j
-                    guard formatter.tokens[prevIndex].isIdentifier else {
+                    if formatter.tokens[prevIndex] == .operator("?", .postfix) {
+                        prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex) ?? prevIndex
+                    }
+                    let prevToken = formatter.tokens[prevIndex]
+                    guard prevToken.isIdentifier || prevToken == .keyword("init") else {
                         return
                     }
                 }
@@ -2121,14 +2125,11 @@ public struct _FormatRules {
                     prevKeywordIndex = prevIndex
                     keyword = formatter.tokens[prevKeywordIndex].string
                 }
-                if [
-                    "func", "throws", "rethrows", "init", "subscript", "else", "if",
-                    "case", "where", "for", "in", "while", "repeat", "do", "catch",
-                ].contains(keyword) {
+                if ["else", "if", "case", "where", "for", "in", "while", "repeat", "do", "catch"].contains(keyword) {
                     return
                 }
                 if ["let", "var"].contains(keyword) {
-                    guard prevToken == .operator("=", .infix) ||
+                    guard formatter.options.swiftVersion >= "5.1" || prevToken == .operator("=", .infix) ||
                         formatter.lastIndex(of: .operator("=", .infix), in: prevKeywordIndex + 1 ..< prevIndex) != nil
                     else {
                         return
@@ -2136,6 +2137,10 @@ public struct _FormatRules {
                     if let prev = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevKeywordIndex),
                         (prev.isKeyword && ["if", "case", "for", "while", "where"].contains(prev.string))
                         || prev == .delimiter(",") {
+                        return
+                    }
+                } else if ["func", "throws", "rethrows", "init", "subscript"].contains(keyword) {
+                    if formatter.options.swiftVersion < "5.1" {
                         return
                     }
                 }

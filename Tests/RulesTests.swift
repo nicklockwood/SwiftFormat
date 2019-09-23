@@ -5298,6 +5298,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testRemoveReturnInComputedVar() {
+        let input = "var foo: Int { return 5 }"
+        let output = "var foo: Int { 5 }"
+        let options = FormatOptions(swiftVersion: "5.1")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testNoRemoveReturnInGet() {
         let input = "var foo: Int {\n    get { return 5 }\n    set { _foo = newValue }\n}"
         let output = "var foo: Int {\n    get { return 5 }\n    set { _foo = newValue }\n}"
@@ -5324,6 +5332,59 @@ class RulesTests: XCTestCase {
         let output = "func foo() -> Int { return 5 }"
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRemoveReturnInFunction() {
+        let input = "func foo() -> Int { return 5 }"
+        let output = "func foo() -> Int { 5 }"
+        let options = FormatOptions(swiftVersion: "5.1")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testNoRemoveReturnInOperatorFunction() {
+        let input = "func + (lhs: Int, rhs: Int) -> Int { return 5 }"
+        let output = "func + (lhs: Int, rhs: Int) -> Int { return 5 }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"])), output + "\n")
+    }
+
+    func testRemoveReturnInOperatorFunction() {
+        let input = "func + (lhs: Int, rhs: Int) -> Int { return 5 }"
+        let output = "func + (lhs: Int, rhs: Int) -> Int { 5 }"
+        let options = FormatOptions(swiftVersion: "5.1")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
+    }
+
+    func testNoRemoveReturnInFailableInit() {
+        let input = "init?() { return nil }"
+        let output = "init?() { return nil }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testRemoveReturnInFailableInit() {
+        let input = "init?() { return nil }"
+        let output = "init?() { nil }"
+        let options = FormatOptions(swiftVersion: "5.1")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testNoRemoveReturnInSubscript() {
+        let input = "subscript(index: Int) -> String { return nil }"
+        let output = "subscript(index: Int) -> String { return nil }"
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"])), output + "\n")
+    }
+
+    func testRemoveReturnInSubscript() {
+        let input = "subscript(index: Int) -> String { return nil }"
+        let output = "subscript(index: Int) -> String { nil }"
+        let options = FormatOptions(swiftVersion: "5.1")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
     }
 
     func testNoRemoveReturnInForIn() {

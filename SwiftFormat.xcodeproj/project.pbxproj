@@ -464,6 +464,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 01A0EAB81D5DB4D000A0A8E3 /* Build configuration list for PBXNativeTarget "SwiftFormat" */;
 			buildPhases = (
+				01CAB4412339503F00AE244F /* Generate Linux Tests */,
 				01A0EA9F1D5DB4CF00A0A8E3 /* Sources */,
 				0142F06D1D72B4A6007D66CC /* Format Code */,
 				01A0EAA01D5DB4CF00A0A8E3 /* Frameworks */,
@@ -601,10 +602,9 @@
 			};
 			buildConfigurationList = 01A0EA9E1D5DB4CF00A0A8E3 /* Build configuration list for PBXProject "SwiftFormat" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
 				Base,
 			);
@@ -690,7 +690,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/format.sh\"";
+			shellScript = "\"${SRCROOT}/format.sh\"\n";
 		};
 		017AEBB31D6F27D500764325 /* Copy Binary */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -719,6 +719,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "cp -r \"${BUILT_PRODUCTS_DIR}/SwiftFormat for Xcode.app\" EditorExtension/";
+		};
+		01CAB4412339503F00AE244F /* Generate Linux Tests */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Linux Tests";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "swift test --generate-linuxmain\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

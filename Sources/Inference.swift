@@ -413,16 +413,18 @@ private struct Inference {
         var hoisted = 0, unhoisted = 0
 
         func hoistable(_ keyword: String, in range: CountableRange<Int>) -> Bool {
-            var found = 0, keywordFound = false, identifierFound = false
+            var count = 0, keywordFound = false, identifierFound = false
             for index in range {
                 switch formatter.tokens[index] {
                 case .keyword(keyword):
                     keywordFound = true
-                    found += 1
                 case .identifier("_"):
                     break
                 case .identifier where formatter.last(.nonSpaceOrComment, before: index)?.string != ".":
                     identifierFound = true
+                    if keywordFound {
+                        count += 1
+                    }
                 case .delimiter(","):
                     guard keywordFound || !identifierFound else { return false }
                     keywordFound = false
@@ -433,7 +435,7 @@ private struct Inference {
                     break
                 }
             }
-            return (keywordFound || !identifierFound) && found > 0
+            return (keywordFound || !identifierFound) && count > 0
         }
 
         formatter.forEach(.startOfScope("(")) { i, _ in

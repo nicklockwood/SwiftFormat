@@ -2971,6 +2971,7 @@ public struct _FormatRules {
         func indicesOf(_ keyword: String, in range: CountableRange<Int>) -> [Int]? {
             var indices = [Int]()
             var keywordFound = false, identifierFound = false
+            var count = 0
             for index in range {
                 switch formatter.tokens[index] {
                 case .keyword(keyword):
@@ -2980,8 +2981,13 @@ public struct _FormatRules {
                     break
                 case .identifier where formatter.last(.nonSpaceOrComment, before: index) != .operator(".", .prefix):
                     identifierFound = true
+                    if keywordFound {
+                        count += 1
+                    }
                 case .delimiter(","):
-                    guard keywordFound || !identifierFound else { return nil }
+                    guard keywordFound || !identifierFound else {
+                        return nil
+                    }
                     keywordFound = false
                     identifierFound = false
                 case .startOfScope("{"):
@@ -2990,7 +2996,7 @@ public struct _FormatRules {
                     break
                 }
             }
-            return !identifierFound || !keywordFound || indices.isEmpty ? nil : indices
+            return (keywordFound || !identifierFound) && count > 0 ? indices : nil
         }
 
         formatter.forEach(.startOfScope("(")) { i, _ in
@@ -3043,7 +3049,9 @@ public struct _FormatRules {
                     return
                 }
             }
-            guard let endIndex = formatter.index(of: .endOfScope(")"), after: openParenIndex) else { return }
+            guard let endIndex = formatter.index(of: .endOfScope(")"), after: openParenIndex) else {
+                return
+            }
             if hoist {
                 // Find let/var keyword indices
                 guard let indices: [Int] = {
@@ -3052,7 +3060,9 @@ public struct _FormatRules {
                         return indicesOf(keyword, in: openParenIndex + 1 ..< endIndex)
                     }
                     return indices
-                }() else { return }
+                }() else {
+                    return
+                }
                 // Remove keywords inside parens
                 for index in indices.reversed() {
                     if formatter.tokens[index + 1].isSpace {

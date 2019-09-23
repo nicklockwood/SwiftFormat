@@ -465,6 +465,12 @@ class InferenceTests: XCTestCase {
         XCTAssertFalse(options.hoistPatternLet)
     }
 
+    func testInferUnhoisted2() {
+        let input = "if case .foo(let bar, _) = quux {}"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertFalse(options.hoistPatternLet)
+    }
+
     // MARK: removeSelf
 
     func testInferInsertSelf() {

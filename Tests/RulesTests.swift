@@ -7498,9 +7498,16 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["redundantParens"])), output + "\n")
     }
 
-    func testHoistIfArgIsUnderscore() {
+    func testHoistIfFirstArgIsUnderscore() {
         let input = "if case .foo(_, let baz) = quux {}"
         let output = "if case let .foo(_, baz) = quux {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testHoistIfSecondArgIsUnderscore() {
+        let input = "if case .foo(let baz, _) = quux {}"
+        let output = "if case let .foo(baz, _) = quux {}"
         XCTAssertEqual(try format(input, rules: [FormatRules.hoistPatternLet]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }

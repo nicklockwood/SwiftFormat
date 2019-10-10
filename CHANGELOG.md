@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.40.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.13) (2019-10-10)
+
+- The `redundantReturn` rule now removes `return` from functions and computed properties in Swift 5.1
+- Fixed a bug with `let` hoisting
+
 ## [0.40.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.12) (2019-09-20)
 
 - Fixed crash when compiling with Xcode 11

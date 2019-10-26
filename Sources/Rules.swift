@@ -1393,8 +1393,8 @@ public struct _FormatRules {
     /// Ensure that TODO, MARK and FIXME comments are followed by a : as required
     public let todos = FormatRule(
         help: """
-        Ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon
-        (else they're ignored by Xcode).
+        Ensures that `TODO:`, `MARK:` and `FIXME:` comments are correctly formatted
+        (otherwise they're ignored by Xcode).
         """
     ) { formatter in
         formatter.forEachToken { i, token in
@@ -1406,6 +1406,18 @@ public struct _FormatRules {
                 removedSpace = true
                 string = string.replacingOccurrences(of: "^/(\\s+)", with: "", options: .regularExpression)
             }
+            for pair in [
+                "todo:": "TODO:",
+                "todo :": "TODO:",
+                "fixme:": "FIXME:",
+                "fixme :": "FIXME:",
+                "mark:": "MARK:",
+                "mark :": "MARK:",
+                "mark-": "MARK: -",
+                "mark -": "MARK: -",
+            ] where string.lowercased().hasPrefix(pair.0) {
+                string = pair.1 + string.dropFirst(pair.0.count)
+            }
             guard let tag = ["TODO", "MARK", "FIXME"].first(where: { string.hasPrefix($0) }) else {
                 return
             }
@@ -1415,7 +1427,10 @@ public struct _FormatRules {
                 return
             }
             while let first = suffix.unicodeScalars.first, " :".unicodeScalars.contains(first) {
-                suffix = String(suffix.unicodeScalars.dropFirst())
+                suffix = String(suffix.dropFirst())
+            }
+            if tag == "MARK", suffix.hasPrefix("-"), suffix != "-", !suffix.hasPrefix("- ") {
+                suffix = "- " + suffix.dropFirst()
             }
             formatter.replaceToken(at: i, with: .commentBody(tag + ":" + (suffix.isEmpty ? "" : " \(suffix)")))
             if removedSpace {

@@ -1350,8 +1350,8 @@ set to 4.2 or above.
 
 ## todos
 
-Ensures that `TODO:`, `MARK:` and `FIXME:` comments include the trailing colon
-(else they're ignored by Xcode).
+Ensures that `TODO:`, `MARK:` and `FIXME:` comments are correctly formatted
+(otherwise they're ignored by Xcode).
 
 <details>
 <summary>Examples</summary>

@@ -3415,6 +3415,69 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testLowercaseMarkColonIsUpdated() {
+        let input = "// mark: foo"
+        let output = "// MARK: foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.todos]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testMixedCaseMarkColonIsUpdated() {
+        let input = "// Mark: foo"
+        let output = "// MARK: foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.todos]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testLowercaseMarkIsNotUpdated() {
+        let input = "// mark as read"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.todos]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testMixedCaseMarkIsNotUpdated() {
+        let input = "// Mark as read"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.todos]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testLowercaseMarkDashIsUpdated() {
+        let input = "// mark - foo"
+        let output = "// MARK: - foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.todos]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSpaceAddedBeforeMarkDash() {
+        let input = "// MARK:- foo"
+        let output = "// MARK: - foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.todos]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSpaceAddedAfterMarkDash() {
+        let input = "// MARK: -foo"
+        let output = "// MARK: - foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.todos]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSpaceAddedAroundMarkDash() {
+        let input = "// MARK:-foo"
+        let output = "// MARK: - foo"
+        XCTAssertEqual(try format(input, rules: [FormatRules.todos]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSpaceNotAddedAfterMarkDashAtEndOfString() {
+        let input = "// MARK: -"
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.todos]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // MARK: semicolons
 
     func testSemicolonRemovedAtEndOfLine() {

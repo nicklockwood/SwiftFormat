@@ -996,6 +996,7 @@ extension RulesTests {
         ("testNoStripHeaderIfNextRuleDisabled", testNoStripHeaderIfNextRuleDisabled),
         ("testNoStripHeaderIfRuleDisabled", testNoStripHeaderIfRuleDisabled),
         ("testNoStripHeaderWhenDisabled", testNoStripHeaderWhenDisabled),
+        ("testNoStripPackageHeader", testNoStripPackageHeader),
         ("testNoTruncateBlankLine", testNoTruncateBlankLine),
         ("testNoUnhoistIfArgIsNamespacedEnumCaseLiteralInParens", testNoUnhoistIfArgIsNamespacedEnumCaseLiteralInParens),
         ("testNoUnhoistIfLetTuple", testNoUnhoistIfLetTuple),

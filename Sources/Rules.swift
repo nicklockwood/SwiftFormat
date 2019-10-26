@@ -3475,7 +3475,8 @@ public struct _FormatRules {
             case .startOfScope("//"):
                 if case let .commentBody(body)? = formatter.next(.nonSpace, after: startIndex) {
                     formatter.processCommentBody(body)
-                    if !formatter.isEnabled || (body.hasPrefix("/") && !body.hasPrefix("//")) {
+                    if !formatter.isEnabled || (body.hasPrefix("/") && !body.hasPrefix("//")) ||
+                        body.hasPrefix("swift-tools-version") {
                         return
                     }
                 }

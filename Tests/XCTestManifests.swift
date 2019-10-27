@@ -875,6 +875,7 @@ extension RulesTests {
         ("testNoRemoveReturnAfterKeyPath", testNoRemoveReturnAfterKeyPath),
         ("testNoRemoveReturnAfterMultipleAs", testNoRemoveReturnAfterMultipleAs),
         ("testNoRemoveReturnAfterParentheses", testNoRemoveReturnAfterParentheses),
+        ("testNoRemoveReturnInCatch", testNoRemoveReturnInCatch),
         ("testNoRemoveReturnInComputedVar", testNoRemoveReturnInComputedVar),
         ("testNoRemoveReturnInFailableInit", testNoRemoveReturnInFailableInit),
         ("testNoRemoveReturnInForIn", testNoRemoveReturnInForIn),

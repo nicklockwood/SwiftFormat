@@ -2150,7 +2150,7 @@ public struct _FormatRules {
                         return
                     }
                     if let prev = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevKeywordIndex),
-                        (prev.isKeyword && ["if", "case", "for", "while", "where"].contains(prev.string))
+                        (prev.isKeyword && ["if", "case", "for", "while", "where", "catch"].contains(prev.string))
                         || prev == .delimiter(",") {
                         return
                     }

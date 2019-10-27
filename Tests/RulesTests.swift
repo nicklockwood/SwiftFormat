@@ -5441,6 +5441,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
     }
 
+    func testNoRemoveReturnInCatch() {
+        let input = """
+        func foo() -> Int {
+            do {
+                return try Bar()
+            } catch let e as Error {
+                return -1
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "5.1")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantReturn], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testNoRemoveReturnInForIn() {
         let input = "for foo in bar { return 5 }"
         let output = "for foo in bar { return 5 }"

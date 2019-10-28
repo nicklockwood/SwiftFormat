@@ -8869,6 +8869,21 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testNoReplaceAndInViewBuilder() {
+        let input = """
+        SomeView {
+            if foo == 5 && bar {
+                Text("5")
+            } else {
+                Text("Not 5")
+            }
+        }
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.andOperator]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // MARK: isEmpty
 
     // count == 0

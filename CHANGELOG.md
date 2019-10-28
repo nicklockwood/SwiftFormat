@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.40.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.14) (2019-10-28)
+
+- The `redundantReturn` rule no longer incorrectly removes `return` inside `catch let` statements
+- The `andOperator` rule no longer replaces `&&` with `,` inside function builder blocks
+- Fixed a bug where `redundantFileprivate` rule incorrectly made overridden `fileprivate init` methods private
+- The `fileHeader` rule no longer strips tools version header from `Package.swift` files
+- The `todos` rule now recognizes and fixes a wider variety of typos
+
 ## [0.40.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.13) (2019-10-10)
 
 - The `redundantReturn` rule now removes `return` from functions and computed properties in Swift 5.1

@@ -19,5 +19,6 @@ DerivedData
 *.ipa
 *.dot
 .build
+.swiftpm
 
 /Snapshots/Private

@@ -9878,6 +9878,52 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testOverriddenFileprivateInitNotChangedToPrivate() {
+        let input = """
+        class Foo {
+            fileprivate init() {}
+        }
+
+        class Bar: Foo, Equatable {
+            public override init() {
+                super.init()
+            }
+        }
+        """
+        let output = input
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testNonOverriddenFileprivateInitChangedToPrivate() {
+        let input = """
+        class Foo {
+            fileprivate init() {}
+        }
+
+        class Bar: Baz {
+            public override init() {
+                super.init()
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            private init() {}
+        }
+
+        class Bar: Baz {
+            public override init() {
+                super.init()
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantFileprivate], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // MARK: yodaConditions
 
     func testNumericLiteralEqualYodaCondition() {

@@ -298,6 +298,11 @@ public class Formatter: NSObject {
         return self.index(of: type, after: index, if: matches).map { tokens[$0] }
     }
 
+    /// Returns the next token in the specified range of the specified type
+    public func next(_ type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return index(of: type, in: range, if: matches).map { tokens[$0] }
+    }
+
     /// Returns the index of the last token in the specified range that matches the block
     public func lastIndex(in range: CountableRange<Int>, where matches: (Token) -> Bool) -> Int? {
         let range = range.clamped(to: 0 ..< tokens.count)
@@ -362,6 +367,11 @@ public class Formatter: NSObject {
     /// Returns the previous token at the current scope of the specified type
     public func last(_ type: TokenType, before index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
         return self.index(of: type, before: index, if: matches).map { tokens[$0] }
+    }
+
+    /// Returns the previous token in the specified range of the specified type
+    public func last(_ type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+        return lastIndex(of: type, in: range, if: matches).map { tokens[$0] }
     }
 
     /// Returns the starting token for the containing scope at the specified index

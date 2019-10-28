@@ -4088,8 +4088,7 @@ public struct _FormatRules {
         }
         func isTypeInitialized(_ name: String, in range: CountableRange<Int>) -> Bool {
             for i in range {
-                let token = formatter.tokens[i]
-                guard case .identifier(name) = token else { continue }
+                guard case .identifier(name) = formatter.tokens[i] else { continue }
                 if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
                     $0 == .operator(".", .infix)
                 }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: dotIndex) == .identifier("init") {
@@ -4102,14 +4101,27 @@ public struct _FormatRules {
         }
         func isMemberReferenced(_ name: String, in range: CountableRange<Int>) -> Bool {
             for i in range {
-                let token = formatter.tokens[i]
-                guard case .identifier(name) = token else { continue }
+                guard case .identifier(name) = formatter.tokens[i] else { continue }
                 if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
                     $0 == .operator(".", .infix)
                 }), formatter.last(.nonSpaceOrCommentOrLinebreak, before: dotIndex)
                     != .identifier("self") {
                     return true
                 }
+            }
+            return false
+        }
+        func isInitOverridden(for type: String, in range: CountableRange<Int>) -> Bool {
+            for i in range {
+                guard case .keyword("init") = formatter.tokens[i],
+                    formatter.specifiersForType(at: i, contains: "override"),
+                    let scopeIndex = formatter.index(of: .startOfScope("{"), before: i),
+                    let colonIndex = formatter.index(of: .delimiter(":"), before: scopeIndex),
+                    formatter.next(.nonSpaceOrCommentOrLinebreak, in: colonIndex + 1 ..< scopeIndex)
+                    == .identifier(type) else {
+                    continue
+                }
+                return true
             }
             return false
         }
@@ -4175,7 +4187,9 @@ public struct _FormatRules {
             if memberType == "init" {
                 // Make initializer private if it's not called anywhere
                 if !isTypeInitialized(typeName, in: 0 ..< startIndex),
-                    !isTypeInitialized(typeName, in: endIndex + 1 ..< formatter.tokens.count) {
+                    !isTypeInitialized(typeName, in: endIndex + 1 ..< formatter.tokens.count),
+                    !isInitOverridden(for: typeName, in: 0 ..< startIndex),
+                    !isInitOverridden(for: typeName, in: endIndex + 1 ..< formatter.tokens.count) {
                     formatter.replaceToken(at: i, with: .keyword("private"))
                 }
             } else if let names = formatter.namesInDeclaration(at: keywordIndex), !names.contains(where: {

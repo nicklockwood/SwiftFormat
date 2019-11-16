@@ -3258,14 +3258,17 @@ public struct _FormatRules {
             let firstIdentifierIndex = formatter.index(of:
                 .nonSpaceOrCommentOrLinebreak, after: i) ?? firstLinebreakIndex
             switch mode {
-            case .beforeFirst,
-                 .preserve where firstIdentifierIndex > firstLinebreakIndex:
+            case .beforeFirst:
+                wrapArgumentsBeforeFirst(startOfScope: i,
+                                         closingBraceIndex: closingBraceIndex,
+                                         allowGrouping: firstIdentifierIndex > firstLinebreakIndex,
+                                         closingBraceOnSameLine: closingBraceOnSameLine)
+            case .preserve where firstIdentifierIndex > firstLinebreakIndex:
                 wrapArgumentsBeforeFirst(startOfScope: i,
                                          closingBraceIndex: closingBraceIndex,
                                          allowGrouping: true,
                                          closingBraceOnSameLine: closingBraceOnSameLine)
-            case .afterFirst,
-                 .preserve:
+            case .afterFirst, .preserve:
                 wrapArgumentsAfterFirst(startOfScope: i,
                                         closingBraceIndex: closingBraceIndex,
                                         allowGrouping: true)

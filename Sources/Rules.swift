@@ -3115,11 +3115,116 @@ public struct _FormatRules {
         }
     }
 
+    public let wrap = FormatRule(
+        help: "Wrap lines that are longer than the maxium width.",
+        options: ["maxwidth"],
+        sharedOptions: ["indent", "tabwidth", "linebreaks"]
+    ) { formatter in
+        let maxWidth = formatter.options.maxWidth
+        guard maxWidth > 0 else { return }
+        var lineLength = 0
+        var lastBreakPoint: Int?
+        var lastBreakPointPriority = Int.min
+        var currentPriority = 0
+        var widthAtLastBreakPoint = 0
+        var stringLiteralDepth = 0
+        var indent = ""
+        var alreadyLinewrapped = false
+        func addBreakPoint(at i: Int, relativePriority: Int) {
+            guard stringLiteralDepth == 0, currentPriority + relativePriority >= lastBreakPointPriority,
+                !formatter.isInClosureArguments(at: i + 1) else {
+                return
+            }
+            let i = formatter.index(of: .nonSpace, before: i + 1) ?? i
+            if formatter.token(at: i + 1)?.isLinebreak == true || formatter.token(at: i)?.isLinebreak == true {
+                return
+            }
+            lastBreakPoint = i
+            lastBreakPointPriority = currentPriority + relativePriority
+            widthAtLastBreakPoint = formatter.lineLength(upTo: i + 1)
+        }
+        func isLinewrapToken(_ token: Token?) -> Bool {
+            switch token {
+            case .delimiter?, .operator(_, .infix)?:
+                return true
+            default:
+                return false
+            }
+        }
+        formatter.forEachToken { i, token in
+            switch token {
+            case .linebreak:
+                lineLength = 0
+                lastBreakPoint = nil
+                indent = formatter.indentForLine(at: i + 1)
+                alreadyLinewrapped = isLinewrapToken(formatter.last(.nonSpaceOrComment, before: i))
+                return
+            case .delimiter(","):
+                addBreakPoint(at: i, relativePriority: 0)
+            case .operator("=", .infix):
+                addBreakPoint(at: i, relativePriority: -9)
+            case .operator(".", .infix):
+                addBreakPoint(at: i - 1, relativePriority: -2)
+            case .operator("->", .infix):
+                addBreakPoint(at: i - 1, relativePriority: -11)
+            case .operator(_, .infix):
+                addBreakPoint(at: i, relativePriority: -3)
+            case .startOfScope("{") where !formatter.isStartOfClosure(at: i):
+                addBreakPoint(at: i, relativePriority: -6)
+                currentPriority -= 6
+            case .endOfScope("}"):
+                currentPriority += 6
+                addBreakPoint(at: i - 1, relativePriority: -6)
+            case .startOfScope("["):
+                addBreakPoint(at: i, relativePriority: -7)
+                currentPriority -= 7
+            case .endOfScope("]"):
+                currentPriority += 7
+                addBreakPoint(at: i - 1, relativePriority: -7)
+            case .startOfScope("("):
+                addBreakPoint(at: i, relativePriority: -8)
+                currentPriority -= 8
+            case .endOfScope(")"):
+                currentPriority += 8
+                addBreakPoint(at: i - 1, relativePriority: -8)
+            case .startOfScope where token.isStringDelimiter:
+                stringLiteralDepth += 1
+            case .endOfScope where token.isStringDelimiter:
+                stringLiteralDepth -= 1
+            case .keyword("else"):
+                addBreakPoint(at: i - 1, relativePriority: -1)
+            case .keyword("in"):
+                if formatter.last(.keyword, before: i) == .keyword("for") {
+                    addBreakPoint(at: i, relativePriority: -11)
+                    break
+                }
+                addBreakPoint(at: i, relativePriority: -5)
+            default:
+                break
+            }
+            lineLength += formatter.tokenLength(token)
+            if lineLength > maxWidth, let breakPoint = lastBreakPoint, breakPoint < i {
+                if let token = formatter.token(at: breakPoint + 1), token.isSpace {
+                    lineLength -= formatter.tokenLength(token)
+                }
+                if !alreadyLinewrapped {
+                    indent += formatter.options.indent
+                }
+                alreadyLinewrapped = true
+                formatter.insertSpace(indent, at: breakPoint + 1)
+                formatter.insertLinebreak(at: breakPoint + 1)
+                lineLength += formatter.tokenLength(.space(indent)) - widthAtLastBreakPoint
+                lastBreakPoint = nil
+                lastBreakPointPriority = .min
+            }
+        }
+    }
+
     /// Normalize argument wrapping style
     public let wrapArguments = FormatRule(
         help: "Wraps function arguments and collection literals.",
-        options: ["wraparguments", "wrapcollections", "closingparen", "maxwidth"],
-        sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth"]
+        options: ["wraparguments", "wrapcollections", "closingparen"],
+        sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
         func removeLinebreakBeforeEndOfScope(at endOfScope: inout Int) {

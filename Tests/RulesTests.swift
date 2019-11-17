@@ -7880,6 +7880,116 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["redundantParens"]), options: options), output + "\n")
     }
 
+    // MARK: wrap
+
+    func testWrapIfStatement() {
+        let input = """
+        if let foo = foo, let bar = bar, let baz = baz {}
+        """
+        let output = """
+        if let foo = foo,
+            let bar = bar,
+            let baz = baz {}
+        """
+        let options = FormatOptions(maxWidth: 20)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrap], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testWrapIfElseStatement() {
+        let input = """
+        if let foo = foo {} else if let bar = bar {}
+        """
+        let output = """
+        if let foo = foo {}
+            else if let bar =
+            bar {}
+        """
+        let options = FormatOptions(maxWidth: 20)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrap], options: options), output)
+        let output2 = """
+        if let foo = foo {}
+        else if let bar =
+            bar {}
+        """
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output2 + "\n")
+    }
+
+    func testWrapGuardStatement() {
+        let input = """
+        guard let foo = foo, let bar = bar else {
+            break
+        }
+        """
+        let output = """
+        guard let foo = foo,
+            let bar = bar
+            else {
+            break
+        }
+        """
+        let options = FormatOptions(maxWidth: 20)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrap], options: options), output)
+        let output2 = """
+        guard let foo = foo,
+            let bar = bar
+        else {
+            break
+        }
+        """
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output2 + "\n")
+    }
+
+    func testWrapClosure() {
+        let input = """
+        let foo = { () -> Bool in true }
+        """
+        let output = """
+        let foo =
+            { () -> Bool in
+            true }
+        """
+        let options = FormatOptions(maxWidth: 20)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrap], options: options), output)
+        let output2 = """
+        let foo =
+            { () -> Bool in
+            true
+        }
+        """
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output2 + "\n")
+    }
+
+    func testWrapClosure2() {
+        let input = """
+        let foo = { bar, _ in bar }
+        """
+        let output = """
+        let foo =
+            { bar, _ in
+            bar }
+        """
+        let options = FormatOptions(maxWidth: 20)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrap], options: options), output)
+        let output2 = """
+        let foo =
+            { bar, _ in
+            bar
+        }
+        """
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output2 + "\n")
+    }
+
+    func testNoWrapInterpolatedStringLiteral() {
+        let input = """
+        "a very long \\(string) literal"
+        """
+        let output = input
+        let options = FormatOptions(maxWidth: 20)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrap], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // MARK: wrapArguments
 
     // afterFirst
@@ -8225,7 +8335,7 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 20)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments", "wrap"]), options: options), output + "\n")
     }
 
     func testWrapAfterFirstIfMaxLengthExceeded2() {
@@ -8239,7 +8349,7 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 20)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments", "wrap"]), options: options), output + "\n")
     }
 
     func testWrapAfterFirstIfMaxLengthExceeded3() {

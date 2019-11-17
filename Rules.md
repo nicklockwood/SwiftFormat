@@ -60,6 +60,7 @@
 * [typeSugar](#typeSugar)
 * [unusedArguments](#unusedArguments)
 * [void](#void)
+* [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
 * [yodaConditions](#yodaConditions)
 
@@ -1537,6 +1538,14 @@ Option | Description
 </details>
 <br/>
 
+## wrap
+
+Wrap lines that are longer than the maxium width.
+
+Option | Description
+--- | ---
+`--maxwidth` | Maximum length of a line before wrapping. defaults to "none"
+
 ## wrapArguments
 
 Wraps function arguments and collection literals.
@@ -1546,7 +1555,6 @@ Option | Description
 `--wraparguments` | Wrap function args: "before-first", "after-first", "preserve"
 `--wrapcollections` | Wrap array/dict: "before-first", "after-first", "preserve"
 `--closingparen` | Closing paren position: "balanced" (default) or "same-line"
-`--maxwidth` | Maximum length of a line before wrapping. defaults to "none"
 
 <details>
 <summary>Examples</summary>

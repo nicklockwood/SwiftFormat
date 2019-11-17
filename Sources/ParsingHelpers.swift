@@ -54,6 +54,8 @@ extension Formatter {
             return string.reduce(0) { count, character in
                 count + (character == "\t" ? tabWidth : 1)
             }
+        case .linebreak:
+            return 0
         default:
             return token.string.count
         }
@@ -285,6 +287,28 @@ extension Formatter {
             i = prevTokenIndex
         }
         return true
+    }
+
+    func isInClosureArguments(at i: Int) -> Bool {
+        var i = i
+        while let token = self.token(at: i) {
+            switch token {
+            case .keyword("in"):
+                guard let scopeIndex = index(of: .startOfScope, before: i) else {
+                    return false
+                }
+                return isStartOfClosure(at: scopeIndex)
+            case .startOfScope("("), .startOfScope("["), .startOfScope("<"),
+                 .endOfScope(")"), .endOfScope("]"), .endOfScope(">"):
+                break
+            case .keyword, .startOfScope, .endOfScope:
+                return false
+            default:
+                break
+            }
+            i += 1
+        }
+        return false
     }
 
     func lastSignificantKeyword(at i: Int) -> String? {

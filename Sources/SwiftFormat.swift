@@ -209,7 +209,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
         return false
     }
 
-    func processDirectory(_ inputURL: URL, with options: inout Options) {
+    func processDirectory(_ inputURL: URL, with options: inout Options) throws {
         if options.formatOptions == nil {
             options.formatOptions = .default
         }
@@ -219,28 +219,18 @@ public func enumerateFiles(withInputURL inputURL: URL,
         )
         let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
         if manager.fileExists(atPath: configFile.path) {
-            do {
-                let data = try Data(contentsOf: configFile)
-                let args = try parseConfigFile(data)
-                try options.addArguments(args, in: inputURL.path)
-            } catch {
-                onComplete { throw error }
-                return
-            }
+            let data = try Data(contentsOf: configFile)
+            let args = try parseConfigFile(data)
+            try options.addArguments(args, in: inputURL.path)
         }
         let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
         if manager.fileExists(atPath: versionFile.path) {
-            do {
-                let versionString = try String(contentsOf: versionFile, encoding: .utf8)
-                guard let version = Version(rawValue: versionString) else {
-                    throw FormatError.options("Malformed \(swiftVersionFile) file at \(versionFile.path)")
-                }
-                assert(options.formatOptions != nil)
-                options.formatOptions?.swiftVersion = version
-            } catch {
-                onComplete { throw error }
-                return
+            let versionString = try String(contentsOf: versionFile, encoding: .utf8)
+            guard let version = Version(rawValue: versionString) else {
+                throw FormatError.options("Malformed \(swiftVersionFile) file at \(versionFile.path)")
             }
+            assert(options.formatOptions != nil)
+            options.formatOptions?.swiftVersion = version
         }
     }
 
@@ -278,7 +268,12 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 return
             }
             var options = options
-            processDirectory(inputURL, with: &options)
+            do {
+                try processDirectory(inputURL, with: &options)
+            } catch {
+                onComplete { throw error }
+                return
+            }
             let enumerationOptions: FileManager.DirectoryEnumerationOptions
             #if os(macOS)
                 enumerationOptions = .skipsHiddenFiles
@@ -318,7 +313,12 @@ public func enumerateFiles(withInputURL inputURL: URL,
             if shouldSkipFile(directory, with: options) {
                 return
             }
-            processDirectory(directory, with: &options)
+            do {
+                try processDirectory(directory, with: &options)
+            } catch {
+                onComplete { throw error }
+                return
+            }
         }
         enumerate(inputURL: inputURL, outputURL: outputURL, options: options)
     }

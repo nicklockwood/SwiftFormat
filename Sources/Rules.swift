@@ -1253,29 +1253,20 @@ public struct _FormatRules {
                 }
             } else {
                 // Implement K&R-style braces, where opening brace appears on the same line
-                var index = i - 1
-                var linebreakIndex: Int?
-                while let token = formatter.token(at: index) {
-                    switch token {
-                    case .linebreak:
-                        linebreakIndex = index
-                    case .space, .commentBody,
-                         .startOfScope("/*"), .startOfScope("//"),
-                         .endOfScope("*/"):
-                        break
-                    default:
-                        if let linebreakIndex = linebreakIndex {
-                            formatter.removeTokens(inRange: Range(linebreakIndex ... i))
-                            if formatter.token(at: linebreakIndex - 1)?.isSpace == true {
-                                formatter.removeToken(at: linebreakIndex - 1)
-                            }
-                            formatter.insertToken(.space(" "), at: index + 1)
-                            formatter.insertToken(.startOfScope("{"), at: index + 2)
-                        }
-                        return
-                    }
-                    index -= 1
+                guard let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                    prevIndex < i - 2 || formatter.tokens[i - 1] != .space(" ") else {
+                    return
                 }
+                formatter.removeToken(at: i)
+                if formatter.token(at: i - 1)?.isSpaceOrLinebreak == false {
+                    if formatter.token(at: i)?.isSpaceOrLinebreak == false {
+                        formatter.insertToken(.space(" "), at: i)
+                    }
+                } else if formatter.token(at: i)?.isSpaceOrLinebreak == true {
+                    formatter.removeToken(at: i - 1)
+                }
+                formatter.insertToken(.startOfScope("{"), at: prevIndex + 1)
+                formatter.insertToken(.space(" "), at: prevIndex + 1)
             }
         }
     }

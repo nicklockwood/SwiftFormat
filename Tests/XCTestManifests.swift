@@ -665,6 +665,7 @@ extension RulesTests {
         ("testKeywordAsIdentifierParensSpacing", testKeywordAsIdentifierParensSpacing),
         ("testKnRBracesAfterComment", testKnRBracesAfterComment),
         ("testKnRBracesAfterMultilineComment", testKnRBracesAfterMultilineComment),
+        ("testKnRBracesAfterMultilineComment2", testKnRBracesAfterMultilineComment2),
         ("testKnRBracesAreConverted", testKnRBracesAreConverted),
         ("testKnRClosingBraceWrapped", testKnRClosingBraceWrapped),
         ("testKnRExtraSpaceNotAddedBeforeBrace", testKnRExtraSpaceNotAddedBeforeBrace),

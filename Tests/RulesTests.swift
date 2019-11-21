@@ -3066,6 +3066,23 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testKnRBracesAfterMultilineComment2() {
+        let input = """
+        class Foo /*
+         aaa
+         */ {
+        }
+        """
+        let output = """
+        class Foo { /*
+         aaa
+         */
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testKnRExtraSpaceNotAddedBeforeBrace() {
         let input = "foo({ bar })"
         let output = "foo({ bar })"

@@ -108,16 +108,30 @@ class MetadataTests: XCTestCase {
             }
             let allOptions = rule.options + rule.sharedOptions
             for index in scopeStart + 1 ..< scopeEnd {
-                guard formatter.tokens[index] == .identifier("options"),
-                    formatter.token(at: index - 1) == .operator(".", .infix),
-                    formatter.token(at: index - 2) == .identifier("formatter"),
-                    formatter.token(at: index + 1) == .operator(".", .infix),
-                    case let .identifier(property)? = formatter.token(at: index + 2),
-                    let option = optionsByProperty[property] else {
+                switch formatter.tokens[index] {
+                case let .identifier(name) where [
+                    "spaceEquivalentToWidth",
+                    "spaceEquivalentToTokens",
+                    "tokenLength",
+                    "lineLength",
+                ].contains(name) &&
+                    formatter.token(at: index - 1) == .operator(".", .infix) &&
+                    formatter.token(at: index - 2) == .identifier("formatter"):
+                    XCTAssert(allOptions.contains("indent"), "indent not listed in \(name) rule")
+                    XCTAssert(allOptions.contains("tabwidth"), "indent not listed in \(name) rule")
+                    referencedOptions += ["indent", "tabwidth"]
+                case .identifier("options") where
+                    formatter.token(at: index - 1) == .operator(".", .infix) &&
+                    formatter.token(at: index - 2) == .identifier("formatter") &&
+                    formatter.token(at: index + 1) == .operator(".", .infix):
+                    if case let .identifier(property)? = formatter.token(at: index + 2),
+                        let option = optionsByProperty[property] {
+                        XCTAssert(allOptions.contains(option), "\(option) not listed in \(name) rule")
+                        referencedOptions.append(option)
+                    }
+                default:
                     continue
                 }
-                XCTAssert(allOptions.contains(option), "\(option) not listed in \(name) rule")
-                referencedOptions.append(option)
             }
             for option in allOptions {
                 XCTAssert(referencedOptions.contains(option), "\(option) not used in \(name) rule")

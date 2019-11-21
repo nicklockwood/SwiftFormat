@@ -1418,6 +1418,10 @@ extension RulesTests {
         ("testSwitchWrappedEnumCaseIndentingVariant2", testSwitchWrappedEnumCaseIndentingVariant2),
         ("testSwitchWrappedEnumCaseIsIndenting", testSwitchWrappedEnumCaseIsIndenting),
         ("testSwitchWrappedEnumCaseWithIndentCaseTrue", testSwitchWrappedEnumCaseWithIndentCaseTrue),
+        ("testTabIndentCase", testTabIndentCase),
+        ("testTabIndentCase2", testTabIndentCase2),
+        ("testTabIndentWrappedFunction", testTabIndentWrappedFunction),
+        ("testTabIndentWrappedTuple", testTabIndentWrappedTuple),
         ("testTernaryCountEqualsZero", testTernaryCountEqualsZero),
         ("testTernaryCountNotEqualToZero", testTernaryCountNotEqualToZero),
         ("testTernaryOfEnumValues", testTernaryOfEnumValues),
@@ -1540,6 +1544,7 @@ extension SwiftFormatTests {
         ("testLinebreakInferredForBlankLinesBetweenScopes", testLinebreakInferredForBlankLinesBetweenScopes),
         ("testNoTimeoutForEmptyFile", testNoTimeoutForEmptyFile),
         ("testOffsetForToken", testOffsetForToken),
+        ("testOffsetForTokenWithTabs", testOffsetForTokenWithTabs),
     ]
 }
 

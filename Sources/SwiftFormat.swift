@@ -337,13 +337,22 @@ public func enumerateFiles(withInputURL inputURL: URL,
 
 /// Get line/column offset for token
 /// Note: line indexes start at 1, columns start at zero
-public func offsetForToken(at index: Int, in tokens: [Token]) -> (line: Int, column: Int) {
+public func offsetForToken(at index: Int, in tokens: [Token], tabWidth: Int) -> (line: Int, column: Int) {
     var line = 1, column = 0
     for token in tokens[0 ..< index] {
-        if token.isLinebreak {
+        switch token {
+        case .linebreak:
             line += 1
             column = 0
-        } else {
+        case let .space(string), let .stringBody(string), let .commentBody(string):
+            guard tabWidth > 1 else {
+                column += string.count
+                break
+            }
+            column += string.reduce(0) { count, character in
+                count + (character == "\t" ? tabWidth : 1)
+            }
+        default:
             column += token.string.count
         }
     }
@@ -372,7 +381,7 @@ public func parsingError(for tokens: [Token], options: FormatOptions) -> FormatE
         default:
             preconditionFailure()
         }
-        let (line, column) = offsetForToken(at: index, in: tokens)
+        let (line, column) = offsetForToken(at: index, in: tokens, tabWidth: options.tabWidth)
         return .parsing("\(message) at \(line):\(column)")
     }
     return nil

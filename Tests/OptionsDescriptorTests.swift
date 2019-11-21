@@ -573,15 +573,13 @@ class OptionsDescriptorTests: XCTestCase {
             (input: "TABS", isValid: true),
             (input: "2", isValid: true),
             (input: "4", isValid: true),
-            (input: " 4", isValid: true),
-            (input: "4 ", isValid: true),
             (input: "foo", isValid: false),
             (input: "4,5 6 7", isValid: false),
             (input: "", isValid: false),
             (input: " ", isValid: false),
         ]
         let fromOptionExpectations: [OptionArgumentMapping<String>] = [
-            (optionValue: "\t", argumentValue: "tabs"),
+            (optionValue: "\t", argumentValue: "tab"),
             (optionValue: " ", argumentValue: "1"),
             (optionValue: "1234", argumentValue: "4"),
         ]

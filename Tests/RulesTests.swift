@@ -5716,14 +5716,22 @@ class RulesTests: XCTestCase {
 
     func testNoRemoveBackticksAroundKeypathKeywordProperty() {
         let input = "var type = \\.`default`"
-        let output = "var type = \\.`default`"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testRemoveBackticksAroundKeypathKeywordPropertyInSwift5() {
+        let input = "var type = \\.`default`"
+        let output = "var type = \\.default"
+        let options = FormatOptions(swiftVersion: "5")
+        XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testNoRemoveBackticksAroundAnyProperty() {
         let input = "enum Foo {\n    case `Any`\n}"
-        let output = "enum Foo {\n    case `Any`\n}"
+        let output = input
         XCTAssertEqual(try format(input, rules: [FormatRules.redundantBackticks]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }

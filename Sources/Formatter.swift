@@ -397,26 +397,6 @@ public class Formatter: NSObject {
         })
     }
 
-    /// Returns the index of the first token of the line containing the specified index
-    public func startOfLine(at index: Int) -> Int {
-        var index = index
-        while let token = token(at: index - 1) {
-            if case .linebreak = token {
-                break
-            }
-            index -= 1
-        }
-        return index
-    }
-
-    /// Returns the space at the start of the line containing the specified index
-    public func indentForLine(at index: Int) -> String {
-        if let token = token(at: startOfLine(at: index)), case let .space(string) = token {
-            return string
-        }
-        return ""
-    }
-
     /// Either modifies or removes the existing space token at the specified
     /// index, or inserts a new one if there is not already a space token present.
     /// Returns the number of tokens inserted or removed

@@ -1546,6 +1546,7 @@ Option | Description
 `--wraparguments` | Wrap function args: "before-first", "after-first", "preserve"
 `--wrapcollections` | Wrap array/dict: "before-first", "after-first", "preserve"
 `--closingparen` | Closing paren position: "balanced" (default) or "same-line"
+`--maxwidth` | Maximum length of a line before wrapping. defaults to "none"
 
 <details>
 <summary>Examples</summary>

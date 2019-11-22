@@ -11,6 +11,38 @@ import Foundation
 // MARK: shared helper methods
 
 extension Formatter {
+    /// Returns the index of the first token of the line containing the specified index
+    public func startOfLine(at index: Int) -> Int {
+        var index = index
+        while let token = token(at: index - 1) {
+            if case .linebreak = token {
+                break
+            }
+            index -= 1
+        }
+        return index
+    }
+
+    /// Returns the index of the linebreak token at the end of the line containing the specified index
+    public func endOfLine(at index: Int) -> Int {
+        var index = index
+        while let token = token(at: index) {
+            if case .linebreak = token {
+                break
+            }
+            index += 1
+        }
+        return index
+    }
+
+    /// Returns the space at the start of the line containing the specified index
+    func indentForLine(at index: Int) -> String {
+        if case let .space(string)? = token(at: startOfLine(at: index)) {
+            return string
+        }
+        return ""
+    }
+
     /// Returns the length (in characters) of the specified token
     func tokenLength(_ token: Token) -> Int {
         switch token {
@@ -25,6 +57,24 @@ extension Formatter {
         default:
             return token.string.count
         }
+    }
+
+    /// Returns the length (in characters) of the line at the specified index
+    func lineLength(at index: Int) -> Int {
+        var length = 0
+        for token in tokens[startOfLine(at: index) ..< endOfLine(at: index)] {
+            length += token.string.count
+        }
+        return length
+    }
+
+    /// Returns the length (in characters) up to (but not including) the specified token index
+    func lineLength(upTo index: Int) -> Int {
+        var length = 0
+        for token in tokens[startOfLine(at: index) ..< index] {
+            length += token.string.count
+        }
+        return length
     }
 
     /// Returns the length (in characters) of the specified token range

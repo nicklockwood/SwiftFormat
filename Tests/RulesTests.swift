@@ -8013,6 +8013,94 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
     }
 
+    // maxWidth, beforeFirst
+
+    func testWrapBeforeFirstIfMaxLengthExceeded() {
+        let input = """
+        func foo(bar: Int, baz: String) -> Bool {}
+        """
+        let output = """
+        func foo(
+            bar: Int,
+            baz: String
+        ) -> Bool {}
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 20)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
+    }
+
+    func testNoWrapBeforeFirstIfMaxLengthNotExceeded() {
+        let input = """
+        func foo(bar: Int, baz: String) -> Bool {}
+        """
+        let output = input
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 42)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
+    }
+
+    func testNoWrapGenericsIfClosingBracketWithinMaxWidth() {
+        let input = """
+        func foo<T: Bar>(bar: Int, baz: String) -> Bool {}
+        """
+        let output = """
+        func foo<T: Bar>(
+            bar: Int,
+            baz: String
+        ) -> Bool {}
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 20)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
+    }
+
+    func testWrapAlreadyWrappedArgumentsIfMaxLengthExceeded() {
+        let input = """
+        func foo(
+            bar: Int, baz: String, quux: Bool
+        ) -> Bool {}
+        """
+        let output = """
+        func foo(
+            bar: Int, baz: String,
+            quux: Bool
+        ) -> Bool {}
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 26)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
+    }
+
+    // maxWidth, afterFirst
+
+    func testWrapAfterFirstIfMaxLengthExceeded() {
+        let input = """
+        func foo(bar: Int, baz: String) -> Bool {}
+        """
+        let output = """
+        func foo(bar: Int,
+                 baz: String) -> Bool {}
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 20)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
+    }
+
+    func testWrapAfterFirstIfMaxLengthExceeded2() {
+        let input = """
+        func foo(bar: Int, baz: String, quux: Bool) -> Bool {}
+        """
+        let output = """
+        func foo(bar: Int,
+                 baz: String,
+                 quux: Bool) -> Bool {}
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 20)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
+    }
+
     // MARK: wrapCollections
 
     func testNoDoubleSpaceAddedToWrappedArray() {

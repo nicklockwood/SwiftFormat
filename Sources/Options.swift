@@ -294,6 +294,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var trailingClosures: [String]
     public var xcodeIndentation: Bool
     public var tabWidth: Int
+    public var maxWidth: Int
 
     // Doesn't really belong here, but hard to put elsewhere
     public var fragment: Bool
@@ -339,6 +340,7 @@ public struct FormatOptions: CustomStringConvertible {
                 trailingClosures: [String] = [],
                 xcodeIndentation: Bool = false,
                 tabWidth: Int = 0,
+                maxWidth: Int = 0,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -380,6 +382,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.trailingClosures = trailingClosures
         self.xcodeIndentation = xcodeIndentation
         self.tabWidth = tabWidth
+        self.maxWidth = maxWidth
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

@@ -241,6 +241,7 @@ extension FormatOptions.Descriptor {
         trailingClosures,
         xcodeIndentation,
         tabWidth,
+        maxWidth,
 
         // Deprecated
         indentComments,
@@ -591,6 +592,15 @@ extension FormatOptions.Descriptor {
         keyPath: \.tabWidth,
         fromArgument: { $0.lowercased() == "unspecified" ? 0 : Int($0).map { max(0, $0) } },
         toArgument: { $0 > 0 ? String($0) : "unspecified" }
+    )
+    static let maxWidth = FormatOptions.Descriptor(
+        argumentName: "maxwidth",
+        propertyName: "maxWidth",
+        displayName: "Max Width",
+        help: "Maximum length of a line before wrapping. defaults to \"none\"",
+        keyPath: \.maxWidth,
+        fromArgument: { $0.lowercased() == "none" ? 0 : Int($0).map { max(0, $0) } },
+        toArgument: { $0 > 0 ? String($0) : "none" }
     )
 
     // MARK: - DEPRECATED

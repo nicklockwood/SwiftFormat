@@ -685,14 +685,19 @@ func processInput(_ inputURLs: [URL],
         { outputFlags.filesSkipped += 1 }
     }
     // Swift version
-    var warnedAboutSwiftVersion = false
-    func warnAboutSwiftVersion(_ options: Options) {
+    var showedConfigurationWarnings = false
+    func showConfigurationWarnings(_ options: Options) {
         let formatOptions = options.formatOptions ?? .default
-        guard !warnedAboutSwiftVersion, formatOptions.swiftVersion == .undefined else {
+        guard !showedConfigurationWarnings else {
             return
         }
-        print("warning: No swift version was specified, so some formatting features were disabled. Specify the version of swift you are using with the --swiftversion command line option, or by adding a \(swiftVersionFile) file to your project.", as: .warning)
-        warnedAboutSwiftVersion = true
+        if formatOptions.swiftVersion == .undefined {
+            print("warning: No swift version was specified, so some formatting features were disabled. Specify the version of swift you are using with the --swiftversion command line option, or by adding a \(swiftVersionFile) file to your project.", as: .warning)
+        }
+        if formatOptions.useTabs, formatOptions.tabWidth <= 0 {
+            print("warning: The --indent option is set to tabs, but no --tabwidth was specified.", as: .warning)
+        }
+        showedConfigurationWarnings = true
     }
     // Format files
     var errors = [Error]()
@@ -762,7 +767,7 @@ func processInput(_ inputURLs: [URL],
                     return {
                         outputFlags.filesChecked += 1
                         cache?[cacheKey] = cacheValue
-                        warnAboutSwiftVersion(options)
+                        showConfigurationWarnings(options)
                     }
                 }
                 if dryrun {
@@ -772,7 +777,7 @@ func processInput(_ inputURLs: [URL],
                     return {
                         outputFlags.filesChecked += 1
                         outputFlags.filesFailed += 1
-                        warnAboutSwiftVersion(options)
+                        showConfigurationWarnings(options)
                     }
                 } else {
                     do {
@@ -785,7 +790,7 @@ func processInput(_ inputURLs: [URL],
                             outputFlags.filesFailed += 1
                             outputFlags.filesWritten += 1
                             cache?[cacheKey] = cacheValue
-                            warnAboutSwiftVersion(options)
+                            showConfigurationWarnings(options)
                         }
                     } catch {
                         throw FormatError.writing("Failed to write file \(outputURL.path), \(error)")
@@ -797,7 +802,7 @@ func processInput(_ inputURLs: [URL],
                 }
                 return {
                     outputFlags.filesChecked += 1
-                    warnAboutSwiftVersion(options)
+                    showConfigurationWarnings(options)
                     if case let FormatError.parsing(string) = error {
                         throw FormatError.parsing("\(string) in \(inputURL.path)")
                     }

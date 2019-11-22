@@ -34,7 +34,7 @@ import XcodeKit
 
 class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
     func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
-        guard ["public.swift-source", "com.apple.dt.playground", "com.apple.dt.playgroundpage"].contains(invocation.buffer.contentUTI) else {
+        guard SupportedContentUTIs.contains(invocation.buffer.contentUTI) else {
             return completionHandler(FormatCommandError.notSwiftLanguage)
         }
 

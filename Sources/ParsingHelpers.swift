@@ -361,6 +361,11 @@ extension Formatter {
         case .keyword("as"), .keyword("in"):
             // For case statements, we already indent
             return currentScope(at: i)?.string == "case"
+        case .keyword("is"):
+            guard let lastToken = last(.nonSpaceOrCommentOrLinebreak, before: i) else {
+                return false
+            }
+            return [.endOfScope("case"), .keyword("case"), .delimiter(",")].contains(lastToken)
         case .delimiter(","):
             if ["<", "[", "(", "case"].contains(scope?.string ?? "") {
                 // For arrays, dictionaries, cases, or argument lists, we already indent

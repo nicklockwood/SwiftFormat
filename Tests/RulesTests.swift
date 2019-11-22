@@ -2074,6 +2074,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testWrappedLineBeforeIsOperator() {
+        let input = "if x {\nlet y = foo\nis Bar\n}"
+        let output = "if x {\n    let y = foo\n        is Bar\n}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testWrappedLineAfterForKeyword() {
         let input = "for\ni in range {}"
         let output = "for\n    i in range {}"

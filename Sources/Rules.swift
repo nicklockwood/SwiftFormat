@@ -2198,7 +2198,7 @@ public struct _FormatRules {
             }
             if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
                 formatter.tokens[prevIndex].isOperator(".") {
-                if formatter.token(at: prevIndex - 1)?.isOperator("\\") != true {
+                if formatter.options.swiftVersion >= "5" || formatter.token(at: prevIndex - 1)?.isOperator("\\") != true {
                     formatter.replaceToken(at: i, with: .identifier(unescaped))
                 }
                 return

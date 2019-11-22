@@ -1148,6 +1148,7 @@ extension RulesTests {
         ("testRedundantSelfRemovedInsideConditionalCase", testRedundantSelfRemovedInsideConditionalCase),
         ("testRedundantSelfRemovedWhenFollowedBySwitchContainingIfdef", testRedundantSelfRemovedWhenFollowedBySwitchContainingIfdef),
         ("testRemoveBackticksAroundGetArgument", testRemoveBackticksAroundGetArgument),
+        ("testRemoveBackticksAroundKeypathKeywordPropertyInSwift5", testRemoveBackticksAroundKeypathKeywordPropertyInSwift5),
         ("testRemoveBackticksAroundKeypathProperty", testRemoveBackticksAroundKeypathProperty),
         ("testRemoveBackticksAroundKeywordProperty", testRemoveBackticksAroundKeywordProperty),
         ("testRemoveBackticksAroundProperty", testRemoveBackticksAroundProperty),

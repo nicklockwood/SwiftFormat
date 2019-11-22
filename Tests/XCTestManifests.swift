@@ -1506,6 +1506,7 @@ extension RulesTests {
         ("testWrappedLineAfterForKeyword", testWrappedLineAfterForKeyword),
         ("testWrappedLineAfterGuardElse", testWrappedLineAfterGuardElse),
         ("testWrappedLineAfterGuardElseWithXcodeStyleNotIndented", testWrappedLineAfterGuardElseWithXcodeStyleNotIndented),
+        ("testWrappedLineAfterInKeyword", testWrappedLineAfterInKeyword),
         ("testWrappedLineAfterOperator", testWrappedLineAfterOperator),
         ("testWrappedLineAfterWhere", testWrappedLineAfterWhere),
         ("testWrappedLineBeforeCommaInsideArray", testWrappedLineBeforeCommaInsideArray),

@@ -2088,6 +2088,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testWrappedLineAfterInKeyword() {
+        let input = "for i in\nrange {}"
+        let output = "for i in\n    range {}"
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testWrappedLineAfterDot() {
         let input = "let foo = bar.\nbaz"
         let output = "let foo = bar.\n    baz"

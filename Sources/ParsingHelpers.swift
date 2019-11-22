@@ -315,7 +315,7 @@ extension Formatter {
             // precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
             switch string {
             case "let", "func", "var", "if", "as", "import", "try", "guard", "case",
-                 "for", "init", "switch", "throw", "where", "subscript", "is",
+                 "for", "init", "switch", "throw", "where", "subscript", "is", "in",
                  "while", "associatedtype", "inout":
                 return false
             case "return":

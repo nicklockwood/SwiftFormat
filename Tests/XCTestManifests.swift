@@ -1690,6 +1690,7 @@ extension TokenizerTests {
         ("testMultilineRawStringContainingUnhashedInterpolation", testMultilineRawStringContainingUnhashedInterpolation),
         ("testMultilineStringStartingWithInterpolation", testMultilineStringStartingWithInterpolation),
         ("testMultilineStringWithEscapedLinebreak", testMultilineStringWithEscapedLinebreak),
+        ("testMultilineStringWithEscapedTripleQuote", testMultilineStringWithEscapedTripleQuote),
         ("testMultipleOptionalChaining", testMultipleOptionalChaining),
         ("testNamespacedKeyPath", testNamespacedKeyPath),
         ("testNegativeExponential", testNegativeExponential),

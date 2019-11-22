@@ -714,9 +714,13 @@ func processInput(_ inputURLs: [URL],
             // Override options
             var options = options
             try options.addArguments(overrides, in: "") // No need for directory as overrides are formatOptions only
+            // Validate options
+            let formatOptions = options.formatOptions ?? .default
+            if formatOptions.useTabs, formatOptions.tabWidth <= 0 {
+                throw FormatError.options("The --maxwidth option requires --tabwidth to also be set")
+            }
             // Check cache
             let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
-            let formatOptions = options.formatOptions ?? .default
             let cachePrefix = "\(version);\(formatOptions)\(rules.sorted().joined(separator: ","));"
             let cacheKey: String = {
                 var path = inputURL.absoluteURL.path

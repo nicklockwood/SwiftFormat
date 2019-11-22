@@ -1071,7 +1071,7 @@ public func tokenize(_ source: String) -> [Token] {
                 escaped = true
                 string.append("\\" + hashes)
                 continue
-            case "\"" where characters.readString("\"\"" + hashes):
+            case "\"" where !escaped && characters.readString("\"\"" + hashes):
                 if !string.isEmpty {
                     tokens.append(.error(string)) // Not permitted by the spec
                 }

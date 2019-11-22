@@ -351,6 +351,18 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testMultilineStringWithEscapedTripleQuote() {
+        let input = "\"\"\"\n\\\"\"\"\n\"\"\""
+        let output: [Token] = [
+            .startOfScope("\"\"\""),
+            .linebreak("\n"),
+            .stringBody("\\\"\"\""),
+            .linebreak("\n"),
+            .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Raw strings
 
     func testEmptyRawString() {

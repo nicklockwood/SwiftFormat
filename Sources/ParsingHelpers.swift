@@ -318,6 +318,8 @@ extension Formatter {
                  "for", "init", "switch", "throw", "where", "subscript", "is",
                  "while", "associatedtype", "inout":
                 return false
+            case "in":
+                return lastSignificantKeyword(at: i) != "for"
             case "return":
                 guard let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: i) else {
                     return true

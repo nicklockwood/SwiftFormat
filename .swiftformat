@@ -22,6 +22,7 @@
 --indentcase false
 --importgrouping testable-bottom
 --linebreaks lf
+--maxwidth none
 --octalgrouping 4,8
 --operatorfunc spaced
 --patternlet hoist

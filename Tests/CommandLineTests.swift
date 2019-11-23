@@ -151,12 +151,7 @@ class CommandLineTests: XCTestCase {
 
     func testFormatting() {
         CLI.print = { _, _ in }
-        #if swift(>=4.1.5)
-            let args = ". --dryrun"
-        #else
-            let args = ". --dryrun --disable redundantSelf" // redundantSelf crashes Xcode 9.4 in debug mode
-        #endif
-
+        let args = ". --dryrun --disable redundantSelf"
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: args), .ok)
     }
 

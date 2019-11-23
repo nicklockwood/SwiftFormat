@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.41.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.41.0) (2019-11-23)
+
+- The `wrapArguments` rule can now automatically wrap functions and collections to `--maxwidth`
+- Added `—maxwidth` option to specify the width at which code should wrap (currently only used by `wrapArguments` rule)
+- Added `—tabwidth` option to help with code indenting and wrapping when using tabs for indent
+- Fixed indenting of code wrapped after the `in` in a `for...in` loop
+- Fixed indenting of code wrapped before the `is` in an expression
+- Added version check for `redundantBackticks` rule to support fixes in Swift 5
+- Fixed error when parsing escaped triple-quote in a multiline string
+- Fixed bug where a multiline comments before an opening brace could result in corrupted output
+- CLI will now fail if .swiftformat file contains an invalid option, instead of ignoring it
+- Added support for formatting Swift package manifest files using Xcode Extension
+
 ## [0.40.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.40.14) (2019-10-28)
 
 - The `redundantReturn` rule no longer incorrectly removes `return` inside `catch let` statements

@@ -1,13 +1,22 @@
-language: swift
-osx_image: xcode10.1
-
 env:
-  - LC_CTYPE=en_US.UTF-8 LANG=en_US.UTF-8
-before_install:
-  - rvm install ruby-2.4.2
-install:
-  - bundle install --without=documentation
-script:
-  - set -o pipefail
-  -  xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test | bundle exec xcpretty
-after_success: bundle exec slather
+  global:
+    - LC_CTYPE=en_US.UTF-8
+matrix:
+  include:
+    - os: osx
+      language: swift
+      osx_image: xcode10.1
+      before_install:
+        - rvm install ruby-2.4.2
+      install:
+        - bundle install --without=documentation
+      script:
+        - set -o pipefail
+        - xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test | bundle exec xcpretty
+      after_success: bundle exec slather
+    - os: linux
+      language: generic
+      sudo: required
+      dist: trusty
+      install: eval "$(curl -sL https://swiftenv.fuller.li/install.sh)"
+      script: swift test

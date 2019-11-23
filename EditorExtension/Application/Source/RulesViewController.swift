@@ -91,8 +91,7 @@ final class RulesViewController: NSViewController {
                     .compactMap { optionName in optionsByName[optionName] }
                     .sorted { $0.descriptor.displayName < $1.descriptor.displayName }
                     .compactMap { option -> UserSelectionType? in
-                        guard !option.isDeprecated,
-                            option.descriptor.argumentName != FormatOptions.Descriptor.indentation.argumentName else {
+                        guard !option.isDeprecated else {
                             return nil
                         }
                         let descriptor = option.descriptor

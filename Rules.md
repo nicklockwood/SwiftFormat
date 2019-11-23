@@ -470,6 +470,7 @@ Adjusts leading whitespace based on scope and line wrapping.
 Option | Description
 --- | ---
 `--indent` | Number of spaces to indent, or "tab" to use tabs
+`--tabwidth` | The width of a tab character. Defaults to "unspecified"
 `--indentcase` | Indent cases inside a switch: "true" or "false" (default)
 `--ifdef` | #if indenting: "indent" (default), "no-indent" or "outdent"
 `--xcodeindentation` | Xcode indent guard/enum: "enabled" or "disabled" (default)

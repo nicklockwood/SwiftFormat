@@ -100,13 +100,13 @@ extension FormatOptions {
             }
         }
 
-        init(argumentName: String,
-             propertyName: String,
-             displayName: String,
-             help: String,
-             keyPath: WritableKeyPath<FormatOptions, String>,
-             fromArgument: @escaping (String) -> String?,
-             toArgument: @escaping (String) -> String) {
+        init<T>(argumentName: String,
+                propertyName: String,
+                displayName: String,
+                help: String,
+                keyPath: WritableKeyPath<FormatOptions, T>,
+                fromArgument: @escaping (String) -> T?,
+                toArgument: @escaping (T) -> String) {
             self.argumentName = argumentName
             self.propertyName = propertyName
             self.displayName = displayName
@@ -240,6 +240,7 @@ extension FormatOptions.Descriptor {
         importGrouping,
         trailingClosures,
         xcodeIndentation,
+        tabWidth,
 
         // Deprecated
         indentComments,
@@ -281,18 +282,10 @@ extension FormatOptions.Descriptor {
             case "tab", "tabs", "tabbed":
                 return "\t"
             default:
-                if let spaces = Int(arg.trimmingCharacters(in: .whitespaces)) {
-                    return String(repeating: " ", count: spaces)
-                }
-                return nil
+                return Int(arg).flatMap { $0 > 0 ? String(repeating: " ", count: $0) : nil }
             }
         },
-        toArgument: { option in
-            if option == "\t" {
-                return "tabs"
-            }
-            return String(option.count)
-        }
+        toArgument: { $0 == "\t" ? "tab" : String($0.count) }
     )
     static let lineBreak = FormatOptions.Descriptor(
         argumentName: "linebreaks",
@@ -589,6 +582,15 @@ extension FormatOptions.Descriptor {
         displayName: "Swift Version",
         help: "The version of swift used in the project being formatted",
         keyPath: \.swiftVersion
+    )
+    static let tabWidth = FormatOptions.Descriptor(
+        argumentName: "tabwidth",
+        propertyName: "tabWidth",
+        displayName: "Tab Width",
+        help: "The width of a tab character. Defaults to \"unspecified\"",
+        keyPath: \.tabWidth,
+        fromArgument: { $0.lowercased() == "unspecified" ? 0 : Int($0).map { max(0, $0) } },
+        toArgument: { $0 > 0 ? String($0) : "unspecified" }
     )
 
     // MARK: - DEPRECATED

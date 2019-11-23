@@ -827,7 +827,7 @@ public struct _FormatRules {
     /// indenting can be configured with the `options` parameter of the formatter.
     public let indent = FormatRule(
         help: "Adjusts leading whitespace based on scope and line wrapping.",
-        options: ["indent", "indentcase", "ifdef", "xcodeindentation"],
+        options: ["indent", "tabwidth", "indentcase", "ifdef", "xcodeindentation"],
         sharedOptions: ["trimwhitespace", "linebreaks"]
     ) { formatter in
         var scopeStack: [Token] = []
@@ -960,13 +960,7 @@ public struct _FormatRules {
                         // Align indent with previous value
                         indentCount = 1
                         indent = ""
-                        for token in formatter.tokens[start ..< nextIndex] {
-                            if case let .space(string) = token {
-                                indent += string
-                            } else {
-                                indent += String(repeating: " ", count: token.string.count)
-                            }
-                        }
+                        indent += formatter.spaceEquivalentToTokens(from: start, upTo: nextIndex)
                         break
                     }
                     fallthrough
@@ -1078,11 +1072,11 @@ public struct _FormatRules {
                 if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
                     indent += formatter.options.indent
                 } else {
-                    // Align indent with previous case value
-                    indent += "     "
                     if formatter.options.indentCase {
                         indent += formatter.options.indent
                     }
+                    // Align indent with previous case value
+                    indent += formatter.spaceEquivalentToWidth(5)
                 }
                 indentStack.append(indent)
                 indentCounts.append(1)
@@ -3126,7 +3120,7 @@ public struct _FormatRules {
     public let wrapArguments = FormatRule(
         help: "Wraps function arguments and collection literals.",
         options: ["wraparguments", "wrapcollections", "closingparen"],
-        sharedOptions: ["indent", "trimwhitespace", "linebreaks"]
+        sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth"]
     ) { formatter in
         func removeLinebreakBeforeClosingBrace(at closingBraceIndex: inout Int) {
             guard let lastIndex = formatter.index(of: .nonSpace, before: closingBraceIndex, if: {
@@ -3200,14 +3194,7 @@ public struct _FormatRules {
             firstArgumentIndex = i + 1
             // Get indent
             let start = formatter.startOfLine(at: i)
-            var indent = ""
-            for token in formatter.tokens[start ..< firstArgumentIndex] {
-                if case let .space(string) = token {
-                    indent += string
-                } else {
-                    indent += String(repeating: " ", count: token.string.count)
-                }
-            }
+            let indent = formatter.spaceEquivalentToTokens(from: start, upTo: firstArgumentIndex)
             removeLinebreakBeforeClosingBrace(at: &closingBraceIndex)
             // Insert linebreak after each comma
             guard var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closingBraceIndex) else {

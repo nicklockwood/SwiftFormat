@@ -2148,6 +2148,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
+    func testWrappedLineAfterGuardCommaIndented() {
+        let input = "guard let foo = foo,\nlet bar = bar else {}"
+        let output = "guard let foo = foo,\n    let bar = bar else {}"
+        let options = FormatOptions(xcodeIndentation: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     func testXcodeIndentationGuardClosure() {
         let input = "guard let foo = bar(baz, completion: {\nfalse\n}) else { return }"
         let output = "guard let foo = bar(baz, completion: {\n    false\n}) else { return }"
@@ -2983,6 +2991,62 @@ class RulesTests: XCTestCase {
         let input = "        return completionHandler(nil)\n    }\n}"
         let output = "        return completionHandler(nil)\n    }\n}"
         let options = FormatOptions(fragment: true)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    // indent with tabs
+
+    func testTabIndentWrappedTuple() {
+        let input = """
+        let foo = (bar: Int,
+                   baz: Int)
+        """
+        let output = """
+        let foo = (bar: Int,
+        \t\t\t\t\t baz: Int)
+        """
+        let options = FormatOptions(indent: "\t", tabWidth: 2)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testTabIndentCase() {
+        let input = """
+        switch x {
+        case .foo,
+             .bar:
+          break
+        }
+        """
+        let output = """
+        switch x {
+        case .foo,
+        \t\t .bar:
+        \tbreak
+        }
+        """
+        let options = FormatOptions(indent: "\t", tabWidth: 2)
+        XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testTabIndentCase2() {
+        let input = """
+        switch x {
+            case .foo,
+                 .bar:
+              break
+        }
+        """
+        let output = """
+        switch x {
+        \tcase .foo,
+        \t\t\t .bar:
+        \t\tbreak
+        }
+        """
+        let options = FormatOptions(indent: "\t", indentCase: true, tabWidth: 2)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
@@ -7939,6 +8003,22 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(wrapArguments: .preserve, closingParenOnSameLine: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    // indent with tabs
+
+    func testTabIndentWrappedFunction() {
+        let input = """
+        func foo(bar: Int,
+                 baz: Int) {}
+        """
+        let output = """
+        func foo(bar: Int,
+        \t\t\t\t baz: Int) {}
+        """
+        let options = FormatOptions(indent: "\t", wrapArguments: .afterFirst, tabWidth: 2)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
     }
 
     // MARK: wrapCollections

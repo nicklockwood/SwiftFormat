@@ -293,6 +293,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var importGrouping: ImportGrouping
     public var trailingClosures: [String]
     public var xcodeIndentation: Bool
+    public var tabWidth: Int
 
     // Doesn't really belong here, but hard to put elsewhere
     public var fragment: Bool
@@ -337,6 +338,7 @@ public struct FormatOptions: CustomStringConvertible {
                 importGrouping: ImportGrouping = .alphabetized,
                 trailingClosures: [String] = [],
                 xcodeIndentation: Bool = false,
+                tabWidth: Int = 0,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -377,11 +379,16 @@ public struct FormatOptions: CustomStringConvertible {
         self.importGrouping = importGrouping
         self.trailingClosures = trailingClosures
         self.xcodeIndentation = xcodeIndentation
+        self.tabWidth = tabWidth
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers
         self.swiftVersion = swiftVersion
         self.fileInfo = fileInfo
+    }
+
+    public var useTabs: Bool {
+        return indent.first == "\t"
     }
 
     public var allOptions: [String: Any] {

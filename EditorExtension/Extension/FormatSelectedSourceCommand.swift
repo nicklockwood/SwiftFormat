@@ -48,6 +48,7 @@ class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
         let tokens = tokenize(invocation.buffer.completeBuffer)
         var formatOptions = store.inferOptions ? inferFormatOptions(from: tokens) : store.formatOptions
         formatOptions.indent = indentationString(for: invocation.buffer)
+        formatOptions.tabWidth = invocation.buffer.tabWidth
         formatOptions.fragment = true
 
         // Grab the selected source to format using entire lines of text

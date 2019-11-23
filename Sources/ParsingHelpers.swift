@@ -11,6 +11,53 @@ import Foundation
 // MARK: shared helper methods
 
 extension Formatter {
+    /// Returns the length (in characters) of the specified token
+    func tokenLength(_ token: Token) -> Int {
+        switch token {
+        case let .space(string), let .stringBody(string), let .commentBody(string):
+            let tabWidth = options.useTabs ? options.tabWidth : options.indent.count
+            guard tabWidth > 1 else {
+                return string.count
+            }
+            return string.reduce(0) { count, character in
+                count + (character == "\t" ? tabWidth : 1)
+            }
+        default:
+            return token.string.count
+        }
+    }
+
+    /// Returns the length (in characters) of the specified token range
+    func lineLength(from start: Int, upTo end: Int) -> Int {
+        return tokens[start ..< end].reduce(0) { total, token in
+            total + tokenLength(token)
+        }
+    }
+
+    /// Returns white space made up of indent characters equvialent to the specified width
+    func spaceEquivalentToWidth(_ width: Int) -> String {
+        if options.useTabs, options.tabWidth > 0 {
+            let tabs = width / options.tabWidth
+            let remainder = width % options.tabWidth
+            return String(repeating: "\t", count: tabs) + String(repeating: " ", count: remainder)
+        }
+        return String(repeating: " ", count: width)
+    }
+
+    /// Returns white space made up of indent characters equvialent to the specified token range
+    func spaceEquivalentToTokens(from start: Int, upTo end: Int) -> String {
+        if options.useTabs, options.tabWidth > 0 {
+            return spaceEquivalentToWidth(lineLength(from: start, upTo: end))
+        }
+        return tokens[start ..< end].reduce(into: "") { result, token in
+            if case let .space(string) = token {
+                result += string
+            } else {
+                result += String(repeating: " ", count: tokenLength(token))
+            }
+        }
+    }
+
     func specifiersForType(at index: Int, contains: (Int, Token) -> Bool) -> Bool {
         let allSpecifiers = _FormatRules.allSpecifiers
         var index = index

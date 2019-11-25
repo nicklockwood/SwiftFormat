@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.41.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.41.1) (2019-11-25)
+
+- Fixed bug with `wrapArguments` rule incorrectly wrapping code inside interpolated String expressions
+
 ## [0.41.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.41.0) (2019-11-23)
 
 - The `wrapArguments` rule can now automatically wrap functions and collections to `--maxwidth`

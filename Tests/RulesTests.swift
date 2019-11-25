@@ -3438,6 +3438,17 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testTrailingCommaNotAddedToTypeDeclaration3() {
+        let input = """
+        func foo() -> [
+            String: String
+        ]
+        """
+        let output = input
+        XCTAssertEqual(try format(input, rules: [FormatRules.trailingCommas]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // trailingCommas = false
 
     func testCommaNotAddedToLastItem() {

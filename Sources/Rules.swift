@@ -1336,11 +1336,14 @@ public struct _FormatRules {
             guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else { return }
             if let startIndex = formatter.index(of: .startOfScope("["), before: i),
                 let prevToken = formatter.last(.nonSpaceOrComment, before: startIndex) {
-                // Check for subscript
-                if prevToken.isIdentifier || prevToken.isUnwrapOperator ||
-                    [.endOfScope(")"), .endOfScope("]")].contains(prevToken) { return }
-                // Check for type declaration
-                if prevToken == .delimiter(":") {
+                switch prevToken {
+                case .identifier,
+                     .operator("!", .postfix), .operator("?", .postfix),
+                     .endOfScope(")"), .endOfScope("]"):
+                    // Subscript
+                    return
+                case .delimiter(":"):
+                    // Check for type declaration
                     if let scopeStart = formatter.index(of: .startOfScope, before: startIndex),
                         formatter.tokens[scopeStart] == .startOfScope("(") {
                         if formatter.last(.keyword, before: scopeStart) == .keyword("func") {
@@ -1350,27 +1353,35 @@ public struct _FormatRules {
                         [.keyword("let"), .keyword("var")].contains(token) {
                         return
                     }
+                case .operator("->", .infix):
+                    return
+                default:
+                    break
                 }
             }
-            let prevToken = formatter.tokens[prevTokenIndex]
-            if prevToken.isLinebreak {
-                if let prevTokenIndex = formatter.index(of:
-                    .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex + 1) {
-                    switch formatter.tokens[prevTokenIndex] {
-                    case .startOfScope("["), .delimiter(":"):
-                        break // do nothing
-                    case .delimiter(","):
-                        if !formatter.options.trailingCommas {
-                            formatter.removeToken(at: prevTokenIndex)
-                        }
-                    default:
-                        if formatter.options.trailingCommas {
-                            formatter.insertToken(.delimiter(","), at: prevTokenIndex + 1)
-                        }
+            switch formatter.tokens[prevTokenIndex] {
+            case .linebreak:
+                guard let prevTokenIndex = formatter.index(
+                    of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex + 1
+                ) else {
+                    break
+                }
+                switch formatter.tokens[prevTokenIndex] {
+                case .startOfScope("["), .delimiter(":"):
+                    break // do nothing
+                case .delimiter(","):
+                    if !formatter.options.trailingCommas {
+                        formatter.removeToken(at: prevTokenIndex)
+                    }
+                default:
+                    if formatter.options.trailingCommas {
+                        formatter.insertToken(.delimiter(","), at: prevTokenIndex + 1)
                     }
                 }
-            } else if prevToken == .delimiter(",") {
+            case .delimiter(","):
                 formatter.removeToken(at: prevTokenIndex)
+            default:
+                break
             }
         }
     }

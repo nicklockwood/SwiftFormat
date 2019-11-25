@@ -322,7 +322,7 @@ public enum Token: Equatable {
     public var isAttribute: Bool { return isKeyword && string.hasPrefix("@") }
     public var isDelimiter: Bool { return hasType(of: .delimiter("")) }
     public var isOperator: Bool { return hasType(of: .operator("", .none)) }
-    public var isUnwrapOperator: Bool { return isOperator("?") || isOperator("!") }
+    public var isUnwrapOperator: Bool { return isOperator("?", .postfix) || isOperator("!", .postfix) }
     public var isRangeOperator: Bool { return isOperator("...") || isOperator("..<") }
     public var isNumber: Bool { return hasType(of: .number("", .integer)) }
     public var isError: Bool { return hasType(of: .error("")) }
@@ -348,6 +348,13 @@ public enum Token: Equatable {
 
     public func isOperator(ofType type: OperatorType) -> Bool {
         if case .operator(_, type) = self {
+            return true
+        }
+        return false
+    }
+
+    public func isOperator(_ string: String, _ type: OperatorType) -> Bool {
+        if case .operator(string, type) = self {
             return true
         }
         return false

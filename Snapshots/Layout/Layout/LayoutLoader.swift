@@ -480,7 +480,7 @@ class LayoutLoader {
         var results = [URL]()
         for file in files where
             file != "build" && !file.hasPrefix(".") && ![
-                ".build", ".app", ".framework", ".xcodeproj", ".xcassets"
+                ".build", ".app", ".framework", ".xcodeproj", ".xcassets",
             ].contains(where: { file.hasSuffix($0) }) {
             let directory = directory.appendingPathComponent(file)
             if ignoring.contains(directory) {

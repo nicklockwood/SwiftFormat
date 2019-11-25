@@ -395,6 +395,21 @@ extension Formatter {
             return false
         }
     }
+
+    // Detect if currently inside a String literal
+    func isStringLiteral(at index: Int) -> Bool {
+        for token in tokens[..<index].reversed() {
+            switch token {
+            case .stringBody:
+                return true
+            case .endOfScope where token.isStringDelimiter, .linebreak:
+                return false
+            default:
+                continue
+            }
+        }
+        return false
+    }
 }
 
 extension _FormatRules {

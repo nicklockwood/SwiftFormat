@@ -3249,7 +3249,8 @@ public struct _FormatRules {
                 return
             }
             guard mode != .disabled, let firstIdentifierIndex =
-                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) else {
+                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                !formatter.isStringLiteral(at: i) else {
                 return
             }
             let maxWidth = formatter.options.maxWidth

@@ -8131,6 +8131,56 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
     }
 
+    func testNoWrapBeforeFirstArgumentInStringInterpolation() {
+        let input = """
+        "a very long string literal with \\(interpolation) inside"
+        """
+        let output = input
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 40)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testNoWrapBeforeFirstArgumentInStringInterpolation2() {
+        let input = """
+        "a very long string literal with \\(interpolation) inside"
+        """
+        let output = input
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 50)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testNoWrapBeforeFirstArgumentInStringInterpolation3() {
+        let input = """
+        "a very long string literal with \\(interpolated, variables) inside"
+        """
+        let output = input
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 40)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testNoWrapBeforeNestedFirstArgumentInStringInterpolation() {
+        let input = """
+        "a very long string literal with \\(foo(interpolated)) inside"
+        """
+        let output = input
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 45)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testNoWrapBeforeNestedFirstArgumentInStringInterpolation2() {
+        let input = """
+        "a very long string literal with \\(foo(interpolated, variables)) inside"
+        """
+        let output = input
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 45)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
     // maxWidth, afterFirst
 
     func testWrapAfterFirstIfMaxLengthExceeded() {
@@ -8171,6 +8221,36 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 32)
         XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all(except: ["unusedArguments"]), options: options), output + "\n")
+    }
+
+    func testNoWrapAfterFirstArgumentInStringInterpolation() {
+        let input = """
+        "a very long string literal with \\(interpolated) inside"
+        """
+        let output = input
+        let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 46)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testNoWrapAfterFirstArgumentInStringInterpolation2() {
+        let input = """
+        "a very long string literal with \\(interpolated, variables) inside"
+        """
+        let output = input
+        let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 50)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
+    }
+
+    func testNoWrapAfterNestedFirstArgumentInStringInterpolation() {
+        let input = """
+        "a very long string literal with \\(foo(interpolated, variables)) inside"
+        """
+        let output = input
+        let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 55)
+        XCTAssertEqual(try format(input, rules: [FormatRules.wrapArguments], options: options), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")
     }
 
     // MARK: wrapCollections

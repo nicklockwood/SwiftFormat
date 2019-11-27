@@ -111,7 +111,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			sK9lsVLYbrjVRTFUBcSTYwN1n4o=
+			vHKhH5rQ+aqJiA6KaapV25m0dEo=
 			</data>
 			<key>requirement</key>
 			<string>identifier "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension" and anchor apple generic and certificate leaf[subject.CN] = "Mac Developer: Nick Lockwood (XDQ4XJZXHD)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>

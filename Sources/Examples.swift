@@ -498,7 +498,7 @@ private struct Examples {
 
     ```diff
     - @IBAction @objc func goBack() {}
-    + @IBOutlet func goBack() {}
+    + @IBAction func goBack() {}
     ```
 
     ```diff

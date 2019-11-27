@@ -101,10 +101,6 @@ public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral 
         self.rawValue = rawValue
     }
 
-    public static func == (lhs: Version, rhs: Version) -> Bool {
-        return lhs.rawValue == rhs.rawValue
-    }
-
     public static func < (lhs: Version, rhs: Version) -> Bool {
         return lhs.rawValue.compare(
             rhs.rawValue,
@@ -156,18 +152,6 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
             return string.isEmpty ? "strip" : string.replacingOccurrences(of: "\n", with: "\\n")
         }
     }
-
-    public static func == (lhs: HeaderStrippingMode, rhs: HeaderStrippingMode) -> Bool {
-        switch (lhs, rhs) {
-        case (.ignore, .ignore):
-            return true
-        case let (.replace(lhs), .replace(rhs)):
-            return lhs == rhs
-        case (.ignore, _),
-             (.replace, _):
-            return false
-        }
-    }
 }
 
 /// File info, used for constructing header comments
@@ -178,11 +162,6 @@ public struct FileInfo: Equatable {
     public init(fileName: String? = nil, creationDate: Date? = nil) {
         self.fileName = fileName
         self.creationDate = creationDate
-    }
-
-    public static func == (lhs: FileInfo, rhs: FileInfo) -> Bool {
-        return lhs.fileName == rhs.fileName &&
-            lhs.creationDate == rhs.creationDate
     }
 }
 
@@ -224,20 +203,6 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
 
     public var description: String {
         return rawValue
-    }
-
-    public static func == (lhs: Grouping, rhs: Grouping) -> Bool {
-        switch (lhs, rhs) {
-        case (.ignore, .ignore),
-             (.none, .none):
-            return true
-        case let (.group(a, b), .group(c, d)):
-            return a == c && b == d
-        case (.ignore, _),
-             (.none, _),
-             (.group, _):
-            return false
-        }
     }
 }
 

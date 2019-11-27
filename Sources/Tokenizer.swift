@@ -486,10 +486,6 @@ public enum Token: Equatable {
             return false
         }
     }
-
-    public static func == (lhs: Token, rhs: Token) -> Bool {
-        return lhs.match(with: rhs) == .exact
-    }
 }
 
 extension UnicodeScalar {

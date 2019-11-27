@@ -54,12 +54,6 @@ extension Rule: Comparable {
 
         return lhs.name < rhs.name
     }
-
-    static func == (lhs: Rule, rhs: Rule) -> Bool {
-        return
-            lhs.name == rhs.name &&
-            lhs.isEnabled == rhs.isEnabled
-    }
 }
 
 extension Rule {

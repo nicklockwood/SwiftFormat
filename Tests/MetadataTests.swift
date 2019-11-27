@@ -112,17 +112,22 @@ class MetadataTests: XCTestCase {
             let allOptions = rule.options + rule.sharedOptions
             for index in scopeStart + 1 ..< scopeEnd {
                 switch formatter.tokens[index] {
-                case let .identifier(name) where [
+                case let .identifier(fn) where [
                     "spaceEquivalentToWidth",
                     "spaceEquivalentToTokens",
                     "tokenLength",
                     "lineLength",
-                ].contains(name) &&
+                ].contains(fn) &&
                     formatter.token(at: index - 1) == .operator(".", .infix) &&
                     formatter.token(at: index - 2) == .identifier("formatter"):
                     XCTAssert(allOptions.contains("indent"), "indent not listed in \(name) rule")
-                    XCTAssert(allOptions.contains("tabwidth"), "indent not listed in \(name) rule")
+                    XCTAssert(allOptions.contains("tabwidth"), "tabwidth not listed in \(name) rule")
                     referencedOptions += ["indent", "tabwidth"]
+                case .identifier("insertLinebreak") where
+                    formatter.token(at: index - 1) == .operator(".", .infix) &&
+                    formatter.token(at: index - 2) == .identifier("formatter"):
+                    XCTAssert(allOptions.contains("linebreaks"), "linebreaks not listed in \(name) rule")
+                    referencedOptions.append("linebreaks")
                 case .identifier("options") where
                     formatter.token(at: index - 1) == .operator(".", .infix) &&
                     formatter.token(at: index - 2) == .identifier("formatter") &&

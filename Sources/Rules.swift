@@ -767,7 +767,7 @@ public struct _FormatRules {
                     if let firstLinebreakIndex = formatter.index(of: .linebreak, in: i + 1 ..< nextTokenIndex),
                         formatter.index(of: .linebreak, in: firstLinebreakIndex + 1 ..< nextTokenIndex) == nil {
                         // Insert linebreak
-                        formatter.insertToken(.linebreak(formatter.options.linebreak), at: firstLinebreakIndex)
+                        formatter.insertLinebreak(at: firstLinebreakIndex)
                     }
                 }
             default:
@@ -789,12 +789,12 @@ public struct _FormatRules {
             if let nextIndex = formatter.index(of: .linebreak, after: i),
                 let nextToken = formatter.next(.nonSpace, after: nextIndex),
                 !nextToken.isLinebreak, nextToken != .endOfScope("}") {
-                formatter.insertToken(.linebreak(formatter.options.linebreak), at: nextIndex)
+                formatter.insertLinebreak(at: nextIndex)
             }
             if let lastIndex = formatter.index(of: .linebreak, before: startIndex),
                 let lastToken = formatter.last(.nonSpace, before: lastIndex),
                 !lastToken.isLinebreak, lastToken != .startOfScope("{") {
-                formatter.insertToken(.linebreak(formatter.options.linebreak), at: lastIndex)
+                formatter.insertLinebreak(at: lastIndex)
             }
         }
     }
@@ -818,7 +818,7 @@ public struct _FormatRules {
             }
         }
         if formatter.isEnabled, !wasLinebreak {
-            formatter.insertToken(.linebreak(formatter.options.linebreak), at: formatter.tokens.count)
+            formatter.insertLinebreak(at: formatter.tokens.count)
         }
     }
 
@@ -1226,7 +1226,7 @@ public struct _FormatRules {
             if let penultimateToken = formatter.last(.nonSpaceOrComment, before: closingBraceIndex),
                 !penultimateToken.isLinebreak {
                 formatter.insertSpace(formatter.indentForLine(at: i), at: closingBraceIndex)
-                formatter.insertToken(.linebreak(formatter.options.linebreak), at: closingBraceIndex)
+                formatter.insertLinebreak(at: closingBraceIndex)
                 if formatter.token(at: closingBraceIndex - 1)?.isSpace == true {
                     formatter.removeToken(at: closingBraceIndex - 1)
                 }
@@ -1238,7 +1238,7 @@ public struct _FormatRules {
                     switch prevToken {
                     case .identifier, .keyword, .endOfScope,
                          .operator("?", .postfix), .operator("!", .postfix):
-                        formatter.insertToken(.linebreak(formatter.options.linebreak), at: i)
+                        formatter.insertLinebreak(at: i)
                         if let breakIndex = formatter.index(of: .linebreak, after: i + 1),
                             let nextIndex = formatter.index(of: .nonSpace, after: breakIndex, if: { $0.isLinebreak }) {
                             formatter.removeTokens(inRange: breakIndex ..< nextIndex)
@@ -3160,7 +3160,7 @@ public struct _FormatRules {
                 if let lastIndex = formatter.index(of: .nonSpace, before: endOfScope) {
                     endOfScope += formatter.insertSpace(indent, at: lastIndex + 1)
                     if !formatter.tokens[lastIndex].isLinebreak {
-                        formatter.insertToken(.linebreak(formatter.options.linebreak), at: lastIndex + 1)
+                        formatter.insertLinebreak(at: lastIndex + 1)
                         endOfScope += 1
                     }
                 }
@@ -3181,7 +3181,7 @@ public struct _FormatRules {
                 } else if !allowGrouping || (maxWidth > 0 &&
                     formatter.lineLength(at: linebreakIndex) > maxWidth &&
                     formatter.lineLength(upTo: linebreakIndex) <= maxWidth) {
-                    formatter.insertToken(.linebreak(formatter.options.linebreak), at: linebreakIndex)
+                    formatter.insertLinebreak(at: linebreakIndex)
                     formatter.insertSpace(indent + formatter.options.indent, at: linebreakIndex + 1)
                 }
                 index = commaIndex
@@ -3189,7 +3189,7 @@ public struct _FormatRules {
             // Insert linebreak after opening paren
             if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == false {
                 formatter.insertSpace(indent + formatter.options.indent, at: i + 1)
-                formatter.insertToken(.linebreak(formatter.options.linebreak), at: i + 1)
+                formatter.insertLinebreak(at: i + 1)
             }
         }
         func wrapArgumentsAfterFirst(startOfScope i: Int, endOfScope: Int, allowGrouping: Bool) {
@@ -3214,7 +3214,7 @@ public struct _FormatRules {
                 }
                 if maxWidth > 0, formatter.lineLength(upTo: commaIndex) >= maxWidth, let breakIndex = lastBreakIndex {
                     endOfScope += 1 + formatter.insertSpace(indent, at: breakIndex)
-                    formatter.insertToken(.linebreak(formatter.options.linebreak), at: breakIndex)
+                    formatter.insertLinebreak(at: breakIndex)
                     lastBreakIndex = nil
                     index = commaIndex
                     continue
@@ -3224,7 +3224,7 @@ public struct _FormatRules {
                         endOfScope += formatter.insertSpace(indent, at: linebreakIndex + 1)
                     }
                 } else if !allowGrouping {
-                    formatter.insertToken(.linebreak(formatter.options.linebreak), at: linebreakIndex)
+                    formatter.insertLinebreak(at: linebreakIndex)
                     endOfScope += 1 + formatter.insertSpace(indent, at: linebreakIndex + 1)
                 } else {
                     lastBreakIndex = linebreakIndex
@@ -3233,7 +3233,7 @@ public struct _FormatRules {
             }
             if maxWidth > 0, let breakIndex = lastBreakIndex, formatter.lineLength(at: breakIndex) > maxWidth {
                 formatter.insertSpace(indent, at: breakIndex)
-                formatter.insertToken(.linebreak(formatter.options.linebreak), at: breakIndex)
+                formatter.insertLinebreak(at: breakIndex)
             }
         }
         formatter.forEach(.startOfScope) { i, token in
@@ -3565,9 +3565,9 @@ public struct _FormatRules {
             formatter.removeTokens(inRange: 0 ..< headerTokens.count)
         }
         if formatter.tokens.first?.isSpaceOrLinebreak == false {
-            formatter.insertToken(.linebreak(formatter.options.linebreak), at: 0)
+            formatter.insertLinebreak(at: 0)
         }
-        formatter.insertToken(.linebreak(formatter.options.linebreak), at: 0)
+        formatter.insertLinebreak(at: 0)
         formatter.insertTokens(headerTokens, at: 0)
     }
 
@@ -4412,7 +4412,7 @@ public struct _FormatRules {
             }
             let nextIndex = formatter.index(of: .nonSpace, after: i) ?? (i + 1)
             formatter.insertSpace(formatter.indentForLine(at: i), at: nextIndex)
-            formatter.insertToken(.linebreak(formatter.options.linebreak), at: nextIndex)
+            formatter.insertLinebreak(at: nextIndex)
             formatter.removeTokens(inRange: i + 1 ..< nextIndex)
             guard case .commentBody? = formatter.last(.nonSpace, before: endOfLine) else {
                 formatter.removeTokens(inRange: endOfLine ..< i)

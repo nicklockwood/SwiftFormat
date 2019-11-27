@@ -413,4 +413,9 @@ public class Formatter: NSObject {
         }
         return 0 // Inserted 0 tokens
     }
+
+    /// Inserts a linebreak at the specified index
+    func insertLinebreak(at index: Int) {
+        insertToken(.linebreak(options.linebreak), at: index)
+    }
 }

@@ -838,7 +838,7 @@ Removes unnecessary `@objc` annotation from properties and functions.
 
 ```diff
 - @IBAction @objc func goBack() {}
-+ @IBOutlet func goBack() {}
++ @IBAction func goBack() {}
 ```
 
 ```diff

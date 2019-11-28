@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.41.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.41.2) (2019-11-27)
+
+- Fixed bug with `trailingCommas` rule incorrectly inserting a comma into wrapped collection type expressions
+
 ## [0.41.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.41.1) (2019-11-25)
 
 - Fixed bug with `wrapArguments` rule incorrectly wrapping code inside interpolated String expressions

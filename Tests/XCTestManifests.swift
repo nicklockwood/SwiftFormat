@@ -254,6 +254,7 @@ extension MetadataTests {
         ("testAllOptionsInRulesFile", testAllOptionsInRulesFile),
         ("testAllRulesInRulesFile", testAllRulesInRulesFile),
         ("testGenerateRulesDocumentation", testGenerateRulesDocumentation),
+        ("testLatestVersionInChangelog", testLatestVersionInChangelog),
         ("testNoInvalidOptionsInRulesFile", testNoInvalidOptionsInRulesFile),
         ("testNoInvalidRulesInRulesFile", testNoInvalidRulesInRulesFile),
         ("testRuleHelpLinesEndInPeriod", testRuleHelpLinesEndInPeriod),

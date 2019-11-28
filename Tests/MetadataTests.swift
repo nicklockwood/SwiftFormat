@@ -12,6 +12,9 @@ import XCTest
 private let projectDirectory = URL(fileURLWithPath: #file)
     .deletingLastPathComponent().deletingLastPathComponent()
 
+private let changeLogURL =
+    projectDirectory.appendingPathComponent("CHANGELOG.md")
+
 private let rulesURL =
     projectDirectory.appendingPathComponent("Rules.md")
 
@@ -166,5 +169,14 @@ class MetadataTests: XCTestCase {
         for key in FormatRules.examplesByName.keys {
             XCTAssertNotNil(FormatRules.byName[key], "Examples includes entry for unknown rule 'key'")
         }
+    }
+
+    // MARK: releases
+
+    func testLatestVersionInChangelog() {
+        let changelog = try! String(contentsOf: changeLogURL, encoding: .utf8)
+        XCTAssertTrue(changelog.contains("[\(SwiftFormat.version)]"), "CHANGELOG.md does not mention latest release")
+        XCTAssertTrue(changelog.contains("(https://github.com/nicklockwood/SwiftFormat/releases/tag/\(SwiftFormat.version))"),
+                      "CHANGELOG.md does not include correct link for latest release")
     }
 }

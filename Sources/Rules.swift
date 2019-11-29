@@ -3175,23 +3175,29 @@ public struct _FormatRules {
             case .endOfScope("}"):
                 currentPriority += 6
                 addBreakPoint(at: i - 1, relativePriority: -6)
-            case .startOfScope("["):
+            case .startOfScope("("):
                 addBreakPoint(at: i, relativePriority: -7)
                 currentPriority -= 7
-            case .endOfScope("]"):
+            case .endOfScope(")"):
                 currentPriority += 7
                 addBreakPoint(at: i - 1, relativePriority: -7)
-            case .startOfScope("("):
+            case .startOfScope("["):
                 addBreakPoint(at: i, relativePriority: -8)
                 currentPriority -= 8
-            case .endOfScope(")"):
+            case .endOfScope("]"):
                 currentPriority += 8
                 addBreakPoint(at: i - 1, relativePriority: -8)
+            case .startOfScope("<"):
+                addBreakPoint(at: i, relativePriority: -9)
+                currentPriority -= 9
+            case .endOfScope(">"):
+                currentPriority += 9
+                addBreakPoint(at: i - 1, relativePriority: -9)
             case .startOfScope where token.isStringDelimiter:
                 stringLiteralDepth += 1
             case .endOfScope where token.isStringDelimiter:
                 stringLiteralDepth -= 1
-            case .keyword("else"):
+            case .keyword("else"), .keyword("where"):
                 addBreakPoint(at: i - 1, relativePriority: -1)
             case .keyword("in"):
                 if formatter.last(.keyword, before: i) == .keyword("for") {
@@ -3338,66 +3344,68 @@ public struct _FormatRules {
                 formatter.insertLinebreak(at: breakIndex)
             }
         }
-        formatter.forEach(.startOfScope) { i, token in
-            guard let endOfScope = formatter.endOfScope(at: i) else {
-                return
-            }
-            let mode: WrapMode
-            var checkNestedScopes = true
-            var endOfScopeOnSameLine = false
-            switch token.string {
-            case "(":
-                guard formatter.index(of: .delimiter, in: i + 1 ..< endOfScope) != nil else {
-                    // Not an argument list, or only one argument
+        for scopeType in ["(", "[", "<"] {
+            formatter.forEach(.startOfScope(scopeType)) { i, _ in
+                guard let endOfScope = formatter.endOfScope(at: i) else {
                     return
                 }
-                checkNestedScopes = false
-                endOfScopeOnSameLine = formatter.options.closingParenOnSameLine
-                fallthrough
-            case "<":
-                mode = formatter.options.wrapArguments
-            case "[":
-                mode = formatter.options.wrapCollections
-            default:
-                return
-            }
-            guard mode != .disabled, let firstIdentifierIndex =
-                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                !formatter.isStringLiteral(at: i) else {
-                return
-            }
-            let maxWidth = formatter.options.maxWidth
-            if let firstLinebreakIndex = checkNestedScopes ?
-                (i ..< endOfScope).first(where: { formatter.tokens[$0].isLinebreak }) :
-                formatter.index(of: .linebreak, in: i + 1 ..< endOfScope) {
-                switch mode {
-                case .beforeFirst:
-                    wrapArgumentsBeforeFirst(startOfScope: i,
-                                             endOfScope: endOfScope,
-                                             allowGrouping: firstIdentifierIndex > firstLinebreakIndex,
-                                             endOfScopeOnSameLine: endOfScopeOnSameLine)
-                case .preserve where firstIdentifierIndex > firstLinebreakIndex:
-                    wrapArgumentsBeforeFirst(startOfScope: i,
-                                             endOfScope: endOfScope,
-                                             allowGrouping: true,
-                                             endOfScopeOnSameLine: endOfScopeOnSameLine)
-                case .afterFirst, .preserve:
-                    wrapArgumentsAfterFirst(startOfScope: i,
-                                            endOfScope: endOfScope,
-                                            allowGrouping: true)
-                case .disabled:
-                    assertionFailure() // Shouldn't happen
+                let mode: WrapMode
+                var checkNestedScopes = true
+                var endOfScopeOnSameLine = false
+                switch scopeType {
+                case "(":
+                    guard formatter.index(of: .delimiter, in: i + 1 ..< endOfScope) != nil else {
+                        // Not an argument list, or only one argument
+                        return
+                    }
+                    checkNestedScopes = false
+                    endOfScopeOnSameLine = formatter.options.closingParenOnSameLine
+                    fallthrough
+                case "<":
+                    mode = formatter.options.wrapArguments
+                case "[":
+                    mode = formatter.options.wrapCollections
+                default:
+                    return
                 }
-            } else if maxWidth > 0, maxWidth < formatter.lineLength(upTo: endOfScope + 1) {
-                if mode == .beforeFirst {
-                    wrapArgumentsBeforeFirst(startOfScope: i,
-                                             endOfScope: endOfScope,
-                                             allowGrouping: false,
-                                             endOfScopeOnSameLine: endOfScopeOnSameLine)
-                } else {
-                    wrapArgumentsAfterFirst(startOfScope: i,
-                                            endOfScope: endOfScope,
-                                            allowGrouping: true)
+                guard mode != .disabled, let firstIdentifierIndex =
+                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                    !formatter.isStringLiteral(at: i) else {
+                    return
+                }
+                let maxWidth = formatter.options.maxWidth
+                if let firstLinebreakIndex = checkNestedScopes ?
+                    (i ..< endOfScope).first(where: { formatter.tokens[$0].isLinebreak }) :
+                    formatter.index(of: .linebreak, in: i + 1 ..< endOfScope) {
+                    switch mode {
+                    case .beforeFirst:
+                        wrapArgumentsBeforeFirst(startOfScope: i,
+                                                 endOfScope: endOfScope,
+                                                 allowGrouping: firstIdentifierIndex > firstLinebreakIndex,
+                                                 endOfScopeOnSameLine: endOfScopeOnSameLine)
+                    case .preserve where firstIdentifierIndex > firstLinebreakIndex:
+                        wrapArgumentsBeforeFirst(startOfScope: i,
+                                                 endOfScope: endOfScope,
+                                                 allowGrouping: true,
+                                                 endOfScopeOnSameLine: endOfScopeOnSameLine)
+                    case .afterFirst, .preserve:
+                        wrapArgumentsAfterFirst(startOfScope: i,
+                                                endOfScope: endOfScope,
+                                                allowGrouping: true)
+                    case .disabled:
+                        assertionFailure() // Shouldn't happen
+                    }
+                } else if maxWidth > 0, maxWidth < formatter.lineLength(upTo: endOfScope + 1) {
+                    if mode == .beforeFirst {
+                        wrapArgumentsBeforeFirst(startOfScope: i,
+                                                 endOfScope: endOfScope,
+                                                 allowGrouping: false,
+                                                 endOfScopeOnSameLine: endOfScopeOnSameLine)
+                    } else {
+                        wrapArgumentsAfterFirst(startOfScope: i,
+                                                endOfScope: endOfScope,
+                                                allowGrouping: true)
+                    }
                 }
             }
         }

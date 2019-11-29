@@ -669,6 +669,8 @@ extension RulesTests {
         ("testKnRBracesAfterMultilineComment2", testKnRBracesAfterMultilineComment2),
         ("testKnRBracesAreConverted", testKnRBracesAreConverted),
         ("testKnRClosingBraceWrapped", testKnRClosingBraceWrapped),
+        ("testKnRClosureArgumentsKeptWithBrace", testKnRClosureArgumentsKeptWithBrace),
+        ("testKnRClosureArgumentsKeptWithBrace2", testKnRClosureArgumentsKeptWithBrace2),
         ("testKnRExtraSpaceNotAddedBeforeBrace", testKnRExtraSpaceNotAddedBeforeBrace),
         ("testKnRInlineBracesNotWrapped", testKnRInlineBracesNotWrapped),
         ("testKnRLinebreakNotRemovedBeforeInlineBlockNot", testKnRLinebreakNotRemovedBeforeInlineBlockNot),

@@ -3186,6 +3186,38 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testKnRClosureArgumentsKeptWithBrace() {
+        let input = """
+        let foo =
+        { bar, baz in
+            print(bar, baz)
+        }
+        """
+        let output = """
+        let foo = { bar, baz in
+            print(bar, baz)
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testKnRClosureArgumentsKeptWithBrace2() {
+        let input = """
+        let foo =
+        { () -> Bool in
+            false
+        }
+        """
+        let output = """
+        let foo = { () -> Bool in
+            false
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // allman style
 
     func testKnRBracesAreConverted() {

@@ -46,7 +46,7 @@ public class Formatter: NSObject {
     private var wasNextDirective = false
 
     // Current rule, used for handling comment directives
-    var currentRule: String? {
+    var currentRule: FormatRule? {
         didSet {
             disabledCount = 0
             disabledNext = 0
@@ -61,7 +61,7 @@ public class Formatter: NSObject {
         let prefix = "swiftformat:"
         guard let rule = currentRule, comment.hasPrefix(prefix),
             let directive = ["disable", "enable"].first(where: { comment.hasPrefix("\(prefix)\($0)") }),
-            comment.range(of: "\\b(\(rule)|all)\\b", options: .regularExpression) != nil else {
+            comment.range(of: "\\b(\(rule.name)|all)\\b", options: .regularExpression) != nil else {
             return
         }
         wasNextDirective = comment.hasPrefix("\(prefix)\(directive):next")

@@ -10,7 +10,7 @@ import Foundation
 
 extension FormatRule {
     var examples: String? {
-        return name.flatMap { examplesByRuleName[$0] }
+        return examplesByRuleName[name]
     }
 }
 

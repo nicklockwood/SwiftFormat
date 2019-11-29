@@ -27,11 +27,11 @@ class MetadataTests: XCTestCase {
     func testGenerateRulesDocumentation() throws {
         var result = "# Rules\n"
         for rule in FormatRules.all {
-            result += "\n* [\(rule.name!)](#\(rule.name!))"
+            result += "\n* [\(rule.name)](#\(rule.name))"
         }
         result += "\n\n----------"
         for rule in FormatRules.all {
-            result += "\n\n## \(rule.name!)\n\n\(rule.help)"
+            result += "\n\n## \(rule.name)\n\n\(rule.help)"
             if !rule.options.isEmpty {
                 result += "\n\nOption | Description\n--- | ---"
                 for option in rule.options {
@@ -78,7 +78,7 @@ class MetadataTests: XCTestCase {
     func testRuleHelpLinesEndInPeriod() {
         for rule in FormatRules.all {
             XCTAssert(rule.help.hasSuffix(".") || rule.help.hasSuffix(".)"),
-                      "\(rule.name!) rule help does not end in a period")
+                      "\(rule.name) rule help does not end in a period")
         }
     }
 

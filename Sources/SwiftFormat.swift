@@ -425,7 +425,7 @@ public func applyRules(_ rules: [FormatRule],
                 rule.apply(with: formatter)
             }
             guard group.wait(timeout: .now() + timeout) != .timedOut else {
-                throw FormatError.writing("\(rule.name ?? "Rule") rule timed out")
+                throw FormatError.writing("\(rule.name) rule timed out")
             }
             callback?(i, formatter.tokens)
         }

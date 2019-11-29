@@ -33,7 +33,7 @@ import Foundation
 
 public final class FormatRule {
     private let fn: (Formatter) -> Void
-    fileprivate(set) var name: String?
+    fileprivate(set) var name = ""
     let help: String
     let options: [String]
     let sharedOptions: [String]
@@ -49,7 +49,7 @@ public final class FormatRule {
     }
 
     public func apply(with formatter: Formatter) {
-        formatter.currentRule = name
+        formatter.currentRule = self
         fn(formatter)
         formatter.currentRule = nil
     }

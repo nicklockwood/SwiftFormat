@@ -1006,8 +1006,8 @@ class TokenizerTests: XCTestCase {
     }
 
     func testEmoji() {
-        let input = "💩"
-        let output: [Token] = [.identifier("💩")]
+        let input = "🙃"
+        let output: [Token] = [.identifier("🙃")]
         XCTAssertEqual(tokenize(input), output)
     }
 

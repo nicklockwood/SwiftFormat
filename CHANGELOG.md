@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.42.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.42.0) (2019-11-30)
+
+- Added `wrap` rule for automatic wrapping of long statements or expressions based on `--maxwidth` option
+- Fixed bug with `braces` rule inserting a redundant blank line at the start of nested scopes
+
 ## [0.41.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.41.2) (2019-11-27)
 
 - Fixed bug with `trailingCommas` rule incorrectly inserting a comma into wrapped collection type expressions

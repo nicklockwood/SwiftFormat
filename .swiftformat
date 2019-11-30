@@ -30,9 +30,10 @@
 --self remove
 --semicolons inline
 --stripunusedargs always
+--swiftversion 4.2
 --trimwhitespace always
---wraparguments preserve
---wrapcollections preserve
+--wraparguments before-first
+--wrapcollections before-first
 
 # rules
 

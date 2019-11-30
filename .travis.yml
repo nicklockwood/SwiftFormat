@@ -15,8 +15,9 @@ matrix:
         - xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test | bundle exec xcpretty
       after_success: bundle exec slather
     - os: linux
-      language: generic
+      dist: xenial
       sudo: required
-      dist: trusty
+      services: docker
+      env: DOCKER_IMAGE=swift:5.0.3-xenial SWIFT_SNAPSHOT=5.0.3 SWIFT_TEST_ARGS="--parallel"
       install: eval "$(curl -sL https://swiftenv.fuller.li/install.sh)"
       script: swift test

@@ -32,8 +32,8 @@
 --stripunusedargs always
 --swiftversion 4.2
 --trimwhitespace always
---wraparguments before-first
---wrapcollections before-first
+--wraparguments preserve
+--wrapcollections preserve
 
 # rules
 

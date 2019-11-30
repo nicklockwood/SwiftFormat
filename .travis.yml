@@ -18,6 +18,6 @@ matrix:
       dist: xenial
       sudo: required
       services: docker
-      env: DOCKER_IMAGE=swift:5.0.3-xenial SWIFT_SNAPSHOT=5.0.3 SWIFT_TEST_ARGS="--parallel"
+      env: DOCKER_IMAGE=swift:5.0.3-xenial SWIFT_SNAPSHOT=5.0.3 SWIFT_VERSION=5.0.3 SWIFT_TEST_ARGS="--parallel"
       install: eval "$(curl -sL https://swiftenv.fuller.li/install.sh)"
       script: swift test

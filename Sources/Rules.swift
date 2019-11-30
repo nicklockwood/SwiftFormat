@@ -1233,23 +1233,20 @@ public struct _FormatRules {
             }
             if formatter.options.allmanBraces {
                 // Implement Allman-style braces, where opening brace appears on the next line
-                if let prevTokenIndex = formatter.index(of: .nonSpace, before: i),
-                    let prevToken = formatter.token(at: prevTokenIndex) {
-                    switch prevToken {
-                    case .identifier, .keyword, .endOfScope,
-                         .operator("?", .postfix), .operator("!", .postfix):
-                        formatter.insertLinebreak(at: i)
-                        if let breakIndex = formatter.index(of: .linebreak, after: i + 1),
-                            let nextIndex = formatter.index(of: .nonSpace, after: breakIndex, if: { $0.isLinebreak }) {
-                            formatter.removeTokens(inRange: breakIndex ..< nextIndex)
-                        }
-                        formatter.insertSpace(formatter.indentForLine(at: i), at: i + 1)
-                        if formatter.tokens[i - 1].isSpace {
-                            formatter.removeToken(at: i - 1)
-                        }
-                    default:
-                        break
+                switch formatter.last(.nonSpace, before: i) ?? .space("") {
+                case .identifier, .keyword, .endOfScope,
+                     .operator("?", .postfix), .operator("!", .postfix):
+                    formatter.insertLinebreak(at: i)
+                    if let breakIndex = formatter.index(of: .linebreak, after: i + 1),
+                        let nextIndex = formatter.index(of: .nonSpace, after: breakIndex, if: { $0.isLinebreak }) {
+                        formatter.removeTokens(inRange: breakIndex ..< nextIndex)
                     }
+                    formatter.insertSpace(formatter.indentForLine(at: i), at: i + 1)
+                    if formatter.tokens[i - 1].isSpace {
+                        formatter.removeToken(at: i - 1)
+                    }
+                default:
+                    break
                 }
             } else {
                 // Implement K&R-style braces, where opening brace appears on the same line
@@ -1262,8 +1259,8 @@ public struct _FormatRules {
                     if formatter.token(at: i)?.isSpaceOrLinebreak == false {
                         formatter.insertToken(.space(" "), at: i)
                     }
-                } else if formatter.token(at: i)?.isSpaceOrLinebreak == true {
-                    formatter.removeToken(at: i - 1)
+                } else if let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i) {
+                    formatter.removeTokens(inRange: prevIndex + 1 ..< i)
                 }
                 formatter.insertToken(.startOfScope("{"), at: prevIndex + 1)
                 formatter.insertToken(.space(" "), at: prevIndex + 1)

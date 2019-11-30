@@ -3086,6 +3086,27 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testNestedAllmanBracesAreConverted() {
+        let input = """
+        func foo()
+        {
+            for bar in baz
+            {
+                print(bar)
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            for bar in baz {
+                print(bar)
+            }
+        }
+        """
+        XCTAssertEqual(try format(input, rules: [FormatRules.braces]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testKnRBracesAfterComment() {
         let input = "func foo() // comment\n{\n    statement\n}"
         let output = "func foo() { // comment\n    statement\n}"

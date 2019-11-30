@@ -713,6 +713,7 @@ extension RulesTests {
         ("testMultipleClosureArgumentUnwrapped", testMultipleClosureArgumentUnwrapped),
         ("testNamedClosureArgumentNotMadeTrailing", testNamedClosureArgumentNotMadeTrailing),
         ("testNamespacedVoidNotConverted", testNamespacedVoidNotConverted),
+        ("testNestedAllmanBracesAreConverted", testNestedAllmanBracesAreConverted),
         ("testNestedArrayLiteralNotEqualYodaCondition", testNestedArrayLiteralNotEqualYodaCondition),
         ("testNestedBraces", testNestedBraces),
         ("testNestedCommentIndenting", testNestedCommentIndenting),

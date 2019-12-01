@@ -178,7 +178,9 @@ The format of the configuration file is described in the [Config section](#confi
 
 Xcode build phase
 -------------------
+**NOTE:** Adding this script will overwrite your source files as you work on them, which has the annoying side-effect of clearing the undo history. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 
+### Using Swift Package Manager
 To set up SwiftFormat as an Xcode build phase, do the following:
 
 #### 1) Create a BuildTools folder & Package.swift
@@ -207,10 +209,23 @@ let package = Package(
    swift run -c release swiftformat "$SRCROOT"
    ```
 
+NOTE: You may wish to check BuildTools/Package.swift into your source control so that the version used by your run-script phase is kept in version control. It is recommended to add the following to your .gitignore file: `BuildTools/.build` and `BuildTools/.swiftpm`.
 
-    **NOTE:** Adding this script will overwrite your source files as you work on them, which has the annoying side-effect of clearing the undo history. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 
-#### Alternative: Locally installed swiftformat
+### Using Cocoapods
+1. Add the `swiftformat` binary to your project directory via [CocoaPods](https://cocoapods.org/), by adding the following line to your Podfile then running `pod install`:
+
+    ```ruby
+    pod 'SwiftFormat/CLI'
+    ```
+    **NOTE:** This will only install the pre-built command-line app, not the source code for the SwiftFormat framework.
+
+2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step:
+
+    ```bash
+    "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat"
+
+### Alternative: Locally installed swiftformat
 Alternatively, you could use a locally installed swiftformat command-line tool instead by putting the following in your Run Script build phase:
 
 ```bash

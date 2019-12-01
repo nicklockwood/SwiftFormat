@@ -178,32 +178,55 @@ The format of the configuration file is described in the [Config section](#confi
 
 Xcode build phase
 -------------------
+**NOTE:** Adding this script will overwrite your source files as you work on them, which has the annoying side-effect of clearing the undo history. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 
+### Using Swift Package Manager
 To set up SwiftFormat as an Xcode build phase, do the following:
 
-1. Add the `swiftformat` binary to your project directory (this is better than referencing a locally installed copy because it means that project will still compile on machines that don't have the `swiftformat` command-line tool installed). You can install the binary manually, or via [CocoaPods](https://cocoapods.org/), by adding the following line to your Podfile then running `pod install`:
+#### 1) Create a BuildTools folder & Package.swift
+1. Create a folder called `BuildTools` in the same folder as your xcodeproj file
+2. In this folder, create a file called `Package.swift`, with the following contents:
+```swift
+// swift-tools-version:5.1
+import PackageDescription
+
+let package = Package(
+    name: "BuildTools",
+	platforms: [.macOS(.v10_11)],
+    dependencies: [
+        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.41.2"),
+    ]
+)
+```
+
+#### 2) Add Build phases to your app target
+1. Click on your project in the file list, choose your target under `TARGETS`, click the `Build Phases` tab
+2. Add a `New Run Script Phase` by clicking the little plus icon in the top left
+3. Drag the new `Run Script` phase **above** the `Compile Sources` phase, expand it and paste the following script:  
+   ```bash
+   cd BuildTools
+   #swift package update #Uncomment this line temporarily to update the version used to the latest matching your BuildTools/Package.swift file
+   swift run -c release swiftformat "$SRCROOT"
+   ```
+
+NOTE: You may wish to check BuildTools/Package.swift into your source control so that the version used by your run-script phase is kept in version control. It is recommended to add the following to your .gitignore file: `BuildTools/.build` and `BuildTools/.swiftpm`.
+
+
+### Using Cocoapods
+1. Add the `swiftformat` binary to your project directory via [CocoaPods](https://cocoapods.org/), by adding the following line to your Podfile then running `pod install`:
 
     ```ruby
     pod 'SwiftFormat/CLI'
     ```
-
     **NOTE:** This will only install the pre-built command-line app, not the source code for the SwiftFormat framework.
 
-2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step. The script should be
-
-    ```bash
-    "${SRCROOT}/path/to/swiftformat" "${SRCROOT}/path/to/your/swift/code/"
-    ```
-        
-	Both paths should be relative to the directory containing your Xcode project. If you are installing SwiftFormat using Cocoapods, the path will be
+2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step:
 
     ```bash
     "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat"
-    ```
-	    
-    **NOTE:** Adding this script will overwrite your source files as you work on them, which has the annoying side-effect of clearing the undo history. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 
-Alternatively, you can skip installation of the SwiftFormat pod and configure Xcode to use the locally installed swiftformat command-line tool instead by putting the following in your Run Script build phase:
+### Alternative: Locally installed swiftformat
+Alternatively, you could use a locally installed swiftformat command-line tool instead by putting the following in your Run Script build phase:
 
 ```bash
 if which swiftformat >/dev/null; then

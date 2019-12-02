@@ -90,7 +90,7 @@ class FormatterTests: XCTestCase {
             (.startOfScope("//"), 0),
             (.space(" "), 0),
             (.commentBody("bar"), 0),
-            (.linebreak("\n"), 0),
+            (.linebreak("\n", 1), 0),
         ]
         let formatter = Formatter(input, options: .default)
         let index = formatter.index(before: 4, where: { !$0.isSpaceOrComment })
@@ -105,7 +105,7 @@ class FormatterTests: XCTestCase {
             (.commentBody("bar"), 0),
             (.space(" "), 0),
             (.endOfScope("*/"), 0),
-            (.linebreak("\n"), 0),
+            (.linebreak("\n", 1), 0),
         ]
         let formatter = Formatter(input, options: .default)
         let index = formatter.index(before: 6, where: { !$0.isSpaceOrComment })

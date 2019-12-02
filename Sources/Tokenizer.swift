@@ -121,6 +121,9 @@ private struct StringDelimiterType {
     var hashCount: Int
 }
 
+// Original line number for token
+public typealias OriginalLine = Int
+
 public typealias TokenWL = (token: Token, lineNum: Int)
 
 public func == (lhs: [TokenWL], rhs: [TokenWL]) -> Bool {
@@ -145,7 +148,7 @@ public func == (lhs: TokenWL, rhs: Token) -> Bool {
 /// All token types
 public enum Token: Equatable {
     case number(String, NumberType)
-    case linebreak(String)
+    case linebreak(String, OriginalLine)
     case startOfScope(String)
     case endOfScope(String)
     case delimiter(String)
@@ -157,11 +160,17 @@ public enum Token: Equatable {
     case commentBody(String)
     case error(String)
 
+    /// Backwards-compatible convenience function for creating linebreaks
+    @available(*, deprecated, message: "Use linebreak(String, OriginalLine) instead")
+    public static func linebreak(_ string: String) -> Token {
+        return linebreak(string, 1)
+    }
+
     /// The original token string
     public var string: String {
         switch self {
         case let .number(string, _),
-             let .linebreak(string),
+             let .linebreak(string, _),
              let .startOfScope(string),
              let .endOfScope(string),
              let .delimiter(string),
@@ -309,7 +318,7 @@ public enum Token: Equatable {
             return a == b ?
                 (c == d ? .exact : .typeAndString) :
                 (c == d ? .typeAndSubtype : .type)
-        case let (.linebreak(a), .linebreak(b)),
+        case let (.linebreak(a, _), .linebreak(b, _)),
              let (.startOfScope(a), .startOfScope(b)),
              let (.endOfScope(a), .endOfScope(b)),
              let (.delimiter(a), .delimiter(b)),
@@ -353,7 +362,7 @@ public enum Token: Equatable {
     public var isIdentifier: Bool { return hasType(of: .identifier("")) }
     public var isIdentifierOrKeyword: Bool { return isIdentifier || isKeyword }
     public var isSpace: Bool { return hasType(of: .space("")) }
-    public var isLinebreak: Bool { return hasType(of: .linebreak("")) }
+    public var isLinebreak: Bool { return hasType(of: .linebreak("", 0)) }
     public var isEndOfStatement: Bool { return self == .delimiter(";") || isLinebreak }
     public var isSpaceOrLinebreak: Bool { return isSpace || isLinebreak }
     public var isSpaceOrComment: Bool { return isSpace || isComment }
@@ -703,16 +712,15 @@ private extension UnicodeScalarView {
     }
 
     mutating func parseLineBreak() -> TokenWL? {
-        var ret: Token?
-
+        let ret: Token?
         if read("\r") {
             if read("\n") {
-                ret = .linebreak("\r\n")
+                ret = .linebreak("\r\n", _lines)
             } else {
-                ret = .linebreak("\r")
+                ret = .linebreak("\r", _lines)
             }
         } else {
-            ret = read("\n") ? .linebreak("\n") : nil
+            ret = read("\n") ? .linebreak("\n", _lines) : nil
         }
 
         if let ret = ret {
@@ -1155,10 +1163,11 @@ public func tokenize(_ source: String) -> [TokenWL] {
                     tokens.append((.stringBody(string), _lines))
                     string = ""
                 }
+                _lines += 1
                 if c == "\r", characters.read("\n") {
-                    tokens.append((.linebreak("\r\n"), _lines))
+                    tokens.append((.linebreak("\r\n", _lines - 1), _lines))
                 } else {
-                    tokens.append((.linebreak(String(c)), _lines))
+                    tokens.append((.linebreak(String(c), _lines - 1), _lines))
                 }
                 if let space = characters.parseSpace() {
                     tokens.append((space.token, _lines))
@@ -1249,9 +1258,9 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 _lines += 1 // TODO: Check.
                 flushCommentBodyTokens()
                 if c == "\r", characters.read("\n") {
-                    tokens.append((.linebreak("\r\n"), _lines))
+                    tokens.append((.linebreak("\r\n", _lines - 1), _lines))
                 } else {
-                    tokens.append((.linebreak(String(c)), _lines))
+                    tokens.append((.linebreak(String(c), _lines - 1), _lines))
                 }
                 continue
             default:

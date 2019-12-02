@@ -125,6 +125,7 @@ extension FormatterTests {
         ("testEnableNextWithMultilineComment", testEnableNextWithMultilineComment),
         ("testIndexBeforeComment", testIndexBeforeComment),
         ("testIndexBeforeMultilineComment", testIndexBeforeMultilineComment),
+        ("testLinebreakAfterLinebreakReturnsCorrectIndex", testLinebreakAfterLinebreakReturnsCorrectIndex),
         ("testRemoveCurrentTokenWhileEnumerating", testRemoveCurrentTokenWhileEnumerating),
         ("testRemoveNextTokenWhileEnumerating", testRemoveNextTokenWhileEnumerating),
         ("testRemovePreviousTokenWhileEnumerating", testRemovePreviousTokenWhileEnumerating),

@@ -90,7 +90,7 @@ class FormatterTests: XCTestCase {
             (.startOfScope("//"), 0),
             (.space(" "), 0),
             (.commentBody("bar"), 0),
-            (.linebreak("\n"), 0),
+            (.linebreak("\n", 1), 0),
         ]
         let formatter = Formatter(input, options: .default)
         let index = formatter.index(before: 4, where: { !$0.isSpaceOrComment })
@@ -105,7 +105,7 @@ class FormatterTests: XCTestCase {
             (.commentBody("bar"), 0),
             (.space(" "), 0),
             (.endOfScope("*/"), 0),
-            (.linebreak("\n"), 0),
+            (.linebreak("\n", 1), 0),
         ]
         let formatter = Formatter(input, options: .default)
         let index = formatter.index(before: 6, where: { !$0.isSpaceOrComment })
@@ -238,5 +238,15 @@ class FormatterTests: XCTestCase {
         let input = "//swiftformat:disable all\n/*swiftformat:enable:next all*/\nlet foo : Int=5;\nlet foo : Int=5;"
         let output = "// swiftformat:disable all\n/*swiftformat:enable:next all*/\nlet foo: Int = 5\nlet foo : Int=5;"
         XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
+    // MARK: linebreaks
+
+    func testLinebreakAfterLinebreakReturnsCorrectIndex() {
+        let formatter = Formatter([
+            .linebreak("\n", 1),
+            .linebreak("\n", 1),
+        ])
+        XCTAssertEqual(formatter.linebreakToken(for: 1), .linebreak("\n", 1))
     }
 }

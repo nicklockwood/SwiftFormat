@@ -102,11 +102,11 @@ private struct Inference {
         var cr: Int = 0, lf: Int = 0, crlf: Int = 0
         formatter.forEachToken { _, token in
             switch token {
-            case .linebreak("\n"):
+            case .linebreak("\n", _):
                 lf += 1
-            case .linebreak("\r"):
+            case .linebreak("\r", _):
                 cr += 1
-            case .linebreak("\r\n"):
+            case .linebreak("\r\n", _):
                 crlf += 1
             default:
                 break

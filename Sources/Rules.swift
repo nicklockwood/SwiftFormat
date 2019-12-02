@@ -1315,7 +1315,7 @@ public struct _FormatRules {
                         $0 == .endOfScope("}")
                     }), bracesContainLinebreak(prevBraceIndex) {
                     formatter.replaceTokens(inRange: prevIndex + 1 ..< i, with:
-                        [.linebreak(formatter.options.linebreak)])
+                        [formatter.linebreakToken(for: prevIndex + 1)])
                     formatter.insertSpace(formatter.indentForLine(at: i), at: prevIndex + 2)
                 }
             default:
@@ -1462,7 +1462,7 @@ public struct _FormatRules {
                         formatter.removeToken(at: i + 1)
                     }
                     formatter.insertSpace(formatter.indentForLine(at: i), at: i + 1)
-                    formatter.replaceToken(at: i, with: .linebreak(formatter.options.linebreak))
+                    formatter.replaceToken(at: i, with: formatter.linebreakToken(for: i))
                 }
             } else {
                 // Safe to remove
@@ -1478,7 +1478,7 @@ public struct _FormatRules {
         isSilent: true
     ) { formatter in
         formatter.forEach(.linebreak) { i, _ in
-            formatter.replaceToken(at: i, with: .linebreak(formatter.options.linebreak))
+            formatter.replaceToken(at: i, with: formatter.linebreakToken(for: i))
         }
     }
 
@@ -3747,7 +3747,7 @@ public struct _FormatRules {
                 var tokens = formatter.tokens[inputRange.1].map { $0.token }
                 if tokens.first?.isLinebreak == false {
                     insertedLinebreak = true
-                    tokens.insert(Token.linebreak(formatter.options.linebreak), at: tokens.startIndex)
+                    tokens.insert(formatter.linebreakToken(for: tokens.startIndex), at: tokens.startIndex)
                 }
                 return tokens
             }

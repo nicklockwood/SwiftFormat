@@ -441,8 +441,29 @@ public class Formatter: NSObject {
         return 0 // Inserted 0 tokens
     }
 
+    /// Returns the original line number at the specified index
+    public func originalLine(at index: Int) -> OriginalLine {
+        for token in tokens[0 ..< index].reversed() {
+            if case let .linebreak(_, line) = token {
+                return line + 1
+            }
+        }
+        return 1
+    }
+
+    /// Returns a linebreak token suitable for insertion at the specified index
+    public func linebreakToken(for index: Int) -> Token {
+        let lineNumber: Int
+        if case let .linebreak(_, index)? = token(at: index) {
+            lineNumber = index
+        } else {
+            lineNumber = originalLine(at: index)
+        }
+        return .linebreak(options.linebreak, lineNumber)
+    }
+
     /// Inserts a linebreak at the specified index
-    func insertLinebreak(at index: Int) {
-        insertToken(.linebreak(options.linebreak), at: index)
+    public func insertLinebreak(at index: Int) {
+        insertToken(linebreakToken(for: index), at: index)
     }
 }

@@ -122,7 +122,7 @@ public class Formatter: NSObject {
         if tokens.isEmpty {
             removeToken(at: index)
         } else {
-            _printWarning(self.tokens[index].lineNum)
+            _printWarning(originalLine(at: index))
             self.tokens[index].token = tokens[0]
             for (i, token) in tokens.dropFirst().enumerated() {
                 insertToken(token, at: index + i + 1)
@@ -134,7 +134,7 @@ public class Formatter: NSObject {
     public func replaceTokens(inRange range: Range<Int>, with tokens: [Token]) {
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
-            _printWarning(self.tokens[range.lowerBound + i].lineNum)
+            _printWarning(originalLine(at: range.lowerBound + i))
             self.tokens[range.lowerBound + i].token = tokens[i]
         }
         if range.count > max {
@@ -155,7 +155,7 @@ public class Formatter: NSObject {
 
     /// Removes the token at the specified index
     public func removeToken(at index: Int) {
-        _printWarning(tokens[index].lineNum)
+        _printWarning(originalLine(at: index))
         tokens.remove(at: index)
         if enumerationIndex >= index {
             enumerationIndex -= 1
@@ -174,13 +174,13 @@ public class Formatter: NSObject {
 
     /// Removes the last token
     public func removeLastToken() {
-        _printWarning(tokens.last!.lineNum)
+        _printWarning(originalLine(at: tokens.endIndex - 1))
         tokens.removeLast()
     }
 
     /// Inserts an array of tokens at the specified index
     public func insertTokens(_ tokens: [Token], at index: Int) {
-        let ln = index > 0 ? self.tokens[index - 1].lineNum : 0
+        let ln = index > 0 ? originalLine(at: index - 1) : 0
         for token in tokens.reversed() {
             _printWarning(ln)
             self.tokens.insert((token, ln), at: index)

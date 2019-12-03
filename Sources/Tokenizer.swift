@@ -715,12 +715,12 @@ private extension UnicodeScalarView {
         let ret: Token?
         if read("\r") {
             if read("\n") {
-                ret = .linebreak("\r\n", _lines)
+                ret = .linebreak("\r\n", 0)
             } else {
-                ret = .linebreak("\r", _lines)
+                ret = .linebreak("\r", 0)
             }
         } else {
-            ret = read("\n") ? .linebreak("\n", _lines) : nil
+            ret = read("\n") ? .linebreak("\n", 0) : nil
         }
 
         if let ret = ret {
@@ -1067,6 +1067,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
     var tokens: [TokenWL] = []
     var characters = UnicodeScalarView(source.unicodeScalars)
     var closedGenericScopeIndexes: [Int] = []
+    var lineNumber = 1
 
     func readHashes(upTo max: Int) -> Int {
         var count = 0
@@ -1139,7 +1140,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
                         if case let (.stringBody(body), num) = tokens[index + 1] {
                             tokens[index + 1] = (.stringBody(remainder + body), num)
                         } else {
-                            tokens.insert((.stringBody(remainder), tokens[index + 1].lineNum), at: index + 1)
+                            tokens.insert((.stringBody(remainder), originalLineForToken(at: index + 1, in: tokens)), at: index + 1)
                         }
                         if offset.isEmpty {
                             tokens.remove(at: index)
@@ -1165,10 +1166,11 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 }
                 _lines += 1
                 if c == "\r", characters.read("\n") {
-                    tokens.append((.linebreak("\r\n", _lines - 1), _lines))
+                    tokens.append((.linebreak("\r\n", lineNumber), _lines))
                 } else {
-                    tokens.append((.linebreak(String(c), _lines - 1), _lines))
+                    tokens.append((.linebreak(String(c), lineNumber), _lines))
                 }
+                lineNumber += 1
                 if let space = characters.parseSpace() {
                     tokens.append((space.token, _lines))
                 }
@@ -1258,10 +1260,11 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 _lines += 1 // TODO: Check.
                 flushCommentBodyTokens()
                 if c == "\r", characters.read("\n") {
-                    tokens.append((.linebreak("\r\n", _lines - 1), _lines))
+                    tokens.append((.linebreak("\r\n", lineNumber), _lines))
                 } else {
-                    tokens.append((.linebreak(String(c), _lines - 1), _lines))
+                    tokens.append((.linebreak(String(c), lineNumber), _lines))
                 }
+                lineNumber += 1
                 continue
             default:
                 if c.isSpace {
@@ -1484,6 +1487,13 @@ public func tokenize(_ source: String) -> [TokenWL] {
             fallthrough
         case .startOfScope:
             closedGenericScopeIndexes.removeAll()
+        case let .linebreak(string, line):
+            if line == 0 {
+                tokens[count - 1].token = .linebreak(string, lineNumber)
+                lineNumber += 1
+            } else {
+                lineNumber = line + 1
+            }
         default:
             break
         }
@@ -1720,7 +1730,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
         default:
             if tokens.last?.token.isError == false {
                 // File ended with scope still open
-                tokens.append((.error(""), tokens.last?.lineNum ?? 0))
+                tokens.append((.error(""), originalLineForToken(at: tokens.endIndex, in: tokens)))
             }
             break loop
         }

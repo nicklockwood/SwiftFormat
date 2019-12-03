@@ -335,11 +335,25 @@ public func enumerateFiles(withInputURL inputURL: URL,
     return errors
 }
 
+/// Get original line  number for token
+/// Note: line indexes start at 1
+public func originalLineForToken(at index: Int, in tokens: [TokenWL]) -> OriginalLine {
+    for token in tokens[..<index].reversed() {
+        switch token.token {
+        case let .linebreak(_, line):
+            return line + 1
+        default:
+            break
+        }
+    }
+    return 1
+}
+
 /// Get line/column offset for token
 /// Note: line indexes start at 1, columns start at zero
 public func offsetForToken(at index: Int, in tokens: [Token], tabWidth: Int) -> (line: Int, column: Int) {
     var column = 0
-    for token in tokens[0 ..< index] {
+    for token in tokens[..<index].reversed() {
         switch token {
         case let .linebreak(_, line):
             return (line + 1, column)

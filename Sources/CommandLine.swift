@@ -598,7 +598,7 @@ func printResult(_ dryrun: Bool, _ lint: Bool, _ flags: OutputFlags) -> ExitCode
 }
 
 func inferOptions(from inputURLs: [URL], options: FileOptions) -> (Int, FormatOptions, [Error]) {
-    var tokens = [TokenWL]()
+    var tokens = [Token]()
     var errors = [Error]()
     var filesParsed = 0
     let baseOptions = Options(fileOptions: options)
@@ -637,13 +637,10 @@ func format(_ source: String, options: Options, verbose: Bool) throws -> String 
     let ruleNames = Array(options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)).sorted()
     let rules = ruleNames.compactMap { rulesByName[$0] }
     var rulesApplied = Set<String>()
-    let callback: ((Int, [TokenWL], [String]) -> Void)? = verbose ? { i, updatedTokens, warnings in
+    let callback: ((Int, [Token], [String]) -> Void)? = verbose ? { i, updatedTokens, warnings in
         guard updatedTokens != tokens else { return }
-
         rulesApplied.insert(ruleNames[i])
-        warnings.forEach {
-            print($0)
-        }
+        warnings.forEach { print($0) }
         tokens = updatedTokens
     } : nil
 
@@ -662,7 +659,7 @@ func format(_ source: String, options: Options, verbose: Bool) throws -> String 
     }
 
     // Output
-    return sourceCode(for: tokens.map { $0.token })
+    return sourceCode(for: tokens)
 }
 
 func processInput(_ inputURLs: [URL],

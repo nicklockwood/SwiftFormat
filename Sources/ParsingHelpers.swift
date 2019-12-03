@@ -65,7 +65,7 @@ extension Formatter {
     func lineLength(at index: Int) -> Int {
         var length = 0
         for token in tokens[startOfLine(at: index) ..< endOfLine(at: index)] {
-            length += token.token.string.count
+            length += token.string.count
         }
         return length
     }
@@ -74,7 +74,7 @@ extension Formatter {
     func lineLength(upTo index: Int) -> Int {
         var length = 0
         for token in tokens[startOfLine(at: index) ..< index] {
-            length += token.token.string.count
+            length += token.string.count
         }
         return length
     }
@@ -82,7 +82,7 @@ extension Formatter {
     /// Returns the length (in characters) of the specified token range
     func lineLength(from start: Int, upTo end: Int) -> Int {
         return tokens[start ..< end].reduce(0) { total, token in
-            total + tokenLength(token.token)
+            total + tokenLength(token)
         }
     }
 
@@ -102,10 +102,10 @@ extension Formatter {
             return spaceEquivalentToWidth(lineLength(from: start, upTo: end))
         }
         return tokens[start ..< end].reduce(into: "") { result, token in
-            if case let .space(string) = token.token {
+            if case let .space(string) = token {
                 result += string
             } else {
-                result += String(repeating: " ", count: tokenLength(token.token))
+                result += String(repeating: " ", count: tokenLength(token))
             }
         }
     }
@@ -114,7 +114,7 @@ extension Formatter {
         let allSpecifiers = _FormatRules.allSpecifiers
         var index = index
         while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
-            switch tokens[prevIndex].token {
+            switch tokens[prevIndex] {
             case let token where contains(prevIndex, token):
                 return true
             case .endOfScope(")"):
@@ -203,7 +203,7 @@ extension Formatter {
                     names.insert(name)
                 }
                 inner: while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
-                    switch tokens[nextIndex].token {
+                    switch tokens[nextIndex] {
                     case .keyword("as"), .keyword("is"), .keyword("try"):
                         break
                     case .startOfScope("<"), .startOfScope("["), .startOfScope("("),
@@ -313,7 +313,7 @@ extension Formatter {
 
     func lastSignificantKeyword(at i: Int) -> String? {
         guard let index = self.index(of: .keyword, before: i + 1),
-            case let .keyword(keyword) = tokens[index].token else {
+            case let .keyword(keyword) = tokens[index] else {
             return nil
         }
         switch keyword {
@@ -423,10 +423,10 @@ extension Formatter {
     // Detect if currently inside a String literal
     func isStringLiteral(at index: Int) -> Bool {
         for token in tokens[..<index].reversed() {
-            switch token.token {
+            switch token {
             case .stringBody:
                 return true
-            case .endOfScope where token.token.isStringDelimiter, .linebreak:
+            case .endOfScope where token.isStringDelimiter, .linebreak:
                 return false
             default:
                 continue
@@ -475,7 +475,7 @@ extension _FormatRules {
             var previousKeywordIndex = formatter.index(of: .keyword, before: i)
             while let previousIndex = previousKeywordIndex {
                 var nextStart: Int? // workaround for Swift Linux bug
-                if formatter.tokens[previousIndex].token.isAttribute {
+                if formatter.tokens[previousIndex].isAttribute {
                     if previousIndex < startIndex {
                         nextStart = formatter.index(of: .linebreak, before: previousIndex) ?? 0
                     }
@@ -500,10 +500,10 @@ extension _FormatRules {
             let endIndex = formatter.index(of: .linebreak, after: i) ?? formatter.tokens.count
             // Get name
             if let firstPartIndex = formatter.index(of: .identifier, after: i) {
-                var name = formatter.tokens[firstPartIndex].token.string
+                var name = formatter.tokens[firstPartIndex].string
                 var partIndex = firstPartIndex
                 loop: while let nextPartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: partIndex) {
-                    switch formatter.tokens[nextPartIndex].token {
+                    switch formatter.tokens[nextPartIndex] {
                     case .operator(".", .infix):
                         name += "."
                     case let .identifier(string):
@@ -525,7 +525,7 @@ extension _FormatRules {
                 return
             }
             if var nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex) {
-                while formatter.tokens[nextTokenIndex].token.isAttribute {
+                while formatter.tokens[nextTokenIndex].isAttribute {
                     guard let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: nextTokenIndex) else {
                         // End of imports
                         pushStack()
@@ -533,7 +533,7 @@ extension _FormatRules {
                     }
                     nextTokenIndex = nextIndex
                 }
-                if formatter.tokens[nextTokenIndex].token != .keyword("import") {
+                if formatter.tokens[nextTokenIndex] != .keyword("import") {
                     // End of imports
                     pushStack()
                     return

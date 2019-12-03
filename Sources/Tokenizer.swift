@@ -124,27 +124,6 @@ private struct StringDelimiterType {
 // Original line number for token
 public typealias OriginalLine = Int
 
-public typealias TokenWL = (token: Token, lineNum: Int)
-
-public func == (lhs: [TokenWL], rhs: [TokenWL]) -> Bool {
-    guard lhs.count == rhs.count else { return false }
-
-    for i in 0 ..< lhs.count {
-        if lhs[i].token != rhs[i].token {
-            return false
-        }
-    }
-    return true
-}
-
-public func != (lhs: [TokenWL], rhs: [TokenWL]) -> Bool {
-    return !(lhs == rhs)
-}
-
-public func == (lhs: TokenWL, rhs: Token) -> Bool {
-    return lhs.token == rhs
-}
-
 /// All token types
 public enum Token: Equatable {
     case number(String, NumberType)
@@ -703,60 +682,48 @@ private extension UnicodeScalarView {
     }
 }
 
-private var _lines = 1
-private func _resetLine() { _lines = 1 }
-
 private extension UnicodeScalarView {
-    mutating func parseSpace() -> TokenWL? {
-        return readCharacters(where: { $0.isSpace }).map { (.space($0), _lines) }
+    mutating func parseSpace() -> Token? {
+        return readCharacters(where: { $0.isSpace }).map { .space($0) }
     }
 
-    mutating func parseLineBreak() -> TokenWL? {
-        let ret: Token?
+    mutating func parseLineBreak() -> Token? {
         if read("\r") {
             if read("\n") {
-                ret = .linebreak("\r\n", 0)
-            } else {
-                ret = .linebreak("\r", 0)
+                return .linebreak("\r\n", 0)
             }
-        } else {
-            ret = read("\n") ? .linebreak("\n", 0) : nil
+            return .linebreak("\r", 0)
         }
-
-        if let ret = ret {
-            _lines += 1
-            return TokenWL(token: ret, lineNum: _lines)
-        }
-        return nil
+        return read("\n") ? .linebreak("\n", 0) : nil
     }
 
-    mutating func parseDelimiter() -> TokenWL? {
+    mutating func parseDelimiter() -> Token? {
         return readCharacter(where: {
             ":;,".unicodeScalars.contains($0)
-        }).map { (.delimiter(String($0)), _lines) }
+        }).map { .delimiter(String($0)) }
     }
 
-    mutating func parseStartOfString() -> TokenWL? {
+    mutating func parseStartOfString() -> Token? {
         guard read("\"") else {
             return nil
         }
         let multiline = readString("\"\"")
-        return (.startOfScope(multiline ? "\"\"\"" : "\""), _lines)
+        return .startOfScope(multiline ? "\"\"\"" : "\"")
     }
 
-    mutating func parseStartOfScope() -> TokenWL? {
+    mutating func parseStartOfScope() -> Token? {
         return parseStartOfString() ?? readCharacter(where: {
             "<([{".unicodeScalars.contains($0)
-        }).map { (.startOfScope(String($0)), _lines) }
+        }).map { .startOfScope(String($0)) }
     }
 
-    mutating func parseEndOfScope() -> TokenWL? {
+    mutating func parseEndOfScope() -> Token? {
         return readCharacter(where: {
             "}])>".unicodeScalars.contains($0)
-        }).map { (.endOfScope(String($0)), _lines) }
+        }).map { .endOfScope(String($0)) }
     }
 
-    mutating func parseOperator() -> TokenWL? {
+    mutating func parseOperator() -> Token? {
         func isHead(_ c: UnicodeScalar) -> Bool {
             if "./\\=­-+!*%&|^~?".unicodeScalars.contains(c) {
                 return true
@@ -804,7 +771,7 @@ private extension UnicodeScalarView {
         if var tail = readCharacter(where: isHead) {
             switch tail {
             case "?", "!":
-                return (.operator(String(tail), .none), _lines)
+                return .operator(String(tail), .none)
             case "/":
                 break
             default:
@@ -812,23 +779,23 @@ private extension UnicodeScalarView {
             }
             var head = ""
             // Tail may only contain dot if head does
-            let headWasDot = tail == "."
+            let headWasDot = (tail == ".")
             while let c = readCharacter(where: { isTail($0) && (headWasDot || $0 != ".") }) {
                 if tail == "/" {
                     if c == "*" {
                         if head == "" {
-                            return (.startOfScope("/*"), _lines)
+                            return .startOfScope("/*")
                         }
                         // Can't return two tokens, so put /* back to be parsed next time
                         self = start
-                        return (.operator(head, .none), _lines)
+                        return .operator(head, .none)
                     } else if c == "/" {
                         if head == "" {
-                            return (.startOfScope("//"), _lines)
+                            return .startOfScope("//")
                         }
                         // Can't return two tokens, so put // back to be parsed next time
                         self = start
-                        return (.operator(head, .none), _lines)
+                        return .operator(head, .none)
                     }
                 }
                 if c != "/" {
@@ -838,12 +805,12 @@ private extension UnicodeScalarView {
                 tail = c
             }
             head.append(Character(tail))
-            return (.operator(head, .none), _lines)
+            return .operator(head, .none)
         }
         return nil
     }
 
-    mutating func parseIdentifier() -> TokenWL? {
+    mutating func parseIdentifier() -> Token? {
         func isHead(_ c: UnicodeScalar) -> Bool {
             switch c.value {
             case 0x41 ... 0x5A, // A-Z
@@ -921,36 +888,36 @@ private extension UnicodeScalarView {
         let start = self
         if read("`") {
             if let identifier = readIdentifier(), read("`") {
-                return (.identifier("`" + identifier + "`"), _lines)
+                return .identifier("`" + identifier + "`")
             }
             self = start
         } else if read("#") {
             if let identifier = readIdentifier() {
                 if identifier == "if" {
-                    return (.startOfScope("#if"), _lines)
+                    return .startOfScope("#if")
                 }
                 if identifier == "endif" {
-                    return (.endOfScope("#endif"), _lines)
+                    return .endOfScope("#endif")
                 }
-                return (.keyword("#" + identifier), _lines)
+                return .keyword("#" + identifier)
             }
             let hashes = readCharacters { $0 == "#" } ?? ""
-            if case let (.startOfScope(quotes), num)? = parseStartOfString() {
-                return (.startOfScope("#" + hashes + quotes), num)
+            if case let .startOfScope(quotes)? = parseStartOfString() {
+                return .startOfScope("#" + hashes + quotes)
             }
             self = start
         } else if read("@") {
             if let identifier = readIdentifier() {
-                return (.keyword("@" + identifier), _lines)
+                return .keyword("@" + identifier)
             }
             self = start
         } else if let identifier = readIdentifier() {
-            return (identifier.isSwiftKeyword ? .keyword(identifier) : .identifier(identifier), _lines)
+            return identifier.isSwiftKeyword ? .keyword(identifier) : .identifier(identifier)
         }
         return nil
     }
 
-    mutating func parseNumber() -> TokenWL? {
+    mutating func parseNumber() -> Token? {
         func readNumber(where head: @escaping (UnicodeScalar) -> Bool) -> String? {
             return read(head: head, tail: { head($0) || $0 == "_" })
         }
@@ -977,37 +944,37 @@ private extension UnicodeScalarView {
                     if let p = readCharacter(where: { "pP".unicodeScalars.contains($0) }) {
                         let sign = readSign()
                         if let power = readInteger() {
-                            return (.number("0x\(hex)\(p)\(sign)\(power)", .hex), _lines)
+                            return .number("0x\(hex)\(p)\(sign)\(power)", .hex)
                         }
-                        return (.error("0x\(hex)\(p)\(readToEndOfToken())"), _lines)
+                        return .error("0x\(hex)\(p)\(readToEndOfToken())")
                     }
                     let endOfHex = self
                     if read("."), let fraction = readHex() {
                         if let p = readCharacter(where: { "pP".unicodeScalars.contains($0) }) {
                             let sign = readSign()
                             if let power = readInteger() {
-                                return (.number("0x\(hex).\(fraction)\(p)\(sign)\(power)", .hex), _lines)
+                                return .number("0x\(hex).\(fraction)\(p)\(sign)\(power)", .hex)
                             }
-                            return (.error("0x\(hex).\(fraction)\(p)\(readToEndOfToken())"), _lines)
+                            return .error("0x\(hex).\(fraction)\(p)\(readToEndOfToken())")
                         }
                         if fraction.unicodeScalars.first?.isDigit == true {
-                            return (.error("0x\(hex).\(fraction)\(readToEndOfToken())"), _lines)
+                            return .error("0x\(hex).\(fraction)\(readToEndOfToken())")
                         }
                     }
                     self = endOfHex
-                    return (.number("0x\(hex)", .hex), _lines)
+                    return .number("0x\(hex)", .hex)
                 }
-                return (.error("0x" + readToEndOfToken()), _lines)
+                return .error("0x" + readToEndOfToken())
             } else if read("b") {
                 if let bin = readNumber(where: { "01".unicodeScalars.contains($0) }) {
-                    return (.number("0b\(bin)", .binary), _lines)
+                    return .number("0b\(bin)", .binary)
                 }
-                return (.error("0b" + readToEndOfToken()), _lines)
+                return .error("0b" + readToEndOfToken())
             } else if read("o") {
                 if let octal = readNumber(where: { ("0" ... "7").contains($0) }) {
-                    return (.number("0o\(octal)", .octal), _lines)
+                    return .number("0o\(octal)", .octal)
                 }
-                return (.error("0o" + readToEndOfToken()), _lines)
+                return .error("0o" + readToEndOfToken())
             }
         }
 
@@ -1034,10 +1001,10 @@ private extension UnicodeScalarView {
             }
         }
 
-        return (.number(number, type), _lines)
+        return .number(number, type)
     }
 
-    mutating func parseToken() -> TokenWL? {
+    mutating func parseToken() -> Token? {
         // Have to split into groups for Swift to be able to process this
         if let token = parseSpace() ??
             parseLineBreak() ??
@@ -1052,19 +1019,15 @@ private extension UnicodeScalarView {
             return token
         }
         if !isEmpty {
-            return (.error(readToEndOfToken()), _lines)
+            return .error(readToEndOfToken())
         }
         return nil
     }
 }
 
-public func pureTokenize(_ source: String) -> [Token] {
-    return tokenize(source).map { $0.token }
-}
-
-public func tokenize(_ source: String) -> [TokenWL] {
+public func tokenize(_ source: String) -> [Token] {
     var scopeIndexStack: [Int] = []
-    var tokens: [TokenWL] = []
+    var tokens: [Token] = []
     var characters = UnicodeScalarView(source.unicodeScalars)
     var closedGenericScopeIndexes: [Int] = []
     var lineNumber = 1
@@ -1089,17 +1052,17 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 continue
             case "\"" where !escaped && characters.readString(hashes):
                 if string != "" {
-                    tokens.append((.stringBody(string), _lines))
+                    tokens.append(.stringBody(string))
                 }
-                tokens.append((.endOfScope("\"" + hashes), _lines))
+                tokens.append(.endOfScope("\"" + hashes))
                 scopeIndexStack.removeLast()
                 return
             case "(" where escaped:
                 if string != "" {
-                    tokens.append((.stringBody(string), _lines))
+                    tokens.append(.stringBody(string))
                 }
                 scopeIndexStack.append(tokens.count)
-                tokens.append((.startOfScope("("), _lines))
+                tokens.append(.startOfScope("("))
                 return
             default:
                 escaped = false
@@ -1107,7 +1070,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
             string.append(Character(c))
         }
         if string != "" {
-            tokens.append((.stringBody(string), _lines))
+            tokens.append(.stringBody(string))
         }
     }
 
@@ -1123,56 +1086,55 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 continue
             case "\"" where !escaped && characters.readString("\"\"" + hashes):
                 if !string.isEmpty {
-                    tokens.append((.error(string), _lines)) // Not permitted by the spec
+                    tokens.append(.error(string)) // Not permitted by the spec
                 }
                 var offset = ""
-                if case let (.space(_offset), _) = tokens.last! {
+                if case let .space(_offset) = tokens.last! {
                     offset = _offset
                 }
                 // Fix up indents
                 for index in (scopeIndexStack.last! ..< tokens.count - 1).reversed() {
-                    if case let (.space(indent), num) = tokens[index], tokens[index - 1].token.isLinebreak {
+                    if case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak {
                         guard offset.isEmpty || indent.hasPrefix(offset) else {
-                            tokens[index] = (.error(indent), num) // Mismatched whitespace
+                            tokens[index] = .error(indent) // Mismatched whitespace
                             break
                         }
                         let remainder: String = String(indent[offset.endIndex ..< indent.endIndex])
-                        if case let (.stringBody(body), num) = tokens[index + 1] {
-                            tokens[index + 1] = (.stringBody(remainder + body), num)
+                        if case let .stringBody(body) = tokens[index + 1] {
+                            tokens[index + 1] = .stringBody(remainder + body)
                         } else {
-                            tokens.insert((.stringBody(remainder), originalLineForToken(at: index + 1, in: tokens)), at: index + 1)
+                            tokens.insert(.stringBody(remainder), at: index + 1)
                         }
                         if offset.isEmpty {
                             tokens.remove(at: index)
                         } else {
-                            tokens[index].token = .space(offset)
+                            tokens[index] = .space(offset)
                         }
                     }
                 }
-                tokens.append((.endOfScope("\"\"\"" + hashes), _lines))
+                tokens.append(.endOfScope("\"\"\"" + hashes))
                 scopeIndexStack.removeLast()
                 return
             case "(" where escaped:
                 if string != "" {
-                    tokens.append((.stringBody(string), _lines))
+                    tokens.append(.stringBody(string))
                 }
                 scopeIndexStack.append(tokens.count)
-                tokens.append((.startOfScope("("), _lines))
+                tokens.append(.startOfScope("("))
                 return
             case "\r", "\n":
                 if string != "" {
-                    tokens.append((.stringBody(string), _lines))
+                    tokens.append(.stringBody(string))
                     string = ""
                 }
-                _lines += 1
                 if c == "\r", characters.read("\n") {
-                    tokens.append((.linebreak("\r\n", lineNumber), _lines))
+                    tokens.append(.linebreak("\r\n", lineNumber))
                 } else {
-                    tokens.append((.linebreak(String(c), lineNumber), _lines))
+                    tokens.append(.linebreak(String(c), lineNumber))
                 }
                 lineNumber += 1
                 if let space = characters.parseSpace() {
-                    tokens.append((space.token, _lines))
+                    tokens.append(space)
                 }
                 escaped = false
                 continue
@@ -1182,7 +1144,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
             string.append(Character(c))
         }
         if string != "" {
-            tokens.append((.stringBody(string), _lines))
+            tokens.append(.stringBody(string))
         }
     }
 
@@ -1191,11 +1153,11 @@ public func tokenize(_ source: String) -> [TokenWL] {
 
     func flushCommentBodyTokens() {
         if comment != "" {
-            tokens.append((.commentBody(comment), _lines))
+            tokens.append(.commentBody(comment))
             comment = ""
         }
         if space != "" {
-            tokens.append((.space(space), _lines))
+            tokens.append(.space(space))
             space = ""
         }
     }
@@ -1208,7 +1170,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
             }
             if space != "" {
                 if comment == "" {
-                    tokens.append((.space(space), _lines))
+                    tokens.append(.space(space))
                 } else {
                     comment += space
                 }
@@ -1225,44 +1187,43 @@ public func tokenize(_ source: String) -> [TokenWL] {
             case "/" where characters.read("*"):
                 flushCommentBodyTokens()
                 scopeIndexStack.append(tokens.count)
-                tokens.append((.startOfScope("/*"), _lines))
+                tokens.append(.startOfScope("/*"))
                 continue
             case "*" where characters.read("/"):
                 flushCommentBodyTokens()
                 // Fix up indents
                 var baseIndent = ""
                 for index in scopeIndexStack.last! ..< tokens.count - 1 {
-                    if case let .space(indent) = tokens[index].token, tokens[index - 1].token.isLinebreak,
-                        tokens.count > index, case .commentBody = tokens[index + 1].token,
+                    if case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak,
+                        tokens.count > index, case .commentBody = tokens[index + 1],
                         baseIndent.isEmpty || indent.count < baseIndent.count {
                         baseIndent = indent
                     }
                 }
                 for index in (scopeIndexStack.last! ..< tokens.count - 1).reversed() {
-                    if case let .space(indent) = tokens[index].token, tokens[index - 1].token.isLinebreak,
-                        tokens.count > index, case let .commentBody(body) = tokens[index + 1].token,
+                    if case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak,
+                        tokens.count > index, case let .commentBody(body) = tokens[index + 1],
                         indent.hasPrefix(baseIndent) {
-                        tokens[index + 1].token = .commentBody(indent.dropFirst(baseIndent.count) + body)
+                        tokens[index + 1] = .commentBody(indent.dropFirst(baseIndent.count) + body)
                         if baseIndent.isEmpty {
                             tokens.remove(at: index)
                         } else {
-                            tokens[index].token = .space(baseIndent)
+                            tokens[index] = .space(baseIndent)
                         }
                     }
                 }
-                tokens.append((.endOfScope("*/"), _lines))
+                tokens.append(.endOfScope("*/"))
                 scopeIndexStack.removeLast()
-                if scopeIndexStack.last == nil || tokens[scopeIndexStack.last!].token != .startOfScope("/*") {
+                if scopeIndexStack.last == nil || tokens[scopeIndexStack.last!] != .startOfScope("/*") {
                     return
                 }
                 continue
             case "\n", "\r":
-                _lines += 1 // TODO: Check.
                 flushCommentBodyTokens()
                 if c == "\r", characters.read("\n") {
-                    tokens.append((.linebreak("\r\n", lineNumber), _lines))
+                    tokens.append(.linebreak("\r\n", lineNumber))
                 } else {
-                    tokens.append((.linebreak(String(c), lineNumber), _lines))
+                    tokens.append(.linebreak(String(c), lineNumber))
                 }
                 lineNumber += 1
                 continue
@@ -1274,7 +1235,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
             }
             if space != "" {
                 if comment == "" {
-                    tokens.append((.space(space), _lines))
+                    tokens.append(.space(space))
                 } else {
                     comment += space
                 }
@@ -1291,13 +1252,13 @@ public func tokenize(_ source: String) -> [TokenWL] {
         if scopeIndexStack.last == index {
             scopeIndexStack.removeLast()
         }
-        tokens[index].token = .operator("<", .none)
+        tokens[index] = .operator("<", .none)
         stitchOperators(at: index)
     }
 
     func convertClosingChevronToSymbol(at i: Int, andOpeningChevron: Bool) {
         assert(tokens[i] == .endOfScope(">"))
-        tokens[i].token = .operator(">", .none)
+        tokens[i] = .operator(">", .none)
         stitchOperators(at: i)
         if let previousIndex = index(of: .nonSpaceOrComment, before: i),
             tokens[previousIndex] == .endOfScope(">") {
@@ -1310,20 +1271,20 @@ public func tokenize(_ source: String) -> [TokenWL] {
     }
 
     func isUnwrapOperator(at index: Int) -> Bool {
-        let token = tokens[index].token
+        let token = tokens[index]
         if case let .operator(string, _) = token, ["?", "!"].contains(string), index > 0 {
-            let token = tokens[index - 1].token
+            let token = tokens[index - 1]
             return !token.isSpaceOrLinebreak && !token.isStartOfScope
         }
         return false
     }
 
     func stitchOperators(at index: Int) {
-        guard case var .operator(string, _) = tokens[index].token else {
+        guard case var .operator(string, _) = tokens[index] else {
             assertionFailure()
             return
         }
-        while let nextToken: Token = index + 1 < tokens.count ? tokens[index + 1].token : nil,
+        while let nextToken: Token = index + 1 < tokens.count ? tokens[index + 1] : nil,
             case let .operator(nextString, _) = nextToken,
             string.hasPrefix(".") || !nextString.contains(".") {
             if scopeIndexStack.last == index {
@@ -1331,11 +1292,11 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 scopeIndexStack.removeLast()
             }
             string += nextString
-            tokens[index].token = .operator(string, .none)
+            tokens[index] = .operator(string, .none)
             tokens.remove(at: index + 1)
         }
         var index = index
-        while let prevToken: Token = index > 1 ? tokens[index - 1].token : nil,
+        while let prevToken: Token = index > 1 ? tokens[index - 1] : nil,
             case let .operator(prevString, _) = prevToken, !isUnwrapOperator(at: index - 1),
             prevString.hasPrefix(".") || !string.contains(".") {
             if scopeIndexStack.last == index - 1 {
@@ -1343,7 +1304,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 scopeIndexStack.removeLast()
             }
             string = prevString + string
-            tokens[index - 1].token = .operator(string, .none)
+            tokens[index - 1] = .operator(string, .none)
             tokens.remove(at: index)
             index -= 1
         }
@@ -1351,7 +1312,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
         // Fix ternary that may not have been correctly closed in the first pass
         if let scopeIndex = scopeIndexStack.last, tokens[scopeIndex] == .operator("?", .infix) {
             for i in index ..< tokens.count where tokens[i] == .delimiter(":") {
-                tokens[i].token = .operator(":", .infix)
+                tokens[i] = .operator(":", .infix)
                 scopeIndexStack.removeLast()
                 break
             }
@@ -1359,26 +1320,26 @@ public func tokenize(_ source: String) -> [TokenWL] {
     }
 
     func setSymbolType(at i: Int) {
-        let token = tokens[i].token
+        let token = tokens[i]
         guard case let .operator(string, currentType) = token else {
             assertionFailure()
             return
         }
         guard let prevNonSpaceToken =
-            index(of: .nonSpaceOrCommentOrLinebreak, before: i).map({ tokens[$0].token }) else {
+            index(of: .nonSpaceOrCommentOrLinebreak, before: i).map({ tokens[$0] }) else {
             if tokens.count > i + 1 {
-                tokens[i].token = .operator(string, .prefix)
+                tokens[i] = .operator(string, .prefix)
             }
             return
         }
         switch prevNonSpaceToken {
         case .keyword("func"), .keyword("operator"):
-            tokens[i].token = .operator(string, .none)
+            tokens[i] = .operator(string, .none)
             return
         default:
             break
         }
-        let prevToken: Token = tokens[i - 1].token
+        let prevToken: Token = tokens[i - 1]
         let type: OperatorType
         switch string {
         case ":", "=", "->":
@@ -1402,14 +1363,14 @@ public func tokenize(_ source: String) -> [TokenWL] {
             type = .postfix
         default:
             guard let nextNonSpaceToken =
-                index(of: .nonSpaceOrCommentOrLinebreak, after: i).map({ tokens[$0].token }) else {
+                index(of: .nonSpaceOrCommentOrLinebreak, after: i).map({ tokens[$0] }) else {
                 if prevToken.isLvalue {
                     type = .postfix
                     break
                 }
                 return
             }
-            let nextToken: Token = tokens[i + 1].token
+            let nextToken: Token = tokens[i + 1]
             if nextToken.isRvalue {
                 type = prevToken.isLvalue ? .infix : .prefix
             } else if prevToken.isLvalue {
@@ -1422,13 +1383,13 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 return
             }
         }
-        tokens[i].token = .operator(string, type)
+        tokens[i] = .operator(string, type)
     }
 
     func index(of type: TokenType, before index: Int) -> Int? {
         var index = index - 1
         while index >= 0 {
-            if tokens[index].token.is(type) {
+            if tokens[index].is(type) {
                 return index
             }
             index -= 1
@@ -1439,7 +1400,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
     func index(of type: TokenType, after index: Int) -> Int? {
         var index = index + 1
         while index < tokens.count {
-            if tokens[index].token.is(type) {
+            if tokens[index].is(type) {
                 return index
             }
             index += 1
@@ -1450,36 +1411,36 @@ public func tokenize(_ source: String) -> [TokenWL] {
     func processToken() {
         let token = tokens.last!
         let count = tokens.count
-        switch token.token {
+        switch token {
         case let .keyword(string):
             // Track switch/case statements
             if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
-                case .operator(".", _) = tokens[prevIndex].token {
-                tokens[tokens.count - 1].token = .identifier(string)
+                case .operator(".", _) = tokens[prevIndex] {
+                tokens[tokens.count - 1] = .identifier(string)
                 processToken()
                 return
             }
             fallthrough
         case .identifier:
-            if count > 1, case .number = tokens[count - 2].token {
-                tokens[count - 1].token = .error(token.token.string)
+            if count > 1, case .number = tokens[count - 2] {
+                tokens[count - 1] = .error(token.string)
             }
         case let .number(string, _) where count > 1:
-            switch tokens[count - 2].token {
+            switch tokens[count - 2] {
             case .number:
-                tokens[count - 1].token = .error(string)
+                tokens[count - 1] = .error(string)
             case .operator(".", _):
-                tokens[count - 1].token = .identifier(string)
+                tokens[count - 1] = .identifier(string)
             default:
                 break
             }
         case .operator:
             stitchOperators(at: count - 1)
         case .startOfScope("<") where count >= 2:
-            if tokens[count - 2].token.isOperator,
+            if tokens[count - 2].isOperator,
                 let index = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 2),
-                ![.keyword("func"), .keyword("init")].contains(tokens[index].token) {
-                tokens[tokens.count - 1].token = .operator("<", .none)
+                ![.keyword("func"), .keyword("init")].contains(tokens[index]) {
+                tokens[tokens.count - 1] = .operator("<", .none)
                 stitchOperators(at: count - 1)
                 processToken()
                 return
@@ -1489,7 +1450,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
             closedGenericScopeIndexes.removeAll()
         case let .linebreak(string, line):
             if line == 0 {
-                tokens[count - 1].token = .linebreak(string, lineNumber)
+                tokens[count - 1] = .linebreak(string, lineNumber)
                 lineNumber += 1
             } else {
                 lineNumber = line + 1
@@ -1497,11 +1458,11 @@ public func tokenize(_ source: String) -> [TokenWL] {
         default:
             break
         }
-        if !token.token.isSpaceOrCommentOrLinebreak {
+        if !token.isSpaceOrCommentOrLinebreak {
             if let prevIndex = index(of: .nonSpaceOrComment, before: count - 1),
-                case .endOfScope(">") = tokens[prevIndex].token {
+                case .endOfScope(">") = tokens[prevIndex] {
                 // Fix up misidentified generic that is actually a pair of operators
-                switch token.token {
+                switch token {
                 case .operator("?", _), .operator("!", _), .operator("&", _),
                      .operator(".", _), .operator("...", _), .operator("->", _),
                      .operator("=", _) where prevIndex != count - 2:
@@ -1510,7 +1471,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
                     guard let startIndex = index(of: .startOfScope, before: count - 1),
                         tokens[startIndex] == .startOfScope("<"),
                         let prevIndex = index(of: .nonSpaceOrComment, before: startIndex),
-                        case .identifier = tokens[prevIndex].token,
+                        case .identifier = tokens[prevIndex],
                         let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
                         tokens[prevPrevIndex] == .delimiter(":") else {
                         fallthrough
@@ -1530,21 +1491,21 @@ public func tokenize(_ source: String) -> [TokenWL] {
         }
         // Handle scope
         if let scopeIndex = scopeIndexStack.last {
-            let scope = tokens[scopeIndex].token
-            if token.token.isEndOfScope(scope) {
+            let scope = tokens[scopeIndex]
+            if token.isEndOfScope(scope) {
                 scopeIndexStack.removeLast()
-                switch token.token {
+                switch token {
                 case .delimiter(":"):
                     if case .operator("?", .infix) = scope {
-                        tokens[tokens.count - 1].token = .operator(":", .infix)
+                        tokens[tokens.count - 1] = .operator(":", .infix)
                     } else {
-                        tokens[tokens.count - 1].token = .startOfScope(":")
+                        tokens[tokens.count - 1] = .startOfScope(":")
                         scopeIndexStack.append(tokens.count - 1)
                     }
                 case .endOfScope("case"), .endOfScope("default"):
                     scopeIndexStack.append(tokens.count - 1)
                 case .endOfScope(")"):
-                    guard let scope = scopeIndexStack.last.map({ tokens[$0].token }) else {
+                    guard let scope = scopeIndexStack.last.map({ tokens[$0] }) else {
                         break
                     }
                     if let delimiterType = scope.stringDelimiterType {
@@ -1563,7 +1524,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 default:
                     break
                 }
-                if token.token == .endOfScope(">") {
+                if token == .endOfScope(">") {
                     closedGenericScopeIndexes.insert(scopeIndex, at: 0)
                 } else {
                     closedGenericScopeIndexes.removeAll()
@@ -1571,7 +1532,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 return
             } else if scope == .startOfScope("<") {
                 // We think it's a generic at this point, but could be wrong
-                switch token.token {
+                switch token {
                 case let .operator(string, _):
                     switch string {
                     case ".", "==", "?", "!", "&", "->":
@@ -1600,45 +1561,45 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 default:
                     break
                 }
-            } else if token.token == .delimiter(":"),
+            } else if token == .delimiter(":"),
                 scope == .startOfScope("(") || scope == .startOfScope("["),
                 let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
-                tokens[prevIndex].token.isIdentifierOrKeyword,
+                tokens[prevIndex].isIdentifierOrKeyword,
                 let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex) {
-                if case let .keyword(name) = tokens[prevIndex].token {
-                    tokens[prevIndex].token = .identifier(name)
+                if case let .keyword(name) = tokens[prevIndex] {
+                    tokens[prevIndex] = .identifier(name)
                 }
-                if case let .keyword(name) = tokens[prevPrevIndex].token {
-                    tokens[prevPrevIndex].token = .identifier(name)
+                if case let .keyword(name) = tokens[prevPrevIndex] {
+                    tokens[prevPrevIndex] = .identifier(name)
                 }
-            } else if case let .keyword(string) = token.token {
+            } else if case let .keyword(string) = token {
                 var scope = scope
                 var scopeIndex = scopeIndex
                 var scopeStackIndex = scopeIndexStack.count - 1
                 while scopeStackIndex > 0, scope == .startOfScope("#if") {
                     scopeStackIndex -= 1
                     scopeIndex = scopeIndexStack[scopeStackIndex]
-                    scope = tokens[scopeIndex].token
+                    scope = tokens[scopeIndex]
                 }
                 if [.startOfScope("{"), .startOfScope(":")].contains(scope) {
                     switch string {
                     case "default":
-                        tokens[tokens.count - 1].token = .endOfScope(string)
+                        tokens[tokens.count - 1] = .endOfScope(string)
                         processToken()
                         return
                     case "case":
                         if let keywordIndex = index(of: .keyword, before: scopeIndex) {
-                            var keyword = tokens[keywordIndex].token
+                            var keyword = tokens[keywordIndex]
                             if case .keyword("where") = keyword,
                                 let keywordIndex = index(of: .keyword, before: keywordIndex) {
-                                keyword = tokens[keywordIndex].token
+                                keyword = tokens[keywordIndex]
                             }
                             if case .keyword("enum") = keyword {
                                 break
                             }
                         }
                         if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1) {
-                            switch tokens[prevIndex].token {
+                            switch tokens[prevIndex] {
                             case .keyword("if"),
                                  .keyword("guard"),
                                  .keyword("while"),
@@ -1646,7 +1607,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
                                  .delimiter(","):
                                 break
                             default:
-                                tokens[tokens.count - 1].token = .endOfScope(string)
+                                tokens[tokens.count - 1] = .endOfScope(string)
                                 processToken()
                                 return
                             }
@@ -1656,10 +1617,10 @@ public func tokenize(_ source: String) -> [TokenWL] {
                     }
                 }
             } else if scope == .startOfScope(":") {
-                if [.keyword("#else"), .keyword("#elseif")].contains(token.token) {
+                if [.keyword("#else"), .keyword("#elseif")].contains(token) {
                     scopeIndexStack.removeLast()
                     return
-                } else if .endOfScope("#endif") == token.token {
+                } else if .endOfScope("#endif") == token {
                     scopeIndexStack.removeLast()
                     if let index = scopeIndexStack.last, tokens[index] == .startOfScope("#if") {
                         scopeIndexStack.removeLast()
@@ -1669,7 +1630,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
             }
         }
         // Either there's no scope, or token didn't close it
-        switch token.token {
+        switch token {
         case let .startOfScope(string):
             scopeIndexStack.append(tokens.count - 1)
             switch string {
@@ -1678,7 +1639,7 @@ public func tokenize(_ source: String) -> [TokenWL] {
             case "//":
                 processCommentBody()
             default:
-                if let delimiterType = token.token.stringDelimiterType {
+                if let delimiterType = token.stringDelimiterType {
                     if delimiterType.isMultiline {
                         processMultilineStringBody(hashCount: delimiterType.hashCount)
                     } else {
@@ -1697,19 +1658,17 @@ public func tokenize(_ source: String) -> [TokenWL] {
                 return
             }
             // Previous scope wasn't closed correctly
-            tokens[count - 1].token = .error(string)
+            tokens[count - 1] = .error(string)
             return
         default:
             break
         }
     }
 
-    _resetLine()
-
     // Ignore hashbang at start of file
     if source.hasPrefix("#!") {
         characters.removeFirst(2)
-        tokens.append((.startOfScope("#!"), 1))
+        tokens.append(.startOfScope("#!"))
         processCommentBody()
     }
 
@@ -1721,16 +1680,16 @@ public func tokenize(_ source: String) -> [TokenWL] {
 
     loop: while let scopeIndex = scopeIndexStack.last {
         switch tokens[scopeIndex] {
-        case (.startOfScope("<"), _):
+        case .startOfScope("<"):
             // If we encountered an end-of-file while a generic scope was
             // still open, the opening < must have been an operator
             convertOpeningChevronToSymbol(at: scopeIndex)
-        case (.startOfScope("//"), _):
+        case .startOfScope("//"):
             scopeIndexStack.removeLast()
         default:
-            if tokens.last?.token.isError == false {
+            if tokens.last?.isError == false {
                 // File ended with scope still open
-                tokens.append((.error(""), originalLineForToken(at: tokens.endIndex, in: tokens)))
+                tokens.append(.error(""))
             }
             break loop
         }

@@ -111,7 +111,7 @@ class MetadataTests: XCTestCase {
             }
             let allOptions = rule.options + rule.sharedOptions
             for index in scopeStart + 1 ..< scopeEnd {
-                switch formatter.tokens[index].token {
+                switch formatter.tokens[index] {
                 case let .identifier(fn) where [
                     "spaceEquivalentToWidth",
                     "spaceEquivalentToTokens",

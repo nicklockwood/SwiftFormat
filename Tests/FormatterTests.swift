@@ -34,10 +34,10 @@ import XCTest
 
 class FormatterTests: XCTestCase {
     func testRemoveCurrentTokenWhileEnumerating() {
-        let input: [TokenWL] = [
-            (.identifier("foo"), 0),
-            (.identifier("bar"), 0),
-            (.identifier("baz"), 0),
+        let input: [Token] = [
+            .identifier("foo"),
+            .identifier("bar"),
+            .identifier("baz"),
         ]
         var output: [Token] = []
         let formatter = Formatter(input, options: .default)
@@ -47,14 +47,14 @@ class FormatterTests: XCTestCase {
                 formatter.removeToken(at: i)
             }
         }
-        XCTAssertEqual(output, input.map { $0.token })
+        XCTAssertEqual(output, input)
     }
 
     func testRemovePreviousTokenWhileEnumerating() {
-        let input: [TokenWL] = [
-            (.identifier("foo"), 0),
-            (.identifier("bar"), 0),
-            (.identifier("baz"), 0),
+        let input: [Token] = [
+            .identifier("foo"),
+            .identifier("bar"),
+            .identifier("baz"),
         ]
         var output: [Token] = []
         let formatter = Formatter(input, options: .default)
@@ -64,14 +64,14 @@ class FormatterTests: XCTestCase {
                 formatter.removeToken(at: i - 1)
             }
         }
-        XCTAssertEqual(output, input.map { $0.token })
+        XCTAssertEqual(output, input)
     }
 
     func testRemoveNextTokenWhileEnumerating() {
-        let input: [TokenWL] = [
-            (.identifier("foo"), 0),
-            (.identifier("bar"), 0),
-            (.identifier("baz"), 0),
+        let input: [Token] = [
+            .identifier("foo"),
+            .identifier("bar"),
+            .identifier("baz"),
         ]
         var output: [Token] = []
         let formatter = Formatter(input, options: .default)
@@ -81,16 +81,16 @@ class FormatterTests: XCTestCase {
                 formatter.removeToken(at: i + 1)
             }
         }
-        XCTAssertEqual(output, input.dropLast().map { $0.token })
+        XCTAssertEqual(output, [Token](input.dropLast()))
     }
 
     func testIndexBeforeComment() {
-        let input: [TokenWL] = [
-            (.identifier("foo"), 0),
-            (.startOfScope("//"), 0),
-            (.space(" "), 0),
-            (.commentBody("bar"), 0),
-            (.linebreak("\n", 1), 0),
+        let input: [Token] = [
+            .identifier("foo"),
+            .startOfScope("//"),
+            .space(" "),
+            .commentBody("bar"),
+            .linebreak("\n", 1),
         ]
         let formatter = Formatter(input, options: .default)
         let index = formatter.index(before: 4, where: { !$0.isSpaceOrComment })
@@ -98,14 +98,14 @@ class FormatterTests: XCTestCase {
     }
 
     func testIndexBeforeMultilineComment() {
-        let input: [TokenWL] = [
-            (.identifier("foo"), 0),
-            (.startOfScope("/*"), 0),
-            (.space(" "), 0),
-            (.commentBody("bar"), 0),
-            (.space(" "), 0),
-            (.endOfScope("*/"), 0),
-            (.linebreak("\n", 1), 0),
+        let input: [Token] = [
+            .identifier("foo"),
+            .startOfScope("/*"),
+            .space(" "),
+            .commentBody("bar"),
+            .space(" "),
+            .endOfScope("*/"),
+            .linebreak("\n", 1),
         ]
         let formatter = Formatter(input, options: .default)
         let index = formatter.index(before: 6, where: { !$0.isSpaceOrComment })

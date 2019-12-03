@@ -151,7 +151,7 @@ class SwiftFormatTests: XCTestCase {
 
     func testOffsetForToken() {
         let source = "// a comment\n    let foo = 5\n"
-        let tokens = pureTokenize(source)
+        let tokens = tokenize(source)
         let (line, column) = offsetForToken(at: 7, in: tokens, tabWidth: 1)
         XCTAssertEqual(line, 2)
         XCTAssertEqual(column, 8)
@@ -159,7 +159,7 @@ class SwiftFormatTests: XCTestCase {
 
     func testOffsetForTokenWithTabs() {
         let source = "// a comment\n\tlet foo = 5\n"
-        let tokens = pureTokenize(source)
+        let tokens = tokenize(source)
         let (line, column) = offsetForToken(at: 7, in: tokens, tabWidth: 2)
         XCTAssertEqual(line, 2)
         XCTAssertEqual(column, 6)

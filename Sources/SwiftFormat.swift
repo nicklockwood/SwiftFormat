@@ -335,20 +335,6 @@ public func enumerateFiles(withInputURL inputURL: URL,
     return errors
 }
 
-/// Get original line  number for token
-/// Note: line indexes start at 1
-public func originalLineForToken(at index: Int, in tokens: [TokenWL]) -> OriginalLine {
-    for token in tokens[..<index].reversed() {
-        switch token.token {
-        case let .linebreak(_, line):
-            return line + 1
-        default:
-            break
-        }
-    }
-    return 1
-}
-
 /// Get line/column offset for token
 /// Note: line indexes start at 1, columns start at zero
 public func offsetForToken(at index: Int, in tokens: [Token], tabWidth: Int) -> (line: Int, column: Int) {
@@ -410,14 +396,13 @@ public func sourceCode(for tokens: [Token]) -> String {
 /// Apply specified rules to a token array with optional callback
 /// Useful for perfoming additional logic after each rule is applied
 public func applyRules(_ rules: [FormatRule],
-                       to originalTokens: [TokenWL],
+                       to originalTokens: [Token],
                        with options: FormatOptions,
-                       callback: ((Int, [TokenWL], [String]) -> Void)? = nil) throws -> [TokenWL] {
+                       callback: ((Int, [Token], [String]) -> Void)? = nil) throws -> [Token] {
     var tokens = originalTokens
-    let pureTokens = originalTokens.map { $0.token }
 
     // Check for parsing errors
-    if let error = parsingError(for: pureTokens, options: options) {
+    if let error = parsingError(for: tokens, options: options) {
         throw error
     }
 
@@ -455,9 +440,9 @@ public func applyRules(_ rules: [FormatRule],
 
 /// Format a pre-parsed token array
 /// Returns the formatted token array, and the number of edits made
-public func format(_ tokens: [TokenWL],
+public func format(_ tokens: [Token],
                    rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = .default) throws -> [TokenWL] {
+                   options: FormatOptions = .default) throws -> [Token] {
     return try applyRules(rules, to: tokens, with: options)
 }
 
@@ -465,7 +450,7 @@ public func format(_ tokens: [TokenWL],
 public func format(_ source: String,
                    rules: [FormatRule] = FormatRules.default,
                    options: FormatOptions = .default) throws -> String {
-    return sourceCode(for: try format(tokenize(source), rules: rules, options: options).map { $0.token })
+    return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
 }
 
 // MARK: Path utilities

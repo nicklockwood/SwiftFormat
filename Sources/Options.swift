@@ -156,11 +156,15 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
 
 /// File info, used for constructing header comments
 public struct FileInfo: Equatable {
-    var fileName: String?
+    var filePath: String?
     var creationDate: Date?
 
-    public init(fileName: String? = nil, creationDate: Date? = nil) {
-        self.fileName = fileName
+    var fileName: String? {
+        return filePath.map { URL(fileURLWithPath: $0).lastPathComponent }
+    }
+
+    public init(filePath: String? = nil, creationDate: Date? = nil) {
+        self.filePath = filePath
         self.creationDate = creationDate
     }
 }

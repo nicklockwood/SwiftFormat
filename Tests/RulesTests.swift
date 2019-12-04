@@ -8864,7 +8864,7 @@ class RulesTests: XCTestCase {
     func testFileHeaderFileReplacement() {
         let input = "let foo = bar"
         let output = "// MyFile.swift\n\nlet foo = bar"
-        let fileInfo = FileInfo(fileName: "MyFile.swift")
+        let fileInfo = FileInfo(filePath: "~/MyFile.swift")
         let options = FormatOptions(fileHeader: "// {file}", fileInfo: fileInfo)
         XCTAssertEqual(try format(input, rules: [FormatRules.fileHeader], options: options), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all, options: options), output + "\n")

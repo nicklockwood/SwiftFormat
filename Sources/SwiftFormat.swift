@@ -113,7 +113,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
     let keys: [URLResourceKey] = [
         .isRegularFileKey, .isDirectoryKey,
         .isAliasFileKey, .isSymbolicLinkKey,
-        .creationDateKey, .nameKey,
+        .creationDateKey, .pathKey,
     ]
 
     struct ResourceValues {
@@ -122,7 +122,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
         let isAliasFile: Bool?
         let isSymbolicLink: Bool?
         let creationDate: Date?
-        let name: String?
+        let path: String?
     }
 
     func getResourceValues(for url: URL) throws -> ResourceValues {
@@ -134,7 +134,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     isAliasFile: resourceValues.isAliasFile,
                     isSymbolicLink: resourceValues.isSymbolicLink,
                     creationDate: resourceValues.creationDate,
-                    name: resourceValues.name
+                    path: resourceValues.path
                 )
             }
             if manager.fileExists(atPath: url.path) {
@@ -150,7 +150,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     isAliasFile: false,
                     isSymbolicLink: false,
                     creationDate: nil,
-                    name: url.lastPathComponent
+                    path: url.path
                 )
             }
             throw FormatError.options("File not found at \(url.path)")
@@ -214,7 +214,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
             options.formatOptions = .default
         }
         options.formatOptions?.fileInfo = FileInfo(
-            fileName: resourceValues.name,
+            filePath: resourceValues.path,
             creationDate: resourceValues.creationDate
         )
         let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
@@ -252,7 +252,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     return
                 }
                 let fileInfo = FileInfo(
-                    fileName: resourceValues.name,
+                    filePath: resourceValues.path,
                     creationDate: resourceValues.creationDate
                 )
                 var options = options

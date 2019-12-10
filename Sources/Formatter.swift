@@ -98,15 +98,40 @@ public class Formatter: NSObject {
     /// The token array managed by the formatter (read-only)
     public private(set) var tokens: [Token]
 
-    /// The warning strings of the applyed tokens.
-    public private(set) var warnings = [String]()
-    private var _prevLineNum = -1
-    private var _prevRule: FormatRule?
-
     /// Create a new formatter instance from a token array
-    public init(_ tokens: [Token], options: FormatOptions = FormatOptions()) {
+    public init(_ tokens: [Token], options: FormatOptions = FormatOptions(), trackChanges: Bool = false) {
         self.tokens = tokens
         self.options = options
+        self.trackChanges = trackChanges
+    }
+
+    // MARK: changes made
+
+    /// Change record
+    public struct Change: Equatable, CustomStringConvertible {
+        public let line: Int
+        public let rule: FormatRule
+        public let filePath: String?
+
+        public var description: String {
+            let help = stripMarkdown(rule.help).replacingOccurrences(of: "\n", with: " ")
+            return "\(filePath ?? ""):\(line):1: warning: (\(rule.name)) \(help)"
+        }
+    }
+
+    /// Changes made
+    public var changes = [Change]()
+
+    /// Should formatter track changes?
+    public var trackChanges = false
+
+    private func trackChange(at index: Int) {
+        guard trackChanges, let rule = currentRule else { return }
+        changes.append(Change(
+            line: originalLine(at: index),
+            rule: rule,
+            filePath: options.fileInfo.filePath
+        ))
     }
 
     // MARK: access and mutation
@@ -121,8 +146,8 @@ public class Formatter: NSObject {
     public func replaceToken(at index: Int, with tokens: Token...) {
         if tokens.isEmpty {
             removeToken(at: index)
-        } else {
-            _printWarning(originalLine(at: index))
+        } else if tokens.count != 1 || tokens[0] != self.tokens[index] {
+            trackChange(at: index)
             self.tokens[index] = tokens[0]
             for (i, token) in tokens.dropFirst().enumerated() {
                 insertToken(token, at: index + i + 1)
@@ -132,9 +157,12 @@ public class Formatter: NSObject {
 
     /// Replaces the tokens in the specified range with new tokens
     public func replaceTokens(inRange range: Range<Int>, with tokens: [Token]) {
+        if range.count == tokens.count, ArraySlice(tokens) == self.tokens[range] {
+            return
+        }
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
-            _printWarning(originalLine(at: range.lowerBound + i))
+            trackChange(at: range.lowerBound + i)
             self.tokens[range.lowerBound + i] = tokens[i]
         }
         if range.count > max {
@@ -155,7 +183,7 @@ public class Formatter: NSObject {
 
     /// Removes the token at the specified index
     public func removeToken(at index: Int) {
-        _printWarning(originalLine(at: index))
+        trackChange(at: index)
         tokens.remove(at: index)
         if enumerationIndex >= index {
             enumerationIndex -= 1
@@ -174,15 +202,14 @@ public class Formatter: NSObject {
 
     /// Removes the last token
     public func removeLastToken() {
-        _printWarning(originalLine(at: tokens.endIndex - 1))
+        trackChange(at: tokens.endIndex - 1)
         tokens.removeLast()
     }
 
     /// Inserts an array of tokens at the specified index
     public func insertTokens(_ tokens: [Token], at index: Int) {
-        let ln = index > 0 ? originalLine(at: index - 1) : 0
+        trackChange(at: index)
         for token in tokens.reversed() {
-            _printWarning(ln)
             self.tokens.insert(token, at: index)
         }
         if enumerationIndex >= index {
@@ -193,22 +220,6 @@ public class Formatter: NSObject {
     /// Inserts a single token at the specified index
     public func insertToken(_ token: Token, at index: Int) {
         insertTokens([token], at: index)
-    }
-
-    // MARK: warnings
-
-    private func _printWarning(_ lineNumber: Int) {
-        defer {
-            _prevLineNum = lineNumber
-            _prevRule = currentRule
-        }
-        guard let rule = currentRule, !rule.isSilent,
-            lineNumber != _prevLineNum || rule !== _prevRule else { return }
-        warnings.append("\(options.fileInfo.filePath ?? ""):\(lineNumber):1: warning: \(rule.help)")
-    }
-
-    public func resetWarnings() {
-        warnings = []
     }
 
     // MARK: enumeration

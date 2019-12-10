@@ -489,24 +489,18 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                             try serializeOptions(options, to: outputURL)
                         } else if let outputURL = outputURL {
                             printRunningMessage()
-                            let output = try format(input, options: options, verbose: verbose)
-                            if (try? String(contentsOf: outputURL)) != output {
-                                if dryrun {
-                                    if verbose {
-                                        print("Would have updated \(outputURL.path).", as: .info)
-                                    }
-                                } else {
-                                    do {
-                                        try output.write(to: outputURL, atomically: true, encoding: .utf8)
-                                    } catch {
-                                        throw FormatError.writing("Failed to write file \(outputURL.path)")
-                                    }
+                            let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
+                            if (try? String(contentsOf: outputURL)) != output, !dryrun {
+                                do {
+                                    try output.write(to: outputURL, atomically: true, encoding: .utf8)
+                                } catch {
+                                    throw FormatError.writing("Failed to write file \(outputURL.path)")
                                 }
                             }
                             print("Swiftformat completed successfully.", as: .success)
                         } else {
                             // Write to stdout
-                            let output = try format(input, options: options, verbose: false)
+                            let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
                             print(output, as: .raw)
                         }
                     } catch {
@@ -544,6 +538,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                                                   overrides: overrides,
                                                   verbose: verbose,
                                                   dryrun: dryrun,
+                                                  lint: lint,
                                                   cacheURL: cacheURL)
             errors += _errors
         })
@@ -627,7 +622,7 @@ func computeHash(_ source: String) -> String {
     return "\(count)\(hash)"
 }
 
-func format(_ source: String, options: Options, verbose: Bool) throws -> String {
+func applyRules(_ source: String, options: Options, verbose: Bool, lint: Bool) throws -> String {
     // Parse source
     let originalTokens = tokenize(source)
     var tokens = originalTokens
@@ -636,25 +631,26 @@ func format(_ source: String, options: Options, verbose: Bool) throws -> String 
     let rulesByName = FormatRules.byName
     let ruleNames = Array(options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)).sorted()
     let rules = ruleNames.compactMap { rulesByName[$0] }
-    var rulesApplied = Set<String>()
-    let callback: ((Int, [Token], [String]) -> Void)? = verbose ? { i, updatedTokens, warnings in
-        guard updatedTokens != tokens else { return }
-        rulesApplied.insert(ruleNames[i])
-        warnings.forEach { print($0) }
-        tokens = updatedTokens
-    } : nil
 
     // Apply rules
     let formatOptions = options.formatOptions ?? .default
-    tokens = try applyRules(rules, to: tokens, with: formatOptions, callback: callback)
+    var changes = [Formatter.Change]()
+    (tokens, changes) = try applyRules(rules, to: tokens, with: formatOptions,
+                                       trackChanges: lint || verbose)
 
     // Display info
+    if lint {
+        changes.forEach { print($0.description, as: .warning) }
+    }
     if verbose {
+        let rulesApplied = changes.reduce(into: Set<String>()) {
+            $0.insert($1.rule.name)
+        }
         if rulesApplied.isEmpty || tokens == originalTokens {
-            print(" -- no changes", as: .success)
+            print("-- no changes", as: .success)
         } else {
             let sortedNames = Array(rulesApplied).sorted().joined(separator: ", ")
-            print(" -- rules applied: \(sortedNames)", as: .success)
+            print("-- rules applied: \(sortedNames)", as: .success)
         }
     }
 
@@ -668,6 +664,7 @@ func processInput(_ inputURLs: [URL],
                   overrides: [String: String],
                   verbose: Bool,
                   dryrun: Bool,
+                  lint: Bool,
                   cacheURL: URL?) -> (OutputFlags, [Error]) {
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
@@ -732,7 +729,7 @@ func processInput(_ inputURLs: [URL],
             }()
             do {
                 if verbose {
-                    print("Formatting \(inputURL.path)", as: .info)
+                    print("\(lint ? "Linting" : "Formatting") \(inputURL.path)", as: .info)
                 }
                 var cacheHash: String?
                 var sourceHash: String?
@@ -747,7 +744,7 @@ func processInput(_ inputURLs: [URL],
                         print("-- no changes (cached)", as: .success)
                     }
                 } else {
-                    output = try format(input, options: options, verbose: verbose)
+                    output = try applyRules(input, options: options, verbose: verbose, lint: lint)
                     if output != input {
                         sourceHash = nil
                     }
@@ -775,9 +772,6 @@ func processInput(_ inputURLs: [URL],
                     }
                 }
                 if dryrun {
-                    if verbose {
-                        print("Would have updated \(outputURL.path)", as: .info)
-                    }
                     return {
                         outputFlags.filesChecked += 1
                         outputFlags.filesFailed += 1

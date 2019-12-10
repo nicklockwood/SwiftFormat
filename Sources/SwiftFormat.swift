@@ -395,10 +395,39 @@ public func sourceCode(for tokens: [Token]) -> String {
 
 /// Apply specified rules to a token array with optional callback
 /// Useful for perfoming additional logic after each rule is applied
+@available(*, deprecated, message: "Use other applyRules() method, or format() or lint() instead")
 public func applyRules(_ rules: [FormatRule],
                        to originalTokens: [Token],
                        with options: FormatOptions,
-                       callback: ((Int, [Token], [String]) -> Void)? = nil) throws -> [Token] {
+                       callback: ((Int, [Token]) -> Void)?) throws -> [Token] {
+    return try applyRules(rules,
+                          to: originalTokens,
+                          with: options,
+                          trackChanges: false,
+                          callback: callback).tokens
+}
+
+/// Apply specified rules to a token array and optionally capture list of changes
+public func applyRules(_ rules: [FormatRule],
+                       to originalTokens: [Token],
+                       with options: FormatOptions,
+                       trackChanges: Bool) throws -> (tokens: [Token], changes: [Formatter.Change]) {
+    return try applyRules(rules,
+                          to: originalTokens,
+                          with: options,
+                          trackChanges: trackChanges,
+                          callback: nil)
+}
+
+private func applyRules(
+    _ rules: [FormatRule],
+    to originalTokens: [Token],
+    with options: FormatOptions,
+    trackChanges: Bool,
+    maxIterations: Int = 10,
+    callback: ((Int, [Token]) -> Void)? = nil
+) throws -> (tokens: [Token], changes: [Formatter.Change]) {
+    precondition(maxIterations > 1)
     var tokens = originalTokens
 
     // Check for parsing errors
@@ -417,8 +446,9 @@ public func applyRules(_ rules: [FormatRule],
     let group = DispatchGroup()
     let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
     let timeout = 1 + TimeInterval(tokens.count) / 1000
-    for _ in 0 ..< 10 {
-        let formatter = Formatter(tokens, options: options)
+    var changes = [Formatter.Change]()
+    for _ in 0 ..< maxIterations {
+        let formatter = Formatter(tokens, options: options, trackChanges: trackChanges)
         for (i, rule) in rules.enumerated() {
             queue.async(group: group) {
                 rule.apply(with: formatter)
@@ -426,11 +456,17 @@ public func applyRules(_ rules: [FormatRule],
             guard group.wait(timeout: .now() + timeout) != .timedOut else {
                 throw FormatError.writing("\(rule.name) rule timed out")
             }
-            callback?(i, formatter.tokens, formatter.warnings)
-            formatter.resetWarnings()
+            callback?(i, formatter.tokens)
         }
         if tokens == formatter.tokens {
-            return tokens
+            #if DEBUG
+                changes += formatter.changes
+            #endif
+            changes.sort(by: { $0.line < $1.line })
+            return (tokens, changes)
+        }
+        if trackChanges {
+            changes += formatter.changes
         }
         tokens = formatter.tokens
         options.fileHeader = .ignore // Prevents infinite recursion
@@ -439,18 +475,29 @@ public func applyRules(_ rules: [FormatRule],
 }
 
 /// Format a pre-parsed token array
-/// Returns the formatted token array, and the number of edits made
-public func format(_ tokens: [Token],
-                   rules: [FormatRule] = FormatRules.default,
+/// Returns the formatted token array
+public func format(_ tokens: [Token], rules: [FormatRule] = FormatRules.default,
                    options: FormatOptions = .default) throws -> [Token] {
-    return try applyRules(rules, to: tokens, with: options)
+    return try applyRules(rules, to: tokens, with: options, trackChanges: false).tokens
 }
 
 /// Format code with specified rules and options
-public func format(_ source: String,
-                   rules: [FormatRule] = FormatRules.default,
+public func format(_ source: String, rules: [FormatRule] = FormatRules.default,
                    options: FormatOptions = .default) throws -> String {
     return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
+}
+
+/// Lint a pre-parsed token array
+/// Returns the list of edits made
+public func lint(_ tokens: [Token], rules: [FormatRule] = FormatRules.default,
+                 options: FormatOptions = .default) throws -> [Formatter.Change] {
+    return try applyRules(rules, to: tokens, with: options, trackChanges: true).changes
+}
+
+/// Lint code with specified rules and options
+public func lint(_ source: String, rules: [FormatRule] = FormatRules.default,
+                 options: FormatOptions = .default) throws -> [Formatter.Change] {
+    return try lint(tokenize(source), rules: rules, options: options)
 }
 
 // MARK: Path utilities

@@ -9978,6 +9978,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testStrippingSwiftModuleDoesNotStripPreviousModuleReferences() {
+        let input = "let a: Swift.String = Optional<String>"
+        let output = "let a: Swift.String = String?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // MARK: redundantExtensionACL
 
     func testPublicExtensionMemberACLStripped() {

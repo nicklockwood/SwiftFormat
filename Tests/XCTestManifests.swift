@@ -1399,6 +1399,7 @@ extension RulesTests {
         ("testStringEqualsStringNonYodaCondition", testStringEqualsStringNonYodaCondition),
         ("testStringLiteralNotEqualYodaCondition", testStringLiteralNotEqualYodaCondition),
         ("testStripHeader", testStripHeader),
+        ("testStrippingSwiftModuleDoesNotStripPreviousModuleReferences", testStrippingSwiftModuleDoesNotStripPreviousModuleReferences),
         ("testStrippingSwiftModuleInOptionalTypeWhenConvertedToSugar", testStrippingSwiftModuleInOptionalTypeWhenConvertedToSugar),
         ("testsTupleNotUnwrapped", testsTupleNotUnwrapped),
         ("testsTupleOfClosuresNotUnwrapped", testsTupleOfClosuresNotUnwrapped),

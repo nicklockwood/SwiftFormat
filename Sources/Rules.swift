@@ -4137,10 +4137,9 @@ public struct _FormatRules {
             }) != nil {
                 return
             }
-
             func dropSwiftModulePrefixIfPresent() {
                 if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: typeIndex, if: {
-                    $0 == .operator(".", .infix)
+                    $0.isOperator(".")
                 }), let swiftTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: dotIndex, if: {
                     $0 == .identifier("Swift")
                 }) {

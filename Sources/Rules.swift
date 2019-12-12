@@ -4137,10 +4137,18 @@ public struct _FormatRules {
             }) != nil {
                 return
             }
+            func dropSwiftModulePrefixIfPresent() {
+                if typeIndex > 2,
+                    formatter.tokens[typeIndex - 2] == .identifier("Swift"),
+                    formatter.tokens[typeIndex - 1] == .operator(".", .infix) {
+                    formatter.removeTokens(inRange: typeIndex - 2 ... typeIndex - 1)
+                }
+            }
             switch formatter.tokens[typeIndex] {
             case .identifier("Array"):
                 formatter.replaceTokens(inRange: typeIndex ... endIndex, with:
                     [.startOfScope("[")] + formatter.tokens[typeStart ... typeEnd] + [.endOfScope("]")])
+                dropSwiftModulePrefixIfPresent()
             case .identifier("Dictionary"):
                 guard let commaIndex = formatter.index(of: .delimiter(","), in: typeStart ..< typeEnd) else {
                     return
@@ -4148,6 +4156,7 @@ public struct _FormatRules {
                 formatter.replaceToken(at: commaIndex, with: .delimiter(":"))
                 formatter.replaceTokens(inRange: typeIndex ... endIndex, with:
                     [.startOfScope("[")] + formatter.tokens[typeStart ... typeEnd] + [.endOfScope("]")])
+                dropSwiftModulePrefixIfPresent()
             case .identifier("Optional"):
                 var typeTokens = formatter.tokens[typeStart ... typeEnd]
                 if formatter.tokens[typeStart] == .startOfScope("("),
@@ -4158,6 +4167,7 @@ public struct _FormatRules {
                 }
                 typeTokens.append(.operator("?", .postfix))
                 formatter.replaceTokens(inRange: typeIndex ... endIndex, with: Array(typeTokens))
+                dropSwiftModulePrefixIfPresent()
             default:
                 return
             }

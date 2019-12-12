@@ -9887,8 +9887,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testSwiftArrayTypeConvertedToSugar() {
+        let input = "var foo: Swift.Array<String>"
+        let output = "var foo: [String]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testDictionaryTypeConvertedToSugar() {
         let input = "var foo: Dictionary<String, Int>"
+        let output = "var foo: [String: Int]"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSwiftDictionaryTypeConvertedToSugar() {
+        let input = "var foo: Swift.Dictionary<String, Int>"
         let output = "var foo: [String: Int]"
         XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
@@ -9901,8 +9915,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testSwiftOptionalTypeConvertedToSugar() {
+        let input = "var foo: Swift.Optional<String>"
+        let output = "var foo: String?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testOptionalClosureParenthesizedConvertedToSugar() {
         let input = "var foo: Optional<(Int) -> String>"
+        let output = "var foo: ((Int) -> String)?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSwiftOptionalClosureParenthesizedConvertedToSugar() {
+        let input = "var foo: Swift.Optional<(Int) -> String>"
         let output = "var foo: ((Int) -> String)?"
         XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
@@ -9922,8 +9950,22 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testSwiftArrayTypeReferenceConvertedToSugar() {
+        let input = "let type = Swift.Array<Foo>.Type"
+        let output = "let type = [Foo].Type"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     func testArraySelfReferenceConvertedToSugar() {
         let input = "let type = Array<Foo>.self"
+        let output = "let type = [Foo].self"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
+    func testSwiftArraySelfReferenceConvertedToSugar() {
+        let input = "let type = Swift.Array<Foo>.self"
         let output = "let type = [Foo].self"
         XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")

@@ -4139,13 +4139,12 @@ public struct _FormatRules {
             }
 
             func dropSwiftModulePrefixIfPresent() {
-                if let dotTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: typeIndex, if: {
+                if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: typeIndex, if: {
                     $0 == .operator(".", .infix)
-                }), let swiftTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: dotTokenIndex, if: {
+                }), let swiftTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: dotIndex, if: {
                     $0 == .identifier("Swift")
                 }) {
-                    formatter.removeToken(at: dotTokenIndex)
-                    formatter.removeToken(at: swiftTokenIndex)
+                    formatter.removeTokens(inRange: swiftTokenIndex ..< typeIndex)
                 }
             }
             switch formatter.tokens[typeIndex] {

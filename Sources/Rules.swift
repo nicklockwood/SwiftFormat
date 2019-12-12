@@ -4138,7 +4138,7 @@ public struct _FormatRules {
                 return
             }
             func dropSwiftModulePrefixIfPresent() {
-                if typeIndex > 2,
+                if typeIndex > 1,
                     formatter.tokens[typeIndex - 2] == .identifier("Swift"),
                     formatter.tokens[typeIndex - 1] == .operator(".", .infix) {
                     formatter.removeTokens(inRange: typeIndex - 2 ... typeIndex - 1)

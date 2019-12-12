@@ -9971,6 +9971,13 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
+    func testStrippingSwiftModuleInOptionalTypeWhenConvertedToSugar() {
+        let input = "Swift.Optional<String>"
+        let output = "String?"
+        XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
+    }
+
     // MARK: redundantExtensionACL
 
     func testPublicExtensionMemberACLStripped() {

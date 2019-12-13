@@ -9971,14 +9971,14 @@ class RulesTests: XCTestCase {
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    func testStrippingSwiftModuleInOptionalTypeWhenConvertedToSugar() {
+    func testStrippingSwiftNamespaceInOptionalTypeWhenConvertedToSugar() {
         let input = "Swift.Optional<String>"
         let output = "String?"
         XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)
         XCTAssertEqual(try format(input + "\n", rules: FormatRules.all), output + "\n")
     }
 
-    func testStrippingSwiftModuleDoesNotStripPreviousModuleReferences() {
+    func testStrippingSwiftNamespaceDoesNotStripPreviousSwiftNamespaceReferences() {
         let input = "let a: Swift.String = Optional<String>"
         let output = "let a: Swift.String = String?"
         XCTAssertEqual(try format(input, rules: [FormatRules.typeSugar]), output)

@@ -4137,7 +4137,7 @@ public struct _FormatRules {
             }) != nil {
                 return
             }
-            func dropSwiftModulePrefixIfPresent() {
+            func dropSwiftNamespaceIfPresent() {
                 if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: typeIndex, if: {
                     $0.isOperator(".")
                 }), let swiftTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: dotIndex, if: {
@@ -4150,7 +4150,7 @@ public struct _FormatRules {
             case .identifier("Array"):
                 formatter.replaceTokens(inRange: typeIndex ... endIndex, with:
                     [.startOfScope("[")] + formatter.tokens[typeStart ... typeEnd] + [.endOfScope("]")])
-                dropSwiftModulePrefixIfPresent()
+                dropSwiftNamespaceIfPresent()
             case .identifier("Dictionary"):
                 guard let commaIndex = formatter.index(of: .delimiter(","), in: typeStart ..< typeEnd) else {
                     return
@@ -4158,7 +4158,7 @@ public struct _FormatRules {
                 formatter.replaceToken(at: commaIndex, with: .delimiter(":"))
                 formatter.replaceTokens(inRange: typeIndex ... endIndex, with:
                     [.startOfScope("[")] + formatter.tokens[typeStart ... typeEnd] + [.endOfScope("]")])
-                dropSwiftModulePrefixIfPresent()
+                dropSwiftNamespaceIfPresent()
             case .identifier("Optional"):
                 var typeTokens = formatter.tokens[typeStart ... typeEnd]
                 if formatter.tokens[typeStart] == .startOfScope("("),
@@ -4169,7 +4169,7 @@ public struct _FormatRules {
                 }
                 typeTokens.append(.operator("?", .postfix))
                 formatter.replaceTokens(inRange: typeIndex ... endIndex, with: Array(typeTokens))
-                dropSwiftModulePrefixIfPresent()
+                dropSwiftNamespaceIfPresent()
             default:
                 return
             }

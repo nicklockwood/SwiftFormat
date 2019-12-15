@@ -51,6 +51,13 @@ class RulesTests: XCTestCase {
                                   options: options), output2)
         if input != output {
             XCTAssertEqual(try format(output, rules: rules, options: options), output)
+        } else {
+            #if os(macOS)
+                // These tests are flakey on Linux, and it's hard to debug
+                XCTAssertEqual(try lint(input, rules: rules, options: options), [])
+                XCTAssertEqual(try lint(input + "\n", rules: FormatRules.all(except: exclude),
+                                        options: options), [])
+            #endif
         }
     }
 
@@ -749,6 +756,11 @@ class RulesTests: XCTestCase {
         let input = "\"foo.\"+#file"
         let output = "\"foo.\" + #file"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
+    }
+
+    func testSpaceNotAddedAroundStarInAvailableAnnotation() {
+        let input = "@available(*, deprecated, message: \"foo\")"
+        testFormatting(for: input, rule: FormatRules.spaceAroundOperators)
     }
 
     // MARK: spaceAroundComments

@@ -1365,6 +1365,7 @@ extension RulesTests {
         ("testSpaceInsideWrappedArray", testSpaceInsideWrappedArray),
         ("testSpaceInSpecifiersLeftIntact", testSpaceInSpecifiersLeftIntact),
         ("testSpaceNotAddedAfterMarkDashAtEndOfString", testSpaceNotAddedAfterMarkDashAtEndOfString),
+        ("testSpaceNotAddedAroundStarInAvailableAnnotation", testSpaceNotAddedAroundStarInAvailableAnnotation),
         ("testSpaceNotRemovedAroundRangeFollowedByPrefixOperator", testSpaceNotRemovedAroundRangeFollowedByPrefixOperator),
         ("testSpaceNotRemovedAroundRangePreceededByPostfixOperator", testSpaceNotRemovedAroundRangePreceededByPostfixOperator),
         ("testSpaceNotRemovedBeforeLeadingRangeOperator", testSpaceNotRemovedBeforeLeadingRangeOperator),

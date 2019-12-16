@@ -385,26 +385,7 @@ public struct FileOptions {
     public var excludedGlobs: [Glob]
     public var unexcludedGlobs: [Glob]
 
-    @available(*, deprecated, message: "Use excludedGlobs property instead")
-    public var excludedURLs: [URL] {
-        return excludedGlobs.compactMap {
-            switch $0 {
-            case let .path(path): return URL(fileURLWithPath: path)
-            case .regex: return nil
-            }
-        }
-    }
-
     public static let `default` = FileOptions()
-
-    @available(*, deprecated, message: "Use other init() method instead")
-    public init(followSymlinks: Bool = false,
-                supportedFileExtensions: [String] = ["swift"],
-                excludedURLs: [URL]) {
-        self.init(followSymlinks: followSymlinks,
-                  supportedFileExtensions: supportedFileExtensions,
-                  excludedGlobs: excludedURLs.map { Glob.path($0.path) })
-    }
 
     public init(followSymlinks: Bool = false,
                 supportedFileExtensions: [String] = ["swift"],

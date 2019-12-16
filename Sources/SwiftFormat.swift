@@ -66,27 +66,6 @@ public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomN
     }
 }
 
-/// Legacy file enumeration function
-@available(*, deprecated, message: "Use other enumerateFiles() method instead")
-public func enumerateFiles(withInputURL inputURL: URL,
-                           excluding excludedURLs: [URL] = [],
-                           outputURL: URL? = nil,
-                           options fileOptions: FileOptions = .default,
-                           concurrent: Bool = true,
-                           block: @escaping (URL, URL) throws -> () throws -> Void) -> [Error] {
-    var fileOptions = fileOptions
-    fileOptions.excludedGlobs += excludedURLs.map { Glob.path($0.path) }
-    let options = Options(fileOptions: fileOptions)
-    return enumerateFiles(
-        withInputURL: inputURL,
-        outputURL: outputURL,
-        options: options,
-        concurrent: concurrent
-    ) { inputURL, outputURL, _ in
-        try block(inputURL, outputURL)
-    }
-}
-
 /// Callback for enumerateFiles() function
 public typealias FileEnumerationHandler = (
     _ inputURL: URL,
@@ -545,15 +524,3 @@ func stripMarkdown(_ input: String) -> String {
     }
     return result
 }
-
-// MARK: Xcode 9.2 compatibility
-
-#if !swift(>=4.1)
-
-    extension Sequence {
-        func compactMap<T>(_ transform: (Element) throws -> T?) rethrows -> [T] {
-            return try flatMap { try transform($0).map { [$0] } ?? [] }
-        }
-    }
-
-#endif

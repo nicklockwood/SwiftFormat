@@ -58,20 +58,24 @@ private var stderr = FileHandle.standardError
 
 private let stderrIsTTY = isatty(STDERR_FILENO) != 0
 
+private let printQueue = DispatchQueue(label: "swiftformat.print")
+
 CLI.print = { message, type in
-    switch type {
-    case .info:
-        print(message, to: &stderr)
-    case .success:
-        print(stderrIsTTY ? message.inGreen : message, to: &stderr)
-    case .error:
-        print(stderrIsTTY ? message.inRed : message, to: &stderr)
-    case .warning:
-        print(stderrIsTTY ? message.inYellow : message, to: &stderr)
-    case .content:
-        print(message)
-    case .raw:
-        print(message, terminator: "")
+    printQueue.sync {
+        switch type {
+        case .info:
+            print(message, to: &stderr)
+        case .success:
+            print(stderrIsTTY ? message.inGreen : message, to: &stderr)
+        case .error:
+            print(stderrIsTTY ? message.inRed : message, to: &stderr)
+        case .warning:
+            print(stderrIsTTY ? message.inYellow : message, to: &stderr)
+        case .content:
+            print(message)
+        case .raw:
+            print(message, terminator: "")
+        }
     }
 }
 

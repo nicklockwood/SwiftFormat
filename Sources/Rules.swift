@@ -1574,39 +1574,10 @@ public struct _FormatRules {
             formatter.removeToken(at: index)
         }
 
-        // TODO: extract as utility
-        func isConditionalStatement(at index: Int) -> Bool {
-            guard var index = formatter.index(of: .keyword, before: index) else {
-                return false
-            }
-            var keyword = formatter.tokens[index].string
-            while ["try", "as", "is", "in"].contains(keyword) ||
-                keyword.hasPrefix("#") || keyword.hasPrefix("@") {
-                guard let prevIndex = formatter.index(of: .keyword, before: index) else {
-                    return false
-                }
-                index = prevIndex
-                keyword = formatter.tokens[index].string
-            }
-            if ["let", "var"].contains(keyword) {
-                index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index) ?? index
-                switch formatter.tokens[index] {
-                case .delimiter(","):
-                    return true
-                case let .keyword(name):
-                    keyword = name
-                default:
-                    return false
-                }
-            }
-            // TODO: unify with conditionals logic in redundantParens
-            return ["if", "guard", "while", "for", "case", "where", "switch"].contains(keyword)
-        }
-
         formatter.forEach(.startOfScope("(")) { i, _ in
             guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 case let .identifier(name) = prevToken, // TODO: are trailing closures allowed in other cases?
-                !blacklist.contains(name), !isConditionalStatement(at: i) else {
+                !blacklist.contains(name), !formatter.isConditionalStatement(at: i) else {
                 return
             }
             guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i), let closingBraceIndex =
@@ -1750,31 +1721,8 @@ public struct _FormatRules {
                     let openingIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closingIndex, if: {
                         $0 == .startOfScope("{")
                     }),
-                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousIndex) != .keyword("func") else {
+                    formatter.isStartOfClosure(at: openingIndex) else {
                     return
-                }
-                if var prevIndex = formatter.index(of: .keyword, before: i) {
-                    var prevKeyword = formatter.tokens[prevIndex].string
-                    while prevKeyword.hasPrefix("#") || prevKeyword.hasPrefix("@") ||
-                        ["try", "is", "as"].contains(prevKeyword),
-                        let index = formatter.index(of: .keyword, before: prevIndex) {
-                        prevIndex = index
-                        prevKeyword = formatter.tokens[index].string
-                    }
-                    if conditionals.contains(prevKeyword) {
-                        return
-                    }
-                    if ["var", "let"].contains(prevKeyword),
-                        let token = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
-                        [.delimiter(","), .keyword("import")].contains(token) ||
-                        conditionals.contains(token.string) {
-                        return
-                    }
-                    if prevKeyword == "var",
-                        let token = formatter.next(.nonSpaceOrCommentOrLinebreak, after: openingIndex),
-                        [.identifier("willSet"), .identifier("didSet")].contains(token) {
-                        return
-                    }
                 }
                 removeParen(at: closingIndex)
                 removeParen(at: i)

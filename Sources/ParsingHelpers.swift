@@ -232,6 +232,42 @@ extension Formatter {
 
     func isStartOfClosure(at i: Int, in scope: Token? = nil) -> Bool {
         assert(tokens[i] == .startOfScope("{"))
+
+        guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
+            return true
+        }
+        switch tokens[prevIndex] {
+        case .startOfScope("("), .startOfScope("["), .startOfScope("{"),
+             .operator(_, .infix), .operator(_, .prefix), .delimiter,
+             .keyword("return"), .keyword("in"), .keyword("where"):
+            return true
+        case .operator(_, .none),
+             .keyword("deinit"), .keyword("catch"), .keyword("else"),
+             .keyword("repeat"), .keyword("throws"), .keyword("rethrows"):
+            return false
+        case .endOfScope(")"):
+            guard let startOfScope = index(of: .startOfScope("("), before: prevIndex),
+                let identifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) else {
+                return true
+            }
+            if !tokens[identifierIndex].isIdentifier ||
+                last(.nonSpaceOrCommentOrLinebreak, before: identifierIndex) == .keyword("func") {
+                return false
+            }
+            if let keywordIndex = indexOfLastSignificantKeyword(at: identifierIndex) {
+                if isConditionalStatement(at: keywordIndex) {
+                    return false
+                }
+                if tokens[keywordIndex].string == "var",
+                    case let .identifier(name)? = next(.nonSpaceOrCommentOrLinebreak, after: i),
+                    ["willSet", "didSet"].contains(name) {
+                    return false
+                }
+            }
+        default:
+            break
+        }
+
         var i = i - 1
         var nextTokenIndex = i
         var foundEquals = false
@@ -265,10 +301,8 @@ extension Formatter {
                         !$0.isSpaceOrCommentOrLinebreak && (!$0.isEndOfScope || $0 == .endOfScope("}"))
                     }) ?? -1
                 }
-                // TODO: combine with keyword logic above and in redundantParens, etc
-                if let keyword = lastSignificantKeyword(at: i),
-                    ["in", "while", "if", "case", "switch", "where", "for", "guard"].contains(keyword) {
-                    break
+                if isConditionalStatement(at: i) {
+                    return false
                 }
                 if isEndOfStatement(at: prevTokenIndex, in: scope),
                     isStartOfStatement(at: nextTokenIndex, in: scope) {
@@ -305,18 +339,43 @@ extension Formatter {
         return false
     }
 
+    func isConditionalStatement(at i: Int) -> Bool {
+        guard let index = indexOfLastSignificantKeyword(at: i) else {
+            return false
+        }
+        switch tokens[index].string {
+        case "let", "var":
+            switch last(.nonSpaceOrCommentOrLinebreak, before: index) {
+            case .delimiter(",")?:
+                return true
+            case let .keyword(name)?:
+                return ["if", "guard", "while", "for", "case"].contains(name)
+            default:
+                return false
+            }
+        case "if", "guard", "while", "for", "case", "where", "switch":
+            return true
+        default:
+            return false
+        }
+    }
+
     func lastSignificantKeyword(at i: Int) -> String? {
-        guard let index = self.index(of: .keyword, before: i + 1),
-            case let .keyword(keyword) = tokens[index] else {
+        return indexOfLastSignificantKeyword(at: i).map { tokens[$0].string }
+    }
+
+    func indexOfLastSignificantKeyword(at i: Int) -> Int? {
+        guard let index = tokens[i].isKeyword ? i : index(of: .keyword, before: i),
+            lastIndex(of: .endOfScope("}"), in: index ..< i) == nil else {
             return nil
         }
-        switch keyword {
+        switch tokens[index].string {
         case let name where name.hasPrefix("#") || name.hasPrefix("@"):
             fallthrough
         case "in", "as", "is", "try":
-            return lastSignificantKeyword(at: index - 1)
-        case let name:
-            return name
+            return indexOfLastSignificantKeyword(at: index - 1)
+        default:
+            return index
         }
     }
 

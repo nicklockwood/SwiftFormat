@@ -3617,6 +3617,11 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantParens)
     }
 
+    func testNestedClosureParensNotRemoved() {
+        let input = "foo { _ in foo(y) {} }"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
     func testParensInStringNotRemoved() {
         let input = "\"hello \\(world)\""
         testFormatting(for: input, rule: FormatRules.redundantParens)

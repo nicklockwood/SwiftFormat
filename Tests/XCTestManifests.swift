@@ -717,6 +717,7 @@ extension RulesTests {
         ("testNestedAllmanBracesAreConverted", testNestedAllmanBracesAreConverted),
         ("testNestedArrayLiteralNotEqualYodaCondition", testNestedArrayLiteralNotEqualYodaCondition),
         ("testNestedBraces", testNestedBraces),
+        ("testNestedClosureParensNotRemoved", testNestedClosureParensNotRemoved),
         ("testNestedCommentIndenting", testNestedCommentIndenting),
         ("testNestedHoistLet", testNestedHoistLet),
         ("testNestedIndentedIfElseifEndifOutdenting", testNestedIndentedIfElseifEndifOutdenting),

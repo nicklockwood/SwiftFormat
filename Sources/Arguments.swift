@@ -472,10 +472,11 @@ let commandLineArguments = [
     "inferoptions",
     "output",
     "cache",
-    "verbose",
-    "quiet",
     "dryrun",
     "lint",
+    "lenient",
+    "verbose",
+    "quiet",
     // Misc
     "help",
     "version",

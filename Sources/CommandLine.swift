@@ -160,10 +160,11 @@ func printHelp(as type: CLI.OutputType) {
     --conflictmarkers  \(stripMarkdown(FormatOptions.Descriptor.ignoreConflictMarkers.help))
     --swiftversion     \(stripMarkdown(FormatOptions.Descriptor.swiftVersion.help))
     --cache            Path to cache file, or "clear" or "ignore" the default cache
-    --verbose          Display detailed formatting output and warnings/errors
-    --quiet            Disables non-critical output messages and warnings
     --dryrun           Run in "dry" mode (without actually changing any files)
     --lint             Like --dryrun, but returns an error if formatting is needed
+    --lenient          Suppress errors for unformatted code in --lint mode
+    --verbose          Display detailed formatting output and warnings/errors
+    --quiet            Disables non-critical output messages and warnings
 
     SwiftFormat has a number of rules that can be enabled or disabled. By default
     most rules are enabled. Use --rules to display all enabled/disabled rules.
@@ -222,6 +223,7 @@ typealias OutputFlags = (
 func processArguments(_ args: [String], in directory: String) -> ExitCode {
     var errors = [Error]()
     var verbose = false
+    var lenient = false
 
     quietMode = false
     defer {
@@ -238,6 +240,9 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
 
         // Verbose
         verbose = (args["verbose"] != nil)
+
+        // Verbose
+        lenient = (args["lenient"] != nil)
 
         // Lint
         let lint = (args["lint"] != nil)
@@ -363,6 +368,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
         try addInputPaths(for: "quiet")
         try addInputPaths(for: "verbose")
+        try addInputPaths(for: "lenient")
         try addInputPaths(for: "dryrun")
         try addInputPaths(for: "lint")
         try addInputPaths(for: "inferoptions")
@@ -562,7 +568,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
         printWarnings(errors)
         print("SwiftFormat completed in \(time).", as: .success)
-        return printResult(dryrun, lint, outputFlags)
+        return printResult(dryrun, lint, lenient, outputFlags)
     } catch {
         if !verbose {
             // Warnings would be redundant at this point
@@ -574,7 +580,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
     }
 }
 
-func printResult(_ dryrun: Bool, _ lint: Bool, _ flags: OutputFlags) -> ExitCode {
+func printResult(_ dryrun: Bool, _ lint: Bool, _ lenient: Bool, _ flags: OutputFlags) -> ExitCode {
     let (written, checked, skipped, failed) = flags
     let ignored = (skipped == 0) ? "" : ", \(skipped) file\(skipped == 1 ? "" : "s") skipped"
     if checked == 0 {
@@ -589,7 +595,7 @@ func printResult(_ dryrun: Bool, _ lint: Bool, _ flags: OutputFlags) -> ExitCode
     } else {
         print("\(written)/\(checked) files formatted\(ignored).", as: .info)
     }
-    return lint && failed > 0 ? .lintFailure : .ok
+    return !lenient && lint && failed > 0 ? .lintFailure : .ok
 }
 
 func inferOptions(from inputURLs: [URL], options: FileOptions) -> (Int, FormatOptions, [Error]) {

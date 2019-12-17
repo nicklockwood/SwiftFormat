@@ -68,8 +68,7 @@
 
 ## andOperator
 
-Replaces the `&&` operator with a comma inside `if`, `guard` and `while`
-conditions.
+Prefer comma over `&&` in `if`, `guard` or `while` conditions.
 
 <details>
 <summary>Examples</summary>
@@ -99,8 +98,7 @@ conditions.
 
 ## anyObjectProtocol
 
-Replaces `class` with `AnyObject` in protocol definitions, as recommended in
-modern Swift guidelines.
+Prefer `AnyObject` over `class` in protocol definitions.
 
 <details>
 <summary>Examples</summary>
@@ -119,7 +117,7 @@ swift version is set to 4.1 or above.
 
 ## blankLinesAroundMark
 
-Adds a blank line before and after each `MARK:` comment.
+Insert blank line before and after `MARK:` comments.
 
 <details>
 <summary>Examples</summary>
@@ -149,7 +147,7 @@ Adds a blank line before and after each `MARK:` comment.
 
 ## blankLinesAtEndOfScope
 
-Removes trailing blank lines from inside braces, brackets, parens or chevrons.
+Remove trailing blank line at the end of a scope.
 
 <details>
 <summary>Examples</summary>
@@ -185,7 +183,7 @@ Removes trailing blank lines from inside braces, brackets, parens or chevrons.
 
 ## blankLinesAtStartOfScope
 
-Removes leading blank lines from inside braces, brackets, parens or chevrons.
+Remove leading blank line at the start of a scope.
 
 <details>
 <summary>Examples</summary>
@@ -221,8 +219,8 @@ Removes leading blank lines from inside braces, brackets, parens or chevrons.
 
 ## blankLinesBetweenScopes
 
-Adds a blank line before each class, struct, enum, extension, protocol or
-function.
+Insert blank line before class, struct, enum, extension, protocol or function
+declarations.
 
 <details>
 <summary>Examples</summary>
@@ -254,7 +252,7 @@ function.
 
 ## braces
 
-Implements K&R or Allman-style braces.
+Wrap braces in accordance with selected style (K&R or Allman).
 
 Option | Description
 --- | ---
@@ -286,7 +284,7 @@ Option | Description
 
 ## consecutiveBlankLines
 
-Reduces multiple sequential blank lines to a single blank line.
+Replace consecutive blank lines with a single blank line.
 
 <details>
 <summary>Examples</summary>
@@ -311,7 +309,7 @@ Reduces multiple sequential blank lines to a single blank line.
 
 ## consecutiveSpaces
 
-Reduces a sequence of spaces to a single space.
+Replace consecutive spaces with a single space.
 
 <details>
 <summary>Examples</summary>
@@ -326,7 +324,7 @@ Reduces a sequence of spaces to a single space.
 
 ## duplicateImports
 
-Removes duplicate import statements.
+Remove duplicate import statements.
 
 <details>
 <summary>Examples</summary>
@@ -350,8 +348,8 @@ Removes duplicate import statements.
 
 ## elseOnSameLine
 
-Controls whether an `else`, `catch` or `while` keyword after a `}` appears on
-the same line.
+Place `else`, `catch` or `while` keyword in accordance with current style (same or
+next line).
 
 Option | Description
 --- | ---
@@ -410,7 +408,7 @@ Option | Description
 
 ## emptyBraces
 
-Removes all white space between otherwise empty braces.
+Remove whitespace inside empty braces.
 
 <details>
 <summary>Examples</summary>
@@ -428,7 +426,7 @@ Removes all white space between otherwise empty braces.
 
 ## fileHeader
 
-Allows the replacement or removal of Xcode source file comment headers.
+Use specified source file header template for all files.
 
 Option | Description
 --- | ---
@@ -436,8 +434,7 @@ Option | Description
 
 ## hoistPatternLet
 
-Moves `let` or `var` bindings inside patterns to the start of the expression
-(or vice-versa).
+Reposition `let` or `var` bindings within pattern.
 
 Option | Description
 --- | ---
@@ -466,7 +463,7 @@ Option | Description
 
 ## indent
 
-Adjusts leading whitespace based on scope and line wrapping.
+Indent code in accordance with the scope level.
 
 Option | Description
 --- | ---
@@ -524,8 +521,7 @@ Option | Description
 
 ## isEmpty
 
-Replaces `count == 0` checks with `isEmpty`, which is preferred for performance
-reasons (especially for Strings where count has O(n) complexity).
+Prefer `isEmpty` over comparing `count` against zero.
 
 <details>
 <summary>Examples</summary>
@@ -551,8 +547,7 @@ reason, the rule is disabled by default, and must be manually enabled via the
 
 ## leadingDelimiters
 
-Moves delimiters such as : or ; or , placed at the start of a line to the end
-of the previous line instead.
+Move leading delimiters to the end of the previous line.
 
 <details>
 <summary>Examples</summary>
@@ -570,11 +565,11 @@ of the previous line instead.
 
 ## linebreakAtEndOfFile
 
-Ensures that the last line of the file is empty.
+Add empty blank line at end of file.
 
 ## linebreaks
 
-Normalizes all linebreaks to use the same character.
+Use specified linebreak character for all linebreaks (CR, LF or CRLF).
 
 Option | Description
 --- | ---
@@ -582,7 +577,7 @@ Option | Description
 
 ## numberFormatting
 
-Handles case and grouping of number literals.
+Use consistent grouping for numeric literals.
 
 Option | Description
 --- | ---
@@ -613,7 +608,7 @@ Option | Description
 
 ## ranges
 
-Controls the spacing around range operators.
+Add or remove space around range operators.
 
 Option | Description
 --- | ---
@@ -637,8 +632,7 @@ Option | Description
 
 ## redundantBackticks
 
-Removes unnecessary escaping of identifiers using backticks, e.g. in cases
-where the escaped word is not a keyword, or is not ambiguous in that context.
+Remove redundant backticks around identifiers.
 
 <details>
 <summary>Examples</summary>
@@ -658,7 +652,7 @@ where the escaped word is not a keyword, or is not ambiguous in that context.
 
 ## redundantBreak
 
-Removes redundant `break` statements from inside switch cases.
+Remove redundant `break` in switch case.
 
 <details>
 <summary>Examples</summary>
@@ -679,8 +673,7 @@ Removes redundant `break` statements from inside switch cases.
 
 ## redundantExtensionACL
 
-Removes access control level keywords from extension members when the access
-level matches the extension itself.
+Remove redundant access control specifiers.
 
 <details>
 <summary>Examples</summary>
@@ -700,8 +693,7 @@ level matches the extension itself.
 
 ## redundantFileprivate
 
-Replaces `fileprivate` access control keyword with `private` when they are
-equivalent, e.g. for top-level constants, functions or types within a file.
+Prefer `private` over `fileprivate` where equivalent.
 
 <details>
 <summary>Examples</summary>
@@ -732,7 +724,7 @@ members that are only accessed from extensions in the same file:
 
 ## redundantGet
 
-Removes unnecessary `get { }` clauses from inside read-only computed properties.
+Remove unneeded `get` clause inside computed properties.
 
 <details>
 <summary>Examples</summary>
@@ -754,7 +746,7 @@ Removes unnecessary `get { }` clauses from inside read-only computed properties.
 
 ## redundantInit
 
-Removes unnecessary `init` when instantiating types.
+Remove explicit `init` if not required.
 
 <details>
 <summary>Examples</summary>
@@ -769,8 +761,7 @@ Removes unnecessary `init` when instantiating types.
 
 ## redundantLet
 
-Removes redundant `let` or `var` from ignored variables in bindings (which is a
-warning in Xcode).
+Remove redundant `let`/`var` from ignored variables.
 
 <details>
 <summary>Examples</summary>
@@ -785,8 +776,7 @@ warning in Xcode).
 
 ## redundantLetError
 
-Removes redundant `let error` from `catch` statements, where it is declared
-implicitly.
+Remove redundant `let error` from `catch` clause.
 
 <details>
 <summary>Examples</summary>
@@ -801,8 +791,7 @@ implicitly.
 
 ## redundantNilInit
 
-Removes unnecessary nil initialization of Optional vars (which are nil by
-default anyway).
+Remove redundant `nil` default value (Optional vars are nil by default).
 
 <details>
 <summary>Examples</summary>
@@ -827,7 +816,7 @@ var foo: Int? = 0
 
 ## redundantObjc
 
-Removes unnecessary `@objc` annotation from properties and functions.
+Remove redundant `@objc` annotations.
 
 <details>
 <summary>Examples</summary>
@@ -852,7 +841,7 @@ Removes unnecessary `@objc` annotation from properties and functions.
 
 ## redundantParens
 
-Removes unnecessary parens from expressions and branch conditions.
+Remove redundant parentheses.
 
 <details>
 <summary>Examples</summary>
@@ -882,7 +871,7 @@ Removes unnecessary parens from expressions and branch conditions.
 
 ## redundantPattern
 
-Removes redundant pattern matching arguments for ignored variables.
+Remove redundant pattern matching parameter syntax.
 
 <details>
 <summary>Examples</summary>
@@ -902,7 +891,7 @@ Removes redundant pattern matching arguments for ignored variables.
 
 ## redundantRawValues
 
-Removes raw string values from enum cases when they match the case name.
+Remove redundant raw string values for enum cases.
 
 <details>
 <summary>Examples</summary>
@@ -924,7 +913,7 @@ Removes raw string values from enum cases when they match the case name.
 
 ## redundantReturn
 
-Removes unnecessary `return` keyword from single-line closures.
+Remove unneeded `return` keyword.
 
 <details>
 <summary>Examples</summary>
@@ -939,8 +928,7 @@ Removes unnecessary `return` keyword from single-line closures.
 
 ## redundantSelf
 
-Adds or removes explicit `self` prefix from class and instance member
-references.
+Insert/remove explicit `self` where applicable.
 
 Option | Description
 --- | ---
@@ -995,7 +983,7 @@ by using `--self init-only`:
 
 ## redundantVoidReturnType
 
-Removes unnecessary `Void` return type from function declarations.
+Remove explicit `Void` return type.
 
 <details>
 <summary>Examples</summary>
@@ -1015,8 +1003,7 @@ Removes unnecessary `Void` return type from function declarations.
 
 ## semicolons
 
-Removes semicolons at the end of lines, and (optionally) replaces inline
-semicolons with a linebreak.
+Remove semicolons.
 
 Option | Description
 --- | ---
@@ -1047,7 +1034,7 @@ goto(fail)
 
 ## sortedImports
 
-Rearranges import statements so that they are sorted.
+Sort import statements alphabetically.
 
 Option | Description
 --- | ---
@@ -1083,7 +1070,7 @@ Option | Description
 
 ## spaceAroundBraces
 
-Contextually adds or removes space around `{ ... }`.
+Add or remove space around curly braces.
 
 <details>
 <summary>Examples</summary>
@@ -1103,7 +1090,7 @@ Contextually adds or removes space around `{ ... }`.
 
 ## spaceAroundBrackets
 
-Contextually adjusts the space around `[ ... ]`.
+Add or remove space around square brackets.
 
 <details>
 <summary>Examples</summary>
@@ -1123,7 +1110,7 @@ Contextually adjusts the space around `[ ... ]`.
 
 ## spaceAroundComments
 
-Adds space around `/* ... */` comments and before `//` comments.
+Add space before and/or after comments.
 
 <details>
 <summary>Examples</summary>
@@ -1143,7 +1130,7 @@ Adds space around `/* ... */` comments and before `//` comments.
 
 ## spaceAroundGenerics
 
-Removes the space around `< ... >`.
+Remove space around angle brackets.
 
 <details>
 <summary>Examples</summary>
@@ -1158,8 +1145,7 @@ Removes the space around `< ... >`.
 
 ## spaceAroundOperators
 
-Contextually adjusts the space around infix operators. Also adds or removes the
-space between an operator function declaration and its arguments.
+Add or remove space around operators or delimiters.
 
 Option | Description
 --- | ---
@@ -1188,7 +1174,7 @@ Option | Description
 
 ## spaceAroundParens
 
-Contextually adjusts the space around `( ... )`.
+Add or remove space around parentheses.
 
 <details>
 <summary>Examples</summary>
@@ -1208,7 +1194,7 @@ Contextually adjusts the space around `( ... )`.
 
 ## spaceInsideBraces
 
-Adds space inside `{ ... }`.
+Add or remove space inside curly braces.
 
 <details>
 <summary>Examples</summary>
@@ -1223,7 +1209,7 @@ Adds space inside `{ ... }`.
 
 ## spaceInsideBrackets
 
-Removes the space inside `[ ... ]`.
+Remove space inside square brackets.
 
 <details>
 <summary>Examples</summary>
@@ -1238,7 +1224,7 @@ Removes the space inside `[ ... ]`.
 
 ## spaceInsideComments
 
-Adds a space inside `/* ... */` comments and at the start of `//` comments.
+Add leading and/or trailing space inside comments.
 
 <details>
 <summary>Examples</summary>
@@ -1258,7 +1244,7 @@ Adds a space inside `/* ... */` comments and at the start of `//` comments.
 
 ## spaceInsideGenerics
 
-Removes the space inside `< ... >`.
+Remove space inside angle brackets.
 
 <details>
 <summary>Examples</summary>
@@ -1273,7 +1259,7 @@ Removes the space inside `< ... >`.
 
 ## spaceInsideParens
 
-Removes the space inside `( ... )`.
+Remove space inside parentheses.
 
 <details>
 <summary>Examples</summary>
@@ -1288,8 +1274,7 @@ Removes the space inside `( ... )`.
 
 ## specifiers
 
-Normalizes the order for property/function/class specifiers (public, weak,
-lazy, etc.)
+Use consistent ordering for member specifiers.
 
 <details>
 <summary>Examples</summary>
@@ -1314,7 +1299,7 @@ lazy, etc.)
 
 ## strongOutlets
 
-Removes the `weak` specifier from `@IBOutlet` properties.
+Remove `weak` specifier from `@IBOutlet` properties.
 
 <details>
 <summary>Examples</summary>
@@ -1332,8 +1317,7 @@ As per Apple's recommendation
 
 ## strongifiedSelf
 
-Replaces `` `self` `` with `self` when using the common ``guard let `self` = self``
-pattern for strongifying weak self references.
+Remove backticks around `self` in Optional unwrap expressions.
 
 <details>
 <summary>Examples</summary>
@@ -1352,8 +1336,7 @@ set to 4.2 or above.
 
 ## todos
 
-Ensures that `TODO:`, `MARK:` and `FIXME:` comments are correctly formatted
-(otherwise they're ignored by Xcode).
+Use correct formatting for `TODO:`, `MARK:` or `FIXME:` comments.
 
 <details>
 <summary>Examples</summary>
@@ -1373,9 +1356,7 @@ Ensures that `TODO:`, `MARK:` and `FIXME:` comments are correctly formatted
 
 ## trailingClosures
 
-Converts the last closure argument in a function call to trailing closure
-syntax where possible. By default this is restricted to anonymous closure
-arguments, as removing named closures can result in call-site ambiguity.
+Use trailing closure syntax where applicable.
 
 Option | Description
 --- | ---
@@ -1399,8 +1380,7 @@ Option | Description
 
 ## trailingCommas
 
-Adds or removes trailing commas from the last item in an array or dictionary
-literal.
+Add or remove trailing comma from the last item in a collection literal.
 
 Option | Description
 --- | ---
@@ -1428,7 +1408,7 @@ Option | Description
 
 ## trailingSpace
 
-Removes the whitespace at the end of a line.
+Remove trailing space at end of a line.
 
 Option | Description
 --- | ---
@@ -1436,7 +1416,7 @@ Option | Description
 
 ## typeSugar
 
-Replaces Array, Dictionary and Optional types with their shorthand forms.
+Prefer shorthand syntax for Arrays, Dictionaries and Optionals.
 
 <details>
 <summary>Examples</summary>
@@ -1461,8 +1441,7 @@ Replaces Array, Dictionary and Optional types with their shorthand forms.
 
 ## unusedArguments
 
-Marks unused arguments in functions and closures with `_` to make it clear they
-aren't used.
+Mark unused function arguments with `_`.
 
 Option | Description
 --- | ---
@@ -1506,7 +1485,7 @@ Option | Description
 
 ## void
 
-Standardizes the use of `Void` vs an empty tuple `()`.
+Use `Void` for type declarations and `()` for values.
 
 Option | Description
 --- | ---
@@ -1540,7 +1519,7 @@ Option | Description
 
 ## wrap
 
-Wrap lines that are longer than the maxium width.
+Wrap lines that exceed the specified maximum width.
 
 Option | Description
 --- | ---
@@ -1548,7 +1527,7 @@ Option | Description
 
 ## wrapArguments
 
-Wraps function arguments and collection literals.
+Align wrapped function arguments or collection elements.
 
 Option | Description
 --- | ---
@@ -1592,5 +1571,4 @@ Or for `--wrapcollections before-first`:
 
 ## yodaConditions
 
-Reorders so-called "yoda conditions" where the constant is placed on the
-left-hand side of a comparison instead of the right.
+Prefer constant values to be on the right-hand-side of expressions.

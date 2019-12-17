@@ -143,7 +143,7 @@ public struct _FormatRules {
     /// * There is space between a closing paren and following opening brace
     /// * There is no space between a closing paren and following opening square bracket
     public let spaceAroundParens = FormatRule(
-        help: "Contextually adjusts the space around `( ... )`."
+        help: "Add or remove space around parentheses."
     ) { formatter in
         func spaceAfter(_ keyword: String, index: Int) -> Bool {
             switch keyword {
@@ -231,7 +231,7 @@ public struct _FormatRules {
 
     /// Remove space immediately inside parens
     public let spaceInsideParens = FormatRule(
-        help: "Removes the space inside `( ... )`."
+        help: "Remove space inside parentheses."
     ) { formatter in
         formatter.forEach(.startOfScope("(")) { i, _ in
             if formatter.token(at: i + 1)?.isSpace == true,
@@ -255,7 +255,7 @@ public struct _FormatRules {
     /// * There is space between a closing bracket and following identifier
     /// * There is space between a closing bracket and following opening brace
     public let spaceAroundBrackets = FormatRule(
-        help: "Contextually adjusts the space around `[ ... ]`."
+        help: "Add or remove space around square brackets."
     ) { formatter in
         formatter.forEach(.startOfScope("[")) { i, token in
             guard let prevToken = formatter.token(at: i - 1) else {
@@ -294,7 +294,7 @@ public struct _FormatRules {
 
     /// Remove space immediately inside square brackets
     public let spaceInsideBrackets = FormatRule(
-        help: "Removes the space inside `[ ... ]`."
+        help: "Remove space inside square brackets."
     ) { formatter in
         formatter.forEach(.startOfScope("[")) { i, _ in
             if formatter.token(at: i + 1)?.isSpace == true,
@@ -313,7 +313,7 @@ public struct _FormatRules {
     /// Ensure that there is space between an opening brace and the preceding
     /// identifier, and between a closing brace and the following identifier.
     public let spaceAroundBraces = FormatRule(
-        help: "Contextually adds or removes space around `{ ... }`."
+        help: "Add or remove space around curly braces."
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             if let prevToken = formatter.token(at: i - 1) {
@@ -340,7 +340,7 @@ public struct _FormatRules {
 
     /// Ensure that there is space immediately inside braces
     public let spaceInsideBraces = FormatRule(
-        help: "Adds space inside `{ ... }`."
+        help: "Add or remove space inside curly braces."
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             if let nextToken = formatter.token(at: i + 1) {
@@ -363,7 +363,7 @@ public struct _FormatRules {
 
     /// Ensure there is no space between an opening chevron and the preceding identifier
     public let spaceAroundGenerics = FormatRule(
-        help: "Removes the space around `< ... >`."
+        help: "Remove space around angle brackets."
     ) { formatter in
         formatter.forEach(.startOfScope("<")) { i, _ in
             if formatter.token(at: i - 1)?.isSpace == true,
@@ -375,7 +375,7 @@ public struct _FormatRules {
 
     /// Remove space immediately inside chevrons
     public let spaceInsideGenerics = FormatRule(
-        help: "Removes the space inside `< ... >`."
+        help: "Remove space inside angle brackets."
     ) { formatter in
         formatter.forEach(.startOfScope("<")) { i, _ in
             if formatter.token(at: i + 1)?.isSpace == true {
@@ -397,10 +397,7 @@ public struct _FormatRules {
     ///   single space, unless it appears at the end of a line, and is not
     ///   preceded by a space, unless it appears at the beginning of a line.
     public let spaceAroundOperators = FormatRule(
-        help: """
-        Contextually adjusts the space around infix operators. Also adds or removes the
-        space between an operator function declaration and its arguments.
-        """,
+        help: "Add or remove space around operators or delimiters.",
         options: ["operatorfunc"]
     ) { formatter in
         formatter.forEachToken { i, token in
@@ -493,7 +490,7 @@ public struct _FormatRules {
 
     /// Add space around comments, except at the start or end of a line
     public let spaceAroundComments = FormatRule(
-        help: "Adds space around `/* ... */` comments and before `//` comments."
+        help: "Add space before and/or after comments."
     ) { formatter in
         formatter.forEach(.startOfScope("//")) { i, _ in
             if let prevToken = formatter.token(at: i - 1), !prevToken.isSpaceOrLinebreak {
@@ -525,7 +522,7 @@ public struct _FormatRules {
     /// Add space inside comments, taking care not to mangle headerdoc or
     /// carefully preformatted comments, such as star boxes, etc.
     public let spaceInsideComments = FormatRule(
-        help: "Adds a space inside `/* ... */` comments and at the start of `//` comments."
+        help: "Add leading and/or trailing space inside comments."
     ) { formatter in
         formatter.forEach(.startOfScope("//")) { i, _ in
             guard let nextToken = formatter.token(at: i + 1),
@@ -566,7 +563,7 @@ public struct _FormatRules {
 
     /// Adds or removes the space around range operators
     public let ranges = FormatRule(
-        help: "Controls the spacing around range operators.",
+        help: "Add or remove space around range operators.",
         options: ["ranges"]
     ) { formatter in
         formatter.forEach(.rangeOperator) { i, token in
@@ -596,7 +593,7 @@ public struct _FormatRules {
     /// the start of a line or inside a comment or string, as these have no semantic
     /// meaning and lead to noise in commits.
     public let consecutiveSpaces = FormatRule(
-        help: "Reduces a sequence of spaces to a single space."
+        help: "Replace consecutive spaces with a single space."
     ) { formatter in
         formatter.forEach(.space) { i, token in
             if let prevToken = formatter.token(at: i - 1), !prevToken.isLinebreak {
@@ -620,7 +617,7 @@ public struct _FormatRules {
     /// Remove trailing space from the end of lines, as it has no semantic
     /// meaning and leads to noise in commits.
     public let trailingSpace = FormatRule(
-        help: "Removes the whitespace at the end of a line.",
+        help: "Remove trailing space at end of a line.",
         options: ["trimwhitespace"]
     ) { formatter in
         formatter.forEach(.space) { i, _ in
@@ -633,7 +630,7 @@ public struct _FormatRules {
 
     /// Collapse all consecutive blank lines into a single blank line
     public let consecutiveBlankLines = FormatRule(
-        help: "Reduces multiple sequential blank lines to a single blank line."
+        help: "Replace consecutive blank lines with a single blank line."
     ) { formatter in
         formatter.forEach(.linebreak) { i, _ in
             if let prevIndex = formatter.index(of: .nonSpace, before: i, if: { $0.isLinebreak }),
@@ -646,7 +643,7 @@ public struct _FormatRules {
 
     /// Remove blank lines immediately after an opening brace, bracket, paren or chevron
     public let blankLinesAtStartOfScope = FormatRule(
-        help: "Removes leading blank lines from inside braces, brackets, parens or chevrons."
+        help: "Remove leading blank line at the start of a scope."
     ) { formatter in
         guard formatter.options.removeBlankLines else { return }
         formatter.forEach(.startOfScope) { i, token in
@@ -679,7 +676,7 @@ public struct _FormatRules {
     /// Remove blank lines immediately before a closing brace, bracket, paren or chevron
     /// unless it's followed by more code on the same line (e.g. } else { )
     public let blankLinesAtEndOfScope = FormatRule(
-        help: "Removes trailing blank lines from inside braces, brackets, parens or chevrons."
+        help: "Remove trailing blank line at the end of a scope."
     ) { formatter in
         guard formatter.options.removeBlankLines else { return }
         formatter.forEach(.endOfScope) { i, token in
@@ -716,8 +713,8 @@ public struct _FormatRules {
     /// Adds a blank line immediately after a closing brace, unless followed by another closing brace
     public let blankLinesBetweenScopes = FormatRule(
         help: """
-        Adds a blank line before each class, struct, enum, extension, protocol or
-        function.
+        Insert blank line before class, struct, enum, extension, protocol or function
+        declarations.
         """,
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -781,7 +778,7 @@ public struct _FormatRules {
 
     /// Adds a blank line around MARK: comments
     public let blankLinesAroundMark = FormatRule(
-        help: "Adds a blank line before and after each `MARK:` comment.",
+        help: "Insert blank line before and after `MARK:` comments.",
         sharedOptions: ["linebreaks"]
     ) { formatter in
         guard formatter.options.insertBlankLines else { return }
@@ -805,7 +802,7 @@ public struct _FormatRules {
     /// Always end file with a linebreak, to avoid incompatibility with certain unix tools:
     /// http://stackoverflow.com/questions/2287967/why-is-it-recommended-to-have-empty-line-in-the-end-of-file
     public let linebreakAtEndOfFile = FormatRule(
-        help: "Ensures that the last line of the file is empty.",
+        help: "Add empty blank line at end of file.",
         sharedOptions: ["linebreaks"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
@@ -829,7 +826,7 @@ public struct _FormatRules {
     /// The type (tab or space) and level (2 spaces, 4 spaces, etc.) of the
     /// indenting can be configured with the `options` parameter of the formatter.
     public let indent = FormatRule(
-        help: "Adjusts leading whitespace based on scope and line wrapping.",
+        help: "Indent code in accordance with the scope level.",
         options: ["indent", "tabwidth", "indentcase", "ifdef", "xcodeindentation"],
         sharedOptions: ["trimwhitespace", "linebreaks"]
     ) { formatter in
@@ -1216,7 +1213,7 @@ public struct _FormatRules {
 
     // Implement brace-wrapping rules
     public let braces = FormatRule(
-        help: "Implements K&R or Allman-style braces.",
+        help: "Wrap braces in accordance with selected style (K&R or Allman).",
         options: ["allman"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -1296,8 +1293,8 @@ public struct _FormatRules {
     /// Also applies to `catch` after `try` and `while` after `repeat`.
     public let elseOnSameLine = FormatRule(
         help: """
-        Controls whether an `else`, `catch` or `while` keyword after a `}` appears on
-        the same line.
+        Place `else`, `catch` or `while` keyword in accordance with current style (same or
+        next line).
         """,
         options: ["elseposition"],
         sharedOptions: ["allman", "linebreaks"]
@@ -1346,10 +1343,7 @@ public struct _FormatRules {
     /// Ensure that the last item in a multi-line array literal is followed by a comma.
     /// This is useful for preventing noise in commits when items are added to end of array.
     public let trailingCommas = FormatRule(
-        help: """
-        Adds or removes trailing commas from the last item in an array or dictionary
-        literal.
-        """,
+        help: "Add or remove trailing comma from the last item in a collection literal.",
         options: ["commas"]
     ) { formatter in
         formatter.forEach(.endOfScope("]")) { i, _ in
@@ -1408,10 +1402,7 @@ public struct _FormatRules {
 
     /// Ensure that TODO, MARK and FIXME comments are followed by a : as required
     public let todos = FormatRule(
-        help: """
-        Ensures that `TODO:`, `MARK:` and `FIXME:` comments are correctly formatted
-        (otherwise they're ignored by Xcode).
-        """
+        help: "Use correct formatting for `TODO:`, `MARK:` or `FIXME:` comments."
     ) { formatter in
         formatter.forEachToken { i, token in
             guard case var .commentBody(string) = token else {
@@ -1457,10 +1448,7 @@ public struct _FormatRules {
 
     /// Remove semicolons, except where doing so would change the meaning of the code
     public let semicolons = FormatRule(
-        help: """
-        Removes semicolons at the end of lines, and (optionally) replaces inline
-        semicolons with a linebreak.
-        """,
+        help: "Remove semicolons.",
         options: ["semicolons"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -1492,7 +1480,7 @@ public struct _FormatRules {
 
     /// Standardise linebreak characters as whatever is specified in the options (\n by default)
     public let linebreaks = FormatRule(
-        help: "Normalizes all linebreaks to use the same character.",
+        help: "Use specified linebreak character for all linebreaks (CR, LF or CRLF).",
         options: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.linebreak) { i, _ in
@@ -1502,10 +1490,7 @@ public struct _FormatRules {
 
     /// Standardise the order of property specifiers
     public let specifiers = FormatRule(
-        help: """
-        Normalizes the order for property/function/class specifiers (public, weak,
-        lazy, etc.)
-        """
+        help: "Use consistent ordering for member specifiers."
     ) { formatter in
         formatter.forEach(.keyword) { i, token in
             switch token.string {
@@ -1567,11 +1552,7 @@ public struct _FormatRules {
     /// NOTE: Parens around trailing closures are sometimes required for disambiguation.
     /// SwiftFormat can't detect those cases, so `trailingClosures` is disabled by default
     public let trailingClosures = FormatRule(
-        help: """
-        Converts the last closure argument in a function call to trailing closure
-        syntax where possible. By default this is restricted to anonymous closure
-        arguments, as removing named closures can result in call-site ambiguity.
-        """,
+        help: "Use trailing closure syntax where applicable.",
         options: ["trailingclosures"]
     ) { formatter in
         let whitelist = Set(
@@ -1664,7 +1645,7 @@ public struct _FormatRules {
 
     /// Remove redundant parens around the arguments for loops, if statements, closures, etc.
     public let redundantParens = FormatRule(
-        help: "Removes unnecessary parens from expressions and branch conditions."
+        help: "Remove redundant parentheses."
     ) { formatter in
         func tokenOutsideParenRequiresSpacing(at index: Int) -> Bool {
             guard let token = formatter.token(at: index) else { return false }
@@ -1888,7 +1869,7 @@ public struct _FormatRules {
 
     /// Remove redundant `get {}` clause inside read-only computed property
     public let redundantGet = FormatRule(
-        help: "Removes unnecessary `get { }` clauses from inside read-only computed properties."
+        help: "Remove unneeded `get` clause inside computed properties."
     ) { formatter in
         formatter.forEach(.identifier("get")) { i, _ in
             if let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
@@ -1909,10 +1890,7 @@ public struct _FormatRules {
 
     /// Remove redundant `= nil` initialization for Optional properties
     public let redundantNilInit = FormatRule(
-        help: """
-        Removes unnecessary nil initialization of Optional vars (which are nil by
-        default anyway).
-        """
+        help: "Remove redundant `nil` default value (Optional vars are nil by default)."
     ) { formatter in
         func search(from index: Int) {
             if let optionalIndex = formatter.index(of: .unwrapOperator, after: index) {
@@ -1961,10 +1939,7 @@ public struct _FormatRules {
 
     /// Remove redundant let/var for unnamed variables
     public let redundantLet = FormatRule(
-        help: """
-        Removes redundant `let` or `var` from ignored variables in bindings (which is a
-        warning in Xcode).
-        """
+        help: "Remove redundant `let`/`var` from ignored variables."
     ) { formatter in
         formatter.forEach(.identifier("_")) { i, _ in
             guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":"),
@@ -1992,7 +1967,7 @@ public struct _FormatRules {
 
     /// Remove redundant pattern in case statements
     public let redundantPattern = FormatRule(
-        help: "Removes redundant pattern matching arguments for ignored variables."
+        help: "Remove redundant pattern matching parameter syntax."
     ) { formatter in
         func redundantBindings(inRange range: Range<Int>) -> Bool {
             var isEmpty = true
@@ -2038,7 +2013,7 @@ public struct _FormatRules {
 
     /// Remove redundant raw string values for case statements
     public let redundantRawValues = FormatRule(
-        help: "Removes raw string values from enum cases when they match the case name."
+        help: "Remove redundant raw string values for enum cases."
     ) { formatter in
         formatter.forEach(.keyword("enum")) { i, _ in
             guard let nameIndex = formatter.index(
@@ -2077,7 +2052,7 @@ public struct _FormatRules {
 
     /// Remove redundant void return values for function declarations
     public let redundantVoidReturnType = FormatRule(
-        help: "Removes unnecessary `Void` return type from function declarations."
+        help: "Remove explicit `Void` return type."
     ) { formatter in
         formatter.forEach(.operator("->", .infix)) { i, _ in
             guard var endIndex = formatter.index(of: .nonSpace, after: i) else { return }
@@ -2116,7 +2091,7 @@ public struct _FormatRules {
 
     /// Remove redundant return keyword from single-line closures
     public let redundantReturn = FormatRule(
-        help: "Removes unnecessary `return` keyword from single-line closures."
+        help: "Remove unneeded `return` keyword."
     ) { formatter in
         formatter.forEach(.keyword("return")) { i, _ in
             guard let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
@@ -2187,10 +2162,7 @@ public struct _FormatRules {
 
     /// Remove redundant backticks around non-keywords, or in places where keywords don't need escaping
     public let redundantBackticks = FormatRule(
-        help: """
-        Removes unnecessary escaping of identifiers using backticks, e.g. in cases
-        where the escaped word is not a keyword, or is not ambiguous in that context.
-        """
+        help: "Remove redundant backticks around identifiers."
     ) { formatter in
         formatter.forEach(.identifier) { i, token in
             guard token.string.first == "`" else { return }
@@ -2250,10 +2222,7 @@ public struct _FormatRules {
     /// Remove redundant self keyword
     // TODO: restructure this to use forEachToken to avoid exposing processCommentBody mechanism
     public let redundantSelf = FormatRule(
-        help: """
-        Adds or removes explicit `self` prefix from class and instance member
-        references.
-        """,
+        help: "Insert/remove explicit `self` where applicable.",
         options: ["self", "selfrequired"]
     ) { formatter in
         func processBody(at index: inout Int,
@@ -2826,10 +2795,7 @@ public struct _FormatRules {
 
     /// Replace unused arguments with an underscore
     public let unusedArguments = FormatRule(
-        help: """
-        Marks unused arguments in functions and closures with `_` to make it clear they
-        aren't used.
-        """,
+        help: "Mark unused function arguments with `_`.",
         options: ["stripunusedargs"]
     ) { formatter in
         func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: CountableRange<Int>) {
@@ -2993,10 +2959,7 @@ public struct _FormatRules {
 
     /// Move `let` and `var` inside patterns to the beginning
     public let hoistPatternLet = FormatRule(
-        help: """
-        Moves `let` or `var` bindings inside patterns to the start of the expression
-        (or vice-versa).
-        """,
+        help: "Reposition `let` or `var` bindings within pattern.",
         options: ["patternlet"]
     ) { formatter in
         func indicesOf(_ keyword: String, in range: CountableRange<Int>) -> [Int]? {
@@ -3139,7 +3102,7 @@ public struct _FormatRules {
     }
 
     public let wrap = FormatRule(
-        help: "Wrap lines that are longer than the maxium width.",
+        help: "Wrap lines that exceed the specified maximum width.",
         options: ["maxwidth"],
         sharedOptions: ["indent", "tabwidth", "linebreaks"]
     ) { formatter in
@@ -3251,7 +3214,7 @@ public struct _FormatRules {
 
     /// Normalize argument wrapping style
     public let wrapArguments = FormatRule(
-        help: "Wraps function arguments and collection literals.",
+        help: "Align wrapped function arguments or collection elements.",
         options: ["wraparguments", "wrapcollections", "closingparen"],
         sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
     ) { formatter in
@@ -3436,7 +3399,7 @@ public struct _FormatRules {
 
     /// Normalize the use of void in closure arguments and return values
     public let void = FormatRule(
-        help: "Standardizes the use of `Void` vs an empty tuple `()`.",
+        help: "Use `Void` for type declarations and `()` for values.",
         options: ["empty"]
     ) { formatter in
         func isArgumentToken(at index: Int) -> Bool {
@@ -3528,7 +3491,7 @@ public struct _FormatRules {
 
     /// Standardize formatting of numeric literals
     public let numberFormatting = FormatRule(
-        help: "Handles case and grouping of number literals.",
+        help: "Use consistent grouping for numeric literals.",
         options: ["decimalgrouping", "binarygrouping", "octalgrouping", "hexgrouping",
                   "fractiongrouping", "exponentgrouping", "hexliteralcase", "exponentcase"]
     ) { formatter in
@@ -3617,7 +3580,7 @@ public struct _FormatRules {
 
     /// Strip header comments from the file
     public let fileHeader = FormatRule(
-        help: "Allows the replacement or removal of Xcode source file comment headers.",
+        help: "Use specified source file header template for all files.",
         options: ["header"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -3706,7 +3669,7 @@ public struct _FormatRules {
 
     /// Strip redundant `.init` from type instantiations
     public let redundantInit = FormatRule(
-        help: "Removes unnecessary `init` when instantiating types."
+        help: "Remove explicit `init` if not required."
     ) { formatter in
         formatter.forEach(.identifier("init")) { i, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
@@ -3726,7 +3689,7 @@ public struct _FormatRules {
 
     /// Sort import statements
     public let sortedImports = FormatRule(
-        help: "Rearranges import statements so that they are sorted.",
+        help: "Sort import statements alphabetically.",
         options: ["importgrouping"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -3777,7 +3740,7 @@ public struct _FormatRules {
 
     /// Remove duplicate import statements
     public let duplicateImports = FormatRule(
-        help: "Removes duplicate import statements."
+        help: "Remove duplicate import statements."
     ) { formatter in
         var importStack = parseImports(formatter)
         while var importRanges = importStack.popLast() {
@@ -3791,7 +3754,7 @@ public struct _FormatRules {
 
     /// Strip unnecessary `weak` from @IBOutlet properties (except delegates and datasources)
     public let strongOutlets = FormatRule(
-        help: "Removes the `weak` specifier from `@IBOutlet` properties."
+        help: "Remove `weak` specifier from `@IBOutlet` properties."
     ) { formatter in
         formatter.forEach(.keyword("@IBOutlet")) { i, _ in
             guard let varIndex = formatter.index(of: .keyword("var"), after: i),
@@ -3814,7 +3777,7 @@ public struct _FormatRules {
 
     /// Remove white-space between empty braces
     public let emptyBraces = FormatRule(
-        help: "Removes all white space between otherwise empty braces."
+        help: "Remove whitespace inside empty braces."
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard let closingIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
@@ -3832,10 +3795,7 @@ public struct _FormatRules {
 
     /// Replace the `&&` operator with `,` where applicable
     public let andOperator = FormatRule(
-        help: """
-        Replaces the `&&` operator with a comma inside `if`, `guard` and `while`
-        conditions.
-        """
+        help: "Prefer comma over `&&` in `if`, `guard` or `while` conditions."
     ) { formatter in
         formatter.forEachToken { i, token in
             switch token {
@@ -3896,10 +3856,7 @@ public struct _FormatRules {
 
     /// Replace count == 0 with isEmpty
     public let isEmpty = FormatRule(
-        help: """
-        Replaces `count == 0` checks with `isEmpty`, which is preferred for performance
-        reasons (especially for Strings where count has O(n) complexity).
-        """
+        help: "Prefer `isEmpty` over comparing `count` against zero."
     ) { formatter in
         formatter.forEach(.identifier("count")) { i, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {
@@ -3982,10 +3939,7 @@ public struct _FormatRules {
 
     /// Remove redundant `let error` from `catch` statements
     public let redundantLetError = FormatRule(
-        help: """
-        Removes redundant `let error` from `catch` statements, where it is declared
-        implicitly.
-        """
+        help: "Remove redundant `let error` from `catch` clause."
     ) { formatter in
         formatter.forEach(.keyword("catch")) { i, _ in
             if let letIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
@@ -4002,10 +3956,7 @@ public struct _FormatRules {
 
     /// Prefer `AnyObject` over `class` for class-based protocols
     public let anyObjectProtocol = FormatRule(
-        help: """
-        Replaces `class` with `AnyObject` in protocol definitions, as recommended in
-        modern Swift guidelines.
-        """
+        help: "Prefer `AnyObject` over `class` in protocol definitions."
     ) { formatter in
         guard formatter.options.swiftVersion >= "4.1" else {
             return
@@ -4026,7 +3977,7 @@ public struct _FormatRules {
 
     /// Remove redundant `break` keyword from switch cases
     public let redundantBreak = FormatRule(
-        help: "Removes redundant `break` statements from inside switch cases."
+        help: "Remove redundant `break` in switch case."
     ) { formatter in
         formatter.forEach(.keyword("break")) { i, _ in
             guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope(":"),
@@ -4045,10 +3996,7 @@ public struct _FormatRules {
 
     /// Removed backticks from `self` when strongifying
     public let strongifiedSelf = FormatRule(
-        help: """
-        Replaces `` `self` `` with `self` when using the common ``guard let `self` = self``
-        pattern for strongifying weak self references.
-        """
+        help: "Remove backticks around `self` in Optional unwrap expressions."
     ) { formatter in
         guard formatter.options.swiftVersion >= "4.2" else {
             return
@@ -4065,7 +4013,7 @@ public struct _FormatRules {
 
     /// Remove redundant @objc annotation
     public let redundantObjc = FormatRule(
-        help: "Removes unnecessary `@objc` annotation from properties and functions."
+        help: "Remove redundant `@objc` annotations."
     ) { formatter in
         let objcAttributes = [
             "@IBOutlet", "@IBAction",
@@ -4137,7 +4085,7 @@ public struct _FormatRules {
 
     /// Replace Array<T>, Dictionary<T, U> and Optional<T> with [T], [T: U] and T?
     public let typeSugar = FormatRule(
-        help: "Replaces Array, Dictionary and Optional types with their shorthand forms."
+        help: "Prefer shorthand syntax for Arrays, Dictionaries and Optionals."
     ) { formatter in
         formatter.forEach(.startOfScope("<")) { i, _ in
             guard let typeIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {
@@ -4195,10 +4143,7 @@ public struct _FormatRules {
 
     /// Remove redundant access control level modifiers in extensions
     public let redundantExtensionACL = FormatRule(
-        help: """
-        Removes access control level keywords from extension members when the access
-        level matches the extension itself.
-        """
+        help: "Remove redundant access control specifiers."
     ) { formatter in
         formatter.forEach(.keyword("extension")) { i, _ in
             var acl = ""
@@ -4222,10 +4167,7 @@ public struct _FormatRules {
 
     /// Replace `fileprivate` with `private` where possible
     public let redundantFileprivate = FormatRule(
-        help: """
-        Replaces `fileprivate` access control keyword with `private` when they are
-        equivalent, e.g. for top-level constants, functions or types within a file.
-        """
+        help: "Prefer `private` over `fileprivate` where equivalent."
     ) { formatter in
         guard !formatter.options.fragment else {
             return
@@ -4375,10 +4317,7 @@ public struct _FormatRules {
 
     /// Reorders "yoda conditions" where constant is placed on lhs of a comparison
     public let yodaConditions = FormatRule(
-        help: """
-        Reorders so-called "yoda conditions" where the constant is placed on the
-        left-hand side of a comparison instead of the right.
-        """
+        help: "Prefer constant values to be on the right-hand-side of expressions."
     ) { formatter in
         let comparisonOperators = ["==", "!=", "<", "<=", ">", ">="].map {
             Token.operator($0, .infix)
@@ -4543,10 +4482,7 @@ public struct _FormatRules {
     }
 
     public let leadingDelimiters = FormatRule(
-        help: """
-        Moves delimiters such as : or ; or , placed at the start of a line to the end
-        of the previous line instead.
-        """,
+        help: "Move leading delimiters to the end of the previous line.",
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.delimiter) { i, _ in

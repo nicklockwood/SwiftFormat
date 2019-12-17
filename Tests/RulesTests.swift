@@ -5416,6 +5416,18 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testNoRemoveSelfInTrailingClosureInVarAssignment() {
+        let input = """
+        func broken() {
+            var bad = abc {
+                self.foo()
+                self.bar
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {

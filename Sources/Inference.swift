@@ -884,9 +884,7 @@ private struct Inference {
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
                     lastKeyword = ""
-                    if let token = formatter.last(.nonSpaceOrLinebreak, before: index),
-                        token.is(.startOfScope) || token == .operator("=", .infix) {
-                        // It's a closure
+                    if formatter.isStartOfClosure(at: index, in: scopeStack.last) {
                         fallthrough
                     }
                     var prevIndex = index - 1

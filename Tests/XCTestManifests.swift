@@ -938,6 +938,7 @@ extension RulesTests {
         ("testNoRemoveSelfInIfLetSelf", testNoRemoveSelfInIfLetSelf),
         ("testNoRemoveSelfInLocalVarPrecededByIfLetContainingClosure", testNoRemoveSelfInLocalVarPrecededByIfLetContainingClosure),
         ("testNoRemoveSelfInLocalVarPrecededByLocalVarFollowedByIfComma", testNoRemoveSelfInLocalVarPrecededByLocalVarFollowedByIfComma),
+        ("testNoRemoveSelfInTrailingClosureInVarAssignment", testNoRemoveSelfInTrailingClosureInVarAssignment),
         ("testNoRemoveSelfInWhilePreceededByVarDeclaration", testNoRemoveSelfInWhilePreceededByVarDeclaration),
         ("testNoRemoveSpaceAfterOperatorEqualsWhenSpaceAroundOperatorDeclarationsFalse", testNoRemoveSpaceAfterOperatorEqualsWhenSpaceAroundOperatorDeclarationsFalse),
         ("testNoRemoveVoidFunctionCall", testNoRemoveVoidFunctionCall),

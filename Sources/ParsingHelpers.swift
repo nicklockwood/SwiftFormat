@@ -230,11 +230,7 @@ extension Formatter {
         }
     }
 
-    func isStartOfClosure(at i: Int) -> Bool {
-        return isStartOfClosure(at: i, in: currentScope(at: i))
-    }
-
-    func isStartOfClosure(at i: Int, in scope: Token?) -> Bool {
+    func isStartOfClosure(at i: Int, in scope: Token? = nil) -> Bool {
         assert(tokens[i] == .startOfScope("{"))
         var i = i - 1
         var nextTokenIndex = i
@@ -246,11 +242,7 @@ extension Formatter {
             switch token {
             case let .keyword(string):
                 switch string {
-                case "var":
-                    if !foundEquals {
-                        fallthrough
-                    }
-                case "class", "struct", "enum", "protocol", "func":
+                case "var" where !foundEquals, "class", "struct", "enum", "protocol", "func":
                     return last(.nonSpaceOrCommentOrLinebreak, before: i) == .keyword("import")
                 case "extension", "init", "subscript",
                      "if", "switch", "guard", "else",
@@ -260,8 +252,10 @@ extension Formatter {
                 default:
                     break
                 }
-            case .operator("=", _):
+            case .operator("=", .infix):
                 foundEquals = true
+            case .delimiter(":") where foundEquals:
+                return false
             case .startOfScope:
                 return true
             case .linebreak:
@@ -358,11 +352,17 @@ extension Formatter {
                 return true
             }
         case .delimiter(","):
+            guard let scope = scope ?? currentScope(at: i) else {
+                return false
+            }
             // For arrays or argument lists, we already indent
-            return ["<", "[", "(", "case", "default"].contains(scope?.string ?? "")
+            return ["<", "[", "(", "case", "default"].contains(scope.string)
         case .delimiter(":"):
+            guard let scope = scope ?? currentScope(at: i) else {
+                return false
+            }
             // For arrays or argument lists, we already indent
-            return ["case", "default", "("].contains(scope?.string ?? "")
+            return ["case", "default", "("].contains(scope.string)
         case .operator(_, .infix), .operator(_, .prefix):
             return false
         case .operator("?", .postfix), .operator("!", .postfix):
@@ -393,11 +393,11 @@ extension Formatter {
             }
             return [.endOfScope("case"), .keyword("case"), .delimiter(",")].contains(lastToken)
         case .delimiter(","):
-            if ["<", "[", "(", "case"].contains(scope?.string ?? "") {
-                // For arrays, dictionaries, cases, or argument lists, we already indent
-                return true
+            guard let scope = scope ?? currentScope(at: i) else {
+                return false
             }
-            return false
+            // For arrays, dictionaries, cases, or argument lists, we already indent
+            return ["<", "[", "(", "case"].contains(scope.string)
         case .delimiter, .operator(_, .infix), .operator(_, .postfix):
             return false
         default:

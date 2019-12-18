@@ -230,10 +230,13 @@ extension Formatter {
         }
     }
 
-    func isStartOfClosure(at i: Int, in scope: Token? = nil) -> Bool {
+    func isStartOfClosure(at i: Int, in _: Token? = nil) -> Bool {
         assert(tokens[i] == .startOfScope("{"))
 
-        guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
+        if isConditionalStatement(at: i) {
+            return false
+        }
+        guard var prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
             return true
         }
         switch tokens[prevIndex] {
@@ -247,74 +250,67 @@ extension Formatter {
             return false
         case .endOfScope(")"):
             guard let startOfScope = index(of: .startOfScope("("), before: prevIndex),
-                let identifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) else {
+                let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) else {
                 return true
             }
-            if !tokens[identifierIndex].isIdentifier ||
-                last(.nonSpaceOrCommentOrLinebreak, before: identifierIndex) == .keyword("func") {
-                return false
-            }
-            if let keywordIndex = indexOfLastSignificantKeyword(at: identifierIndex) {
-                if isConditionalStatement(at: keywordIndex) {
-                    return false
-                }
-                if tokens[keywordIndex].string == "var",
-                    case let .identifier(name)? = next(.nonSpaceOrCommentOrLinebreak, after: i),
-                    ["willSet", "didSet"].contains(name) {
-                    return false
-                }
-            }
-        default:
-            break
-        }
-
-        var i = i - 1
-        var nextTokenIndex = i
-        var foundEquals = false
-        while let token = self.token(at: i) {
-            let prevTokenIndex = index(before: i, where: {
-                !$0.isSpaceOrComment && (!$0.isEndOfScope || $0 == .endOfScope("}"))
-            }) ?? -1
-            switch token {
-            case let .keyword(string):
-                switch string {
-                case "var" where !foundEquals, "class", "struct", "enum", "protocol", "func":
-                    return last(.nonSpaceOrCommentOrLinebreak, before: i) == .keyword("import")
-                case "extension", "init", "subscript",
-                     "if", "switch", "guard", "else",
-                     "for", "while", "repeat",
-                     "do", "catch":
-                    return false
-                default:
-                    break
-                }
-            case .operator("=", .infix):
-                foundEquals = true
-            case .delimiter(":") where foundEquals:
-                return false
-            case .startOfScope:
-                return true
-            case .linebreak:
-                var prevTokenIndex = prevTokenIndex
-                if self.token(at: prevTokenIndex)?.isLinebreak == true {
-                    prevTokenIndex = index(before: prevTokenIndex, where: {
-                        !$0.isSpaceOrCommentOrLinebreak && (!$0.isEndOfScope || $0 == .endOfScope("}"))
-                    }) ?? -1
-                }
-                if isConditionalStatement(at: i) {
-                    return false
-                }
-                if isEndOfStatement(at: prevTokenIndex, in: scope),
-                    isStartOfStatement(at: nextTokenIndex, in: scope) {
+            switch tokens[prev] {
+            case .identifier:
+                prevIndex = prev
+            case .operator("?", .postfix), .operator("!", .postfix):
+                guard token(at: prev - 1)?.isIdentifier == true else {
                     return true
                 }
+                prevIndex = prev - 1
             default:
-                break
+                return true
             }
-            nextTokenIndex = i
-            i = prevTokenIndex
+            fallthrough
+        case .identifier:
+            if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                isAccessorKeyword(at: nextIndex) || isAccessorKeyword(at: prevIndex) {
+                return false
+            }
+            guard let prevKeywordIndex = indexOfLastSignificantKeyword(at: prevIndex) else {
+                return true
+            }
+            switch tokens[prevKeywordIndex].string {
+            case "var":
+                if lastIndex(of: .operator("=", .infix), in: prevKeywordIndex + 1 ..< i) != nil {
+                    return true
+                }
+                var index = prevKeywordIndex
+                while let nextIndex = self.index(of: .nonSpaceOrComment, after: index),
+                    nextIndex < i {
+                    switch tokens[nextIndex] {
+                    case .operator("=", .infix):
+                        return true
+                    case .linebreak:
+                        guard let nextIndex =
+                            self.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex) else {
+                            return true
+                        }
+                        if isEndOfStatement(at: index), isStartOfStatement(at: nextIndex) {
+                            return true
+                        }
+                        index = nextIndex
+                    default:
+                        index = nextIndex
+                    }
+                }
+                return false
+            case "func", "class", "protocol", "enum":
+                return false
+            default:
+                return true
+            }
+        case .keyword:
+            return false
+        case .operator("?", .postfix), .operator("!", .postfix),
+             .endOfScope("]"), .endOfScope(">"):
+            return false
+        default:
+            return true
         }
-        return true
     }
 
     func isInClosureArguments(at i: Int) -> Bool {
@@ -339,6 +335,33 @@ extension Formatter {
         return false
     }
 
+    func isAccessorKeyword(at i: Int, checkKeyword: Bool = true) -> Bool {
+        guard !checkKeyword ||
+            ["get", "set", "willSet", "didSet"].contains(token(at: i)?.string ?? ""),
+            var prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
+            return false
+        }
+        if tokens[prevIndex] == .endOfScope("}"),
+            let startIndex = index(of: .startOfScope("{"), before: prevIndex),
+            let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) {
+            prevIndex = prev
+            if tokens[prevIndex] == .endOfScope(")"),
+                let startIndex = index(of: .startOfScope("("), before: prevIndex),
+                let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) {
+                prevIndex = prev
+            }
+            return isAccessorKeyword(at: prevIndex)
+        } else if tokens[prevIndex] == .startOfScope("{") {
+            switch lastSignificantKeyword(at: prevIndex) {
+            case "var"?, "subscript"?:
+                return true
+            default:
+                return false
+            }
+        }
+        return false
+    }
+
     func isConditionalStatement(at i: Int) -> Bool {
         guard let index = indexOfLastSignificantKeyword(at: i) else {
             return false
@@ -349,7 +372,7 @@ extension Formatter {
             case .delimiter(",")?:
                 return true
             case let .keyword(name)?:
-                return ["if", "guard", "while", "for", "case"].contains(name)
+                return ["if", "guard", "while", "for", "case", "catch"].contains(name)
             default:
                 return false
             }
@@ -379,13 +402,12 @@ extension Formatter {
         }
     }
 
-    func isEndOfStatement(at i: Int, in scope: Token?) -> Bool {
+    func isEndOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
         guard let token = self.token(at: i) else { return true }
         switch token {
         case .endOfScope("case"), .endOfScope("default"):
             return false
         case let .keyword(string):
-            // TODO: handle in
             // TODO: handle context-specific keywords
             // associativity, convenience, dynamic, didSet, final, get, infix, indirect,
             // lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
@@ -436,7 +458,7 @@ extension Formatter {
         }
     }
 
-    func isStartOfStatement(at i: Int, in scope: Token?) -> Bool {
+    func isStartOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
         guard let token = self.token(at: i) else { return true }
         switch token {
         case let .keyword(string) where [ // TODO: handle "in"

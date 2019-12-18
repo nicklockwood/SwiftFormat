@@ -1820,17 +1820,16 @@ public struct _FormatRules {
         help: "Remove unneeded `get` clause inside computed properties."
     ) { formatter in
         formatter.forEach(.identifier("get")) { i, _ in
-            if let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
-                $0 == .startOfScope("{")
-            }), let prevKeyword = formatter.last(.keyword, before: previousIndex),
-                [.keyword("var"), .keyword("subscript")].contains(prevKeyword), let openIndex = formatter.index(of:
-                    .nonSpaceOrCommentOrLinebreak, after: i, if: { $0 == .startOfScope("{") }),
+            if formatter.isAccessorKeyword(at: i, checkKeyword: false),
+                let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+                    $0 == .startOfScope("{")
+                }), let openIndex = formatter.index(of: .startOfScope("{"), after: i),
                 let closeIndex = formatter.index(of: .endOfScope("}"), after: openIndex),
                 let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closeIndex, if: {
                     $0 == .endOfScope("}")
                 }) {
                 formatter.removeTokens(inRange: closeIndex ..< nextIndex)
-                formatter.removeTokens(inRange: previousIndex + 1 ... openIndex)
+                formatter.removeTokens(inRange: prevIndex + 1 ... openIndex)
                 // TODO: fix-up indenting of lines in between removed braces
             }
         }
@@ -2049,12 +2048,11 @@ public struct _FormatRules {
             case .keyword("in"):
                 break
             case .startOfScope("{"):
-                guard formatter.options.swiftVersion >= "5.1" ||
-                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex) != .identifier("get") else {
-                    return
-                }
                 guard var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) else {
                     break
+                }
+                if formatter.options.swiftVersion < "5.1", formatter.isAccessorKeyword(at: prevIndex) {
+                    return
                 }
                 if formatter.tokens[prevIndex] == .endOfScope(")"),
                     let j = formatter.index(of: .startOfScope("("), before: prevIndex) {
@@ -2069,35 +2067,22 @@ public struct _FormatRules {
                 }
                 let prevToken = formatter.tokens[prevIndex]
                 guard ![.delimiter(":"), .startOfScope("(")].contains(prevToken),
-                    var prevKeywordIndex = formatter.index(of: .keyword, before: startIndex) else {
+                    var prevKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startIndex - 1) else {
                     break
                 }
-                var keyword = formatter.tokens[prevKeywordIndex].string
-                while ["try", "as", "is"].contains(keyword) || keyword.hasPrefix("#") || keyword.hasPrefix("@") {
-                    guard let prevIndex = formatter.index(of: .keyword, before: prevKeywordIndex) else {
-                        return
-                    }
-                    prevKeywordIndex = prevIndex
-                    keyword = formatter.tokens[prevKeywordIndex].string
-                }
-                if ["else", "if", "case", "where", "for", "in", "while", "repeat", "do", "catch"].contains(keyword) {
-                    return
-                }
-                if ["let", "var"].contains(keyword) {
+                switch formatter.tokens[prevKeywordIndex].string {
+                case "let", "var":
                     guard formatter.options.swiftVersion >= "5.1" || prevToken == .operator("=", .infix) ||
-                        formatter.lastIndex(of: .operator("=", .infix), in: prevKeywordIndex + 1 ..< prevIndex) != nil
-                    else {
+                        formatter.lastIndex(of: .operator("=", .infix), in: prevKeywordIndex + 1 ..< prevIndex) != nil,
+                        !formatter.isConditionalStatement(at: prevKeywordIndex) else {
                         return
                     }
-                    if let prev = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevKeywordIndex),
-                        (prev.isKeyword && ["if", "case", "for", "while", "where", "catch"].contains(prev.string))
-                        || prev == .delimiter(",") {
-                        return
-                    }
-                } else if ["func", "throws", "rethrows", "init", "subscript"].contains(keyword) {
+                case "func", "throws", "rethrows", "init", "subscript":
                     if formatter.options.swiftVersion < "5.1" {
                         return
                     }
+                default:
+                    return
                 }
             default:
                 return
@@ -2137,12 +2122,10 @@ public struct _FormatRules {
                     formatter.replaceToken(at: i, with: .identifier(unescaped))
                     return
                 case "get", "set", "willSet", "didSet":
-                    guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope("{") else {
-                        // TODO: check it's actually inside a var or subscript
+                    if formatter.isAccessorKeyword(at: i, checkKeyword: false) {
                         return
                     }
-                    formatter.replaceToken(at: i, with: .identifier(unescaped))
-                    return
+                    fallthrough
                 default:
                     formatter.replaceToken(at: i, with: .identifier(unescaped))
                     return

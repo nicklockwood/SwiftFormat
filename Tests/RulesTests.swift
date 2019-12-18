@@ -1846,9 +1846,27 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
-    func testIndentClosureStartingOnIndentedLine2() {
+    func testIndentClosureStartingOnIndentedLineInVar() {
         let input = "var foo = foo\n.bar {\nbaz()\n}"
         let output = "var foo = foo\n    .bar {\n        baz()\n    }"
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentClosureStartingOnIndentedLineInLet() {
+        let input = "let foo = foo\n.bar {\nbaz()\n}"
+        let output = "let foo = foo\n    .bar {\n        baz()\n    }"
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentClosureStartingOnIndentedLineInTypedVar() {
+        let input = "var: Int foo = foo\n.bar {\nbaz()\n}"
+        let output = "var: Int foo = foo\n    .bar {\n        baz()\n    }"
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentClosureStartingOnIndentedLineInTypedLet() {
+        let input = "let: Int foo = foo\n.bar {\nbaz()\n}"
+        let output = "let: Int foo = foo\n    .bar {\n        baz()\n    }"
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
@@ -1873,6 +1891,12 @@ class RulesTests: XCTestCase {
     func testChainedClosureIndentsAfterVarDeclaration() {
         let input = "var foo: Int\nfoo\n.bar {\nbaz()\n}\n.bar {\nbaz()\n}"
         let output = "var foo: Int\nfoo\n    .bar {\n        baz()\n    }\n    .bar {\n        baz()\n    }"
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testChainedClosureIndentsAfterLetDeclaration() {
+        let input = "let foo: Int\nfoo\n.bar {\nbaz()\n}\n.bar {\nbaz()\n}"
+        let output = "let foo: Int\nfoo\n    .bar {\n        baz()\n    }\n    .bar {\n        baz()\n    }"
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
@@ -4255,7 +4279,7 @@ class RulesTests: XCTestCase {
     }
 
     func testNoRemoveAttributedGet() {
-        let input = "var enabled: Bool { @objc(isEnabled) get { return true } }"
+        let input = "var enabled: Bool { @objc(isEnabled) get { true } }"
         testFormatting(for: input, rule: FormatRules.redundantGet)
     }
 
@@ -4266,7 +4290,7 @@ class RulesTests: XCTestCase {
     }
 
     func testGetNotRemovedInFunction() {
-        let input = "func foo() {\n    get {\n        return self.lookup(index)\n    }\n}"
+        let input = "func foo() {\n    get {\n        self.lookup(index)\n    }\n}"
         testFormatting(for: input, rule: FormatRules.redundantGet)
     }
 
@@ -4513,6 +4537,12 @@ class RulesTests: XCTestCase {
         let output = "var foo: Int {\n    get { 5 }\n    set { _foo = newValue }\n}"
         let options = FormatOptions(swiftVersion: "5.1")
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testNoRemoveReturnInGetClosure() {
+        let input = "let foo = get { return 5 }"
+        let output = "let foo = get { 5 }"
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn)
     }
 
     func testRemoveReturnInVarClosure() {

@@ -1183,6 +1183,7 @@ extension RulesTests {
         ("testRemoveReturnInComputedVar", testRemoveReturnInComputedVar),
         ("testRemoveReturnInFailableInit", testRemoveReturnInFailableInit),
         ("testRemoveReturnInFunction", testRemoveReturnInFunction),
+        ("testRemoveReturnInGet", testRemoveReturnInGet),
         ("testRemoveReturnInOperatorFunction", testRemoveReturnInOperatorFunction),
         ("testRemoveReturnInParenthesizedClosure", testRemoveReturnInParenthesizedClosure),
         ("testRemoveReturnInSubscript", testRemoveReturnInSubscript),

@@ -2101,7 +2101,8 @@ public struct _FormatRules {
             case .keyword("in"):
                 break
             case .startOfScope("{"):
-                guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex) != .identifier("get") else {
+                guard formatter.options.swiftVersion >= "5.1" ||
+                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex) != .identifier("get") else {
                     return
                 }
                 guard var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) else {

@@ -4503,6 +4503,13 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantReturn)
     }
 
+    func testRemoveReturnInGet() {
+        let input = "var foo: Int {\n    get { return 5 }\n    set { _foo = newValue }\n}"
+        let output = "var foo: Int {\n    get { 5 }\n    set { _foo = newValue }\n}"
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
     func testRemoveReturnInVarClosure() {
         let input = "var foo = { return 5 }()"
         let output = "var foo = { 5 }()"

@@ -51,7 +51,7 @@ Having a tool to automatically enforce a common style eliminates those issues, a
 How do I install it?
 ---------------------
 
-That depends. There are four ways you can use SwiftFormat:
+That depends - There are several ways you can use SwiftFormat:
 
 1. As a command-line tool that you run manually, or as part of some other toolchain
 2. As a Source Editor Extension that you can invoke via the Editor > SwiftFormat menu within Xcode
@@ -178,12 +178,17 @@ The format of the configuration file is described in the [Config section](#confi
 
 Xcode build phase
 -------------------
+
 **NOTE:** Adding this script will overwrite your source files as you work on them, which has the annoying side-effect of clearing the undo history. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 
+Alternatively, you might want to consider running SwiftFormat in [lint](#linting) mode as part of your normal build, and then running a formatting pass manually, or as part of a less-frequent build target (such as the tests).
+
 ### Using Swift Package Manager
+
 To set up SwiftFormat as an Xcode build phase, do the following:
 
 #### 1) Create a BuildTools folder & Package.swift
+
 1. Create a folder called `BuildTools` in the same folder as your xcodeproj file
 2. In this folder, create a file called `Package.swift`, with the following contents:
 ```swift
@@ -199,7 +204,8 @@ let package = Package(
 )
 ```
 
-#### 2) Add Build phases to your app target
+#### 2) Add a Build phases to your app target
+
 1. Click on your project in the file list, choose your target under `TARGETS`, click the `Build Phases` tab
 2. Add a `New Run Script Phase` by clicking the little plus icon in the top left
 3. Drag the new `Run Script` phase **above** the `Compile Sources` phase, expand it and paste the following script:  
@@ -209,23 +215,32 @@ let package = Package(
    swift run -c release swiftformat "$SRCROOT"
    ```
 
-NOTE: You may wish to check BuildTools/Package.swift into your source control so that the version used by your run-script phase is kept in version control. It is recommended to add the following to your .gitignore file: `BuildTools/.build` and `BuildTools/.swiftpm`.
+**NOTE:** You may wish to check BuildTools/Package.swift into your source control so that the version used by your run-script phase is kept in version control. It is recommended to add the following to your .gitignore file: `BuildTools/.build` and `BuildTools/.swiftpm`.
 
 
 ### Using Cocoapods
+
+#### 1) Add the SwitfFormat CLI to your Podfile
+
 1. Add the `swiftformat` binary to your project directory via [CocoaPods](https://cocoapods.org/), by adding the following line to your Podfile then running `pod install`:
 
     ```ruby
     pod 'SwiftFormat/CLI'
     ```
-    **NOTE:** This will only install the pre-built command-line app, not the source code for the SwiftFormat framework.
 
-2. In the Build Phases section of your project target, add a new Run Script phase before the Compile Sources step:
+**NOTE:** This will only install the pre-built command-line app, not the source code for the SwiftFormat framework.
 
+#### 2) Add a Build phase to your app target
+
+1. Click on your project in the file list, choose your target under `TARGETS`, click the `Build Phases` tab
+2. Add a `New Run Script Phase` by clicking the little plus icon in the top left
+3. Drag the new `Run Script` phase **above** the `Compile Sources` phase, expand it and paste the following script:  
     ```bash
-    "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat"
+    "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat" "$SRCROOT"
+    ```
 
 ### Alternative: Locally installed swiftformat
+
 Alternatively, you could use a locally installed swiftformat command-line tool instead by putting the following in your Run Script build phase:
 
 ```bash
@@ -497,11 +512,19 @@ In order to run SwiftFormat as a linter, you can use the `--lint` command-line o
 $ swiftformat --lint path/to/project
 ```
 
-This works exactly the same way as when running in format mode, and all the same configuration options apply, however no files will be modified. SwiftFormat will simply format each file in memory and then compare the result against the input and report the files that required changes.
+This runs the same rules as format mode, and all the same configuration options apply, however no files will be modified. Instead, SwiftFormat will format each file in memory and then compare the result against the input and report the lines that required changes.
 
-The `--lint` option is very similar to `--dryrun`, except that `--lint` will return a nonzero error code if any changes are detected, which is useful if you want it to fail a build step on your CI server.
+The `--lint` option is similar to `--dryrun`, but `--lint` returns warnings for every line that required changes, and will return a nonzero error code if any changes are detected, which is useful if you want it to fail a build step on your CI server.
 
-By default, `--lint` will only report the number of files that were changed, but you can use the additional `--verbose` flag to display a detailed report about which specific rules were applied to which specific files.
+If you would prefer `--lint` not to fail your build, you can use the `--lenient` option to force SwiftFormat to return success in `--lint` mode even when formatting issues were detected.
+
+```bash
+$ swiftformat --lint --lenient path/to/project
+```
+
+By default, `--lint` will only report lines that require formatting, but you can use the additional `--verbose` flag to display additional info about which files were checked, even if there were no changes needed.
+
+If you would prefer not to see a warning for each and every formatting change, you can use the `--quiet` flag to suppress all output except errors.
 
 
 Cache
@@ -662,6 +685,7 @@ Credits
 * [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
 * [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
 * [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions
+* [Balázs Kilvády](https://github.com/balitm) - Xcode lint warning integration
 * [Nick Lockwood](https://github.com/nicklockwood) - Everything else
 
 ([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

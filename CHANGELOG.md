@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.43.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.0) (2019-12-18)
+
+- Added per-line warning when running in `--lint` mode
+- Significantly improved Xcode integration when running as a build step in `--lint` mode
+- Added `--lenient` option to suppress errors when running in `--lint` mode
+- Fixed bug where required `self` was sometimes incorrectly removed inside a trailing closure
+- Improved `wrap` rule heuristic for prioritizing where a line should be broken
+- Fixed bug in `typeSugar` rule affecting namespaced types
+
 ## [0.42.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.42.0) (2019-11-30)
 
 - Added `wrap` rule for automatic wrapping of long statements or expressions based on `--maxwidth` option

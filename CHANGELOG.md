@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.43.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.1) (2019-12-22)
+
+- Fixed indent regression in wrapped `let` expressions
+- Fixed failure to remove `return` in `get` accessors
+
 ## [0.43.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.0) (2019-12-18)
 
 - Added per-line warning when running in `--lint` mode

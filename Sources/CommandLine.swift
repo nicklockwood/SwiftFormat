@@ -500,21 +500,22 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                         var options = options
                         options.formatOptions = inferFormatOptions(from: tokens)
                         try serializeOptions(options, to: outputURL)
-                    } else if let outputURL = outputURL {
+                    } else {
                         printRunningMessage()
                         let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
-                        if (try? String(contentsOf: outputURL)) != output, !dryrun {
-                            do {
-                                try output.write(to: outputURL, atomically: true, encoding: .utf8)
-                            } catch {
-                                throw FormatError.writing("Failed to write file \(outputURL.path)")
+                        if let outputURL = outputURL {
+                            if (try? String(contentsOf: outputURL)) != output, !dryrun {
+                                do {
+                                    try output.write(to: outputURL, atomically: true, encoding: .utf8)
+                                } catch {
+                                    throw FormatError.writing("Failed to write file \(outputURL.path)")
+                                }
                             }
+                        } else {
+                            // Write to stdout
+                            print(output, as: .raw)
                         }
                         print("Swiftformat completed successfully.", as: .success)
-                    } else {
-                        // Write to stdout
-                        let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
-                        print(output, as: .raw)
                     }
                     status = .finished(nil)
                 } catch {

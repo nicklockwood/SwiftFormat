@@ -39,8 +39,15 @@ class CommandLineTests: XCTestCase {
     // MARK: pipe
 
     func testPipe() {
-        CLI.print = { message, _ in
-            XCTAssertEqual(message, "func foo() {\n    bar()\n}\n")
+        CLI.print = { message, type in
+            switch type {
+            case .raw, .content:
+                XCTAssertEqual(message, "func foo() {\n    bar()\n}\n")
+            case .error, .warning:
+                XCTFail()
+            case .info, .success:
+                break
+            }
         }
         var readCount = 0
         CLI.readLine = {

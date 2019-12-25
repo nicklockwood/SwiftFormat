@@ -515,6 +515,23 @@ extension Formatter {
         }
         return false
     }
+
+    // Detect if code is inside a ViewBuilder
+    func isInViewBuilder(at i: Int) -> Bool {
+        var i = i
+        while let startIndex = index(of: .startOfScope("{"), before: i) {
+            guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) else {
+                return false
+            }
+            if tokens[prevIndex] == .identifier("View"),
+                let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                [.delimiter(":"), .identifier("some")].contains(prevToken) {
+                return true
+            }
+            i = prevIndex
+        }
+        return false
+    }
 }
 
 extension _FormatRules {

@@ -3738,10 +3738,12 @@ public struct _FormatRules {
             guard var endIndex = formatter.index(of: .startOfScope("{"), after: i) else {
                 return
             }
-            // Crude check for ViewBuilder
+            // Crude check for Function Builder
             if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
                 case let .identifier(name) = nextToken, let firstChar = name.first.map(String.init),
                 firstChar == firstChar.uppercased() {
+                return
+            } else if formatter.isInViewBuilder(at: i) {
                 return
             }
             var index = i + 1

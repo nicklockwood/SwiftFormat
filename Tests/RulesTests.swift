@@ -7832,6 +7832,19 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.andOperator)
     }
 
+    func testNoReplaceAndInViewBuilder2() {
+        let input = """
+        var body: some View {
+            ZStack {
+                if self.foo && self.bar {
+                    self.closedPath
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.andOperator)
+    }
+
     // MARK: isEmpty
 
     // count == 0

@@ -989,6 +989,7 @@ extension RulesTests {
         ("testNoRemoveWeakFromNonOutlet", testNoRemoveWeakFromNonOutlet),
         ("testNoRemoveWeakFromNonOutletAfterOutlet", testNoRemoveWeakFromNonOutletAfterOutlet),
         ("testNoReplaceAndInViewBuilder", testNoReplaceAndInViewBuilder),
+        ("testNoReplaceAndInViewBuilder2", testNoReplaceAndInViewBuilder2),
         ("testNoReplaceIfAndOr", testNoReplaceIfAndOr),
         ("testNoReplaceIfCaseLetAnd", testNoReplaceIfCaseLetAnd),
         ("testNoReplaceIfLetAndLetAnd", testNoReplaceIfLetAndLetAnd),

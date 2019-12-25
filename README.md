@@ -123,14 +123,6 @@ $ swiftformat .
     
 (that's a space and then a period after the command) in the terminal to format any Swift files in the current directory. In place of the `.`, you can instead type an absolute or relative path to the file or directory that you want to format.
 
-If you prefer, you can use unix pipes to include SwiftFormat as part of a command chain. For example, this is an alternative way to format a file:
-
-```bash
-$ cat /path/to/file.swift | swiftformat --output /path/to/file.swift
-```
-    
-Omitting the `--output /path/to/file.swift` will print the formatted file to `stdout`.
-
 **WARNING:** `swiftformat .` will overwrite any Swift files it finds in the current directory, and any subfolders therein. If you run it in your home directory, it will probably reformat every Swift file on your hard drive.
 
 To use it safely, do the following:
@@ -154,6 +146,26 @@ To use it safely, do the following:
 6. (Optional) commit the changes.
 
 Following these instructions *should* ensure that you avoid catastrophic data loss, but in the unlikely event that it wipes your hard drive, **please note that I accept no responsibility**.
+
+**Using Standard Input/Output:**
+
+If you prefer, you can use unix pipes to include SwiftFormat as part of a command chain. For example, this is an alternative way to format a file:
+
+```bash
+$ cat /path/to/file.swift | swiftformat --output /path/to/file.swift
+```
+    
+Omitting the `--output /path/to/file.swift` will print the formatted file to Standard Output (stdout). You can also use `>` to specify the output path as follows:
+
+```bash
+$ cat /path/to/file.swift | swiftformat > /path/to/file.swift
+```
+
+If you do not supply an input file, SwiftFormat will automatically take its input from Standard Input (stdin), but will time-out if no input is received immediately and display the help screen. To make it explicit, pass "stdin" as the input path:
+
+```bash
+$ cat /path/to/file.swift | swiftformat stdin
+```
 
 
 Xcode source editor extension

@@ -84,13 +84,13 @@ extension CommandLineTests {
         ("testHelpLineLength", testHelpLineLength),
         ("testHelpOptionsDocumented", testHelpOptionsDocumented),
         ("testHelpOptionsImplemented", testHelpOptionsImplemented),
-        ("testPipe", testPipe),
         ("testQuietModeAllowsContent", testQuietModeAllowsContent),
         ("testQuietModeAllowsErrors", testQuietModeAllowsErrors),
         ("testQuietModeNoOutput", testQuietModeNoOutput),
         ("testRegressionSuite", testRegressionSuite),
         ("testRulesNotMarkedAsDisabled", testRulesNotMarkedAsDisabled),
         ("testSplitInputPaths", testSplitInputPaths),
+        ("testStdin", testStdin),
     ]
 }
 

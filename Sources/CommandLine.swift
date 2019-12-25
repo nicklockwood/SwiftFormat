@@ -148,7 +148,7 @@ func printHelp(as type: CLI.OutputType) {
 
     Usage: swiftformat [<file> <file> ...] [--inferoptions] [--output path] [...]
 
-    <file> <file> ...  One or more swift files or directory paths to be processed
+    <file> <file> ...  Swift files or directories to be processed, or "stdin"
 
     --config           Path to a configuration file containing rules and options
     --inferoptions     Instead of formatting input, use it to infer format options
@@ -250,12 +250,6 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         // Dry run
         let dryrun = lint || (args["dryrun"] != nil)
 
-        // Input path(s)
-        var inputURLs = [URL]()
-        while let inputPath = args[String(inputURLs.count + 1)] {
-            inputURLs += try parsePaths(inputPath, for: "input", in: directory)
-        }
-
         // Warnings
         for warning in warningsForArguments(args) {
             print(warning, as: .warning)
@@ -356,6 +350,17 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             overrides[key] = args[key]
         }
 
+        // Input path(s)
+        var useStdin = false
+        var inputURLs = [URL]()
+        while !useStdin, let inputPath = args[String(inputURLs.count + 1)] {
+            if inputPath.lowercased() == "stdin" {
+                useStdin = true
+            } else {
+                inputURLs += try parsePaths(inputPath, for: "input", in: directory)
+            }
+        }
+
         // Treat values for arguments that do not take a value as input paths
         func addInputPaths(for argName: String) throws {
             guard let arg = args[argName], !arg.isEmpty else {
@@ -364,7 +369,11 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             guard inputURLs.isEmpty || "/.,".contains(where: { arg.contains($0) }) else {
                 throw FormatError.options("--\(argName) argument does not expect a value")
             }
-            inputURLs += try parsePaths(arg, for: "input", in: directory)
+            if arg.lowercased() == "stdin" {
+                useStdin = true
+            } else {
+                inputURLs += try parsePaths(arg, for: "input", in: directory)
+            }
         }
         try addInputPaths(for: "quiet")
         try addInputPaths(for: "verbose")
@@ -481,46 +490,56 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             case idle, started, finished(Error?)
         }
 
-        // If no input file, try stdin
-        if inputURLs.isEmpty {
-            var input: String?
-            var status = Status.idle
-            DispatchQueue.global(qos: .userInitiated).async {
-                status = .started
-                while let line = CLI.readLine() {
-                    input = (input ?? "") + line
-                }
-                guard let input = input else {
-                    status = .finished(nil)
-                    return
-                }
-                do {
-                    if args["inferoptions"] != nil {
-                        let tokens = tokenize(input)
-                        var options = options
-                        options.formatOptions = inferFormatOptions(from: tokens)
-                        try serializeOptions(options, to: outputURL)
-                    } else {
-                        printRunningMessage()
-                        let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
-                        if let outputURL = outputURL {
-                            if (try? String(contentsOf: outputURL)) != output, !dryrun {
-                                do {
-                                    try output.write(to: outputURL, atomically: true, encoding: .utf8)
-                                } catch {
-                                    throw FormatError.writing("Failed to write file \(outputURL.path)")
-                                }
+        var input: String?
+        var status = Status.idle
+        func processFromStdin() {
+            status = .started
+            while let line = CLI.readLine() {
+                input = (input ?? "") + line
+            }
+            guard let input = input else {
+                status = .finished(nil)
+                return
+            }
+            do {
+                if args["inferoptions"] != nil {
+                    let tokens = tokenize(input)
+                    var options = options
+                    options.formatOptions = inferFormatOptions(from: tokens)
+                    try serializeOptions(options, to: outputURL)
+                } else {
+                    printRunningMessage()
+                    let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
+                    if let outputURL = outputURL {
+                        if (try? String(contentsOf: outputURL)) != output, !dryrun {
+                            do {
+                                try output.write(to: outputURL, atomically: true, encoding: .utf8)
+                            } catch {
+                                throw FormatError.writing("Failed to write file \(outputURL.path)")
                             }
-                        } else {
-                            // Write to stdout
-                            print(output, as: .raw)
                         }
-                        print("Swiftformat completed successfully.", as: .success)
+                    } else {
+                        // Write to stdout
+                        print(output, as: .raw)
                     }
-                    status = .finished(nil)
-                } catch {
-                    status = .finished(error)
+                    print("Swiftformat completed successfully.", as: .success)
                 }
+                status = .finished(nil)
+            } catch {
+                status = .finished(error)
+            }
+        }
+
+        if useStdin {
+            processFromStdin()
+            if case let .finished(error) = status, let fatalError = error {
+                throw fatalError
+            }
+            return .ok
+        } else if inputURLs.isEmpty {
+            // If no input file, try stdin
+            DispatchQueue.global(qos: .userInitiated).async {
+                processFromStdin()
             }
             // Wait for input
             while case .idle = status {}

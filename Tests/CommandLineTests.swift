@@ -36,9 +36,9 @@ private let projectDirectory = URL(fileURLWithPath: #file)
     .deletingLastPathComponent().deletingLastPathComponent()
 
 class CommandLineTests: XCTestCase {
-    // MARK: pipe
+    // MARK: stdin
 
-    func testPipe() {
+    func testStdin() {
         CLI.print = { message, type in
             switch type {
             case .raw, .content:
@@ -66,6 +66,8 @@ class CommandLineTests: XCTestCase {
             }
         }
         _ = processArguments([""], in: "")
+        readCount = 0
+        _ = processArguments(["", "stdin"], in: "")
     }
 
     // MARK: help

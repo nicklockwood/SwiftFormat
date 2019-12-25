@@ -477,52 +477,63 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             }
         }
 
+        enum Status {
+            case idle, started, finished(Error?)
+        }
+
         // If no input file, try stdin
         if inputURLs.isEmpty {
             var input: String?
-            var finished = false
-            var fatalError: Error?
+            var status = Status.idle
             DispatchQueue.global(qos: .userInitiated).async {
+                status = .started
                 while let line = CLI.readLine() {
                     input = (input ?? "") + line
                 }
-                if let input = input {
-                    do {
-                        if args["inferoptions"] != nil {
-                            let tokens = tokenize(input)
-                            var options = options
-                            options.formatOptions = inferFormatOptions(from: tokens)
-                            try serializeOptions(options, to: outputURL)
-                        } else if let outputURL = outputURL {
-                            printRunningMessage()
-                            let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
-                            if (try? String(contentsOf: outputURL)) != output, !dryrun {
-                                do {
-                                    try output.write(to: outputURL, atomically: true, encoding: .utf8)
-                                } catch {
-                                    throw FormatError.writing("Failed to write file \(outputURL.path)")
-                                }
-                            }
-                            print("Swiftformat completed successfully.", as: .success)
-                        } else {
-                            // Write to stdout
-                            let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
-                            print(output, as: .raw)
-                        }
-                    } catch {
-                        fatalError = error
-                    }
+                guard let input = input else {
+                    status = .finished(nil)
+                    return
                 }
-                finished = true
+                do {
+                    if args["inferoptions"] != nil {
+                        let tokens = tokenize(input)
+                        var options = options
+                        options.formatOptions = inferFormatOptions(from: tokens)
+                        try serializeOptions(options, to: outputURL)
+                    } else if let outputURL = outputURL {
+                        printRunningMessage()
+                        let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
+                        if (try? String(contentsOf: outputURL)) != output, !dryrun {
+                            do {
+                                try output.write(to: outputURL, atomically: true, encoding: .utf8)
+                            } catch {
+                                throw FormatError.writing("Failed to write file \(outputURL.path)")
+                            }
+                        }
+                        print("Swiftformat completed successfully.", as: .success)
+                    } else {
+                        // Write to stdout
+                        let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
+                        print(output, as: .raw)
+                    }
+                    status = .finished(nil)
+                } catch {
+                    status = .finished(error)
+                }
             }
             // Wait for input
+            while case .idle = status {}
             let start = NSDate()
-            while start.timeIntervalSinceNow > -0.01 {}
+            while input == nil, start.timeIntervalSinceNow > -0.2 {}
             // If no input received by now, assume none is coming
             if input != nil {
-                while !finished, start.timeIntervalSinceNow > -30 {}
-                if let fatalError = fatalError {
-                    throw fatalError
+                while start.timeIntervalSinceNow > -30 {
+                    if case let .finished(error) = status {
+                        if let error = error {
+                            throw error
+                        }
+                        break
+                    }
                 }
             } else if args["inferoptions"] != nil {
                 throw FormatError.options("--inferoptions requires one or more input files")

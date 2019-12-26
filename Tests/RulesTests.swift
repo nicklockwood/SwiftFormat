@@ -2007,6 +2007,21 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    // TODO: maybe need special case handling for this?
+    func testIndentWrappedTrailingComment() {
+        let input = """
+        let foo = 5 // a wrapped
+                    // comment
+                    // block
+        """
+        let output = """
+        let foo = 5 // a wrapped
+        // comment
+        // block
+        """
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
     // indent multiline strings
 
     func testSimpleMultilineString() {

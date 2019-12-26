@@ -1181,12 +1181,10 @@ public struct _FormatRules {
                     }
                 case .startOfScope("//"):
                     if let lineIndex = formatter.index(of: .linebreak, after: nextNonSpaceIndex),
-                        let nextToken = formatter.next(.nonSpace, after: lineIndex), [
-                            .startOfScope("//"), .startOfScope("#if"),
-                        ].contains(nextToken) {
+                        formatter.next(.nonSpace, after: lineIndex) == .startOfScope("#if") {
                         break
                     }
-                    fallthrough
+                    formatter.insertSpace(indent, at: i + 1)
                 case .startOfScope("#if"):
                     if let lineIndex = formatter.index(of: .linebreak, after: nextNonSpaceIndex),
                         let nextKeyword = formatter.next(.nonSpaceOrCommentOrLinebreak, after: lineIndex), [

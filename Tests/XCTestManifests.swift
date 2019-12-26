@@ -690,6 +690,7 @@ extension RulesTests {
         ("testIndentUnknownDefaultCorrectlyWhenIndentCaseTrue", testIndentUnknownDefaultCorrectlyWhenIndentCaseTrue),
         ("testIndentWrappedFunctionArgument", testIndentWrappedFunctionArgument),
         ("testIndentWrappedFunctionClosureArgument", testIndentWrappedFunctionClosureArgument),
+        ("testIndentWrappedTrailingComment", testIndentWrappedTrailingComment),
         ("testInsertBlankLineAfterMarkAtStartOfFile", testInsertBlankLineAfterMarkAtStartOfFile),
         ("testInsertBlankLineBeforeMarkAtEndOfFile", testInsertBlankLineBeforeMarkAtEndOfFile),
         ("testInsertBlankLinesAroundMark", testInsertBlankLinesAroundMark),

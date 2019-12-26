@@ -212,6 +212,6 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, _ in
             Swift.print(message)
         }
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --verbose --symlinks follow --lint"), .ok)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --symlinks follow --lint --cache ignore"), .ok)
     }
 }

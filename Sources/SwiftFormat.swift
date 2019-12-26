@@ -136,22 +136,6 @@ public func enumerateFiles(withInputURL inputURL: URL,
         #endif
     }
 
-    let resourceValues: ResourceValues
-    do {
-        resourceValues = try getResourceValues(for: inputURL)
-    } catch {
-        return [error]
-    }
-    let fileOptions = baseOptions.fileOptions ?? .default
-    if !fileOptions.followSymlinks,
-        resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true {
-        return [FormatError.options("Symbolic link or alias was skipped: \(inputURL.path)")]
-    }
-    if resourceValues.isDirectory == false,
-        !fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
-        return [FormatError.options("Unsupported file type: \(inputURL.path)")]
-    }
-
     let group = DispatchGroup()
     var completionBlocks = [() throws -> Void]()
     let completionQueue = DispatchQueue(label: "swiftformat.enumeration")
@@ -162,6 +146,55 @@ public func enumerateFiles(withInputURL inputURL: URL,
     }
 
     let queue = concurrent ? DispatchQueue.global(qos: .userInitiated) : completionQueue
+
+    func resolveInputURL(_ inputURL: URL, options: Options) -> (URL, ResourceValues, Options)? {
+        let fileOptions = options.fileOptions ?? .default
+        let inputURL = inputURL.standardizedFileURL
+        do {
+            let resourceValues = try getResourceValues(for: inputURL)
+            if resourceValues.isAliasFile == true {
+                #if os(macOS)
+                    if fileOptions.followSymlinks {
+                        let resolvedURL = try URL(resolvingAliasFileAt: inputURL)
+                        return (resolvedURL, try getResourceValues(for: resolvedURL), baseOptions)
+                    } else if let handler = skipped {
+                        onComplete(try handler(inputURL, inputURL, options))
+                        return nil
+                    }
+                #endif
+            } else if resourceValues.isSymbolicLink == true {
+                if fileOptions.followSymlinks {
+                    let resolvedURL = inputURL.resolvingSymlinksInPath()
+                    return (resolvedURL, try getResourceValues(for: resolvedURL), baseOptions)
+                } else if let handler = skipped {
+                    onComplete(try handler(inputURL, inputURL, options))
+                    return nil
+                }
+            }
+            return (inputURL, resourceValues, options)
+        } catch {
+            onComplete { throw error }
+            return nil
+        }
+    }
+
+    let fileOptions = baseOptions.fileOptions ?? .default
+    do {
+        let resourceValues = try getResourceValues(for: inputURL.standardizedFileURL)
+        if !fileOptions.followSymlinks,
+            resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true {
+            return [FormatError.options("Symbolic link or alias was skipped: \(inputURL.path)")]
+        }
+    } catch {
+        return [error]
+    }
+    guard let (inputURL, resourceValues, _) = resolveInputURL(inputURL, options: baseOptions) else {
+        return []
+    }
+    if resourceValues.isDirectory == false,
+        !fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
+        return [FormatError.options("Unsupported file type: \(inputURL.path)")]
+    }
 
     func shouldSkipFile(_ inputURL: URL, with options: Options) -> Bool {
         guard let excludedGlobs = options.fileOptions?.excludedGlobs else {
@@ -216,12 +249,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
     func enumerate(inputURL: URL,
                    outputURL: URL?,
                    options: Options) {
-        let inputURL = inputURL.standardizedFileURL
-        let resourceValues: ResourceValues
-        do {
-            resourceValues = try getResourceValues(for: inputURL)
-        } catch {
-            onComplete { throw error }
+        guard let (inputURL, resourceValues, options) = resolveInputURL(inputURL, options: options) else {
             return
         }
         let fileOptions = options.fileOptions ?? .default
@@ -273,10 +301,6 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     enumerate(inputURL: url, outputURL: outputURL, options: options)
                 }
             }
-        } else if fileOptions.followSymlinks,
-            resourceValues.isSymbolicLink == true || resourceValues.isAliasFile == true {
-            let resolvedURL = inputURL.resolvingSymlinksInPath()
-            enumerate(inputURL: resolvedURL, outputURL: outputURL, options: options)
         }
     }
 

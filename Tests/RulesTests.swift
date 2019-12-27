@@ -44,6 +44,7 @@ class RulesTests: XCTestCase {
     func testFormatting(for input: String, _ outputs: [String], rules: [FormatRule],
                         options: FormatOptions = .default, exclude: [String] = []) {
         XCTAssertNotEqual(input, outputs.first)
+        XCTAssert((0 ... 2).contains(outputs.count))
         let output = outputs.first ?? input, output2 = outputs.last ?? input
         let exclude = exclude + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
         XCTAssertEqual(try format(input, rules: rules, options: options), output)
@@ -51,14 +52,15 @@ class RulesTests: XCTestCase {
                                   options: options), output2)
         if input != output {
             XCTAssertEqual(try format(output, rules: rules, options: options), output)
-        } else {
-            #if os(macOS)
-                // These tests are flakey on Linux, and it's hard to debug
-                XCTAssertEqual(try lint(input, rules: rules, options: options), [])
-                XCTAssertEqual(try lint(input + "\n", rules: FormatRules.all(except: exclude),
-                                        options: options), [])
-            #endif
+            XCTAssertEqual(try format(output2, rules: FormatRules.all(except: exclude),
+                                      options: options), output2)
         }
+        #if os(macOS)
+            // These tests are flakey on Linux, and it's hard to debug
+            XCTAssertEqual(try lint(output, rules: rules, options: options), [])
+            XCTAssertEqual(try lint(output2, rules: FormatRules.all(except: exclude),
+                                    options: options), [])
+        #endif
     }
 
     // MARK: spaceAroundParens

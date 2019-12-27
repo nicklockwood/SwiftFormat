@@ -3535,7 +3535,8 @@ public struct _FormatRules {
             }
             header = string
         }
-        if let startIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1) {
+        var lastHeaderTokenIndex = -1
+        if var startIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1) {
             switch formatter.tokens[startIndex] {
             case .startOfScope("//"):
                 if case let .commentBody(body)? = formatter.next(.nonSpace, after: startIndex) {
@@ -3550,9 +3551,9 @@ public struct _FormatRules {
                     if let nextToken = formatter.token(at: index + 1), nextToken != .startOfScope("//") {
                         switch nextToken {
                         case .linebreak:
-                            formatter.removeTokens(inRange: 0 ... index + 1)
+                            lastHeaderTokenIndex = index + 1
                         case .space where formatter.token(at: index + 2)?.isLinebreak == true:
-                            formatter.removeTokens(inRange: 0 ... index + 2)
+                            lastHeaderTokenIndex = index + 2
                         default:
                             break
                         }
@@ -3568,31 +3569,48 @@ public struct _FormatRules {
                     }
                 }
                 while let endIndex = formatter.index(of: .endOfScope("*/"), after: startIndex) {
-                    formatter.removeTokens(inRange: 0 ... endIndex)
-                    if let linebreakIndex = formatter.index(of: .linebreak, after: -1) {
-                        formatter.removeTokens(inRange: 0 ... linebreakIndex)
+                    lastHeaderTokenIndex = endIndex
+                    if let linebreakIndex = formatter.index(of: .linebreak, after: endIndex) {
+                        lastHeaderTokenIndex = linebreakIndex
                     }
-                    if formatter.next(.nonSpace, after: -1) != .startOfScope("/*") {
-                        if let endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1) {
-                            formatter.removeTokens(inRange: 0 ..< endIndex)
+                    guard let nextIndex = formatter.index(of: .nonSpace, after: lastHeaderTokenIndex) else {
+                        break
+                    }
+                    guard formatter.tokens[nextIndex] == .startOfScope("/*") else {
+                        if let endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: lastHeaderTokenIndex) {
+                            lastHeaderTokenIndex = endIndex - 1
                         }
                         break
                     }
+                    startIndex = nextIndex
                 }
             default:
                 break
             }
         }
-        guard !header.isEmpty else { return }
-        let headerTokens = tokenize(header)
-        if Array(formatter.tokens.prefix(headerTokens.count)) == headerTokens {
-            formatter.removeTokens(inRange: 0 ..< headerTokens.count)
+        if header.isEmpty {
+            formatter.removeTokens(inRange: 0 ..< lastHeaderTokenIndex + 1)
+            return
         }
-        if formatter.tokens.first?.isSpaceOrLinebreak == false {
-            formatter.insertLinebreak(at: 0)
+        var headerTokens = tokenize(header)
+        if headerTokens == Array(formatter.tokens[
+            lastHeaderTokenIndex + 1 ... lastHeaderTokenIndex + headerTokens.count
+        ]) {
+            lastHeaderTokenIndex += headerTokens.count
         }
-        formatter.insertLinebreak(at: 0)
-        formatter.insertTokens(headerTokens, at: 0)
+        let headerLinebreaks = headerTokens.reduce(0) { result, token -> Int in
+            result + (token.isLinebreak ? 1 : 0)
+        }
+        headerTokens += [
+            .linebreak(formatter.options.linebreak, headerLinebreaks + 1),
+            .linebreak(formatter.options.linebreak, headerLinebreaks + 2),
+        ]
+        if let index = formatter.index(of: .nonSpace, after: lastHeaderTokenIndex, if: {
+            $0.isLinebreak
+        }) {
+            lastHeaderTokenIndex = index
+        }
+        formatter.replaceTokens(inRange: 0 ..< lastHeaderTokenIndex + 1, with: headerTokens)
     }
 
     /// Strip redundant `.init` from type instantiations

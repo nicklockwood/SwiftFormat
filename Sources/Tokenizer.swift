@@ -38,15 +38,15 @@ import Foundation
 // Used to speed up matching
 // Note: Any, Self, self, super, nil, true and false have been omitted deliberately, as they
 // behave like identifiers. So too have context-specific keywords such as the following:
-// associativity, convenience, dynamic, didSet, final, get, infix, indirect,
-// lazy, left, mutating, none, nonmutating, open, optional, override, postfix,
-// precedence, prefix, Protocol, required, right, set, Type, unowned, weak, willSet
+// any, associativity, convenience, didSet, dynamic, final, get, indirect, infix, lazy,
+// left, mutating, none, nonmutating, open, optional, override, postfix, precedence,
+// prefix, Protocol, required, right, set, some, Type, unowned, weak, willSet
 private let swiftKeywords = Set([
     "let", "return", "func", "var", "if", "public", "as", "else", "in", "import",
     "class", "try", "guard", "case", "for", "init", "extension", "private", "static",
     "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
-    "throw", "typealias", "where", "break", "deinit", "subscript", "lazy", "is",
-    "while", "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
+    "throw", "typealias", "where", "break", "deinit", "subscript", "is", "while",
+    "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
     "default", "protocol", "defer", /* Any, Self, self, super, nil, true, false */
 ])
 
@@ -57,6 +57,7 @@ public extension String {
     }
 
     /// Is this string a keyword in some contexts?
+    @available(*, deprecated, message: "Not reliable - use a different approach")
     var isContextualKeyword: Bool {
         switch self {
         case "Any", "super", "self", "nil", "true", "false",

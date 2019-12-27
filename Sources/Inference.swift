@@ -963,6 +963,10 @@ private struct Inference {
                     } else {
                         isAssignment = false
                     }
+                    if !isAssignment, token.string == "lazy" {
+                        lastKeyword = "lazy"
+                        lastKeywordIndex = index
+                    }
                     let name = token.unescaped()
                     guard members.contains(name), !localNames.contains(name), !isAssignment ||
                         formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .operator("=", .infix),

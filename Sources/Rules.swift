@@ -2107,55 +2107,10 @@ public struct _FormatRules {
         help: "Remove redundant backticks around identifiers."
     ) { formatter in
         formatter.forEach(.identifier) { i, token in
-            guard token.string.first == "`" else { return }
-            let unescaped = token.unescaped()
-            if !unescaped.isSwiftKeyword {
-                switch unescaped {
-                case "Any", "super", "self", "nil", "true", "false":
-                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {
-                        // TODO: this exception is no longer needed in Swift 4
-                        return
-                    }
-                case "Self" where formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"):
-                    // TODO: check for other cases where it's safe to use unescaped
-                    break
-                case "Type":
-                    if formatter.currentScope(at: i) == .startOfScope("{") {
-                        // TODO: check it's actually inside a type declaration, otherwise backticks aren't needed
-                        return
-                    }
-                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {
-                        return
-                    }
-                    formatter.replaceToken(at: i, with: .identifier(unescaped))
-                    return
-                case "get", "set", "willSet", "didSet":
-                    if formatter.isAccessorKeyword(at: i, checkKeyword: false) {
-                        return
-                    }
-                    fallthrough
-                default:
-                    formatter.replaceToken(at: i, with: .identifier(unescaped))
-                    return
-                }
-            }
-            if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
-                formatter.tokens[prevIndex].isOperator(".") {
-                if formatter.options.swiftVersion >= "5" || formatter.token(at: prevIndex - 1)?.isOperator("\\") != true {
-                    formatter.replaceToken(at: i, with: .identifier(unescaped))
-                }
+            guard token.string.first == "`", !formatter.backticksRequired(at: i) else {
                 return
             }
-            guard !["let", "var"].contains(unescaped),
-                let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) else {
-                return
-            }
-            let nextToken = formatter.tokens[nextIndex]
-            if formatter.currentScope(at: i) == .startOfScope("("),
-                nextToken == .delimiter(":") || (nextToken.isIdentifier &&
-                    formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .delimiter(":")) {
-                formatter.replaceToken(at: i, with: .identifier(unescaped))
-            }
+            formatter.replaceToken(at: i, with: .identifier(token.unescaped()))
         }
     }
 
@@ -2527,8 +2482,8 @@ public struct _FormatRules {
                             break
                         }
                     }
-                    if case let .identifier(name) = formatter.tokens[nextIndex], name.isContextualKeyword {
-                        // May be unnecessary, but will be reverted by `redundantBackticks` rule if so
+                    if case let .identifier(name) = formatter.tokens[nextIndex],
+                        formatter.backticksRequired(at: nextIndex, ignoreLeadingDot: true) {
                         formatter.replaceToken(at: nextIndex, with: .identifier("`\(name)`"))
                     }
                     formatter.removeTokens(inRange: index ..< nextIndex)
@@ -2551,9 +2506,17 @@ public struct _FormatRules {
                             formatter.next(.nonSpaceOrCommentOrLinebreak, after: scopeEnd) == .operator("=", .infix) {
                             // continue
                         } else {
+                            if token.string == "lazy" {
+                                lastKeyword = "lazy"
+                                lastKeywordIndex = index
+                            }
                             break
                         }
                     } else {
+                        if token.string == "lazy" {
+                            lastKeyword = "lazy"
+                            lastKeywordIndex = index
+                        }
                         break
                     }
                     let isAssignment: Bool
@@ -2570,6 +2533,10 @@ public struct _FormatRules {
                         }
                     } else {
                         isAssignment = false
+                    }
+                    if !isAssignment, token.string == "lazy" {
+                        lastKeyword = "lazy"
+                        lastKeywordIndex = index
                     }
                     let name = token.unescaped()
                     guard members.contains(name), !localNames.contains(name), !isAssignment ||

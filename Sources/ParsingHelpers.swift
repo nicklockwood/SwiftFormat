@@ -532,6 +532,67 @@ extension Formatter {
         }
         return false
     }
+
+    // Detect if identifier requires backtick escaping
+    func backticksRequired(at i: Int, ignoreLeadingDot: Bool = false) -> Bool {
+        guard let token = token(at: i), token.isIdentifier else {
+            return false
+        }
+        let unescaped = token.unescaped()
+        if !unescaped.isSwiftKeyword {
+            switch unescaped {
+            case "super", "self", "nil", "true", "false":
+                if options.swiftVersion < "4" {
+                    return true
+                }
+            case "Self", "Any":
+                if let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i),
+                    [.delimiter(":"), .operator("->", .infix)].contains(prevToken) {
+                    // TODO: check for other cases where it's safe to use unescaped
+                    return false
+                }
+            case "Type":
+                if currentScope(at: i) == .startOfScope("{") {
+                    // TODO: check it's actually inside a type declaration, otherwise backticks aren't needed
+                    return true
+                }
+                if last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {
+                    return true
+                }
+                return false
+            case "get", "set", "willSet", "didSet":
+                return isAccessorKeyword(at: i, checkKeyword: false)
+            default:
+                return false
+            }
+        }
+        if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+            tokens[prevIndex].isOperator(".") {
+            if options.swiftVersion >= "5" || self.token(at: prevIndex - 1)?.isOperator("\\") != true {
+                return ignoreLeadingDot
+            }
+            return true
+        }
+        guard !["let", "var"].contains(unescaped) else {
+            return true
+        }
+        return !isArgumentPosition(at: i)
+    }
+
+    // Is token at argument position
+    func isArgumentPosition(at i: Int) -> Bool {
+        assert(tokens[i].isIdentifierOrKeyword)
+        guard let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i) else {
+            return false
+        }
+        let nextToken = tokens[nextIndex]
+        if currentScope(at: i) == .startOfScope("("),
+            nextToken == .delimiter(":") || (nextToken.isIdentifier &&
+                next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .delimiter(":")) {
+            return true
+        }
+        return false
+    }
 }
 
 extension _FormatRules {

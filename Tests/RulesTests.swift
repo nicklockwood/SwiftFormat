@@ -4769,14 +4769,26 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantBackticks)
     }
 
-    func testNoRemoveBackticksAroundClassSelf() {
+    func testNoRemoveBackticksAroundClassSelfInTypealias() {
         let input = "typealias `Self` = Foo"
         testFormatting(for: input, rule: FormatRules.redundantBackticks)
     }
 
-    func testRemoveBackticksAroundSelfArgument() {
-        let input = "func foo(`self`: Foo) { print(self) }"
-        let output = "func foo(self: Foo) { print(self) }"
+    func testRemoveBackticksAroundClassSelfAsReturnType() {
+        let input = "func foo(bar: `Self`) { print(bar) }"
+        let output = "func foo(bar: Self) { print(bar) }"
+        testFormatting(for: input, output, rule: FormatRules.redundantBackticks)
+    }
+
+    func testRemoveBackticksAroundClassSelfAsParameterType() {
+        let input = "func foo() -> `Self` {}"
+        let output = "func foo() -> Self {}"
+        testFormatting(for: input, output, rule: FormatRules.redundantBackticks)
+    }
+
+    func testRemoveBackticksAroundClassSelfArgument() {
+        let input = "func foo(`Self`: Foo) { print(Self) }"
+        let output = "func foo(Self: Foo) { print(Self) }"
         testFormatting(for: input, output, rule: FormatRules.redundantBackticks)
     }
 
@@ -4812,6 +4824,18 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantBackticks)
     }
 
+    func testNoRemoveBackticksAroundTrueArgument() {
+        let input = "func foo(`true`: Foo) { print(`true`) }"
+        testFormatting(for: input, rule: FormatRules.redundantBackticks)
+    }
+
+    func testRemoveBackticksAroundTrueArgument() {
+        let input = "func foo(`true`: Foo) { print(`true`) }"
+        let output = "func foo(true: Foo) { print(`true`) }"
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, output, rule: FormatRules.redundantBackticks, options: options)
+    }
+
     func testNoRemoveBackticksAroundTypeProperty() {
         let input = "var type: Foo.`Type`"
         testFormatting(for: input, rule: FormatRules.redundantBackticks)
@@ -4825,6 +4849,13 @@ class RulesTests: XCTestCase {
     func testNoRemoveBackticksAroundTrueProperty() {
         let input = "var type = Foo.`true`"
         testFormatting(for: input, rule: FormatRules.redundantBackticks)
+    }
+
+    func testRemoveBackticksAroundTrueProperty() {
+        let input = "var type = Foo.`true`"
+        let output = "var type = Foo.true"
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, output, rule: FormatRules.redundantBackticks, options: options)
     }
 
     func testRemoveBackticksAroundProperty() {
@@ -5068,6 +5099,14 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testNoRemoveSelfFromLazyVarImmediatelyAfterOtherVar() {
+        let input = """
+        var baz = bar
+        lazy var foo = self.bar
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     func testNoRemoveSelfFromLazyVarClosure() {
         let input = "lazy var foo = { self.bar }()"
         testFormatting(for: input, rule: FormatRules.redundantSelf)
@@ -5114,12 +5153,6 @@ class RulesTests: XCTestCase {
     func testNoRemoveSelfFromVarDeclaredLaterInOuterScope() {
         let input = "func foo() {\n    if quux {\n        let bar = self.baz\n    }\n    let baz = 6\n}"
         testFormatting(for: input, rule: FormatRules.redundantSelf)
-    }
-
-    func testNoRemoveSelfFromKeyword() {
-        let input = "func foo() { self.default = 5 }"
-        let output = "func foo() { `default` = 5 }"
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
     func testNoRemoveSelfInWhilePreceededByVarDeclaration() {
@@ -5552,6 +5585,72 @@ class RulesTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
+    func testRequiredBackticksAddedAroundKeywordWhenRemovingSelf() {
+        let input = """
+        class Foo {
+            let `default` = 5
+            func foo() {
+                print(self.default)
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            let `default` = 5
+            func foo() {
+                print(`default`)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
+    func testRequiredBackticksAddedAroundContextualKeywordWhenRemovingSelf() {
+        let input = """
+        class Foo {
+            let `self` = 5
+            func foo() {
+                print(self.self)
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            let `self` = 5
+            func foo() {
+                print(`self`)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
+    func testUnneededBackticksNotAddedAroundContextualKeywordWhenRemovingSelf() {
+        let input = """
+        class Foo {
+            let get = 5
+            func foo() {
+                print(self.get)
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            let get = 5
+            func foo() {
+                print(get)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
+    func testRemoveSelfForMemberNamedLazy() {
+        let input = "func foo() { self.lazy() }"
+        let output = "func foo() { lazy() }"
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
     // explicitSelf = .insert
@@ -5994,6 +6093,27 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testInsertSelfForMemberNamedLazy() {
+        let input = """
+        class Foo {
+            var lazy = "foo"
+            func foo() {
+                print(lazy)
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var lazy = "foo"
+            func foo() {
+                print(self.lazy)
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
     }
 
     // explicitSelf = .initOnly

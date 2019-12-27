@@ -264,6 +264,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var xcodeIndentation: Bool
     public var tabWidth: Int
     public var maxWidth: Int
+    public var noSpaceOperators: [String]
 
     // Doesn't really belong here, but hard to put elsewhere
     public var fragment: Bool
@@ -310,6 +311,7 @@ public struct FormatOptions: CustomStringConvertible {
                 xcodeIndentation: Bool = false,
                 tabWidth: Int = 0,
                 maxWidth: Int = 0,
+                noSpaceOperators: [String] = [],
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -352,6 +354,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.xcodeIndentation = xcodeIndentation
         self.tabWidth = tabWidth
         self.maxWidth = maxWidth
+        self.noSpaceOperators = noSpaceOperators
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

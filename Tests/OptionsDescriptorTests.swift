@@ -86,8 +86,8 @@ class OptionsDescriptorTests: XCTestCase {
     ///   - descriptor: FormatOptions.Descriptor being tested
     ///   - keyPath: to the FormatOptions property that is beeing validated
     ///   - expectations: Array of expectations for different inputs
-    ///   - invalid: Provide if an invalid input can be store in FormatOptions. In Which case the default value should be return instead
-    ///   - testName: for asserts clarity
+    ///   - invalid: Invalid FormatOptions value, which should yield the defaultArgument value
+    ///   - testName: for assertion clarity
     private func validateFromOptions<T>(_ descriptor: FormatOptions.Descriptor,
                                         keyPath: WritableKeyPath<FormatOptions, T>,
                                         expectations: [OptionArgumentMapping<T>],
@@ -132,7 +132,7 @@ class OptionsDescriptorTests: XCTestCase {
         let values: [String] = descriptor.type.associatedValue()
 
         XCTAssertEqual(Set(values), validArguments, "\(testName): All valid arguments are accounted for")
-        XCTAssertTrue(validArguments.contains(descriptor.defaultArgument), "\(testName): Default argument is part of the valide arguments")
+        XCTAssertTrue(validArguments.contains(descriptor.defaultArgument), "\(testName): Default argument is part of the valid arguments")
     }
 
     private typealias FreeTextValidationExpectation = (input: String, isValid: Bool)
@@ -631,6 +631,24 @@ class OptionsDescriptorTests: XCTestCase {
         validateArgumentsFreeTextType(descriptor, expectations: validations)
         validateFromOptions(descriptor, keyPath: \FormatOptions.fileHeader, expectations: fromOptionExpectations)
         validateFromOptionalArguments(descriptor, keyPath: \FormatOptions.fileHeader, expectations: fromArgumentExpectations, testCaseVariation: false)
+    }
+
+    func testNoSpaceOperators() {
+        let descriptor = FormatOptions.Descriptor.noSpaceOperators
+        let validations: [FreeTextValidationExpectation] = [
+            (input: "+", isValid: true),
+            (input: "", isValid: true),
+            (input: ":", isValid: true),
+            (input: "foo", isValid: false),
+            (input: ";", isValid: false),
+            (input: "?", isValid: false),
+        ]
+        let fromOptionExpectations: [OptionArgumentMapping<[String]>] = [
+            (optionValue: [], argumentValue: ""),
+            (optionValue: ["*", "/"], argumentValue: "*,/"),
+        ]
+        validateFromOptions(descriptor, keyPath: \FormatOptions.noSpaceOperators, expectations: fromOptionExpectations)
+        validateArgumentsFreeTextType(descriptor, expectations: validations)
     }
 
     // MARK: Deprecated

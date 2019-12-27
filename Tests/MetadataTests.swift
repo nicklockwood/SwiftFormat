@@ -168,6 +168,13 @@ class MetadataTests: XCTestCase {
         }
     }
 
+    func testArgumentNamesAreValidLength() {
+        let arguments = Set(commandLineArguments).subtracting(deprecatedArguments)
+        for argument in arguments {
+            XCTAssert(argument.count <= Options.maxArgumentNameLength)
+        }
+    }
+
     // MARK: examples
 
     func testAllExamplesMatchRule() {

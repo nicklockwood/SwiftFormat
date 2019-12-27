@@ -141,6 +141,8 @@ class ArgumentsTests: XCTestCase {
         ]), output)
     }
 
+    // merging
+
     func testDuplicateDisableArgumentsAreMerged() {
         let input = ["", "--disable", "foo", "--disable", "bar"]
         let output = ["0": "", "disable": "foo,bar"]
@@ -173,6 +175,14 @@ class ArgumentsTests: XCTestCase {
         ]), output)
     }
 
+    func testDuplicateUnspacedOperatorsArgumentsAreMerged() {
+        let input = ["", "--nospaceoperators", "+", "--nospaceoperators", "*"]
+        let output = ["0": "", "nospaceoperators": "+,*"]
+        XCTAssertEqual(try preprocessArguments(input, [
+            "nospaceoperators",
+        ]), output)
+    }
+
     func testDuplicateRangesArgumentsAreNotMerged() {
         let input = ["", "--ranges", "spaced", "--ranges", "no-space"]
         let output = ["0": "", "ranges": "no-space"]
@@ -190,7 +200,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testCommandLineArgumentsAreCorrect() {
-        let output = ["allman": "false", "wraparguments": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": "", "xcodeindentation": "disabled", "fragment": "false", "conflictmarkers": "reject", "tabwidth": "unspecified", "maxwidth": "none"]
+        let output = ["allman": "false", "wraparguments": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": "", "xcodeindentation": "disabled", "fragment": "false", "conflictmarkers": "reject", "tabwidth": "unspecified", "maxwidth": "none", "nospaceoperators": ""]
         XCTAssertEqual(argumentsFor(.default), output)
     }
 

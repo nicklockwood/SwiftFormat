@@ -1150,6 +1150,7 @@ Add or remove space around operators or delimiters.
 Option | Description
 --- | ---
 `--operatorfunc` | Spacing for operator funcs: "spaced" (default) or "no-space"
+`--nospaceoperators` | Comma-delimited list of operators without surrounding space
 
 <details>
 <summary>Examples</summary>

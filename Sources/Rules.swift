@@ -398,7 +398,7 @@ public struct _FormatRules {
     ///   preceded by a space, unless it appears at the beginning of a line.
     public let spaceAroundOperators = FormatRule(
         help: "Add or remove space around operators or delimiters.",
-        options: ["operatorfunc"]
+        options: ["operatorfunc", "nospaceoperators"]
     ) { formatter in
         formatter.forEachToken { i, token in
             switch token {
@@ -445,6 +445,16 @@ public struct _FormatRules {
                 } else if let prevToken = formatter.last(.nonSpace, before: i),
                     !prevToken.isStartOfScope, !prevToken.isOperator(ofType: .prefix) {
                     formatter.insertSpace(" ", at: i)
+                }
+            case .operator("?", .infix):
+                break // Spacing around ternary ? is not optional
+            case let .operator(name, .infix) where formatter.options.noSpaceOperators.contains(name):
+                if formatter.token(at: i - 1)?.isSpace == true,
+                    formatter.token(at: i + 1)?.isSpace == true,
+                    formatter.token(at: i - 2)?.isOperator != true || formatter.tokens[i - 2].isUnwrapOperator,
+                    formatter.token(at: i + 2)?.isOperator != true {
+                    formatter.removeToken(at: i + 1)
+                    formatter.removeToken(at: i - 1)
                 }
             case .operator(_, .infix) where !token.isRangeOperator:
                 if formatter.token(at: i + 1)?.isSpaceOrLinebreak == false {

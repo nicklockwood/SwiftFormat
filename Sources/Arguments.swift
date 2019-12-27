@@ -32,6 +32,8 @@
 import Foundation
 
 extension Options {
+    static let maxArgumentNameLength = 16
+
     init(_ args: [String: String], in directory: String) throws {
         fileOptions = try fileOptionsFor(args, in: directory)
         formatOptions = try formatOptionsFor(args)

@@ -66,6 +66,12 @@ public extension String {
             return isSwiftKeyword
         }
     }
+
+    /// Is this string a valid operator?
+    var isOperator: Bool {
+        let tokens = tokenize(self)
+        return tokens.count == 1 && tokens[0].isOperator
+    }
 }
 
 /// Classes of token used for matching

@@ -43,8 +43,8 @@ class RulesTests: XCTestCase {
 
     func testFormatting(for input: String, _ outputs: [String], rules: [FormatRule],
                         options: FormatOptions = .default, exclude: [String] = []) {
-        XCTAssertNotEqual(input, outputs.first)
-        XCTAssert((0 ... 2).contains(outputs.count))
+        precondition(input != outputs.first, "Redundant output parameter")
+        precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
         let output = outputs.first ?? input, output2 = outputs.last ?? input
         let exclude = exclude + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
         XCTAssertEqual(try format(input, rules: rules, options: options), output)
@@ -763,6 +763,73 @@ class RulesTests: XCTestCase {
     func testSpaceNotAddedAroundStarInAvailableAnnotation() {
         let input = "@available(*, deprecated, message: \"foo\")"
         testFormatting(for: input, rule: FormatRules.spaceAroundOperators)
+    }
+
+    // noSpaceOperators
+
+    func testNoAddSpaceAroundNoSpaceStar() {
+        let input = "let a = b*c+d"
+        let output = "let a = b*c + d"
+        let options = FormatOptions(noSpaceOperators: ["*"])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testRemoveSpaceAroundNoSpaceStar() {
+        let input = "let a = b * c + d"
+        let output = "let a = b*c + d"
+        let options = FormatOptions(noSpaceOperators: ["*"])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testNoRemoveSpaceAroundNoSpaceStarBeforePrefixOperator() {
+        let input = "let a = b * -c"
+        let options = FormatOptions(noSpaceOperators: ["*"])
+        testFormatting(for: input, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testNoRemoveSpaceAroundNoSpaceStarAfterPostfixOperator() {
+        let input = "let a = b% * c"
+        let options = FormatOptions(noSpaceOperators: ["*"])
+        testFormatting(for: input, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testRemoveSpaceAroundNoSpaceStarAfterUnwrapOperator() {
+        let input = "let a = b! * c"
+        let output = "let a = b!*c"
+        let options = FormatOptions(noSpaceOperators: ["*"])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testNoAddSpaceAroundNoSpaceRange() {
+        let input = "let a = b...c"
+        let options = FormatOptions(noSpaceOperators: ["..."])
+        testFormatting(for: input, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testRemoveSpaceAroundNoSpaceRange() {
+        let input = "let a = b ... c"
+        let output = "let a = b...c"
+        let options = FormatOptions(noSpaceOperators: ["..."])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testNoRemoveSpaceAroundNoSpaceRangeBeforePrefixOperator() {
+        let input = "let a = b ... -c"
+        let options = FormatOptions(noSpaceOperators: ["..."])
+        testFormatting(for: input, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testNoRemoveSpaceAroundTernaryColon() {
+        let input = "let a = b ? c : d"
+        let output = "let a = b ? c:d"
+        let options = FormatOptions(noSpaceOperators: [":"])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testNoRemoveSpaceAroundTernaryQuestionMark() {
+        let input = "let a = b ? c : d"
+        let options = FormatOptions(noSpaceOperators: ["?"])
+        testFormatting(for: input, rule: FormatRules.spaceAroundOperators, options: options)
     }
 
     // MARK: spaceAroundComments

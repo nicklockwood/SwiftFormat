@@ -80,6 +80,7 @@ extension FormatOptions {
              keyPath: WritableKeyPath<FormatOptions, Bool>,
              trueValues: [String],
              falseValues: [String]) {
+            assert(argumentName.count <= Options.maxArgumentNameLength)
             self.argumentName = argumentName
             self.propertyName = propertyName
             self.displayName = displayName
@@ -191,14 +192,17 @@ extension FormatOptions {
              propertyName: String,
              displayName: String,
              help: String = "",
-             keyPath: WritableKeyPath<FormatOptions, [String]>) {
+             keyPath: WritableKeyPath<FormatOptions, [String]>,
+             validate: @escaping (String) throws -> Void = { _ in }) {
             self.argumentName = argumentName
             self.propertyName = propertyName
             self.displayName = displayName
             self.help = help
             type = .set
             toOptions = { value, options in
-                options[keyPath: keyPath] = parseCommaDelimitedList(value)
+                let values = parseCommaDelimitedList(value)
+                try values.forEach(validate)
+                options[keyPath: keyPath] = values
             }
             fromOptions = { options in
                 options[keyPath: keyPath].joined(separator: ",")
@@ -242,6 +246,7 @@ extension FormatOptions.Descriptor {
         xcodeIndentation,
         tabWidth,
         maxWidth,
+        noSpaceOperators,
 
         // Deprecated
         indentComments,
@@ -547,6 +552,43 @@ extension FormatOptions.Descriptor {
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
     )
+    static let tabWidth = FormatOptions.Descriptor(
+        argumentName: "tabwidth",
+        propertyName: "tabWidth",
+        displayName: "Tab Width",
+        help: "The width of a tab character. Defaults to \"unspecified\"",
+        keyPath: \.tabWidth,
+        fromArgument: { $0.lowercased() == "unspecified" ? 0 : Int($0).map { max(0, $0) } },
+        toArgument: { $0 > 0 ? String($0) : "unspecified" }
+    )
+    static let maxWidth = FormatOptions.Descriptor(
+        argumentName: "maxwidth",
+        propertyName: "maxWidth",
+        displayName: "Max Width",
+        help: "Maximum length of a line before wrapping. defaults to \"none\"",
+        keyPath: \.maxWidth,
+        fromArgument: { $0.lowercased() == "none" ? 0 : Int($0).map { max(0, $0) } },
+        toArgument: { $0 > 0 ? String($0) : "none" }
+    )
+    static let noSpaceOperators = FormatOptions.Descriptor(
+        argumentName: "nospaceoperators",
+        propertyName: "noSpaceOperators",
+        displayName: "No-space Operators",
+        help: "Comma-delimited list of operators without surrounding space",
+        keyPath: \FormatOptions.noSpaceOperators,
+        validate: {
+            switch $0 {
+            case "?":
+                throw FormatError.options("Spacing around ? operator is not optional")
+            case ":":
+                break
+            case _ where !$0.isOperator:
+                throw FormatError.options("'\($0)' is not a valid infix operator")
+            default:
+                break
+            }
+        }
+    )
 
     // MARK: - Internal
 
@@ -583,24 +625,6 @@ extension FormatOptions.Descriptor {
         displayName: "Swift Version",
         help: "The version of swift used in the project being formatted",
         keyPath: \.swiftVersion
-    )
-    static let tabWidth = FormatOptions.Descriptor(
-        argumentName: "tabwidth",
-        propertyName: "tabWidth",
-        displayName: "Tab Width",
-        help: "The width of a tab character. Defaults to \"unspecified\"",
-        keyPath: \.tabWidth,
-        fromArgument: { $0.lowercased() == "unspecified" ? 0 : Int($0).map { max(0, $0) } },
-        toArgument: { $0 > 0 ? String($0) : "unspecified" }
-    )
-    static let maxWidth = FormatOptions.Descriptor(
-        argumentName: "maxwidth",
-        propertyName: "maxWidth",
-        displayName: "Max Width",
-        help: "Maximum length of a line before wrapping. defaults to \"none\"",
-        keyPath: \.maxWidth,
-        fromArgument: { $0.lowercased() == "none" ? 0 : Int($0).map { max(0, $0) } },
-        toArgument: { $0 > 0 ? String($0) : "none" }
     )
 
     // MARK: - DEPRECATED

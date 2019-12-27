@@ -90,7 +90,7 @@ func printOptions(as type: CLI.OutputType) {
     print(FormatOptions.Descriptor.formatting.compactMap {
         guard !$0.isDeprecated else { return nil }
         var result = "--\($0.argumentName)"
-        for _ in 0 ..< 19 - result.count {
+        for _ in 0 ..< Options.maxArgumentNameLength + 3 - result.count {
             result += " "
         }
         return result + stripMarkdown($0.help)

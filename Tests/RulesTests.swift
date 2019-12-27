@@ -5099,12 +5099,32 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testRemoveSelfFromLazyVar() {
+        let input = "lazy var foo = self.bar"
+        let output = "lazy var foo = bar"
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
+    }
+
     func testNoRemoveSelfFromLazyVarImmediatelyAfterOtherVar() {
         let input = """
         var baz = bar
         lazy var foo = self.bar
         """
         testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
+    func testRemoveSelfFromLazyVarImmediatelyAfterOtherVar() {
+        let input = """
+        var baz = bar
+        lazy var foo = self.bar
+        """
+        let output = """
+        var baz = bar
+        lazy var foo = bar
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
     }
 
     func testNoRemoveSelfFromLazyVarClosure() {

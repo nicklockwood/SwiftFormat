@@ -729,7 +729,7 @@ private struct Inference {
                 case .keyword("var"), .keyword("let"):
                     index += 1
                     switch lastKeyword {
-                    case "lazy":
+                    case "lazy" where formatter.options.swiftVersion < "4":
                         loop: while let nextIndex =
                             formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
                             switch formatter.tokens[nextIndex] {

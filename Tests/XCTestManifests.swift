@@ -1254,6 +1254,8 @@ extension RulesTests {
         ("testRemoveSelfFromComputedArrayVar", testRemoveSelfFromComputedArrayVar),
         ("testRemoveSelfFromComputedVar", testRemoveSelfFromComputedVar),
         ("testRemoveSelfFromGenericComputedVar", testRemoveSelfFromGenericComputedVar),
+        ("testRemoveSelfFromLazyVar", testRemoveSelfFromLazyVar),
+        ("testRemoveSelfFromLazyVarImmediatelyAfterOtherVar", testRemoveSelfFromLazyVarImmediatelyAfterOtherVar),
         ("testRemoveSelfFromNamespacedComputedVar", testRemoveSelfFromNamespacedComputedVar),
         ("testRemoveSelfFromOptionalComputedVar", testRemoveSelfFromOptionalComputedVar),
         ("testRemoveSelfFromVarInFuncWithUnusedArgument", testRemoveSelfFromVarInFuncWithUnusedArgument),

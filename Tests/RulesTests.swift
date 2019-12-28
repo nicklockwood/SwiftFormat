@@ -5607,7 +5607,7 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
-    func testRequiredBackticksAddedAroundKeywordWhenRemovingSelf() {
+    func testSelfNotRemovedWhenPropertyIsKeyword() {
         let input = """
         class Foo {
             let `default` = 5
@@ -5616,18 +5616,10 @@ class RulesTests: XCTestCase {
             }
         }
         """
-        let output = """
-        class Foo {
-            let `default` = 5
-            func foo() {
-                print(`default`)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
-    func testRequiredBackticksAddedAroundContextualKeywordWhenRemovingSelf() {
+    func testSelfNotRemovedWhenPropertyIsContextualKeyword() {
         let input = """
         class Foo {
             let `self` = 5
@@ -5636,18 +5628,10 @@ class RulesTests: XCTestCase {
             }
         }
         """
-        let output = """
-        class Foo {
-            let `self` = 5
-            func foo() {
-                print(`self`)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
-    func testUnneededBackticksNotAddedAroundContextualKeywordWhenRemovingSelf() {
+    func testSelfRemovedForContextualKeywordThatRequiresNoEscaping() {
         let input = """
         class Foo {
             let get = 5

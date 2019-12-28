@@ -2467,11 +2467,9 @@ public struct _FormatRules {
                             break
                         }
                     }
-                    if case let .identifier(name) = formatter.tokens[nextIndex],
-                        formatter.backticksRequired(at: nextIndex, ignoreLeadingDot: true) {
-                        formatter.replaceToken(at: nextIndex, with: .identifier("`\(name)`"))
+                    if !formatter.backticksRequired(at: nextIndex, ignoreLeadingDot: true) {
+                        formatter.removeTokens(inRange: index ..< nextIndex)
                     }
-                    formatter.removeTokens(inRange: index ..< nextIndex)
                 case .identifier("type"): // Special case for type(of:)
                     guard let parenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
                         $0 == .startOfScope("(")

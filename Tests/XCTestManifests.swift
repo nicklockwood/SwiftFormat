@@ -480,6 +480,8 @@ extension RulesTests {
         ("testConsecutiveBlankLinesAtEndOfFile", testConsecutiveBlankLinesAtEndOfFile),
         ("testConsecutiveBlankLinesAtStartOfFile", testConsecutiveBlankLinesAtStartOfFile),
         ("testConsecutiveBlankLinesInsideStringLiteral", testConsecutiveBlankLinesInsideStringLiteral),
+        ("testConsecutiveCodeCommentsNotIndented", testConsecutiveCodeCommentsNotIndented),
+        ("testConsecutiveCodeCommentsNotIndentedInWrapBeforeFirst", testConsecutiveCodeCommentsNotIndentedInWrapBeforeFirst),
         ("testConsecutiveSpaces", testConsecutiveSpaces),
         ("testConsecutiveSpacesAfterComment", testConsecutiveSpacesAfterComment),
         ("testConsecutiveSpacesDoesntAffectMultilineComments", testConsecutiveSpacesDoesntAffectMultilineComments),

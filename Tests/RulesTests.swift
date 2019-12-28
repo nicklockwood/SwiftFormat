@@ -6944,6 +6944,17 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["indent"])
     }
 
+    func testConsecutiveCodeCommentsNotIndented() {
+        let input = """
+        let a = [foo,
+        //         bar,
+        //         baz,
+                 quux]
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
     // preserve
 
     func testAfterFirstPreserved() {
@@ -7059,6 +7070,19 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(wrapArguments: .beforeFirst)
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
                        exclude: ["redundantParens"])
+    }
+
+    func testConsecutiveCodeCommentsNotIndentedInWrapBeforeFirst() {
+        let input = """
+        let a = [
+            foo,
+        //    bar,
+        //    baz,
+            quux,
+        ]
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
     // closingParenOnSameLine = true

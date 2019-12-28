@@ -849,21 +849,6 @@ public struct _FormatRules {
         var linewrapStack = [false]
         var lineIndex = 0
 
-        func isCommentedCode(at index: Int) -> Bool {
-            if formatter.token(at: index) == .startOfScope("//"), !scopeStack.isEmpty,
-                formatter.token(at: index - 1)?.isSpace != true {
-                switch formatter.token(at: index + 1) {
-                case nil, .linebreak?:
-                    return true
-                case let .space(space)? where space.hasPrefix(formatter.options.indent):
-                    return true
-                default:
-                    break
-                }
-            }
-            return false
-        }
-
         func isGuardElseClause(at index: Int, token: Token) -> Bool {
             func hasKeyword(_ string: String) -> Bool {
                 return formatter.index(of: .keyword(string), after: formatter.startOfLine(at: index) - 1) ?? index < index
@@ -1029,7 +1014,7 @@ public struct _FormatRules {
                     }
                     // Check if line on which scope ends should be unindented
                     let start = formatter.startOfLine(at: i)
-                    guard !isCommentedCode(at: start),
+                    guard !formatter.isCommentedCode(at: start),
                         // Only reduce indent if line begins with a closing scope token or @unknown
                         let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
                         nextToken.isEndOfScope || nextToken == .keyword("@unknown"),
@@ -1109,7 +1094,7 @@ public struct _FormatRules {
                         let startIndex = formatter.index(of: .nonSpaceOrComment, before: index),
                         formatter.tokens[startIndex].isLinebreak {
                         // Set indent for comment immediately before this line to match this line
-                        if !isCommentedCode(at: startIndex + 1) {
+                        if !formatter.isCommentedCode(at: startIndex + 1) {
                             formatter.insertSpace(indent, at: startIndex + 1)
                         }
                         if case .endOfScope("*/") = prevToken,
@@ -1174,7 +1159,7 @@ public struct _FormatRules {
                 }
                 guard let nextNonSpaceIndex = formatter.index(of: .nonSpace, after: i),
                     // Avoid indenting commented code
-                    !isCommentedCode(at: nextNonSpaceIndex) else {
+                    !formatter.isCommentedCode(at: nextNonSpaceIndex) else {
                     break
                 }
                 // Apply indent
@@ -3174,14 +3159,16 @@ public struct _FormatRules {
                 if let index = formatter.index(of: .nonSpace, before: linebreakIndex) {
                     linebreakIndex = index + 1
                 }
-                if formatter.tokens[linebreakIndex].isLinebreak, !formatter.options.truncateBlankLines ||
-                    formatter.next(.nonSpace, after: linebreakIndex).map({ !$0.isLinebreak }) ?? false {
-                    formatter.insertSpace(indent + formatter.options.indent, at: linebreakIndex + 1)
-                } else if !allowGrouping || (maxWidth > 0 &&
-                    formatter.lineLength(at: linebreakIndex) > maxWidth &&
-                    formatter.lineLength(upTo: linebreakIndex) <= maxWidth) {
-                    formatter.insertLinebreak(at: linebreakIndex)
-                    formatter.insertSpace(indent + formatter.options.indent, at: linebreakIndex + 1)
+                if !formatter.isCommentedCode(at: linebreakIndex + 1) {
+                    if formatter.tokens[linebreakIndex].isLinebreak, !formatter.options.truncateBlankLines ||
+                        formatter.next(.nonSpace, after: linebreakIndex).map({ !$0.isLinebreak }) ?? false {
+                        formatter.insertSpace(indent + formatter.options.indent, at: linebreakIndex + 1)
+                    } else if !allowGrouping || (maxWidth > 0 &&
+                        formatter.lineLength(at: linebreakIndex) > maxWidth &&
+                        formatter.lineLength(upTo: linebreakIndex) <= maxWidth) {
+                        formatter.insertLinebreak(at: linebreakIndex)
+                        formatter.insertSpace(indent + formatter.options.indent, at: linebreakIndex + 1)
+                    }
                 }
                 index = commaIndex
             }
@@ -3219,7 +3206,7 @@ public struct _FormatRules {
                     continue
                 }
                 if formatter.tokens[linebreakIndex].isLinebreak {
-                    if linebreakIndex + 1 != endOfScope {
+                    if linebreakIndex + 1 != endOfScope, !formatter.isCommentedCode(at: linebreakIndex + 1) {
                         endOfScope += formatter.insertSpace(indent, at: linebreakIndex + 1)
                     }
                 } else if !allowGrouping {

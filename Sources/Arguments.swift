@@ -302,7 +302,7 @@ func serialize(arguments: [String: String],
     }.sorted().joined(separator: separator)
 }
 
-// Get command line arguments from options (excludes deprecated/renamed options)
+// Get command line arguments from options
 func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [String: String] {
     var args = [String: String]()
     if let fileOptions = options.fileOptions {
@@ -330,17 +330,19 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
         assert(arguments.isEmpty)
     }
     if let formatOptions = options.formatOptions {
-        for descriptor in FormatOptions.Descriptor.all where !descriptor.isDeprecated {
+        for descriptor in FormatOptions.Descriptor.all where !descriptor.isRenamed {
             let value = descriptor.fromOptions(formatOptions)
-            if !excludingDefaults || value != descriptor.fromOptions(.default) {
-                // Special case for swiftVersion
-                // TODO: find a better solution for this
-                if descriptor.argumentName == FormatOptions.Descriptor.swiftVersion.argumentName,
-                    value == Version.undefined.rawValue {
-                    continue
-                }
-                args[descriptor.argumentName] = value
+            guard value != descriptor.fromOptions(.default) ||
+                (!excludingDefaults && !descriptor.isDeprecated) else {
+                continue
             }
+            // Special case for swiftVersion
+            // TODO: find a better solution for this
+            if descriptor.argumentName == FormatOptions.Descriptor.swiftVersion.argumentName,
+                value == Version.undefined.rawValue {
+                continue
+            }
+            args[descriptor.argumentName] = value
         }
     }
     if let rules = options.rules {

@@ -200,7 +200,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testCommandLineArgumentsAreCorrect() {
-        let output = ["allman": "false", "wraparguments": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "ranges": "spaced", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": "", "xcodeindentation": "disabled", "fragment": "false", "conflictmarkers": "reject", "tabwidth": "unspecified", "maxwidth": "none", "nospaceoperators": ""]
+        let output = ["allman": "false", "wraparguments": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": "", "xcodeindentation": "disabled", "fragment": "false", "conflictmarkers": "reject", "tabwidth": "unspecified", "maxwidth": "none", "nospaceoperators": ""]
         XCTAssertEqual(argumentsFor(.default), output)
     }
 
@@ -546,5 +546,10 @@ class ArgumentsTests: XCTestCase {
         let options = try Options(["unexclude": "foo bar, baz"], in: "/dir")
         let paths = options.fileOptions?.unexcludedGlobs.map { $0.description } ?? []
         XCTAssertEqual(paths, ["/dir/foo bar", "/dir/baz"])
+    }
+
+    func testParseDeprecatedOption() throws {
+        let options = try Options(["ranges": "nospace"], in: "")
+        XCTAssertEqual(options.formatOptions?.spaceAroundRangeOperators, false)
     }
 }

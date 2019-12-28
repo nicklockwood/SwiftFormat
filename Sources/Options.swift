@@ -230,12 +230,10 @@ public struct FormatOptions: CustomStringConvertible {
     public var indent: String
     public var linebreak: String
     public var allowInlineSemicolons: Bool
-    public var spaceAroundRangeOperators: Bool
     public var spaceAroundOperatorDeclarations: Bool
     public var useVoid: Bool
     public var indentCase: Bool
     public var trailingCommas: Bool
-    public var indentComments: Bool
     public var truncateBlankLines: Bool
     public var insertBlankLines: Bool
     public var removeBlankLines: Bool
@@ -265,6 +263,10 @@ public struct FormatOptions: CustomStringConvertible {
     public var tabWidth: Int
     public var maxWidth: Int
     public var noSpaceOperators: [String]
+
+    // Deprecated
+    public var indentComments: Bool
+    public var spaceAroundRangeOperators: Bool
 
     // Doesn't really belong here, but hard to put elsewhere
     public var fragment: Bool

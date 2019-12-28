@@ -57,6 +57,12 @@ extension FormatOptions {
             return deprecationMessage != nil
         }
 
+        var isRenamed: Bool {
+            return deprecationMessage != nil && FormatOptions.Descriptor.all.contains(where: {
+                $0.propertyName == propertyName && $0.argumentName != argumentName
+            })
+        }
+
         var defaultArgument: String {
             return fromOptions(FormatOptions.default)
         }
@@ -216,7 +222,6 @@ extension FormatOptions.Descriptor {
         indentation,
         lineBreak,
         allowInlineSemicolons,
-        spaceAroundRangeOperators,
         spaceAroundOperatorDeclarations,
         useVoid,
         indentCase,
@@ -252,6 +257,7 @@ extension FormatOptions.Descriptor {
         indentComments,
         insertBlankLines,
         removeBlankLines,
+        spaceAroundRangeOperators,
 
         // Renamed
         // NOTE: these must go after the non-deprecated versions
@@ -310,15 +316,6 @@ extension FormatOptions.Descriptor {
         trueValues: ["inline"],
         falseValues: ["never", "false"]
     )
-    static let spaceAroundRangeOperators = FormatOptions.Descriptor(
-        argumentName: "ranges",
-        propertyName: "spaceAroundRangeOperators",
-        displayName: "Ranges",
-        help: "Spacing for ranges: \"spaced\" (default) or \"no-space\"",
-        keyPath: \.spaceAroundRangeOperators,
-        trueValues: ["spaced", "space", "spaces"],
-        falseValues: ["no-space", "nospace"]
-    )
     static let spaceAroundOperatorDeclarations = FormatOptions.Descriptor(
         argumentName: "operatorfunc",
         propertyName: "spaceAroundOperatorDeclarations",
@@ -354,15 +351,6 @@ extension FormatOptions.Descriptor {
         keyPath: \.trailingCommas,
         trueValues: ["always", "true"],
         falseValues: ["inline", "false"]
-    )
-    static let indentComments = FormatOptions.Descriptor(
-        argumentName: "comments",
-        propertyName: "indentComments",
-        displayName: "Comments",
-        help: "Indenting of comment bodies: \"indent\" (default) or \"ignore\"",
-        keyPath: \.indentComments,
-        trueValues: ["indent", "indented"],
-        falseValues: ["ignore"]
     )
     static let truncateBlankLines = FormatOptions.Descriptor(
         argumentName: "trimwhitespace",
@@ -592,15 +580,6 @@ extension FormatOptions.Descriptor {
 
     // MARK: - Internal
 
-    static let experimentalRules = FormatOptions.Descriptor(
-        argumentName: "experimental",
-        propertyName: "experimentalRules",
-        displayName: "Experimental Rules",
-        help: "Experimental rules: \"enabled\" or \"disabled\" (default)",
-        keyPath: \.experimentalRules,
-        trueValues: ["enabled", "true"],
-        falseValues: ["disabled", "false"]
-    )
     static let fragment = FormatOptions.Descriptor(
         argumentName: "fragment",
         propertyName: "fragment",
@@ -636,8 +615,18 @@ extension FormatOptions.Descriptor {
         hexLiterals.argumentName: "`--hexliterals` option is deprecated. Use `--hexliteralcase` instead.",
         wrapElements.argumentName: "`--wrapelements` option is deprecated. Use `--wrapcollections` instead.",
         experimentalRules.argumentName: "`--experimentalRules` option is deprecated. Use `--enable` to opt-in to rules individually.",
+        spaceAroundRangeOperators.argumentName: "`--ranges` option is deprecated. Use `--nospaceoperators` instead.",
     ]
 
+    static let indentComments = FormatOptions.Descriptor(
+        argumentName: "comments",
+        propertyName: "indentComments",
+        displayName: "Comments",
+        help: "Indenting of comment bodies: \"indent\" (default) or \"ignore\"",
+        keyPath: \.indentComments,
+        trueValues: ["indent", "indented"],
+        falseValues: ["ignore"]
+    )
     static let insertBlankLines = FormatOptions.Descriptor(
         argumentName: "insertlines",
         propertyName: "insertBlankLines",
@@ -672,5 +661,23 @@ extension FormatOptions.Descriptor {
         help: "deprecated",
         keyPath: \.wrapCollections,
         options: ["before-first", "after-first", "preserve", "disabled"]
+    )
+    static let experimentalRules = FormatOptions.Descriptor(
+        argumentName: "experimental",
+        propertyName: "experimentalRules",
+        displayName: "Experimental Rules",
+        help: "Experimental rules: \"enabled\" or \"disabled\" (default)",
+        keyPath: \.experimentalRules,
+        trueValues: ["enabled", "true"],
+        falseValues: ["disabled", "false"]
+    )
+    static let spaceAroundRangeOperators = FormatOptions.Descriptor(
+        argumentName: "ranges",
+        propertyName: "spaceAroundRangeOperators",
+        displayName: "Ranges",
+        help: "Spacing for ranges: \"spaced\" (default) or \"no-space\"",
+        keyPath: \.spaceAroundRangeOperators,
+        trueValues: ["spaced", "space", "spaces"],
+        falseValues: ["no-space", "nospace"]
     )
 }

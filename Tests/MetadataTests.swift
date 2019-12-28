@@ -85,9 +85,9 @@ class MetadataTests: XCTestCase {
     // MARK: options
 
     func testRulesOptions() throws {
-        var optionsByProperty = [String: String]()
-        for descriptor in FormatOptions.Descriptor.formatting where !descriptor.isDeprecated {
-            optionsByProperty[descriptor.propertyName] = descriptor.argumentName
+        var optionsByProperty = [String: FormatOptions.Descriptor]()
+        for descriptor in FormatOptions.Descriptor.formatting.reversed() {
+            optionsByProperty[descriptor.propertyName] = descriptor
         }
         let rulesFile = projectDirectory.appendingPathComponent("Sources/Rules.swift")
         let rulesSource = try String(contentsOf: rulesFile, encoding: .utf8)
@@ -134,15 +134,16 @@ class MetadataTests: XCTestCase {
                 case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
                     if case let .identifier(property)? = formatter.token(at: index + 2),
                         let option = optionsByProperty[property] {
-                        XCTAssert(allOptions.contains(option), "\(option) not listed in \(name) rule")
-                        referencedOptions.append(option)
+                        let argName = option.argumentName
+                        XCTAssert(allOptions.contains(argName) || option.isDeprecated, "\(argName) not listed in \(name) rule")
+                        referencedOptions.append(argName)
                     }
                 default:
                     continue
                 }
             }
-            for option in allOptions {
-                XCTAssert(referencedOptions.contains(option), "\(option) not used in \(name) rule")
+            for argName in allOptions {
+                XCTAssert(referencedOptions.contains(argName), "\(argName) not used in \(name) rule")
             }
         }
         // TODO: check all options are used
@@ -157,7 +158,7 @@ class MetadataTests: XCTestCase {
     }
 
     func testNoInvalidOptionsInRulesFile() {
-        let arguments = Set(commandLineArguments).subtracting(deprecatedArguments)
+        let arguments = Set(commandLineArguments)
         var range = rulesFile.startIndex ..< rulesFile.endIndex
         while let match = rulesFile.range(of: "`--[a-zA-Z]+[` ]", options: .regularExpression, range: range, locale: nil) {
             let lower = rulesFile.index(match.lowerBound, offsetBy: 3)

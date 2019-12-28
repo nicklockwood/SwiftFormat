@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.43.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.2) (2019-12-28)
+
+- Added `--nospaceoperators` option for selectively removing space around specific operators
+- Allow `self` in lazy vars when Swift 4 and above
+- Fixed spurious lint warning when using a custom header with `fileHeader` rule
+- Fixed bugs with indenting of consecutive comments
+- Fixed resolving of macOS aliases when using `--symlinks follow`
+- Added explicit `stdin` parameter option
+- Fixed stdin timeout flakiness
+- Fixed bug with `andOperator` replacing `&&` with `,` inside ViewBuilders
+
 ## [0.43.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.1) (2019-12-22)
 
 - Fixed indent regression in wrapped `let` expressions

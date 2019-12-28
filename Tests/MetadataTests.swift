@@ -111,27 +111,27 @@ class MetadataTests: XCTestCase {
             }
             let allOptions = rule.options + rule.sharedOptions
             for index in scopeStart + 1 ..< scopeEnd {
+                guard formatter.token(at: index - 1) == .operator(".", .infix),
+                    formatter.token(at: index - 2) == .identifier("formatter") else {
+                    continue
+                }
                 switch formatter.tokens[index] {
                 case let .identifier(fn) where [
                     "spaceEquivalentToWidth",
                     "spaceEquivalentToTokens",
                     "tokenLength",
                     "lineLength",
-                ].contains(fn) &&
-                    formatter.token(at: index - 1) == .operator(".", .infix) &&
-                    formatter.token(at: index - 2) == .identifier("formatter"):
+                ].contains(fn):
                     XCTAssert(allOptions.contains("indent"), "indent not listed in \(name) rule")
                     XCTAssert(allOptions.contains("tabwidth"), "tabwidth not listed in \(name) rule")
                     referencedOptions += ["indent", "tabwidth"]
-                case .identifier("insertLinebreak") where
-                    formatter.token(at: index - 1) == .operator(".", .infix) &&
-                    formatter.token(at: index - 2) == .identifier("formatter"):
+                case .identifier("isCommentedCode"):
+                    XCTAssert(allOptions.contains("indent"), "indent not listed in \(name) rule")
+                    referencedOptions.append("indent")
+                case .identifier("insertLinebreak"):
                     XCTAssert(allOptions.contains("linebreaks"), "linebreaks not listed in \(name) rule")
                     referencedOptions.append("linebreaks")
-                case .identifier("options") where
-                    formatter.token(at: index - 1) == .operator(".", .infix) &&
-                    formatter.token(at: index - 2) == .identifier("formatter") &&
-                    formatter.token(at: index + 1) == .operator(".", .infix):
+                case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
                     if case let .identifier(property)? = formatter.token(at: index + 2),
                         let option = optionsByProperty[property] {
                         XCTAssert(allOptions.contains(option), "\(option) not listed in \(name) rule")

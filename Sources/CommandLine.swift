@@ -252,7 +252,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
 
         // Warnings
         for warning in warningsForArguments(args) {
-            print(warning, as: .warning)
+            print("warning: \(warning)", as: .warning)
         }
 
         // Show help
@@ -727,12 +727,17 @@ func processInput(_ inputURLs: [URL],
         { outputFlags.filesSkipped += 1 }
     }
     // Swift version
+    var shownWarnings = Set<String>()
     var showedConfigurationWarnings = false
     func showConfigurationWarnings(_ options: Options) {
-        let formatOptions = options.formatOptions ?? .default
+        for warning in warningsForArguments(argumentsFor(options)) where !shownWarnings.contains(warning) {
+            shownWarnings.insert(warning)
+            print("warning: \(warning)", as: .warning)
+        }
         guard !showedConfigurationWarnings else {
             return
         }
+        let formatOptions = options.formatOptions ?? .default
         if formatOptions.swiftVersion == .undefined {
             print("warning: No swift version was specified, so some formatting features were disabled. Specify the version of swift you are using with the --swiftversion command line option, or by adding a \(swiftVersionFile) file to your project.", as: .warning)
         }

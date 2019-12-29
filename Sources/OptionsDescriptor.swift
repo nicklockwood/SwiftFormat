@@ -609,13 +609,13 @@ extension FormatOptions.Descriptor {
     // MARK: - DEPRECATED
 
     static let deprecatedMessage = [
-        indentComments.argumentName: "`--comments` option is deprecated. Relative indent within multiline comments is now preserved by default.",
-        insertBlankLines.argumentName: "`--insertlines` option is deprecated. Use `--enable blankLinesBetweenScopes` or `--enable blankLinesAroundMark` or `--disable blankLinesBetweenScopes` or `--disable blankLinesAroundMark` instead.",
-        removeBlankLines.argumentName: "`--removelines` option is deprecated. Use `--enable blankLinesAtStartOfScope` or `--enable blankLinesAtEndOfScope` or `--disable blankLinesAtStartOfScope` or `--disable blankLinesAtEndOfScope` instead.",
-        hexLiterals.argumentName: "`--hexliterals` option is deprecated. Use `--hexliteralcase` instead.",
-        wrapElements.argumentName: "`--wrapelements` option is deprecated. Use `--wrapcollections` instead.",
-        experimentalRules.argumentName: "`--experimentalRules` option is deprecated. Use `--enable` to opt-in to rules individually.",
-        spaceAroundRangeOperators.argumentName: "`--ranges` option is deprecated. Use `--nospaceoperators` instead.",
+        indentComments.argumentName: "--comments option is deprecated. Relative indent within multiline comments is now preserved by default.",
+        insertBlankLines.argumentName: "--insertlines option is deprecated. Use '--enable blankLinesBetweenScopes' or '--enable blankLinesAroundMark' or '--disable blankLinesBetweenScopes' or '--disable blankLinesAroundMark' instead.",
+        removeBlankLines.argumentName: "--removelines option is deprecated. Use '--enable blankLinesAtStartOfScope' or '--enable blankLinesAtEndOfScope' or '--disable blankLinesAtStartOfScope' or '--disable blankLinesAtEndOfScope' instead.",
+        hexLiterals.argumentName: "--hexliterals option is deprecated. Use --hexliteralcase instead.",
+        wrapElements.argumentName: "--wrapelements option is deprecated. Use --wrapcollections instead.",
+        experimentalRules.argumentName: "--experimentalRules option is deprecated. Use --enable to opt-in to rules individually.",
+        spaceAroundRangeOperators.argumentName: "--ranges option is deprecated. Use --nospaceoperators instead.",
     ]
 
     static let indentComments = FormatOptions.Descriptor(

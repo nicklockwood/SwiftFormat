@@ -3050,13 +3050,13 @@ public struct _FormatRules {
                 return
             case .delimiter(","):
                 addBreakPoint(at: i, relativePriority: 0)
-            case .operator("=", .infix):
+            case .operator("=", .infix) where formatter.token(at: i + 1)?.isSpace == true:
                 addBreakPoint(at: i, relativePriority: -9)
             case .operator(".", .infix):
                 addBreakPoint(at: i - 1, relativePriority: -2)
             case .operator("->", .infix):
                 addBreakPoint(at: i - 1, relativePriority: -11)
-            case .operator(_, .infix):
+            case .operator(_, .infix) where formatter.token(at: i + 1)?.isSpace == true:
                 addBreakPoint(at: i, relativePriority: -3)
             case .startOfScope("{") where !formatter.isStartOfClosure(at: i):
                 addBreakPoint(at: i, relativePriority: -6)

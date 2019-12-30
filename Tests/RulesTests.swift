@@ -6911,6 +6911,21 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrap, options: options)
     }
 
+    func testNoWrapAtUnspacedOperator() {
+        let input = "let foo = bar+baz+quux"
+        let output = "let foo =\n    bar+baz+quux"
+        let options = FormatOptions(maxWidth: 15)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options,
+                       exclude: ["spaceAroundOperators"])
+    }
+
+    func testNoWrapAtUnspacedEquals() {
+        let input = "let foo=bar+baz+quux"
+        let options = FormatOptions(maxWidth: 15)
+        testFormatting(for: input, rule: FormatRules.wrap, options: options,
+                       exclude: ["spaceAroundOperators"])
+    }
+
     // MARK: wrapArguments
 
     // afterFirst

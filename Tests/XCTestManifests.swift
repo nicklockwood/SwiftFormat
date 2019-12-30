@@ -1063,6 +1063,8 @@ extension RulesTests {
         ("testNoWrapAfterFirstArgumentInStringInterpolation", testNoWrapAfterFirstArgumentInStringInterpolation),
         ("testNoWrapAfterFirstArgumentInStringInterpolation2", testNoWrapAfterFirstArgumentInStringInterpolation2),
         ("testNoWrapAfterNestedFirstArgumentInStringInterpolation", testNoWrapAfterNestedFirstArgumentInStringInterpolation),
+        ("testNoWrapAtUnspacedEquals", testNoWrapAtUnspacedEquals),
+        ("testNoWrapAtUnspacedOperator", testNoWrapAtUnspacedOperator),
         ("testNoWrapBeforeFirstArgumentInStringInterpolation", testNoWrapBeforeFirstArgumentInStringInterpolation),
         ("testNoWrapBeforeFirstArgumentInStringInterpolation2", testNoWrapBeforeFirstArgumentInStringInterpolation2),
         ("testNoWrapBeforeFirstArgumentInStringInterpolation3", testNoWrapBeforeFirstArgumentInStringInterpolation3),

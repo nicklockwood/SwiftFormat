@@ -1184,7 +1184,8 @@ public struct _FormatRules {
                 switch formatter.tokens[nextNonSpaceIndex] {
                 case .linebreak where formatter.options.truncateBlankLines:
                     formatter.insertSpace("", at: i + 1)
-                case .error, .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"):
+                case .error, .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"),
+                     .startOfScope("#if") where formatter.options.ifdefIndent != .indent:
                     break
                 case .startOfScope("/*"), .commentBody, .endOfScope("*/"):
                     nextNonSpaceIndex = formatter.endOfScope(at: nextNonSpaceIndex) ?? nextNonSpaceIndex

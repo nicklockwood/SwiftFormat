@@ -684,7 +684,6 @@ extension RulesTests {
         ("testIndentMultilineSwitchCaseCommentsCorrectly", testIndentMultilineSwitchCaseCommentsCorrectly),
         ("testIndentMultilineSwitchCaseCommentsWithIndentCaseTrue", testIndentMultilineSwitchCaseCommentsWithIndentCaseTrue),
         ("testIndentMultipleSingleLineSwitchCaseCommentsCorrectly", testIndentMultipleSingleLineSwitchCaseCommentsCorrectly),
-        ("testIndentMultipleSingleLineSwitchCaseCommentsWithCommentsIgnoredCorrectly", testIndentMultipleSingleLineSwitchCaseCommentsWithCommentsIgnoredCorrectly),
         ("testIndentMultipleSingleLineSwitchCaseCommentsWithCommentsIgnoredCorrectlyWhenIndentCaseTrue", testIndentMultipleSingleLineSwitchCaseCommentsWithCommentsIgnoredCorrectlyWhenIndentCaseTrue),
         ("testIndentNestedArrayLiteral", testIndentNestedArrayLiteral),
         ("testIndentSwitchAfterRangeCase", testIndentSwitchAfterRangeCase),

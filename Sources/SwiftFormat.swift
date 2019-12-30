@@ -461,15 +461,10 @@ private func applyRules(
             }
             callback?(i, formatter.tokens)
         }
+        changes += formatter.changes
         if tokens == formatter.tokens {
-            #if DEBUG
-                changes += formatter.changes
-            #endif
             changes.sort(by: { $0.line < $1.line })
             return (tokens, changes)
-        }
-        if trackChanges {
-            changes += formatter.changes
         }
         tokens = formatter.tokens
         options.fileHeader = .ignore // Prevents infinite recursion

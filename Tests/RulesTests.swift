@@ -1561,19 +1561,6 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
-    func testIndentMultipleSingleLineSwitchCaseCommentsWithCommentsIgnoredCorrectly() {
-        let input = """
-        switch x {
-        // bar
-        case .y: return 1
-        // baz
-        case .z: return 2
-        }
-        """
-        let options = FormatOptions(indentComments: false)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
-    }
-
     func testIndentIfCase() {
         let input = "{\nif case let .foo(msg) = error {}\n}"
         let output = "{\n    if case let .foo(msg) = error {}\n}"

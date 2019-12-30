@@ -684,7 +684,7 @@ func applyRules(_ source: String, options: Options, verbose: Bool, lint: Bool) t
                                        trackChanges: lint || verbose)
 
     // Display info
-    if lint {
+    if lint, tokens != originalTokens {
         changes.forEach { print($0.description, as: .warning) }
     }
     if verbose {

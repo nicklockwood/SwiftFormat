@@ -1175,7 +1175,7 @@ public struct _FormatRules {
                     }
                     indentStack.append(indent)
                 }
-                guard let nextNonSpaceIndex = formatter.index(of: .nonSpace, after: i),
+                guard var nextNonSpaceIndex = formatter.index(of: .nonSpace, after: i),
                     // Avoid indenting commented code
                     !formatter.isCommentedCode(at: nextNonSpaceIndex) else {
                     break
@@ -1186,18 +1186,20 @@ public struct _FormatRules {
                     formatter.insertSpace("", at: i + 1)
                 case .error, .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"):
                     break
-                case .endOfScope, .keyword("@unknown"):
-                    if let scope = scopeStack.last, [
-                        .startOfScope("/*"), .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"),
-                    ].contains(scope) {
-                        formatter.insertSpace(indent, at: i + 1)
-                    }
+                case .startOfScope("/*"), .commentBody, .endOfScope("*/"):
+                    nextNonSpaceIndex = formatter.endOfScope(at: nextNonSpaceIndex) ?? nextNonSpaceIndex
+                    fallthrough
                 case .startOfScope("//"):
+                    nextNonSpaceIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                        after: nextNonSpaceIndex) ?? nextNonSpaceIndex
+                    nextNonSpaceIndex = formatter.index(of: .nonSpaceOrLinebreak,
+                                                        before: nextNonSpaceIndex) ?? nextNonSpaceIndex
                     if let lineIndex = formatter.index(of: .linebreak, after: nextNonSpaceIndex),
-                        formatter.next(.nonSpace, after: lineIndex) == .startOfScope("#if") {
+                        let nextToken = formatter.next(.nonSpace, after: lineIndex),
+                        [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif")].contains(nextToken) {
                         break
                     }
-                    formatter.insertSpace(indent, at: i + 1)
+                    fallthrough
                 case .startOfScope("#if"):
                     if let lineIndex = formatter.index(of: .linebreak, after: nextNonSpaceIndex),
                         let nextKeyword = formatter.next(.nonSpaceOrCommentOrLinebreak, after: lineIndex), [
@@ -1206,6 +1208,12 @@ public struct _FormatRules {
                         break
                     }
                     formatter.insertSpace(indent, at: i + 1)
+                case .endOfScope, .keyword("@unknown"):
+                    if let scope = scopeStack.last, [
+                        .startOfScope("/*"), .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"),
+                    ].contains(scope) {
+                        formatter.insertSpace(indent, at: i + 1)
+                    }
                 default:
                     formatter.insertSpace(indent, at: i + 1)
                 }

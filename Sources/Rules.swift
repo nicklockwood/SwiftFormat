@@ -462,10 +462,12 @@ public struct _FormatRules {
             case .operator("?", .infix):
                 break // Spacing around ternary ? is not optional
             case let .operator(name, .infix) where formatter.options.noSpaceOperators.contains(name):
-                if formatter.token(at: i - 1)?.isSpace == true,
-                    formatter.token(at: i + 1)?.isSpace == true,
-                    formatter.token(at: i - 2)?.isOperator != true || formatter.tokens[i - 2].isUnwrapOperator,
-                    formatter.token(at: i + 2)?.isOperator != true {
+                if formatter.token(at: i + 1)?.isSpace == true,
+                    formatter.token(at: i - 1)?.isSpace == true,
+                    let nextToken = formatter.next(.nonSpace, after: i),
+                    !nextToken.isCommentOrLinebreak, !nextToken.isOperator,
+                    let prevToken = formatter.last(.nonSpace, before: i),
+                    !prevToken.isCommentOrLinebreak, !prevToken.isOperator || prevToken.isUnwrapOperator {
                     formatter.removeToken(at: i + 1)
                     formatter.removeToken(at: i - 1)
                 }

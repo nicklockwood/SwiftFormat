@@ -832,6 +832,31 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.spaceAroundOperators, options: options)
     }
 
+    func testSpaceOnOneSideOfPlusMatchedByLinebreakNotRemoved() {
+        let input = "let range = 0 +\n4"
+        let options = FormatOptions(noSpaceOperators: ["+"])
+        testFormatting(for: input, rule: FormatRules.ranges, options: options, exclude: ["indent"])
+    }
+
+    func testSpaceOnOneSideOfPlusMatchedByLinebreakNotRemoved2() {
+        let input = "let range = 0\n+ 4"
+        let options = FormatOptions(noSpaceOperators: ["+"])
+        testFormatting(for: input, rule: FormatRules.ranges, options: options, exclude: ["indent"])
+    }
+
+    func testSpaceAroundPlusWithLinebreakOnOneSideNotRemoved() {
+        let input = "let range = 0 + \n4"
+        let options = FormatOptions(noSpaceOperators: ["+"])
+        testFormatting(for: input, rule: FormatRules.ranges, options: options,
+                       exclude: ["indent", "trailingSpace"])
+    }
+
+    func testSpaceAroundPlusWithLinebreakOnOneSideNotRemoved2() {
+        let input = "let range = 0\n + 4"
+        let options = FormatOptions(noSpaceOperators: ["+"])
+        testFormatting(for: input, rule: FormatRules.ranges, options: options, exclude: ["indent"])
+    }
+
     // MARK: spaceAroundComments
 
     func testSpaceAroundCommentInParens() {

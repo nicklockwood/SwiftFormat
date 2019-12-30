@@ -461,7 +461,8 @@ public struct _FormatRules {
                 }
             case .operator("?", .infix):
                 break // Spacing around ternary ? is not optional
-            case let .operator(name, .infix) where formatter.options.noSpaceOperators.contains(name):
+            case let .operator(name, .infix) where formatter.options.noSpaceOperators.contains(name) ||
+                (!formatter.options.spaceAroundRangeOperators && token.isRangeOperator):
                 if formatter.token(at: i + 1)?.isSpace == true,
                     formatter.token(at: i - 1)?.isSpace == true,
                     let nextToken = formatter.next(.nonSpace, after: i),
@@ -471,7 +472,7 @@ public struct _FormatRules {
                     formatter.removeToken(at: i + 1)
                     formatter.removeToken(at: i - 1)
                 }
-            case .operator(_, .infix) where !token.isRangeOperator:
+            case .operator(_, .infix):
                 if formatter.token(at: i + 1)?.isSpaceOrLinebreak == false {
                     formatter.insertToken(.space(" "), at: i + 1)
                 }
@@ -589,11 +590,13 @@ public struct _FormatRules {
     /// Adds or removes the space around range operators
     public let ranges = FormatRule(
         help: "Add or remove space around range operators.",
-        options: ["ranges"]
+        options: ["ranges"],
+        sharedOptions: ["nospaceoperators"]
     ) { formatter in
         formatter.forEach(.rangeOperator) { i, token in
-            guard case .operator(_, .infix) = token else { return }
-            if !formatter.options.spaceAroundRangeOperators {
+            guard case let .operator(name, .infix) = token else { return }
+            if !formatter.options.spaceAroundRangeOperators ||
+                formatter.options.noSpaceOperators.contains(name) {
                 if formatter.token(at: i + 1)?.isSpace == true,
                     formatter.token(at: i - 1)?.isSpace == true,
                     let nextToken = formatter.next(.nonSpace, after: i),

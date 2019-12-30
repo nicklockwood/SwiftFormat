@@ -765,6 +765,12 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.spaceAroundOperators)
     }
 
+    func testAddSpaceAroundRange() {
+        let input = "let a = b...c"
+        let output = "let a = b ... c"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
+    }
+
     // noSpaceOperators
 
     func testNoAddSpaceAroundNoSpaceStar() {

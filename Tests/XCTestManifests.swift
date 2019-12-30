@@ -354,6 +354,7 @@ extension RulesTests {
     static let __allTests__RulesTests = [
         ("testAddSpaceAfterFuncEquals", testAddSpaceAfterFuncEquals),
         ("testAddSpaceAfterOperatorEquals", testAddSpaceAfterOperatorEquals),
+        ("testAddSpaceAroundRange", testAddSpaceAroundRange),
         ("testAddSpaceBetweenAutoclosureEscapingAndBlock", testAddSpaceBetweenAutoclosureEscapingAndBlock),
         ("testAddSpaceBetweenCaptureListAndArguments", testAddSpaceBetweenCaptureListAndArguments),
         ("testAddSpaceBetweenCaptureListAndArguments2", testAddSpaceBetweenCaptureListAndArguments2),

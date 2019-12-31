@@ -2751,32 +2751,27 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.braces)
     }
 
-    func testKnRClosureArgumentsKeptWithBrace() {
+    func testKnRBracesIgnoresClosure() {
         let input = """
         let foo =
-        { bar, baz in
-            print(bar, baz)
-        }
+            { bar in
+                print(bar)
+            }
         """
-        let output = """
-        let foo = { bar, baz in
-            print(bar, baz)
-        }
-        """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, rule: FormatRules.braces)
     }
 
-    func testKnRClosureArgumentsKeptWithBrace2() {
+    func testUnbalancedClosingClosureBraceCorrected() {
         let input = """
         let foo =
-        { () -> Bool in
-            false
-        }
+            { bar in
+                print(bar) }
         """
         let output = """
-        let foo = { () -> Bool in
-            false
-        }
+        let foo =
+            { bar in
+                print(bar)
+            }
         """
         testFormatting(for: input, output, rule: FormatRules.braces)
     }
@@ -6870,8 +6865,8 @@ class RulesTests: XCTestCase {
         let output2 = """
         let foo =
             { () -> Bool in
-            true
-        }
+                true
+            }
         """
         let options = FormatOptions(maxWidth: 20)
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
@@ -6889,8 +6884,8 @@ class RulesTests: XCTestCase {
         let output2 = """
         let foo =
             { bar, _ in
-            bar
-        }
+                bar
+            }
         """
         let options = FormatOptions(maxWidth: 20)
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)

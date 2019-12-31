@@ -1238,7 +1238,12 @@ public struct _FormatRules {
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, token in
-            guard var closingBraceIndex = formatter.endOfScope(at: i) else {
+            guard var closingBraceIndex = formatter.endOfScope(at: i),
+                // Check this isn't an inline block
+                formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil,
+                let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
+                ![.delimiter(","), .keyword("in")].contains(prevToken),
+                !prevToken.is(.startOfScope) else {
                 return
             }
             loop: while let token = formatter.token(at: closingBraceIndex) {
@@ -1255,14 +1260,6 @@ public struct _FormatRules {
                     return // error
                 }
             }
-            // Check this isn't an inline block
-            guard formatter.token(at: closingBraceIndex) == .endOfScope("}"),
-                formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil,
-                let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-                ![.delimiter(","), .keyword("in")].contains(prevToken),
-                !prevToken.is(.startOfScope) else {
-                return
-            }
             if let penultimateToken = formatter.last(.nonSpaceOrComment, before: closingBraceIndex),
                 !penultimateToken.isLinebreak {
                 formatter.insertSpace(formatter.indentForLine(at: i), at: closingBraceIndex)
@@ -1270,6 +1267,9 @@ public struct _FormatRules {
                 if formatter.token(at: closingBraceIndex - 1)?.isSpace == true {
                     formatter.removeToken(at: closingBraceIndex - 1)
                 }
+            }
+            guard !formatter.isStartOfClosure(at: i) else {
+                return
             }
             if formatter.options.allmanBraces {
                 // Implement Allman-style braces, where opening brace appears on the next line

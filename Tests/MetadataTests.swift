@@ -132,6 +132,11 @@ class MetadataTests: XCTestCase {
                     referencedOptions.append(.indentation)
                 case .identifier("insertLinebreak"), .identifier("linebreakToken"):
                     referencedOptions.append(.lineBreak)
+                case .identifier("wrapCollectionsAndArguments"):
+                    referencedOptions += [
+                        .wrapArguments, .wrapCollections, .closingParen,
+                        .indentation, .truncateBlankLines, .lineBreak, .tabWidth, .maxWidth,
+                    ]
                 case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
                     if case let .identifier(property)? = formatter.token(at: index + 2),
                         let option = optionsByProperty[property] {

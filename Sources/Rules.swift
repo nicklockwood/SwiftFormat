@@ -32,7 +32,7 @@
 import Foundation
 
 public final class FormatRule: Equatable {
-    fileprivate let fn: (Formatter) -> Void
+    private let fn: (Formatter) -> Void
     fileprivate(set) var name = ""
     let help: String
     let options: [String]
@@ -3019,14 +3019,14 @@ public struct _FormatRules {
     public let wrap = FormatRule(
         help: "Wrap lines that exceed the specified maximum width.",
         options: ["maxwidth"],
-        sharedOptions: ["indent", "tabwidth", "linebreaks"]
+        sharedOptions: ["wraparguments", "wrapcollections", "closingparen", "indent",
+                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
         guard maxWidth > 0 else { return }
-
-        // TODO: find a less hacky solution
-        FormatRules.wrapArguments.fn(formatter)
-
+        // Wrap collections first to avoid conflict
+        formatter.wrapCollectionsAndArguments(completePartialWrapping: false)
+        // Wrap other line types
         var lineLength = 0
         var lastBreakPoint: Int?
         var lastBreakPointPriority = Int.min
@@ -3136,185 +3136,7 @@ public struct _FormatRules {
         options: ["wraparguments", "wrapcollections", "closingparen"],
         sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
     ) { formatter in
-        let maxWidth = formatter.options.maxWidth
-        func removeLinebreakBeforeEndOfScope(at endOfScope: inout Int) {
-            guard let lastIndex = formatter.index(of: .nonSpace, before: endOfScope, if: {
-                $0.isLinebreak
-            }) else {
-                return
-            }
-            if case .commentBody? = formatter.last(.nonSpace, before: lastIndex) {
-                return
-            }
-            // Remove linebreak
-            formatter.removeTokens(inRange: lastIndex ..< endOfScope)
-            endOfScope = lastIndex
-            // Remove trailing comma
-            if let prevCommaIndex = formatter.index(of:
-                .nonSpaceOrCommentOrLinebreak, before: endOfScope, if: {
-                    $0 == .delimiter(",")
-            }) {
-                formatter.removeToken(at: prevCommaIndex)
-                endOfScope -= 1
-            }
-        }
-        func wrapArgumentsBeforeFirst(startOfScope i: Int,
-                                      endOfScope: Int,
-                                      allowGrouping: Bool,
-                                      endOfScopeOnSameLine: Bool) {
-            // Get indent
-            let indent = formatter.indentForLine(at: i)
-            var endOfScope = endOfScope
-            if endOfScopeOnSameLine {
-                removeLinebreakBeforeEndOfScope(at: &endOfScope)
-            } else {
-                // Insert linebreak before closing paren
-                if let lastIndex = formatter.index(of: .nonSpace, before: endOfScope) {
-                    endOfScope += formatter.insertSpace(indent, at: lastIndex + 1)
-                    if !formatter.tokens[lastIndex].isLinebreak {
-                        formatter.insertLinebreak(at: lastIndex + 1)
-                        endOfScope += 1
-                    }
-                }
-            }
-            // Insert linebreak after each comma
-            var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope)!
-            if formatter.tokens[index] != .delimiter(",") {
-                index += 1
-            }
-            while let commaIndex = formatter.lastIndex(of: .delimiter(","), in: i + 1 ..< index),
-                var linebreakIndex = formatter.index(of: .nonSpaceOrComment, after: commaIndex) {
-                if let index = formatter.index(of: .nonSpace, before: linebreakIndex) {
-                    linebreakIndex = index + 1
-                }
-                if !formatter.isCommentedCode(at: linebreakIndex + 1) {
-                    if formatter.tokens[linebreakIndex].isLinebreak, !formatter.options.truncateBlankLines ||
-                        formatter.next(.nonSpace, after: linebreakIndex).map({ !$0.isLinebreak }) ?? false {
-                        formatter.insertSpace(indent + formatter.options.indent, at: linebreakIndex + 1)
-                    } else if !allowGrouping || (maxWidth > 0 &&
-                        formatter.lineLength(at: linebreakIndex) > maxWidth &&
-                        formatter.lineLength(upTo: linebreakIndex) <= maxWidth) {
-                        formatter.insertLinebreak(at: linebreakIndex)
-                        formatter.insertSpace(indent + formatter.options.indent, at: linebreakIndex + 1)
-                    }
-                }
-                index = commaIndex
-            }
-            // Insert linebreak after opening paren
-            if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == false {
-                formatter.insertSpace(indent + formatter.options.indent, at: i + 1)
-                formatter.insertLinebreak(at: i + 1)
-            }
-        }
-        func wrapArgumentsAfterFirst(startOfScope i: Int, endOfScope: Int, allowGrouping: Bool) {
-            guard var firstArgumentIndex = formatter.index(of: .nonSpaceOrLinebreak, in: i + 1 ..< endOfScope) else {
-                return
-            }
-            // Remove linebreak after opening paren
-            formatter.removeTokens(inRange: i + 1 ..< firstArgumentIndex)
-            var endOfScope = endOfScope - (firstArgumentIndex - (i + 1))
-            firstArgumentIndex = i + 1
-            // Get indent
-            let start = formatter.startOfLine(at: i)
-            let indent = formatter.spaceEquivalentToTokens(from: start, upTo: firstArgumentIndex)
-            removeLinebreakBeforeEndOfScope(at: &endOfScope)
-            // Insert linebreak after each comma
-            var lastBreakIndex: Int?
-            var index = firstArgumentIndex
-            while let commaIndex = formatter.index(of: .delimiter(","), in: index + 1 ..< endOfScope),
-                var linebreakIndex = formatter.index(of: .nonSpaceOrComment, after: commaIndex) {
-                if let index = formatter.index(of: .nonSpace, before: linebreakIndex) {
-                    linebreakIndex = index + 1
-                }
-                if maxWidth > 0, formatter.lineLength(upTo: commaIndex) >= maxWidth, let breakIndex = lastBreakIndex {
-                    endOfScope += 1 + formatter.insertSpace(indent, at: breakIndex)
-                    formatter.insertLinebreak(at: breakIndex)
-                    lastBreakIndex = nil
-                    index = commaIndex
-                    continue
-                }
-                if formatter.tokens[linebreakIndex].isLinebreak {
-                    if linebreakIndex + 1 != endOfScope, !formatter.isCommentedCode(at: linebreakIndex + 1) {
-                        endOfScope += formatter.insertSpace(indent, at: linebreakIndex + 1)
-                    }
-                } else if !allowGrouping {
-                    formatter.insertLinebreak(at: linebreakIndex)
-                    endOfScope += 1 + formatter.insertSpace(indent, at: linebreakIndex + 1)
-                } else {
-                    lastBreakIndex = linebreakIndex
-                }
-                index = commaIndex
-            }
-            if maxWidth > 0, let breakIndex = lastBreakIndex, formatter.lineLength(at: breakIndex) > maxWidth {
-                formatter.insertSpace(indent, at: breakIndex)
-                formatter.insertLinebreak(at: breakIndex)
-            }
-        }
-        for scopeType in ["(", "[", "<"] {
-            formatter.forEach(.startOfScope(scopeType)) { i, _ in
-                guard let endOfScope = formatter.endOfScope(at: i) else {
-                    return
-                }
-                let mode: WrapMode
-                var checkNestedScopes = true
-                var endOfScopeOnSameLine = false
-                switch scopeType {
-                case "(":
-                    guard formatter.index(of: .delimiter, in: i + 1 ..< endOfScope) != nil else {
-                        // Not an argument list, or only one argument
-                        return
-                    }
-                    checkNestedScopes = false
-                    endOfScopeOnSameLine = formatter.options.closingParenOnSameLine
-                    fallthrough
-                case "<":
-                    mode = formatter.options.wrapArguments
-                case "[":
-                    mode = formatter.options.wrapCollections
-                default:
-                    return
-                }
-                guard mode != .disabled, let firstIdentifierIndex =
-                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                    !formatter.isStringLiteral(at: i) else {
-                    return
-                }
-                let maxWidth = formatter.options.maxWidth
-                if let firstLinebreakIndex = checkNestedScopes ?
-                    (i ..< endOfScope).first(where: { formatter.tokens[$0].isLinebreak }) :
-                    formatter.index(of: .linebreak, in: i + 1 ..< endOfScope) {
-                    switch mode {
-                    case .beforeFirst:
-                        wrapArgumentsBeforeFirst(startOfScope: i,
-                                                 endOfScope: endOfScope,
-                                                 allowGrouping: firstIdentifierIndex > firstLinebreakIndex,
-                                                 endOfScopeOnSameLine: endOfScopeOnSameLine)
-                    case .preserve where firstIdentifierIndex > firstLinebreakIndex:
-                        wrapArgumentsBeforeFirst(startOfScope: i,
-                                                 endOfScope: endOfScope,
-                                                 allowGrouping: true,
-                                                 endOfScopeOnSameLine: endOfScopeOnSameLine)
-                    case .afterFirst, .preserve:
-                        wrapArgumentsAfterFirst(startOfScope: i,
-                                                endOfScope: endOfScope,
-                                                allowGrouping: true)
-                    case .disabled:
-                        assertionFailure() // Shouldn't happen
-                    }
-                } else if maxWidth > 0, maxWidth < formatter.lineLength(upTo: endOfScope + 1) {
-                    if mode == .beforeFirst {
-                        wrapArgumentsBeforeFirst(startOfScope: i,
-                                                 endOfScope: endOfScope,
-                                                 allowGrouping: false,
-                                                 endOfScopeOnSameLine: endOfScopeOnSameLine)
-                    } else {
-                        wrapArgumentsAfterFirst(startOfScope: i,
-                                                endOfScope: endOfScope,
-                                                allowGrouping: true)
-                    }
-                }
-            }
-        }
+        formatter.wrapCollectionsAndArguments(completePartialWrapping: true)
     }
 
     /// Normalize the use of void in closure arguments and return values
@@ -3631,8 +3453,8 @@ public struct _FormatRules {
         options: ["importgrouping"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        func sortRanges(_ ranges: [ImportRange]) -> [ImportRange] {
-            func isCaseInsensitiveLessThan(_ a: ImportRange, _ b: ImportRange) -> Bool {
+        func sortRanges(_ ranges: [Formatter.ImportRange]) -> [Formatter.ImportRange] {
+            func isCaseInsensitiveLessThan(_ a: Formatter.ImportRange, _ b: Formatter.ImportRange) -> Bool {
                 let la = a.0.lowercased()
                 let lb = b.0.lowercased()
                 if la == lb {
@@ -3655,7 +3477,7 @@ public struct _FormatRules {
             }
         }
 
-        var importStack = parseImports(formatter)
+        var importStack = formatter.parseImports()
         while let importRanges = importStack.popLast() {
             guard importRanges.count > 1 else { continue }
             let range: Range = importRanges.first!.1.lowerBound ..< importRanges.last!.1.upperBound
@@ -3680,7 +3502,7 @@ public struct _FormatRules {
     public let duplicateImports = FormatRule(
         help: "Remove duplicate import statements."
     ) { formatter in
-        var importStack = parseImports(formatter)
+        var importStack = formatter.parseImports()
         while var importRanges = importStack.popLast() {
             while let range = importRanges.popLast() {
                 if importRanges.contains(where: { $0.0 == range.0 }) {
@@ -4124,7 +3946,7 @@ public struct _FormatRules {
         guard hasUnreplacedFileprivates, formatter.options.swiftVersion >= "4" else {
             return
         }
-        let importRanges = _FormatRules.parseImports(formatter)
+        let importRanges = formatter.parseImports()
         var fileJustContainsOneType: Bool?
         func ifCodeInRange(_ range: CountableRange<Int>) -> Bool {
             var index = range.lowerBound

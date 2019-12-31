@@ -608,6 +608,274 @@ extension Formatter {
         }
         return false
     }
+
+    // Shared import rules implementation
+    typealias ImportRange = (String, Range<Int>)
+    func parseImports() -> [[ImportRange]] {
+        var importStack = [[ImportRange]]()
+        var importRanges = [ImportRange]()
+        forEach(.keyword("import")) { i, _ in
+            func pushStack() {
+                importStack.append(importRanges)
+                importRanges.removeAll()
+            }
+            // Get start of line
+            var startIndex = index(of: .linebreak, before: i) ?? 0
+            // Check for attributes
+            var previousKeywordIndex = index(of: .keyword, before: i)
+            while let previousIndex = previousKeywordIndex {
+                var nextStart: Int? // workaround for Swift Linux bug
+                if tokens[previousIndex].isAttribute {
+                    if previousIndex < startIndex {
+                        nextStart = index(of: .linebreak, before: previousIndex) ?? 0
+                    }
+                    previousKeywordIndex = index(of: .keyword, before: previousIndex)
+                    startIndex = nextStart ?? startIndex
+                } else if previousIndex >= startIndex {
+                    // Can't handle another keyword on same line as import
+                    return
+                } else {
+                    break
+                }
+            }
+            // Gather comments
+            var prevIndex = index(of: .linebreak, before: startIndex) ?? 0
+            while startIndex > 0,
+                next(.nonSpace, after: prevIndex)?.isComment == true,
+                next(.nonSpaceOrComment, after: prevIndex)?.isLinebreak == true {
+                startIndex = prevIndex
+                prevIndex = index(of: .linebreak, before: startIndex) ?? 0
+            }
+            // Get end of line
+            let endIndex = index(of: .linebreak, after: i) ?? tokens.count
+            // Get name
+            if let firstPartIndex = index(of: .identifier, after: i) {
+                var name = tokens[firstPartIndex].string
+                var partIndex = firstPartIndex
+                loop: while let nextPartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: partIndex) {
+                    switch tokens[nextPartIndex] {
+                    case .operator(".", .infix):
+                        name += "."
+                    case let .identifier(string):
+                        name += string
+                    default:
+                        break loop
+                    }
+                    partIndex = nextPartIndex
+                }
+                importRanges.append((name, startIndex ..< endIndex as Range))
+            } else {
+                // Error
+                pushStack()
+                return
+            }
+            if next(.spaceOrCommentOrLinebreak, after: endIndex)?.isLinebreak == true {
+                // Blank line after - consider this the end of a block
+                pushStack()
+                return
+            }
+            if var nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex) {
+                while tokens[nextTokenIndex].isAttribute {
+                    guard let nextIndex = index(of: .nonSpaceOrLinebreak, after: nextTokenIndex) else {
+                        // End of imports
+                        pushStack()
+                        return
+                    }
+                    nextTokenIndex = nextIndex
+                }
+                if tokens[nextTokenIndex] != .keyword("import") {
+                    // End of imports
+                    pushStack()
+                    return
+                }
+            }
+        }
+        // End of imports
+        importStack.append(importRanges)
+        return importStack
+    }
+
+    // Shared wrap implementation
+    func wrapCollectionsAndArguments(completePartialWrapping: Bool) {
+        let maxWidth = options.maxWidth
+        func removeLinebreakBeforeEndOfScope(at endOfScope: inout Int) {
+            guard let lastIndex = index(of: .nonSpace, before: endOfScope, if: {
+                $0.isLinebreak
+            }) else {
+                return
+            }
+            if case .commentBody? = last(.nonSpace, before: lastIndex) {
+                return
+            }
+            // Remove linebreak
+            removeTokens(inRange: lastIndex ..< endOfScope)
+            endOfScope = lastIndex
+            // Remove trailing comma
+            if let prevCommaIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope, if: {
+                $0 == .delimiter(",")
+            }) {
+                removeToken(at: prevCommaIndex)
+                endOfScope -= 1
+            }
+        }
+        func wrapArgumentsBeforeFirst(startOfScope i: Int,
+                                      endOfScope: Int,
+                                      allowGrouping: Bool,
+                                      endOfScopeOnSameLine: Bool) {
+            // Get indent
+            let indent = indentForLine(at: i)
+            var endOfScope = endOfScope
+            if endOfScopeOnSameLine {
+                removeLinebreakBeforeEndOfScope(at: &endOfScope)
+            } else {
+                // Insert linebreak before closing paren
+                if let lastIndex = self.index(of: .nonSpace, before: endOfScope) {
+                    endOfScope += insertSpace(indent, at: lastIndex + 1)
+                    if !tokens[lastIndex].isLinebreak {
+                        insertLinebreak(at: lastIndex + 1)
+                        endOfScope += 1
+                    }
+                }
+            }
+            // Insert linebreak after each comma
+            var index = self.index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope)!
+            if tokens[index] != .delimiter(",") {
+                index += 1
+            }
+            while let commaIndex = lastIndex(of: .delimiter(","), in: i + 1 ..< index),
+                var linebreakIndex = self.index(of: .nonSpaceOrComment, after: commaIndex) {
+                if let index = self.index(of: .nonSpace, before: linebreakIndex) {
+                    linebreakIndex = index + 1
+                }
+                if !isCommentedCode(at: linebreakIndex + 1) {
+                    if tokens[linebreakIndex].isLinebreak, !options.truncateBlankLines ||
+                        next(.nonSpace, after: linebreakIndex).map({ !$0.isLinebreak }) ?? false {
+                        insertSpace(indent + options.indent, at: linebreakIndex + 1)
+                    } else if !allowGrouping || (maxWidth > 0 &&
+                        lineLength(at: linebreakIndex) > maxWidth &&
+                        lineLength(upTo: linebreakIndex) <= maxWidth) {
+                        insertLinebreak(at: linebreakIndex)
+                        insertSpace(indent + options.indent, at: linebreakIndex + 1)
+                    }
+                }
+                index = commaIndex
+            }
+            // Insert linebreak after opening paren
+            if next(.nonSpaceOrComment, after: i)?.isLinebreak == false {
+                insertSpace(indent + options.indent, at: i + 1)
+                insertLinebreak(at: i + 1)
+            }
+        }
+        func wrapArgumentsAfterFirst(startOfScope i: Int, endOfScope: Int, allowGrouping: Bool) {
+            guard var firstArgumentIndex = self.index(of: .nonSpaceOrLinebreak, in: i + 1 ..< endOfScope) else {
+                return
+            }
+            // Remove linebreak after opening paren
+            removeTokens(inRange: i + 1 ..< firstArgumentIndex)
+            var endOfScope = endOfScope - (firstArgumentIndex - (i + 1))
+            firstArgumentIndex = i + 1
+            // Get indent
+            let start = startOfLine(at: i)
+            let indent = spaceEquivalentToTokens(from: start, upTo: firstArgumentIndex)
+            removeLinebreakBeforeEndOfScope(at: &endOfScope)
+            // Insert linebreak after each comma
+            var lastBreakIndex: Int?
+            var index = firstArgumentIndex
+            while let commaIndex = self.index(of: .delimiter(","), in: index + 1 ..< endOfScope),
+                var linebreakIndex = self.index(of: .nonSpaceOrComment, after: commaIndex) {
+                if let index = self.index(of: .nonSpace, before: linebreakIndex) {
+                    linebreakIndex = index + 1
+                }
+                if maxWidth > 0, lineLength(upTo: commaIndex) >= maxWidth, let breakIndex = lastBreakIndex {
+                    endOfScope += 1 + insertSpace(indent, at: breakIndex)
+                    insertLinebreak(at: breakIndex)
+                    lastBreakIndex = nil
+                    index = commaIndex
+                    continue
+                }
+                if tokens[linebreakIndex].isLinebreak {
+                    if linebreakIndex + 1 != endOfScope, !isCommentedCode(at: linebreakIndex + 1) {
+                        endOfScope += insertSpace(indent, at: linebreakIndex + 1)
+                    }
+                } else if !allowGrouping {
+                    insertLinebreak(at: linebreakIndex)
+                    endOfScope += 1 + insertSpace(indent, at: linebreakIndex + 1)
+                } else {
+                    lastBreakIndex = linebreakIndex
+                }
+                index = commaIndex
+            }
+            if maxWidth > 0, let breakIndex = lastBreakIndex, lineLength(at: breakIndex) > maxWidth {
+                insertSpace(indent, at: breakIndex)
+                insertLinebreak(at: breakIndex)
+            }
+        }
+        for scopeType in ["(", "[", "<"] {
+            forEach(.startOfScope(scopeType)) { i, _ in
+                guard let endOfScope = endOfScope(at: i) else {
+                    return
+                }
+                let mode: WrapMode
+                var checkNestedScopes = true
+                var endOfScopeOnSameLine = false
+                switch scopeType {
+                case "(":
+                    guard index(of: .delimiter, in: i + 1 ..< endOfScope) != nil else {
+                        // Not an argument list, or only one argument
+                        return
+                    }
+                    checkNestedScopes = false
+                    endOfScopeOnSameLine = options.closingParenOnSameLine
+                    fallthrough
+                case "<":
+                    mode = options.wrapArguments
+                case "[":
+                    mode = options.wrapCollections
+                default:
+                    return
+                }
+                guard mode != .disabled, let firstIdentifierIndex =
+                    index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                    !isStringLiteral(at: i) else {
+                    return
+                }
+                let maxWidth = options.maxWidth
+                if completePartialWrapping, let firstLinebreakIndex = checkNestedScopes ?
+                    (i ..< endOfScope).first(where: { tokens[$0].isLinebreak }) :
+                    index(of: .linebreak, in: i + 1 ..< endOfScope) {
+                    switch mode {
+                    case .beforeFirst:
+                        wrapArgumentsBeforeFirst(startOfScope: i,
+                                                 endOfScope: endOfScope,
+                                                 allowGrouping: firstIdentifierIndex > firstLinebreakIndex,
+                                                 endOfScopeOnSameLine: endOfScopeOnSameLine)
+                    case .preserve where firstIdentifierIndex > firstLinebreakIndex:
+                        wrapArgumentsBeforeFirst(startOfScope: i,
+                                                 endOfScope: endOfScope,
+                                                 allowGrouping: true,
+                                                 endOfScopeOnSameLine: endOfScopeOnSameLine)
+                    case .afterFirst, .preserve:
+                        wrapArgumentsAfterFirst(startOfScope: i,
+                                                endOfScope: endOfScope,
+                                                allowGrouping: true)
+                    case .disabled:
+                        assertionFailure() // Shouldn't happen
+                    }
+                } else if maxWidth > 0, maxWidth < lineLength(upTo: endOfScope + 1) {
+                    if mode == .beforeFirst {
+                        wrapArgumentsBeforeFirst(startOfScope: i,
+                                                 endOfScope: endOfScope,
+                                                 allowGrouping: false,
+                                                 endOfScopeOnSameLine: endOfScopeOnSameLine)
+                    } else {
+                        wrapArgumentsAfterFirst(startOfScope: i,
+                                                endOfScope: endOfScope,
+                                                allowGrouping: true)
+                    }
+                }
+            }
+        }
+    }
 }
 
 extension _FormatRules {
@@ -630,94 +898,6 @@ extension _FormatRules {
     static var currentYear: String = {
         yearFormatter(Date())
     }()
-
-    // Shared import rules implementation
-    typealias ImportRange = (String, Range<Int>)
-    static func parseImports(_ formatter: Formatter) -> [[ImportRange]] {
-        var importStack = [[ImportRange]]()
-        var importRanges = [ImportRange]()
-        formatter.forEach(.keyword("import")) { i, _ in
-
-            func pushStack() {
-                importStack.append(importRanges)
-                importRanges.removeAll()
-            }
-
-            // Get start of line
-            var startIndex = formatter.index(of: .linebreak, before: i) ?? 0
-            // Check for attributes
-            var previousKeywordIndex = formatter.index(of: .keyword, before: i)
-            while let previousIndex = previousKeywordIndex {
-                var nextStart: Int? // workaround for Swift Linux bug
-                if formatter.tokens[previousIndex].isAttribute {
-                    if previousIndex < startIndex {
-                        nextStart = formatter.index(of: .linebreak, before: previousIndex) ?? 0
-                    }
-                    previousKeywordIndex = formatter.index(of: .keyword, before: previousIndex)
-                    startIndex = nextStart ?? startIndex
-                } else if previousIndex >= startIndex {
-                    // Can't handle another keyword on same line as import
-                    return
-                } else {
-                    break
-                }
-            }
-            // Gather comments
-            var prevIndex = formatter.index(of: .linebreak, before: startIndex) ?? 0
-            while startIndex > 0,
-                formatter.next(.nonSpace, after: prevIndex)?.isComment == true,
-                formatter.next(.nonSpaceOrComment, after: prevIndex)?.isLinebreak == true {
-                startIndex = prevIndex
-                prevIndex = formatter.index(of: .linebreak, before: startIndex) ?? 0
-            }
-            // Get end of line
-            let endIndex = formatter.index(of: .linebreak, after: i) ?? formatter.tokens.count
-            // Get name
-            if let firstPartIndex = formatter.index(of: .identifier, after: i) {
-                var name = formatter.tokens[firstPartIndex].string
-                var partIndex = firstPartIndex
-                loop: while let nextPartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: partIndex) {
-                    switch formatter.tokens[nextPartIndex] {
-                    case .operator(".", .infix):
-                        name += "."
-                    case let .identifier(string):
-                        name += string
-                    default:
-                        break loop
-                    }
-                    partIndex = nextPartIndex
-                }
-                importRanges.append((name, startIndex ..< endIndex as Range))
-            } else {
-                // Error
-                pushStack()
-                return
-            }
-            if formatter.next(.spaceOrCommentOrLinebreak, after: endIndex)?.isLinebreak == true {
-                // Blank line after - consider this the end of a block
-                pushStack()
-                return
-            }
-            if var nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex) {
-                while formatter.tokens[nextTokenIndex].isAttribute {
-                    guard let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: nextTokenIndex) else {
-                        // End of imports
-                        pushStack()
-                        return
-                    }
-                    nextTokenIndex = nextIndex
-                }
-                if formatter.tokens[nextTokenIndex] != .keyword("import") {
-                    // End of imports
-                    pushStack()
-                    return
-                }
-            }
-        }
-        // End of imports
-        importStack.append(importRanges)
-        return importStack
-    }
 
     // All specifiers
     static let allSpecifiers = Set(specifierOrder)

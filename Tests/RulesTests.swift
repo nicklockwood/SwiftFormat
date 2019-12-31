@@ -6891,6 +6891,21 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
     }
 
+    func testWrapClosure3() {
+        let input = "let foo = bar { $0.baz }"
+        let output = """
+        let foo = bar {
+            $0.baz }
+        """
+        let output2 = """
+        let foo = bar {
+            $0.baz
+        }
+        """
+        let options = FormatOptions(maxWidth: 20)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+    }
+
     func testNoWrapInterpolatedStringLiteral() {
         let input = """
         "a very long \\(string) literal"

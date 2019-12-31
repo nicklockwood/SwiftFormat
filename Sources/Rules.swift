@@ -3075,7 +3075,8 @@ public struct _FormatRules {
             case .operator(_, .infix) where formatter.token(at: i + 1)?.isSpace == true:
                 addBreakPoint(at: i, relativePriority: -3)
             case .startOfScope("{"):
-                if !formatter.isStartOfClosure(at: i),
+                if !formatter.isStartOfClosure(at: i) ||
+                    formatter.next(.keyword, after: i) != .keyword("in"),
                     formatter.next(.nonSpace, after: i) != .endOfScope("}") {
                     addBreakPoint(at: i, relativePriority: -6)
                 }

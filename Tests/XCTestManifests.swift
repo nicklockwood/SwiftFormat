@@ -1585,6 +1585,7 @@ extension RulesTests {
         ("testWrapBeforeFirstIfMaxLengthExceeded", testWrapBeforeFirstIfMaxLengthExceeded),
         ("testWrapClosure", testWrapClosure),
         ("testWrapClosure2", testWrapClosure2),
+        ("testWrapClosure3", testWrapClosure3),
         ("testWrapGuardStatement", testWrapGuardStatement),
         ("testWrapIfElseStatement", testWrapIfElseStatement),
         ("testWrapIfStatement", testWrapIfStatement),

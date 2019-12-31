@@ -32,7 +32,7 @@
 import Foundation
 
 public final class FormatRule: Equatable {
-    private let fn: (Formatter) -> Void
+    fileprivate let fn: (Formatter) -> Void
     fileprivate(set) var name = ""
     let help: String
     let options: [String]
@@ -3023,6 +3023,10 @@ public struct _FormatRules {
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
         guard maxWidth > 0 else { return }
+
+        // TODO: find a less hacky solution
+        FormatRules.wrapArguments.fn(formatter)
+
         var lineLength = 0
         var lastBreakPoint: Int?
         var lastBreakPointPriority = Int.min
@@ -3070,30 +3074,29 @@ public struct _FormatRules {
                 addBreakPoint(at: i - 1, relativePriority: -11)
             case .operator(_, .infix) where formatter.token(at: i + 1)?.isSpace == true:
                 addBreakPoint(at: i, relativePriority: -3)
-            case .startOfScope("{") where !formatter.isStartOfClosure(at: i):
-                addBreakPoint(at: i, relativePriority: -6)
+            case .startOfScope("{"):
+                if !formatter.isStartOfClosure(at: i),
+                    formatter.next(.nonSpace, after: i) != .endOfScope("}") {
+                    addBreakPoint(at: i, relativePriority: -6)
+                }
                 currentPriority -= 6
             case .endOfScope("}"):
                 currentPriority += 6
-                addBreakPoint(at: i - 1, relativePriority: -6)
+                if formatter.last(.nonSpace, before: i) != .startOfScope("{") {
+                    addBreakPoint(at: i - 1, relativePriority: -6)
+                }
             case .startOfScope("("):
-                addBreakPoint(at: i, relativePriority: -7)
                 currentPriority -= 7
             case .endOfScope(")"):
                 currentPriority += 7
-                addBreakPoint(at: i - 1, relativePriority: -7)
             case .startOfScope("["):
-                addBreakPoint(at: i, relativePriority: -8)
                 currentPriority -= 8
             case .endOfScope("]"):
                 currentPriority += 8
-                addBreakPoint(at: i - 1, relativePriority: -8)
             case .startOfScope("<"):
-                addBreakPoint(at: i, relativePriority: -9)
                 currentPriority -= 9
             case .endOfScope(">"):
                 currentPriority += 9
-                addBreakPoint(at: i - 1, relativePriority: -9)
             case .startOfScope where token.isStringDelimiter:
                 stringLiteralDepth += 1
             case .endOfScope where token.isStringDelimiter:
@@ -3105,7 +3108,7 @@ public struct _FormatRules {
                     addBreakPoint(at: i, relativePriority: -11)
                     break
                 }
-                addBreakPoint(at: i, relativePriority: -5)
+                addBreakPoint(at: i, relativePriority: -5 - currentPriority)
             default:
                 break
             }

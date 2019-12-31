@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.43.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.3) (2019-12-31)
+
+- Deprecated `ranges` rule and `--ranges` option (use `--nospaceoperators` with `spaceAroundOperators` rule instead)
+- The `redundantSelf` rule no longer removes self in cases where property requirea backtick escaping
+- Fixed bug with `--nospaceoperators` potentially removing required spaced near linebreaks
+- Fixed spurious lint warnings in `spaceAroundOperators`, `indent` and `wrap` rules
+- Improved wrapping heuristic for closures to avoid splitting expressions if avoidable
+- Fixed indenting of closing brace for line-wrapped closures
+- Fixed `indent` rule performance regression introduced in 0.43.2
+- Added warnings for deprecated options in config file
+
 ## [0.43.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.2) (2019-12-28)
 
 - Added `--nospaceoperators` option for selectively removing space around specific operators

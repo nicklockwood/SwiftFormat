@@ -595,8 +595,7 @@ extension Formatter {
     }
 
     func isCommentedCode(at i: Int) -> Bool {
-        if token(at: i) == .startOfScope("//"), currentScope(at: i) != nil,
-            token(at: i - 1)?.isSpace != true {
+        if token(at: i) == .startOfScope("//"), token(at: i - 1)?.isSpace != true {
             switch token(at: i + 1) {
             case nil, .linebreak?:
                 return true

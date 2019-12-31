@@ -38,6 +38,14 @@ public final class FormatRule: Equatable {
     let options: [String]
     let sharedOptions: [String]
 
+    var deprecationMessage: String? {
+        return FormatRule.deprecatedMessage[name]
+    }
+
+    var isDeprecated: Bool {
+        return deprecationMessage != nil
+    }
+
     fileprivate init(help: String,
                      options: [String] = [],
                      sharedOptions: [String] = [],
@@ -57,6 +65,10 @@ public final class FormatRule: Equatable {
     public static func == (lhs: FormatRule, rhs: FormatRule) -> Bool {
         return lhs === rhs
     }
+
+    static let deprecatedMessage = [
+        "ranges": "ranges rule is deprecated. Use spaceAroundOperators instead.",
+    ]
 }
 
 public let FormatRules = _FormatRules()
@@ -82,7 +94,8 @@ private func allRules(except rules: [String]) -> [FormatRule] {
 
 private let _allRules = allRules(except: [])
 private let _defaultRules = allRules(except: _disabledByDefault)
-private let _disabledByDefault = ["isEmpty"]
+private let _deprecatedRules = FormatRule.deprecatedMessage.keys
+private let _disabledByDefault = _deprecatedRules + ["isEmpty"]
 
 public extension _FormatRules {
     /// A Dictionary of rules by name

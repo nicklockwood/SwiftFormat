@@ -20,7 +20,7 @@
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
 * [numberFormatting](#numberFormatting)
-* [ranges](#ranges)
+* [ranges *(deprecated)*](#ranges)
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
 * [redundantExtensionACL](#redundantExtensionACL)
@@ -610,25 +610,7 @@ Option | Description
 
 Add or remove space around range operators.
 
-Option | Description
---- | ---
-`--ranges` | Spacing for ranges: "spaced" (default) or "no-space"
-
-<details>
-<summary>Examples</summary>
-
-```diff
-- for i in 0..<5 {}
-+ for i in 0 ..< 5 {}
-```
-
-```diff
-- if (0...5).contains(i) {}
-+ if (0 ... 5).contains(i) {}
-```
-
-</details>
-<br/>
+*Note: ranges rule is deprecated. Use spaceAroundOperators instead.*
 
 ## redundantBackticks
 

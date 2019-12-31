@@ -27,11 +27,16 @@ class MetadataTests: XCTestCase {
     func testGenerateRulesDocumentation() throws {
         var result = "# Rules\n"
         for rule in FormatRules.all {
-            result += "\n* [\(rule.name)](#\(rule.name))"
+            let annotation = rule.isDeprecated ? " *(deprecated)*" : ""
+            result += "\n* [\(rule.name)\(annotation)](#\(rule.name))"
         }
         result += "\n\n----------"
         for rule in FormatRules.all {
             result += "\n\n## \(rule.name)\n\n\(rule.help)"
+            if let message = rule.deprecationMessage {
+                result += "\n\n*Note: \(message)*"
+                continue
+            }
             if !rule.options.isEmpty {
                 result += "\n\nOption | Description\n--- | ---"
                 for option in rule.options {

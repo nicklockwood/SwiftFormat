@@ -338,7 +338,15 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             print("")
             let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
             for name in Array(allRules).sorted() {
-                print(" \(name)\(rules.contains(name) ? "" : " (disabled)")", as: .content)
+                let annotation: String
+                if rules.contains(name) {
+                    annotation = ""
+                } else if FormatRules.byName[name]?.isDeprecated == true {
+                    annotation = " (deprecated)"
+                } else {
+                    annotation = " (disabled)"
+                }
+                print(" \(name)\(annotation)", as: .content)
             }
             print("")
             return .ok

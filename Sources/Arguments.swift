@@ -451,6 +451,11 @@ func warningsForArguments(_ args: [String: String]) -> [String] {
             warnings.append(message)
         }
     }
+    for name in Set(rulesArguments.flatMap { (try? args[$0].map(parseRules) ?? []) ?? [] }) {
+        if let message = FormatRules.byName[name]?.deprecationMessage {
+            warnings.append(message)
+        }
+    }
     return warnings
 }
 

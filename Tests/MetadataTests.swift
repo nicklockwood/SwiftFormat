@@ -98,7 +98,6 @@ class MetadataTests: XCTestCase {
         let rulesSource = try String(contentsOf: rulesFile, encoding: .utf8)
         let tokens = tokenize(rulesSource)
         let formatter = Formatter(tokens)
-        var referencedOptions = [String]()
         var rulesByOption = [String: String]()
         formatter.forEach(.identifier("FormatRule")) { i, _ in
             guard formatter.next(.nonSpaceOrLinebreak, after: i) == .startOfScope("("),
@@ -115,6 +114,7 @@ class MetadataTests: XCTestCase {
                 rulesByOption[option] = name
             }
             let allOptions = rule.options + rule.sharedOptions
+            var referencedOptions = [FormatOptions.Descriptor]()
             for index in scopeStart + 1 ..< scopeEnd {
                 guard formatter.token(at: index - 1) == .operator(".", .infix),
                     formatter.token(at: index - 2) == .identifier("formatter") else {
@@ -127,28 +127,27 @@ class MetadataTests: XCTestCase {
                     "tokenLength",
                     "lineLength",
                 ].contains(fn):
-                    XCTAssert(allOptions.contains("indent"), "indent not listed in \(name) rule")
-                    XCTAssert(allOptions.contains("tabwidth"), "tabwidth not listed in \(name) rule")
-                    referencedOptions += ["indent", "tabwidth"]
+                    referencedOptions += [.indentation, .tabWidth]
                 case .identifier("isCommentedCode"):
-                    XCTAssert(allOptions.contains("indent"), "indent not listed in \(name) rule")
-                    referencedOptions.append("indent")
-                case .identifier("insertLinebreak"):
-                    XCTAssert(allOptions.contains("linebreaks"), "linebreaks not listed in \(name) rule")
-                    referencedOptions.append("linebreaks")
+                    referencedOptions.append(.indentation)
+                case .identifier("insertLinebreak"), .identifier("linebreakToken"):
+                    referencedOptions.append(.lineBreak)
                 case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
                     if case let .identifier(property)? = formatter.token(at: index + 2),
                         let option = optionsByProperty[property] {
-                        let argName = option.argumentName
-                        XCTAssert(allOptions.contains(argName) || option.isDeprecated, "\(argName) not listed in \(name) rule")
-                        referencedOptions.append(argName)
+                        referencedOptions.append(option)
                     }
                 default:
                     continue
                 }
             }
+            for option in referencedOptions {
+                XCTAssert(allOptions.contains(option.argumentName) || option.isDeprecated,
+                          "\(option.argumentName) not listed in \(name) rule")
+            }
             for argName in allOptions {
-                XCTAssert(referencedOptions.contains(argName), "\(argName) not used in \(name) rule")
+                XCTAssert(referencedOptions.contains { $0.argumentName == argName },
+                          "\(argName) not used in \(name) rule")
             }
         }
         // TODO: check all options are used

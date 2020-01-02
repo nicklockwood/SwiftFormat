@@ -1303,7 +1303,7 @@ public func tokenize(_ source: String) -> [Token] {
             tokens.remove(at: index + 1)
         }
         var index = index
-        while let prevToken: Token = index > 1 ? tokens[index - 1] : nil,
+        while let prevToken: Token = index > 0 ? tokens[index - 1] : nil,
             case let .operator(prevString, _) = prevToken, !isUnwrapOperator(at: index - 1),
             prevString.hasPrefix(".") || !string.contains(".") {
             if scopeIndexStack.last == index - 1 {
@@ -1315,7 +1315,7 @@ public func tokenize(_ source: String) -> [Token] {
             tokens.remove(at: index)
             index -= 1
         }
-        setSymbolType(at: index)
+        setOperatorType(at: index)
         // Fix ternary that may not have been correctly closed in the first pass
         if let scopeIndex = scopeIndexStack.last, tokens[scopeIndex] == .operator("?", .infix) {
             for i in index ..< tokens.count where tokens[i] == .delimiter(":") {
@@ -1326,7 +1326,7 @@ public func tokenize(_ source: String) -> [Token] {
         }
     }
 
-    func setSymbolType(at i: Int) {
+    func setOperatorType(at i: Int) {
         let token = tokens[i]
         guard case let .operator(string, currentType) = token else {
             assertionFailure()
@@ -1445,8 +1445,9 @@ public func tokenize(_ source: String) -> [Token] {
             stitchOperators(at: count - 1)
         case .startOfScope("<") where count >= 2:
             if tokens[count - 2].isOperator,
-                let index = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 2),
-                ![.keyword("func"), .keyword("init")].contains(tokens[index]) {
+                index(of: .nonSpaceOrCommentOrLinebreak, before: count - 2).map({
+                    ![.keyword("func"), .keyword("init")].contains(tokens[$0])
+                }) ?? true {
                 tokens[tokens.count - 1] = .operator("<", .none)
                 stitchOperators(at: count - 1)
                 processToken()
@@ -1493,7 +1494,7 @@ public func tokenize(_ source: String) -> [Token] {
             }
             if let lastSymbolIndex = index(of: .operator, before: count - 1) {
                 // Set operator type
-                setSymbolType(at: lastSymbolIndex)
+                setOperatorType(at: lastSymbolIndex)
             }
         }
         // Handle scope
@@ -1704,7 +1705,7 @@ public func tokenize(_ source: String) -> [Token] {
 
     // Set final operator type
     if let lastSymbolIndex = index(of: .operator, before: tokens.count) {
-        setSymbolType(at: lastSymbolIndex)
+        setOperatorType(at: lastSymbolIndex)
     }
 
     return tokens

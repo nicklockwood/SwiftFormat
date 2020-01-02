@@ -812,6 +812,12 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.spaceAroundOperators, options: options)
     }
 
+    func testNoAddSpaceAroundNoSpaceHalfOpenRange() {
+        let input = "let a = b..<c"
+        let options = FormatOptions(noSpaceOperators: ["..<"])
+        testFormatting(for: input, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
     func testRemoveSpaceAroundNoSpaceRange() {
         let input = "let a = b ... c"
         let output = "let a = b...c"

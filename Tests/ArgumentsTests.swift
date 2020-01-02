@@ -552,4 +552,9 @@ class ArgumentsTests: XCTestCase {
         let options = try Options(["ranges": "nospace"], in: "")
         XCTAssertEqual(options.formatOptions?.spaceAroundRangeOperators, false)
     }
+
+    func testParseNoSpaceOperatorsOption() throws {
+        let options = try Options(["nospaceoperators": "...,..<"], in: "")
+        XCTAssertEqual(options.formatOptions?.noSpaceOperators, ["...", "..<"])
+    }
 }

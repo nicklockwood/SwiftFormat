@@ -1259,6 +1259,22 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testAngleBracketSuffixedOperator() {
+        let input = "..<"
+        let output: [Token] = [.operator("..<", .none)]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAngleBracketSuffixedOperator2() {
+        let input = "a..<b"
+        let output: [Token] = [
+            .identifier("a"),
+            .operator("..<", .infix),
+            .identifier("b"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testUnicodeOperator() {
         let input = "≥"
         let output: [Token] = [.operator("≥", .none)]

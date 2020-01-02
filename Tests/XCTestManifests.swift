@@ -1179,6 +1179,7 @@ extension RulesTests {
         ("testPrivateRequiredStaticFuncSpecifiers", testPrivateRequiredStaticFuncSpecifiers),
         ("testPrivateSetSpecifierNotMangled", testPrivateSetSpecifierNotMangled),
         ("testPublicExtensionMemberACLStripped", testPublicExtensionMemberACLStripped),
+        ("testReduceIndentForMultilineString", testReduceIndentForMultilineString),
         ("testRedundantBreaksRemoved", testRedundantBreaksRemoved),
         ("testRedundantObjcCommentNotRemoved", testRedundantObjcCommentNotRemoved),
         ("testRedundantObjcRemovedFromAfterOutlet", testRedundantObjcRemovedFromAfterOutlet),

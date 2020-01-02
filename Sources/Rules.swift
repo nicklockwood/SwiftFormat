@@ -1036,7 +1036,8 @@ public struct _FormatRules {
                         // Only reduce indent if line begins with a closing scope token or @unknown
                         let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
                         nextToken.isEndOfScope || nextToken == .keyword("@unknown"),
-                        !nextToken.isMultilineStringDelimiter else {
+                        // Don't reduce indent further if first token in line is multiline string delimiter
+                        nextToken == token || !nextToken.isMultilineStringDelimiter else {
                         break
                     }
                     // Reduce indent for closing scope of guard else back to normal

@@ -2143,6 +2143,26 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testReduceIndentForMultilineString() {
+        let input = """
+        switch foo {
+            case bar:
+                return \"""
+                baz
+                \"""
+        }
+        """
+        let output = """
+        switch foo {
+        case bar:
+            return \"""
+            baz
+            \"""
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
     // indent multiline raw strings
 
     func testIndentIndentedSimpleRawMultilineString() {

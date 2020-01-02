@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.43.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.4) (2020-01-02)
+
+- Fixed regression in `indent` rule` that could cause multiline strings to become misformatted
+- Fixed bug in `--nospaceoperators` option where `..<` operator was rejected
+- Added instructions for installing SwiftFormat for Xcode via Homebrew cask
+
 ## [0.43.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.3) (2019-12-31)
 
 - Deprecated `ranges` rule and `--ranges` option (use `--nospaceoperators` with `spaceAroundOperators` rule instead)

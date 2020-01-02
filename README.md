@@ -69,7 +69,6 @@ Command-line tool
 You can install the `swiftformat` command-line tool on macOS using [Homebrew](http://brew.sh/). Assuming you already have Homebrew installed, just type:
 
 ```bash
-$ brew update
 $ brew install swiftformat
 ```
 
@@ -173,15 +172,29 @@ Xcode source editor extension
 
 **Installation:**
 
-You'll find the latest version of the SwiftFormat for Xcode application inside the EditorExtension folder included in the SwiftFormat repository. Drag it into your `Applications` folder, then double-click to launch it, and follow the on-screen instructions.
+Like the command-line tool, you can install the SwiftFormat for Xcode extension application via [Homebrew](http://brew.sh/). Assuming you already have Homebrew installed, type:
 
-**NOTE:** The Extension requires Xcode 9.2 and macOS 10.12 (Sierra) or higher.
+```bash
+$ brew cask install swiftformat-for-xcode
+```
+
+This will install SwiftFormat for Xcode in your Applications folder. Double-click the app to launch it, and then follow the on-screen instructions.
+
+**NOTE:** The app should be correctly signed, but if you get a Gatekeeper warning when trying to open it you can bypass this by right-clicking (or control-clicking) the app and selecting `Open`.
+
+To update to the latest version once installed use:
+
+```bash
+$ brew cask upgrade swiftformat-for-xcode
+```
+
+Alternatively, if you prefer not to use Homebrew, you'll find the latest version of the SwiftFormat for Xcode application inside the EditorExtension folder included in the SwiftFormat repository. Download and unpack the zip archive, then drag `SwiftFormat for Xcode.app` into your `Applications` folder.
 
 **Usage:**
 
-In Xcode, you'll find a SwiftFormat option under the Editor menu. You can use this to format either the current selection or the whole file.
+Once you have launched the app and restarted Xcode, you'll find a SwiftFormat option under Xcode's Editor menu. You can use this to format either the current selection or the whole file.
 
-You can configure the formatting [rules](#rules) and [options](#options) used by the Xcode source editor extension using the host application. There is currently no way to override these per-project, however you can import and export different configurations using the File menu. You will need to do this again each time you switch project.
+You can configure the formatting [rules](#rules) and [options](#options) using the SwiftFormat for Xcode host application. There is currently no way to override these per-project, however you can import and export different configurations using the File menu. You will need to do this again each time you switch projects.
 
 The format of the configuration file is described in the [Config section](#config-file) below.
 
@@ -694,6 +707,7 @@ Credits
 * [Vincent Bernier](https://github.com/vinceburn) - Xcode extension settings UI
 * [Maxime Marinel](https://github.com/bourvill) - Git pre-commit hook script
 * [Romain Pouclet](https://github.com/palleas) - Homebrew formula
+* [Aerobounce](https://github.com/aerobounce) - Homebrew cask for source editor extension
 * [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
 * [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
 * [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions

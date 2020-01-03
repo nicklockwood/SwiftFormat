@@ -8450,7 +8450,7 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.strongifiedSelf)
     }
 
-    func testStrongSelfConvertedToSelfInOptions() {
+    func testStrongSelfConvertedToSelfIfDefinedInOptions() {
         let input = """
         { [weak self] in
             guard let strongSelf = self else { return }
@@ -8465,7 +8465,7 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.strongifiedSelf, options: options)
     }
 
-    func testStrongSelfNotConvertedToSelfNotInOptions() {
+    func testStrongSelfNotConvertedToSelfIfNotDefinedInOptions() {
         let input = """
         { [weak self] in
             guard let strongSelf = self else { return }

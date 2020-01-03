@@ -3760,7 +3760,8 @@ public struct _FormatRules {
 
     /// Standardize on using self when strongifying self. Will also remove backticks around `self` in Optional unwrap expressions.
     public let strongifiedSelf = FormatRule(
-        help: "Standardize on using self when strongifying self. Will also remove backticks around `self` in Optional unwrap expressions."
+        help: "Standardize on using self when strongifying self. Will also remove backticks around `self` in Optional unwrap expressions.",
+        options: ["strongifiedSelfIdentifiers"]
     ) { formatter in
         guard formatter.options.swiftVersion >= "4.2" else {
             return

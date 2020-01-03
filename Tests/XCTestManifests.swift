@@ -419,6 +419,7 @@ extension RulesTests {
         ("testBraceIndentAfterClosingScope", testBraceIndentAfterClosingScope),
         ("testBraceIndentAfterComment", testBraceIndentAfterComment),
         ("testBraceIndentAfterLineWithParens", testBraceIndentAfterLineWithParens),
+        ("testBreakAfterSemicolonNotMangled", testBreakAfterSemicolonNotMangled),
         ("testBreakInEmptyCaseNotRemoved", testBreakInEmptyCaseNotRemoved),
         ("testCallOfExpressionWithInlineCommentNotTreatedAsYodaCondition", testCallOfExpressionWithInlineCommentNotTreatedAsYodaCondition),
         ("testCallOfParenthesizedExpressionNotTreatedAsYodaCondition", testCallOfParenthesizedExpressionNotTreatedAsYodaCondition),

@@ -8399,6 +8399,20 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantBreak)
     }
 
+    func testBreakAfterSemicolonNotMangled() {
+        let input = """
+        switch foo {
+        case 1: print(1); break
+        }
+        """
+        let output = """
+        switch foo {
+        case 1: print(1);
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantBreak, exclude: ["semicolons"])
+    }
+
     // MARK: strongifiedSelf
 
     func testBacktickedSelfConvertedToSelfInGuard() {

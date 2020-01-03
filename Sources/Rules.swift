@@ -3747,13 +3747,14 @@ public struct _FormatRules {
             guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope(":"),
                 formatter.currentScope(at: i) == .startOfScope(":"),
                 formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isEndOfScope == true,
+                let startIndex = formatter.index(of: .nonSpace, before: i),
                 let endIndex = formatter.index(of: .nonSpace, after: i) else {
                 return
             }
-            formatter.removeTokens(inRange: i ..< endIndex)
-            if formatter.tokens[i].isLinebreak {
-                let startIndex = formatter.startOfLine(at: i)
-                formatter.removeTokens(inRange: startIndex ... i)
+            if formatter.tokens[startIndex].isLinebreak, formatter.tokens[endIndex].isLinebreak {
+                formatter.removeTokens(inRange: startIndex ..< endIndex)
+            } else {
+                formatter.removeTokens(inRange: startIndex + 1 ..< endIndex)
             }
         }
     }

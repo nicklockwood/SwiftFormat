@@ -3758,9 +3758,9 @@ public struct _FormatRules {
         }
     }
 
-    /// Standardize on using self when strongifying self. Remove backticks around `self`
+    /// Standardize to use self when strongifying self
     public let strongifiedSelf = FormatRule(
-        help: "Standardize on using self when strongifying self. Remove backticks around `self`",
+        help: "Standardize to use self when strongifying self. Remove backticks around `self`.",
         options: ["strongselfids"]
     ) { formatter in
         guard formatter.options.swiftVersion >= "4.2" else {

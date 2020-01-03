@@ -1300,7 +1300,7 @@ As per Apple's recommendation
 
 ## strongifiedSelf
 
-Standardize on using self when strongifying self. Remove backticks around `self`
+Standardize to use self when strongifying self. Remove backticks around `self`.
 
 Option | Description
 --- | ---

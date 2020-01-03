@@ -582,7 +582,7 @@ extension FormatOptions.Descriptor {
         argumentName: "strongselfids",
         propertyName: "strongSelfIds",
         displayName: "Strongified Self Identifiers",
-        help: "Comma-delimited list of identifiers that should be replaced with self",
+        help: "Comma-delimited list of ids that should be replaced with self",
         keyPath: \FormatOptions.strongSelfIds
     )
 

@@ -1304,7 +1304,7 @@ Standardize on using self when strongifying self. Will also remove backticks aro
 
 Option | Description
 --- | ---
-`--strongselfids` | Comma-delimited list of identifiers that should be replaced with self
+`--strongselfids` | Comma-delimited list of disallowed identifiers that should be replaced with self
 
 
 <details>

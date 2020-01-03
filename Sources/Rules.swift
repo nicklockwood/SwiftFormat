@@ -3765,7 +3765,8 @@ public struct _FormatRules {
         guard formatter.options.swiftVersion >= "4.2" else {
             return
         }
-        ["`self`", "ss", "sSelf", "strongSelf"].forEach { idName in
+        let strongifiedSelfIdentifiers = formatter.options.strongifiedSelfIdentifiers + ["`self`"]
+        strongifiedSelfIdentifiers.forEach { idName in
             formatter.forEach(.identifier(idName)) { i, _ in
                 guard let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
                     $0 == .operator("=", .infix)

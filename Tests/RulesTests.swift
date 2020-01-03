@@ -8461,7 +8461,7 @@ class RulesTests: XCTestCase {
             guard let self = self else { return }
         }
         """
-        let options = FormatOptions(strongifiedSelfIdentifiers: ["strongSelf"], swiftVersion: "4.2")
+        let options = FormatOptions(strongSelfIds: ["strongSelf"], swiftVersion: "4.2")
         testFormatting(for: input, output, rule: FormatRules.strongifiedSelf, options: options)
     }
 

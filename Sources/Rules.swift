@@ -3761,13 +3761,13 @@ public struct _FormatRules {
     /// Standardize on using self when strongifying self. Will also remove backticks around `self` in Optional unwrap expressions.
     public let strongifiedSelf = FormatRule(
         help: "Standardize on using self when strongifying self. Will also remove backticks around `self` in Optional unwrap expressions.",
-        options: ["strongifiedSelfIdentifiers"]
+        options: ["strongSelfIds"]
     ) { formatter in
         guard formatter.options.swiftVersion >= "4.2" else {
             return
         }
-        let strongifiedSelfIdentifiers = formatter.options.strongifiedSelfIdentifiers + ["`self`"]
-        strongifiedSelfIdentifiers.forEach { idName in
+        let strongSelfIds = formatter.options.strongSelfIds + ["`self`"]
+        strongSelfIds.forEach { idName in
             formatter.forEach(.identifier(idName)) { i, _ in
                 guard let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
                     $0 == .operator("=", .infix)

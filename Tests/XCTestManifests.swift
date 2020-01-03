@@ -55,7 +55,7 @@ extension ArgumentsTests {
         ("testParseQuoteArguments", testParseQuoteArguments),
         ("testParseQuotedEscapedN", testParseQuotedEscapedN),
         ("testParseSimpleArguments", testParseSimpleArguments),
-        ("testParseStrongifiedSelfIdentifiers", testParseStrongifiedSelfIdentifiers),
+        ("testParseStrongSelfIds", testParseStrongSelfIds),
         ("testParseUnexcludedURLsFileOption", testParseUnexcludedURLsFileOption),
         ("testParseUppercaseIgnoreFileHeader", testParseUppercaseIgnoreFileHeader),
         ("testPreprocessArguments", testPreprocessArguments),

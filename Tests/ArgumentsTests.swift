@@ -200,7 +200,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testCommandLineArgumentsAreCorrect() {
-        let output = ["allman": "false", "wraparguments": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": "", "xcodeindentation": "disabled", "fragment": "false", "conflictmarkers": "reject", "tabwidth": "unspecified", "maxwidth": "none", "nospaceoperators": "", "strongifiedselfidentifiers": ""]
+        let output = ["allman": "false", "wraparguments": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": "", "xcodeindentation": "disabled", "fragment": "false", "conflictmarkers": "reject", "tabwidth": "unspecified", "maxwidth": "none", "nospaceoperators": "", "strongselfids": ""]
         XCTAssertEqual(argumentsFor(.default), output)
     }
 
@@ -558,8 +558,8 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(options.formatOptions?.noSpaceOperators, ["...", "..<"])
     }
 
-    func testParseStrongifiedSelfIdentifiers() throws {
-        let options = try Options(["strongifiedselfidentifiers": "ss,sSelf,strongSelf"], in: "")
-        XCTAssertEqual(options.formatOptions?.strongifiedSelfIdentifiers, ["ss", "sSelf", "strongSelf"])
+    func testParseStrongSelfIds() throws {
+        let options = try Options(["strongselfids": "ss,sSelf,strongSelf"], in: "")
+        XCTAssertEqual(options.formatOptions?.strongSelfIds, ["ss", "sSelf", "strongSelf"])
     }
 }

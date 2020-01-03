@@ -2324,7 +2324,8 @@ public struct _FormatRules {
                         assert(!isTypeRoot)
                         // Guard is included because it's an error to reference guard vars in body
                         var scopedNames = localNames
-                        formatter.processDeclaredVariables(at: &index, names: &scopedNames)
+                        var i = index
+                        formatter.processDeclaredVariables(at: &i, names: &scopedNames, removeSelf: explicitSelf != .insert)
                         guard let startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
                             return // error
                         }

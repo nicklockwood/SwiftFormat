@@ -5696,6 +5696,28 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testRemoveRedundantSelfInGuardLet() {
+        let input = """
+        class Foo {
+            func foo() {
+                guard let bar = self.baz else {
+                    return
+                }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            func foo() {
+                guard let bar = baz else {
+                    return
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {

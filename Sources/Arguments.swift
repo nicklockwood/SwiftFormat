@@ -44,7 +44,7 @@ extension Options {
         let oldArguments = argumentsFor(self)
         let newArguments = try mergeArguments(args, into: oldArguments)
         var newOptions = try Options(newArguments, in: directory)
-        if let fileInfo = self.formatOptions?.fileInfo {
+        if let fileInfo = formatOptions?.fileInfo {
             newOptions.formatOptions?.fileInfo = fileInfo
         }
         self = newOptions

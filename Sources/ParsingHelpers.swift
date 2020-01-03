@@ -180,7 +180,7 @@ extension Formatter {
         case "let", "var":
             var index = index + 1
             var names = Set<String>()
-            processDeclaredVariables(at: &index, names: &names)
+            processDeclaredVariables(at: &index, names: &names, removeSelf: false)
             return names
         case "func", "class", "struct", "enum":
             guard let name = next(.identifier, after: index) else {
@@ -192,8 +192,27 @@ extension Formatter {
         }
     }
 
+    // remove self if possible
+    func removeSelf(at i: Int, localNames: Set<String>) -> Bool {
+        assert(tokens[i] == .identifier("self"))
+        guard let dotIndex = index(of: .nonSpaceOrLinebreak, after: i, if: {
+            $0 == .operator(".", .infix)
+        }), let nextIndex = index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {
+            $0.isIdentifier && !localNames.contains($0.unescaped())
+        }), !backticksRequired(at: nextIndex, ignoreLeadingDot: true) else {
+            return false
+        }
+        removeTokens(inRange: i ..< nextIndex)
+        return true
+    }
+
     // gather declared variable names, starting at index after let/var keyword
     func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
+        processDeclaredVariables(at: &index, names: &names, removeSelf: false)
+    }
+
+    // gather declared variable names, starting at index after let/var keyword
+    func processDeclaredVariables(at index: inout Int, names: inout Set<String>, removeSelf: Bool) {
         while let token = self.token(at: index) {
             switch token {
             case .identifier where
@@ -218,6 +237,8 @@ extension Formatter {
                     case .delimiter(","):
                         index = nextIndex
                         break inner
+                    case .identifier("self") where removeSelf && isEnabled:
+                        _ = self.removeSelf(at: nextIndex, localNames: names)
                     default:
                         break
                     }

@@ -230,7 +230,15 @@ extension Formatter {
                         guard let endIndex = endOfScope(at: nextIndex) else {
                             return // error
                         }
-                        index = endIndex
+                        if removeSelf, isEnabled {
+                            for i in (nextIndex ..< endIndex).reversed()
+                                where tokens[i] == .identifier("self") {
+                                _ = self.removeSelf(at: i, localNames: names)
+                            }
+                            index = endOfScope(at: nextIndex)!
+                        } else {
+                            index = endIndex
+                        }
                         continue
                     case .keyword, .startOfScope("{"), .endOfScope("}"), .startOfScope(":"):
                         return

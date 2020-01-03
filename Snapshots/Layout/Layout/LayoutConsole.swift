@@ -317,7 +317,7 @@ private class LayoutWarningView: UIView, LayoutLoading {
             )
         } else {
             layoutNode?.setState([
-                "warning": self.warnings.last ?? "",
+                "warning": warnings.last ?? "",
             ])
         }
         UIView.animate(withDuration: 0.25) {

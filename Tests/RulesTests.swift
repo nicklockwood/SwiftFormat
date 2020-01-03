@@ -5696,6 +5696,44 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testRemoveRedundantSelfInArrayLiteral() {
+        let input = """
+        class Foo {
+            func foo() {
+                print([self.bar.x, self.bar.y])
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            func foo() {
+                print([bar.x, bar.y])
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
+    func testRemoveRedundantSelfInArrayLiteralVar() {
+        let input = """
+        class Foo {
+            func foo() {
+                var bars = [self.bar.x, self.bar.y]
+                print(bars)
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            func foo() {
+                var bars = [bar.x, bar.y]
+                print(bars)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
     func testRemoveRedundantSelfInGuardLet() {
         let input = """
         class Foo {

@@ -1244,6 +1244,8 @@ extension RulesTests {
         ("testRemoveRedundantReturnInClosure", testRemoveRedundantReturnInClosure),
         ("testRemoveRedundantReturnInClosureWithArgs", testRemoveRedundantReturnInClosureWithArgs),
         ("testRemoveRedundantReturnInMap", testRemoveRedundantReturnInMap),
+        ("testRemoveRedundantSelfInArrayLiteral", testRemoveRedundantSelfInArrayLiteral),
+        ("testRemoveRedundantSelfInArrayLiteralVar", testRemoveRedundantSelfInArrayLiteralVar),
         ("testRemoveRedundantSelfInGuardLet", testRemoveRedundantSelfInGuardLet),
         ("testRemoveRedundantVarsInCase", testRemoveRedundantVarsInCase),
         ("testRemoveRedundantVoidReturnType", testRemoveRedundantVoidReturnType),

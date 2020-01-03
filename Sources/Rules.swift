@@ -2324,8 +2324,8 @@ public struct _FormatRules {
                         assert(!isTypeRoot)
                         // Guard is included because it's an error to reference guard vars in body
                         var scopedNames = localNames
-                        var i = index
-                        formatter.processDeclaredVariables(at: &i, names: &scopedNames, removeSelf: explicitSelf != .insert)
+                        formatter.processDeclaredVariables(at: &index, names: &scopedNames,
+                                                           removeSelf: explicitSelf != .insert)
                         guard let startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
                             return // error
                         }
@@ -2377,7 +2377,7 @@ public struct _FormatRules {
                         break
                     }
                     fallthrough
-                case .startOfScope where token.isStringDelimiter, .startOfScope("#if"):
+                case .startOfScope where token.isStringDelimiter, .startOfScope("#if"), .startOfScope("["):
                     scopeStack.append(token)
                 case .startOfScope(":"):
                     lastKeyword = ""

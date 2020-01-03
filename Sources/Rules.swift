@@ -3765,13 +3765,15 @@ public struct _FormatRules {
         guard formatter.options.swiftVersion >= "4.2" else {
             return
         }
-        formatter.forEach(.identifier("`self`")) { i, _ in
-            guard let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
-                $0 == .operator("=", .infix)
-            }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: equalIndex) == .identifier("self") else {
-                return
+        ["`self`", "ss", "sSelf", "strongSelf"].forEach { idName in
+            formatter.forEach(.identifier(idName)) { i, _ in
+                guard let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                    $0 == .operator("=", .infix)
+                }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: equalIndex) == .identifier("self") else {
+                    return
+                }
+                formatter.replaceToken(at: i, with: .identifier("self"))
             }
-            formatter.replaceToken(at: i, with: .identifier("self"))
         }
     }
 

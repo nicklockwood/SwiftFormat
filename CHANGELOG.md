@@ -1,15 +1,20 @@
 # Change Log
 
+## [0.43.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.5) (2020-01-04)
+
+- Fixed bug where `redundantBreak` rule removed entire line if break appeared after a semicolon
+- Fixed a couple of cases where `redundantSelf` failed to remove `self` as expected
+
 ## [0.43.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.4) (2020-01-02)
 
-- Fixed regression in `indent` rule` that could cause multiline strings to become misformatted
+- Fixed regression in `indent` rule` that could cause multiline strings to become mis-formatted
 - Fixed bug in `--nospaceoperators` option where `..<` operator was rejected
 - Added instructions for installing SwiftFormat for Xcode via Homebrew cask
 
 ## [0.43.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.3) (2019-12-31)
 
 - Deprecated `ranges` rule and `--ranges` option (use `--nospaceoperators` with `spaceAroundOperators` rule instead)
-- The `redundantSelf` rule no longer removes self in cases where property requirea backtick escaping
+- The `redundantSelf` rule no longer removes self in cases where property requires backtick escaping
 - Fixed bug with `--nospaceoperators` potentially removing required spaced near linebreaks
 - Fixed spurious lint warnings in `spaceAroundOperators`, `indent` and `wrap` rules
 - Improved wrapping heuristic for closures to avoid splitting expressions if avoidable

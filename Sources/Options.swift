@@ -82,7 +82,7 @@ public enum ArgumentStrippingMode: String {
 }
 
 /// Version number wrapper
-public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral {
+public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral, CustomStringConvertible {
     public let rawValue: String
 
     public static let undefined = Version(rawValue: "0")!
@@ -107,6 +107,10 @@ public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral 
             options: .numeric,
             locale: Locale(identifier: "en_US")
         ) == .orderedAscending
+    }
+
+    public var description: String {
+        return rawValue
     }
 }
 
@@ -155,7 +159,7 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
 }
 
 /// File info, used for constructing header comments
-public struct FileInfo: Equatable {
+public struct FileInfo: Equatable, CustomStringConvertible {
     var filePath: String?
     var creationDate: Date?
 
@@ -166,6 +170,10 @@ public struct FileInfo: Equatable {
     public init(filePath: String? = nil, creationDate: Date? = nil) {
         self.filePath = filePath
         self.creationDate = creationDate
+    }
+
+    public var description: String {
+        return "\(fileName ?? "");\(creationDate.map { "\($0)" } ?? "")"
     }
 }
 

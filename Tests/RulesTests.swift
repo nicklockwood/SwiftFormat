@@ -1424,6 +1424,16 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
+    func testIndentImbalancedNestedClosingParens() {
+        let input = """
+        Foo(bar:
+            Bar(
+                baz: quux
+            ))
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent specifiers
 
     func testNoIndentWrappedSpecifiersForProtocol() {

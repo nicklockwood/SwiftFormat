@@ -1033,11 +1033,8 @@ public struct _FormatRules {
                     // Check if line on which scope ends should be unindented
                     let start = formatter.startOfLine(at: i)
                     guard !formatter.isCommentedCode(at: start),
-                        // Only reduce indent if line begins with a closing scope token or @unknown
-                        let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: start - 1),
-                        nextToken.isEndOfScope || nextToken == .keyword("@unknown"),
-                        // Don't reduce indent further if first token in line is multiline string delimiter
-                        nextToken == token || !nextToken.isMultilineStringDelimiter else {
+                        // Don't reduce indent if end of scope is not first token in line
+                        formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: start - 1) == i else {
                         break
                     }
                     // Reduce indent for closing scope of guard else back to normal

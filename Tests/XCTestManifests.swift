@@ -675,6 +675,7 @@ extension RulesTests {
         ("testIndentIdentifierAfterReturn", testIndentIdentifierAfterReturn),
         ("testIndentIfCase", testIndentIfCase),
         ("testIndentIfCaseCommaCase", testIndentIfCaseCommaCase),
+        ("testIndentImbalancedNestedClosingParens", testIndentImbalancedNestedClosingParens),
         ("testIndentIndentedSimpleMultilineString", testIndentIndentedSimpleMultilineString),
         ("testIndentIndentedSimpleRawMultilineString", testIndentIndentedSimpleRawMultilineString),
         ("testIndentInsideWrappedClassDefinition", testIndentInsideWrappedClassDefinition),

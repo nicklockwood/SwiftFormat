@@ -463,8 +463,22 @@ private func applyRules(
         }
         changes += formatter.changes
         if tokens == formatter.tokens {
-            changes.sort(by: { $0.line < $1.line })
-            return (tokens, changes)
+            // Sort changes
+            changes.sort(by: {
+                if $0.line == $1.line {
+                    return $0.rule.name < $1.rule.name
+                }
+                return $0.line < $1.line
+            })
+            // Filter out duplicates
+            var last: Formatter.Change?
+            return (tokens, changes.filter { change in
+                if last == change {
+                    return false
+                }
+                last = change
+                return true
+            })
         }
         tokens = formatter.tokens
         options.fileHeader = .ignore // Prevents infinite recursion

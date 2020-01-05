@@ -100,14 +100,30 @@ class SwiftFormatTests: XCTestCase {
 
     func testFormatReturnsInputWithNoRules() {
         let input = "foo ()  "
-        let output = "foo ()  "
-        XCTAssertEqual(try format(input, rules: []), output)
+        XCTAssertEqual(try format(input, rules: []), input)
     }
 
     func testFormatUsesDefaultRulesIfNoneSpecified() {
         let input = "foo ()  "
         let output = "foo()\n"
         XCTAssertEqual(try format(input), output)
+    }
+
+    // MARK: lint function
+
+    func testLintReturnsNoChangesWithNoRules() {
+        let input = "foo ()  "
+        XCTAssertEqual(try lint(input, rules: []), [])
+    }
+
+    func testLintWithDefaultRules() {
+        let input = "foo ()  "
+        XCTAssertEqual(try lint(input), [
+            .init(line: 1, rule: FormatRules.consecutiveSpaces, filePath: nil),
+            .init(line: 1, rule: FormatRules.linebreakAtEndOfFile, filePath: nil),
+            .init(line: 1, rule: FormatRules.spaceAroundParens, filePath: nil),
+            .init(line: 1, rule: FormatRules.trailingSpace, filePath: nil),
+        ])
     }
 
     // MARK: fragments

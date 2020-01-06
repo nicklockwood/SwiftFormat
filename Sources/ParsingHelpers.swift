@@ -45,27 +45,15 @@ extension Formatter {
 
     /// Returns the length (in characters) of the specified token
     func tokenLength(_ token: Token) -> Int {
-        switch token {
-        case let .space(string), let .stringBody(string), let .commentBody(string):
-            let tabWidth = options.useTabs ? options.tabWidth : options.indent.count
-            guard tabWidth > 1 else {
-                return string.count
-            }
-            return string.reduce(0) { count, character in
-                count + (character == "\t" ? tabWidth : 1)
-            }
-        case .linebreak:
-            return 0
-        default:
-            return token.string.count
-        }
+        let tabWidth = options.tabWidth > 0 ? options.tabWidth : options.indent.count
+        return token.columnWidth(tabWidth: tabWidth)
     }
 
     /// Returns the length (in characters) of the line at the specified index
     func lineLength(at index: Int) -> Int {
         var length = 0
         for token in tokens[startOfLine(at: index) ..< endOfLine(at: index)] {
-            length += token.string.count
+            length += tokenLength(token)
         }
         return length
     }
@@ -74,7 +62,7 @@ extension Formatter {
     func lineLength(upTo index: Int) -> Int {
         var length = 0
         for token in tokens[startOfLine(at: index) ..< index] {
-            length += token.string.count
+            length += tokenLength(token)
         }
         return length
     }

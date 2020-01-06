@@ -188,7 +188,7 @@ class SwiftFormatTests: XCTestCase {
     func testTokenIndexForOffsetWithTabs() {
         let tokens = tokenize("// a comment\n\tlet foo = 5\n")
         let offset = SourceOffset(line: 2, column: 7)
-        XCTAssertEqual(tokenIndexForOffset(offset, in: tokens, tabWidth: 1), 7)
+        XCTAssertEqual(tokenIndexForOffset(offset, in: tokens, tabWidth: 2), 7)
     }
 
     // MARK: newOffset

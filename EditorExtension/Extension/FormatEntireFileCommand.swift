@@ -42,36 +42,41 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
         let sourceToFormat = invocation.buffer.completeBuffer
         let input = tokenize(sourceToFormat)
 
+        // Get rules
+        let rules = FormatRules.named(RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
+
+        // Get options
         let store = OptionsStore()
         var formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
         formatOptions.indent = invocation.buffer.indentationString
         formatOptions.tabWidth = invocation.buffer.tabWidth
+
+        let output: [Token]
         do {
-            let rules = FormatRules.named(RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
-            let output = try format(input, rules: rules, options: formatOptions)
-            if output == input {
-                // No changes needed
-                return completionHandler(nil)
-            }
-
-            // Remove all selections to avoid a crash when changing the contents of the buffer.
-            let selections = invocation.buffer.selections.copy() as! [XCSourceTextRange]
-            invocation.buffer.selections.removeAllObjects()
-
-            // Update buffer
-            invocation.buffer.completeBuffer = sourceCode(for: output)
-
-            // Restore selections
-            for selection in selections {
-                invocation.buffer.selections.add(XCSourceTextRange(
-                    start: invocation.buffer.newPosition(for: selection.start, in: output),
-                    end: invocation.buffer.newPosition(for: selection.end, in: output)
-                ))
-            }
-
-            return completionHandler(nil)
+            output = try format(input, rules: rules, options: formatOptions)
         } catch {
             return completionHandler(error)
         }
+        if output == input {
+            // No changes needed
+            return completionHandler(nil)
+        }
+
+        // Remove all selections to avoid a crash when changing the contents of the buffer.
+        let selections = invocation.buffer.selections.copy() as! [XCSourceTextRange]
+        invocation.buffer.selections.removeAllObjects()
+
+        // Update buffer
+        invocation.buffer.completeBuffer = sourceCode(for: output)
+
+        // Restore selections
+        for selection in selections {
+            invocation.buffer.selections.add(XCSourceTextRange(
+                start: invocation.buffer.newPosition(for: selection.start, in: output),
+                end: invocation.buffer.newPosition(for: selection.end, in: output)
+            ))
+        }
+
+        return completionHandler(nil)
     }
 }

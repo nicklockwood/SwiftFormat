@@ -367,6 +367,30 @@ public func offsetForToken(at index: Int, in tokens: [Token], tabWidth: Int) -> 
     return SourceOffset(line: 1, column: column)
 }
 
+/// Get token index for offset
+public func tokenIndexForOffset(_ offset: SourceOffset, in tokens: [Token], tabWidth: Int) -> Int {
+    var tokenIndex = 0, line = 1
+    for index in tokens.indices {
+        guard case let .linebreak(_, originalLine) = tokens[index] else {
+            continue
+        }
+        line = originalLine
+        guard originalLine < offset.line else {
+            break
+        }
+        tokenIndex = index + 1
+    }
+    if line < offset.line {
+        return tokens.endIndex
+    }
+    var column = 1
+    while tokenIndex < tokens.endIndex, column < offset.column {
+        column += tokens[tokenIndex].columnWidth(tabWidth: tabWidth)
+        tokenIndex += 1
+    }
+    return tokenIndex
+}
+
 /// Get new offset for an original offset (before formatting)
 public func newOffset(for offset: SourceOffset, in tokens: [Token], tabWidth: Int) -> SourceOffset {
     var closestLine = 0
@@ -438,6 +462,7 @@ public func applyRules(_ rules: [FormatRule],
                           to: originalTokens,
                           with: options,
                           trackChanges: false,
+                          range: nil,
                           callback: callback).tokens
 }
 
@@ -445,11 +470,13 @@ public func applyRules(_ rules: [FormatRule],
 public func applyRules(_ rules: [FormatRule],
                        to originalTokens: [Token],
                        with options: FormatOptions,
-                       trackChanges: Bool) throws -> (tokens: [Token], changes: [Formatter.Change]) {
+                       trackChanges: Bool,
+                       range: Range<Int>?) throws -> (tokens: [Token], changes: [Formatter.Change]) {
     return try applyRules(rules,
                           to: originalTokens,
                           with: options,
                           trackChanges: trackChanges,
+                          range: range,
                           callback: nil)
 }
 
@@ -458,6 +485,7 @@ private func applyRules(
     to originalTokens: [Token],
     with options: FormatOptions,
     trackChanges: Bool,
+    range: Range<Int>?,
     maxIterations: Int = 10,
     callback: ((Int, [Token]) -> Void)? = nil
 ) throws -> (tokens: [Token], changes: [Formatter.Change]) {
@@ -482,7 +510,8 @@ private func applyRules(
     let timeout = 1 + TimeInterval(tokens.count) / 1000
     var changes = [Formatter.Change]()
     for _ in 0 ..< maxIterations {
-        let formatter = Formatter(tokens, options: options, trackChanges: trackChanges)
+        let formatter = Formatter(tokens, options: options,
+                                  trackChanges: trackChanges, range: range)
         for (i, rule) in rules.enumerated() {
             queue.async(group: group) {
                 rule.apply(with: formatter)
@@ -520,8 +549,8 @@ private func applyRules(
 /// Format a pre-parsed token array
 /// Returns the formatted token array
 public func format(_ tokens: [Token], rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = .default) throws -> [Token] {
-    return try applyRules(rules, to: tokens, with: options, trackChanges: false).tokens
+                   options: FormatOptions = .default, range: Range<Int>? = nil) throws -> [Token] {
+    return try applyRules(rules, to: tokens, with: options, trackChanges: false, range: range).tokens
 }
 
 /// Format code with specified rules and options
@@ -534,7 +563,7 @@ public func format(_ source: String, rules: [FormatRule] = FormatRules.default,
 /// Returns the list of edits made
 public func lint(_ tokens: [Token], rules: [FormatRule] = FormatRules.default,
                  options: FormatOptions = .default) throws -> [Formatter.Change] {
-    return try applyRules(rules, to: tokens, with: options, trackChanges: true).changes
+    return try applyRules(rules, to: tokens, with: options, trackChanges: true, range: nil).changes
 }
 
 /// Lint code with specified rules and options

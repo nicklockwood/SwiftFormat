@@ -115,6 +115,7 @@ extension FormatterTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__FormatterTests = [
+        ("testCodeOutsideRangeNotFormatted", testCodeOutsideRangeNotFormatted),
         ("testDisableAllRules", testDisableAllRules),
         ("testDisableAllRulesAndReEnableOneRule", testDisableAllRulesAndReEnableOneRule),
         ("testDisableAllRulesWithMultilineComment", testDisableAllRulesWithMultilineComment),
@@ -1666,6 +1667,8 @@ extension SwiftFormatTests {
         ("testNoTimeoutForEmptyFile", testNoTimeoutForEmptyFile),
         ("testOffsetForToken", testOffsetForToken),
         ("testOffsetForTokenWithTabs", testOffsetForTokenWithTabs),
+        ("testTokenIndexForOffset", testTokenIndexForOffset),
+        ("testTokenIndexForOffsetWithTabs", testTokenIndexForOffsetWithTabs),
     ]
 }
 

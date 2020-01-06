@@ -45,6 +45,9 @@ public class Formatter: NSObject {
     private var disabledNext = 0
     private var wasNextDirective = false
 
+    // Formatting range
+    public var range: Range<Int>?
+
     // Current rule, used for handling comment directives
     var currentRule: FormatRule? {
         didSet {
@@ -54,7 +57,12 @@ public class Formatter: NSObject {
     }
 
     // Is current rule enabled
-    var isEnabled: Bool { return disabledCount + disabledNext <= 0 }
+    var isEnabled: Bool {
+        guard range?.contains(enumerationIndex) != false else {
+            return false
+        }
+        return disabledCount + disabledNext <= 0
+    }
 
     // Process a comment token (which may contain directives)
     func processCommentBody(_ comment: String) {
@@ -99,10 +107,12 @@ public class Formatter: NSObject {
     public private(set) var tokens: [Token]
 
     /// Create a new formatter instance from a token array
-    public init(_ tokens: [Token], options: FormatOptions = FormatOptions(), trackChanges: Bool = false) {
+    public init(_ tokens: [Token], options: FormatOptions = FormatOptions(),
+                trackChanges: Bool = false, range: Range<Int>? = nil) {
         self.tokens = tokens
         self.options = options
         self.trackChanges = trackChanges
+        self.range = range
     }
 
     // MARK: changes made
@@ -132,6 +142,13 @@ public class Formatter: NSObject {
             rule: rule,
             filePath: options.fileInfo.filePath
         ))
+    }
+
+    private func updateRange(at index: Int, delta: Int) {
+        guard let range = range, range.contains(index) else {
+            return
+        }
+        self.range = range.lowerBound ..< range.upperBound + delta
     }
 
     // MARK: access and mutation
@@ -184,6 +201,7 @@ public class Formatter: NSObject {
     /// Removes the token at the specified index
     public func removeToken(at index: Int) {
         trackChange(at: index)
+        updateRange(at: index, delta: -1)
         tokens.remove(at: index)
         if enumerationIndex >= index {
             enumerationIndex -= 1
@@ -203,6 +221,7 @@ public class Formatter: NSObject {
     /// Removes the last token
     public func removeLastToken() {
         trackChange(at: tokens.endIndex - 1)
+        updateRange(at: tokens.endIndex - 1, delta: -1)
         tokens.removeLast()
     }
 
@@ -210,6 +229,7 @@ public class Formatter: NSObject {
     public func insertTokens(_ tokens: [Token], at index: Int) {
         trackChange(at: index)
         for token in tokens.reversed() {
+            updateRange(at: index, delta: 1)
             self.tokens.insert(token, at: index)
         }
         if enumerationIndex >= index {

@@ -274,4 +274,41 @@ class FormatterTests: XCTestCase {
             .endOfScope("}"),
         ])
     }
+
+    // MARK: range
+
+    func testCodeOutsideRangeNotFormatted() throws {
+        let input = tokenize("""
+        func foo () {
+
+            var  bar = 5
+        }
+        """)
+        for range in [0 ..< 2, 5 ..< 7, 14 ..< 16, 17 ..< 19] {
+            XCTAssertEqual(try format(input,
+                                      rules: FormatRules.all,
+                                      range: range), input)
+        }
+        let output1 = tokenize("""
+        func foo () {
+
+            var bar = 5
+        }
+        """)
+        XCTAssertEqual(try format(
+            input,
+            rules: [FormatRules.consecutiveSpaces],
+            range: 10 ..< 13
+        ), output1)
+        let output2 = """
+        func foo () {
+            var  bar = 5
+        }
+        """
+        XCTAssertEqual(sourceCode(for: try format(
+            input,
+            rules: [FormatRules.blankLinesAtStartOfScope],
+            range: 6 ..< 9
+        )), output2)
+    }
 }

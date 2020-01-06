@@ -681,7 +681,7 @@ func applyRules(_ source: String, options: Options, verbose: Bool, lint: Bool) t
     let formatOptions = options.formatOptions ?? .default
     var changes = [Formatter.Change]()
     (tokens, changes) = try applyRules(rules, to: tokens, with: formatOptions,
-                                       trackChanges: lint || verbose)
+                                       trackChanges: lint || verbose, range: nil)
 
     // Display info
     if lint, tokens != originalTokens {

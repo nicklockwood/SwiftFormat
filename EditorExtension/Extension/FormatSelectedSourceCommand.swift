@@ -33,77 +33,60 @@ import Foundation
 import XcodeKit
 
 class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
-    func perform(with invocation: XCSourceEditorCommandInvocation,
-                 completionHandler: @escaping (Error?) -> Void) {
+    func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         guard SupportedContentUTIs.contains(invocation.buffer.contentUTI) else {
             return completionHandler(FormatCommandError.notSwiftLanguage)
         }
 
-        guard let selection = invocation.buffer.selections.firstObject as? XCSourceTextRange else {
+        guard let selections = invocation.buffer.selections.copy() as? [XCSourceTextRange] else {
             return completionHandler(FormatCommandError.noSelection)
         }
 
-        // Inspect the whole file to infer the format options
+        // Grab the selected source to format
+        let sourceToFormat = invocation.buffer.completeBuffer
+        let input = tokenize(sourceToFormat)
+
+        // Get rules
+        let rules = FormatRules.named(RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
+
+        // Get options
         let store = OptionsStore()
-        let tokens = tokenize(invocation.buffer.completeBuffer)
-        var formatOptions = store.inferOptions ? inferFormatOptions(from: tokens) : store.formatOptions
+        var formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
         formatOptions.indent = invocation.buffer.indentationString
         formatOptions.tabWidth = invocation.buffer.tabWidth
-        formatOptions.fragment = true
 
-        // Grab the selected source to format using entire lines of text
-        let selectionRange = selection.start.line ... min(selection.end.line, invocation.buffer.lines.count - 1)
-        let sourceToFormat = selectionRange.flatMap {
-            (invocation.buffer.lines[$0] as? String).map { [$0] } ?? []
-        }.joined()
-
-        do {
-            let rules = FormatRules.named(RulesStore()
-                .rules
-                .filter { $0.isEnabled }
-                .map { $0.name })
-
-            let formattedSource = try format(sourceToFormat, rules: rules, options: formatOptions)
-            if formattedSource == sourceToFormat {
-                // No changes needed
-                return completionHandler(nil)
+        // Apply formatting for each range
+        var output = input
+        let tabWidth = invocation.buffer.tabWidth
+        for selection in selections {
+            let startOffset = SourceOffset(selection.start), endOffset = SourceOffset(selection.end)
+            let start = tokenIndexForOffset(startOffset, in: output, tabWidth: tabWidth)
+            let end = tokenIndexForOffset(endOffset, in: output, tabWidth: tabWidth)
+            do {
+                output = try format(output, rules: rules, options: formatOptions, range: start ..< end)
+            } catch {
+                return completionHandler(error)
             }
-
-            // Remove all selections to avoid a crash when changing the contents of the buffer.
-            invocation.buffer.selections.removeAllObjects()
-            invocation.buffer.lines.removeObjects(in: NSMakeRange(selection.start.line, selectionRange.count))
-            invocation.buffer.lines.insert(formattedSource, at: selection.start.line)
-
-            let updatedSelectionRange = rangeForDifferences(
-                in: selection, between: sourceToFormat, and: formattedSource
-            )
-
-            invocation.buffer.selections.add(updatedSelectionRange)
-
-            return completionHandler(nil)
-        } catch {
-            return completionHandler(error)
         }
-    }
+        if output == input {
+            // No changes needed
+            return completionHandler(nil)
+        }
 
-    /// Given a source text range, an original source string and a modified target string this
-    /// method will calculate the differences, and return a usable XCSourceTextRange based upon the original.
-    ///
-    /// - Parameters:
-    ///   - textRange: Existing source text range
-    ///   - sourceText: Original text
-    ///   - targetText: Modified text
-    /// - Returns: Source text range that should be usable with the passed modified text
-    private func rangeForDifferences(in textRange: XCSourceTextRange,
-                                     between _: String, and targetText: String) -> XCSourceTextRange {
-        // Ensure that we're not greedy about end selections — this can cause empty lines to be removed
-        let lineCountOfTarget = targetText.components(separatedBy: CharacterSet.newlines).count
-        let finalLine = (textRange.end.column > 0) ? textRange.end.line : textRange.end.line - 1
-        let range = textRange.start.line ... finalLine
-        let difference = range.count - lineCountOfTarget
-        let start = XCSourceTextPosition(line: textRange.start.line, column: 0)
-        let end = XCSourceTextPosition(line: finalLine - difference, column: 0)
+        // Remove all selections to avoid a crash when changing the contents of the buffer.
+        invocation.buffer.selections.removeAllObjects()
 
-        return XCSourceTextRange(start: start, end: end)
+        // Update buffer
+        invocation.buffer.completeBuffer = sourceCode(for: output)
+
+        // Restore selections
+        for selection in selections {
+            invocation.buffer.selections.add(XCSourceTextRange(
+                start: invocation.buffer.newPosition(for: selection.start, in: output),
+                end: invocation.buffer.newPosition(for: selection.end, in: output)
+            ))
+        }
+
+        return completionHandler(nil)
     }
 }

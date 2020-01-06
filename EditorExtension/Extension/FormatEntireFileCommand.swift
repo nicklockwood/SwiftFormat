@@ -40,33 +40,34 @@ class FormatEntireFileCommand: NSObject, XCSourceEditorCommand {
 
         // Grab the selected source to format
         let sourceToFormat = invocation.buffer.completeBuffer
-        let tokens = tokenize(sourceToFormat)
+        let input = tokenize(sourceToFormat)
 
         let store = OptionsStore()
-        var formatOptions = store.inferOptions ? inferFormatOptions(from: tokens) : store.formatOptions
-        formatOptions.indent = indentationString(for: invocation.buffer)
+        var formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
+        formatOptions.indent = invocation.buffer.indentationString
         formatOptions.tabWidth = invocation.buffer.tabWidth
         do {
             let rules = FormatRules.named(RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
-            let output = try format(tokens, rules: rules, options: formatOptions)
-            if output == tokens {
+            let output = try format(input, rules: rules, options: formatOptions)
+            if output == input {
                 // No changes needed
                 return completionHandler(nil)
             }
 
             // Remove all selections to avoid a crash when changing the contents of the buffer.
+            let selections = invocation.buffer.selections.copy() as! [XCSourceTextRange]
             invocation.buffer.selections.removeAllObjects()
 
             // Update buffer
             invocation.buffer.completeBuffer = sourceCode(for: output)
 
-            // For the time being, set the selection back to the last character of the buffer
-            guard let lastLine = invocation.buffer.lines.lastObject as? String else {
-                return completionHandler(FormatCommandError.invalidSelection)
+            // Restore selections
+            for selection in selections {
+                invocation.buffer.selections.add(XCSourceTextRange(
+                    start: invocation.buffer.newPosition(for: selection.start, in: output),
+                    end: invocation.buffer.newPosition(for: selection.end, in: output)
+                ))
             }
-            let position = XCSourceTextPosition(line: invocation.buffer.lines.count - 1, column: lastLine.count)
-            let updatedSelectionRange = XCSourceTextRange(start: position, end: position)
-            invocation.buffer.selections.add(updatedSelectionRange)
 
             return completionHandler(nil)
         } catch {

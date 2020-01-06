@@ -9,23 +9,34 @@
 import Foundation
 import XcodeKit
 
-/// Calculates the indentation string representation for a given source text buffer.
-///
-/// - Returns: Indentation represented as a string
-///
-/// NOTE: we cannot exactly replicate Xcode's indent logic in SwiftFormat because
-/// SwiftFormat doesn't support the concept of mixed tabs/spaces that Xcode does.
-///
-/// But that's OK, because mixing tabs and spaces is really stupid.
-///
-/// So in the event that the user has chosen to use tabs, but their chosen indentation
-/// width is not a multiple of the tab width, we'll just use spaces instead.
-func indentationString(for buffer: XCSourceTextBuffer) -> String {
-    if buffer.usesTabsForIndentation {
-        let tabCount = buffer.indentationWidth / buffer.tabWidth
-        if tabCount * buffer.tabWidth == buffer.indentationWidth {
-            return String(repeating: "\t", count: tabCount)
-        }
+extension XCSourceTextPosition {
+    init(_ offset: SourceOffset) {
+        self.init(line: offset.line - 1, column: offset.column - 1)
     }
-    return String(repeating: " ", count: buffer.indentationWidth)
+}
+
+extension SourceOffset {
+    init(_ position: XCSourceTextPosition) {
+        line = position.line + 1
+        column = position.column + 1
+    }
+}
+
+extension XCSourceTextBuffer {
+    /// Calculates the indentation string representation for a given source text buffer
+    var indentationString: String {
+        if usesTabsForIndentation {
+            let tabCount = indentationWidth / tabWidth
+            if tabCount * tabWidth == indentationWidth {
+                return String(repeating: "\t", count: tabCount)
+            }
+        }
+        return String(repeating: " ", count: indentationWidth)
+    }
+
+    func newPosition(for position: XCSourceTextPosition,
+                     in tokens: [Token]) -> XCSourceTextPosition {
+        let offset = newOffset(for: SourceOffset(position), in: tokens, tabWidth: tabWidth)
+        return XCSourceTextPosition(offset)
+    }
 }

@@ -171,6 +171,23 @@ public enum Token: Equatable {
         }
     }
 
+    /// Returns the width (in characters) of the token
+    public func columnWidth(tabWidth: Int) -> Int {
+        switch self {
+        case let .space(string), let .stringBody(string), let .commentBody(string):
+            guard tabWidth > 1 else {
+                return string.count
+            }
+            return string.reduce(0) { count, character in
+                count + (character == "\t" ? tabWidth : 1)
+            }
+        case .linebreak:
+            return 0
+        default:
+            return string.count
+        }
+    }
+
     /// Returns the unescaped token string
     public func unescaped() -> String {
         switch self {

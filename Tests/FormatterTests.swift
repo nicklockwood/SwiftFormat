@@ -249,4 +249,29 @@ class FormatterTests: XCTestCase {
         ])
         XCTAssertEqual(formatter.linebreakToken(for: 1), .linebreak("\n", 1))
     }
+
+    func testOriginalLinePreservedAfterFormatting() {
+        let formatter = Formatter([
+            .identifier("foo"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n", 1),
+            .linebreak("\n", 2),
+            .space("    "),
+            .identifier("bar"),
+            .linebreak("\n", 3),
+            .endOfScope("}"),
+        ])
+        FormatRules.blankLinesAtStartOfScope.apply(with: formatter)
+        XCTAssertEqual(formatter.tokens, [
+            .identifier("foo"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n", 2),
+            .space("    "),
+            .identifier("bar"),
+            .linebreak("\n", 3),
+            .endOfScope("}"),
+        ])
+    }
 }

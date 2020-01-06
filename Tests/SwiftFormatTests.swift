@@ -131,7 +131,7 @@ class SwiftFormatTests: XCTestCase {
     func testFormattingFailsForFragment() {
         let input = "foo () {"
         XCTAssertThrowsError(try format(input, rules: [])) {
-            XCTAssertEqual("\($0)", "Unexpected end of file at 1:8")
+            XCTAssertEqual("\($0)", "Unexpected end of file at 1:9")
         }
     }
 
@@ -146,7 +146,7 @@ class SwiftFormatTests: XCTestCase {
     func testFormattingFailsForConflict() {
         let input = "foo () {\n<<<<<< old\n    bar()\n======\n    baz()\n>>>>>> new\n}"
         XCTAssertThrowsError(try format(input, rules: [])) {
-            XCTAssertEqual("\($0)", "Found conflict marker <<<<<< at 2:0")
+            XCTAssertEqual("\($0)", "Found conflict marker <<<<<< at 2:1")
         }
     }
 
@@ -166,19 +166,61 @@ class SwiftFormatTests: XCTestCase {
     // MARK: offsetForToken
 
     func testOffsetForToken() {
-        let source = "// a comment\n    let foo = 5\n"
-        let tokens = tokenize(source)
-        let (line, column) = offsetForToken(at: 7, in: tokens, tabWidth: 1)
-        XCTAssertEqual(line, 2)
-        XCTAssertEqual(column, 8)
+        let tokens = tokenize("// a comment\n    let foo = 5\n")
+        let offset = offsetForToken(at: 7, in: tokens, tabWidth: 1)
+        XCTAssertEqual(offset, SourceOffset(line: 2, column: 9))
     }
 
     func testOffsetForTokenWithTabs() {
-        let source = "// a comment\n\tlet foo = 5\n"
-        let tokens = tokenize(source)
-        let (line, column) = offsetForToken(at: 7, in: tokens, tabWidth: 2)
-        XCTAssertEqual(line, 2)
-        XCTAssertEqual(column, 6)
+        let tokens = tokenize("// a comment\n\tlet foo = 5\n")
+        let offset = offsetForToken(at: 7, in: tokens, tabWidth: 2)
+        XCTAssertEqual(offset, SourceOffset(line: 2, column: 7))
+    }
+
+    // MARK: tokenIndexForOffset
+
+    func testTokenIndexForOffset() {
+        let tokens = tokenize("// a comment\n    let foo = 5\n")
+        let offset = SourceOffset(line: 2, column: 9)
+        XCTAssertEqual(tokenIndexForOffset(offset, in: tokens, tabWidth: 1), 7)
+    }
+
+    func testTokenIndexForOffsetWithTabs() {
+        let tokens = tokenize("// a comment\n\tlet foo = 5\n")
+        let offset = SourceOffset(line: 2, column: 7)
+        XCTAssertEqual(tokenIndexForOffset(offset, in: tokens, tabWidth: 1), 7)
+    }
+
+    // MARK: newOffset
+
+    func testNewOffsetsForUnchangedPosition() {
+        let tokens = tokenize("foo\nbar\nbaz")
+        let offset1 = SourceOffset(line: 1, column: 1)
+        let offset2 = SourceOffset(line: 2, column: 1)
+        let offset3 = SourceOffset(line: 3, column: 1)
+        XCTAssertEqual(newOffset(for: offset1, in: tokens, tabWidth: 1), offset1)
+        XCTAssertEqual(newOffset(for: offset2, in: tokens, tabWidth: 1), offset2)
+        XCTAssertEqual(newOffset(for: offset3, in: tokens, tabWidth: 1), offset3)
+    }
+
+    func testNewOffsetsForRemovedLine() throws {
+        let input = tokenize("foo\nbar\n\n\nbaz\nquux")
+        let offset1 = SourceOffset(line: 1, column: 1)
+        let offset2 = SourceOffset(line: 2, column: 1)
+        let offset3 = SourceOffset(line: 5, column: 1)
+        let offset4 = SourceOffset(line: 6, column: 1)
+        let output = try format(input, rules: [FormatRules.consecutiveBlankLines])
+        let expected3 = SourceOffset(line: 4, column: 1)
+        let expected4 = SourceOffset(line: 5, column: 1)
+        XCTAssertEqual(newOffset(for: offset1, in: output, tabWidth: 1), offset1)
+        XCTAssertEqual(newOffset(for: offset2, in: output, tabWidth: 1), offset2)
+        XCTAssertEqual(newOffset(for: offset3, in: output, tabWidth: 1), expected3)
+        XCTAssertEqual(newOffset(for: offset4, in: output, tabWidth: 1), expected4)
+    }
+
+    func testNewOffsetsForEmptyOutput() {
+        let offset = SourceOffset(line: 1, column: 1)
+        XCTAssertEqual(newOffset(for: offset, in: [], tabWidth: 1), offset)
     }
 
     // MARK: expand path

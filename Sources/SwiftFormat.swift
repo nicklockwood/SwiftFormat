@@ -338,27 +338,58 @@ public func enumerateFiles(withInputURL inputURL: URL,
     return errors
 }
 
-/// Get line/column offset for token
-/// Note: line indexes start at 1, columns start at zero
-public func offsetForToken(at index: Int, in tokens: [Token], tabWidth: Int) -> (line: Int, column: Int) {
-    var column = 0
+/// Line and column offset in source
+/// Note: line and column indexes start at 1
+public struct SourceOffset: Equatable, CustomStringConvertible {
+    var line, column: Int
+
+    public init(line: Int, column: Int) {
+        self.line = line
+        self.column = column
+    }
+
+    public var description: String {
+        return "\(line):\(column)"
+    }
+}
+
+/// Get offset for token
+public func offsetForToken(at index: Int, in tokens: [Token], tabWidth: Int) -> SourceOffset {
+    var column = 1
     for token in tokens[..<index].reversed() {
         switch token {
         case let .linebreak(_, line):
-            return (line + 1, column)
-        case let .space(string), let .stringBody(string), let .commentBody(string):
-            guard tabWidth > 1 else {
-                column += string.count
-                break
-            }
-            column += string.reduce(0) { count, character in
-                count + (character == "\t" ? tabWidth : 1)
-            }
+            return SourceOffset(line: line + 1, column: column)
         default:
-            column += token.string.count
+            column += token.columnWidth(tabWidth: tabWidth)
         }
     }
-    return (1, column)
+    return SourceOffset(line: 1, column: column)
+}
+
+/// Get new offset for an original offset (before formatting)
+public func newOffset(for offset: SourceOffset, in tokens: [Token], tabWidth: Int) -> SourceOffset {
+    var closestLine = 0
+    for i in tokens.indices {
+        guard case let .linebreak(_, originalLine) = tokens[i] else {
+            continue
+        }
+        closestLine += 1
+        guard originalLine >= offset.line else {
+            continue
+        }
+        var lineLength = 0
+        for j in (0 ..< i).reversed() {
+            let token = tokens[j]
+            if token.isLinebreak {
+                break
+            }
+            lineLength += token.columnWidth(tabWidth: tabWidth)
+        }
+        return SourceOffset(line: closestLine, column: min(offset.column, lineLength + 1))
+    }
+    let lineLength = tokens.reduce(0) { $0 + $1.columnWidth(tabWidth: tabWidth) }
+    return SourceOffset(line: closestLine + 1, column: min(offset.column, lineLength + 1))
 }
 
 /// Process parsing errors
@@ -383,8 +414,8 @@ public func parsingError(for tokens: [Token], options: FormatOptions) -> FormatE
         default:
             preconditionFailure()
         }
-        let (line, column) = offsetForToken(at: index, in: tokens, tabWidth: options.tabWidth)
-        return .parsing("\(message) at \(line):\(column)")
+        let offset = offsetForToken(at: index, in: tokens, tabWidth: options.tabWidth)
+        return .parsing("\(message) at \(offset)")
     }
     return nil
 }

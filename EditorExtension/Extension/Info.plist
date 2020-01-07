@@ -28,19 +28,19 @@
 			<array>
 				<dict>
 					<key>XCSourceEditorCommandClassName</key>
-					<string>$(PRODUCT_MODULE_NAME).FormatSelectedSourceCommand</string>
+					<string>$(PRODUCT_MODULE_NAME).FormatSelectionCommand</string>
 					<key>XCSourceEditorCommandIdentifier</key>
-					<string>$(PRODUCT_BUNDLE_IDENTIFIER).FormatSelectedSourceCommand</string>
+					<string>$(PRODUCT_BUNDLE_IDENTIFIER).FormatSelectionCommand</string>
 					<key>XCSourceEditorCommandName</key>
-					<string>Format Selected Source</string>
+					<string>Format Selection</string>
 				</dict>
 				<dict>
 					<key>XCSourceEditorCommandClassName</key>
-					<string>$(PRODUCT_MODULE_NAME).FormatEntireFileCommand</string>
+					<string>$(PRODUCT_MODULE_NAME).FormatFileCommand</string>
 					<key>XCSourceEditorCommandIdentifier</key>
-					<string>$(PRODUCT_BUNDLE_IDENTIFIER).FormatEntireFileCommand</string>
+					<string>$(PRODUCT_BUNDLE_IDENTIFIER).FormatFileCommand</string>
 					<key>XCSourceEditorCommandName</key>
-					<string>Format Entire File</string>
+					<string>Format File</string>
 				</dict>
 				<dict>
 					<key>XCSourceEditorCommandClassName</key>

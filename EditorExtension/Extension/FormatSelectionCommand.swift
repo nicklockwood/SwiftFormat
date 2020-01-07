@@ -1,5 +1,5 @@
 //
-//  FormatSelectedSourceCommand.swift
+//  FormatSelectionCommand.swift
 //  Swift Formatter
 //
 //  Created by Tony Arnold on 5/10/16.
@@ -32,7 +32,7 @@
 import Foundation
 import XcodeKit
 
-class FormatSelectedSourceCommand: NSObject, XCSourceEditorCommand {
+class FormatSelectionCommand: NSObject, XCSourceEditorCommand {
     func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         guard SupportedContentUTIs.contains(invocation.buffer.contentUTI) else {
             return completionHandler(FormatCommandError.notSwiftLanguage)

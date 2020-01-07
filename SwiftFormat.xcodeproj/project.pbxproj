@@ -18,6 +18,7 @@
 		01045AA0211A1EE300D2BE3D /* Arguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01045A982119979400D2BE3D /* Arguments.swift */; };
 		011A53EB21FFAA4200DD9268 /* VersionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 011A53E921FFAA3A00DD9268 /* VersionTests.swift */; };
 		01426E4E23AA29B100E7D871 /* ParsingHelpersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01426E4D23AA29B100E7D871 /* ParsingHelpersTests.swift */; };
+		0142C77023C3FB6D005D5832 /* LintFileCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0142C76F23C3FB6D005D5832 /* LintFileCommand.swift */; };
 		0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */; };
 		01567D2F225B2BFD00B22D41 /* ParsingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */; };
 		01567D30225B2BFD00B22D41 /* ParsingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */; };
@@ -142,6 +143,7 @@
 		01045A9C2119A21000D2BE3D /* ArgumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgumentsTests.swift; sourceTree = "<group>"; };
 		011A53E921FFAA3A00DD9268 /* VersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionTests.swift; sourceTree = "<group>"; };
 		01426E4D23AA29B100E7D871 /* ParsingHelpersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParsingHelpersTests.swift; sourceTree = "<group>"; };
+		0142C76F23C3FB6D005D5832 /* LintFileCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LintFileCommand.swift; sourceTree = "<group>"; };
 		0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftFormatTests.swift; sourceTree = "<group>"; };
 		01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParsingHelpers.swift; sourceTree = "<group>"; };
 		015AF2C51DC6A538008F0A8C /* SwiftFormatPerfTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftFormatPerfTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -417,6 +419,7 @@
 			children = (
 				90F16AF71DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift */,
 				90C4B6E61DA4B059009EB000 /* FormatSelectedSourceCommand.swift */,
+				0142C76F23C3FB6D005D5832 /* LintFileCommand.swift */,
 			);
 			name = Commands;
 			sourceTree = "<group>";
@@ -853,6 +856,7 @@
 				01045A9F2119D30D00D2BE3D /* Inference.swift in Sources */,
 				01A95BD2225BEDE300744931 /* ParsingHelpers.swift in Sources */,
 				90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */,
+				0142C77023C3FB6D005D5832 /* LintFileCommand.swift in Sources */,
 				E4E4D3CC2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				E4FABAD8202FEF060065716E /* OptionsDescriptor.swift in Sources */,
 				9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */,

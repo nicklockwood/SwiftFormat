@@ -35,6 +35,7 @@ enum FormatCommandError: Error, LocalizedError, CustomNSError {
     case notSwiftLanguage
     case noSelection
     case invalidSelection
+    case lintWarnings([Formatter.Change])
 
     var localizedDescription: String {
         switch self {
@@ -44,6 +45,18 @@ enum FormatCommandError: Error, LocalizedError, CustomNSError {
             return "Error: no text selected."
         case .invalidSelection:
             return "Error: invalid selection."
+        case let .lintWarnings(changes):
+            let change = changes.first!
+            let rule = change.rule
+            let message = "Warning: \(rule.name) violation on line \(change.line). \(rule.help)"
+            switch changes.count - 1 {
+            case 0:
+                return message
+            case 1:
+                return "\(message) (+ 1 other warning)"
+            case let n:
+                return "\(message) (+ \(n) other warnings)"
+            }
         }
     }
 

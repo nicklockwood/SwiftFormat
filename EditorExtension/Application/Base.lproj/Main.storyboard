@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15702"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -471,12 +471,12 @@
                                                                 <outlet property="checkbox" destination="Mfi-uR-j8t" id="XlW-qO-5oC"/>
                                                             </connections>
                                                         </tableCellView>
-                                                        <tableCellView identifier="FreeTextTableCellView" id="ISi-9v-fr9" customClass="FreeTextTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
+                                                        <tableCellView identifier="FreeTextTableCellView" misplaced="YES" id="ISi-9v-fr9" customClass="FreeTextTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
                                                             <rect key="frame" x="1" y="30" width="473" height="30"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hfs-ko-uob">
-                                                                    <rect key="frame" x="32" y="7" width="68" height="17"/>
+                                                                    <rect key="frame" x="32" y="7" width="68" height="16"/>
                                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Rule name" id="vqw-aY-rHp">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -484,7 +484,7 @@
                                                                     </textFieldCell>
                                                                 </textField>
                                                                 <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="3FH-Sx-Hfs">
-                                                                    <rect key="frame" x="106" y="4" width="359" height="22"/>
+                                                                    <rect key="frame" x="106" y="4" width="359" height="21"/>
                                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Mkg-Qi-aiV">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -530,7 +530,7 @@
                                                                     </connections>
                                                                 </popUpButton>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8Sj-pm-88d">
-                                                                    <rect key="frame" x="32" y="6" width="355" height="17"/>
+                                                                    <rect key="frame" x="32" y="7" width="355" height="16"/>
                                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Option name" id="72m-8i-Mg3">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -611,11 +611,11 @@
             <objects>
                 <viewController title="About" showSeguePresentationStyle="single" id="XfG-lQ-9wD" sceneMemberID="viewController">
                     <view key="view" wantsLayer="YES" id="m2S-Jp-Qdl">
-                        <rect key="frame" x="0.0" y="0.0" width="385" height="451"/>
+                        <rect key="frame" x="0.0" y="0.0" width="385" height="496"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aNJ-6N-CED">
-                                <rect key="frame" x="18" y="414" width="349" height="17"/>
+                                <rect key="frame" x="18" y="460" width="349" height="16"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="What is SwiftFormat for Xcode?" id="DWG-95-tUK">
                                     <font key="font" metaFont="systemBold"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -623,7 +623,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="Zkf-d0-hNG">
-                                <rect key="frame" x="18" y="338" width="349" height="68"/>
+                                <rect key="frame" x="18" y="388" width="349" height="64"/>
                                 <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="xVj-5Y-11n">
                                     <font key="font" metaFont="system"/>
                                     <string key="title">SwiftFormat for Xcode is an extension for Apple's IDE, Xcode that reformats swift code. It applies a set of rules to the whitespace around the code, leaving the meaning intact.</string>
@@ -632,7 +632,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="qnt-Gk-VpH">
-                                <rect key="frame" x="18" y="305" width="349" height="17"/>
+                                <rect key="frame" x="18" y="356" width="349" height="16"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="How do I install it?" id="NmP-Dn-biY">
                                     <font key="font" metaFont="systemBold"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -640,7 +640,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="VVr-7o-9zD">
-                                <rect key="frame" x="18" y="212" width="349" height="85"/>
+                                <rect key="frame" x="18" y="268" width="349" height="80"/>
                                 <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="9no-dM-Qlu">
                                     <font key="font" metaFont="system"/>
                                     <string key="title">1. Open System Preferences
@@ -653,7 +653,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="BT8-iH-xPF">
-                                <rect key="frame" x="18" y="179" width="349" height="17"/>
+                                <rect key="frame" x="18" y="236" width="349" height="16"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Using SwiftFormat in Xcode" id="oXO-Zs-OzH">
                                     <font key="font" metaFont="systemBold"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -661,40 +661,56 @@
                                 </textFieldCell>
                             </textField>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="8zw-Wj-eDm">
-                                <rect key="frame" x="18" y="120" width="349" height="51"/>
-                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Open any Swift source code in Xcode — under the &quot;Editor&quot; menu, you will find &quot;SwiftFormat&quot; which has two options:" allowsEditingTextAttributes="YES" id="hXB-Qi-ovD">
+                                <rect key="frame" x="18" y="180" width="349" height="48"/>
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Open any Swift source code in Xcode — under the &quot;Editor&quot; menu, you will find &quot;SwiftFormat&quot; which has the following options:" allowsEditingTextAttributes="YES" id="hXB-Qi-ovD">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="OUH-Zg-5E6">
-                                <rect key="frame" x="18" y="91" width="349" height="17"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Selected Source" id="Hrg-QH-mw6">
+                                <rect key="frame" x="18" y="152" width="349" height="16"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Selection" id="Hrg-QH-mw6">
                                     <font key="font" metaFont="systemMedium" size="13"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="0fv-q4-LYw">
-                                <rect key="frame" x="18" y="41" width="349" height="17"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format Entire File" id="TzM-um-Cxx">
+                                <rect key="frame" x="18" y="104" width="349" height="16"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Format File" id="TzM-um-Cxx">
                                     <font key="font" metaFont="systemMedium" size="13"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="f7w-oN-I0u">
-                                <rect key="frame" x="18" y="20" width="349" height="17"/>
-                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Re-formats the entire swift file you’re currently editing." id="TvB-5m-5S4">
+                                <rect key="frame" x="18" y="84" width="349" height="16"/>
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Formats the entire swift file you’re currently editing." id="TvB-5m-5S4">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="3tw-Xe-luV">
-                                <rect key="frame" x="18" y="70" width="349" height="17"/>
-                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Re-formats just the swift code you have selected." id="kCm-Pj-5CN">
+                                <rect key="frame" x="18" y="132" width="349" height="16"/>
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Formats just the swift code you have selected." id="kCm-Pj-5CN">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ozx-uI-Xqg">
+                                <rect key="frame" x="18" y="56" width="349" height="16"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Lint File" id="ybJ-xr-7zq">
+                                    <font key="font" metaFont="systemMedium" size="13"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="aqr-5C-gJh">
+                                <rect key="frame" x="18" y="20" width="349" height="32"/>
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Lints the currently open swift file and warns if formatting changes are needed (no actual changes are applied)." id="L2T-8z-YeX">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -702,13 +718,15 @@
                             </textField>
                         </subviews>
                         <constraints>
+                            <constraint firstItem="aqr-5C-gJh" firstAttribute="leading" secondItem="ozx-uI-Xqg" secondAttribute="leading" id="7IM-kC-uGv"/>
                             <constraint firstItem="qnt-Gk-VpH" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="8zH-8M-B3o"/>
                             <constraint firstItem="0fv-q4-LYw" firstAttribute="leading" secondItem="OUH-Zg-5E6" secondAttribute="leading" id="95j-tH-qIF"/>
                             <constraint firstItem="BT8-iH-xPF" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="9Zc-9a-gjc"/>
                             <constraint firstItem="Zkf-d0-hNG" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="DFs-BK-idd"/>
-                            <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="f7w-oN-I0u" secondAttribute="bottom" constant="20" symbolic="YES" id="DvH-ox-lha"/>
+                            <constraint firstAttribute="trailing" secondItem="ozx-uI-Xqg" secondAttribute="trailing" constant="20" symbolic="YES" id="Df8-8a-GoC"/>
                             <constraint firstAttribute="trailing" secondItem="OUH-Zg-5E6" secondAttribute="trailing" constant="20" symbolic="YES" id="Jdx-KP-H8m"/>
                             <constraint firstAttribute="trailing" secondItem="Zkf-d0-hNG" secondAttribute="trailing" constant="20" symbolic="YES" id="OVl-wP-9Cu"/>
+                            <constraint firstItem="aqr-5C-gJh" firstAttribute="top" secondItem="ozx-uI-Xqg" secondAttribute="bottom" constant="4" id="OcJ-kM-lg4"/>
                             <constraint firstItem="Zkf-d0-hNG" firstAttribute="top" secondItem="aNJ-6N-CED" secondAttribute="bottom" constant="8" symbolic="YES" id="Ovr-gf-o9G"/>
                             <constraint firstItem="f7w-oN-I0u" firstAttribute="top" secondItem="0fv-q4-LYw" secondAttribute="bottom" constant="4" id="QHZ-cv-wXr"/>
                             <constraint firstAttribute="trailing" secondItem="f7w-oN-I0u" secondAttribute="trailing" constant="20" symbolic="YES" id="SIM-AT-wfl"/>
@@ -729,16 +747,20 @@
                             <constraint firstItem="3tw-Xe-luV" firstAttribute="top" secondItem="OUH-Zg-5E6" secondAttribute="bottom" constant="4" id="kH7-9c-TpL"/>
                             <constraint firstItem="8zw-Wj-eDm" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="20" symbolic="YES" id="l3G-Oo-SwJ"/>
                             <constraint firstItem="3tw-Xe-luV" firstAttribute="leading" secondItem="OUH-Zg-5E6" secondAttribute="leading" id="s0U-Ud-Izp"/>
+                            <constraint firstItem="ozx-uI-Xqg" firstAttribute="top" secondItem="f7w-oN-I0u" secondAttribute="bottom" constant="12" id="tEm-hC-wtb"/>
                             <constraint firstItem="qnt-Gk-VpH" firstAttribute="top" secondItem="Zkf-d0-hNG" secondAttribute="bottom" constant="16" id="tiH-6g-ALA"/>
                             <constraint firstItem="OUH-Zg-5E6" firstAttribute="top" secondItem="8zw-Wj-eDm" secondAttribute="bottom" constant="12" id="uWd-JY-Hhx"/>
+                            <constraint firstAttribute="trailing" secondItem="aqr-5C-gJh" secondAttribute="trailing" constant="20" symbolic="YES" id="vDM-3e-9Jx"/>
                             <constraint firstItem="0fv-q4-LYw" firstAttribute="top" secondItem="3tw-Xe-luV" secondAttribute="bottom" constant="12" id="wBk-Ab-bdR"/>
                             <constraint firstItem="aNJ-6N-CED" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="20" symbolic="YES" id="xiA-eD-jTg"/>
+                            <constraint firstItem="ozx-uI-Xqg" firstAttribute="leading" secondItem="f7w-oN-I0u" secondAttribute="leading" id="y9R-f9-KDr"/>
+                            <constraint firstAttribute="bottom" secondItem="aqr-5C-gJh" secondAttribute="bottom" constant="20" symbolic="YES" id="znD-d5-KwB"/>
                         </constraints>
                     </view>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="524.5" y="1253.5"/>
+            <point key="canvasLocation" x="524.5" y="1269"/>
         </scene>
     </scenes>
 </document>

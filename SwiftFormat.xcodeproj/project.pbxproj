@@ -68,9 +68,9 @@
 		90C4B6D41DA4B04A009EB000 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90C4B6D21DA4B04A009EB000 /* Main.storyboard */; };
 		90C4B6E01DA4B059009EB000 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90C4B6DF1DA4B059009EB000 /* Cocoa.framework */; };
 		90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C4B6E41DA4B059009EB000 /* SourceEditorExtension.swift */; };
-		90C4B6E71DA4B059009EB000 /* FormatSelectedSourceCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C4B6E61DA4B059009EB000 /* FormatSelectedSourceCommand.swift */; };
+		90C4B6E71DA4B059009EB000 /* FormatSelectionCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C4B6E61DA4B059009EB000 /* FormatSelectionCommand.swift */; };
 		90C4B6EB1DA4B059009EB000 /* SwiftFormat.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		90F16AF81DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F16AF71DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift */; };
+		90F16AF81DA5EB4600EB4EA1 /* FormatFileCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F16AF71DA5EB4600EB4EA1 /* FormatFileCommand.swift */; };
 		90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */; };
 		B9C4F55C2387FA3E0088DBEE /* SupportedContentUTIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */; };
 		E4083191202C049200CAF11D /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
@@ -181,10 +181,10 @@
 		90C4B6DF1DA4B059009EB000 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		90C4B6E31DA4B059009EB000 /* SwiftFormatter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftFormatter.entitlements; sourceTree = "<group>"; };
 		90C4B6E41DA4B059009EB000 /* SourceEditorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceEditorExtension.swift; sourceTree = "<group>"; };
-		90C4B6E61DA4B059009EB000 /* FormatSelectedSourceCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatSelectedSourceCommand.swift; sourceTree = "<group>"; };
+		90C4B6E61DA4B059009EB000 /* FormatSelectionCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatSelectionCommand.swift; sourceTree = "<group>"; };
 		90C4B6E81DA4B059009EB000 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		90CB44D81DA4B56500F86C22 /* SwiftFormatter.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftFormatter.entitlements; sourceTree = "<group>"; };
-		90F16AF71DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatEntireFileCommand.swift; sourceTree = "<group>"; };
+		90F16AF71DA5EB4600EB4EA1 /* FormatFileCommand.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatFileCommand.swift; sourceTree = "<group>"; };
 		90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandErrors.swift; sourceTree = "<group>"; };
 		B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedContentUTIs.swift; sourceTree = "<group>"; };
 		E41CB5BE2025761D00C1BEDE /* UserSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSelection.swift; sourceTree = "<group>"; };
@@ -417,8 +417,8 @@
 		90F16AF91DA5ECBA00EB4EA1 /* Commands */ = {
 			isa = PBXGroup;
 			children = (
-				90F16AF71DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift */,
-				90C4B6E61DA4B059009EB000 /* FormatSelectedSourceCommand.swift */,
+				90F16AF71DA5EB4600EB4EA1 /* FormatFileCommand.swift */,
+				90C4B6E61DA4B059009EB000 /* FormatSelectionCommand.swift */,
 				0142C76F23C3FB6D005D5832 /* LintFileCommand.swift */,
 			);
 			name = Commands;
@@ -868,8 +868,8 @@
 				01F3DF8E1DB9FD3F00454944 /* Options.swift in Sources */,
 				9028F7831DA4B435009FE5B4 /* SwiftFormat.swift in Sources */,
 				B9C4F55C2387FA3E0088DBEE /* SupportedContentUTIs.swift in Sources */,
-				90C4B6E71DA4B059009EB000 /* FormatSelectedSourceCommand.swift in Sources */,
-				90F16AF81DA5EB4600EB4EA1 /* FormatEntireFileCommand.swift in Sources */,
+				90C4B6E71DA4B059009EB000 /* FormatSelectionCommand.swift in Sources */,
+				90F16AF81DA5EB4600EB4EA1 /* FormatFileCommand.swift in Sources */,
 				01ACAE08220CD916003F3CCF /* Examples.swift in Sources */,
 				9028F7861DA4B435009FE5B4 /* Rules.swift in Sources */,
 			);

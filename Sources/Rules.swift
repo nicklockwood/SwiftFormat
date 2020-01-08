@@ -944,6 +944,20 @@ public struct _FormatRules {
                     indentCount = indentCounts.last! + 1
                 }
                 var indent = indentStack[indentStack.count - indentCount]
+
+                // If using xcodeindentation, increase indent if '->' for function return value
+                // is wrapped to start of a line in the current scope.
+                if formatter.options.xcodeIndentation,
+                    string == "{",
+                    let endOfScope = formatter.index(of: .endOfScope(")"), before: i),
+                    let returnOperatorIndex = formatter.index(
+                        of: .operator("->", .infix),
+                        in: endOfScope + 1 ..< i
+                    ),
+                    formatter.last(.nonSpaceOrComment, before: returnOperatorIndex)?.isLinebreak == true {
+                    indent += formatter.options.indent
+                }
+
                 switch string {
                 case "/*":
                     // Comments only indent one space
@@ -3086,7 +3100,7 @@ public struct _FormatRules {
             case .operator(".", .infix):
                 addBreakPoint(at: i - 1, relativePriority: -2)
             case .operator("->", .infix):
-                addBreakPoint(at: i - 1, relativePriority: -11)
+                addBreakPoint(at: i - 1, relativePriority: -7)
             case .operator(_, .infix) where formatter.token(at: i + 1)?.isSpace == true:
                 addBreakPoint(at: i, relativePriority: -3)
             case .startOfScope("{"):

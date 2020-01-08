@@ -1072,7 +1072,7 @@ class RulesTests: XCTestCase {
     // MARK: consecutiveBlankLines
 
     func testConsecutiveBlankLines() {
-        let input = "foo\n   \n\nbar"
+        let input = "foo\n\n    \nbar"
         let output = "foo\n\nbar"
         testFormatting(for: input, output, rule: FormatRules.consecutiveBlankLines)
     }
@@ -1094,11 +1094,29 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.consecutiveBlankLines)
     }
 
+    func testConsecutiveBlankLinesAtStartOfStringLiteral() {
+        let input = "\"\"\"\n\n\nhello world\n\"\"\""
+        testFormatting(for: input, rule: FormatRules.consecutiveBlankLines)
+    }
+
+    func testConsecutiveBlankLinesAfterStringLiteral() {
+        let input = "\"\"\"\nhello world\n\"\"\"\n\n\nfoo()"
+        let output = "\"\"\"\nhello world\n\"\"\"\n\nfoo()"
+        testFormatting(for: input, output, rule: FormatRules.consecutiveBlankLines)
+    }
+
     func testFragmentWithTrailingLinebreaks() {
         let input = "func foo() {}\n\n\n"
         let output = "func foo() {}\n\n"
         let options = FormatOptions(fragment: true)
         testFormatting(for: input, output, rule: FormatRules.consecutiveBlankLines, options: options)
+    }
+
+    func testLintingConsecutiveBlankLinesReportsCorrectLine() {
+        let input = "foo\n   \n\nbar"
+        XCTAssertEqual(try lint(input, rules: [FormatRules.consecutiveBlankLines]), [
+            .init(line: 3, rule: FormatRules.consecutiveBlankLines, filePath: nil),
+        ])
     }
 
     // MARK: blankLinesAtStartOfScope

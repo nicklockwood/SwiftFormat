@@ -661,10 +661,23 @@ public struct _FormatRules {
         help: "Replace consecutive blank lines with a single blank line."
     ) { formatter in
         formatter.forEach(.linebreak) { i, _ in
-            if let prevIndex = formatter.index(of: .nonSpace, before: i, if: { $0.isLinebreak }),
-                formatter.next(.nonSpace, after: i)?.isLinebreak ?? !formatter.options.fragment,
-                formatter.currentScope(at: prevIndex)?.isStringDelimiter != true {
-                formatter.removeTokens(inRange: prevIndex ..< i)
+            guard let prevIndex = formatter.index(of: .nonSpace, before: i, if: { $0.isLinebreak }) else {
+                return
+            }
+            if let prevToken = formatter.last(.nonSpaceOrLinebreak, before: prevIndex) {
+                switch prevToken {
+                case .startOfScope where prevToken.isStringDelimiter, .stringBody:
+                    return
+                default:
+                    break
+                }
+            }
+            if let nextIndex = formatter.index(of: .nonSpace, after: i) {
+                if formatter.tokens[nextIndex].isLinebreak {
+                    formatter.removeTokens(inRange: i + 1 ... nextIndex)
+                }
+            } else if !formatter.options.fragment {
+                formatter.removeTokens(inRange: i ..< formatter.tokens.count)
             }
         }
     }

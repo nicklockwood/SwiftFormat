@@ -6992,6 +6992,44 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
     }
 
+    func testWrapFunctionIfReturnTypeExceedsMaxWidth() {
+        let input = """
+        func testFunc() -> ReturnType {
+            doSomething()
+        }
+        """
+        let output = """
+        func testFunc()
+            -> ReturnType {
+            doSomething()
+        }
+        """
+        let options = FormatOptions(maxWidth: 25)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapFunctionIfReturnTypeExceedsMaxWidthWithXcodeIndentation() {
+        let input = """
+        func testFunc() -> ReturnType {
+            doSomething()
+        }
+        """
+        let output = """
+        func testFunc()
+            -> ReturnType {
+            doSomething()
+        }
+        """
+        let output2 = """
+        func testFunc()
+            -> ReturnType {
+                doSomething()
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true, maxWidth: 25)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+    }
+
     func testNoWrapInterpolatedStringLiteral() {
         let input = """
         "a very long \\(string) literal"
@@ -7374,7 +7412,42 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 32)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
-                       exclude: ["unusedArguments"])
+                       exclude: ["unusedArguments", "wrap"])
+    }
+
+    func testWrapAfterFirstIfMaxLengthExceeded3WithWrap() {
+        let input = """
+        func foo(bar: Int, baz: String, aVeryLongLastArgumentThatExceedsTheMaxWidthByItself: Bool) -> Bool {}
+        """
+        let output = """
+        func foo(bar: Int, baz: String,
+                 aVeryLongLastArgumentThatExceedsTheMaxWidthByItself: Bool)
+                 -> Bool {}
+        """
+        let output2 = """
+        func foo(bar: Int, baz: String,
+                 aVeryLongLastArgumentThatExceedsTheMaxWidthByItself: Bool)
+            -> Bool {}
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 32)
+        testFormatting(for: input, [output, output2],
+                       rules: [FormatRules.wrapArguments, FormatRules.wrap],
+                       options: options, exclude: ["unusedArguments"])
+    }
+
+    func testWrapAfterFirstIfMaxLengthExceeded4WithWrap() {
+        let input = """
+        func foo(bar: String, baz: String, quux: Bool) -> Bool {}
+        """
+        let output = """
+        func foo(bar: String,
+                 baz: String,
+                 quux: Bool) -> Bool {}
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 31)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments, FormatRules.wrap],
+                       options: options, exclude: ["unusedArguments"])
     }
 
     func testNoWrapAfterFirstArgumentInStringInterpolation() {

@@ -1368,6 +1368,18 @@ class RulesTests: XCTestCase {
 
     // MARK: indent
 
+    func testReduceIndentAtStartOfFile() {
+        let input = "    foo()"
+        let output = "foo()"
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testReduceIndentAtEndOfFile() {
+        let input = "foo()\n   bar()"
+        let output = "foo()\nbar()"
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
     // indent parens
 
     func testSimpleScope() {

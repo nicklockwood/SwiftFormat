@@ -988,7 +988,10 @@ public struct _FormatRules {
                 scopeStartLineIndexes.append(lineIndex)
                 linewrapStack.append(false)
             case .space:
-                break
+                if i == 0, !formatter.options.fragment,
+                    formatter.token(at: i + 1)?.isLinebreak != true {
+                    formatter.removeToken(at: i)
+                }
             case .error("}"), .error("]"), .error(")"), .error(">"):
                 // Handled over-terminated fragment
                 if let prevToken = formatter.token(at: i - 1) {

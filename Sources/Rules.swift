@@ -905,6 +905,14 @@ public struct _FormatRules {
             return lastGuardIndex > lastStartIndex && linewrapStack.last == true && lastEndIndex < lastGuardIndex
         }
 
+        func inFunctionDeclarationWhereReturnTypeIsWrappedToStartOfLine(at i: Int) -> Bool {
+            guard let returnOperatorIndex = formatter.startOfReturnType(at: i) else {
+                return false
+            }
+            return formatter.last(.nonSpaceOrComment,
+                                  before: returnOperatorIndex)?.isLinebreak == true
+        }
+
         if formatter.options.fragment,
             let firstIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1),
             let indentToken = formatter.token(at: firstIndex - 1), case let .space(string) = indentToken {
@@ -949,12 +957,7 @@ public struct _FormatRules {
                 // is wrapped to start of a line in the current scope.
                 if formatter.options.xcodeIndentation,
                     string == "{",
-                    let endOfScope = formatter.index(of: .endOfScope(")"), before: i),
-                    let returnOperatorIndex = formatter.index(
-                        of: .operator("->", .infix),
-                        in: endOfScope + 1 ..< i
-                    ),
-                    formatter.last(.nonSpaceOrComment, before: returnOperatorIndex)?.isLinebreak == true {
+                    inFunctionDeclarationWhereReturnTypeIsWrappedToStartOfLine(at: i) {
                     indent += formatter.options.indent
                 }
 
@@ -3100,7 +3103,10 @@ public struct _FormatRules {
             case .operator(".", .infix):
                 addBreakPoint(at: i - 1, relativePriority: -2)
             case .operator("->", .infix):
-                addBreakPoint(at: i - 1, relativePriority: -7)
+                if formatter.isInReturnType(at: i) {
+                    currentPriority -= 5
+                }
+                addBreakPoint(at: i - 1, relativePriority: -5)
             case .operator(_, .infix) where formatter.token(at: i + 1)?.isSpace == true:
                 addBreakPoint(at: i, relativePriority: -3)
             case .startOfScope("{"):
@@ -3108,6 +3114,9 @@ public struct _FormatRules {
                     formatter.next(.keyword, after: i) != .keyword("in"),
                     formatter.next(.nonSpace, after: i) != .endOfScope("}") {
                     addBreakPoint(at: i, relativePriority: -6)
+                }
+                if formatter.isInReturnType(at: i) {
+                    currentPriority += 5
                 }
                 currentPriority -= 6
             case .endOfScope("}"):

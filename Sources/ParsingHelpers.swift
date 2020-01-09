@@ -247,6 +247,20 @@ extension Formatter {
         }
     }
 
+    func isInReturnType(at i: Int) -> Bool {
+        return startOfReturnType(at: i) != nil
+    }
+
+    /// Returns the index of the `->` operator for the current return type declaration if
+    /// the specified index is a return type declaration.
+    func startOfReturnType(at i: Int) -> Int? {
+        guard let startOfFuncDeclaration = indexOfLastSignificantKeyword(at: i),
+            token(at: startOfFuncDeclaration) == .keyword("func") else {
+            return nil
+        }
+        return index(of: .operator("->", .infix), in: startOfFuncDeclaration + 1 ..< i)
+    }
+
     func isStartOfClosure(at i: Int, in _: Token? = nil) -> Bool {
         assert(tokens[i] == .startOfScope("{"))
 
@@ -278,6 +292,8 @@ extension Formatter {
                     return true
                 }
                 prevIndex = prev - 1
+            case .operator("->", .infix):
+                return false
             default:
                 return true
             }
@@ -831,6 +847,14 @@ extension Formatter {
                 guard let endOfScope = endOfScope(at: i) else {
                     return
                 }
+
+                func willWrapAtStartOfReturnType(maxWidth: Int) -> Bool {
+                    return currentRule == FormatRules.wrap &&
+                        // Return type will only wrap if wrapping is part of wrap rule.
+                        isInReturnType(at: i) &&
+                        maxWidth < lineLength(at: i)
+                }
+
                 let mode: WrapMode
                 var checkNestedScopes = true
                 var endOfScopeOnSameLine = false
@@ -877,7 +901,9 @@ extension Formatter {
                     case .disabled:
                         assertionFailure() // Shouldn't happen
                     }
-                } else if maxWidth > 0, maxWidth < lineLength(upTo: endOfScope + 1) {
+                } else if maxWidth > 0,
+                    maxWidth < lineLength(upTo: endOfScope + 1),
+                    !willWrapAtStartOfReturnType(maxWidth: maxWidth) {
                     if mode == .beforeFirst {
                         wrapArgumentsBeforeFirst(startOfScope: i,
                                                  endOfScope: endOfScope,

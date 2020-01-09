@@ -134,7 +134,7 @@ class MetadataTests: XCTestCase {
                     referencedOptions.append(.lineBreak)
                 case .identifier("wrapCollectionsAndArguments"):
                     referencedOptions += [
-                        .wrapArguments, .wrapCollections, .closingParen,
+                        .wrapArguments, .wrapParameters, .wrapCollections, .closingParen,
                         .indentation, .truncateBlankLines, .lineBreak, .tabWidth, .maxWidth,
                     ]
                 case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):

@@ -249,6 +249,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var fileHeader: HeaderStrippingMode
     public var ifdefIndent: IndentMode
     public var wrapArguments: WrapMode
+    public var wrapParameters: WrapMode
     public var wrapCollections: WrapMode
     public var closingParenOnSameLine: Bool
     public var uppercaseHex: Bool
@@ -300,6 +301,7 @@ public struct FormatOptions: CustomStringConvertible {
                 fileHeader: HeaderStrippingMode = .ignore,
                 ifdefIndent: IndentMode = .indent,
                 wrapArguments: WrapMode = .preserve,
+                wrapParameters: WrapMode = .preserve,
                 wrapCollections: WrapMode = .preserve,
                 closingParenOnSameLine: Bool = false,
                 uppercaseHex: Bool = true,
@@ -343,6 +345,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.fileHeader = fileHeader
         self.ifdefIndent = ifdefIndent
         self.wrapArguments = wrapArguments
+        self.wrapParameters = wrapParameters
         self.wrapCollections = wrapCollections
         self.closingParenOnSameLine = closingParenOnSameLine
         self.uppercaseHex = uppercaseHex

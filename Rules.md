@@ -1514,12 +1514,39 @@ Align wrapped function arguments or collection elements.
 
 Option | Description
 --- | ---
-`--wraparguments` | Wrap function args: "before-first", "after-first", "preserve"
-`--wrapcollections` | Wrap array/dict: "before-first", "after-first", "preserve"
+`--wraparguments` | Wrap all arguments: "before-first", "after-first", "preserve" (default)
+`--wrapparameters` | Wrap function parameters: "before-first", "after-first", "preserve" (defaults to --wrapArguments value)
+`--wrapcollections` | Wrap array/dict: "before-first", "after-first", "preserve" (default)
 `--closingparen` | Closing paren position: "balanced" (default) or "same-line"
 
 <details>
 <summary>Examples</summary>
+
+**NOTE:** For backwards compatibility with previous versions, if no value
+is provided for `--wrapparameters`, the value for `--wraparguments` will be used.
+`--wraparguments before-first`
+
+```diff
+- foo(bar: Int,
+-     baz: String)
+
++ foo(
++   bar: Int,
++   baz: String
++ )
+```
+
+```diff
+- class Foo<Bar,
+-           Baz>
+
++ class Foo<
++   Bar,
++   Baz
++ >
+```
+
+`--wrapparameters after-first`
 
 ```diff
 - func foo(bar: Int,
@@ -1535,7 +1562,7 @@ Option | Description
   }
 ```
 
-Or for `--wrapcollections before-first`:
+`--wrapcollections before-first`:
 
 ```diff
 - let foo = [bar,

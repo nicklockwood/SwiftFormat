@@ -231,6 +231,7 @@ extension FormatOptions.Descriptor {
         fileHeader,
         ifdefIndent,
         wrapArguments,
+        wrapParameters,
         wrapCollections,
         closingParen,
         hexLiteralCase,
@@ -390,15 +391,23 @@ extension FormatOptions.Descriptor {
         argumentName: "wraparguments",
         propertyName: "wrapArguments",
         displayName: "Wrap Arguments",
-        help: "Wrap function args: \"before-first\", \"after-first\", \"preserve\"",
+        help: "Wrap all arguments: \"before-first\", \"after-first\", \"preserve\" (default)",
         keyPath: \.wrapArguments,
+        options: ["before-first", "after-first", "preserve", "disabled"]
+    )
+    static let wrapParameters = FormatOptions.Descriptor(
+        argumentName: "wrapparameters",
+        propertyName: "wrapParameters",
+        displayName: "Wrap Parameters",
+        help: "Wrap function parameters: \"before-first\", \"after-first\", \"preserve\" (defaults to --wrapArguments value)",
+        keyPath: \.wrapParameters,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
     static let wrapCollections = FormatOptions.Descriptor(
         argumentName: "wrapcollections",
         propertyName: "wrapCollections",
         displayName: "Wrap Collections",
-        help: "Wrap array/dict: \"before-first\", \"after-first\", \"preserve\"",
+        help: "Wrap array/dict: \"before-first\", \"after-first\", \"preserve\" (default)",
         keyPath: \.wrapCollections,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )

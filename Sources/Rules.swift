@@ -190,14 +190,6 @@ public struct _FormatRules {
             return true
         }
 
-        func isAttribute(at i: Int) -> Bool {
-            assert(formatter.tokens[i] == .endOfScope(")"))
-            guard let openParenIndex = formatter.index(of: .startOfScope("("), before: i),
-                let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: openParenIndex),
-                prevToken.isAttribute else { return false }
-            return true
-        }
-
         formatter.forEach(.startOfScope("(")) { i, token in
             guard let prevToken = formatter.token(at: i - 1) else {
                 return
@@ -206,7 +198,7 @@ public struct _FormatRules {
             case let .keyword(string) where spaceAfter(string, index: i - 1):
                 fallthrough
             case .endOfScope("]") where isCaptureList(at: i - 1),
-                 .endOfScope(")") where isAttribute(at: i - 1):
+                 .endOfScope(")") where formatter.isAttribute(at: i - 1):
                 formatter.insertToken(.space(" "), at: i)
             case .space:
                 if let token = formatter.token(at: i - 2) {
@@ -217,7 +209,7 @@ public struct _FormatRules {
                         fallthrough
                     case .endOfScope("}"), .endOfScope(">"),
                          .endOfScope("]") where !isCaptureList(at: i - 2),
-                         .endOfScope(")") where !isAttribute(at: i - 2):
+                         .endOfScope(")") where !formatter.isAttribute(at: i - 2):
                         formatter.removeToken(at: i - 1)
                     default:
                         break

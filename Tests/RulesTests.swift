@@ -7036,11 +7036,13 @@ class RulesTests: XCTestCase {
         let input = """
         func testFunc() -> ReturnType {
             doSomething()
+            doSomething()
         }
         """
         let output = """
         func testFunc()
             -> ReturnType {
+            doSomething()
             doSomething()
         }
         """
@@ -7052,11 +7054,13 @@ class RulesTests: XCTestCase {
         let input = """
         func testFunc() -> ReturnType {
             doSomething()
+            doSomething()
         }
         """
         let output = """
         func testFunc()
             -> ReturnType {
+            doSomething()
             doSomething()
         }
         """
@@ -7064,9 +7068,124 @@ class RulesTests: XCTestCase {
         func testFunc()
             -> ReturnType {
                 doSomething()
+                doSomething()
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 25)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+    }
+
+    func testWrapFunctionIfReturnTypeExceedsMaxWidth2() {
+        let input = """
+        func testFunc() -> (ReturnType, ReturnType2) {
+            doSomething()
+        }
+        """
+        let output = """
+        func testFunc()
+            -> (ReturnType, ReturnType2) {
+            doSomething()
+        }
+        """
+        let options = FormatOptions(maxWidth: 35)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapFunctionIfReturnTypeExceedsMaxWidth2WithXcodeIndentation() {
+        let input = """
+        func testFunc() -> (ReturnType, ReturnType2) {
+            doSomething()
+        }
+        """
+        let output = """
+        func testFunc()
+            -> (ReturnType, ReturnType2) {
+            doSomething()
+        }
+        """
+        let output2 = """
+        func testFunc()
+            -> (ReturnType, ReturnType2) {
+                doSomething()
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+    }
+
+    func testWrapFunctionIfReturnTypeExceedsMaxWidth3() {
+        let input = """
+        func testFunc() -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let output = """
+        func testFunc()
+            -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let options = FormatOptions(maxWidth: 35)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapFunctionIfReturnTypeExceedsMaxWidth3WithXcodeIndentation() {
+        let input = """
+        func testFunc() -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let output = """
+        func testFunc()
+            -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let output2 = """
+        func testFunc()
+            -> (Bool, String) -> String? {
+                doSomething()
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+    }
+
+    func testWrapFunctionIfReturnTypeExceedsMaxWidth4() {
+        let input = """
+        func testFunc(_: () -> Void) -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let output = """
+        func testFunc(_: () -> Void)
+            -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let options = FormatOptions(maxWidth: 35)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapFunctionIfReturnTypeExceedsMaxWidth4WithXcodeIndentation() {
+        let input = """
+        func testFunc(_: () -> Void) -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let output = """
+        func testFunc(_: () -> Void)
+            -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let output2 = """
+        func testFunc(_: () -> Void)
+            -> (Bool, String) -> String? {
+                doSomething()
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
     }
 
@@ -7486,6 +7605,34 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 31)
         testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments, FormatRules.wrap],
+                       options: options, exclude: ["unusedArguments"])
+    }
+
+    func testWrapAfterFirstIfMaxLengthExceededInClassScopeWithWrap() {
+        let input = """
+        class TestClass {
+            func foo(bar: String, baz: String, quux: Bool) -> Bool {}
+        }
+        """
+        let output = """
+        class TestClass {
+            func foo(bar: String,
+                     baz: String,
+                     quux: Bool)
+                     -> Bool {}
+        }
+        """
+        let output2 = """
+        class TestClass {
+            func foo(bar: String,
+                     baz: String,
+                     quux: Bool)
+                -> Bool {}
+        }
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 31)
+        testFormatting(for: input, [output, output2],
                        rules: [FormatRules.wrapArguments, FormatRules.wrap],
                        options: options, exclude: ["unusedArguments"])
     }

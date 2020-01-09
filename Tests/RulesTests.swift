@@ -7271,6 +7271,27 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
+    func testWrapParametersNotSetWrapArgumentsAfterFirstDefaultsToAfterFirst() {
+        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let output = "func foo(bar _: Int,\n         baz _: String) {}"
+        let options = FormatOptions(wrapArguments: .afterFirst)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapParametersNotSetWrapArgumentsBeforeFirstDefaultsToBeforeFirst() {
+        let input = "func foo(bar _: Int,\n    baz _: String) {}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let options = FormatOptions(wrapArguments: .beforeFirst)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapParametersNotSetWrapArgumentsPreserveDefaultsToPreserve() {
+        let input = "func foo(\n    bar _: Int,\n    baz _: String) {}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let options = FormatOptions(wrapArguments: .preserve)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
     // MARK: preserve
 
     func testAfterFirstPreserved() {

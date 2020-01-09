@@ -926,7 +926,7 @@ extension Formatter {
                         wrapArgumentsAfterFirst(startOfScope: i,
                                                 endOfScope: endOfScope,
                                                 allowGrouping: true)
-                    case .disabled:
+                    case .disabled, .default:
                         assertionFailure() // Shouldn't happen
                     }
                 } else if maxWidth > 0,

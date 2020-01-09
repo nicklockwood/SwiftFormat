@@ -1159,18 +1159,35 @@ public struct _FormatRules {
             case .linebreak:
                 // Detect linewrap
                 let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
-                let linewrapped = !formatter.isEndOfStatement(
-                    at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last
-                ) || !(nextTokenIndex == nil || formatter.isStartOfStatement(
-                    at: nextTokenIndex!, in: scopeStack.last
-                )) || (formatter.options.xcodeIndentation &&
-                    isGuardElseClause(at: i, token: token))
+                let linewrapped =
+                    !formatter.isEndOfStatement(at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last)
+                    || !(nextTokenIndex == nil
+                        || formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last)
+                    ) || (formatter.options.xcodeIndentation && isGuardElseClause(at: i, token: token))
                 // Determine current indent
                 var indent = indentStack.last ?? ""
                 if linewrapped, lineIndex == scopeStartLineIndexes.last {
                     indent = indentStack.count > 1 ? indentStack[indentStack.count - 2] : ""
                 }
                 lineIndex += 1
+
+                func xcodeIndentationShouldIndentNextLine(at i: Int) -> Bool {
+                    // If there is a linebreak after certain symbols, we should add
+                    // an additional indentation to the lines at the same indention scope
+                    // after this line.
+                    guard let lastToken = formatter.token(at: formatter.endOfLine(at: i) - 1) else {
+                        return false
+                    }
+                    switch lastToken {
+                    case .keyword("return"):
+                        return true
+                    case let .operator(string, .infix):
+                        return ["="].contains(string)
+                    default:
+                        return false
+                    }
+                }
+
                 // Begin wrap scope
                 if linewrapStack.last == true {
                     if !linewrapped {
@@ -1249,6 +1266,13 @@ public struct _FormatRules {
                 default:
                     formatter.insertSpace(indent, at: i + 1)
                 }
+
+                if linewrapped,
+                    formatter.options.xcodeIndentation,
+                    xcodeIndentationShouldIndentNextLine(at: i) {
+                    indentStack[indentStack.count - 1] += formatter.options.indent
+                }
+
             default:
                 break
             }

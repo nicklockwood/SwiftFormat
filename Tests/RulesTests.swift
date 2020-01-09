@@ -7271,22 +7271,6 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
-    // MARK: afterFirst
-
-    func testBeforeFirstConvertedToAfterFirst() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
-        let output = "func foo(bar _: Int,\n         baz _: String) {}"
-        let options = FormatOptions(wrapParameters: .afterFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
-    }
-
-    func testNoWrapInnerArguments() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: foo(bar, baz)\n) {}"
-        let output = "func foo(bar _: Int,\n         baz _: foo(bar, baz)) {}"
-        let options = FormatOptions(wrapParameters: .afterFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
-    }
-
     // MARK: preserve
 
     func testAfterFirstPreserved() {
@@ -7329,85 +7313,20 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
-    // MARK: beforeFirst
+    // MARK: afterFirst
 
-    func testWrapAfterFirstConvertedToWrapBefore() {
-        let input = "func foo(bar _: Int,\n    baz _: String) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
-        let options = FormatOptions(wrapParameters: .beforeFirst)
+    func testBeforeFirstConvertedToAfterFirst() {
+        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let output = "func foo(bar _: Int,\n         baz _: String) {}"
+        let options = FormatOptions(wrapParameters: .afterFirst)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
-    func testLinebreakInsertedAtEndOfWrappedFunction() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: String) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
-        let options = FormatOptions(wrapParameters: .beforeFirst)
+    func testNoWrapInnerArguments() {
+        let input = "func foo(\n    bar _: Int,\n    baz _: foo(bar, baz)\n) {}"
+        let output = "func foo(bar _: Int,\n         baz _: foo(bar, baz)) {}"
+        let options = FormatOptions(wrapParameters: .afterFirst)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
-    }
-
-    func testAfterFirstConvertedToBeforeFirst() {
-        let input = "func foo(bar _: Int,\n         baz _: String) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
-        let options = FormatOptions(wrapParameters: .beforeFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
-    }
-
-    // MARK: maxWidth, beforeFirst
-
-    func testWrapBeforeFirstIfMaxLengthExceeded() {
-        let input = """
-        func foo(bar: Int, baz: String) -> Bool {}
-        """
-        let output = """
-        func foo(
-            bar: Int,
-            baz: String
-        ) -> Bool {}
-        """
-        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
-                       exclude: ["unusedArguments"])
-    }
-
-    func testNoWrapBeforeFirstIfMaxLengthNotExceeded() {
-        let input = """
-        func foo(bar: Int, baz: String) -> Bool {}
-        """
-        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 42)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
-                       exclude: ["unusedArguments"])
-    }
-
-    func testNoWrapGenericsIfClosingBracketWithinMaxWidth() {
-        let input = """
-        func foo<T: Bar>(bar: Int, baz: String) -> Bool {}
-        """
-        let output = """
-        func foo<T: Bar>(
-            bar: Int,
-            baz: String
-        ) -> Bool {}
-        """
-        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
-                       exclude: ["unusedArguments"])
-    }
-
-    func testWrapAlreadyWrappedArgumentsIfMaxLengthExceeded() {
-        let input = """
-        func foo(
-            bar: Int, baz: String, quux: Bool
-        ) -> Bool {}
-        """
-        let output = """
-        func foo(
-            bar: Int, baz: String,
-            quux: Bool
-        ) -> Bool {}
-        """
-        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 26)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
-                       exclude: ["unusedArguments"])
     }
 
     // MARK: maxWidth, afterFirst
@@ -7515,6 +7434,159 @@ class RulesTests: XCTestCase {
                        options: options, exclude: ["unusedArguments"])
     }
 
+    func testWrapParametersListInClosureType() {
+        let input = """
+        var mathFunction: (Int,
+                           Int, String) -> Int = { _, _, _ in
+            0
+        }
+        """
+        let output = """
+        var mathFunction: (Int,
+                           Int,
+                           String) -> Int = { _, _, _ in
+            0
+        }
+        """
+        let output2 = """
+        var mathFunction: (Int,
+                           Int,
+                           String)
+            -> Int =
+            { _, _, _ in
+                0
+            }
+        """
+        let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 30)
+        testFormatting(for: input, [output, output2],
+                       rules: [FormatRules.wrapArguments],
+                       options: options)
+    }
+
+    // MARK: beforeFirst
+
+    func testWrapAfterFirstConvertedToWrapBefore() {
+        let input = "func foo(bar _: Int,\n    baz _: String) {}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testLinebreakInsertedAtEndOfWrappedFunction() {
+        let input = "func foo(\n    bar _: Int,\n    baz _: String) {}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testAfterFirstConvertedToBeforeFirst() {
+        let input = "func foo(bar _: Int,\n         baz _: String) {}"
+        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapParametersListBeforeFirstInClosureType() {
+        let input = """
+        var mathFunction: (Int,
+                           Int, String) -> Int = { _, _, _ in
+            0
+        }
+        """
+        let output = """
+        var mathFunction: (
+            Int,
+            Int,
+            String
+        ) -> Int = { _, _, _ in
+            0
+        }
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments],
+                       options: options)
+    }
+
+    // MARK: maxWidth, beforeFirst
+
+    func testWrapBeforeFirstIfMaxLengthExceeded() {
+        let input = """
+        func foo(bar: Int, baz: String) -> Bool {}
+        """
+        let output = """
+        func foo(
+            bar: Int,
+            baz: String
+        ) -> Bool {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 20)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testNoWrapBeforeFirstIfMaxLengthNotExceeded() {
+        let input = """
+        func foo(bar: Int, baz: String) -> Bool {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 42)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testNoWrapGenericsIfClosingBracketWithinMaxWidth() {
+        let input = """
+        func foo<T: Bar>(bar: Int, baz: String) -> Bool {}
+        """
+        let output = """
+        func foo<T: Bar>(
+            bar: Int,
+            baz: String
+        ) -> Bool {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 20)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testWrapAlreadyWrappedArgumentsIfMaxLengthExceeded() {
+        let input = """
+        func foo(
+            bar: Int, baz: String, quux: Bool
+        ) -> Bool {}
+        """
+        let output = """
+        func foo(
+            bar: Int, baz: String,
+            quux: Bool
+        ) -> Bool {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 26)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testWrapParametersListBeforeFirstInClosureTypeWithMaxWidth() {
+        let input = """
+        var mathFunction: (Int, Int, String) -> Int = { _, _, _ in
+            0
+        }
+        """
+        let output = """
+        var mathFunction: (
+            Int,
+            Int,
+            String
+        ) -> Int = { _, _, _ in
+            0
+        }
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 30)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments],
+                       options: options)
+    }
+
     // MARK: closingParenOnSameLine = true
 
     func testParenOnSameLineWhenWrapAfterFirstConvertedToWrapBefore() {
@@ -7573,8 +7645,7 @@ class RulesTests: XCTestCase {
         """
         let output = """
         foo(bar _: Int,
-            baz _: String
-        )
+            baz _: String)
         """
         let options = FormatOptions(wrapArguments: .afterFirst)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)

@@ -928,6 +928,32 @@ private struct Examples {
     """
 
     let wrapArguments = """
+    **NOTE:** For backwards compatibility with previous versions, if no value is
+    provided for `--wrapparameters`, the value for `--wraparguments` will be used.
+    `--wraparguments before-first`
+
+    ```diff
+    - foo(bar: Int,
+    -     baz: String)
+
+    + foo(
+    +   bar: Int,
+    +   baz: String
+    + )
+    ```
+
+    ```diff
+    - class Foo<Bar,
+    -           Baz>
+
+    + class Foo<
+    +   Bar,
+    +   Baz
+    + >
+    ```
+
+    `--wrapparameters after-first`
+
     ```diff
     - func foo(bar: Int,
     -          baz: String) {
@@ -942,7 +968,7 @@ private struct Examples {
       }
     ```
 
-    Or for `--wrapcollections before-first`:
+    `--wrapcollections before-first`:
 
     ```diff
     - let foo = [bar,

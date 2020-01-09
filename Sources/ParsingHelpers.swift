@@ -867,7 +867,7 @@ extension Formatter {
             }
         }
         for scopeType in ["(", "[", "<"] {
-            forEach(.startOfScope(scopeType)) { i, _ in
+            forEach(.startOfScope(scopeType)) { i, _ in // TODO: use token closure arg
                 guard let endOfScope = endOfScope(at: i) else {
                     return
                 }
@@ -888,9 +888,25 @@ extension Formatter {
                         // Not an argument list, or only one argument
                         return
                     }
+
+                    func isParameterList() -> Bool {
+                        if last(.keyword, before: i) == .keyword("func") {
+                            // Is parameters at start of function
+                            return true
+                        }
+
+                        if last(.nonSpaceOrCommentOrLinebreak, before: i) == .delimiter(":"),
+                            next(.nonSpaceOrCommentOrLinebreak, after: endOfScope) == .operator("->", .infix) {
+                            // Is parameter list for a closure type
+                            return true
+                        }
+
+                        return false
+                    }
+
                     checkNestedScopes = false
                     endOfScopeOnSameLine = options.closingParenOnSameLine
-                    fallthrough
+                    mode = isParameterList() ? options.wrapParameters : options.wrapArguments
                 case "<":
                     mode = options.wrapArguments
                 case "[":

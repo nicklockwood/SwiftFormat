@@ -2140,6 +2140,30 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testWrappedLineAfterTypeAttribute() {
+        let input = """
+        let f: @convention(swift)
+            (Int) -> Int = { x in x }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testWrappedLineAfterTypeAttribute2() {
+        let input = """
+        func foo(_: @escaping
+            (Int) -> Int) {}
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testWrappedLineAfterNonTypeAttribute() {
+        let input = """
+        @discardableResult
+        func foo() -> Int { 5 }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent xcodeindentation
 
     func testChainedFunctionsInPropertySetterOnNewLineWithXcodeIndentation() {

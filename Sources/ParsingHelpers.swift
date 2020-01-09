@@ -435,6 +435,26 @@ extension Formatter {
         }
     }
 
+    func isAttribute(at i: Int) -> Bool {
+        return startOfAttribute(at: i) != nil
+    }
+
+    func startOfAttribute(at i: Int) -> Int? {
+        switch tokens[i] {
+        case let token where token.isAttribute:
+            return i
+        case .endOfScope(")"):
+            guard let openParenIndex = index(of: .startOfScope("("), before: i),
+                let prevTokenIndex = index(of: .nonSpaceOrComment, before: openParenIndex),
+                tokens[prevTokenIndex].isAttribute else {
+                return nil
+            }
+            return prevTokenIndex
+        default:
+            return nil
+        }
+    }
+
     func isEndOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
         guard let token = self.token(at: i) else { return true }
         switch token {
@@ -487,6 +507,10 @@ extension Formatter {
                 return true
             }
         default:
+            if let attributeIndex = startOfAttribute(at: i),
+                let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: attributeIndex) {
+                return isEndOfStatement(at: prevIndex, in: scope)
+            }
             return true
         }
     }

@@ -3062,7 +3062,7 @@ public struct _FormatRules {
     public let wrap = FormatRule(
         help: "Wrap lines that exceed the specified maximum width.",
         options: ["maxwidth"],
-        sharedOptions: ["wraparguments", "wrapcollections", "closingparen", "indent",
+        sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "indent",
                         "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
@@ -3183,7 +3183,7 @@ public struct _FormatRules {
     /// Normalize argument wrapping style
     public let wrapArguments = FormatRule(
         help: "Align wrapped function arguments or collection elements.",
-        options: ["wraparguments", "wrapcollections", "closingparen"],
+        options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen"],
         sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true)

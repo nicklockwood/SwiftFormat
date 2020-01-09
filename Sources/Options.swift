@@ -57,6 +57,7 @@ public enum WrapMode: String {
     case afterFirst = "after-first"
     case preserve
     case disabled
+    case `default`
 
     public init?(rawValue: String) {
         switch rawValue {
@@ -68,6 +69,8 @@ public enum WrapMode: String {
             self = .preserve
         case "disabled":
             self = .disabled
+        case "default":
+            self = .default
         default:
             return nil
         }
@@ -301,7 +304,7 @@ public struct FormatOptions: CustomStringConvertible {
                 fileHeader: HeaderStrippingMode = .ignore,
                 ifdefIndent: IndentMode = .indent,
                 wrapArguments: WrapMode = .preserve,
-                wrapParameters: WrapMode = .preserve,
+                wrapParameters: WrapMode = .default,
                 wrapCollections: WrapMode = .preserve,
                 closingParenOnSameLine: Bool = false,
                 uppercaseHex: Bool = true,
@@ -345,7 +348,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.fileHeader = fileHeader
         self.ifdefIndent = ifdefIndent
         self.wrapArguments = wrapArguments
-        self.wrapParameters = wrapParameters
+        self.wrapParameters = wrapParameters == .default ? wrapArguments : wrapParameters
         self.wrapCollections = wrapCollections
         self.closingParenOnSameLine = closingParenOnSameLine
         self.uppercaseHex = uppercaseHex

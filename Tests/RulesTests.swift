@@ -1993,6 +1993,36 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
+    func testChainedFunctionsInPropertySetter() {
+        let input = """
+        private let foo = bar(a: "A", b: "B")
+        .baz()!
+        .quux
+        """
+        let output = """
+        private let foo = bar(a: "A", b: "B")
+            .baz()!
+            .quux
+        """
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testChainedFunctionsInPropertySetterOnNewLine() {
+        let input = """
+        private let foo =
+        bar(a: "A", b: "B")
+        .baz()!
+        .quux
+        """
+        let output = """
+        private let foo =
+            bar(a: "A", b: "B")
+            .baz()!
+            .quux
+        """
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
     func testChainedFunctionsInsideIf() {
         let input = "if foo {\nreturn bar()\n.baz()\n}"
         let output = "if foo {\n    return bar()\n        .baz()\n}"
@@ -2068,6 +2098,67 @@ class RulesTests: XCTestCase {
     func testIndentClassDeclarationContainingComment() {
         let input = "class Foo: Bar,\n    // Comment\n    Baz {}"
         testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    // indent xcodeindentation
+
+    func testChainedFunctionsInPropertySetterOnNewLineWithXcodeIndentation() {
+        let input = """
+        private let foo =
+        bar(a: "A", b: "B")
+        .baz()!
+        .quux
+        """
+        let output = """
+        private let foo =
+            bar(a: "A", b: "B")
+                .baz()!
+                .quux
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testChainedFunctionsInFunctionWithReturnOnNewLineWithXcodeIndentation() {
+        let input = """
+        func foo() -> Bool {
+        return
+        bar(a: "A", b: "B")
+        .baz()!
+        .quux
+        }
+        """
+        let output = """
+        func foo() -> Bool {
+            return
+                bar(a: "A", b: "B")
+                    .baz()!
+                    .quux
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testChainedOrOperatorsInFunctionWithReturnOnNewLineWithXcodeIndentation() {
+        let input = """
+        func foo(lhs: Bool, rhs: Bool) -> Bool {
+        return
+        lhs == rhs &&
+        lhs == rhs &&
+        lhs == rhs
+        }
+        """
+        let output = """
+        func foo(lhs: Bool, rhs: Bool) -> Bool {
+            return
+                lhs == rhs &&
+                    lhs == rhs &&
+                    lhs == rhs
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
     // indent comments

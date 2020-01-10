@@ -391,7 +391,7 @@ extension FormatOptions.Descriptor {
         argumentName: "wraparguments",
         propertyName: "wrapArguments",
         displayName: "Wrap Arguments",
-        help: "Wrap all arguments: \"before-first\", \"after-first\", \"preserve\" (default)",
+        help: "Wrap all arguments: \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapArguments,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
@@ -399,7 +399,7 @@ extension FormatOptions.Descriptor {
         argumentName: "wrapparameters",
         propertyName: "wrapParameters",
         displayName: "Wrap Parameters",
-        help: "Wrap function parameters: \"before-first\", \"after-first\", \"preserve\" (defaults to --wrapArguments value)",
+        help: "Wrap func params: \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapParameters,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
@@ -407,7 +407,7 @@ extension FormatOptions.Descriptor {
         argumentName: "wrapcollections",
         propertyName: "wrapCollections",
         displayName: "Wrap Collections",
-        help: "Wrap array/dict: \"before-first\", \"after-first\", \"preserve\" (default)",
+        help: "Wrap array/dict: \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapCollections,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )

@@ -1514,16 +1514,16 @@ Align wrapped function arguments or collection elements.
 
 Option | Description
 --- | ---
-`--wraparguments` | Wrap all arguments: "before-first", "after-first", "preserve" (default)
-`--wrapparameters` | Wrap function parameters: "before-first", "after-first", "preserve" (defaults to --wrapArguments value)
-`--wrapcollections` | Wrap array/dict: "before-first", "after-first", "preserve" (default)
+`--wraparguments` | Wrap all arguments: "before-first", "after-first", "preserve"
+`--wrapparameters` | Wrap func params: "before-first", "after-first", "preserve"
+`--wrapcollections` | Wrap array/dict: "before-first", "after-first", "preserve"
 `--closingparen` | Closing paren position: "balanced" (default) or "same-line"
 
 <details>
 <summary>Examples</summary>
 
-**NOTE:** For backwards compatibility with previous versions, if no value
-is provided for `--wrapparameters`, the value for `--wraparguments` will be used.
+**NOTE:** For backwards compatibility with previous versions, if no value is
+provided for `--wrapparameters`, the value for `--wraparguments` will be used.
 `--wraparguments before-first`
 
 ```diff

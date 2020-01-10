@@ -867,6 +867,16 @@ extension Formatter {
                         maxWidth < lineLength(at: i)
                 }
 
+                func lineLengthToNextWrap() -> Int {
+                    if let startOfNextScopeOnLine = index(
+                        of: .startOfScope,
+                        in: endOfScope + 1 ..< endOfLine(at: endOfScope)
+                    ) {
+                        return lineLength(upTo: startOfNextScopeOnLine)
+                    }
+                    return lineLength(at: endOfScope)
+                }
+
                 let mode: WrapMode
                 var endOfScopeOnSameLine = false
                 switch scopeType {
@@ -941,7 +951,7 @@ extension Formatter {
                         assertionFailure() // Shouldn't happen
                     }
                 } else if maxWidth > 0,
-                    maxWidth < lineLength(upTo: endOfScope + 1),
+                    maxWidth < lineLengthToNextWrap(),
                     !willWrapAtStartOfReturnType(maxWidth: maxWidth) {
                     if mode == .beforeFirst {
                         wrapArgumentsBeforeFirst(startOfScope: i,

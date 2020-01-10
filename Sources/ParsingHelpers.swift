@@ -868,7 +868,6 @@ extension Formatter {
                 }
 
                 let mode: WrapMode
-                var checkNestedScopes = true
                 var endOfScopeOnSameLine = false
                 switch scopeType {
                 case "(":
@@ -906,8 +905,6 @@ extension Formatter {
 
                         return false
                     }
-
-                    checkNestedScopes = true // TODO: remove this var?
                     endOfScopeOnSameLine = options.closingParenOnSameLine
                     mode = isParameterList() ? options.wrapParameters : options.wrapArguments
                 case "<":
@@ -923,9 +920,8 @@ extension Formatter {
                     return
                 }
                 let maxWidth = options.maxWidth
-                if completePartialWrapping, let firstLinebreakIndex = checkNestedScopes ?
-                    (i ..< endOfScope).first(where: { tokens[$0].isLinebreak }) :
-                    index(of: .linebreak, in: i + 1 ..< endOfScope) {
+                if completePartialWrapping,
+                    let firstLinebreakIndex = (i ..< endOfScope).first(where: { tokens[$0].isLinebreak }) {
                     switch mode {
                     case .beforeFirst:
                         wrapArgumentsBeforeFirst(startOfScope: i,

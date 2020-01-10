@@ -855,7 +855,7 @@ extension Formatter {
             }
         }
         for scopeType in ["(", "[", "<"] {
-            forEach(.startOfScope(scopeType)) { i, _ in // TODO: use token closure arg
+            forEach(.startOfScope(scopeType)) { i, _ in
                 guard let endOfScope = endOfScope(at: i) else {
                     return
                 }
@@ -878,13 +878,28 @@ extension Formatter {
                     }
 
                     func isParameterList() -> Bool {
-                        if last(.keyword, before: i) == .keyword("func") {
+                        if last(.keyword, before: i) == .keyword("func"),
+                            let funcStartIndex = index(of: .keyword("func"), before: i),
+                            lastIndex(of: .endOfScope("}"), in: funcStartIndex ..< i) == nil {
                             // Is parameters at start of function
                             return true
                         }
 
-                        if last(.nonSpaceOrCommentOrLinebreak, before: i) == .delimiter(":"),
-                            next(.nonSpaceOrCommentOrLinebreak, after: endOfScope) == .operator("->", .infix) {
+                        let afterClosureParameterListTokens: [Token] = [.operator("->", .infix),
+                                                                        .keyword("throws"),
+                                                                        .keyword("rethrows")]
+
+                        let beforeClosureParameterListKeywords: [Token] = [.delimiter(":"),
+                                                                           .keyword("@escaping"),
+                                                                           .keyword("@noescape"),
+                                                                           .keyword("@autoclosure")]
+
+                        if let closureTypeDelimiterIndex = index(of: .delimiter(":"), before: i),
+                            range(closureTypeDelimiterIndex ..< i,
+                                  doesNotContainsTokensExcept: beforeClosureParameterListKeywords,
+                                  allowingWhitespaceAndComments: true),
+                            let tokenAfterParameterList = next(.nonSpaceOrCommentOrLinebreak, after: endOfScope),
+                            afterClosureParameterListTokens.contains(tokenAfterParameterList) {
                             // Is parameter list for a closure type
                             return true
                         }
@@ -892,7 +907,7 @@ extension Formatter {
                         return false
                     }
 
-                    checkNestedScopes = false
+                    checkNestedScopes = true // TODO: remove this var?
                     endOfScopeOnSameLine = options.closingParenOnSameLine
                     mode = isParameterList() ? options.wrapParameters : options.wrapArguments
                 case "<":

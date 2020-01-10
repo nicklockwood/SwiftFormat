@@ -412,6 +412,34 @@ public class Formatter: NSObject {
         return lastIndex(of: type, in: range, if: matches).map { tokens[$0] }
     }
 
+    /// Inserts a linebreak at the specified index
+    public func insertLinebreak(at index: Int) {
+        insertToken(linebreakToken(for: index), at: index)
+    }
+
+    /// Indicates if the given range contains any nontokens other than those allowed.
+    ///
+    /// - Note: The range does not need to include the given tokens to return `true`,
+    ///         it just can't include any unallowed tokens.
+    ///
+    /// - Parameters:
+    ///   - range: The range to check
+    ///   - allowedTokens: The only tokens allowed in the range
+    ///   - allowingWhitespaceAndComments:If spaces, linebreaks, and comments should also be allowed.
+    public func range(_ range: CountableRange<Int>,
+                      doesNotContainsTokensExcept allowedTokens: [Token],
+                      allowingWhitespaceAndComments: Bool) -> Bool {
+        let range = range.clamped(to: 0 ..< tokens.count)
+        for token in tokens[range] {
+            if allowedTokens.contains(token) ||
+                (allowingWhitespaceAndComments && token.isSpaceOrCommentOrLinebreak) {
+                continue
+            }
+            return false
+        }
+        return true
+    }
+
     /// Returns the starting token for the containing scope at the specified index
     public func currentScope(at index: Int) -> Token? {
         return last(.startOfScope, before: index)
@@ -471,10 +499,5 @@ public class Formatter: NSObject {
             lineNumber = originalLine(at: index)
         }
         return .linebreak(options.linebreak, lineNumber)
-    }
-
-    /// Inserts a linebreak at the specified index
-    public func insertLinebreak(at index: Int) {
-        insertToken(linebreakToken(for: index), at: index)
     }
 }

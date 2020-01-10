@@ -7271,6 +7271,16 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
+    func testWrapParametersClosureAfterParameterListDoesNotWrapClosureArguments() {
+        let input = """
+        func foo() {}
+        bar = (baz: 5, quux: 7,
+               quuz: 10)
+        """
+        let options = FormatOptions(wrapArguments: .preserve, wrapParameters: .beforeFirst)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
     func testWrapParametersNotSetWrapArgumentsAfterFirstDefaultsToAfterFirst() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let output = "func foo(bar _: Int,\n         baz _: String) {}"
@@ -7527,6 +7537,179 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, [output],
                        rules: [FormatRules.wrapArguments],
                        options: options)
+    }
+
+    func testWrapParametersListBeforeFirstInThrowingClosureType() {
+        let input = """
+        var mathFunction: (Int,
+                           Int, String) throws -> Int = { _, _, _ in
+            0
+        }
+        """
+        let output = """
+        var mathFunction: (
+            Int,
+            Int,
+            String
+        ) throws -> Int = { _, _, _ in
+            0
+        }
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments],
+                       options: options)
+    }
+
+    func testWrapParametersListBeforeFirstInRethrowingClosureType() {
+        let input = """
+        var mathFunction: (Int,
+                           Int, String) rethrows -> Int = { _, _, _ in
+            0
+        }
+        """
+        let output = """
+        var mathFunction: (
+            Int,
+            Int,
+            String
+        ) rethrows -> Int = { _, _, _ in
+            0
+        }
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments],
+                       options: options)
+    }
+
+    func testWrapParametersListBeforeFirstInClosureTypeAsFunctionParameter() {
+        let input = """
+        func foo(bar: (Int,
+                       Bool, String) -> Int) -> Int {}
+        """
+        let output = """
+        func foo(
+            bar: (
+                Int,
+                Bool,
+                String
+            ) -> Int
+        ) -> Int {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments],
+                       options: options,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testWrapParametersListBeforeFirstInClosureTypeAsFunctionParameterWithOtherParams() {
+        let input = """
+        func foo(bar: Int, baz: (Int,
+                                 Bool, String) -> Int) -> Int {}
+        """
+        let output = """
+        func foo(
+            bar: Int,
+            baz: (
+                Int,
+                Bool,
+                String
+            ) -> Int
+        ) -> Int {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments],
+                       options: options,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testWrapParametersListBeforeFirstInClosureTypeAsFunctionParameterWithOtherParamsAfterWrappedClosure() {
+        let input = """
+        func foo(bar: Int, baz: (Int,
+                                 Bool, String) -> Int, quux: String) -> Int {}
+        """
+        let output = """
+        func foo(
+            bar: Int,
+            baz: (
+                Int,
+                Bool,
+                String
+            ) -> Int,
+            quux: String
+        ) -> Int {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments],
+                       options: options,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testWrapParametersListBeforeFirstInEscapingClosureTypeAsFunctionParameter() {
+        let input = """
+        func foo(bar: @escaping (Int,
+                                 Bool, String) -> Int) -> Int {}
+        """
+        let output = """
+        func foo(
+            bar: @escaping (
+                Int,
+                Bool,
+                String
+            ) -> Int
+        ) -> Int {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments],
+                       options: options,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testWrapParametersListBeforeFirstInNoEscapeClosureTypeAsFunctionParameter() {
+        let input = """
+        func foo(bar: @noescape (Int,
+                                 Bool, String) -> Int) -> Int {}
+        """
+        let output = """
+        func foo(
+            bar: @noescape (
+                Int,
+                Bool,
+                String
+            ) -> Int
+        ) -> Int {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments],
+                       options: options,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testWrapParametersListBeforeFirstInEscapingAutoclosureTypeAsFunctionParameter() {
+        let input = """
+        func foo(bar: @escaping @autoclosure (Int,
+                                              Bool, String) -> Int) -> Int {}
+        """
+        let output = """
+        func foo(
+            bar: @escaping @autoclosure (
+                Int,
+                Bool,
+                String
+            ) -> Int
+        ) -> Int {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments],
+                       options: options,
+                       exclude: ["unusedArguments"])
     }
 
     // MARK: maxWidth, beforeFirst

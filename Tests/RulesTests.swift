@@ -7558,6 +7558,19 @@ class RulesTests: XCTestCase {
                        options: options)
     }
 
+    func testWrapParametersAfterFirstIfMaxLengthExceededInReturnType() {
+        let input = """
+        func foo(bar: Int, baz: String, quux: Bool) -> LongReturnType {}
+        """
+        let output = """
+        func foo(bar: Int, baz: String,
+                 quux: Bool) -> LongReturnType {}
+        """
+        let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 50)
+        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments],
+                       options: options, exclude: ["unusedArguments"])
+    }
+
     // MARK: beforeFirst
 
     func testWrapAfterFirstConvertedToWrapBefore() {
@@ -7832,6 +7845,22 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 26)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
                        exclude: ["unusedArguments"])
+    }
+
+    func testWrapParametersBeforeFirstIfMaxLengthExceededInReturnType() {
+        let input = """
+        func foo(bar: Int, baz: String, quux: Bool) -> LongReturnType {}
+        """
+        let output = """
+        func foo(
+            bar: Int,
+            baz: String,
+            quux: Bool
+        ) -> LongReturnType {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 50)
+        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments],
+                       options: options, exclude: ["unusedArguments"])
     }
 
     func testWrapParametersListBeforeFirstInClosureTypeWithMaxWidth() {

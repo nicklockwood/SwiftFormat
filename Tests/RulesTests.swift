@@ -43,7 +43,7 @@ class RulesTests: XCTestCase {
 
     func testFormatting(for input: String, _ outputs: [String], rules: [FormatRule],
                         options: FormatOptions = .default, exclude: [String] = []) {
-        precondition(input != outputs.first, "Redundant output parameter")
+        precondition(input != outputs.first || input != outputs.last, "Redundant output parameter")
         precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
         let output = outputs.first ?? input, output2 = outputs.last ?? input
         let exclude = exclude + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
@@ -52,9 +52,12 @@ class RulesTests: XCTestCase {
                                   options: options), output2)
         if input != output {
             XCTAssertEqual(try format(output, rules: rules, options: options), output)
+        }
+        if input != output2, output != output2 {
             XCTAssertEqual(try format(output2, rules: FormatRules.all(except: exclude),
                                       options: options), output2)
         }
+
         #if os(macOS)
             // These tests are flakey on Linux, and it's hard to debug
             XCTAssertEqual(try lint(output, rules: rules, options: options), [])
@@ -7304,6 +7307,30 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
     }
 
+    func testWrapChainedFunctionAfterSubscriptCollection() {
+        let input = """
+        let foo = bar["baz"].quuz()
+        """
+        let output = """
+        let foo = bar["baz"]
+            .quuz()
+        """
+        let options = FormatOptions(maxWidth: 20)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapChainedFunctionInSubscriptCollection() {
+        let input = """
+        let foo = bar[baz.quuz()]
+        """
+        let output = """
+        let foo =
+            bar[baz.quuz()]
+        """
+        let options = FormatOptions(maxWidth: 20)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
     func testNoWrapInterpolatedStringLiteral() {
         let input = """
         "a very long \\(string) literal"
@@ -7424,7 +7451,7 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
-    // MARK: maxWidth, afterFirst
+    // MARK: afterFirst, maxWidth
 
     func testWrapAfterFirstIfMaxLengthExceeded() {
         let input = """
@@ -7562,12 +7589,12 @@ class RulesTests: XCTestCase {
         let input = """
         func foo(bar: Int, baz: String, quux: Bool) -> LongReturnType {}
         """
-        let output = """
+        let output2 = """
         func foo(bar: Int, baz: String,
                  quux: Bool) -> LongReturnType {}
         """
         let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 50)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments],
+        testFormatting(for: input, [input, output2], rules: [FormatRules.wrapArguments],
                        options: options, exclude: ["unusedArguments"])
     }
 
@@ -7789,7 +7816,7 @@ class RulesTests: XCTestCase {
                        exclude: ["unusedArguments"])
     }
 
-    // MARK: maxWidth, beforeFirst
+    // MARK: beforeFirst, maxWidth
 
     func testWrapBeforeFirstIfMaxLengthExceeded() {
         let input = """
@@ -7851,7 +7878,7 @@ class RulesTests: XCTestCase {
         let input = """
         func foo(bar: Int, baz: String, quux: Bool) -> LongReturnType {}
         """
-        let output = """
+        let output2 = """
         func foo(
             bar: Int,
             baz: String,
@@ -7859,7 +7886,7 @@ class RulesTests: XCTestCase {
         ) -> LongReturnType {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 50)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments],
+        testFormatting(for: input, [input, output2], rules: [FormatRules.wrapArguments],
                        options: options, exclude: ["unusedArguments"])
     }
 
@@ -8175,6 +8202,21 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
+    // MARK: beforeFirst maxWidth
+
+    func testWrapCollectionOnOneLineBeforeFirstWidthExceededInChainedFunctionCallAfterCollection() {
+        let input = """
+        let foo = ["bar", "baz"].quux(quuz)
+        """
+        let output2 = """
+        let foo = ["bar", "baz"]
+            .quux(quuz)
+        """
+        let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 26)
+        testFormatting(for: input, [input, output2],
+                       rules: [FormatRules.wrapArguments], options: options)
+    }
+
     // MARK: afterFirst
 
     func testTrailingCommaRemovedInWrappedArray() {
@@ -8230,6 +8272,44 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(trailingCommas: true, wrapCollections: .preserve)
         testFormatting(for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.trailingCommas],
                        options: options)
+    }
+
+    // MARK: wrapArguments --wrapCollections & --wrapArguments
+
+    // MARK: beforeFirst maxWidth
+
+    func testWrapArgumentsBeforeFirstWhenArgumentsExceedMaxWidthAndArgumentIsCollection() {
+        let input = """
+        foo(bar: ["baz", "quux"], quuz: corge)
+        """
+        let output = """
+        foo(
+            bar: ["baz", "quux"],
+            quuz: corge
+        )
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst,
+                                    wrapCollections: .beforeFirst,
+                                    maxWidth: 26)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments], options: options)
+    }
+
+    // MARK: afterFirst maxWidth
+
+    func testWrapArgumentsAfterFirstWhenArgumentsExceedMaxWidthAndArgumentIsCollection() {
+        let input = """
+        foo(bar: ["baz", "quux"], quuz: corge)
+        """
+        let output = """
+        foo(bar: ["baz", "quux"],
+            quuz: corge)
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst,
+                                    wrapCollections: .beforeFirst,
+                                    maxWidth: 26)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments], options: options)
     }
 
     // MARK: - numberFormatting

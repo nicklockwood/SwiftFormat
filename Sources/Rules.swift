@@ -949,7 +949,7 @@ public struct _FormatRules {
                 // is wrapped to start of a line in the current scope.
                 if formatter.options.xcodeIndentation,
                     string == "{",
-                    inFunctionDeclarationWhereReturnTypeIsWrappedToStartOfLine(at: i) {
+                    inFunctionDeclarationWhereReturnTypeIsWrappedToStartOfLine(at: i - 1) {
                     indent += formatter.options.indent
                 }
 
@@ -3072,30 +3072,15 @@ public struct _FormatRules {
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
         guard maxWidth > 0 else { return }
+
         // Wrap collections first to avoid conflict
         formatter.wrapCollectionsAndArguments(completePartialWrapping: false)
+
         // Wrap other line types
-        var lineLength = 0
-        var lastBreakPoint: Int?
-        var lastBreakPointPriority = Int.min
-        var currentPriority = 0
-        var widthAtLastBreakPoint = 0
-        var stringLiteralDepth = 0
+        var currentIndex = 0
         var indent = ""
         var alreadyLinewrapped = false
-        func addBreakPoint(at i: Int, relativePriority: Int) {
-            guard stringLiteralDepth == 0, currentPriority + relativePriority >= lastBreakPointPriority,
-                !formatter.isInClosureArguments(at: i + 1) else {
-                return
-            }
-            let i = formatter.index(of: .nonSpace, before: i + 1) ?? i
-            if formatter.token(at: i + 1)?.isLinebreak == true || formatter.token(at: i)?.isLinebreak == true {
-                return
-            }
-            lastBreakPoint = i
-            lastBreakPointPriority = currentPriority + relativePriority
-            widthAtLastBreakPoint = formatter.lineLength(upTo: i + 1)
-        }
+
         func isLinewrapToken(_ token: Token?) -> Bool {
             switch token {
             case .delimiter?, .operator(_, .infix)?:
@@ -3104,83 +3089,23 @@ public struct _FormatRules {
                 return false
             }
         }
-        formatter.forEachToken { i, token in
-            switch token {
-            case .linebreak:
-                lineLength = 0
-                lastBreakPoint = nil
-                indent = formatter.indentForLine(at: i + 1)
-                alreadyLinewrapped = isLinewrapToken(formatter.last(.nonSpaceOrComment, before: i))
-                return
-            case .delimiter(","):
-                addBreakPoint(at: i, relativePriority: 0)
-            case .operator("=", .infix) where formatter.token(at: i + 1)?.isSpace == true:
-                addBreakPoint(at: i, relativePriority: -9)
-            case .operator(".", .infix):
-                addBreakPoint(at: i - 1, relativePriority: -2)
-            case .operator("->", .infix):
-                if formatter.isInReturnType(at: i) {
-                    currentPriority -= 5
-                }
-                addBreakPoint(at: i - 1, relativePriority: -5)
-            case .operator(_, .infix) where formatter.token(at: i + 1)?.isSpace == true:
-                addBreakPoint(at: i, relativePriority: -3)
-            case .startOfScope("{"):
-                if !formatter.isStartOfClosure(at: i) ||
-                    formatter.next(.keyword, after: i) != .keyword("in"),
-                    formatter.next(.nonSpace, after: i) != .endOfScope("}") {
-                    addBreakPoint(at: i, relativePriority: -6)
-                }
-                if formatter.isInReturnType(at: i) {
-                    currentPriority += 5
-                }
-                currentPriority -= 6
-            case .endOfScope("}"):
-                currentPriority += 6
-                if formatter.last(.nonSpace, before: i) != .startOfScope("{") {
-                    addBreakPoint(at: i - 1, relativePriority: -6)
-                }
-            case .startOfScope("("):
-                currentPriority -= 7
-            case .endOfScope(")"):
-                currentPriority += 7
-            case .startOfScope("["):
-                currentPriority -= 8
-            case .endOfScope("]"):
-                currentPriority += 8
-            case .startOfScope("<"):
-                currentPriority -= 9
-            case .endOfScope(">"):
-                currentPriority += 9
-            case .startOfScope where token.isStringDelimiter:
-                stringLiteralDepth += 1
-            case .endOfScope where token.isStringDelimiter:
-                stringLiteralDepth -= 1
-            case .keyword("else"), .keyword("where"):
-                addBreakPoint(at: i - 1, relativePriority: -1)
-            case .keyword("in"):
-                if formatter.last(.keyword, before: i) == .keyword("for") {
-                    addBreakPoint(at: i, relativePriority: -11)
-                    break
-                }
-                addBreakPoint(at: i, relativePriority: -5 - currentPriority)
-            default:
-                break
-            }
-            lineLength += formatter.tokenLength(token)
-            if lineLength > maxWidth, let breakPoint = lastBreakPoint, breakPoint < i {
-                if let token = formatter.token(at: breakPoint + 1), token.isSpace {
-                    lineLength -= formatter.tokenLength(token)
-                }
+
+        while currentIndex < formatter.tokens.count {
+            if let token = formatter.token(at: currentIndex), token.isLinebreak {
+                indent = formatter.indentForLine(at: currentIndex + 1)
+                alreadyLinewrapped = isLinewrapToken(formatter.last(.nonSpaceOrComment, before: currentIndex))
+                currentIndex += 1
+
+            } else if let breakPoint = formatter.indexWhereLineShouldWrapInLine(at: currentIndex) {
                 if !alreadyLinewrapped {
                     indent += formatter.options.indent
                 }
                 alreadyLinewrapped = true
-                formatter.insertSpace(indent, at: breakPoint + 1)
+                let spaceAdded = formatter.insertSpace(indent, at: breakPoint + 1)
                 formatter.insertLinebreak(at: breakPoint + 1)
-                lineLength += formatter.tokenLength(.space(indent)) - widthAtLastBreakPoint
-                lastBreakPoint = nil
-                lastBreakPointPriority = .min
+                currentIndex = breakPoint + spaceAdded + 2
+            } else {
+                currentIndex = formatter.endOfLine(at: currentIndex)
             }
         }
     }

@@ -255,10 +255,15 @@ extension Formatter {
     /// the specified index is a return type declaration.
     func startOfReturnType(at i: Int) -> Int? {
         guard let startOfFuncDeclaration = indexOfLastSignificantKeyword(at: i),
-            token(at: startOfFuncDeclaration) == .keyword("func") else {
+            token(at: startOfFuncDeclaration) == .keyword("func"),
+            token(at: i) != .startOfScope("{") else {
             return nil
         }
-        return index(of: .operator("->", .infix), in: startOfFuncDeclaration + 1 ..< i)
+
+        let startOfFuncImplementation = index(of: .startOfScope("{"), after: i)
+
+        return index(of: .operator("->", .infix),
+                     in: startOfFuncDeclaration + 1 ..< (startOfFuncImplementation ?? i))
     }
 
     func isStartOfClosure(at i: Int, in _: Token? = nil) -> Bool {
@@ -421,7 +426,8 @@ extension Formatter {
     }
 
     func indexOfLastSignificantKeyword(at i: Int) -> Int? {
-        guard let index = tokens[i].isKeyword ? i : index(of: .keyword, before: i),
+        guard let token = token(at: i),
+            let index = token.isKeyword ? i : index(of: .keyword, before: i),
             lastIndex(of: .endOfScope("}"), in: index ..< i) == nil else {
             return nil
         }
@@ -894,14 +900,55 @@ extension Formatter {
                         maxWidth < lineLength(at: i)
                 }
 
+                func startOfNextScope() -> Int? {
+                    let endOfLine = self.endOfLine(at: i)
+                    guard endOfScope < endOfLine else { return nil }
+
+                    var startOfLastScopeOnLine = endOfScope
+
+                    repeat {
+                        guard let startOfNextScope = index(
+                            of: .startOfScope,
+                            in: startOfLastScopeOnLine + 1 ..< endOfLine
+                        ) else {
+                            return nil
+                        }
+
+                        startOfLastScopeOnLine = startOfNextScope
+                    } while isInReturnType(at: startOfLastScopeOnLine)
+
+                    return startOfLastScopeOnLine
+                }
+
                 func lineLengthToNextWrap() -> Int {
-                    if let startOfNextScopeOnLine = index(
-                        of: .startOfScope,
-                        in: endOfScope + 1 ..< endOfLine(at: endOfScope)
-                    ) {
-                        return lineLength(upTo: startOfNextScopeOnLine)
+                    if currentRule == FormatRules.wrap {
+                        let startOfNextScopeOnLine = startOfNextScope()
+                        let nextNaturalWrap = indexWhereLineShouldWrap(from: endOfScope + 1)
+
+                        switch (startOfNextScopeOnLine, nextNaturalWrap) {
+                        case let (.some(startOfNextScopeOnLine), .some(nextNaturalWrap)):
+                            return min(lineLength(upTo: startOfNextScopeOnLine),
+                                       lineLength(upTo: nextNaturalWrap))
+                        case let (nil, .some(nextNaturalWrap)):
+                            return lineLength(upTo: nextNaturalWrap)
+                        case let (.some(startOfNextScopeOnLine), nil):
+                            return lineLength(upTo: startOfNextScopeOnLine)
+                        case (nil, nil):
+                            return lineLength(upTo: endOfScope)
+                        }
+
+                    } else {
+                        return lineLength(upTo: endOfScope)
                     }
-                    return lineLength(at: endOfScope)
+                }
+
+                func shouldWrapArguments() -> Bool {
+                    guard maxWidth > 0 else {
+                        return false
+                    }
+
+                    return maxWidth < lineLengthToNextWrap()
+                        && !willWrapAtStartOfReturnType(maxWidth: maxWidth)
                 }
 
                 let mode: WrapMode
@@ -926,7 +973,6 @@ extension Formatter {
                     !isStringLiteral(at: i) else {
                     return
                 }
-                let maxWidth = options.maxWidth
                 if completePartialWrapping,
                     let firstLinebreakIndex = (i ..< endOfScope).first(where: { tokens[$0].isLinebreak }) {
                     switch mode {
@@ -947,9 +993,7 @@ extension Formatter {
                     case .disabled, .default:
                         assertionFailure() // Shouldn't happen
                     }
-                } else if maxWidth > 0,
-                    maxWidth < lineLengthToNextWrap(),
-                    !willWrapAtStartOfReturnType(maxWidth: maxWidth) {
+                } else if shouldWrapArguments() {
                     if mode == .beforeFirst {
                         wrapArgumentsBeforeFirst(startOfScope: i,
                                                  endOfScope: endOfScope,

@@ -1,0 +1,16 @@
+name: 'Apply SwiftFormat'
+description: 'A code library and command-line formatting tool for reformatting Swift code'
+author: 'Nick Lockwood'
+inputs: 
+  args:
+    description: 'SwiftFormat command line arguments (--exclude)'
+    required: false
+  config-file-path:
+    description: 'swiftformat config file path'
+    required: false
+runs:
+  using: 'node12'
+  main: './action/lib/index.js'
+branding:
+  icon: 'bar-chart'  
+  color: 'blue'

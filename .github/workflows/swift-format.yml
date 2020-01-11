@@ -1,0 +1,30 @@
+on: pull_request
+name: sort-cases
+jobs:
+  sortcases:
+    name: Sort
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@master
+      with: 
+        ref: ${{ github.head_ref }}
+    - name: Changed Files Exporter
+      uses: futuratrepadeira/changed-files@v3.0.0
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+      id: files
+    - name: Automatic Sort Cases
+      uses: erkekin/CaseSorter@master
+      with: 
+        files: "${{ steps.files.outputs.files_updated }} ${{ steps.files.outputs.files_created }}"
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: enum cases sorted
+        title: Case Sorter in Action
+        body: This is an auto-generated PR with fixes by case sorter tool.
+        labels: sort, automated pr, enum
+        branch: ${{ steps.vars.outputs.branch-name }}
+        branch-suffix: none

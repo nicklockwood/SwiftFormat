@@ -520,4 +520,105 @@ public class Formatter: NSObject {
         }
         return .linebreak(options.linebreak, lineNumber)
     }
+
+    /// Returns the index where the `wrap` rule should add the next linebreak in the line at the selected index.
+    ///
+    /// If the line does not need to be wrapped, this will return `nil`.
+    ///
+    /// - Note: This checks the entire line from the start of the line, the linebreak may be an index preceding the
+    ///         `index` passed to the function.
+    func indexWhereLineShouldWrapInLine(at index: Int) -> Int? {
+        return indexWhereLineShouldWrap(from: startOfLine(at: index))
+    }
+
+    func indexWhereLineShouldWrap(from index: Int) -> Int? {
+        var lineLength = self.lineLength(upTo: index)
+        var stringLiteralDepth = 0
+        var currentPriority = 0
+        var lastBreakPoint: Int?
+        var lastBreakPointPriority = Int.min
+
+        let maxWidth = options.maxWidth
+        guard maxWidth > 0 else { return nil }
+
+        func addBreakPoint(at i: Int, relativePriority: Int) {
+            guard stringLiteralDepth == 0, currentPriority + relativePriority >= lastBreakPointPriority,
+                !isInClosureArguments(at: i + 1) else {
+                return
+            }
+            let i = self.index(of: .nonSpace, before: i + 1) ?? i
+            if token(at: i + 1)?.isLinebreak == true || token(at: i)?.isLinebreak == true {
+                return
+            }
+            lastBreakPoint = i
+            lastBreakPointPriority = currentPriority + relativePriority
+        }
+
+        let tokens = self.tokens[index ..< endOfLine(at: index)]
+        for (i, token) in zip(tokens.indices, tokens) {
+            switch token {
+            case .linebreak:
+                return nil
+            case .delimiter(","):
+                addBreakPoint(at: i, relativePriority: 0)
+            case .operator("=", .infix) where self.token(at: i + 1)?.isSpace == true:
+                addBreakPoint(at: i, relativePriority: -9)
+            case .operator(".", .infix):
+                addBreakPoint(at: i - 1, relativePriority: -2)
+            case .operator("->", .infix):
+                if isInReturnType(at: i) {
+                    currentPriority -= 5
+                }
+                addBreakPoint(at: i - 1, relativePriority: -5)
+            case .operator(_, .infix) where self.token(at: i + 1)?.isSpace == true:
+                addBreakPoint(at: i, relativePriority: -3)
+            case .startOfScope("{"):
+                if !isStartOfClosure(at: i) ||
+                    next(.keyword, after: i) != .keyword("in"),
+                    next(.nonSpace, after: i) != .endOfScope("}") {
+                    addBreakPoint(at: i, relativePriority: -6)
+                }
+                if isInReturnType(at: i) {
+                    currentPriority += 5
+                }
+                currentPriority -= 6
+            case .endOfScope("}"):
+                currentPriority += 6
+                if last(.nonSpace, before: i) != .startOfScope("{") {
+                    addBreakPoint(at: i - 1, relativePriority: -6)
+                }
+            case .startOfScope("("):
+                currentPriority -= 7
+            case .endOfScope(")"):
+                currentPriority += 7
+            case .startOfScope("["):
+                currentPriority -= 8
+            case .endOfScope("]"):
+                currentPriority += 8
+            case .startOfScope("<"):
+                currentPriority -= 9
+            case .endOfScope(">"):
+                currentPriority += 9
+            case .startOfScope where token.isStringDelimiter:
+                stringLiteralDepth += 1
+            case .endOfScope where token.isStringDelimiter:
+                stringLiteralDepth -= 1
+            case .keyword("else"), .keyword("where"):
+                addBreakPoint(at: i - 1, relativePriority: -1)
+            case .keyword("in"):
+                if last(.keyword, before: i) == .keyword("for") {
+                    addBreakPoint(at: i, relativePriority: -11)
+                    break
+                }
+                addBreakPoint(at: i, relativePriority: -5 - currentPriority)
+            default:
+                break
+            }
+            lineLength += tokenLength(token)
+            if lineLength > maxWidth, let breakPoint = lastBreakPoint, breakPoint < i {
+                return breakPoint
+            }
+        }
+        return nil
+    }
 }

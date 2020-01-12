@@ -649,9 +649,9 @@ extension Formatter {
             return false
         }
         let nextToken = tokens[nextIndex]
-        if currentScope(at: i) == .startOfScope("("),
-            nextToken == .delimiter(":") || (nextToken.isIdentifier &&
-                next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .delimiter(":")) {
+        if nextToken == .delimiter(":") || (nextToken.isIdentifier &&
+            next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .delimiter(":")),
+            currentScope(at: i) == .startOfScope("(") {
             return true
         }
         return false

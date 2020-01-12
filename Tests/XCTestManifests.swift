@@ -1689,6 +1689,8 @@ extension RulesTests {
         ("testWrappedLineBeforeWhere", testWrappedLineBeforeWhere),
         ("testWrappedLineInClosure", testWrappedLineInClosure),
         ("testWrappedLinesWithComments", testWrappedLinesWithComments),
+        ("testWrappedMultilineClosureOnNewLineWithXcodeIndentation", testWrappedMultilineClosureOnNewLineWithXcodeIndentation),
+        ("testWrappedMultilineStringOnNewLineWithXcodeIndentation", testWrappedMultilineStringOnNewLineWithXcodeIndentation),
         ("testWrapReset", testWrapReset),
         ("testXcodeIndentationGuardClosure", testXcodeIndentationGuardClosure),
         ("testYodaConditionFollowedByExpression", testYodaConditionFollowedByExpression),

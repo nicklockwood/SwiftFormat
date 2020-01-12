@@ -2239,6 +2239,48 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    func testWrappedMultilineClosureOnNewLineWithXcodeIndentation() {
+        let input = """
+        func foo() {
+            let bar =
+            {
+                print("foo")
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            let bar =
+                {
+                    print("foo")
+                }
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testWrappedMultilineStringOnNewLineWithXcodeIndentation() {
+        let input = """
+        func foo() {
+            let bar =
+            \"""
+            foo
+            \"""
+        }
+        """
+        let output = """
+        func foo() {
+            let bar =
+                \"""
+                foo
+                \"""
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
     // indent comments
 
     func testCommentIndenting() {

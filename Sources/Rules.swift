@@ -623,19 +623,30 @@ public struct _FormatRules {
         help: "Replace consecutive spaces with a single space."
     ) { formatter in
         formatter.forEach(.space) { i, token in
-            if let prevToken = formatter.token(at: i - 1), !prevToken.isLinebreak {
-                switch token {
-                case .space(""):
-                    formatter.removeToken(at: i)
-                case .space(" "):
-                    break
-                case .space:
-                    let scope = formatter.currentScope(at: i)
-                    if scope != .startOfScope("/*"), scope != .startOfScope("//") {
-                        formatter.replaceToken(at: i, with: .space(" "))
-                    }
+            switch token {
+            case .space(""):
+                formatter.removeToken(at: i)
+            case .space(" "):
+                break
+            default:
+                guard let prevToken = formatter.token(at: i - 1),
+                    let nextToken = formatter.token(at: i + 1) else {
+                    return
+                }
+                switch prevToken {
+                case .linebreak, .startOfScope("/*"), .startOfScope("//"), .commentBody:
+                    return
+                case .endOfScope("*/") where nextToken == .startOfScope("/*") &&
+                    formatter.currentScope(at: i) == .startOfScope("/*"):
+                    return
                 default:
                     break
+                }
+                switch nextToken {
+                case .linebreak, .endOfScope("*/"), .commentBody:
+                    return
+                default:
+                    formatter.replaceToken(at: i, with: .space(" "))
                 }
             }
         }

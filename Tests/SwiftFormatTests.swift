@@ -119,7 +119,6 @@ class SwiftFormatTests: XCTestCase {
     func testLintWithDefaultRules() {
         let input = "foo ()  "
         XCTAssertEqual(try lint(input), [
-            .init(line: 1, rule: FormatRules.consecutiveSpaces, filePath: nil),
             .init(line: 1, rule: FormatRules.linebreakAtEndOfFile, filePath: nil),
             .init(line: 1, rule: FormatRules.spaceAroundParens, filePath: nil),
             .init(line: 1, rule: FormatRules.trailingSpace, filePath: nil),

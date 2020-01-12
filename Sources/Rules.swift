@@ -922,8 +922,7 @@ public struct _FormatRules {
             guard let returnOperatorIndex = formatter.startOfReturnType(at: i) else {
                 return false
             }
-            return formatter.last(.nonSpaceOrComment,
-                                  before: returnOperatorIndex)?.isLinebreak == true
+            return formatter.last(.nonSpaceOrComment, before: returnOperatorIndex)?.isLinebreak == true
         }
 
         if formatter.options.fragment,
@@ -1184,18 +1183,19 @@ public struct _FormatRules {
                 }
                 lineIndex += 1
 
-                func xcodeIndentationShouldIndentNextLine(at i: Int) -> Bool {
+                func shouldIndentNextLine(at i: Int) -> Bool {
+                    guard formatter.options.xcodeIndentation else {
+                        return false
+                    }
                     // If there is a linebreak after certain symbols, we should add
                     // an additional indentation to the lines at the same indention scope
                     // after this line.
-                    guard let lastToken = formatter.token(at: formatter.endOfLine(at: i) - 1) else {
-                        return false
-                    }
-                    switch lastToken {
-                    case .keyword("return"):
+                    switch formatter.token(at: formatter.endOfLine(at: i) - 1) {
+                    case .keyword("return")?, .operator("=", .infix)?:
+                        if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isStartOfScope == true {
+                            return false
+                        }
                         return true
-                    case let .operator(string, .infix):
-                        return ["="].contains(string)
                     default:
                         return false
                     }
@@ -1280,9 +1280,7 @@ public struct _FormatRules {
                     formatter.insertSpace(indent, at: i + 1)
                 }
 
-                if linewrapped,
-                    formatter.options.xcodeIndentation,
-                    xcodeIndentationShouldIndentNextLine(at: i) {
+                if linewrapped, shouldIndentNextLine(at: i) {
                     indentStack[indentStack.count - 1] += formatter.options.indent
                 }
 

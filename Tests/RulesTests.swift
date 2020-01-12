@@ -1014,8 +1014,19 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.consecutiveSpaces)
     }
 
+    func testConsecutiveSpacesRemovedBetweenComments() {
+        let input = "/* foo */  /* bar */"
+        let output = "/* foo */ /* bar */"
+        testFormatting(for: input, output, rule: FormatRules.consecutiveSpaces)
+    }
+
     func testConsecutiveSpacesDoesntAffectNestedMultilineComments() {
         let input = "/*  foo  /*  bar  */  baz  */"
+        testFormatting(for: input, rule: FormatRules.consecutiveSpaces)
+    }
+
+    func testConsecutiveSpacesDoesntAffectNestedMultilineComments2() {
+        let input = "/*  /*  foo  */  /*  bar  */  */"
         testFormatting(for: input, rule: FormatRules.consecutiveSpaces)
     }
 

@@ -665,6 +665,21 @@ extension Formatter {
         return false
     }
 
+    func isParameterList(at i: Int) -> Bool {
+        assert(tokens[i] == .startOfScope("("))
+        if let endIndex = endOfScope(at: i),
+            let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
+            [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
+            return true
+        }
+        if let funcIndex = index(of: .keyword, before: i, if: { $0 == .keyword("func") }),
+            lastIndex(of: .endOfScope("}"), in: funcIndex ..< i) == nil {
+            // Is parameters at start of function
+            return true
+        }
+        return false
+    }
+
     // Shared import rules implementation
     typealias ImportRange = (String, Range<Int>)
     func parseImports() -> [[ImportRange]] {
@@ -888,40 +903,9 @@ extension Formatter {
                         // Not an argument list, or only one argument
                         return
                     }
-
-                    func isParameterList() -> Bool {
-                        if last(.keyword, before: i) == .keyword("func"),
-                            let funcStartIndex = index(of: .keyword("func"), before: i),
-                            lastIndex(of: .endOfScope("}"), in: funcStartIndex ..< i) == nil {
-                            // Is parameters at start of function
-                            return true
-                        }
-
-                        let afterClosureParameterListTokens: [Token] = [.operator("->", .infix),
-                                                                        .keyword("throws"),
-                                                                        .keyword("rethrows")]
-
-                        let beforeClosureParameterListKeywords: [Token] = [.delimiter(":"),
-                                                                           .keyword("@escaping"),
-                                                                           .keyword("@noescape"),
-                                                                           .keyword("@autoclosure")]
-
-                        if let closureTypeDelimiterIndex = index(of: .delimiter(":"), before: i),
-                            range(closureTypeDelimiterIndex ..< i,
-                                  doesNotContainsTokensExcept: beforeClosureParameterListKeywords,
-                                  allowingWhitespaceAndComments: true),
-                            let tokenAfterParameterList = next(.nonSpaceOrCommentOrLinebreak, after: endOfScope),
-                            afterClosureParameterListTokens.contains(tokenAfterParameterList) {
-                            // Is parameter list for a closure type
-                            return true
-                        }
-
-                        return false
-                    }
-
                     checkNestedScopes = true // TODO: remove this var?
                     endOfScopeOnSameLine = options.closingParenOnSameLine
-                    mode = isParameterList() ? options.wrapParameters : options.wrapArguments
+                    mode = isParameterList(at: i) ? options.wrapParameters : options.wrapArguments
                 case "<":
                     mode = options.wrapArguments
                 case "[":

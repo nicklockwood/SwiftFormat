@@ -3760,20 +3760,24 @@ public struct _FormatRules {
         }
     }
 
-    /// Removed backticks from `self` when strongifying
+    /// Standardize to use self when strongifying self
     public let strongifiedSelf = FormatRule(
-        help: "Remove backticks around `self` in Optional unwrap expressions."
+        help: "Standardize to use self when strongifying self. Remove backticks around `self`.",
+        options: ["strongselfids"]
     ) { formatter in
         guard formatter.options.swiftVersion >= "4.2" else {
             return
         }
-        formatter.forEach(.identifier("`self`")) { i, _ in
-            guard let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
-                $0 == .operator("=", .infix)
-            }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: equalIndex) == .identifier("self") else {
-                return
+        let strongSelfIds = formatter.options.strongSelfIds + ["`self`"]
+        strongSelfIds.forEach { idName in
+            formatter.forEach(.identifier(idName)) { i, _ in
+                guard let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                    $0 == .operator("=", .infix)
+                }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: equalIndex) == .identifier("self") else {
+                    return
+                }
+                formatter.replaceToken(at: i, with: .identifier("self"))
             }
-            formatter.replaceToken(at: i, with: .identifier("self"))
         }
     }
 

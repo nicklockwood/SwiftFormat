@@ -252,6 +252,7 @@ extension FormatOptions.Descriptor {
         tabWidth,
         maxWidth,
         noSpaceOperators,
+        strongSelfIds,
 
         // Deprecated
         indentComments,
@@ -576,6 +577,13 @@ extension FormatOptions.Descriptor {
                 break
             }
         }
+    )
+    static let strongSelfIds = FormatOptions.Descriptor(
+        argumentName: "strongselfids",
+        propertyName: "strongSelfIds",
+        displayName: "Strongified Self Identifiers",
+        help: "Comma-delimited list of ids that should be replaced with self",
+        keyPath: \FormatOptions.strongSelfIds
     )
 
     // MARK: - Internal

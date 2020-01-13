@@ -8524,6 +8524,31 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.strongifiedSelf)
     }
 
+    func testStrongSelfConvertedToSelfIfDefinedInOptions() {
+        let input = """
+        { [weak self] in
+            guard let strongSelf = self else { return }
+        }
+        """
+        let output = """
+        { [weak self] in
+            guard let self = self else { return }
+        }
+        """
+        let options = FormatOptions(strongSelfIds: ["strongSelf"], swiftVersion: "4.2")
+        testFormatting(for: input, output, rule: FormatRules.strongifiedSelf, options: options)
+    }
+
+    func testStrongSelfNotConvertedToSelfIfNotDefinedInOptions() {
+        let input = """
+        { [weak self] in
+            guard let strongSelf = self else { return }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4.2")
+        testFormatting(for: input, rule: FormatRules.strongifiedSelf, options: options)
+    }
+
     // MARK: redundantObjc
 
     func testRedundantObjcRemovedFromBeforeOutlet() {

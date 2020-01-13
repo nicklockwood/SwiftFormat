@@ -1300,7 +1300,11 @@ As per Apple's recommendation
 
 ## strongifiedSelf
 
-Remove backticks around `self` in Optional unwrap expressions.
+Standardize to use self when strongifying self. Remove backticks around `self`.
+
+Option | Description
+--- | ---
+`--strongselfids` | Comma-delimited list of ids that should be replaced with self
 
 <details>
 <summary>Examples</summary>

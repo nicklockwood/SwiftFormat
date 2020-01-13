@@ -8033,6 +8033,18 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
+    func testWrapArgumentsDoesNotAffectInit() {
+        let input = "init(\n    bar _: Int,\n    baz _: String\n) {}"
+        let options = FormatOptions(wrapArguments: .afterFirst, wrapParameters: .preserve)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArgumentsDoesNotAffectSubscript() {
+        let input = "subscript(\n    bar _: Int,\n    baz _: String\n) -> Int {}"
+        let options = FormatOptions(wrapArguments: .afterFirst, wrapParameters: .preserve)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
     // MARK: afterFirst
 
     func testWrapArgumentsConvertBeforeFirstToAfterFirst() {

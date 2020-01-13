@@ -7384,6 +7384,22 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
+    func testWrapThrowingFunctionIfReturnTypeExceedsMaxWidth() {
+        let input = """
+        func testFunc(_: () -> Void) throws -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let output = """
+        func testFunc(_: () -> Void) throws
+            -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let options = FormatOptions(maxWidth: 42)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
     func testNoWrapInterpolatedStringLiteral() {
         let input = """
         "a very long \\(string) literal"

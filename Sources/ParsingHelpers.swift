@@ -255,9 +255,9 @@ extension Formatter {
     /// Returns the index of the `->` operator for the current return type declaration if
     /// the specified index is in a return type declaration.
     func startOfReturnType(at i: Int) -> Int? {
-        guard let startIndex = indexOfLastSignificantKeyword(at: i),
-            [.keyword("func"), .keyword("subscript")].contains(tokens[startIndex]),
-            token(at: i) != .startOfScope("{") else {
+        guard let startIndex = indexOfLastSignificantKeyword(
+            at: i, excluding: ["throws", "rethrows"]
+        ), ["func", "subscript"].contains(tokens[startIndex].string) else {
             return nil
         }
 
@@ -425,17 +425,18 @@ extension Formatter {
         return indexOfLastSignificantKeyword(at: i).map { tokens[$0].string }
     }
 
-    func indexOfLastSignificantKeyword(at i: Int) -> Int? {
+    func indexOfLastSignificantKeyword(at i: Int, excluding: [String] = []) -> Int? {
         guard let token = token(at: i),
             let index = token.isKeyword ? i : index(of: .keyword, before: i),
             lastIndex(of: .endOfScope("}"), in: index ..< i) == nil else {
-            return nil
+                return nil
         }
         switch tokens[index].string {
-        case let name where name.hasPrefix("#") || name.hasPrefix("@"):
+        case let name where
+            name.hasPrefix("#") || name.hasPrefix("@") || excluding.contains(name):
             fallthrough
         case "in", "as", "is", "try":
-            return indexOfLastSignificantKeyword(at: index - 1)
+            return indexOfLastSignificantKeyword(at: index - 1, excluding: excluding)
         default:
             return index
         }

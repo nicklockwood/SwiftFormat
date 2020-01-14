@@ -7354,7 +7354,9 @@ class RulesTests: XCTestCase {
                        exclude: ["spaceAroundOperators"])
     }
 
-    // MARK: - wrapArguments --wrapParameters
+    // MARK: - wrapArguments
+
+    // MARK: wrapParameters
 
     func testWrapParametersDoesNotAffectFunctionDeclaration() {
         let input = "foo(\n    bar _: Int,\n    baz _: String\n)"
@@ -7906,9 +7908,29 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 30)
-        testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments],
+        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments],
                        options: options)
+    }
+
+    func testNoWrapSubscriptWithSingleElement() {
+        let input = "guard let foo = bar[0] {}"
+        let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 20)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+                       exclude: ["wrap"])
+    }
+
+    func testNoWrapArrayWithSingleElement() {
+        let input = "let foo = [0]"
+        let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 11)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+                       exclude: ["wrap"])
+    }
+
+    func testNoWrapDictionaryWithSingleElement() {
+        let input = "let foo = [bar: baz]"
+        let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 15)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+                       exclude: ["wrap"])
     }
 
     // MARK: closingParenOnSameLine = true
@@ -8053,7 +8075,35 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
-    // MARK: - --wrapArguments & --wrapParameter
+    func testNoMangleCommentedLinesWhenWrappingArgumentsWithNoCommas() {
+        let input = """
+        foo(bar: bar
+        //    baz: baz
+            ) {}
+        """
+        let output = """
+        foo(
+            bar: bar
+        //    baz: baz
+        ) {}
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    // MARK: preserve
+
+    func testWrapArgumentsDoesNotAffectLessThanOperator() {
+        let input = """
+        func foo() {
+            guard foo < bar.count else { return nil }
+        }
+        """
+        let options = FormatOptions(wrapArguments: .preserve)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    // MARK: - --wrapArguments, --wrapParameter
 
     // MARK: beforeFirst
 
@@ -8274,7 +8324,15 @@ class RulesTests: XCTestCase {
                        options: options)
     }
 
-    // MARK: wrapArguments --wrapCollections & --wrapArguments
+    func testBeforeFirstPreservedAndTrailingCommaAddedInSingleLineNestedDictionaryWithOneNestedItem() {
+        let input = "[\n    foo: [bar: baz]]"
+        let output = "[\n    foo: [bar: baz],\n]"
+        let options = FormatOptions(trailingCommas: true, wrapCollections: .preserve)
+        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.trailingCommas],
+                       options: options)
+    }
+
+    // MARK: - wrapArguments --wrapCollections & --wrapArguments
 
     // MARK: beforeFirst maxWidth
 
@@ -8310,6 +8368,40 @@ class RulesTests: XCTestCase {
                                     maxWidth: 26)
         testFormatting(for: input, [output],
                        rules: [FormatRules.wrapArguments], options: options)
+    }
+
+    // MARK: - wrapArguments Multiple Wraps On Same Line
+
+    func testWrapAfterFirstWhenChainedFunctionAndThenArgumentsExceedMaxWidth() {
+        let input = """
+        foo.bar(baz: [qux, quux]).quuz([corge: grault], garply: waldo)
+        """
+        let output = """
+        foo.bar(baz: [qux, quux])
+            .quuz([corge: grault],
+                  garply: waldo)
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst,
+                                    wrapCollections: .afterFirst,
+                                    maxWidth: 28)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments, FormatRules.wrap], options: options)
+    }
+
+    func testWrapAfterFirstWrapCollectionsBeforeFirstWhenChainedFunctionAndThenArgumentsExceedMaxWidth() {
+        let input = """
+        foo.bar(baz: [qux, quux]).quuz([corge: grault], garply: waldo)
+        """
+        let output = """
+        foo.bar(baz: [qux, quux])
+            .quuz([corge: grault],
+                  garply: waldo)
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst,
+                                    wrapCollections: .beforeFirst,
+                                    maxWidth: 28)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments, FormatRules.wrap], options: options)
     }
 
     // MARK: - numberFormatting

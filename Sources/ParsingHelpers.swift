@@ -219,9 +219,17 @@ extension Formatter {
                             return // error
                         }
                         if removeSelf, isEnabled {
-                            for i in (nextIndex ..< endIndex).reversed()
-                                where tokens[i] == .identifier("self") {
-                                _ = self.removeSelf(at: i, localNames: names)
+                            var i = endIndex - 1
+                            while i > nextIndex {
+                                switch tokens[i] {
+                                case .endOfScope("}"):
+                                    i = self.index(of: .startOfScope("{"), before: i) ?? i
+                                case .identifier("self"):
+                                    _ = self.removeSelf(at: i, localNames: names)
+                                default:
+                                    break
+                                }
+                                i -= 1
                             }
                             index = endOfScope(at: nextIndex)!
                         } else {

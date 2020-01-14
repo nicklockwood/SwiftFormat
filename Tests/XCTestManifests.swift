@@ -1352,6 +1352,7 @@ extension RulesTests {
         ("testSelfNotInsertedInTupleAssignment", testSelfNotInsertedInTupleAssignment),
         ("testSelfNotRemovedInClosureAfterSwitch", testSelfNotRemovedInClosureAfterSwitch),
         ("testSelfNotRemovedInClosureInCaseWithWhereClause", testSelfNotRemovedInClosureInCaseWithWhereClause),
+        ("testSelfNotRemovedInClosureInIf", testSelfNotRemovedInClosureInIf),
         ("testSelfNotRemovedInGetter", testSelfNotRemovedInGetter),
         ("testSelfNotRemovedInIfdef", testSelfNotRemovedInIfdef),
         ("testSelfNotRemovedWhenPropertyIsContextualKeyword", testSelfNotRemovedWhenPropertyIsContextualKeyword),

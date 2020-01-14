@@ -5984,6 +5984,16 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testSelfNotRemovedInClosureInIf() {
+        let input = """
+        if let foo = bar(baz: { [weak self] in
+            guard let self = self else { return }
+            _ = self.myVar
+        }) {}
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {

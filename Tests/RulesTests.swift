@@ -2071,8 +2071,8 @@ class RulesTests: XCTestCase {
         let output = """
         private let foo =
             bar(a: "A", b: "B")
-            .baz()!
-            .quux
+                .baz()!
+                .quux
         """
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
@@ -2276,6 +2276,23 @@ class RulesTests: XCTestCase {
                 foo
                 \"""
         }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testChainedFunctionEndingInOpenParenNotDoubleIndented() {
+        let input = """
+        private let foo =
+        bar.baz(
+            quux
+        )
+        """
+        let output = """
+        private let foo =
+            bar.baz(
+                quux
+            )
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)

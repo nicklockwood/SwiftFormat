@@ -1184,18 +1184,24 @@ public struct _FormatRules {
                 lineIndex += 1
 
                 func shouldIndentNextLine(at i: Int) -> Bool {
-                    guard formatter.options.xcodeIndentation else {
-                        return false
-                    }
                     // If there is a linebreak after certain symbols, we should add
                     // an additional indentation to the lines at the same indention scope
                     // after this line.
-                    switch formatter.token(at: formatter.endOfLine(at: i) - 1) {
+                    let endOfLine = formatter.endOfLine(at: i)
+                    switch formatter.token(at: endOfLine - 1) {
                     case .keyword("return")?, .operator("=", .infix)?:
                         if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isStartOfScope == true {
                             return false
                         }
-                        return true
+                        let endOfNextLine = formatter.endOfLine(at: endOfLine + 1)
+                        switch formatter.last(.nonSpaceOrCommentOrLinebreak, before: endOfNextLine) {
+                        case .startOfScope?:
+                            return false
+                        case .operator(_, .infix)?, .delimiter(",")?:
+                            return formatter.options.xcodeIndentation
+                        default:
+                            return true
+                        }
                     default:
                         return false
                     }

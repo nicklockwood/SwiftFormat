@@ -192,7 +192,7 @@ Alternatively, if you prefer not to use Homebrew, you'll find the latest version
 
 **Usage:**
 
-Once you have launched the app and restarted Xcode, you'll find a SwiftFormat option under Xcode's Editor menu. You can use this to format either the current selection or the whole file.
+Once you have launched the app and restarted Xcode, you'll find a SwiftFormat option under Xcode's Editor menu.
 
 You can configure the formatting [rules](#rules) and [options](#options) using the SwiftFormat for Xcode host application. There is currently no way to override these per-project, however you can import and export different configurations using the File menu. You will need to do this again each time you switch projects.
 
@@ -712,6 +712,7 @@ Credits
 * [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
 * [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions
 * [Balázs Kilvády](https://github.com/balitm) - Xcode lint warning integration
+* [Anthony Miller](https://github.com/AnthonyMDev) - Improvements to wrap/indent logic
 * [Nick Lockwood](https://github.com/nicklockwood) - Everything else
 
 ([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

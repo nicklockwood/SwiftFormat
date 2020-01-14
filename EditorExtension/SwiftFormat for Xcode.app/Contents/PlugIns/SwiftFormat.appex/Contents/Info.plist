@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BuildMachineOSBuild</key>
-	<string>18G103</string>
+	<string>18G2022</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
@@ -17,7 +17,7 @@
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.43.5</string>
+	<string>0.44.0</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>
@@ -48,19 +48,27 @@
 			<array>
 				<dict>
 					<key>XCSourceEditorCommandClassName</key>
-					<string>SwiftFormat.FormatSelectedSourceCommand</string>
+					<string>SwiftFormat.FormatSelectionCommand</string>
 					<key>XCSourceEditorCommandIdentifier</key>
-					<string>com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension.FormatSelectedSourceCommand</string>
+					<string>com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension.FormatSelectionCommand</string>
 					<key>XCSourceEditorCommandName</key>
-					<string>Format Selected Source</string>
+					<string>Format Selection</string>
 				</dict>
 				<dict>
 					<key>XCSourceEditorCommandClassName</key>
-					<string>SwiftFormat.FormatEntireFileCommand</string>
+					<string>SwiftFormat.FormatFileCommand</string>
 					<key>XCSourceEditorCommandIdentifier</key>
-					<string>com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension.FormatEntireFileCommand</string>
+					<string>com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension.FormatFileCommand</string>
 					<key>XCSourceEditorCommandName</key>
-					<string>Format Entire File</string>
+					<string>Format File</string>
+				</dict>
+				<dict>
+					<key>XCSourceEditorCommandClassName</key>
+					<string>SwiftFormat.LintFileCommand</string>
+					<key>XCSourceEditorCommandIdentifier</key>
+					<string>com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension.LintFileCommand</string>
+					<key>XCSourceEditorCommandName</key>
+					<string>Lint File</string>
 				</dict>
 			</array>
 			<key>XCSourceEditorExtensionPrincipalClass</key>

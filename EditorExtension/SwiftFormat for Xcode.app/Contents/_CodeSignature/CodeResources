@@ -6,31 +6,31 @@
 	<dict>
 		<key>Resources/Base.lproj/Main.storyboardc/9ZR-Qg-hHT-view-iDF-FY-6tf.nib</key>
 		<data>
-		3no0eAtV8b10B9KTo+nAAwBJeCo=
+		z3v+1cdDj01hzKIHftQ0wvQIFT0=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/Info.plist</key>
 		<data>
-		N8yXOmvRLiT6ddu+JW9Yh0/k03k=
+		30a2JNiEYlWWB5EtEWvnioWAFT4=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/MainMenu.nib</key>
 		<data>
-		EvZERo0ymPBghsDuZmc3Yo/imvI=
+		eEf3+O9zyBzABmZ7PyaRrZs+UUg=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/MainWindowTabViewController.nib</key>
 		<data>
-		B0Jw7YHLXSMJFTOZyMo5BC6EBmg=
+		z0rSRIZnTVWPDlgmwfB3oMOwwnw=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/NSWindowController-B8D-0N-5wS.nib</key>
 		<data>
-		567Y0dHCWmemllvEaDcEjnDWmh4=
+		Qukwfii28V82HY5FflGVyGys2rs=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/RulesViewController.nib</key>
 		<data>
-		AKcP7aNRdPVdg0qEHkNlbs1G80M=
+		iH9gMGmzMd0oDOCZADqmdMRfFkk=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/XfG-lQ-9wD-view-m2S-Jp-Qdl.nib</key>
 		<data>
-		Fpuyfh9zwfm9IaqhlADoThv3beY=
+		EdqS1MyI3MQuetEqbOPzPpvqVGw=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -111,7 +111,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			FnhExIbWQgbB+zQwIxZ0VYaC4jg=
+			vvlXfO9Z3w+MOqh0HjklJVusRmw=
 			</data>
 			<key>requirement</key>
 			<string>anchor apple generic and identifier "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension" and (certificate leaf[field.1.2.840.113635.100.6.1.9] /* exists */ or certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "8VQKF583ED")</string>
@@ -120,77 +120,77 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			3no0eAtV8b10B9KTo+nAAwBJeCo=
+			z3v+1cdDj01hzKIHftQ0wvQIFT0=
 			</data>
 			<key>hash2</key>
 			<data>
-			7jt76O+ThbheWMDCbCqjXt7LsvVg0AN8YaJeM2lZdZ4=
+			2kaefwZJg37W3tdj1uF3JmisLBMU+Avswd8xW73gmnY=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/Info.plist</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			N8yXOmvRLiT6ddu+JW9Yh0/k03k=
+			30a2JNiEYlWWB5EtEWvnioWAFT4=
 			</data>
 			<key>hash2</key>
 			<data>
-			4BXIRw2nz/jSMfjIkLl4ez5HUYiw43niV0mnOidzn+8=
+			dQIYSXfGpiAlsGRJXLgZsKqifNk6jUq+yB3+x1q0++k=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/MainMenu.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			EvZERo0ymPBghsDuZmc3Yo/imvI=
+			eEf3+O9zyBzABmZ7PyaRrZs+UUg=
 			</data>
 			<key>hash2</key>
 			<data>
-			983AGSKR6c2ZL15vlMj2GCXQT96oYVuyROLwICBn9OU=
+			CFFUzQqKxEr4kJIp7bPxTRyDQBO0ZXDSwRgdMqPoD6w=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/MainWindowTabViewController.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			B0Jw7YHLXSMJFTOZyMo5BC6EBmg=
+			z0rSRIZnTVWPDlgmwfB3oMOwwnw=
 			</data>
 			<key>hash2</key>
 			<data>
-			tJaf8vQmbtMoUhmQr+eOc99wLfKglADpR8z+DgxeebI=
+			XSRKajS/vx1LNzjcx/u47RtLyLKTNVBNjqe2Q9entGo=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/NSWindowController-B8D-0N-5wS.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			567Y0dHCWmemllvEaDcEjnDWmh4=
+			Qukwfii28V82HY5FflGVyGys2rs=
 			</data>
 			<key>hash2</key>
 			<data>
-			b+CRR+XU2MnUwq+x/0suY1WxmWkFjfEV9SeQMg1nJD0=
+			iStrXCG6nVOK+y0BV9HodFAVYb1mtTu/CVfBiF46PeA=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/RulesViewController.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			AKcP7aNRdPVdg0qEHkNlbs1G80M=
+			iH9gMGmzMd0oDOCZADqmdMRfFkk=
 			</data>
 			<key>hash2</key>
 			<data>
-			jwUAsB3NUAJxD1IYepcCQAEKLGh3zJFKoEvDPi1ZESI=
+			Lo6TAehMBfdDBR76bJ8Lmu6HcSMTsiDoHyOcJDhQ2Y4=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/XfG-lQ-9wD-view-m2S-Jp-Qdl.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			Fpuyfh9zwfm9IaqhlADoThv3beY=
+			EdqS1MyI3MQuetEqbOPzPpvqVGw=
 			</data>
 			<key>hash2</key>
 			<data>
-			WZlJzEVKN27feqWkD1ZlvDcYU1YT3ekJb67zOGP6gek=
+			YE1s5p+6lFloj7VwIpiUaxytp5pCIxSKT+kVtMXxBvY=
 			</data>
 		</dict>
 	</dict>

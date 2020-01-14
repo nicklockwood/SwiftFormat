@@ -59,7 +59,8 @@ final class RulesViewController: NSViewController {
         super.viewDidLoad()
         inferOptionsButton.state = optionStore.inferOptions ? .on : .off
         viewModels = buildRules()
-        NotificationCenter.default.addObserver(self, selector: #selector(didLoadNewConfiguration), name: .applicationDidLoadNewConfiguration, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didLoadNewConfiguration),
+                                               name: .applicationDidLoadNewConfiguration, object: nil)
     }
 
     @objc private func didLoadNewConfiguration(_: Notification) {

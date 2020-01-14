@@ -1172,10 +1172,10 @@ public struct _FormatRules {
                 // Detect linewrap
                 let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
                 let linewrapped =
-                    !formatter.isEndOfStatement(at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last)
-                    || !(nextTokenIndex == nil
-                        || formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last)
-                    ) || (formatter.options.xcodeIndentation && isGuardElseClause(at: i, token: token))
+                    !formatter.isEndOfStatement(at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last) ||
+                    !(nextTokenIndex == nil ||
+                        formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last)) ||
+                    (formatter.options.xcodeIndentation && isGuardElseClause(at: i, token: token))
                 // Determine current indent
                 var indent = indentStack.last ?? ""
                 if linewrapped, lineIndex == scopeStartLineIndexes.last {

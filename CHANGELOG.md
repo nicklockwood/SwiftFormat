@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.44.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.0) (2020-01-15)
+
+- Xcode Extension now includes Lint File option
+- Xcode Extension now preserves selection after formatting
+- Improved range-based formatting in Xcode Extension
+- Wrapping of function calls can now be configured separately from function declarations via the `--wrapparameters` option
+- Numerous improvements to wrapping and indenting logic (thanks to @AnthonyMDev for the fixes)
+- Fixed indent logic for unbalanced closing parens
+- Fixed `self` being removed incorrectly inside if statements
+- Fixed duplicate lint warnings
+- Fixed failure to fix indent at start of file
+- Fixed reported line index for `consecutiveBlankLines` rule
+
 ## [0.43.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.43.5) (2020-01-04)
 
 - Fixed bug where `redundantBreak` rule removed entire line if break appeared after a semicolon

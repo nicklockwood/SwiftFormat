@@ -512,7 +512,7 @@ private func applyRules(
     for _ in 0 ..< maxIterations {
         let formatter = Formatter(tokens, options: options,
                                   trackChanges: trackChanges, range: range)
-        for (i, rule) in rules.enumerated() {
+        for (i, rule) in rules.sorted().enumerated() {
             queue.async(group: group) {
                 rule.apply(with: formatter)
             }

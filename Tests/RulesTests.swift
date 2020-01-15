@@ -8008,6 +8008,23 @@ class RulesTests: XCTestCase {
                        options: options)
     }
 
+    func testNoWrapBeforeFirstMaxWidthNotExceededWithLineBreakSinceLastEndOfArgumentScope() {
+        let input = """
+        class Foo {
+            func foo() {
+                bar()
+            }
+
+            func bar(foo: String, bar: Int) {
+                quux()
+            }
+        }
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 37)
+        testFormatting(for: input, rule: FormatRules.wrapArguments,
+                       options: options, exclude: ["unusedArguments"])
+    }
+
     func testNoWrapSubscriptWithSingleElement() {
         let input = "guard let foo = bar[0] {}"
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 20)

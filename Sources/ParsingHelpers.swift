@@ -437,7 +437,7 @@ extension Formatter {
         guard let token = token(at: i),
             let index = token.isKeyword ? i : index(of: .keyword, before: i),
             lastIndex(of: .endOfScope("}"), in: index ..< i) == nil else {
-                return nil
+            return nil
         }
         switch tokens[index].string {
         case let name where
@@ -914,7 +914,7 @@ extension Formatter {
                 continue
             }
 
-            if let endOfLineSinceLastIndex = ((lastIndex + 1) ..< i).first(where: {
+            if let endOfLineSinceLastIndex = ((lastIndex + 1) ..< i).last(where: {
                 tokens[$0].isLinebreak
             }) {
                 lastIndex = max(endOfLineSinceLastIndex, lastIndex)

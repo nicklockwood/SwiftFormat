@@ -35,9 +35,9 @@ public final class FormatRule: Equatable, Comparable {
     private let fn: (Formatter) -> Void
     fileprivate(set) var name = ""
     let help: String
+    let orderAfter: [String]
     let options: [String]
     let sharedOptions: [String]
-    let orderingPriority: Int
 
     var deprecationMessage: String? {
         return FormatRule.deprecatedMessage[name]
@@ -48,15 +48,15 @@ public final class FormatRule: Equatable, Comparable {
     }
 
     fileprivate init(help: String,
+                     orderAfter: [String] = [],
                      options: [String] = [],
                      sharedOptions: [String] = [],
-                     orderingPriority: Int = 0,
                      _ fn: @escaping (Formatter) -> Void) {
         self.fn = fn
         self.help = help
+        self.orderAfter = orderAfter
         self.options = options
         self.sharedOptions = sharedOptions
-        self.orderingPriority = orderingPriority
     }
 
     public func apply(with formatter: Formatter) {
@@ -70,11 +70,7 @@ public final class FormatRule: Equatable, Comparable {
     }
 
     public static func < (lhs: FormatRule, rhs: FormatRule) -> Bool {
-        if lhs.orderingPriority < rhs.orderingPriority {
-            return true
-        }
-
-        return lhs.name < rhs.name
+        return rhs.orderAfter.contains(lhs.name) || lhs.name < rhs.name
     }
 
     static let deprecatedMessage = [
@@ -871,9 +867,9 @@ public struct _FormatRules {
     /// indenting can be configured with the `options` parameter of the formatter.
     public let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
+        orderAfter: ["wrap", "wrapArguments"],
         options: ["indent", "tabwidth", "indentcase", "ifdef", "xcodeindentation"],
-        sharedOptions: ["trimwhitespace"],
-        orderingPriority: 1000
+        sharedOptions: ["trimwhitespace"]
     ) { formatter in
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []
@@ -3080,8 +3076,7 @@ public struct _FormatRules {
         help: "Wrap lines that exceed the specified maximum width.",
         options: ["maxwidth"],
         sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "indent",
-                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"],
-        orderingPriority: 1
+                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
         guard maxWidth > 0 else { return }
@@ -3126,9 +3121,9 @@ public struct _FormatRules {
     /// Normalize argument wrapping style
     public let wrapArguments = FormatRule(
         help: "Align wrapped function arguments or collection elements.",
+        orderAfter: ["wrap"],
         options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen"],
-        sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"],
-        orderingPriority: 2
+        sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true)
     }

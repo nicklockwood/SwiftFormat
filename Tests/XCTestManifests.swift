@@ -265,6 +265,7 @@ extension MetadataTests {
         ("testNoInvalidOptionsInRulesFile", testNoInvalidOptionsInRulesFile),
         ("testNoInvalidRulesInRulesFile", testNoInvalidRulesInRulesFile),
         ("testRuleHelpLinesEndInPeriod", testRuleHelpLinesEndInPeriod),
+        ("testRuleOrderNamesAreValid", testRuleOrderNamesAreValid),
         ("testRulesOptions", testRulesOptions),
     ]
 }

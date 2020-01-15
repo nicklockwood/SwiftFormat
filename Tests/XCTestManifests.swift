@@ -1088,6 +1088,7 @@ extension RulesTests {
         ("testNoWrapBeforeFirstArgumentInStringInterpolation2", testNoWrapBeforeFirstArgumentInStringInterpolation2),
         ("testNoWrapBeforeFirstArgumentInStringInterpolation3", testNoWrapBeforeFirstArgumentInStringInterpolation3),
         ("testNoWrapBeforeFirstIfMaxLengthNotExceeded", testNoWrapBeforeFirstIfMaxLengthNotExceeded),
+        ("testNoWrapBeforeFirstMaxWidthNotExceededWithLineBreakSinceLastEndOfArgumentScope", testNoWrapBeforeFirstMaxWidthNotExceededWithLineBreakSinceLastEndOfArgumentScope),
         ("testNoWrapBeforeNestedFirstArgumentInStringInterpolation", testNoWrapBeforeNestedFirstArgumentInStringInterpolation),
         ("testNoWrapBeforeNestedFirstArgumentInStringInterpolation2", testNoWrapBeforeNestedFirstArgumentInStringInterpolation2),
         ("testNoWrapDictionaryWithSingleElement", testNoWrapDictionaryWithSingleElement),

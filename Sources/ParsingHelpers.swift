@@ -904,6 +904,12 @@ extension Formatter {
                 continue
             }
 
+            if let endOfLineSinceLastIndex = ((lastIndex + 1) ..< i).first(where: {
+                tokens[$0].isLinebreak
+            }) {
+                lastIndex = max(endOfLineSinceLastIndex, lastIndex)
+            }
+
             guard let endOfScope = endOfScope(at: i) else {
                 return
             }
@@ -911,6 +917,7 @@ extension Formatter {
             let mode: WrapMode
             var endOfScopeOnSameLine = false
             let hasMultipleArguments = tokens[i + 1 ..< endOfScope].contains(.delimiter(","))
+            var isParameters = false
             switch token.string {
             case "(":
                 guard hasMultipleArguments ||
@@ -921,7 +928,8 @@ extension Formatter {
                 }
 
                 endOfScopeOnSameLine = options.closingParenOnSameLine
-                mode = isParameterList(at: i) ? options.wrapParameters : options.wrapArguments
+                isParameters = isParameterList(at: i)
+                mode = isParameters ? options.wrapParameters : options.wrapArguments
             case "<":
                 mode = options.wrapArguments
             case "[":
@@ -999,15 +1007,18 @@ extension Formatter {
                 }
 
                 func wrapArgumentsWithoutPartialWrapping() {
-                    if mode == .beforeFirst {
+                    switch mode {
+                    case .preserve where isParameters, .beforeFirst:
                         wrapArgumentsBeforeFirst(startOfScope: i,
                                                  endOfScope: endOfScope,
                                                  allowGrouping: false,
                                                  endOfScopeOnSameLine: endOfScopeOnSameLine)
-                    } else {
+                    case .afterFirst, .preserve:
                         wrapArgumentsAfterFirst(startOfScope: i,
                                                 endOfScope: endOfScope,
                                                 allowGrouping: true)
+                    case .disabled, .default:
+                        assertionFailure() // Shouldn't happen
                     }
                 }
 

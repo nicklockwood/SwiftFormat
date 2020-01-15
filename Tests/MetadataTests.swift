@@ -193,6 +193,16 @@ class MetadataTests: XCTestCase {
         }
     }
 
+    // MARK: order
+
+    func testRuleOrderNamesAreValid() {
+        for rule in FormatRules.all {
+            for name in rule.orderAfter {
+                XCTAssert(FormatRules.byName[name] != nil, "\(name) rule does not exist")
+            }
+        }
+    }
+
     // MARK: releases
 
     func testLatestVersionInChangelog() {

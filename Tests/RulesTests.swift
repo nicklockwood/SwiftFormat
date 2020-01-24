@@ -10526,6 +10526,11 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.yodaConditions)
     }
 
+    func testEnumCaseLessThanEnumCase() {
+        let input = "XCTAssertFalse(.never < .never)"
+        testFormatting(for: input, rule: FormatRules.yodaConditions)
+    }
+
     // MARK: - leadingDelimiters
 
     func testLeadingCommaMovedToPreviousLine() {

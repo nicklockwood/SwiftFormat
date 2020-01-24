@@ -2481,6 +2481,23 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testLessThanEnumCase() {
+        let input = "XCTAssertFalse(.never < .never)"
+        let output: [Token] = [
+            .identifier("XCTAssertFalse"),
+            .startOfScope("("),
+            .operator(".", .prefix),
+            .identifier("never"),
+            .space(" "),
+            .operator("<", .infix),
+            .space(" "),
+            .operator(".", .prefix),
+            .identifier("never"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: optionals
 
     func testAssignOptional() {

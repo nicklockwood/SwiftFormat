@@ -4126,6 +4126,7 @@ public struct _FormatRules {
             }
             switch token {
             case .number, .identifier("true"), .identifier("false"), .identifier("nil"),
+                 .operator(".", .prefix) where formatter.token(at: index + 1)?.isIdentifier == true,
                  .identifier where formatter.token(at: index - 1) == .operator(".", .prefix) &&
                      formatter.token(at: index - 2) != .operator("\\", .prefix):
                 return true

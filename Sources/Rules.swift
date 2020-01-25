@@ -3115,12 +3115,14 @@ public struct _FormatRules {
             }
         }
 
-        while currentIndex < formatter.tokens.count {
-            if let token = formatter.token(at: currentIndex), token.isLinebreak {
+        formatter.forEachToken { i, token in
+            if i < currentIndex {
+                return
+            }
+            if token.isLinebreak {
                 indent = formatter.indentForLine(at: currentIndex + 1)
                 alreadyLinewrapped = isLinewrapToken(formatter.last(.nonSpaceOrComment, before: currentIndex))
                 currentIndex += 1
-
             } else if let breakPoint = formatter.indexWhereLineShouldWrapInLine(at: currentIndex) {
                 if !alreadyLinewrapped {
                     indent += formatter.options.indent

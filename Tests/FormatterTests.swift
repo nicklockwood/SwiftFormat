@@ -240,6 +240,15 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default), output)
     }
 
+    func testDisableLinewrap() {
+        let input = """
+        // swiftformat:disable all
+        let foo = bar.baz(some: param).quux("a string of some sort")
+        """
+        let options = FormatOptions(maxWidth: 10)
+        XCTAssertEqual(try format(input, rules: FormatRules.default, options: options), input)
+    }
+
     // MARK: linebreaks
 
     func testLinebreakAfterLinebreakReturnsCorrectIndex() {

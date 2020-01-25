@@ -121,6 +121,7 @@ extension FormatterTests {
         ("testDisableAllRulesWithMultilineComment", testDisableAllRulesWithMultilineComment),
         ("testDisableAndReEnableAllRules", testDisableAndReEnableAllRules),
         ("testDisableAndReEnableRules", testDisableAndReEnableRules),
+        ("testDisableLinewrap", testDisableLinewrap),
         ("testDisableNext", testDisableNext),
         ("testDisableNextWithMultilineComment", testDisableNextWithMultilineComment),
         ("testDisableRule", testDisableRule),

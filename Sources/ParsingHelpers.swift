@@ -899,19 +899,10 @@ extension Formatter {
         }
 
         var lastIndex = -1
-
-        func nextStartOfScope() -> Int? {
-            return ((lastIndex + 1) ..< tokens.count)
-                .first {
-                    let token = tokens[$0]
-                    return token.isStartOfScope && ["(", "[", "<"].contains(token.string)
-                }
-        }
-
-        while let i = nextStartOfScope() {
-            guard let token = self.token(at: i) else {
+        forEach(.startOfScope) { i, token in
+            guard ["(", "[", "<"].contains(token.string) else {
                 lastIndex = i
-                continue
+                return
             }
 
             if let endOfLineSinceLastIndex = ((lastIndex + 1) ..< i).last(where: {
@@ -934,7 +925,7 @@ extension Formatter {
                     index(in: i + 1 ..< endOfScope, where: { $0.isComment }) != nil else {
                     // Not an argument list, or only one argument
                     lastIndex = i
-                    continue
+                    return
                 }
 
                 endOfScopeOnSameLine = options.closingParenOnSameLine
@@ -951,7 +942,7 @@ extension Formatter {
                 index(of: .nonSpaceOrCommentOrLinebreak, after: i),
                 !isStringLiteral(at: i) else {
                 lastIndex = i
-                continue
+                return
             }
 
             if completePartialWrapping,
@@ -1038,7 +1029,7 @@ extension Formatter {
                         !willWrapAtStartOfReturnType(maxWidth: maxWidth) {
                         wrapArgumentsWithoutPartialWrapping()
                         lastIndex = nextWrapIndex
-                        continue
+                        return
                     }
 
                 } else if maxWidth < lineLength(upTo: endOfScope) {

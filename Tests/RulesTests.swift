@@ -3930,6 +3930,18 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantParens)
     }
 
+    func testRedundantParensRemovedInIfWithNoSpace() {
+        let input = "if(x) {}"
+        let output = "if x {}"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensRemovedInHashIfWithNoSpace() {
+        let input = "#if(x)\n#endif"
+        let output = "#if x\n#endif"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
     func testRequiredParensNotRemovedInIf() {
         let input = "if (x || y) * z {}"
         testFormatting(for: input, rule: FormatRules.redundantParens)

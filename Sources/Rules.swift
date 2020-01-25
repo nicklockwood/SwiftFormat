@@ -1717,7 +1717,7 @@ public struct _FormatRules {
         func tokenOutsideParenRequiresSpacing(at index: Int) -> Bool {
             guard let token = formatter.token(at: index) else { return false }
             switch token {
-            case .identifier, .keyword, .number:
+            case .identifier, .keyword, .number, .startOfScope("#if"):
                 return true
             default:
                 return false
@@ -3120,10 +3120,10 @@ public struct _FormatRules {
                 return
             }
             if token.isLinebreak {
-                indent = formatter.indentForLine(at: currentIndex + 1)
-                alreadyLinewrapped = isLinewrapToken(formatter.last(.nonSpaceOrComment, before: currentIndex))
-                currentIndex += 1
-            } else if let breakPoint = formatter.indexWhereLineShouldWrapInLine(at: currentIndex) {
+                indent = formatter.indentForLine(at: i + 1)
+                alreadyLinewrapped = isLinewrapToken(formatter.last(.nonSpaceOrComment, before: i))
+                currentIndex = i + 1
+            } else if let breakPoint = formatter.indexWhereLineShouldWrapInLine(at: i) {
                 if !alreadyLinewrapped {
                     indent += formatter.options.indent
                 }
@@ -3132,7 +3132,7 @@ public struct _FormatRules {
                 formatter.insertLinebreak(at: breakPoint + 1)
                 currentIndex = breakPoint + spaceAdded + 2
             } else {
-                currentIndex = formatter.endOfLine(at: currentIndex)
+                currentIndex = formatter.endOfLine(at: i)
             }
         }
     }

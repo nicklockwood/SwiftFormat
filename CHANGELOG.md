@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.44.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.1) (2020-01-26)
+
+- Fixed `spaceInsideComments` rule mangling preformatted comments with multiple slashes
+- Fixed `redundantFileprivate` breaking code relying on type-inference for `init`
+- Reverted overly aggressive argument wrapping change in 0.44.0
+- Fixed `redundantParens` rule breaking `#if` statements without space before argument
+- Fixed `// swiftformat:disable` directives not affecting `wrap` or `wrapArguments` rules
+- Fixed bug where `yodaConditions` rule caused formatting to never terminate
+- Fixed crash in `fileHeader` rule
+
 ## [0.44.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.0) (2020-01-15)
 
 - Xcode Extension now includes Lint File option

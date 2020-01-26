@@ -877,6 +877,7 @@ extension RulesTests {
         ("testNoMangleCommentedLinesWhenWrappingArguments", testNoMangleCommentedLinesWhenWrappingArguments),
         ("testNoMangleCommentedLinesWhenWrappingArgumentsWithNoCommas", testNoMangleCommentedLinesWhenWrappingArgumentsWithNoCommas),
         ("testNoMangleLabelWhenIndentCaseTrue", testNoMangleLabelWhenIndentCaseTrue),
+        ("testNoMangleNestedFunctionCalls", testNoMangleNestedFunctionCalls),
         ("testNoMangleYodaConditionFollowedByAndOperator", testNoMangleYodaConditionFollowedByAndOperator),
         ("testNoMangleYodaConditionFollowedByOrOperator", testNoMangleYodaConditionFollowedByOrOperator),
         ("testNoMangleYodaConditionFollowedByParentheses", testNoMangleYodaConditionFollowedByParentheses),

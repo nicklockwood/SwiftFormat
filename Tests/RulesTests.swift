@@ -7803,13 +7803,11 @@ class RulesTests: XCTestCase {
                        Bool, String) -> Int) -> Int {}
         """
         let output = """
-        func foo(
-            bar: (
-                Int,
-                Bool,
-                String
-            ) -> Int
-        ) -> Int {}
+        func foo(bar: (
+            Int,
+            Bool,
+            String
+        ) -> Int) -> Int {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
@@ -7824,14 +7822,11 @@ class RulesTests: XCTestCase {
                                  Bool, String) -> Int) -> Int {}
         """
         let output = """
-        func foo(
-            bar: Int,
-            baz: (
-                Int,
-                Bool,
-                String
-            ) -> Int
-        ) -> Int {}
+        func foo(bar: Int, baz: (
+            Int,
+            Bool,
+            String
+        ) -> Int) -> Int {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
@@ -7846,15 +7841,11 @@ class RulesTests: XCTestCase {
                                  Bool, String) -> Int, quux: String) -> Int {}
         """
         let output = """
-        func foo(
-            bar: Int,
-            baz: (
-                Int,
-                Bool,
-                String
-            ) -> Int,
-            quux: String
-        ) -> Int {}
+        func foo(bar: Int, baz: (
+            Int,
+            Bool,
+            String
+        ) -> Int, quux: String) -> Int {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
@@ -7869,13 +7860,11 @@ class RulesTests: XCTestCase {
                                  Bool, String) -> Int) -> Int {}
         """
         let output = """
-        func foo(
-            bar: @escaping (
-                Int,
-                Bool,
-                String
-            ) -> Int
-        ) -> Int {}
+        func foo(bar: @escaping (
+            Int,
+            Bool,
+            String
+        ) -> Int) -> Int {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
@@ -7890,13 +7879,11 @@ class RulesTests: XCTestCase {
                                  Bool, String) -> Int) -> Int {}
         """
         let output = """
-        func foo(
-            bar: @noescape (
-                Int,
-                Bool,
-                String
-            ) -> Int
-        ) -> Int {}
+        func foo(bar: @noescape (
+            Int,
+            Bool,
+            String
+        ) -> Int) -> Int {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
@@ -7911,13 +7898,11 @@ class RulesTests: XCTestCase {
                                               Bool, String) -> Int) -> Int {}
         """
         let output = """
-        func foo(
-            bar: @escaping @autoclosure (
-                Int,
-                Bool,
-                String
-            ) -> Int
-        ) -> Int {}
+        func foo(bar: @escaping @autoclosure (
+            Int,
+            Bool,
+            String
+        ) -> Int) -> Int {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
@@ -8361,7 +8346,7 @@ class RulesTests: XCTestCase {
 
     func testTrailingCommasAddedToWrappedNestedDictionary() {
         let input = "[foo: [bar: baz,\n    bar2: baz2]]"
-        let output = "[\n    foo: [\n        bar: baz,\n        bar2: baz2,\n    ],\n]"
+        let output = "[foo: [\n    bar: baz,\n    bar2: baz2,\n]]"
         let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
         testFormatting(for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.trailingCommas],
                        options: options)
@@ -8537,6 +8522,34 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(wrapArguments: .afterFirst,
                                     wrapCollections: .beforeFirst,
                                     maxWidth: 28)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments, FormatRules.wrap], options: options)
+    }
+
+    func testNoMangleNestedFunctionCalls() {
+        let input = """
+        points.append(.curve(
+            quadraticBezier(p0.position.x, Double(p1.x), Double(p2.x), t),
+            quadraticBezier(p0.position.y, Double(p1.y), Double(p2.y), t)
+        ))
+        """
+        let output = """
+        points.append(.curve(
+            quadraticBezier(
+                p0.position.x,
+                Double(p1.x),
+                Double(p2.x),
+                t
+            ),
+            quadraticBezier(
+                p0.position.y,
+                Double(p1.y),
+                Double(p2.y),
+                t
+            )
+        ))
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 40)
         testFormatting(for: input, [output],
                        rules: [FormatRules.wrapArguments, FormatRules.wrap], options: options)
     }

@@ -917,7 +917,7 @@ extension Formatter {
 
             let mode: WrapMode
             var endOfScopeOnSameLine = false
-            let hasMultipleArguments = tokens[i + 1 ..< endOfScope].contains(.delimiter(","))
+            let hasMultipleArguments = index(of: .delimiter(","), in: i + 1 ..< endOfScope) != nil
             var isParameters = false
             switch token.string {
             case "(":
@@ -946,7 +946,7 @@ extension Formatter {
             }
 
             if completePartialWrapping,
-                let firstLinebreakIndex = (i ..< endOfScope).first(where: { tokens[$0].isLinebreak }) {
+                let firstLinebreakIndex = index(of: .linebreak, in: i + 1 ..< endOfScope) {
                 switch mode {
                 case .beforeFirst:
                     wrapArgumentsBeforeFirst(startOfScope: i,

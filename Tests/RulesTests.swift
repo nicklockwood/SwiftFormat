@@ -8048,6 +8048,20 @@ class RulesTests: XCTestCase {
                        exclude: ["wrap"])
     }
 
+    func testNoWrapImageLiteral() {
+        let input = "if let image = #imageLiteral(resourceName: \"abc.png\") {}"
+        let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 30)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+                       exclude: ["wrap"])
+    }
+
+    func testNoWrapColorLiteral() {
+        let input = "if let color = #colorLiteral(resourceName: \"abc\") {}"
+        let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 30)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+                       exclude: ["wrap"])
+    }
+
     // MARK: closingParenOnSameLine = true
 
     func testParenOnSameLineWhenWrapAfterFirstConvertedToWrapBefore() {

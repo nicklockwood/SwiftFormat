@@ -10282,6 +10282,20 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantFileprivate, options: options)
     }
 
+    func testFileprivateInitNotChangedToPrivateWhenUsingTypeInferredInits() {
+        let input = """
+        struct Example {
+            fileprivate init() {}
+        }
+
+        enum Namespace {
+            static let example: Example = .init()
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+    }
+
     // MARK: - yodaConditions
 
     func testNumericLiteralEqualYodaCondition() {

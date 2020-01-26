@@ -3971,13 +3971,23 @@ public struct _FormatRules {
         }
         func isTypeInitialized(_ name: String, in range: CountableRange<Int>) -> Bool {
             for i in range {
-                guard case .identifier(name) = formatter.tokens[i] else { continue }
-                if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
-                    $0 == .operator(".", .infix)
-                }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: dotIndex) == .identifier("init") {
-                    return true
-                } else if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .startOfScope("(") {
-                    return true
+                switch formatter.tokens[i] {
+                case .identifier(name):
+                    if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                        $0 == .operator(".", .infix)
+                    }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: dotIndex) == .identifier("init") {
+                        return true
+                    } else if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .startOfScope("(") {
+                        return true
+                    }
+                case .identifier("init"):
+                    // TODO: this will return true if *any* type is initialized using type inference.
+                    // Is there a way to narrow this down a bit?
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .operator(".", .prefix) {
+                        return true
+                    }
+                default:
+                    break
                 }
             }
             return false

@@ -588,6 +588,7 @@ extension RulesTests {
         ("testFileprivateInitChangedToPrivateIfConstructorNotCalledOutsideType", testFileprivateInitChangedToPrivateIfConstructorNotCalledOutsideType),
         ("testFileprivateInitNotChangedToPrivateIfConstructorCalledOutsideType", testFileprivateInitNotChangedToPrivateIfConstructorCalledOutsideType),
         ("testFileprivateInitNotChangedToPrivateIfConstructorCalledOutsideType2", testFileprivateInitNotChangedToPrivateIfConstructorCalledOutsideType2),
+        ("testFileprivateInitNotChangedToPrivateWhenUsingTypeInferredInits", testFileprivateInitNotChangedToPrivateWhenUsingTypeInferredInits),
         ("testFileprivateInnerTypeNotChangedToPrivate", testFileprivateInnerTypeNotChangedToPrivate),
         ("testFileprivateMultiLetNotChangedToPrivateIfAccessedOutsideType", testFileprivateMultiLetNotChangedToPrivateIfAccessedOutsideType),
         ("testFileprivateStructMemberNotChangedToPrivateIfConstructorCalledOutsideType", testFileprivateStructMemberNotChangedToPrivateIfConstructorCalledOutsideType),

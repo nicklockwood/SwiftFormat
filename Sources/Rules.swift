@@ -555,7 +555,7 @@ public struct _FormatRules {
             guard let first = string.first else { return }
             if "/!:".contains(first) {
                 let nextIndex = string.index(after: string.startIndex)
-                if nextIndex < string.endIndex, case let next = string[nextIndex], !" \t".contains(next) {
+                if nextIndex < string.endIndex, case let next = string[nextIndex], !" \t/".contains(next) {
                     let string = String(string.first!) + " " + String(string.dropFirst())
                     formatter.replaceToken(at: i + 1, with: .commentBody(string))
                 }

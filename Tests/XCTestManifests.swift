@@ -1197,6 +1197,7 @@ extension RulesTests {
         ("testPrefixMinusBeforeMember", testPrefixMinusBeforeMember),
         ("testPrefixSpecifier", testPrefixSpecifier),
         ("testPreformattedMultilineComment", testPreformattedMultilineComment),
+        ("testPreformattedSingleLineComment", testPreformattedSingleLineComment),
         ("testPreprocessorSortedImports", testPreprocessorSortedImports),
         ("testPreserveSelfInsideClassInit", testPreserveSelfInsideClassInit),
         ("testPrivateConvenienceInit", testPrivateConvenienceInit),

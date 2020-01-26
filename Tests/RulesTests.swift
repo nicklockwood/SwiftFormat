@@ -979,6 +979,11 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.spaceInsideComments)
     }
 
+    func testPreformattedSingleLineComment() {
+        let input = "/////////ATTENTION////////"
+        testFormatting(for: input, rule: FormatRules.spaceInsideComments)
+    }
+
     func testNoSpaceAddedToFirstLineOfDocComment() {
         let input = "/**\n Comment\n */"
         testFormatting(for: input, rule: FormatRules.spaceInsideComments)

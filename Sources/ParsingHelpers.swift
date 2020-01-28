@@ -922,9 +922,9 @@ extension Formatter {
             switch token.string {
             case "(":
                 /// Don't wrap color/image literals due to Xcode bug
-                guard i - 1 >= 0,
-                    tokens[i - 1].string != "#colorLiteral",
-                    tokens[i - 1].string != "#imageLiteral" else {
+                guard let prevToken = self.token(at: i - 1),
+                    prevToken != .keyword("#colorLiteral"),
+                    prevToken != .keyword("#imageLiteral") else {
                     return
                 }
                 guard hasMultipleArguments ||

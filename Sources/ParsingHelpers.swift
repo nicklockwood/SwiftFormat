@@ -921,6 +921,12 @@ extension Formatter {
             var isParameters = false
             switch token.string {
             case "(":
+                /// Don't wrap color/image literals due to Xcode bug
+                guard let prevToken = self.token(at: i - 1),
+                    prevToken != .keyword("#colorLiteral"),
+                    prevToken != .keyword("#imageLiteral") else {
+                    return
+                }
                 guard hasMultipleArguments ||
                     index(in: i + 1 ..< endOfScope, where: { $0.isComment }) != nil else {
                     // Not an argument list, or only one argument

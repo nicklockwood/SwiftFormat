@@ -8056,7 +8056,7 @@ class RulesTests: XCTestCase {
     }
 
     func testNoWrapColorLiteral() {
-        let input = "if let color = #colorLiteral(resourceName: \"abc\") {}"
+        let input = "if let color = #colorLiteral(red: 0.2392156863, green: 0.6470588235, blue: 0.3647058824, alpha: 1)"
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 30)
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
                        exclude: ["wrap"])

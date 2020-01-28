@@ -3144,11 +3144,6 @@ public struct _FormatRules {
         options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen"],
         sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
     ) { formatter in
-        /// Don't wrap color/image literals due to Xcode bug
-        guard !formatter.tokens.contains(.keyword("#colorLiteral")),
-            !formatter.tokens.contains(.keyword("#imageLiteral")) else {
-            return
-        }
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true)
     }
 

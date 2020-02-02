@@ -1500,6 +1500,8 @@ extension RulesTests {
         ("testSpaceInSpecifiersLeftIntact", testSpaceInSpecifiersLeftIntact),
         ("testSpaceNotAddedAfterMarkDashAtEndOfString", testSpaceNotAddedAfterMarkDashAtEndOfString),
         ("testSpaceNotAddedAroundStarInAvailableAnnotation", testSpaceNotAddedAroundStarInAvailableAnnotation),
+        ("testSpaceNotInsertedAfterClosureBeforeForceUnwrap", testSpaceNotInsertedAfterClosureBeforeForceUnwrap),
+        ("testSpaceNotInsertedAfterClosureBeforeUnwrap", testSpaceNotInsertedAfterClosureBeforeUnwrap),
         ("testSpaceNotRemovedAroundRangeFollowedByPrefixOperator", testSpaceNotRemovedAroundRangeFollowedByPrefixOperator),
         ("testSpaceNotRemovedAroundRangePreceededByPostfixOperator", testSpaceNotRemovedAroundRangePreceededByPostfixOperator),
         ("testSpaceNotRemovedBeforeLeadingRangeOperator", testSpaceNotRemovedBeforeLeadingRangeOperator),

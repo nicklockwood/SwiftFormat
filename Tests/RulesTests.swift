@@ -4612,6 +4612,18 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.trailingClosures)
     }
 
+    func testSpaceNotInsertedAfterClosureBeforeUnwrap() {
+        let input = "let foo = bar.map({ foo($0) })?.baz"
+        let output = "let foo = bar.map { foo($0) }?.baz"
+        testFormatting(for: input, output, rule: FormatRules.trailingClosures)
+    }
+
+    func testSpaceNotInsertedAfterClosureBeforeForceUnwrap() {
+        let input = "let foo = bar.map({ foo($0) })!.baz"
+        let output = "let foo = bar.map { foo($0) }!.baz"
+        testFormatting(for: input, output, rule: FormatRules.trailingClosures)
+    }
+
     func testSolitaryClosureMadeTrailingForNumericTupleMember() {
         let input = "foo.1({ bar })"
         let output = "foo.1 { bar }"

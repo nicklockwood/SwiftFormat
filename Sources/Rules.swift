@@ -1663,7 +1663,7 @@ public struct _FormatRules {
                     formatter.removeToken(at: index + 1)
                 }
             } else if let next = formatter.token(at: index + 1),
-                !next.isSpace, next != .operator(".", .infix) {
+                !next.isSpace, !next.isOperator {
                 // Need to insert one
                 formatter.insertToken(.space(" "), at: index + 1)
             }

@@ -335,7 +335,8 @@ extension Formatter {
                             self.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex) else {
                             return true
                         }
-                        if isEndOfStatement(at: index), isStartOfStatement(at: nextIndex) {
+                        if tokens[nextIndex] != .startOfScope("{"),
+                            isEndOfStatement(at: index), isStartOfStatement(at: nextIndex) {
                             return true
                         }
                         index = nextIndex
@@ -349,10 +350,8 @@ extension Formatter {
             default:
                 return true
             }
-        case .keyword:
-            return false
         case .operator("?", .postfix), .operator("!", .postfix),
-             .endOfScope("]"), .endOfScope(">"):
+             .keyword, .endOfScope("]"), .endOfScope(">"):
             return false
         default:
             return true

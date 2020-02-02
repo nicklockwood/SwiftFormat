@@ -2984,7 +2984,16 @@ class RulesTests: XCTestCase {
     }
 
     func testKnRNoMangleCommentBeforeClosure() {
-        let input = "[\n    // foo\n    foo,\n    // bar\n    {\n        bar\n    }(),\n]"
+        let input = """
+        [
+            // foo
+            foo,
+            // bar
+            {
+                bar
+            }(),
+        ]
+        """
         testFormatting(for: input, rule: FormatRules.braces)
     }
 
@@ -3031,6 +3040,21 @@ class RulesTests: XCTestCase {
             { bar in
                 print(bar)
             }
+        """
+        testFormatting(for: input, output, rule: FormatRules.braces)
+    }
+
+    func testAllmanComputedPropertyBracesConverted() {
+        let input = """
+        var foo: Int
+        {
+            return 5
+        }
+        """
+        let output = """
+        var foo: Int {
+            return 5
+        }
         """
         testFormatting(for: input, output, rule: FormatRules.braces)
     }

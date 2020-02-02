@@ -19,6 +19,11 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 7))
     }
 
+    func testComputedVarAllmanBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("var foo: Int\n{\n    return 5\n}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 7))
+    }
+
     func testVarFollowedByBracesOnNextLineTreatedAsClosure() {
         let formatter = Formatter(tokenize("var foo: Int\nfoo { return 5 }"))
         XCTAssert(formatter.isStartOfClosure(at: 9))

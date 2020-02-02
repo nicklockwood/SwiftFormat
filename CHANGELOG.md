@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.44.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.2) (2020-02-02)
+
+- Fixed crash in line wrapping logic
+- Fixed several cases where braces were not correctly moved according to `wrap` rule
+- Prevented wrapping of image and color literals
+- Fixed bug with `trailingClosures` rule breaking unwrap operators
+
 ## [0.44.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.1) (2020-01-26)
 
 - Fixed `spaceInsideComments` rule mangling preformatted comments with multiple slashes

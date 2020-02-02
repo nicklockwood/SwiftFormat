@@ -12,6 +12,78 @@ import XCTest
 class ParsingHelpersTests: XCTestCase {
     // MARK: isStartOfClosure
 
+    // functions
+
+    func testFunctionBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("func foo() { bar = 5 }"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 6))
+    }
+
+    func testNonVoidFunctionBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("func foo() -> Int {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 10))
+    }
+
+    func testOptionalReturningFunctionBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("func foo() -> Int? {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 11))
+    }
+
+    func testTupleReturningFunctionBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("func foo() -> (Int, Bool) {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 15))
+    }
+
+    func testArrayReturningFunctionBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("func foo() -> [Int] {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 12))
+    }
+
+    func testNonVoidFunctionAllmanBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("func foo() -> Int\n{\n    return 5\n}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 10))
+    }
+
+    func testThrowingFunctionBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("func foo() throws { bar = 5 }"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 8))
+    }
+
+    func testFunctionAllmanBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("func foo()\n{\n    bar = 5\n}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 6))
+    }
+
+    func testInitBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("init() { foo = 5 }"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 4))
+    }
+
+    func testInitAllmanBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("init()\n{\n    foo = 5\n}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 4))
+    }
+
+    func testDeinitBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("deinit { foo = nil }"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 2))
+    }
+
+    func testDeinitAllmanBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("deinit\n{\n    foo = nil\n}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 2))
+    }
+
+    func testSubscriptBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("subscript(i: Int) -> Int { foo[i] }"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 12))
+    }
+
+    func testSubscriptAllmanBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("subscript(i: Int) -> Int\n{\n    foo[i]\n}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 12))
+    }
+
     // accessors
 
     func testComputedVarBracesNotTreatedAsClosure() {

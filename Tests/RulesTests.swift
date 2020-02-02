@@ -3059,6 +3059,36 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.braces)
     }
 
+    func testAllmanInitBracesConverted() {
+        let input = """
+        init()
+        {
+            foo = 5
+        }
+        """
+        let output = """
+        init() {
+            foo = 5
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.braces)
+    }
+
+    func testAllmanSubscriptBracesConverted() {
+        let input = """
+        subscript(i: Int) -> Int
+        {
+            foo[i]
+        }
+        """
+        let output = """
+        subscript(i: Int) -> Int {
+            foo[i]
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.braces)
+    }
+
     // allman style
 
     func testKnRBracesAreConverted() {

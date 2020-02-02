@@ -305,7 +305,7 @@ extension Formatter {
                     return true
                 }
                 prevIndex = prev - 1
-            case .operator("->", .infix):
+            case .operator("->", .infix), .keyword("init"), .keyword("subscript"):
                 return false
             default:
                 return true
@@ -345,7 +345,7 @@ extension Formatter {
                     }
                 }
                 return false
-            case "func", "class", "protocol", "enum":
+            case "func", "subscript", "class", "protocol", "enum":
                 return false
             default:
                 return true

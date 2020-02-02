@@ -1656,20 +1656,6 @@ public struct _FormatRules {
         )
         let blacklist = Set(["performBatchUpdates"])
 
-        func removeParen(at index: Int) {
-            if formatter.token(at: index - 1)?.isSpace == true {
-                if formatter.token(at: index + 1)?.isSpace == true {
-                    // Need to remove one
-                    formatter.removeToken(at: index + 1)
-                }
-            } else if let next = formatter.token(at: index + 1),
-                !next.isSpace, !next.isOperator {
-                // Need to insert one
-                formatter.insertToken(.space(" "), at: index + 1)
-            }
-            formatter.removeToken(at: index)
-        }
-
         formatter.forEach(.startOfScope("(")) { i, _ in
             guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 case let .identifier(name) = prevToken, // TODO: are trailing closures allowed in other cases?
@@ -1704,7 +1690,7 @@ public struct _FormatRules {
                 return
             }
             let wasParen = (startIndex == i)
-            removeParen(at: closingIndex)
+            formatter.removeParen(at: closingIndex)
             formatter.replaceTokens(inRange: startIndex ..< openingBraceIndex, with:
                 wasParen ? [.space(" ")] : [.endOfScope(")"), .space(" ")])
         }
@@ -1714,45 +1700,6 @@ public struct _FormatRules {
     public let redundantParens = FormatRule(
         help: "Remove redundant parentheses."
     ) { formatter in
-        func tokenOutsideParenRequiresSpacing(at index: Int) -> Bool {
-            guard let token = formatter.token(at: index) else { return false }
-            switch token {
-            case .identifier, .keyword, .number, .startOfScope("#if"):
-                return true
-            default:
-                return false
-            }
-        }
-
-        func tokenInsideParenRequiresSpacing(at index: Int) -> Bool {
-            guard let token = formatter.token(at: index) else { return false }
-            switch token {
-            case .operator, .startOfScope("{"), .endOfScope("}"):
-                return true
-            default:
-                return tokenOutsideParenRequiresSpacing(at: index)
-            }
-        }
-
-        func removeParen(at index: Int) {
-            if formatter.token(at: index - 1)?.isSpace == true,
-                formatter.token(at: index + 1)?.isSpace == true {
-                // Need to remove one
-                formatter.removeToken(at: index + 1)
-            } else if case .startOfScope = formatter.tokens[index] {
-                if tokenOutsideParenRequiresSpacing(at: index - 1),
-                    tokenInsideParenRequiresSpacing(at: index + 1) {
-                    // Need to insert one
-                    formatter.insertToken(.space(" "), at: index + 1)
-                }
-            } else if tokenInsideParenRequiresSpacing(at: index - 1),
-                tokenOutsideParenRequiresSpacing(at: index + 1) {
-                // Need to insert one
-                formatter.insertToken(.space(" "), at: index + 1)
-            }
-            formatter.removeToken(at: index)
-        }
-
         func nestedParens(in range: ClosedRange<Int>) -> ClosedRange<Int>? {
             guard let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: range.lowerBound, if: {
                 $0 == .startOfScope("(")
@@ -1775,8 +1722,8 @@ public struct _FormatRules {
             while let range = innerParens, nestedParens(in: range) != nil {
                 // TODO: this could be a lot more efficient if we kept track of the
                 // removed token indices instead of recalculating paren positions every time
-                removeParen(at: range.upperBound)
-                removeParen(at: range.lowerBound)
+                formatter.removeParen(at: range.upperBound)
+                formatter.removeParen(at: range.lowerBound)
                 closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
                 innerParens = nestedParens(in: i ... closingIndex)
             }
@@ -1806,8 +1753,8 @@ public struct _FormatRules {
                     formatter.next(.nonSpaceOrComment, after: index)?.isIdentifier == true {
                     return
                 }
-                removeParen(at: closingIndex)
-                removeParen(at: i)
+                formatter.removeParen(at: closingIndex)
+                formatter.removeParen(at: i)
             case .stringBody, .operator("?", .postfix), .operator("!", .postfix),
                  .operator("->", .infix), .keyword("throws"), .keyword("rethrows"):
                 return
@@ -1820,8 +1767,8 @@ public struct _FormatRules {
                     formatter.isStartOfClosure(at: openingIndex) else {
                     return
                 }
-                removeParen(at: closingIndex)
-                removeParen(at: i)
+                formatter.removeParen(at: closingIndex)
+                formatter.removeParen(at: i)
             case let .keyword(name) where !conditionals.contains(name) && !["let", "var"].contains(name):
                 return
             case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"), .endOfScope(">"):
@@ -1849,8 +1796,8 @@ public struct _FormatRules {
                     // TODO: improve the logic here so we don't misidentify function calls as tuples
                     return
                 }
-                removeParen(at: closingIndex)
-                removeParen(at: i)
+                formatter.removeParen(at: closingIndex)
+                formatter.removeParen(at: i)
             case .operator(_, .infix):
                 guard let nextIndex = formatter.index(of: .nonSpaceOrComment, after: i, if: {
                     $0 == .startOfScope("{")
@@ -1858,12 +1805,12 @@ public struct _FormatRules {
                     formatter.index(of: .nonSpaceOrComment, before: closingIndex) == lastIndex else {
                     fallthrough
                 }
-                removeParen(at: closingIndex)
-                removeParen(at: i)
+                formatter.removeParen(at: closingIndex)
+                formatter.removeParen(at: i)
             default:
                 if let range = innerParens {
-                    removeParen(at: range.upperBound)
-                    removeParen(at: range.lowerBound)
+                    formatter.removeParen(at: range.upperBound)
+                    formatter.removeParen(at: range.lowerBound)
                     closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
                     innerParens = nil
                 }
@@ -1905,8 +1852,8 @@ public struct _FormatRules {
                     }) == nil else {
                     return
                 }
-                removeParen(at: closingIndex)
-                removeParen(at: i)
+                formatter.removeParen(at: closingIndex)
+                formatter.removeParen(at: i)
             }
         }
     }

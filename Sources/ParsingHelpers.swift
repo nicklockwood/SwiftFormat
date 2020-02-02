@@ -1045,6 +1045,45 @@ extension Formatter {
             lastIndex = i
         }
     }
+
+    func removeParen(at index: Int) {
+        func tokenOutsideParenRequiresSpacing(at index: Int) -> Bool {
+            guard let token = self.token(at: index) else { return false }
+            switch token {
+            case .identifier, .keyword, .number, .startOfScope("#if"):
+                return true
+            default:
+                return false
+            }
+        }
+
+        func tokenInsideParenRequiresSpacing(at index: Int) -> Bool {
+            guard let token = self.token(at: index) else { return false }
+            switch token {
+            case .operator, .startOfScope("{"), .endOfScope("}"):
+                return true
+            default:
+                return tokenOutsideParenRequiresSpacing(at: index)
+            }
+        }
+
+        if token(at: index - 1)?.isSpace == true,
+            token(at: index + 1)?.isSpace == true {
+            // Need to remove one
+            removeToken(at: index + 1)
+        } else if case .startOfScope = tokens[index] {
+            if tokenOutsideParenRequiresSpacing(at: index - 1),
+                tokenInsideParenRequiresSpacing(at: index + 1) {
+                // Need to insert one
+                insertToken(.space(" "), at: index + 1)
+            }
+        } else if tokenInsideParenRequiresSpacing(at: index - 1),
+            tokenOutsideParenRequiresSpacing(at: index + 1) {
+            // Need to insert one
+            insertToken(.space(" "), at: index + 1)
+        }
+        removeToken(at: index)
+    }
 }
 
 extension _FormatRules {

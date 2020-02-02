@@ -836,6 +836,7 @@ extension RulesTests {
         ("testNoConfuseCaseWithSpecifier", testNoConfuseCaseWithSpecifier),
         ("testNoConfusePostfixIdentifierWithKeyword", testNoConfusePostfixIdentifierWithKeyword),
         ("testNoConfusePostfixIdentifierWithKeyword2", testNoConfusePostfixIdentifierWithKeyword2),
+        ("testNoCrashWrap", testNoCrashWrap),
         ("testNoDecimalGrouping", testNoDecimalGrouping),
         ("testNoDeleteCodeBetweenImports", testNoDeleteCodeBetweenImports),
         ("testNoDeleteCodeBetweenImports2", testNoDeleteCodeBetweenImports2),

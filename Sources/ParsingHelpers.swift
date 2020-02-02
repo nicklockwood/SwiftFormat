@@ -904,10 +904,10 @@ extension Formatter {
                 return
             }
 
-            if let endOfLineSinceLastIndex = ((lastIndex + 1) ..< i).last(where: {
+            if lastIndex < i, let i = (lastIndex + 1 ..< i).last(where: {
                 tokens[$0].isLinebreak
             }) {
-                lastIndex = max(endOfLineSinceLastIndex, lastIndex)
+                lastIndex = i
             }
 
             guard let endOfScope = endOfScope(at: i) else {

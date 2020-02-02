@@ -7521,6 +7521,25 @@ class RulesTests: XCTestCase {
                        exclude: ["spaceAroundOperators"])
     }
 
+    func testNoCrashWrap() {
+        let input = """
+        struct Foo {
+            func bar(a: Set<B>, c: D) {}
+        }
+        """
+        let output = """
+        struct Foo {
+            func bar(
+                a: Set<B>,
+                c: D
+            ) {}
+        }
+        """
+        let options = FormatOptions(maxWidth: 10)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options,
+                       exclude: ["unusedArguments"])
+    }
+
     // MARK: - wrapArguments
 
     // MARK: wrapParameters

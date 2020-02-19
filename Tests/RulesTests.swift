@@ -5188,6 +5188,21 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantReturn)
     }
 
+    func testNoRemoveReturnInIfLetWithNoSpaceAfterParen() {
+        let input = """
+        var foo: String? {
+            if let bar = baz(){
+                return bar
+            } else {
+                return nil
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options,
+                       exclude: ["spaceAroundBraces", "spaceAroundParens"])
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

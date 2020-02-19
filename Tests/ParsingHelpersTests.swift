@@ -73,6 +73,11 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertTrue(formatter.isStartOfClosure(at: 8))
     }
 
+    func testIfConditionWithoutSpaceNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("if let foo = bar(){}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 11))
+    }
+
     func testGuardElseBracesNotTreatedAsClosure() {
         let formatter = Formatter(tokenize("guard foo else {}"))
         XCTAssertFalse(formatter.isStartOfClosure(at: 6))

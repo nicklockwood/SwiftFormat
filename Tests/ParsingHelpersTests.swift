@@ -44,6 +44,60 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 4))
     }
 
+    // conditional statements
+
+    func testIfBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("if foo {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 4))
+    }
+
+    func testIfLetBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("if let foo = foo {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 10))
+    }
+
+    func testIfCommaBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("if foo, bar {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 7))
+    }
+
+    func testIfElseBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("if foo {} else {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 9))
+    }
+
+    func testIfConditionClosureTreatedAsClosure() {
+        let formatter = Formatter(tokenize("""
+        if let foo = { () -> Int? in 5 }() {}
+        """))
+        XCTAssertTrue(formatter.isStartOfClosure(at: 8))
+    }
+
+    func testGuardElseBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("guard foo else {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 6))
+    }
+
+    func testWhileBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("while foo {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 4))
+    }
+
+    func testForInBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("for foo in bar {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 8))
+    }
+
+    func testRepeatBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("repeat {} while foo"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 2))
+    }
+
+    func testDoBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("do {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 2))
+    }
+
     // functions
 
     func testFunctionBracesNotTreatedAsClosure() {

@@ -278,6 +278,10 @@ extension Formatter {
         assert(tokens[i] == .startOfScope("{"))
 
         if isConditionalStatement(at: i) {
+            if let endIndex = endOfScope(at: i),
+                next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") {
+                return true
+            }
             return false
         }
         guard var prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {

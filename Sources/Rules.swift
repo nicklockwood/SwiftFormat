@@ -1362,20 +1362,12 @@ public struct _FormatRules {
                 }
             } else {
                 // Implement K&R-style braces, where opening brace appears on the same line
-                guard let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
-                    prevIndex < i - 2 || formatter.tokens[i - 1] != .space(" ") else {
+                guard let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i),
+                    formatter.tokens[prevIndex ..< i].contains(where: { $0.isLinebreak }),
+                    !formatter.tokens[prevIndex].isComment else {
                     return
                 }
-                formatter.removeToken(at: i)
-                if formatter.token(at: i - 1)?.isSpaceOrLinebreak == false {
-                    if formatter.token(at: i)?.isSpaceOrLinebreak == false {
-                        formatter.insertToken(.space(" "), at: i)
-                    }
-                } else if let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i) {
-                    formatter.removeTokens(inRange: prevIndex + 1 ..< i)
-                }
-                formatter.insertToken(.startOfScope("{"), at: prevIndex + 1)
-                formatter.insertToken(.space(" "), at: prevIndex + 1)
+                formatter.replaceTokens(inRange: prevIndex + 1 ..< i, with: [.space(" ")])
             }
         }
     }

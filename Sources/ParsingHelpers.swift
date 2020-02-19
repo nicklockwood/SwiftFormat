@@ -345,7 +345,7 @@ extension Formatter {
                     }
                 }
                 return false
-            case "func", "subscript", "class", "protocol", "enum":
+            case "func", "subscript", "class", "struct", "protocol", "enum":
                 return false
             default:
                 return true

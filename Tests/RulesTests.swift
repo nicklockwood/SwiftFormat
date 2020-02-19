@@ -2947,30 +2947,24 @@ class RulesTests: XCTestCase {
 
     func testKnRBracesAfterComment() {
         let input = "func foo() // comment\n{\n    statement\n}"
-        let output = "func foo() { // comment\n    statement\n}"
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, rule: FormatRules.braces)
     }
 
     func testKnRBracesAfterMultilineComment() {
         let input = "func foo() /* comment/ncomment */\n{\n    statement\n}"
-        let output = "func foo() { /* comment/ncomment */\n    statement\n}"
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, rule: FormatRules.braces)
     }
 
     func testKnRBracesAfterMultilineComment2() {
         let input = """
         class Foo /*
          aaa
-         */ {
-        }
-        """
-        let output = """
-        class Foo { /*
-         aaa
          */
+        {
+            // foo
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, rule: FormatRules.braces)
     }
 
     func testKnRExtraSpaceNotAddedBeforeBrace() {
@@ -3089,6 +3083,36 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.braces)
     }
 
+    func testBracesForStructDeclaration() {
+        let input = """
+        struct Foo
+        {
+            // foo
+        }
+        """
+        let output = """
+        struct Foo {
+            // foo
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.braces)
+    }
+
+    func testBracesForInit() {
+        let input = """
+        init(foo: Int)
+        {
+            self.foo = foo
+        }
+        """
+        let output = """
+        init(foo: Int) {
+            self.foo = foo
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.braces)
+    }
+
     // allman style
 
     func testKnRBracesAreConverted() {
@@ -3158,6 +3182,38 @@ class RulesTests: XCTestCase {
     func testAllmanBraceAfterSwitch() {
         let input = "switch foo {\ncase bar: break\n}"
         let output = "switch foo\n{\ncase bar: break\n}"
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+    }
+
+    func testAllmanBracesForStructDeclaration() {
+        let input = """
+        struct Foo {
+            // foo
+        }
+        """
+        let output = """
+        struct Foo
+        {
+            // foo
+        }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+    }
+
+    func testAllmanBracesForInit() {
+        let input = """
+        init(foo: Int) {
+            self.foo = foo
+        }
+        """
+        let output = """
+        init(foo: Int)
+        {
+            self.foo = foo
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: FormatRules.braces, options: options)
     }

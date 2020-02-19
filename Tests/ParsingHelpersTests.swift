@@ -12,6 +12,38 @@ import XCTest
 class ParsingHelpersTests: XCTestCase {
     // MARK: isStartOfClosure
 
+    // types
+
+    func testStructBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("struct Foo {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 4))
+    }
+
+    func testStructWithProtocolBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("struct Foo: Bar {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 7))
+    }
+
+    func testStructWithMultipleProtocolsBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("struct Foo: Bar, Baz {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 10))
+    }
+
+    func testClassBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("class Foo {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 4))
+    }
+
+    func testProtocolBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("protocol Foo {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 4))
+    }
+
+    func testEnumBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("enum Foo {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 4))
+    }
+
     // functions
 
     func testFunctionBracesNotTreatedAsClosure() {

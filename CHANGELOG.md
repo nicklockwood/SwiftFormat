@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.44.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.3) (2020-02-20)
+
+- Fixed incorrect indenting of closing multiline string delimiter
+- Fixed bug where `redundantReturn` rule incorrectly removed `return` after a brace without leading space
+- Fixed edge case where closures without surrounding parentheses were misinterpreted in if statements
+- Fixed failure to wrap braces after a struct or init declaration
+
 ## [0.44.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.2) (2020-02-02)
 
 - Fixed crash in line wrapping logic

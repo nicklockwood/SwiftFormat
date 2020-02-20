@@ -1253,6 +1253,7 @@ extension RulesTests {
         ("testReduceIndentAtEndOfFile", testReduceIndentAtEndOfFile),
         ("testReduceIndentAtStartOfFile", testReduceIndentAtStartOfFile),
         ("testReduceIndentForMultilineString", testReduceIndentForMultilineString),
+        ("testReduceIndentForMultilineString2", testReduceIndentForMultilineString2),
         ("testRedundantBreaksRemoved", testRedundantBreaksRemoved),
         ("testRedundantObjcCommentNotRemoved", testRedundantObjcCommentNotRemoved),
         ("testRedundantObjcRemovedFromAfterOutlet", testRedundantObjcRemovedFromAfterOutlet),

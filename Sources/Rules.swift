@@ -1277,10 +1277,15 @@ public struct _FormatRules {
                     }
                     formatter.insertSpace(indent, at: i + 1)
                 case .endOfScope, .keyword("@unknown"):
-                    if let scope = scopeStack.last, [
-                        .startOfScope("/*"), .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"),
-                    ].contains(scope) {
-                        formatter.insertSpace(indent, at: i + 1)
+                    if let scope = scopeStack.last {
+                        switch scope {
+                        case .startOfScope("/*"), .startOfScope("#if"),
+                             .keyword("#else"), .keyword("#elseif"),
+                             .startOfScope where scope.isStringDelimiter:
+                            formatter.insertSpace(indent, at: i + 1)
+                        default:
+                            break
+                        }
                     }
                 default:
                     formatter.insertSpace(indent, at: i + 1)

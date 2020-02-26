@@ -1360,7 +1360,7 @@ public struct _FormatRules {
             if formatter.options.allmanBraces {
                 // Implement Allman-style braces, where opening brace appears on the next line
                 switch formatter.last(.nonSpace, before: i) ?? .space("") {
-                case .identifier, .keyword, .endOfScope,
+                case .identifier, .keyword, .endOfScope, .number,
                      .operator("?", .postfix), .operator("!", .postfix):
                     formatter.insertLinebreak(at: i)
                     if let breakIndex = formatter.index(of: .linebreak, after: i + 1),

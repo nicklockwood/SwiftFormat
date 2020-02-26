@@ -413,6 +413,7 @@ extension RulesTests {
         ("testAllmanBraceRepeatWhileIndent", testAllmanBraceRepeatWhileIndent),
         ("testAllmanBracesAreConverted", testAllmanBracesAreConverted),
         ("testAllmanBracesForIfStatement", testAllmanBracesForIfStatement),
+        ("testAllmanBracesForIfStatement2", testAllmanBracesForIfStatement2),
         ("testAllmanBracesForInit", testAllmanBracesForInit),
         ("testAllmanBracesForStructDeclaration", testAllmanBracesForStructDeclaration),
         ("testAllmanBraceThrowsFunctionIndent", testAllmanBraceThrowsFunctionIndent),

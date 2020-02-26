@@ -5223,6 +5223,22 @@ class RulesTests: XCTestCase {
                        exclude: ["spaceAroundBraces", "spaceAroundParens"])
     }
 
+    func testRemoveBlankLineWithReturn() {
+        let input = """
+        foo {
+            return
+                bar
+        }
+        """
+        let output = """
+        foo {
+            bar
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn,
+                       exclude: ["indent"])
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

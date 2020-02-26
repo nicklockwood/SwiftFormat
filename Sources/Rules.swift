@@ -2134,7 +2134,12 @@ public struct _FormatRules {
                 return
             }
             formatter.removeToken(at: i)
-            if formatter.token(at: i)?.isSpace == true {
+            if var nextIndex = formatter.index(of: .nonSpace, after: i - 1, if: { $0.isLinebreak }) {
+                if let i = formatter.index(of: .nonSpaceOrLinebreak, after: nextIndex) {
+                    nextIndex = i - 1
+                }
+                formatter.removeTokens(inRange: i ... nextIndex)
+            } else if formatter.token(at: i)?.isSpace == true {
                 formatter.removeToken(at: i)
             }
         }

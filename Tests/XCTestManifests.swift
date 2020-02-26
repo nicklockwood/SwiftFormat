@@ -1297,6 +1297,7 @@ extension RulesTests {
         ("testRemoveBackticksAroundTrueArgument", testRemoveBackticksAroundTrueArgument),
         ("testRemoveBackticksAroundTrueProperty", testRemoveBackticksAroundTrueProperty),
         ("testRemoveBackticksAroundTypeAtRootLevel", testRemoveBackticksAroundTypeAtRootLevel),
+        ("testRemoveBlankLineWithReturn", testRemoveBlankLineWithReturn),
         ("testRemoveCommaDelimitedCaseRawStringCases", testRemoveCommaDelimitedCaseRawStringCases),
         ("testRemoveDuplicateConditionalImport", testRemoveDuplicateConditionalImport),
         ("testRemoveDuplicateImport", testRemoveDuplicateImport),

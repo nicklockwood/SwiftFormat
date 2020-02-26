@@ -71,6 +71,13 @@ class ParsingHelpersTests: XCTestCase {
         if let foo = { () -> Int? in 5 }() {}
         """))
         XCTAssertTrue(formatter.isStartOfClosure(at: 8))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 26))
+    }
+
+    func testIfConditionClosureTreatedAsClosure2() {
+        let formatter = Formatter(tokenize("if !foo { bar } {}"))
+        XCTAssertTrue(formatter.isStartOfClosure(at: 5))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 11))
     }
 
     func testIfConditionWithoutSpaceNotTreatedAsClosure() {

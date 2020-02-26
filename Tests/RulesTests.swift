@@ -5239,6 +5239,15 @@ class RulesTests: XCTestCase {
                        exclude: ["spaceAroundBraces", "spaceAroundParens"])
     }
 
+    func testNoRemoveReturnInIfWithUnParenthesizedClosure() {
+        let input = """
+        if foo { $0.bar } {
+            return true
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantReturn)
+    }
+
     func testRemoveBlankLineWithReturn() {
         let input = """
         foo {

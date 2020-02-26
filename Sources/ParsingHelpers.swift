@@ -279,7 +279,8 @@ extension Formatter {
 
         if isConditionalStatement(at: i) {
             if let endIndex = endOfScope(at: i),
-                next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") {
+                next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") ||
+                next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{") {
                 return true
             }
             return false
@@ -296,6 +297,11 @@ extension Formatter {
              .keyword("deinit"), .keyword("catch"), .keyword("else"),
              .keyword("repeat"), .keyword("throws"), .keyword("rethrows"):
             return false
+        case .endOfScope("}"):
+            guard let startOfScope = index(of: .startOfScope("{"), before: prevIndex) else {
+                return false
+            }
+            return !isStartOfClosure(at: startOfScope)
         case .endOfScope(")"):
             guard let startOfScope = index(of: .startOfScope("("), before: prevIndex),
                 let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) else {
@@ -312,7 +318,7 @@ extension Formatter {
             case .operator("->", .infix), .keyword("init"), .keyword("subscript"):
                 return false
             default:
-                return true
+                return !isConditionalStatement(at: startOfScope)
             }
             fallthrough
         case .identifier:
@@ -438,8 +444,12 @@ extension Formatter {
 
     func indexOfLastSignificantKeyword(at i: Int, excluding: [String] = []) -> Int? {
         guard let token = token(at: i),
-            let index = token.isKeyword ? i : index(of: .keyword, before: i),
-            lastIndex(of: .endOfScope("}"), in: index ..< i) == nil else {
+            let index = token.isKeyword ? i : index(of: .keyword, before: i) else {
+            return nil
+        }
+        if let endBraceIndex = lastIndex(of: .endOfScope("}"), in: index ..< i),
+            let startIndex = self.index(of: .startOfScope("{"), before: endBraceIndex),
+            !isStartOfClosure(at: startIndex) {
             return nil
         }
         switch tokens[index].string {

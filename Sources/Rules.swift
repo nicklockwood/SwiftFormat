@@ -436,26 +436,35 @@ public struct _FormatRules {
                     [.keyword("as"), .keyword("try")].contains(prevToken) {
                     formatter.insertToken(.space(" "), at: i + 1)
                 }
-            case let .operator(".", type):
+            case .operator(".", _):
                 if formatter.token(at: i + 1)?.isSpace == true {
                     formatter.removeToken(at: i + 1)
                 }
-                if type == .infix {
-                    if formatter.token(at: i - 1)?.isSpace == true,
-                        let lastTokenIndex = formatter.index(of: .nonSpace, before: i),
-                        formatter.tokens[lastTokenIndex].isLvalue {
-                        if ["!", "?"].contains(formatter.tokens[lastTokenIndex].string),
-                            let prevToken = formatter.last(.nonSpace, before: lastTokenIndex),
-                            [.keyword("try"), .keyword("as")].contains(prevToken) {} else {
-                            formatter.removeToken(at: i - 1)
-                        }
+                guard let prevIndex = formatter.index(of: .nonSpace, before: i) else {
+                    formatter.removeTokens(inRange: 0 ..< i)
+                    break
+                }
+                let spaceRequired: Bool
+                switch formatter.tokens[prevIndex] {
+                case .operator(_, .infix), .startOfScope("{"):
+                    return
+                case let token where token.isUnwrapOperator:
+                    if let prevToken = formatter.last(.nonSpace, before: prevIndex),
+                        [.keyword("try"), .keyword("as")].contains(prevToken) {
+                        spaceRequired = true
+                    } else {
+                        spaceRequired = false
                     }
-                } else if formatter.token(at: i - 1)?.isSpace == true {
-                    if formatter.last(.nonSpace, before: i) == nil {
+                case .startOfScope, .operator(_, .prefix):
+                    spaceRequired = false
+                case let token:
+                    spaceRequired = !token.isAttribute && !token.isLvalue
+                }
+                if formatter.token(at: i - 1)?.isSpace == true {
+                    if !spaceRequired {
                         formatter.removeToken(at: i - 1)
                     }
-                } else if let prevToken = formatter.last(.nonSpace, before: i),
-                    !prevToken.isStartOfScope, !prevToken.isOperator(ofType: .prefix) {
+                } else if spaceRequired {
                     formatter.insertSpace(" ", at: i)
                 }
             case .operator("?", .infix):

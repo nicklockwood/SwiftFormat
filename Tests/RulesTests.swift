@@ -774,6 +774,12 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
     }
 
+    func testSpaceRemovedInNestedPropertyWrapper() {
+        let input = "@Encoded .Foo var foo: String"
+        let output = "@Encoded.Foo var foo: String"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
+    }
+
     // noSpaceOperators
 
     func testNoAddSpaceAroundNoSpaceStar() {

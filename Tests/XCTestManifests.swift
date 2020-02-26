@@ -1544,6 +1544,7 @@ extension RulesTests {
         ("testSpacePreservedBetweenOptionalTryAndDot", testSpacePreservedBetweenOptionalTryAndDot),
         ("testSpaceRemovedInForcedChaining", testSpaceRemovedInForcedChaining),
         ("testSpaceRemovedInMultipleOptionalChaining", testSpaceRemovedInMultipleOptionalChaining),
+        ("testSpaceRemovedInNestedPropertyWrapper", testSpaceRemovedInNestedPropertyWrapper),
         ("testSpaceRemovedInOptionalChaining", testSpaceRemovedInOptionalChaining),
         ("testSplitLineMultipleOptionalChaining", testSplitLineMultipleOptionalChaining),
         ("testSplitLineOptionalChaining", testSplitLineOptionalChaining),

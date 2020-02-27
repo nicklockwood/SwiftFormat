@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.44.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.4) (2020-02-27)
+
+- Allman braces are now applied correctly for lines that end in a numeric literal
+- Blank line is now removed when stripping a redundant `return` keyword on its own line
+- Fixed space being inserted before the `.` in a nested PropertyWrapper expression
+- Fixed `return` being incorrectly removed inside `if` statements containing an unparenthesized closure
+
 ## [0.44.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.3) (2020-02-20)
 
 - Fixed incorrect indenting of closing multiline string delimiter

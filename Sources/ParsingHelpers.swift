@@ -448,9 +448,12 @@ extension Formatter {
             return nil
         }
         if let endBraceIndex = lastIndex(of: .endOfScope("}"), in: index ..< i),
-            let startIndex = self.index(of: .startOfScope("{"), before: endBraceIndex),
-            !isStartOfClosure(at: startIndex) {
-            return nil
+            let startIndex = self.index(of: .startOfScope("{"), before: endBraceIndex) {
+            if isStartOfClosure(at: startIndex) {
+                return indexOfLastSignificantKeyword(at: startIndex, excluding: excluding)
+            } else {
+                return nil
+            }
         }
         switch tokens[index].string {
         case let name where

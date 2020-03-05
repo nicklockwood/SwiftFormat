@@ -480,6 +480,7 @@ extension RulesTests {
         ("testCaseVarOuterParensRemoved", testCaseVarOuterParensRemoved),
         ("testCatchLetError", testCatchLetError),
         ("testChainedClosureIndents", testChainedClosureIndents),
+        ("testChainedClosureIndentsAfterIfCondition", testChainedClosureIndentsAfterIfCondition),
         ("testChainedClosureIndentsAfterLetDeclaration", testChainedClosureIndentsAfterLetDeclaration),
         ("testChainedClosureIndentsAfterVarDeclaration", testChainedClosureIndentsAfterVarDeclaration),
         ("testChainedFunctionEndingInOpenParenNotDoubleIndented", testChainedFunctionEndingInOpenParenNotDoubleIndented),

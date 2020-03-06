@@ -2064,6 +2064,16 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
+    func testWrappedClosureIndentAfterAssignment() {
+        let input = """
+        let bar =
+            baz { _ in
+                print("baz")
+            }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     func testChainedFunctionsInPropertySetter() {
         let input = """
         private let foo = bar(a: "A", b: "B")

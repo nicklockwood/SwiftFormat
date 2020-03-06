@@ -1621,14 +1621,50 @@ class RulesTests: XCTestCase {
     }
 
     func testIndentSwitchCaseCommentsCorrectly() {
-        let input = "switch x {\n// comment\ncase y:\n// comment\nbreak\n// comment\ncase z:\nbreak\n}"
-        let output = "switch x {\n// comment\ncase y:\n    // comment\n    break\n// comment\ncase z:\n    break\n}"
+        let input = """
+        switch x {
+        // comment
+        case y:
+        // comment
+        break
+        // comment
+        case z:
+        break
+        }
+        """
+        let output = """
+        switch x {
+        // comment
+        case y:
+            // comment
+            break
+        // comment
+        case z:
+            break
+        }
+        """
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
     func testIndentMultilineSwitchCaseCommentsCorrectly() {
         let input = "switch x {\n/*\n * comment\n */\ncase y:\nbreak\n/*\n * comment\n */\ndefault:\nbreak\n}"
         let output = "switch x {\n/*\n * comment\n */\ncase y:\n    break\n/*\n * comment\n */\ndefault:\n    break\n}"
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentEnumCaseComment() {
+        let input = """
+        enum Foo {
+           /// bar
+           case bar
+        }
+        """
+        let output = """
+        enum Foo {
+            /// bar
+            case bar
+        }
+        """
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 

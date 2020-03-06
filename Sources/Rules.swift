@@ -1276,7 +1276,7 @@ public struct _FormatRules {
                 case .startOfScope("#if"):
                     if let lineIndex = formatter.index(of: .linebreak, after: nextNonSpaceIndex),
                         let nextKeyword = formatter.next(.nonSpaceOrCommentOrLinebreak, after: lineIndex), [
-                            .keyword("case"), .endOfScope("case"), .endOfScope("default"), .keyword("@unknown"),
+                            .endOfScope("case"), .endOfScope("default"), .keyword("@unknown"),
                         ].contains(nextKeyword) {
                         break
                     }

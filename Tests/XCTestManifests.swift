@@ -726,6 +726,7 @@ extension RulesTests {
         ("testIndentedIfEndifOutdenting", testIndentedIfEndifOutdenting),
         ("testIndentElseAfterComment", testIndentElseAfterComment),
         ("testIndentEnumCaseBodyAfterWhereClause", testIndentEnumCaseBodyAfterWhereClause),
+        ("testIndentEnumCaseComment", testIndentEnumCaseComment),
         ("testIndentEnumDeclarationInsideSwitchCase", testIndentEnumDeclarationInsideSwitchCase),
         ("testIndentEnumDictionaryKeysAndValues", testIndentEnumDictionaryKeysAndValues),
         ("testIndentEnumValueAfterReturn", testIndentEnumValueAfterReturn),

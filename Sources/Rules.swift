@@ -1222,8 +1222,12 @@ public struct _FormatRules {
                 } else if linewrapped {
                     linewrapStack[linewrapStack.count - 1] = true
 
-                    func isWrappedEnumCase() -> Bool {
-                        guard let caseIndex = formatter.index(of: .keyword("case"), before: i) else { return false }
+                    func isWrappedDeclaration() -> Bool {
+                        guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .delimiter(","),
+                            let keywordIndex = formatter.index(of: .keyword, before: i, if: {
+                                ["class", "struct", "enum", "protocol", "case",
+                                 "func", "var", "let"].contains($0.string)
+                        }) else { return false }
 
                         let start: Int
                         if let currentScope = formatter.currentScope(at: i) {
@@ -1232,13 +1236,14 @@ public struct _FormatRules {
                             start = formatter.startOfLine(at: i) - 1
                         }
 
-                        return caseIndex > formatter.index(of: .startOfScope, before: i) ?? -1 &&
-                            caseIndex <= formatter.index(of: .keyword, after: start) ?? i
+                        return keywordIndex > formatter.index(of: .startOfScope, before: i) ?? -1
+                            && keywordIndex <= formatter.index(of: .keyword, after: start) ?? i
                     }
+
                     // Don't indent enum cases if Xcode indentation is set
                     // Don't indent line starting with dot if previous line was just a closing scope
                     let lastToken = formatter.token(at: lastNonSpaceOrLinebreakIndex)
-                    if !formatter.options.xcodeIndentation || !isWrappedEnumCase(),
+                    if !formatter.options.xcodeIndentation || !isWrappedDeclaration(),
                         formatter.token(at: nextTokenIndex ?? -1) != .operator(".", .infix) ||
                         !(lastToken?.isEndOfScope == true && lastToken != .endOfScope("case") &&
                             formatter.last(.nonSpace, before:

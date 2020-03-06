@@ -1726,6 +1726,8 @@ extension RulesTests {
         ("testWrapParametersNotSetWrapArgumentsBeforeFirstDefaultsToBeforeFirst", testWrapParametersNotSetWrapArgumentsBeforeFirstDefaultsToBeforeFirst),
         ("testWrapParametersNotSetWrapArgumentsPreserveDefaultsToPreserve", testWrapParametersNotSetWrapArgumentsPreserveDefaultsToPreserve),
         ("testWrappedBeforeComma", testWrappedBeforeComma),
+        ("testWrappedClassDeclaration", testWrappedClassDeclaration),
+        ("testWrappedClassDeclarationLikeXcode", testWrappedClassDeclarationLikeXcode),
         ("testWrappedClosureIndentAfterAssignment", testWrappedClosureIndentAfterAssignment),
         ("testWrappedEnumThatLooksLikeIf", testWrappedEnumThatLooksLikeIf),
         ("testWrappedFunctionArguments", testWrappedFunctionArguments),

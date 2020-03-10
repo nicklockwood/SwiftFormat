@@ -320,4 +320,15 @@ class FormatterTests: XCTestCase {
             range: 6 ..< 9
         )), output2)
     }
+
+    // MARK: endOfScope
+
+    func testEndOfScopeInSwitch() throws {
+        let formatter = Formatter(tokenize("""
+        switch foo {
+        case bar: break
+        }
+        """))
+        XCTAssertEqual(formatter.endOfScope(at: 4), 13)
+    }
 }

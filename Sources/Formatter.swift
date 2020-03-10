@@ -468,7 +468,7 @@ public class Formatter: NSObject {
     /// Returns the index of the ending token for the current scope
     // TODO: should this return the closing `}` for `switch { ...` instead of nested `case`?
     public func endOfScope(at index: Int) -> Int? {
-        let startIndex: Int
+        var startIndex: Int
         guard var startToken = token(at: index) else { return nil }
         if case .startOfScope = startToken {
             startIndex = index
@@ -478,9 +478,21 @@ public class Formatter: NSObject {
         } else {
             return nil
         }
-        return self.index(after: startIndex, where: {
+        guard startToken == .startOfScope("{") else {
+            return self.index(after: startIndex, where: {
+                $0.isEndOfScope(startToken)
+            })
+        }
+        while let endIndex = self.index(after: startIndex, where: {
             $0.isEndOfScope(startToken)
-        })
+        }), let token = token(at: endIndex) {
+            if token == .endOfScope("}") {
+                return endIndex
+            }
+            startIndex = endIndex
+            startToken = token
+        }
+        return nil
     }
 
     /// Either modifies or removes the existing space token at the specified

@@ -478,8 +478,7 @@ public enum Token: Equatable {
             default:
                 return false
             }
-        case .delimiter(":"):
-            // Special case, only used in tokenizer
+        case .delimiter(":"), .startOfScope(":"):
             switch token {
             case .endOfScope("case"), .endOfScope("default"), .operator("?", .infix):
                 return true

@@ -1324,28 +1324,14 @@ public struct _FormatRules {
         options: ["allman"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        formatter.forEach(.startOfScope("{")) { i, token in
-            guard var closingBraceIndex = formatter.endOfScope(at: i),
+        formatter.forEach(.startOfScope("{")) { i, _ in
+            guard let closingBraceIndex = formatter.endOfScope(at: i),
                 // Check this isn't an inline block
                 formatter.index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil,
                 let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 ![.delimiter(","), .keyword("in")].contains(prevToken),
                 !prevToken.is(.startOfScope) else {
                 return
-            }
-            loop: while let token = formatter.token(at: closingBraceIndex) {
-                switch token {
-                case .endOfScope("}"):
-                    break loop
-                case .endOfScope("case"), .endOfScope("default"):
-                    guard let i = formatter.index(of: .startOfScope(":"), after: closingBraceIndex),
-                        let j = formatter.endOfScope(at: i + 1) else {
-                        return // error
-                    }
-                    closingBraceIndex = j
-                default:
-                    return // error
-                }
             }
             if let penultimateToken = formatter.last(.nonSpaceOrComment, before: closingBraceIndex),
                 !penultimateToken.isLinebreak {

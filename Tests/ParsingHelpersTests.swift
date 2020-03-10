@@ -44,6 +44,11 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 4))
     }
 
+    func testExtensionBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("extension Foo {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 4))
+    }
+
     // conditional statements
 
     func testIfBracesNotTreatedAsClosure() {

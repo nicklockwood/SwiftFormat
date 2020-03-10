@@ -3227,6 +3227,21 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.braces)
     }
 
+    func testBracesForExtension() {
+        let input = """
+        extension Foo
+        {
+            // foo
+        }
+        """
+        let output = """
+        extension Foo {
+            // foo
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.braces)
+    }
+
     // allman style
 
     func testKnRBracesAreConverted() {
@@ -3356,6 +3371,22 @@ class RulesTests: XCTestCase {
         """
         let output = """
         if foo > 0
+        {
+            // foo
+        }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+    }
+
+    func testAllmanBracesForExtension() {
+        let input = """
+        extension Foo {
+            // foo
+        }
+        """
+        let output = """
+        extension Foo
         {
             // foo
         }

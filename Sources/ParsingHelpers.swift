@@ -311,10 +311,14 @@ extension Formatter {
             case .identifier:
                 prevIndex = prev
             case .operator("?", .postfix), .operator("!", .postfix):
-                guard token(at: prev - 1)?.isIdentifier == true else {
+                switch token(at: prev - 1) {
+                case .identifier?:
+                    prevIndex = prev - 1
+                case .keyword("init")?:
+                    return false
+                default:
                     return true
                 }
-                prevIndex = prev - 1
             case .operator("->", .infix), .keyword("init"), .keyword("subscript"):
                 return false
             default:
@@ -712,8 +716,19 @@ extension Formatter {
         return false
     }
 
+    struct ImportRange: Comparable {
+        var module: String
+        var range: Range<Int>
+        var isTestable: Bool
+
+        static func < (lhs: ImportRange, rhs: ImportRange) -> Bool {
+            let la = lhs.module.lowercased()
+            let lb = rhs.module.lowercased()
+            return la == lb ? lhs.module < rhs.module : la < lb
+        }
+    }
+
     // Shared import rules implementation
-    typealias ImportRange = (String, Range<Int>)
     func parseImports() -> [[ImportRange]] {
         var importStack = [[ImportRange]]()
         var importRanges = [ImportRange]()
@@ -766,7 +781,12 @@ extension Formatter {
                     }
                     partIndex = nextPartIndex
                 }
-                importRanges.append((name, startIndex ..< endIndex as Range))
+                let range = startIndex ..< endIndex as Range
+                importRanges.append(ImportRange(
+                    module: name,
+                    range: range,
+                    isTestable: tokens[range].contains(.keyword("@testable"))
+                ))
             } else {
                 // Error
                 pushStack()

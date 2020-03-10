@@ -3408,37 +3408,26 @@ public struct _FormatRules {
         sharedOptions: ["linebreaks"]
     ) { formatter in
         func sortRanges(_ ranges: [Formatter.ImportRange]) -> [Formatter.ImportRange] {
-            func isCaseInsensitiveLessThan(_ a: Formatter.ImportRange, _ b: Formatter.ImportRange) -> Bool {
-                let la = a.0.lowercased()
-                let lb = b.0.lowercased()
-                if la == lb {
-                    return a.0 < b.0
-                }
-                return la < lb
-            }
             if case .alphabetized = formatter.options.importGrouping {
-                return ranges.sorted(by: isCaseInsensitiveLessThan)
+                return ranges.sorted(by: <)
             }
             // Group @testable imports at the top or bottom
             return ranges.sorted {
-                let isLhsTestable = formatter.tokens[$0.1].contains(.keyword("@testable"))
-                let isRhsTestable = formatter.tokens[$1.1].contains(.keyword("@testable"))
                 // If both have a @testable keyword, or neither has one, just sort alphabetically
-                guard isLhsTestable != isRhsTestable else {
-                    return isCaseInsensitiveLessThan($0, $1)
+                guard $0.isTestable != $1.isTestable else {
+                    return $0 < $1
                 }
-                return formatter.options.importGrouping == .testableTop ? isLhsTestable : isRhsTestable
+                return formatter.options.importGrouping == .testableTop ? $0.isTestable : $1.isTestable
             }
         }
 
-        var importStack = formatter.parseImports()
-        while let importRanges = importStack.popLast() {
+        for var importRanges in formatter.parseImports().reversed() {
             guard importRanges.count > 1 else { continue }
-            let range: Range = importRanges.first!.1.lowerBound ..< importRanges.last!.1.upperBound
+            let range: Range = importRanges.first!.range.lowerBound ..< importRanges.last!.range.upperBound
             let sortedRanges = sortRanges(importRanges)
             var insertedLinebreak = false
             var sortedTokens = sortedRanges.flatMap { inputRange -> [Token] in
-                var tokens = Array(formatter.tokens[inputRange.1])
+                var tokens = Array(formatter.tokens[inputRange.range])
                 if tokens.first?.isLinebreak == false {
                     insertedLinebreak = true
                     tokens.insert(formatter.linebreakToken(for: tokens.startIndex), at: tokens.startIndex)
@@ -3456,12 +3445,22 @@ public struct _FormatRules {
     public let duplicateImports = FormatRule(
         help: "Remove duplicate import statements."
     ) { formatter in
-        var importStack = formatter.parseImports()
-        while var importRanges = importStack.popLast() {
-            while let range = importRanges.popLast() {
-                if importRanges.contains(where: { $0.0 == range.0 }) {
-                    formatter.removeTokens(inRange: range.1)
+        for var importRanges in formatter.parseImports().reversed() {
+            for i in importRanges.indices.reversed() {
+                let range = importRanges.remove(at: i)
+                guard let j = importRanges.firstIndex(where: { $0.module == range.module }) else {
+                    continue
                 }
+                let range2 = importRanges[j]
+                if !range.isTestable || range2.isTestable {
+                    formatter.removeTokens(inRange: range.range)
+                    continue
+                }
+                if j >= i {
+                    formatter.removeTokens(inRange: range2.range)
+                    importRanges.remove(at: j)
+                }
+                importRanges.append(range)
             }
         }
     }
@@ -3907,11 +3906,11 @@ public struct _FormatRules {
             while index < range.upperBound, let nextIndex =
                 formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: index ..< range.upperBound) {
                 guard let importRange = importRanges.first(where: {
-                    $0.contains(where: { $0.1.contains(nextIndex) })
+                    $0.contains(where: { $0.range.contains(nextIndex) })
                 }) else {
                     return true
                 }
-                index = importRange.last!.1.upperBound + 1
+                index = importRange.last!.range.upperBound + 1
             }
             return false
         }

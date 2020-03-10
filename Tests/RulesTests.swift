@@ -3242,6 +3242,21 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.braces)
     }
 
+    func testBracesForOptionalInit() {
+        let input = """
+        init?()
+        {
+            return nil
+        }
+        """
+        let output = """
+        init?() {
+            return nil
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.braces)
+    }
+
     // allman style
 
     func testKnRBracesAreConverted() {
@@ -3341,6 +3356,22 @@ class RulesTests: XCTestCase {
         init(foo: Int)
         {
             self.foo = foo
+        }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+    }
+
+    func testAllmanBracesForOptionalInit() {
+        let input = """
+        init?() {
+            return nil
+        }
+        """
+        let output = """
+        init?()
+        {
+            return nil
         }
         """
         let options = FormatOptions(allmanBraces: true)
@@ -9464,6 +9495,18 @@ class RulesTests: XCTestCase {
     func testRemoveDuplicateImportFunc() {
         let input = "import func Foo.bar\nimport func Foo.bar"
         let output = "import func Foo.bar"
+        testFormatting(for: input, output, rule: FormatRules.duplicateImports)
+    }
+
+    func testNoRemoveTestableDuplicateImport() {
+        let input = "import Foo\n@testable import Foo"
+        let output = "\n@testable import Foo"
+        testFormatting(for: input, output, rule: FormatRules.duplicateImports)
+    }
+
+    func testNoRemoveTestableDuplicateImport2() {
+        let input = "@testable import Foo\nimport Foo"
+        let output = "@testable import Foo"
         testFormatting(for: input, output, rule: FormatRules.duplicateImports)
     }
 

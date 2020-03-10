@@ -167,6 +167,16 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 4))
     }
 
+    func testOptionalInitNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("init?() { return nil }"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 5))
+    }
+
+    func testOptionalInitAllmanBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("init?()\n{\n    return nil\n}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 5))
+    }
+
     func testDeinitBracesNotTreatedAsClosure() {
         let formatter = Formatter(tokenize("deinit { foo = nil }"))
         XCTAssertFalse(formatter.isStartOfClosure(at: 2))

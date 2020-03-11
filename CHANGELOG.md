@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.44.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.5) (2020-03-11)
+
+- Fixed bug with indenting of chained closures
+- Fixed bug where wrapped braces were over-indented
+- Fixed indenting of comments inside enum declarations
+- Improved consistency of `--xcodeindentation` output with Xcode's built-in formatting
+- Extension braces are now correctly wrapped
+- Switch statement braces are now correctly wrapped
+- Fixed bug where `duplicateImports` rule could remove a required `@testable` import
+
 ## [0.44.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.4) (2020-02-27)
 
 - Allman braces are now applied correctly for lines that end in a numeric literal

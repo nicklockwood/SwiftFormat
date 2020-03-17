@@ -450,8 +450,8 @@ extension Formatter {
         guard i > 0 else {
             return calculateIndexOfLastSignificantKeyword(at: i, excluding: excluding)
         }
-        if let cacheIndex = cacheIndexOfLastSignificantKeywords[i] {
-            return cacheIndex
+        if cacheIndexOfLastSignificantKeywords[i] != -1 {
+            return cacheIndexOfLastSignificantKeywords[i]
         }
         let index = calculateIndexOfLastSignificantKeyword(at: i, excluding: excluding)
         cacheIndexOfLastSignificantKeywords[i] = index

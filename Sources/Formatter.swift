@@ -104,7 +104,14 @@ public class Formatter: NSObject {
     public let options: FormatOptions
 
     /// The token array managed by the formatter (read-only)
-    public private(set) var tokens: [Token]
+    public private(set) var tokens: [Token] {
+        didSet {
+            cacheIndexOfLastSignificantKeywords = [Int?](repeating: -1, count: tokens.count)
+        }
+    }
+
+    /// The indexOfLastSignificantKeyword cache array
+    internal var cacheIndexOfLastSignificantKeywords = [Int?]()
 
     /// Create a new formatter instance from a token array
     public init(_ tokens: [Token], options: FormatOptions = FormatOptions(),
@@ -113,6 +120,7 @@ public class Formatter: NSObject {
         self.options = options
         self.trackChanges = trackChanges
         self.range = range
+        cacheIndexOfLastSignificantKeywords = [Int?](repeating: -1, count: tokens.count)
     }
 
     // MARK: changes made

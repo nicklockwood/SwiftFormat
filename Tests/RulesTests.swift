@@ -4957,6 +4957,27 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.trailingClosures)
     }
 
+    // multiple closures
+
+    func testMultipleNestedClosures() throws {
+        let repeatCount = 10
+        let input = """
+        override func foo() {
+            bar {
+                var baz = 5
+        \(String(repeating: """
+                fizz {
+                    buzz {
+                        fizzbuzz()
+                    }
+                }
+
+        """, count: repeatCount))    }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.trailingClosures)
+    }
+
     // MARK: - redundantGet
 
     func testRemoveSingleLineIsolatedGet() {

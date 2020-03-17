@@ -346,6 +346,7 @@ extension ParsingHelpersTests {
         ("testFunctionAllmanBracesNotTreatedAsClosure", testFunctionAllmanBracesNotTreatedAsClosure),
         ("testFunctionBracesNotTreatedAsClosure", testFunctionBracesNotTreatedAsClosure),
         ("testFunctionInGetterPosition", testFunctionInGetterPosition),
+        ("testFunctionInLotsOfClosure", testFunctionInLotsOfClosure),
         ("testGenericSubscriptSetGet", testGenericSubscriptSetGet),
         ("testGetSet", testGetSet),
         ("testGuardElseBracesNotTreatedAsClosure", testGuardElseBracesNotTreatedAsClosure),

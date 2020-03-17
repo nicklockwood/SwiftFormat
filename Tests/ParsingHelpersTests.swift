@@ -327,6 +327,30 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isStartOfClosure(at: 21))
     }
 
+    func testFunctionInLotsOfClosure() {
+        let repeatCount = 2
+        let formatter = Formatter(tokenize("""
+        override func foo() {
+        bar {
+        var baz = 5
+        \(String(repeating: """
+        fizz {
+        buzz {
+        fizzbuzz()
+        }
+        }
+        
+        """, count: repeatCount))}
+        }
+        """))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 8))
+        XCTAssert(formatter.isStartOfClosure(at: 12))
+        for i in stride(from: 0, to: repeatCount * 16, by: 16) {
+            XCTAssert(formatter.isStartOfClosure(at: 24 + i))
+            XCTAssert(formatter.isStartOfClosure(at: 28 + i))
+        }
+    }
+
     // MARK: isAccessorKeyword
 
     func testDidSet() {

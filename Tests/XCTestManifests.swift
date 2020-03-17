@@ -129,6 +129,7 @@ extension FormatterTests {
         ("testEnableNext", testEnableNext),
         ("testEnableNextWithMultilineComment", testEnableNextWithMultilineComment),
         ("testEndOfScopeInSwitch", testEndOfScopeInSwitch),
+        ("testFunctionInLotsOfClosureNotFormatted", testFunctionInLotsOfClosureNotFormatted),
         ("testIndexBeforeComment", testIndexBeforeComment),
         ("testIndexBeforeMultilineComment", testIndexBeforeMultilineComment),
         ("testLinebreakAfterLinebreakReturnsCorrectIndex", testLinebreakAfterLinebreakReturnsCorrectIndex),

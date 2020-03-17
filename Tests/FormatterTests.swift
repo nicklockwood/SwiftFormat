@@ -331,4 +331,39 @@ class FormatterTests: XCTestCase {
         """))
         XCTAssertEqual(formatter.endOfScope(at: 4), 13)
     }
+
+    // MARK: closure
+
+    func testFunctionInLotsOfClosureNotFormatted() throws {
+        let repeatCount = 10
+        let input = """
+        override func foo() {
+        bar {
+        var baz = 5
+        \(String(repeating: """
+        fizz {
+        buzz {
+        fizzbuzz()
+        }
+        }
+        
+        """, count: repeatCount))}
+        }
+        """
+        let output = """
+        override func foo() {
+            bar {
+                var baz = 5
+        \(String(repeating: """
+                fizz {
+                    buzz {
+                        fizzbuzz()
+                    }
+                }
+        
+        """, count: repeatCount))    }
+        }
+        """
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+    }
 }

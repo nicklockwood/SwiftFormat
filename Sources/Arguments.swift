@@ -463,6 +463,7 @@ let fileArguments = [
     "symlinks",
     "exclude",
     "unexclude",
+    "filelist",
 ]
 
 let rulesArguments = [

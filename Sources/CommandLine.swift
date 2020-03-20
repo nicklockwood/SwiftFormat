@@ -155,6 +155,7 @@ func printHelp(as type: CLI.OutputType) {
     --output           Output path for formatted file(s) (defaults to input path)
     --exclude          Comma-delimited list of ignored paths (supports glob syntax)
     --unexclude        Paths to not exclude, even if excluded elsewhere in config
+    --filelist         Path to a file with names of files to process, one per line
     --symlinks         How symlinks are handled: "follow" or "ignore" (default)
     --fragment         \(stripMarkdown(FormatOptions.Descriptor.fragment.help))
     --conflictmarkers  \(stripMarkdown(FormatOptions.Descriptor.ignoreConflictMarkers.help))
@@ -361,6 +362,18 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         // Input path(s)
         var useStdin = false
         var inputURLs = [URL]()
+        if let fileListFile = args["filelist"] {
+            do {
+                let files = try String(contentsOf: URL(fileURLWithPath: fileListFile))
+                    .split(whereSeparator: { $0.isNewline })
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
+                    .map(URL.init(fileURLWithPath:))
+                inputURLs.append(contentsOf: files)
+            } catch {
+                throw FormatError.options("Failed to read file list at \(fileListFile)")
+            }
+        }
         while !useStdin, let inputPath = args[String(inputURLs.count + 1)] {
             if inputPath.lowercased() == "stdin" {
                 useStdin = true

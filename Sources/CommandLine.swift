@@ -155,6 +155,7 @@ func printHelp(as type: CLI.OutputType) {
     --output           Output path for formatted file(s) (defaults to input path)
     --exclude          Comma-delimited list of ignored paths (supports glob syntax)
     --unexclude        Paths to not exclude, even if excluded elsewhere in config
+    --filelist         Path to a file with names of files to process, one per line
     --symlinks         How symlinks are handled: "follow" or "ignore" (default)
     --fragment         \(stripMarkdown(FormatOptions.Descriptor.fragment.help))
     --conflictmarkers  \(stripMarkdown(FormatOptions.Descriptor.ignoreConflictMarkers.help))

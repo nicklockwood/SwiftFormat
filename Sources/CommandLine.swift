@@ -363,12 +363,16 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         var useStdin = false
         var inputURLs = [URL]()
         if let fileListFile = args["filelist"] {
-            let files = try String(contentsOf: URL(fileURLWithPath: fileListFile))
-                .split(whereSeparator: { $0.isNewline })
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-                .filter { !$0.isEmpty }
-                .map(URL.init(fileURLWithPath:))
-            inputURLs.append(contentsOf: files)
+            do {
+                let files = try String(contentsOf: URL(fileURLWithPath: fileListFile))
+                    .split(whereSeparator: { $0.isNewline })
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
+                    .map(URL.init(fileURLWithPath:))
+                inputURLs.append(contentsOf: files)
+            } catch {
+                throw FormatError.options("Failed to read file list at \(fileListFile)")
+            }
         }
         while !useStdin, let inputPath = args[String(inputURLs.count + 1)] {
             if inputPath.lowercased() == "stdin" {

@@ -463,7 +463,6 @@ let fileArguments = [
     "symlinks",
     "exclude",
     "unexclude",
-    "filelist",
 ]
 
 let rulesArguments = [
@@ -478,6 +477,7 @@ let optionsArguments = fileArguments + rulesArguments + formattingArguments + in
 
 let commandLineArguments = [
     // Input options
+    "filelist",
     "config",
     "inferoptions",
     "output",

@@ -150,12 +150,12 @@ func printHelp(as type: CLI.OutputType) {
 
     <file> <file> ...  Swift files or directories to be processed, or "stdin"
 
+    --filelist         Path to a file with names of files to process, one per line
     --config           Path to a configuration file containing rules and options
     --inferoptions     Instead of formatting input, use it to infer format options
     --output           Output path for formatted file(s) (defaults to input path)
     --exclude          Comma-delimited list of ignored paths (supports glob syntax)
     --unexclude        Paths to not exclude, even if excluded elsewhere in config
-    --filelist         Path to a file with names of files to process, one per line
     --symlinks         How symlinks are handled: "follow" or "ignore" (default)
     --fragment         \(stripMarkdown(FormatOptions.Descriptor.fragment.help))
     --conflictmarkers  \(stripMarkdown(FormatOptions.Descriptor.ignoreConflictMarkers.help))
@@ -362,16 +362,13 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         // Input path(s)
         var useStdin = false
         var inputURLs = [URL]()
-        if let fileListFile = args["filelist"] {
+        if let fileListPath = args["filelist"] {
+            let fileListURL = try parsePath(fileListPath, for: "filelist", in: directory)
             do {
-                let files = try String(contentsOf: URL(fileURLWithPath: fileListFile))
-                    .split(whereSeparator: { $0.isNewline })
-                    .map { $0.trimmingCharacters(in: .whitespaces) }
-                    .filter { !$0.isEmpty }
-                    .map(URL.init(fileURLWithPath:))
-                inputURLs.append(contentsOf: files)
+                let source = try String(contentsOf: fileListURL)
+                inputURLs += parseFileList(source, in: fileListURL.deletingLastPathComponent().path)
             } catch {
-                throw FormatError.options("Failed to read file list at \(fileListFile)")
+                throw FormatError.options("Failed to read file list at \(fileListPath)")
             }
         }
         while !useStdin, let inputPath = args[String(inputURLs.count + 1)] {
@@ -630,6 +627,14 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         print("error: \(error).", as: .error)
         return .error
     }
+}
+
+func parseFileList(_ source: String, in directory: String) -> [URL] {
+    return source
+        .components(separatedBy: .newlines)
+        .map { $0.components(separatedBy: "#")[0].trimmingCharacters(in: .whitespaces) }
+        .filter { !$0.isEmpty }
+        .map { expandPath($0, in: directory) }
 }
 
 func printResult(_ dryrun: Bool, _ lint: Bool, _ lenient: Bool, _ flags: OutputFlags) -> ExitCode {

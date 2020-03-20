@@ -87,6 +87,7 @@ extension CommandLineTests {
         ("testHelpLineLength", testHelpLineLength),
         ("testHelpOptionsDocumented", testHelpOptionsDocumented),
         ("testHelpOptionsImplemented", testHelpOptionsImplemented),
+        ("testParseFileList", testParseFileList),
         ("testQuietModeAllowsContent", testQuietModeAllowsContent),
         ("testQuietModeAllowsErrors", testQuietModeAllowsErrors),
         ("testQuietModeNoOutput", testQuietModeNoOutput),

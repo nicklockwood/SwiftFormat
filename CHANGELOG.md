@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.44.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.6) (2020-03-21)
+
+- Fixed timeout when formatting files containing multiple trailing closures
+- Added `--filelist` argument for specifying input source files list in a standalone file
+- Fixed bug in the git pre-commit hook suggested in the README file
+
 ## [0.44.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.5) (2020-03-11)
 
 - Fixed bug with indenting of chained closures

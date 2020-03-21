@@ -723,6 +723,8 @@ Credits
 * [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions
 * [Balázs Kilvády](https://github.com/balitm) - Xcode lint warning integration
 * [Anthony Miller](https://github.com/AnthonyMDev) - Improvements to wrap/indent logic
+* [Shingo Takagi](https://github.com/zizi4n5) - Several brace-related bug fixes
+* [Juri Pakaste](https://github.com/juri) - Filelist feature
 * [Nick Lockwood](https://github.com/nicklockwood) - Everything else
 
 ([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

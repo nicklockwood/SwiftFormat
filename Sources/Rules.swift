@@ -2014,7 +2014,7 @@ public struct _FormatRules {
                 }), let quoteIndex = formatter.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
                     $0 == .startOfScope("\"")
                 }), formatter.token(at: quoteIndex + 2) == .endOfScope("\"") {
-                    if formatter.tokens[nameIndex].string == formatter.token(at: quoteIndex + 1)?.string {
+                    if formatter.tokens[nameIndex].unescaped() == formatter.token(at: quoteIndex + 1)?.string {
                         formatter.removeTokens(inRange: nameIndex + 1 ... quoteIndex + 2)
                         index = nameIndex
                     } else {

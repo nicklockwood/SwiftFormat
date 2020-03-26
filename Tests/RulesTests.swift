@@ -5168,6 +5168,12 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantRawValues)
     }
 
+    func testRemoveBacktickCaseRawStringCases() {
+        let input = "enum Foo: String { case `as` = \"as\", `let` = \"let\" }"
+        let output = "enum Foo: String { case `as`, `let` }"
+        testFormatting(for: input, output, rule: FormatRules.redundantRawValues)
+    }
+
     func testNoRemoveRawStringIfNameDoesntMatch() {
         let input = "enum Foo: String {\n    case bar = \"foo\"\n}"
         testFormatting(for: input, rule: FormatRules.redundantRawValues)

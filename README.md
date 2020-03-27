@@ -227,9 +227,11 @@ let package = Package(
 	platforms: [.macOS(.v10_11)],
     dependencies: [
         .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.41.2"),
-    ]
+    ],
+    targets: [.target(name: "BuildTools", path: "")]
 )
 ```
+3. If you are running Xcode 11.4 or later, in the `BuildTools` folder create a file called `Empty.swift` with nothing in it. This is to satisfy a change in Swift Package Manager.
 
 #### 2) Add a Build phases to your app target
 
@@ -238,6 +240,7 @@ let package = Package(
 3. Drag the new `Run Script` phase **above** the `Compile Sources` phase, expand it and paste the following script:  
    ```bash
    cd BuildTools
+   SDKROOT=macosx
    #swift package update #Uncomment this line temporarily to update the version used to the latest matching your BuildTools/Package.swift file
    swift run -c release swiftformat "$SRCROOT"
    ```

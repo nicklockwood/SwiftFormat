@@ -224,7 +224,7 @@ import PackageDescription
 
 let package = Package(
     name: "BuildTools",
-	platforms: [.macOS(.v10_11)],
+    platforms: [.macOS(.v10_11)],
     dependencies: [
         .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.41.2"),
     ]
@@ -721,7 +721,7 @@ Credits
 * [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
 * [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
 * [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions
-* [Balázs Kilvády](https://github.com/balitm) - Xcode lint warning integration
+* [Balázs Kilvády](https://github.com/balitm) - Xcode lint warning integration
 * [Anthony Miller](https://github.com/AnthonyMDev) - Improvements to wrap/indent logic
 * [Shingo Takagi](https://github.com/zizi4n5) - Several brace-related bug fixes
 * [Juri Pakaste](https://github.com/juri) - Filelist feature

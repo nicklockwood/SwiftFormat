@@ -342,7 +342,7 @@ To setup SwiftFormat to be used by your continuous integration system using [Dan
 
     ```ruby
     swiftformat.binary_path = "/path/to/swiftformat" # optional
-    swiftformat.additional_args = "--indent tab --self insert" # optional
+    swiftformat.additional_args = "--indent tabs --self insert" # optional
     swiftformat.check_format(fail_on_error: true)
     ```
     

@@ -107,12 +107,12 @@ extension Formatter {
                 return true
             case .endOfScope(")"):
                 guard let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
-                    let index = self.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
+                    last(.nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
                         $0.isAttribute || _FormatRules.aclSpecifiers.contains($0.string)
-                    }) else {
+                    }) != nil else {
                     return false
                 }
-                prevIndex = index
+                prevIndex = startIndex
             case let .keyword(name), let .identifier(name):
                 if !allSpecifiers.contains(name), !name.hasPrefix("@") {
                     return false

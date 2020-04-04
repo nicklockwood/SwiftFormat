@@ -5058,8 +5058,23 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantNilInit)
     }
 
-    func testNoRemoveNilInitWithCustomAttribute() {
+    func testNoRemoveNilInitWithPropertyWrapper() {
         let input = "@Foo var foo: Int? = nil"
+        testFormatting(for: input, rule: FormatRules.redundantNilInit)
+    }
+
+    func testNoRemoveNilInitWithLowercasePropertyWrapper() {
+        let input = "@foo var foo: Int? = nil"
+        testFormatting(for: input, rule: FormatRules.redundantNilInit)
+    }
+
+    func testNoRemoveNilInitWithPropertyWrapperWithArgument() {
+        let input = "@Foo(bar: baz) var foo: Int? = nil"
+        testFormatting(for: input, rule: FormatRules.redundantNilInit)
+    }
+
+    func testNoRemoveNilInitWithLowercasePropertyWrapperWithArgument() {
+        let input = "@foo(bar: baz) var foo: Int? = nil"
         testFormatting(for: input, rule: FormatRules.redundantNilInit)
     }
 

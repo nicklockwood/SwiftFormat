@@ -956,15 +956,15 @@ private struct Examples {
     `--wrapparameters after-first`
 
     ```diff
-    - func foo(bar: Int,
-    -          baz: String) {
+    - func foo(
+    -   bar: Int,
+    -   baz: String
+    - ) {
         ...
       }
 
-    + func foo(
-    +   bar: Int,
-    +   baz: String
-    + ) {
+    + func foo(bar: Int,
+    +          baz: String) {
         ...
       }
     ```

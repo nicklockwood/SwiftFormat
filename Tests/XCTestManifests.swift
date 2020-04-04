@@ -388,6 +388,7 @@ extension ParsingHelpersTests {
         ("testVarDidSetWithExplicitParamBracesNotTreatedAsClosure5", testVarDidSetWithExplicitParamBracesNotTreatedAsClosure5),
         ("testVarFollowedByBracesOnNextLineTreatedAsClosure", testVarFollowedByBracesOnNextLineTreatedAsClosure),
         ("testWhileBracesNotTreatedAsClosure", testWhileBracesNotTreatedAsClosure),
+        ("testWrappedClosureAfterSwitch", testWrappedClosureAfterSwitch),
     ]
 }
 
@@ -767,6 +768,7 @@ extension RulesTests {
         ("testIndentUnknownCaseCorrectlyWhenIndentCaseTrue", testIndentUnknownCaseCorrectlyWhenIndentCaseTrue),
         ("testIndentUnknownDefault", testIndentUnknownDefault),
         ("testIndentUnknownDefaultCorrectlyWhenIndentCaseTrue", testIndentUnknownDefaultCorrectlyWhenIndentCaseTrue),
+        ("testIndentWrappedClosureAfterSwitch", testIndentWrappedClosureAfterSwitch),
         ("testIndentWrappedFunctionArgument", testIndentWrappedFunctionArgument),
         ("testIndentWrappedFunctionClosureArgument", testIndentWrappedFunctionClosureArgument),
         ("testIndentWrappedTrailingComment", testIndentWrappedTrailingComment),

@@ -327,6 +327,8 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isStartOfClosure(at: 21))
     }
 
+    // edge cases
+
     func testMultipleNestedTrailingClosures() {
         let repeatCount = 2
         let formatter = Formatter(tokenize("""
@@ -349,6 +351,20 @@ class ParsingHelpersTests: XCTestCase {
             XCTAssert(formatter.isStartOfClosure(at: 24 + i))
             XCTAssert(formatter.isStartOfClosure(at: 28 + i))
         }
+    }
+
+    func testWrappedClosureAfterSwitch() {
+        let formatter = Formatter(tokenize("""
+        switch foo {
+        default:
+            break
+        }
+        bar
+            .map {
+                // baz
+            }
+        """))
+        XCTAssert(formatter.isStartOfClosure(at: 20))
     }
 
     // MARK: isAccessorKeyword

@@ -2268,6 +2268,20 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentWrappedClosureAfterSwitch() {
+        let input = """
+        switch foo {
+        default:
+            break
+        }
+        bar
+            .map {
+                // baz
+            }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent xcodeindentation
 
     func testChainedFunctionsInPropertySetterOnNewLineWithXcodeIndentation() {

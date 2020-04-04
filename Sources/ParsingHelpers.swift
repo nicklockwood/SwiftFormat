@@ -463,9 +463,9 @@ extension Formatter {
             let index = token.isKeyword ? i : index(of: .keyword, before: i) else {
             return nil
         }
-        if let endBraceIndex = lastIndex(of: .endOfScope("}"), in: index ..< i),
-            let startIndex = self.index(of: .startOfScope("{"), before: endBraceIndex) {
-            if isStartOfClosure(at: startIndex) {
+        if let endBraceIndex = lastIndex(of: .endOfScope("}"), in: index ..< i) {
+            if let startIndex = self.index(of: .startOfScope("{"), before: endBraceIndex),
+                isStartOfClosure(at: startIndex) {
                 return indexOfLastSignificantKeyword(at: startIndex, excluding: excluding)
             } else {
                 return nil

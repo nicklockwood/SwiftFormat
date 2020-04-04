@@ -1549,15 +1549,15 @@ provided for `--wrapparameters`, the value for `--wraparguments` will be used.
 `--wrapparameters after-first`
 
 ```diff
-- func foo(bar: Int,
--          baz: String) {
+- func foo(
+-   bar: Int,
+-   baz: String
+- ) {
     ...
   }
 
-+ func foo(
-+   bar: Int,
-+   baz: String
-+ ) {
++ func foo(bar: Int,
++          baz: String) {
     ...
   }
 ```

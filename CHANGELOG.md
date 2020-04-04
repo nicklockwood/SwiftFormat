@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.44.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.7) (2020-04-04)
+
+- Fixed indenting of wrapped closures after a switch statement
+- Fixed bug with `redundantNilInit` removing `nil` for properties using parameterized property wrappers
+- Fixed `redundantRawValues` rule not removing values for backtick-escaped case names
+- Improved error messages for misnamed rules
+- Documentation improvements
+
 ## [0.44.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.6) (2020-03-21)
 
 - Fixed timeout when formatting files containing multiple trailing closures

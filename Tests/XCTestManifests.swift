@@ -53,6 +53,7 @@ extension ArgumentsTests {
         ("testParseIgnoreFileHeader", testParseIgnoreFileHeader),
         ("testParseInvalidRuleThrows", testParseInvalidRuleThrows),
         ("testParseNoSpaceOperatorsOption", testParseNoSpaceOperatorsOption),
+        ("testParseOptionAsRuleThrows", testParseOptionAsRuleThrows),
         ("testParseQuoteArguments", testParseQuoteArguments),
         ("testParseQuotedEscapedN", testParseQuotedEscapedN),
         ("testParseRulesCaseInsensitive", testParseRulesCaseInsensitive),

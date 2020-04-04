@@ -74,7 +74,11 @@ private func print(_ message: String, as type: CLI.OutputType = .info) {
 
 private func printWarnings(_ errors: [Error]) {
     for error in errors {
-        print("warning: \(error).", as: .warning)
+        var errorMessage = "\(error)"
+        if ![".", "?", "!"].contains(errorMessage.last ?? " ") {
+            errorMessage += "."
+        }
+        print("warning: \(errorMessage)", as: .warning)
     }
 }
 
@@ -624,7 +628,11 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             printWarnings(errors)
         }
         // Fatal error
-        print("error: \(error).", as: .error)
+        var errorMessage = "\(error)"
+        if ![".", "?", "!"].contains(errorMessage.last ?? " ") {
+            errorMessage += "."
+        }
+        print("error: \(errorMessage)", as: .error)
         return .error
     }
 }

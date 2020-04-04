@@ -153,12 +153,22 @@ func parseCommaDelimitedList(_ string: String) -> [String] {
 let allRules = Set(FormatRules.byName.keys)
 func parseRules(_ rules: String) throws -> [String] {
     return try parseCommaDelimitedList(rules).map { proposedName in
-        guard let name = allRules.first(where: {
+        if let name = allRules.first(where: {
             $0.lowercased() == proposedName.lowercased()
-        }) else {
-            throw FormatError.options("Unknown rule '\(proposedName)'")
+        }) {
+            return name
         }
-        return name
+        if FormatOptions.Descriptor.all.contains(where: {
+            $0.argumentName == proposedName
+        }) {
+            for rule in FormatRules.all where rule.options.contains(proposedName) {
+                throw FormatError.options(
+                    "'\(proposedName)' is not a formatting rule. Did you mean '\(rule.name)'?"
+                )
+            }
+            throw FormatError.options("'\(proposedName)' is not a formatting rule")
+        }
+        throw FormatError.options("Unknown rule '\(proposedName)'")
     }
 }
 

@@ -566,6 +566,14 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testParseInvalidRuleThrows() {
-        XCTAssertThrowsError(try parseRules("strongOutlet"))
+        XCTAssertThrowsError(try parseRules("strongOutlet")) { error in
+            XCTAssertEqual("\(error)", "Unknown rule 'strongOutlet'")
+        }
+    }
+
+    func testParseOptionAsRuleThrows() {
+        XCTAssertThrowsError(try parseRules("importgrouping")) { error in
+            XCTAssert("\(error)".contains("'sortedImports'"))
+        }
     }
 }

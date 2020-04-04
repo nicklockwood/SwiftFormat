@@ -930,6 +930,7 @@ private struct Examples {
     let wrapArguments = """
     **NOTE:** For backwards compatibility with previous versions, if no value is
     provided for `--wrapparameters`, the value for `--wraparguments` will be used.
+
     `--wraparguments before-first`
 
     ```diff

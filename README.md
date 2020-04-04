@@ -342,7 +342,7 @@ To setup SwiftFormat to be used by your continuous integration system using [Dan
 
     ```ruby
     swiftformat.binary_path = "/path/to/swiftformat" # optional
-    swiftformat.additional_args = "--indent tabs --self insert" # optional
+    swiftformat.additional_args = "--indent tab --self insert" # optional
     swiftformat.check_format(fail_on_error: true)
     ```
     
@@ -456,7 +456,7 @@ A SwiftFormat configuration file consists of one or more command-line options, s
 
 ```
 --allman true
---indent tabs
+--indent tab
 --disable elseOnSameLine,semicolons
 ```
 
@@ -477,7 +477,7 @@ The config file format is designed to be edited by hand. You may include blank l
 ```
 # format options
 --allman true
---indent tabs # tabs FTW!
+--indent tab # tabs FTW!
 
 # file options
 --exclude Pods

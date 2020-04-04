@@ -152,11 +152,14 @@ func parseCommaDelimitedList(_ string: String) -> [String] {
 // Parse a comma-delimited string into an array of rules
 let allRules = Set(FormatRules.byName.keys)
 func parseRules(_ rules: String) throws -> [String] {
-    let rules = parseCommaDelimitedList(rules)
-    try rules.first(where: { !allRules.contains($0) }).map {
-        throw FormatError.options("Unknown rule '\($0)'")
+    return try parseCommaDelimitedList(rules).map { proposedName in
+        guard let name = allRules.first(where: {
+            $0.lowercased() == proposedName.lowercased()
+        }) else {
+            throw FormatError.options("Unknown rule '\(proposedName)'")
+        }
+        return name
     }
-    return rules
 }
 
 // Parse single file path

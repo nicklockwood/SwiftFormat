@@ -480,7 +480,7 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(selfRequired, ["assert", "expect", "log"])
     }
 
-    // MARK: Add arguments
+    // MARK: add arguments
 
     func testAddFormatArguments() throws {
         var options = Options(
@@ -527,7 +527,7 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(formatOptions.fileInfo, fileInfo)
     }
 
-    // MARK: Options parsing
+    // MARK: options parsing
 
     func testParseEmptyOptions() throws {
         let options = try Options([:], in: "")
@@ -556,5 +556,16 @@ class ArgumentsTests: XCTestCase {
     func testParseNoSpaceOperatorsOption() throws {
         let options = try Options(["nospaceoperators": "...,..<"], in: "")
         XCTAssertEqual(options.formatOptions?.noSpaceOperators, ["...", "..<"])
+    }
+
+    // MARK: parse rules
+
+    func testParseRulesCaseInsensitive() throws {
+        let rules = try parseRules("strongoutlets")
+        XCTAssertEqual(rules, ["strongOutlets"])
+    }
+
+    func testParseInvalidRuleThrows() {
+        XCTAssertThrowsError(try parseRules("strongOutlet"))
     }
 }

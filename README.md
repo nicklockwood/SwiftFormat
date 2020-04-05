@@ -36,7 +36,7 @@ Table of Contents
 What is this?
 ----------------
 
-SwiftFormat is a code library and command-line tool for reformatting swift code on macOS or Linux.
+SwiftFormat is a code library and command-line tool for reformatting Swift code on macOS or Linux.
 
 SwiftFormat goes above and beyond what you might expect from a code formatter. In addition to adjusting white space it can insert or remove implicit `self`, remove redundant parentheses, and correct many other deviations from the standard Swift idioms.
 
@@ -517,13 +517,13 @@ Examples:
 
 * `foo.swift` - Matches the file "foo.swift" in the same directory as the config file.
 
-* `*.swift` - Matches any swift file in the same directory as the config file.
+* `*.swift` - Matches any Swift file in the same directory as the config file.
 
 * `foo/bar.swift` - Matches the file "bar.swift" in the directory "foo".
 
 * `**/foo.swift` - Matches any file named "foo.swift" in the project.
 
-* `**/*.swift` - Matches any swift file in the project.
+* `**/*.swift` - Matches any Swift file in the project.
 
 * `**/Generated` - Matches any folder called `Generated` in the project.
 

@@ -4513,6 +4513,21 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantParens)
     }
 
+    func testClosureArgsContainingSelfNotUnwrapped() {
+        let input = "{ (self) in self }"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testClosureArgsContainingSelfNotUnwrapped2() {
+        let input = "{ (foo, self) in foo(self) }"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testClosureArgsContainingSelfNotUnwrapped3() {
+        let input = "{ (self, foo) in foo(self) }"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
     // before trailing closure
 
     func testParensRemovedBeforeTrailingClosure() {

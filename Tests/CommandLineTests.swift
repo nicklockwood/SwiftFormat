@@ -228,6 +228,7 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, _ in
             Swift.print(message)
         }
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --symlinks follow --lint --cache ignore"), .ok)
+        // NOTE: to update regression suite, run again without `--lint` argument
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --symlinks follow --cache ignore --lint"), .ok)
     }
 }

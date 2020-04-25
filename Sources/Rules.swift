@@ -2840,9 +2840,11 @@ public struct _FormatRules {
                     formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
                 let nextToken = formatter.tokens[nextIndex]
                 switch nextToken {
-                case let .identifier(name) where name != "_":
-                    argNames.append(nextToken.unescaped())
-                    nameIndexPairs.append((externalNameIndex, nextIndex))
+                case let .identifier(name):
+                    if name != "_" {
+                        argNames.append(nextToken.unescaped())
+                        nameIndexPairs.append((externalNameIndex, nextIndex))
+                    }
                 case .delimiter(":"):
                     let externalNameToken = formatter.tokens[externalNameIndex]
                     if case let .identifier(name) = externalNameToken, name != "_" {

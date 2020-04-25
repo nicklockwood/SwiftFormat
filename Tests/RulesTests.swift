@@ -7339,6 +7339,18 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testPartiallyMarkedUnusedArguments() {
+        let input = "func foo(bar: Bar, baz _: Baz) {}"
+        let output = "func foo(bar _: Bar, baz _: Baz) {}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testPartiallyMarkedUnusedArguments2() {
+        let input = "func foo(bar _: Bar, baz: Baz) {}"
+        let output = "func foo(bar _: Bar, baz _: Baz) {}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

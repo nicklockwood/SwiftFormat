@@ -1259,6 +1259,8 @@ extension RulesTests {
         ("testParensRemovedBeforeTrailingClosure3", testParensRemovedBeforeTrailingClosure3),
         ("testParensRemovedBeforeTrailingClosureInsideHashIf", testParensRemovedBeforeTrailingClosureInsideHashIf),
         ("testParensRemovedOnLineAfterSelectorIdentifier", testParensRemovedOnLineAfterSelectorIdentifier),
+        ("testPartiallyMarkedUnusedArguments", testPartiallyMarkedUnusedArguments),
+        ("testPartiallyMarkedUnusedArguments2", testPartiallyMarkedUnusedArguments2),
         ("testPerformBatchUpdatesNotMadeTrailing", testPerformBatchUpdatesNotMadeTrailing),
         ("testPInExponentialNotConvertedToLower", testPInExponentialNotConvertedToLower),
         ("testPInExponentialNotConvertedToUpper", testPInExponentialNotConvertedToUpper),

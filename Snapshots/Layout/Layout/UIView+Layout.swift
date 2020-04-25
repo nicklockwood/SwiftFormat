@@ -334,7 +334,7 @@ extension UIView: LayoutManaged {
 
     /// Called immediately before a child node is added
     /// Returning false will cancel insertion of the node
-    @objc open func shouldInsertChildNode(_ node: LayoutNode, at _: Int) -> Bool {
+    @objc open func shouldInsertChildNode(_: LayoutNode, at _: Int) -> Bool {
         return true
     }
 

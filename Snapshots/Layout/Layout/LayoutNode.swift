@@ -278,7 +278,7 @@ public class LayoutNode: NSObject {
     public override func observeValue(
         forKeyPath _: String?,
         of _: Any?,
-        change: [NSKeyValueChangeKey: Any]?,
+        change _: [NSKeyValueChangeKey: Any]?,
         context _: UnsafeMutableRawPointer?
     ) {
         guard _setupComplete, _updateLock == 0, _evaluating.isEmpty,

@@ -185,7 +185,7 @@ class XMLParser: NSObject, XMLParserDelegate {
         top = node
     }
 
-    func parser(_: Foundation.XMLParser, didEndElement elementName: String, namespaceURI _: String?, qualifiedName _: String?) {
+    func parser(_: Foundation.XMLParser, didEndElement _: String, namespaceURI _: String?, qualifiedName _: String?) {
         if !top!.isHTML {
             if top!.children.isEmpty {
                 text = text.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -1928,6 +1928,7 @@ extension TokenizerTests {
         ("testHexadecimalPower", testHexadecimalPower),
         ("testHexPropertyAccess", testHexPropertyAccess),
         ("testIfLessThanIfGreaterThan", testIfLessThanIfGreaterThan),
+        ("testIndentedNestedMultilineComment", testIndentedNestedMultilineComment),
         ("testIndentedSimpleMultilineString", testIndentedSimpleMultilineString),
         ("testInfixEqualsDoubleChevronGenericFunction", testInfixEqualsDoubleChevronGenericFunction),
         ("testInfixEqualsDoubleChevronOperator", testInfixEqualsDoubleChevronOperator),

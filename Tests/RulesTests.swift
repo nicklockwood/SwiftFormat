@@ -2417,9 +2417,17 @@ class RulesTests: XCTestCase {
     }
 
     func testNestedCommentIndenting() {
-        let input = "/* foo\n/*\nbar\n*/\n*/"
-        let output = "/* foo\n /*\n  bar\n  */\n */"
-        testFormatting(for: input, output, rule: FormatRules.indent)
+        let input = """
+        /*
+         class foo() {
+             /*
+              * Nested comment
+              */
+             bar {}
+         }
+         */
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
     }
 
     func testCommentedCodeBlocksNotIndented() {

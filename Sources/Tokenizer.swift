@@ -1224,15 +1224,22 @@ public func tokenize(_ source: String) -> [Token] {
                     }
                 }
                 for index in (scopeIndexStack.last! ..< tokens.count - 1).reversed() {
-                    if case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak,
-                        tokens.count > index, case let .commentBody(body) = tokens[index + 1],
-                        indent.hasPrefix(baseIndent) {
+                    guard case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak,
+                        tokens.count > index, indent.hasPrefix(baseIndent) else {
+                        continue
+                    }
+                    switch tokens[index + 1] {
+                    case let .commentBody(body):
                         tokens[index + 1] = .commentBody(indent.dropFirst(baseIndent.count) + body)
-                        if baseIndent.isEmpty {
-                            tokens.remove(at: index)
-                        } else {
-                            tokens[index] = .space(baseIndent)
-                        }
+                    case .startOfScope("/*"), .endOfScope("*/"):
+                        tokens.insert(.commentBody(String(indent.dropFirst(baseIndent.count))), at: index + 1)
+                    default:
+                        continue
+                    }
+                    if baseIndent.isEmpty {
+                        tokens.remove(at: index)
+                    } else {
+                        tokens[index] = .space(baseIndent)
                     }
                 }
                 tokens.append(.endOfScope("*/"))

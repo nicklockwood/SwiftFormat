@@ -551,6 +551,9 @@ public struct _FormatRules {
                 }
             }
             if let prevToken = formatter.token(at: startIndex - 1), !prevToken.isSpaceOrLinebreak {
+                if case let .commentBody(text) = prevToken, text.last?.unicodeScalars.last?.isSpace == true {
+                    return
+                }
                 formatter.insertToken(.space(" "), at: startIndex)
             }
         }
@@ -987,8 +990,10 @@ public struct _FormatRules {
 
                 switch string {
                 case "/*":
-                    // Comments only indent one space
-                    indent += " "
+                    if scopeStack.count < 2 || scopeStack[scopeStack.count - 2] != .startOfScope("/*") {
+                        // Comments only indent one space
+                        indent += " "
+                    }
                 case ":":
                     indent += formatter.options.indent
                     if formatter.options.indentCase,

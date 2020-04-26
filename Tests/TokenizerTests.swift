@@ -351,6 +351,119 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testMultilineStringWithMultilineInterpolation() {
+        let input = """
+        \"""
+        \\(
+            6
+        )
+        \"""
+        """
+        let output: [Token] = [
+            .startOfScope("\"\"\""),
+            .linebreak("\n", 1),
+            .stringBody("\\"),
+            .startOfScope("("),
+            .linebreak("\n", 2),
+            .space("    "),
+            .number("6", .integer),
+            .linebreak("\n", 3),
+            .endOfScope(")"),
+            .linebreak("\n", 4),
+            .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testIndentMultilineStringWithMultilineNestedInterpolation() {
+        let input = """
+        \"""
+            foo
+                \\(bar {
+                    \"""
+                        baz
+                    \"""
+                })
+            quux
+        \"""
+        """
+        let output: [Token] = [
+            .startOfScope("\"\"\""),
+            .linebreak("\n", 1),
+            .stringBody("    foo"),
+            .linebreak("\n", 2),
+            .stringBody("        \\"),
+            .startOfScope("("),
+            .identifier("bar"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n", 3),
+            .space("            "),
+            .startOfScope("\"\"\""),
+            .linebreak("\n", 4),
+            .space("            "),
+            .stringBody("    baz"),
+            .linebreak("\n", 5),
+            .space("            "),
+            .endOfScope("\"\"\""),
+            .linebreak("\n", 6),
+            .space("        "),
+            .endOfScope("}"),
+            .endOfScope(")"),
+            .linebreak("\n", 7),
+            .stringBody("    quux"),
+            .linebreak("\n", 8),
+            .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testIndentMultilineStringWithMultilineNestedInterpolation2() {
+        let input = """
+        \"""
+            foo
+                \\(bar {
+                    \"""
+                        baz
+                    \"""
+                    }
+                )
+            quux
+        \"""
+        """
+        let output: [Token] = [
+            .startOfScope("\"\"\""),
+            .linebreak("\n", 1),
+            .stringBody("    foo"),
+            .linebreak("\n", 2),
+            .stringBody("        \\"),
+            .startOfScope("("),
+            .identifier("bar"),
+            .space(" "),
+            .startOfScope("{"),
+            .linebreak("\n", 3),
+            .space("            "),
+            .startOfScope("\"\"\""),
+            .linebreak("\n", 4),
+            .space("            "),
+            .stringBody("    baz"),
+            .linebreak("\n", 5),
+            .space("            "),
+            .endOfScope("\"\"\""),
+            .linebreak("\n", 6),
+            .space("            "),
+            .endOfScope("}"),
+            .linebreak("\n", 7),
+            .space("        "),
+            .endOfScope(")"),
+            .linebreak("\n", 8),
+            .stringBody("    quux"),
+            .linebreak("\n", 9),
+            .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testMultilineStringWithEscapedTripleQuote() {
         let input = "\"\"\"\n\\\"\"\"\n\"\"\""
         let output: [Token] = [

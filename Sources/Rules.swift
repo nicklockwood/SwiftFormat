@@ -1020,25 +1020,36 @@ public struct _FormatRules {
                         i += formatter.insertSpace("", at: formatter.startOfLine(at: i))
                     }
                 case "[", "(":
-                    if let linebreakIndex = formatter.index(of: .linebreak, after: i),
+                    guard let linebreakIndex = formatter.index(of: .linebreak, after: i),
                         let nextIndex = formatter.index(of: .nonSpace, after: i),
-                        nextIndex != linebreakIndex {
-                        if formatter.last(.nonSpaceOrComment, before: linebreakIndex) != .delimiter(","),
-                            formatter.next(.nonSpaceOrComment, after: linebreakIndex) != .delimiter(",") {
-                            fallthrough
-                        }
-                        let start = formatter.startOfLine(at: i)
-                        // Align indent with previous value
-                        indentCount = 1
-                        indent = ""
-                        indent += formatter.spaceEquivalentToTokens(from: start, upTo: nextIndex)
-                        break
+                        nextIndex != linebreakIndex else {
+                        fallthrough
                     }
-                    fallthrough
+                    if formatter.last(.nonSpaceOrComment, before: linebreakIndex) != .delimiter(","),
+                        formatter.next(.nonSpaceOrComment, after: linebreakIndex) != .delimiter(",") {
+                        fallthrough
+                    }
+                    let start = formatter.startOfLine(at: i)
+                    // Align indent with previous value
+                    indentCount = 1
+                    indent = ""
+                    indent += formatter.spaceEquivalentToTokens(from: start, upTo: nextIndex)
                 default:
                     if token.isMultilineStringDelimiter {
                         // Don't indent multiline string literals
                         break
+                    }
+                    let start = formatter.startOfLine(at: i)
+                    if let index = formatter.index(of: .nonSpace, in: start ..< i),
+                        case let .stringBody(string) = formatter.tokens[index],
+                        string.unicodeScalars.first?.isSpace == true {
+                        var space = ""
+                        var index = string.startIndex
+                        while index < string.endIndex, string[index].unicodeScalars.first!.isSpace {
+                            space.append(string[index])
+                            index = string.index(after: index)
+                        }
+                        indent += space
                     }
                     indent += formatter.options.indent
                 }

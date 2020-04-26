@@ -405,6 +405,15 @@ public enum Token: Equatable {
         }
     }
 
+    public var isStringBody: Bool {
+        switch self {
+        case .stringBody:
+            return true
+        default:
+            return false
+        }
+    }
+
     public var isStringDelimiter: Bool {
         switch self {
         case let .startOfScope(string), let .endOfScope(string):
@@ -1111,28 +1120,39 @@ public func tokenize(_ source: String) -> [Token] {
                 if !string.isEmpty {
                     tokens.append(.error(string)) // Not permitted by the spec
                 }
-                var offset = ""
-                if case let .space(_offset) = tokens.last! {
-                    offset = _offset
+                var offsetStack = [""]
+                if case let .space(offset) = tokens.last! {
+                    offsetStack[0] = offset
                 }
                 // Fix up indents
                 for index in (scopeIndexStack.last! ..< tokens.count - 1).reversed() {
-                    if case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak {
-                        guard offset.isEmpty || indent.hasPrefix(offset) else {
-                            tokens[index] = .error(indent) // Mismatched whitespace
-                            break
+                    let nextToken = tokens[index + 1]
+                    guard case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak,
+                        (nextToken.isMultilineStringDelimiter && nextToken.isEndOfScope) ||
+                        nextToken.isStringBody else {
+                        if nextToken.isMultilineStringDelimiter, nextToken.isStartOfScope {
+                            offsetStack.removeLast()
                         }
-                        let remainder: String = String(indent[offset.endIndex ..< indent.endIndex])
-                        if case let .stringBody(body) = tokens[index + 1] {
-                            tokens[index + 1] = .stringBody(remainder + body)
-                        } else {
-                            tokens.insert(.stringBody(remainder), at: index + 1)
-                        }
-                        if offset.isEmpty {
-                            tokens.remove(at: index)
-                        } else {
-                            tokens[index] = .space(offset)
-                        }
+                        continue
+                    }
+                    if nextToken.isMultilineStringDelimiter, nextToken.isEndOfScope {
+                        offsetStack.append(indent)
+                    }
+                    let offset = offsetStack.last ?? ""
+                    guard offset.isEmpty || indent.hasPrefix(offset) else {
+                        tokens[index] = .error(indent) // Mismatched whitespace
+                        break
+                    }
+                    let remainder: String = String(indent[offset.endIndex ..< indent.endIndex])
+                    if case let .stringBody(body) = nextToken {
+                        tokens[index + 1] = .stringBody(remainder + body)
+                    } else if !remainder.isEmpty {
+                        tokens.insert(.stringBody(remainder), at: index + 1)
+                    }
+                    if offset.isEmpty {
+                        tokens.remove(at: index)
+                    } else {
+                        tokens[index] = .space(offset)
                     }
                 }
                 tokens.append(.endOfScope("\"\"\"" + hashes))

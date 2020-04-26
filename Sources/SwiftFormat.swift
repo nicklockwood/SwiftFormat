@@ -492,6 +492,11 @@ private func applyRules(
     precondition(maxIterations > 1)
     var tokens = originalTokens
 
+    // Ensure rule names have been set
+    if rules.first?.name == "" {
+        _ = FormatRules.all
+    }
+
     // Check for parsing errors
     if let error = parsingError(for: tokens, options: options) {
         throw error

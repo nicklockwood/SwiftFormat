@@ -1660,6 +1660,7 @@ extension RulesTests {
         ("testTreatEscapedArgumentsAsUsed", testTreatEscapedArgumentsAsUsed),
         ("testTrueNotEqualYodaCondition", testTrueNotEqualYodaCondition),
         ("testTruncateBlankLine", testTruncateBlankLine),
+        ("testTruncateBlankLineBeforeIndenting", testTruncateBlankLineBeforeIndenting),
         ("testTupleYodaCondition", testTupleYodaCondition),
         ("testTypealiasVoidNotConverted", testTypealiasVoidNotConverted),
         ("testTypedClosureArgumentNotUnwrapped", testTypedClosureArgumentNotUnwrapped),

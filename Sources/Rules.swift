@@ -70,6 +70,9 @@ public final class FormatRule: Equatable, Comparable {
     }
 
     public static func < (lhs: FormatRule, rhs: FormatRule) -> Bool {
+        if lhs.orderAfter.contains(rhs.name) {
+            return false
+        }
         return rhs.orderAfter.contains(lhs.name) || lhs.name < rhs.name
     }
 
@@ -887,7 +890,7 @@ public struct _FormatRules {
     /// indenting can be configured with the `options` parameter of the formatter.
     public let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
-        orderAfter: ["wrap", "wrapArguments"],
+        orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
         options: ["indent", "tabwidth", "indentcase", "ifdef", "xcodeindentation"],
         sharedOptions: ["trimwhitespace"]
     ) { formatter in

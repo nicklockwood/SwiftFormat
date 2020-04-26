@@ -3030,6 +3030,24 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    // indent blank lines
+
+    func testTruncateBlankLineBeforeIndenting() {
+        // NOTE: don't convert to multiline string
+        let input =
+            "func foo() {\n" +
+            "    guard bar = baz else { return }\n" +
+            "    \n" + // should not be indented
+            "    quux()\n" +
+            "}"
+
+        let rules = [FormatRules.indent, FormatRules.trailingSpace]
+        let options = FormatOptions(truncateBlankLines: true)
+        XCTAssertEqual(try lint(input, rules: rules, options: options), [
+            Formatter.Change(line: 3, rule: FormatRules.trailingSpace, filePath: nil),
+        ])
+    }
+
     // MARK: - braces
 
     func testAllmanBracesAreConverted() {

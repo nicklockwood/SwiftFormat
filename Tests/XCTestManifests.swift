@@ -764,6 +764,7 @@ extension RulesTests {
         ("testIndentMultilineStringInNestedCalls", testIndentMultilineStringInNestedCalls),
         ("testIndentMultilineStringWithMultilineInterpolation", testIndentMultilineStringWithMultilineInterpolation),
         ("testIndentMultilineStringWithMultilineNestedInterpolation", testIndentMultilineStringWithMultilineNestedInterpolation),
+        ("testIndentMultilineStringWithMultilineNestedInterpolation2", testIndentMultilineStringWithMultilineNestedInterpolation2),
         ("testIndentMultilineStringWrappedAfter", testIndentMultilineStringWrappedAfter),
         ("testIndentMultilineSwitchCaseCommentsCorrectly", testIndentMultilineSwitchCaseCommentsCorrectly),
         ("testIndentMultilineSwitchCaseCommentsWithIndentCaseTrue", testIndentMultilineSwitchCaseCommentsWithIndentCaseTrue),

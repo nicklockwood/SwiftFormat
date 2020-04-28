@@ -2549,6 +2549,24 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentMultilineStringWithMultilineNestedInterpolation2() {
+        let input = """
+        func foo() {
+            \"""
+                bar
+                    \\(bar.map {
+                        \"""
+                            quux
+                        \"""
+                    }
+                    )
+                quux
+            \"""
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent multiline raw strings
 
     func testIndentIndentedSimpleRawMultilineString() {

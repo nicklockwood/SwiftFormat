@@ -902,6 +902,7 @@ public struct _FormatRules {
         var lastNonSpaceOrLinebreakIndex = -1
         var lastNonSpaceIndex = -1
         var indentStack = [""]
+        var stringBodyIndentStack = [""]
         var indentCounts = [1]
         var linewrapStack = [false]
         var lineIndex = 0
@@ -949,12 +950,29 @@ public struct _FormatRules {
             func popScope() {
                 if linewrapStack.last == true {
                     indentStack.removeLast()
+                    stringBodyIndentStack.removeLast()
                 }
                 indentStack.removeLast()
+                stringBodyIndentStack.removeLast()
                 indentCounts.removeLast()
                 linewrapStack.removeLast()
                 scopeStartLineIndexes.removeLast()
                 scopeStack.removeLast()
+            }
+
+            func stringBodyIndent(at i: Int) -> String {
+                var space = ""
+                let start = formatter.startOfLine(at: i)
+                if let index = formatter.index(of: .nonSpace, in: start ..< i),
+                    case let .stringBody(string) = formatter.tokens[index],
+                    string.unicodeScalars.first?.isSpace == true {
+                    var index = string.startIndex
+                    while index < string.endIndex, string[index].unicodeScalars.first!.isSpace {
+                        space.append(string[index])
+                        index = string.index(after: index)
+                    }
+                }
+                return space
             }
 
             var i = i
@@ -1032,28 +1050,18 @@ public struct _FormatRules {
                     let start = formatter.startOfLine(at: i)
                     // Align indent with previous value
                     indentCount = 1
-                    indent = ""
-                    indent += formatter.spaceEquivalentToTokens(from: start, upTo: nextIndex)
+                    indent = formatter.spaceEquivalentToTokens(from: start, upTo: nextIndex)
                 default:
                     if token.isMultilineStringDelimiter {
                         // Don't indent multiline string literals
                         break
                     }
-                    let start = formatter.startOfLine(at: i)
-                    if let index = formatter.index(of: .nonSpace, in: start ..< i),
-                        case let .stringBody(string) = formatter.tokens[index],
-                        string.unicodeScalars.first?.isSpace == true {
-                        var space = ""
-                        var index = string.startIndex
-                        while index < string.endIndex, string[index].unicodeScalars.first!.isSpace {
-                            space.append(string[index])
-                            index = string.index(after: index)
-                        }
-                        indent += space
-                    }
-                    indent += formatter.options.indent
+                    let stringIndent = stringBodyIndent(at: i)
+                    stringBodyIndentStack[stringBodyIndentStack.count - 1] = stringIndent
+                    indent += stringIndent + formatter.options.indent
                 }
                 indentStack.append(indent)
+                stringBodyIndentStack.append("")
                 indentCounts.append(indentCount)
                 scopeStartLineIndexes.append(lineIndex)
                 linewrapStack.append(false)
@@ -1102,6 +1110,8 @@ public struct _FormatRules {
                     if indentCount > 0 {
                         indentStack.removeLast()
                         indentStack.append(indentStack.last ?? "")
+                        stringBodyIndentStack.removeLast()
+                        stringBodyIndentStack.append(stringBodyIndentStack.last ?? "")
                     }
                     // Check if line on which scope ends should be unindented
                     let start = formatter.startOfLine(at: i)
@@ -1128,7 +1138,8 @@ public struct _FormatRules {
                             formatter.options.indentCase, scopeStack.last != .startOfScope("#if") {
                             indent += formatter.options.indent
                         }
-                        i += formatter.insertSpace(indent, at: start)
+                        let stringIndent = stringBodyIndentStack.last!
+                        i += formatter.insertSpace(stringIndent + indent, at: start)
                     }
                 } else if token == .endOfScope("#endif"), indentStack.count > 1 {
                     var indent = indentStack[indentStack.count - 2]
@@ -1164,6 +1175,7 @@ public struct _FormatRules {
                     indent += formatter.spaceEquivalentToWidth(5)
                 }
                 indentStack.append(indent)
+                stringBodyIndentStack.append("")
                 indentCounts.append(1)
                 scopeStartLineIndexes.append(lineIndex)
                 linewrapStack.append(false)
@@ -1270,6 +1282,7 @@ public struct _FormatRules {
                         indent += formatter.options.indent
                     }
                     indentStack.append(indent)
+                    stringBodyIndentStack.append("")
                 }
                 guard var nextNonSpaceIndex = formatter.index(of: .nonSpace, after: i),
                     // Avoid indenting commented code

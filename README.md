@@ -314,19 +314,18 @@ Git pre-commit hook
 
 1. Follow the instructions for installing the SwiftFormat command-line tool.
 
-2. Edit or create a `.git/hooks/pre-commit` file in your project folder. The .git folder is hidden but should already exist if you are using Git with your project, so open it with the terminal, or the Finder's `Go > Go to Folder...` menu.
+2. Install [git-format-staged](https://github.com/hallettj/git-format-staged).
 
-3. Add the following line in the pre-commit file (unlike the Xcode build phase approach, this uses your locally installed version of SwiftFormat, not a separate copy in your project repository)
+3. Edit or create a `.git/hooks/pre-commit` file in your project folder. The .git folder is hidden but should already exist if you are using Git with your project, so open it with the terminal, or the Finder's `Go > Go to Folder...` menu.
+
+4. Add the following line in the pre-commit file (unlike the Xcode build phase approach, this uses your locally installed version of SwiftFormat, not a separate copy in your project repository)
 
     ```bash
     #!/bin/bash
-    git diff --diff-filter=d --staged --name-only | grep -e '\.swift$' | while read line; do
-      swiftformat "${line}";
-      git add "$line";
-    done
+    git-format-staged --formatter "swiftformat --config .swiftformat stdin" "*.swift"
     ```
 
-4. enable the hook by typing `chmod +x .git/hooks/pre-commit` in the terminal
+5. enable the hook by typing `chmod +x .git/hooks/pre-commit` in the terminal
  
 The pre-commit hook will now run whenever you run `git commit`. Running `git commit --no-verify` will skip the pre-commit hook.
 

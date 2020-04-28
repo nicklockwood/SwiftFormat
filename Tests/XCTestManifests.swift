@@ -391,6 +391,7 @@ extension ParsingHelpersTests {
         ("testVarDidSetWithExplicitParamBracesNotTreatedAsClosure5", testVarDidSetWithExplicitParamBracesNotTreatedAsClosure5),
         ("testVarFollowedByBracesOnNextLineTreatedAsClosure", testVarFollowedByBracesOnNextLineTreatedAsClosure),
         ("testWhileBracesNotTreatedAsClosure", testWhileBracesNotTreatedAsClosure),
+        ("testWrappedClosureAfterAnIfStatement", testWrappedClosureAfterAnIfStatement),
         ("testWrappedClosureAfterSwitch", testWrappedClosureAfterSwitch),
     ]
 }

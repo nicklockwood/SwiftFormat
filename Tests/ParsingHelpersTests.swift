@@ -353,6 +353,15 @@ class ParsingHelpersTests: XCTestCase {
         }
     }
 
+    func testWrappedClosureAfterAnIfStatement() {
+        let formatter = Formatter(tokenize("""
+        if foo {}
+        bar
+            .baz {}
+        """))
+        XCTAssert(formatter.isStartOfClosure(at: 13))
+    }
+
     func testWrappedClosureAfterSwitch() {
         let formatter = Formatter(tokenize("""
         switch foo {

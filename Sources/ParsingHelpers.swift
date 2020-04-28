@@ -422,23 +422,40 @@ extension Formatter {
     }
 
     func isConditionalStatement(at i: Int) -> Bool {
+        return startOfConditionalStatement(at: i) != nil
+    }
+
+    func startOfConditionalStatement(at i: Int) -> Int? {
         guard let index = indexOfLastSignificantKeyword(at: i) else {
-            return false
+            return nil
         }
-        switch tokens[index].string {
-        case "let", "var":
-            switch last(.nonSpaceOrCommentOrLinebreak, before: index) {
-            case .delimiter(",")?:
-                return true
-            case let .keyword(name)?:
-                return ["if", "guard", "while", "for", "case", "catch"].contains(name)
-            default:
+
+        func isAfterBrace(_ index: Int) -> Bool {
+            guard let braceIndex = lastIndex(of: .endOfScope("}"), in: index + 1 ..< i) else {
                 return false
             }
+            return self.index(of: .linebreak, in: braceIndex + 1 ..< i) != nil
+        }
+
+        switch tokens[index].string {
+        case "let", "var":
+            guard let prevIndex = self
+                .index(of: .nonSpaceOrCommentOrLinebreak, before: index) else {
+                return nil
+            }
+            switch tokens[prevIndex] {
+            case .delimiter(","):
+                return prevIndex
+            case let .keyword(name) where
+                ["if", "guard", "while", "for", "case", "catch"].contains(name):
+                return isAfterBrace(prevIndex) ? nil : prevIndex
+            default:
+                return nil
+            }
         case "if", "guard", "while", "for", "case", "where", "switch":
-            return true
+            return isAfterBrace(index) ? nil : index
         default:
-            return false
+            return nil
         }
     }
 
@@ -447,30 +464,18 @@ extension Formatter {
     }
 
     func indexOfLastSignificantKeyword(at i: Int, excluding: [String] = []) -> Int? {
-        guard i > 0 else {
-            return calculateIndexOfLastSignificantKeyword(at: i, excluding: excluding)
-        }
-        if cacheIndexOfLastSignificantKeywords[i] != -1 {
-            return cacheIndexOfLastSignificantKeywords[i]
-        }
-        let index = calculateIndexOfLastSignificantKeyword(at: i, excluding: excluding)
-        cacheIndexOfLastSignificantKeywords[i] = index
-        return index
-    }
-
-    private func calculateIndexOfLastSignificantKeyword(at i: Int, excluding: [String] = []) -> Int? {
         guard let token = token(at: i),
             let index = token.isKeyword ? i : index(of: .keyword, before: i) else {
             return nil
         }
-        if let endBraceIndex = lastIndex(of: .endOfScope("}"), in: index ..< i) {
-            if let startIndex = self.index(of: .startOfScope("{"), before: endBraceIndex),
-                isStartOfClosure(at: startIndex) {
-                return indexOfLastSignificantKeyword(at: startIndex, excluding: excluding)
-            } else {
-                return nil
-            }
-        }
+//        if let endBraceIndex = lastIndex(of: .endOfScope("}"), in: index ..< i) {
+//            if let startIndex = self.index(of: .startOfScope("{"), before: endBraceIndex),
+//                isStartOfClosure(at: startIndex) {
+//                return calculateIndexOfLastSignificantKeyword(at: startIndex - 1, excluding: excluding)
+//            } else {
+//                return nil
+//            }
+//        }
         switch tokens[index].string {
         case let name where
             name.hasPrefix("#") || name.hasPrefix("@") || excluding.contains(name):

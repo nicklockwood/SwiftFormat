@@ -1234,25 +1234,32 @@ public func tokenize(_ source: String) -> [Token] {
                 continue
             case "*" where characters.read("/"):
                 flushCommentBodyTokens()
+                tokens.append(.endOfScope("*/"))
                 // Fix up indents
                 var baseIndent = ""
-                for index in scopeIndexStack.last! ..< tokens.count - 1 {
-                    if case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak,
-                        tokens.count > index, case .commentBody = tokens[index + 1],
+                let range = scopeIndexStack.last! + 1 ..< tokens.count - 1
+                for index in range where tokens[index - 1].isLinebreak {
+                    if case let .space(indent) = tokens[index], case .commentBody = tokens[index + 1],
                         baseIndent.isEmpty || indent.count < baseIndent.count {
                         baseIndent = indent
+                    } else if case .commentBody = tokens[index] {
+                        baseIndent = ""
+                        break
                     }
                 }
-                for index in (scopeIndexStack.last! ..< tokens.count - 1).reversed() {
+                for index in range.reversed() {
                     guard case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak,
-                        tokens.count > index, indent.hasPrefix(baseIndent) else {
+                        indent.hasPrefix(baseIndent) else {
                         continue
                     }
                     switch tokens[index + 1] {
                     case let .commentBody(body):
                         tokens[index + 1] = .commentBody(indent.dropFirst(baseIndent.count) + body)
                     case .startOfScope("/*"), .endOfScope("*/"):
-                        tokens.insert(.commentBody(String(indent.dropFirst(baseIndent.count))), at: index + 1)
+                        if indent.count > baseIndent.count {
+                            tokens.insert(.commentBody(String(indent.dropFirst(baseIndent.count))),
+                                          at: index + 1)
+                        }
                     default:
                         continue
                     }
@@ -1262,7 +1269,6 @@ public func tokenize(_ source: String) -> [Token] {
                         tokens[index] = .space(baseIndent)
                     }
                 }
-                tokens.append(.endOfScope("*/"))
                 scopeIndexStack.removeLast()
                 if scopeIndexStack.last == nil || tokens[scopeIndexStack.last!] != .startOfScope("/*") {
                     return

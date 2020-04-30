@@ -813,6 +813,29 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testPreformattedMultilineComment2() {
+        let input = """
+        /**
+        func foo() {
+            bar()
+        }
+        */
+        """
+        let output: [Token] = [
+            .startOfScope("/*"),
+            .commentBody("*"),
+            .linebreak("\n", 1),
+            .commentBody("func foo() {"),
+            .linebreak("\n", 2),
+            .commentBody("    bar()"),
+            .linebreak("\n", 3),
+            .commentBody("}"),
+            .linebreak("\n", 4),
+            .endOfScope("*/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testIndentedNestedMultilineComment() {
         let input = """
         /*

@@ -45,6 +45,7 @@ class RulesTests: XCTestCase {
                         options: FormatOptions = .default, exclude: [String] = []) {
         precondition(input != outputs.first || input != outputs.last, "Redundant output parameter")
         precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
+        precondition(Set(exclude).intersection(rules.map { $0.name }).isEmpty, "Cannot exclude rule under test")
         let output = outputs.first ?? input, output2 = outputs.last ?? input
         let exclude = exclude + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
         XCTAssertEqual(try format(input, rules: rules, options: options), output)
@@ -8031,8 +8032,10 @@ class RulesTests: XCTestCase {
                 completionHandler: @escaping (URLSession.AuthChallengeDisposition,
                 URLCredential?) -> Void
             ) {
-                authenticationChallengeProcessor
-                    .process(challenge: challenge, completionHandler: completionHandler)
+                authenticationChallengeProcessor.process(
+                    challenge: challenge,
+                    completionHandler: completionHandler
+                )
             }
         }
         """

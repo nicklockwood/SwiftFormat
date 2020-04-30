@@ -1068,7 +1068,7 @@ extension Formatter {
 
                 func wrapArgumentsWithoutPartialWrapping() {
                     switch mode {
-                    case .preserve where isParameters, .beforeFirst:
+                    case .preserve where token.string == "(", .beforeFirst:
                         wrapArgumentsBeforeFirst(startOfScope: i,
                                                  endOfScope: endOfScope,
                                                  allowGrouping: false,
@@ -1083,14 +1083,14 @@ extension Formatter {
                 }
 
                 if currentRule == FormatRules.wrap {
-                    if let nextWrapIndex = indexOfNextWrap(), nextWrapIndex > lastIndex,
+                    let nextWrapIndex = indexOfNextWrap() ?? endOfLine(at: i)
+                    if nextWrapIndex > lastIndex,
                         maxWidth < lineLength(from: max(lastIndex, 0), upTo: nextWrapIndex),
                         !willWrapAtStartOfReturnType(maxWidth: maxWidth) {
                         wrapArgumentsWithoutPartialWrapping()
                         lastIndex = nextWrapIndex
                         return
                     }
-
                 } else if maxWidth < lineLength(upTo: endOfScope) {
                     wrapArgumentsWithoutPartialWrapping()
                 }

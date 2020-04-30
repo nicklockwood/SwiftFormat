@@ -790,7 +790,7 @@ func processInput(_ inputURLs: [URL],
             // Validate options
             let formatOptions = options.formatOptions ?? .default
             if formatOptions.useTabs, formatOptions.tabWidth <= 0 {
-                throw FormatError.options("The --maxwidth option requires --tabwidth to also be set")
+                throw FormatError.options("Indenting with tabs requires --tabwidth to also be set")
             }
             // Check cache
             let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)

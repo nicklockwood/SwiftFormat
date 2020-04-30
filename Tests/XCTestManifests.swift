@@ -887,6 +887,7 @@ extension RulesTests {
         ("testNoConfusePostfixIdentifierWithKeyword", testNoConfusePostfixIdentifierWithKeyword),
         ("testNoConfusePostfixIdentifierWithKeyword2", testNoConfusePostfixIdentifierWithKeyword2),
         ("testNoCrashWrap", testNoCrashWrap),
+        ("testNoCrashWrap2", testNoCrashWrap2),
         ("testNoDecimalGrouping", testNoDecimalGrouping),
         ("testNoDeleteCodeBetweenImports", testNoDeleteCodeBetweenImports),
         ("testNoDeleteCodeBetweenImports2", testNoDeleteCodeBetweenImports2),

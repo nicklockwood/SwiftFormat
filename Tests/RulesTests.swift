@@ -8015,6 +8015,32 @@ class RulesTests: XCTestCase {
                        exclude: ["unusedArguments"])
     }
 
+    func testNoCrashWrap2() {
+        let input = """
+        struct Test {
+            func webView(_: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+                authenticationChallengeProcessor.process(challenge: challenge, completionHandler: completionHandler)
+            }
+        }
+        """
+        let output = """
+        struct Test {
+            func webView(
+                _: WKWebView,
+                didReceive challenge: URLAuthenticationChallenge,
+                completionHandler: @escaping (URLSession.AuthChallengeDisposition,
+                URLCredential?) -> Void
+            ) {
+                authenticationChallengeProcessor
+                    .process(challenge: challenge, completionHandler: completionHandler)
+            }
+        }
+        """
+        let options = FormatOptions(maxWidth: 80)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options,
+                       exclude: ["indent", "wrapArguments"])
+    }
+
     // MARK: - wrapArguments
 
     // MARK: wrapParameters

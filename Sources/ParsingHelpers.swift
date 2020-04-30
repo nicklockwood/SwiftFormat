@@ -1083,7 +1083,7 @@ extension Formatter {
                 }
 
                 if currentRule == FormatRules.wrap {
-                    if let nextWrapIndex = indexOfNextWrap(),
+                    if let nextWrapIndex = indexOfNextWrap(), nextWrapIndex > lastIndex,
                         maxWidth < lineLength(from: max(lastIndex, 0), upTo: nextWrapIndex),
                         !willWrapAtStartOfReturnType(maxWidth: maxWidth) {
                         wrapArgumentsWithoutPartialWrapping()

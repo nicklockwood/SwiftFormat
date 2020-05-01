@@ -345,7 +345,7 @@ extension UIViewController: LayoutManaged {
 }
 
 extension UITabBar {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["selectedImageTintColor"] = .unavailable() // Deprecated
         types["itemPositioning"] = RuntimeType([
@@ -371,7 +371,7 @@ extension UITabBar {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "delegate":
             if viewController is UITabBarController {
@@ -388,7 +388,7 @@ extension UITabBar {
 }
 
 extension UITabBarController {
-    open override class func create(with node: LayoutNode) throws -> UITabBarController {
+    override open class func create(with node: LayoutNode) throws -> UITabBarController {
         let tabBarController = self.init()
         let tabBarType = type(of: tabBarController.tabBar)
         if let child = node.children.first(where: { $0._class is UITabBar.Type && $0._class != tabBarType }) {
@@ -397,7 +397,7 @@ extension UITabBarController {
         return tabBarController
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["delegate"] = RuntimeType(UITabBarControllerDelegate.self)
         types["selectedIndex"] = .int
@@ -418,7 +418,7 @@ extension UITabBarController {
         return types
     }
 
-    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "viewControllers":
             setViewControllers(value as? [UIViewController], animated: true)
@@ -427,7 +427,7 @@ extension UITabBarController {
         }
     }
 
-    open override func didInsertChildNode(_ node: LayoutNode, at index: Int) {
+    override open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
         if let viewController = node.viewController {
             var viewControllers = self.viewControllers ?? []
             viewControllers.append(viewController) // Ignore index
@@ -440,7 +440,7 @@ extension UITabBarController {
         }
     }
 
-    open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
+    override open func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
         if let viewController = node.viewController,
             var viewControllers = self.viewControllers,
             let index = viewControllers.index(of: viewController) {
@@ -453,7 +453,7 @@ extension UITabBarController {
 }
 
 extension UINavigationBar: TitleTextAttributes {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["backgroundImage"] = .uiImage
         types["titleVerticalPositionAdjustment"] = .cgFloat
@@ -488,7 +488,7 @@ extension UINavigationBar: TitleTextAttributes {
         set { titleTextAttributes?[NSAttributedString.Key.font] = newValue }
     }
 
-    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "items":
             setItems(value as? [UINavigationItem], animated: true)
@@ -497,7 +497,7 @@ extension UINavigationBar: TitleTextAttributes {
         }
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "backgroundImage":
             setBackgroundImage(value as? UIImage, for: .default)
@@ -520,7 +520,7 @@ extension UINavigationBar: TitleTextAttributes {
 }
 
 extension UIToolbar {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["items"] = .array(of: UIBarButtonItem.self)
         types["backgroundImage"] = .uiImage
@@ -536,7 +536,7 @@ extension UIToolbar {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "backgroundImage":
             setBackgroundImage(value as? UIImage, forToolbarPosition: .any, barMetrics: .default)
@@ -554,7 +554,7 @@ extension UIToolbar {
 }
 
 extension UINavigationController {
-    open override class func create(with node: LayoutNode) throws -> UINavigationController {
+    override open class func create(with node: LayoutNode) throws -> UINavigationController {
         var navigationBarClass = try node.value(forExpression: "navigationBarClass") as? UINavigationBar.Type
         var toolbarClass = try node.value(forExpression: "toolbarClass") as? UIToolbar.Type
         for child in node.children {
@@ -575,14 +575,14 @@ extension UINavigationController {
         return self.init(navigationBarClass: navigationBarClass, toolbarClass: toolbarClass)
     }
 
-    open override class var parameterTypes: [String: RuntimeType] {
+    override open class var parameterTypes: [String: RuntimeType] {
         return [
             "navigationBarClass": RuntimeType(class: UINavigationBar.self),
             "toolbarClass": RuntimeType(class: UIToolbar.self),
         ]
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["viewControllers"] = .array(of: UIViewController.self)
         // Read-only properties
@@ -613,7 +613,7 @@ extension UINavigationController {
         return types
     }
 
-    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "isNavigationBarHidden":
             setNavigationBarHidden(value as! Bool, animated: true)
@@ -626,7 +626,7 @@ extension UINavigationController {
         }
     }
 
-    open override func didInsertChildNode(_ node: LayoutNode, at index: Int) {
+    override open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
         if let viewController = node.viewController {
             var viewControllers = self.viewControllers
             viewControllers.append(viewController) // Ignore index
@@ -642,7 +642,7 @@ extension UINavigationController {
         }
     }
 
-    open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
+    override open func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
         var viewControllers = self.viewControllers
         if let viewController = node.viewController,
             let index = viewControllers.index(of: viewController) {
@@ -656,7 +656,7 @@ extension UINavigationController {
 
 // TODO: better support for alert actions and text fields
 extension UIAlertController {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["preferredStyle"] = .uiAlertControllerStyle
         #if arch(i386) || arch(x86_64)
@@ -673,20 +673,20 @@ extension UIAlertController {
 }
 
 extension UIActivityViewController {
-    open override class func create(with node: LayoutNode) throws -> UIActivityViewController {
+    override open class func create(with node: LayoutNode) throws -> UIActivityViewController {
         let activityItems: [Any] = try node.value(forExpression: "activityItems") as? [Any] ?? []
         let applicationActivities = try node.value(forExpression: "applicationActivities") as? [UIActivity]
         return self.init(activityItems: activityItems, applicationActivities: applicationActivities)
     }
 
-    open override class var parameterTypes: [String: RuntimeType] {
+    override open class var parameterTypes: [String: RuntimeType] {
         return [
             "activityItems": .array(of: .any), // TODO: validate activity item types
             "applicationActivities": RuntimeType([UIActivity].self),
         ]
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["excludedActivityTypes"] = .array(of: .uiActivityType)
         #if arch(i386) || arch(x86_64)
@@ -735,7 +735,7 @@ extension UIActivityViewController {
 }
 
 extension UIInputViewController {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         #if arch(i386) || arch(x86_64)
             // Private property
@@ -746,7 +746,7 @@ extension UIInputViewController {
 }
 
 extension UISplitViewController {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["preferredDisplayMode"] = .uiSplitViewControllerDisplayMode
         types["viewControllers"] = .array(of: UIViewController.self)
@@ -769,7 +769,7 @@ extension UISplitViewController {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "primaryEdge":
             // Does nothing on iOS 10 and earlier

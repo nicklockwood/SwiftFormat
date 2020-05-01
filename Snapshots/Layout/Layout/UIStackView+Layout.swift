@@ -3,7 +3,7 @@
 import UIKit
 
 extension UIStackView {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["axis"] = .uiLayoutConstraintAxis
         types["distribution"] = .uiStackViewDistribution
@@ -34,17 +34,17 @@ extension UIStackView {
         return types
     }
 
-    open override func didInsertChildNode(_ node: LayoutNode, at index: Int) {
+    override open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
         super.didInsertChildNode(node, at: index)
         addArrangedSubview(node.view)
     }
 
-    open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
+    override open func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
         (node._view as UIView?).map(removeArrangedSubview)
         super.willRemoveChildNode(node, at: index)
     }
 
-    open override class var defaultExpressions: [String: String] {
+    override open class var defaultExpressions: [String: String] {
         return [
             "width": "auto",
             "height": "auto",

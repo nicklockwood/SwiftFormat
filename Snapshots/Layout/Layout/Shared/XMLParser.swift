@@ -144,7 +144,7 @@ class XMLParser: NSObject, XMLParserDelegate {
         super.init()
     }
 
-    private override init() {
+    override private init() {
         preconditionFailure()
     }
 

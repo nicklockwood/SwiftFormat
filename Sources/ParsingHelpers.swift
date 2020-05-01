@@ -1169,12 +1169,12 @@ extension _FormatRules {
 
     // Swift specifier keywords, in preferred order
     static let specifierOrder = [
+        "override",
         "private", "fileprivate", "internal", "public", "open",
         "private(set)", "fileprivate(set)", "internal(set)", "public(set)",
         "final", "dynamic", // Can't be both
         "optional", "required",
         "convenience",
-        "override",
         "indirect",
         "lazy",
         "weak", "unowned",

@@ -3,7 +3,7 @@
 import UIKit
 
 private class LayoutTableView: UITableView {
-    open override var intrinsicContentSize: CGSize {
+    override open var intrinsicContentSize: CGSize {
         guard layoutNode != nil else {
             return super.intrinsicContentSize
         }
@@ -13,7 +13,7 @@ private class LayoutTableView: UITableView {
         )
     }
 
-    open override var contentSize: CGSize {
+    override open var contentSize: CGSize {
         didSet {
             if oldValue != contentSize, let layoutNode = layoutNode {
                 layoutNode.contentSizeChanged()
@@ -53,7 +53,7 @@ private extension UITableView {
 }
 
 extension UITableView: LayoutBacked {
-    open override class func create(with node: LayoutNode) throws -> UITableView {
+    override open class func create(with node: LayoutNode) throws -> UITableView {
         let style = try node.value(forExpression: "style") as? UITableView.Style ?? .plain
         let tableView: UITableView = {
             if self == UITableView.self {
@@ -82,13 +82,13 @@ extension UITableView: LayoutBacked {
         sectionFooterHeight = UITableView.automaticDimension
     }
 
-    open override class var parameterTypes: [String: RuntimeType] {
+    override open class var parameterTypes: [String: RuntimeType] {
         return [
             "style": .uiTableViewStyle,
         ]
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["separatorStyle"] = .uiTableViewCellSeparatorStyle
         types["separatorInsetReference"] = .uiTableViewSeparatorInsetReference
@@ -123,7 +123,7 @@ extension UITableView: LayoutBacked {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "separatorInsetReference":
             // Does nothing on iOS 10 and earlier
@@ -135,7 +135,7 @@ extension UITableView: LayoutBacked {
         }
     }
 
-    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "isEditing":
             setEditing(value as! Bool, animated: true)
@@ -144,7 +144,7 @@ extension UITableView: LayoutBacked {
         }
     }
 
-    open override func shouldInsertChildNode(_ node: LayoutNode, at _: Int) -> Bool {
+    override open func shouldInsertChildNode(_ node: LayoutNode, at _: Int) -> Bool {
         do {
             switch node.viewClass {
             case is UITableViewCell.Type:
@@ -168,7 +168,7 @@ extension UITableView: LayoutBacked {
         return false
     }
 
-    open override func didInsertChildNode(_ node: LayoutNode, at index: Int) {
+    override open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
         if tableHeaderView == nil {
             tableHeaderView = node.view
         } else if tableFooterView == nil {
@@ -178,7 +178,7 @@ extension UITableView: LayoutBacked {
         }
     }
 
-    open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
+    override open func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
         let hadView = (node._view != nil)
         super.willRemoveChildNode(node, at: index)
         guard let view = node._view else { return }
@@ -192,7 +192,7 @@ extension UITableView: LayoutBacked {
         }
     }
 
-    open override func didUpdateLayout(for _: LayoutNode) {
+    override open func didUpdateLayout(for _: LayoutNode) {
         for cell in visibleCells {
             cell.layoutNode?.update()
         }
@@ -200,7 +200,7 @@ extension UITableView: LayoutBacked {
 }
 
 extension UITableViewController: LayoutBacked {
-    open override class func create(with node: LayoutNode) throws -> UITableViewController {
+    override open class func create(with node: LayoutNode) throws -> UITableViewController {
         let style = try node.value(forExpression: "style") as? UITableView.Style ?? .plain
         let viewController = self.init(style: style)
         if !node.children.contains(where: { $0.viewClass is UITableView.Type }) {
@@ -211,13 +211,13 @@ extension UITableViewController: LayoutBacked {
         return viewController
     }
 
-    open override class var parameterTypes: [String: RuntimeType] {
+    override open class var parameterTypes: [String: RuntimeType] {
         return [
             "style": .uiTableViewStyle,
         ]
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         for (key, type) in UITableView.cachedExpressionTypes {
             types["tableView.\(key)"] = type
@@ -225,7 +225,7 @@ extension UITableViewController: LayoutBacked {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case _ where name.hasPrefix("tableView."):
             try tableView.setValue(value, forExpression: String(name["tableView.".endIndex ..< name.endIndex]))
@@ -234,7 +234,7 @@ extension UITableViewController: LayoutBacked {
         }
     }
 
-    open override func shouldInsertChildNode(_ node: LayoutNode, at index: Int) -> Bool {
+    override open func shouldInsertChildNode(_ node: LayoutNode, at index: Int) -> Bool {
         switch node.viewClass {
         case is UITableViewCell.Type, is UITableViewHeaderFooterView.Type:
             return tableView?.shouldInsertChildNode(node, at: index) ?? false
@@ -243,7 +243,7 @@ extension UITableViewController: LayoutBacked {
         }
     }
 
-    open override func didInsertChildNode(_ node: LayoutNode, at index: Int) {
+    override open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
         // TODO: what if more than one tableView is added?
         if node.viewClass is UITableView.Type {
             let wasLoaded = (viewIfLoaded != nil)
@@ -256,7 +256,7 @@ extension UITableViewController: LayoutBacked {
         tableView.didInsertChildNode(node, at: index)
     }
 
-    open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
+    override open func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
         if node.viewClass is UITableView.Type {
             tableView = nil
             return
@@ -465,7 +465,7 @@ extension UITableView {
 
 private class LayoutTableViewHeaderFooterView: UITableViewHeaderFooterView {
     // TODO: it looks like UITableView doesn't use this for auto-sizing sections header/footer - remove it?
-    open override func sizeThatFits(_ size: CGSize) -> CGSize {
+    override open func sizeThatFits(_ size: CGSize) -> CGSize {
         if let layoutNode = layoutNode {
             let height = (try? layoutNode.doubleValue(forSymbol: "height")) ?? 0
             return CGSize(width: size.width, height: CGFloat(height))
@@ -490,7 +490,7 @@ private extension UITableViewHeaderFooterView {
 }
 
 extension UITableViewHeaderFooterView: LayoutBacked {
-    open override class func create(with node: LayoutNode) throws -> UITableViewHeaderFooterView {
+    override open class func create(with node: LayoutNode) throws -> UITableViewHeaderFooterView {
         let reuseIdentifier = try node.value(forExpression: "reuseIdentifier") as? String
         let view: UITableViewHeaderFooterView = {
             if self == UITableViewHeaderFooterView.self {
@@ -512,13 +512,13 @@ extension UITableViewHeaderFooterView: LayoutBacked {
         return view
     }
 
-    open override class var parameterTypes: [String: RuntimeType] {
+    override open class var parameterTypes: [String: RuntimeType] {
         return [
             "reuseIdentifier": .string,
         ]
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["backgroundColor"] = .unavailable("Setting backgroundColor on UITableViewHeaderFooterView is not supported. Use contentView.backgroundColor instead.")
         types["editingAccessoryType"] = types["accessoryType"]
@@ -556,12 +556,12 @@ extension UITableViewHeaderFooterView: LayoutBacked {
         return types
     }
 
-    open override func didInsertChildNode(_ node: LayoutNode, at index: Int) {
+    override open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
         // Insert child views into `contentView` instead of directly
         contentView.didInsertChildNode(node, at: index)
     }
 
-    open override var intrinsicContentSize: CGSize {
+    override open var intrinsicContentSize: CGSize {
         guard let layoutNode = layoutNode, layoutNode.children.isEmpty else {
             return super.intrinsicContentSize
         }
@@ -573,7 +573,7 @@ extension UITableViewHeaderFooterView: LayoutBacked {
 }
 
 private class LayoutTableViewCell: UITableViewCell {
-    open override func sizeThatFits(_ size: CGSize) -> CGSize {
+    override open func sizeThatFits(_ size: CGSize) -> CGSize {
         if let layoutNode = layoutNode {
             let height = (try? layoutNode.doubleValue(forSymbol: "height")) ?? 0
             return CGSize(width: size.width, height: CGFloat(height))
@@ -598,7 +598,7 @@ private extension UITableViewCell {
 }
 
 extension UITableViewCell: LayoutBacked {
-    open override class func create(with node: LayoutNode) throws -> UITableViewCell {
+    override open class func create(with node: LayoutNode) throws -> UITableViewCell {
         let style = try node.value(forExpression: "style") as? UITableViewCell.CellStyle ?? .default
         let reuseIdentifier = try node.value(forExpression: "reuseIdentifier") as? String
         let cell: UITableViewCell = {
@@ -626,14 +626,14 @@ extension UITableViewCell: LayoutBacked {
         return cell
     }
 
-    open override class var parameterTypes: [String: RuntimeType] {
+    override open class var parameterTypes: [String: RuntimeType] {
         return [
             "style": .uiTableViewCellStyle,
             "reuseIdentifier": .string,
         ]
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["selectionStyle"] = .uiTableViewCellSelectionStyle
         types["focusStyle"] = .uiTableViewCellFocusStyle
@@ -688,11 +688,11 @@ extension UITableViewCell: LayoutBacked {
         return types
     }
 
-    open override class var bodyExpression: String? {
+    override open class var bodyExpression: String? {
         return "textLabel.attributedText"
     }
 
-    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "isEditing":
             setEditing(value as! Bool, animated: true)
@@ -705,7 +705,7 @@ extension UITableViewCell: LayoutBacked {
         }
     }
 
-    open override func didInsertChildNode(_ node: LayoutNode, at index: Int) {
+    override open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
         // Insert child views into `contentView` instead of directly
         contentView.didInsertChildNode(node, at: index)
     }

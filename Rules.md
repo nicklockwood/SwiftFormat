@@ -1268,8 +1268,8 @@ Use consistent ordering for member specifiers.
 ```
 
 ```diff
-- override public final func foo()
-+ public final override func foo()
+- final public override func foo()
++ override public final func foo()
 ```
 
 ```diff

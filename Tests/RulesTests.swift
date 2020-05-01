@@ -10878,7 +10878,7 @@ class RulesTests: XCTestCase {
         }
 
         class Bar: Foo, Equatable {
-            public override init() {
+            override public init() {
                 super.init()
             }
         }
@@ -10894,7 +10894,7 @@ class RulesTests: XCTestCase {
         }
 
         class Bar: Baz {
-            public override init() {
+            override public init() {
                 super.init()
             }
         }
@@ -10905,7 +10905,7 @@ class RulesTests: XCTestCase {
         }
 
         class Bar: Baz {
-            public override init() {
+            override public init() {
                 super.init()
             }
         }

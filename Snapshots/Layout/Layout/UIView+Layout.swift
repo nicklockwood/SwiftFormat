@@ -367,7 +367,7 @@ extension UIView: LayoutManaged {
 }
 
 extension UIImageView {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["animationImages"] = .array(of: .uiImage)
         types["highlightedAnimationImages"] = .array(of: .uiImage)
@@ -385,7 +385,7 @@ extension UIImageView {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "isAnimating":
             switch (value as! Bool, isAnimating) {
@@ -433,7 +433,7 @@ private let controlStates: [String: UIControl.State] = [
 
 private var layoutActionsKey: UInt8 = 0
 extension UIControl {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["contentVerticalAlignment"] = .uiControlContentVerticalAlignment
         types["contentHorizontalAlignment"] = .uiControlContentHorizontalAlignment
@@ -453,7 +453,7 @@ extension UIControl {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         if let action = value as? Selector, let event = controlEvents[name] {
             var actions = objc_getAssociatedObject(self, &layoutActionsKey) as? NSMutableDictionary
             if actions == nil {
@@ -507,18 +507,18 @@ extension UIControl {
 }
 
 extension UIButton {
-    open override class func create(with node: LayoutNode) throws -> UIButton {
+    override open class func create(with node: LayoutNode) throws -> UIButton {
         if let type = try node.value(forExpression: "type") as? UIButton.ButtonType {
             return self.init(type: type)
         }
         return self.init(frame: .zero)
     }
 
-    open override class var parameterTypes: [String: RuntimeType] {
+    override open class var parameterTypes: [String: RuntimeType] {
         return ["type": .uiButtonType]
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["title"] = .string
         types["attributedTitle"] = .nsAttributedString
@@ -553,7 +553,7 @@ extension UIButton {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "title": setTitle(value as? String, for: .normal)
         case "titleColor": setTitleColor(value as? UIColor, for: .normal)
@@ -579,7 +579,7 @@ extension UIButton {
         }
     }
 
-    open override func value(forSymbol name: String) throws -> Any {
+    override open func value(forSymbol name: String) throws -> Any {
         switch name {
         case "title": return title(for: .normal) ?? ""
         case "titleColor": return titleColor(for: .normal) as Any
@@ -620,7 +620,7 @@ private let textInputTraits: [String: RuntimeType] = [
 ]
 
 extension UILabel {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["textAlignment"] = .nsTextAlignment
         types["lineBreakMode"] = .nsLineBreakMode
@@ -651,7 +651,7 @@ extension UILabel {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         if #available(iOS 12.0, *) {} else {
             switch name {
             case "enablesMarqueeWhenAncestorFocused":
@@ -671,7 +671,7 @@ private let dragAndDropOptions: [String: RuntimeType] = [
 ]
 
 extension UITextField {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         for (name, type) in textInputTraits {
             types[name] = type
@@ -735,7 +735,7 @@ extension UITextField {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "autocapitalizationType": autocapitalizationType = value as! UITextAutocapitalizationType
         case "autocorrectionType": autocorrectionType = value as! UITextAutocorrectionType
@@ -784,7 +784,7 @@ extension UITextField {
 }
 
 extension UITextView {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["textAlignment"] = .nsTextAlignment
         types["dataDetectorTypes"] = .uiDataDetectorTypes
@@ -819,7 +819,7 @@ extension UITextView {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "autocapitalizationType": autocapitalizationType = value as! UITextAutocapitalizationType
         case "autocorrectionType": autocorrectionType = value as! UITextAutocorrectionType
@@ -856,7 +856,7 @@ extension UITextView {
 }
 
 extension UISearchBar {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["barPosition"] = .uiBarPosition
         types["barStyle"] = .uiBarStyle
@@ -889,7 +889,7 @@ extension UISearchBar {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "autocapitalizationType": autocapitalizationType = value as! UITextAutocapitalizationType
         case "autocorrectionType": autocorrectionType = value as! UITextAutocorrectionType
@@ -925,7 +925,7 @@ private let controlSegments = RuntimeType.uiSegmentedControlSegment.values.mapVa
 }
 
 extension UISegmentedControl: TitleTextAttributes {
-    open override class func create(with node: LayoutNode) throws -> UISegmentedControl {
+    override open class func create(with node: LayoutNode) throws -> UISegmentedControl {
         var items = [Any]()
         for item in try node.value(forExpression: "items") as? [Any] ?? [] {
             switch item {
@@ -938,7 +938,7 @@ extension UISegmentedControl: TitleTextAttributes {
         return self.init(items: items)
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["items"] = RuntimeType(NSArray.self)
         // TODO: find a good naming scheme for left/right state variants
@@ -1040,7 +1040,7 @@ extension UISegmentedControl: TitleTextAttributes {
         setTitleTextAttributes(attributes, for: state)
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "items": try setItems(value as? NSArray, animated: false)
         // TODO: find a good naming scheme for barMetrics variants
@@ -1089,7 +1089,7 @@ extension UISegmentedControl: TitleTextAttributes {
         }
     }
 
-    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "items":
             try setItems(value as? NSArray, animated: true)
@@ -1100,7 +1100,7 @@ extension UISegmentedControl: TitleTextAttributes {
 }
 
 extension UIStepper {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         // TODO: find a good naming scheme for left/right state variants
         types["backgroundImage"] = .uiImage
@@ -1115,7 +1115,7 @@ extension UIStepper {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "backgroundImage": setBackgroundImage(value as? UIImage, for: .normal)
         case "dividerImage": setDividerImage(value as? UIImage, forLeftSegmentState: .normal, rightSegmentState: .normal)
@@ -1138,7 +1138,7 @@ extension UIStepper {
 }
 
 extension UIActivityIndicatorView {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["isAnimating"] = .bool
         types["activityIndicatorViewStyle"] = .uiActivityIndicatorViewStyle
@@ -1172,7 +1172,7 @@ extension UIActivityIndicatorView {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "isAnimating":
             switch (value as! Bool, isAnimating) {
@@ -1188,13 +1188,13 @@ extension UIActivityIndicatorView {
         }
     }
 
-    open override class var defaultExpressions: [String: String] {
+    override open class var defaultExpressions: [String: String] {
         return ["isAnimating": "true"]
     }
 }
 
 extension UISwitch {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
 
         #if arch(i386) || arch(x86_64)
@@ -1204,7 +1204,7 @@ extension UISwitch {
         return types
     }
 
-    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "isOn":
             setOn(value as! Bool, animated: true)
@@ -1215,7 +1215,7 @@ extension UISwitch {
 }
 
 extension UISlider {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["thumbImage"] = .uiImage
         types["minimumTrackImage"] = .uiImage
@@ -1228,7 +1228,7 @@ extension UISlider {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "thumbImage": setThumbImage(value as? UIImage, for: .normal)
         case "minimumTrackImage": setMinimumTrackImage(value as? UIImage, for: .normal)
@@ -1248,7 +1248,7 @@ extension UISlider {
         }
     }
 
-    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "value":
             setValue(value as! Float, animated: true)
@@ -1259,7 +1259,7 @@ extension UISlider {
 }
 
 extension UIProgressView {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["progressViewStyle"] = .uiProgressViewStyle
 
@@ -1270,7 +1270,7 @@ extension UIProgressView {
         return types
     }
 
-    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "progress":
             setProgress(value as! Float, animated: true)
@@ -1281,16 +1281,16 @@ extension UIProgressView {
 }
 
 extension UIInputView {
-    open override class func create(with node: LayoutNode) throws -> UIInputView {
+    override open class func create(with node: LayoutNode) throws -> UIInputView {
         let inputViewStyle = try node.value(forExpression: "inputViewStyle") as? UIInputView.Style ?? .default
         return self.init(frame: .zero, inputViewStyle: inputViewStyle)
     }
 
-    open override class var parameterTypes: [String: RuntimeType] {
+    override open class var parameterTypes: [String: RuntimeType] {
         return ["inputViewStyle": .uiInputViewStyle]
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         // Read-only properties
         types["inputViewStyle"] = nil
@@ -1315,7 +1315,7 @@ extension UIInputView {
 }
 
 extension UIDatePicker {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["datePickerMode"] = .uiDatePickerMode
 
@@ -1332,7 +1332,7 @@ extension UIDatePicker {
         return types
     }
 
-    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "date":
             setDate(value as! Date, animated: true)
@@ -1343,7 +1343,7 @@ extension UIDatePicker {
 }
 
 extension UIRefreshControl {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["isRefreshing"] = .bool
 
@@ -1354,7 +1354,7 @@ extension UIRefreshControl {
         return types
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "isRefreshing":
             switch (value as! Bool, isRefreshing) {
@@ -1372,7 +1372,7 @@ extension UIRefreshControl {
 }
 
 extension UIVisualEffectView {
-    open override class func create(with node: LayoutNode) throws -> UIVisualEffectView {
+    override open class func create(with node: LayoutNode) throws -> UIVisualEffectView {
         let defaultStyle = RuntimeType.uiBlurEffect_Style.values["regular"]! as! UIBlurEffect.Style
         var effect = try node.value(forExpression: "effect") as? UIVisualEffect
         let style = try node.value(forExpression: "effect.style") as? UIBlurEffect.Style
@@ -1391,7 +1391,7 @@ extension UIVisualEffectView {
         return self.init(effect: effect)
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         for (key, type) in UIView.cachedExpressionTypes {
             types["contentView.\(key)"] = type
@@ -1404,7 +1404,7 @@ extension UIVisualEffectView {
         return types
     }
 
-    open override func didInsertChildNode(_ node: LayoutNode, at index: Int) {
+    override open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
         // Insert child views into `contentView` instead of directly
         contentView.didInsertChildNode(node, at: index)
     }
@@ -1413,7 +1413,7 @@ extension UIVisualEffectView {
 private var baseURLKey = 1
 
 extension UIWebView {
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["baseURL"] = .url
         types["delegate"] = RuntimeType(UIWebViewDelegate.self)
@@ -1434,7 +1434,7 @@ extension UIWebView {
         return types
     }
 
-    open override class var bodyExpression: String? {
+    override open class var bodyExpression: String? {
         return "htmlString"
     }
 
@@ -1446,7 +1446,7 @@ extension UIWebView {
         }
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "baseURL":
             baseURL = value as? URL
@@ -1463,18 +1463,18 @@ extension UIWebView {
 private var readAccessURLKey = 1
 
 extension WKWebView {
-    open override class func create(with node: LayoutNode) throws -> WKWebView {
+    override open class func create(with node: LayoutNode) throws -> WKWebView {
         if let configuration = try node.value(forExpression: "configuration") as? WKWebViewConfiguration {
             return self.init(frame: .zero, configuration: configuration)
         }
         return self.init(frame: .zero)
     }
 
-    open override class var parameterTypes: [String: RuntimeType] {
+    override open class var parameterTypes: [String: RuntimeType] {
         return ["configuration": RuntimeType(WKWebViewConfiguration.self)]
     }
 
-    open override class var expressionTypes: [String: RuntimeType] {
+    override open class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["baseURL"] = .url
         types["fileURL"] = .url
@@ -1498,7 +1498,7 @@ extension WKWebView {
         return types
     }
 
-    open override class var bodyExpression: String? {
+    override open class var bodyExpression: String? {
         return "htmlString"
     }
 
@@ -1518,7 +1518,7 @@ extension WKWebView {
         }
     }
 
-    open override func setValue(_ value: Any, forExpression name: String) throws {
+    override open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "baseURL":
             baseURL = value as? URL

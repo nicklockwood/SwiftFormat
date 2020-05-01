@@ -1,5 +1,20 @@
 # Change Log
 
+## [0.44.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.8) (2020-05-01)
+
+- Fixed a significant performance regression introduced in 0.44.6
+- Changed ordering of `override` keyword in specifier lists to match SwiftLint
+- Fixed timeout due to infinite recursion when formatting nested comments
+- The `trailingSpace` rule is now called before `indent` to avoid noise when linting
+- Fixed bug where `unusedArguments` rule ignored all arguments if any was already ignored
+- Fixed `redundantParens` rule breaking closure argument lists where argument is named `self`
+- Fixed indenting of multiline string interpolations
+- Fixed broken formatting of multiline string interpolations
+- Fixed crash in `wrap` rule
+- The `wrap` rule now favors wrapping function args over wrapping at `.` operator
+- Fixed a bug with indenting of pre-formatted multiline comments
+- Fixed a misleading error message relating to `--tabwidth` option
+
 ## [0.44.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.7) (2020-04-04)
 
 - Fixed indenting of wrapped closures after a switch statement

@@ -745,6 +745,19 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testCommentIndentingWithTrailingClose() {
+        let input = "/* foo\n */"
+        let output: [Token] = [
+            .startOfScope("/*"),
+            .space(" "),
+            .commentBody("foo"),
+            .linebreak("\n", 1),
+            .space(" "),
+            .endOfScope("*/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testNestedComments() {
         let input = "/*foo/*bar*/baz*/"
         let output: [Token] = [

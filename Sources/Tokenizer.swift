@@ -1239,9 +1239,15 @@ public func tokenize(_ source: String) -> [Token] {
                 var baseIndent = ""
                 let range = scopeIndexStack.last! + 1 ..< tokens.count - 1
                 for index in range where tokens[index - 1].isLinebreak {
-                    if case let .space(indent) = tokens[index], case .commentBody = tokens[index + 1],
-                        baseIndent.isEmpty || indent.count < baseIndent.count {
-                        baseIndent = indent
+                    if case let .space(indent) = tokens[index] {
+                        switch tokens[index + 1] {
+                        case .commentBody, .endOfScope("*/"):
+                            if baseIndent.isEmpty || indent.count < baseIndent.count {
+                                baseIndent = indent
+                            }
+                        default:
+                            break
+                        }
                     } else if case .commentBody = tokens[index] {
                         baseIndent = ""
                         break

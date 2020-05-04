@@ -2417,6 +2417,12 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
+    func testCommentIndentingWithTrailingClose2() {
+        let input = "/* foo\n*/"
+        let output = "/* foo\n */"
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
     func testNestedCommentIndenting() {
         let input = """
         /*

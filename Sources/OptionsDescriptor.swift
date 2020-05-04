@@ -253,6 +253,7 @@ extension FormatOptions.Descriptor {
         tabWidth,
         maxWidth,
         noSpaceOperators,
+        specifierOrder,
 
         // Deprecated
         indentComments,
@@ -583,6 +584,18 @@ extension FormatOptions.Descriptor {
                 throw FormatError.options("'\($0)' is not a valid infix operator")
             default:
                 break
+            }
+        }
+    )
+    static let specifierOrder = FormatOptions.Descriptor(
+        argumentName: "specifierorder",
+        propertyName: "specifierOrder",
+        displayName: "Specifier Order",
+        help: "Comma-delimited list of specifiers in preferred order",
+        keyPath: \FormatOptions.specifierOrder,
+        validate: {
+            guard _FormatRules.allSpecifiers.contains($0) else {
+                throw FormatError.options("'\($0)' is not a valid specifier")
             }
         }
     )

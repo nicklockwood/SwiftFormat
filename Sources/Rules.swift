@@ -1611,7 +1611,8 @@ public struct _FormatRules {
 
     /// Standardise the order of property specifiers
     public let specifiers = FormatRule(
-        help: "Use consistent ordering for member specifiers."
+        help: "Use consistent ordering for member specifiers.",
+        options: ["specifierorder"]
     ) { formatter in
         formatter.forEach(.keyword) { i, token in
             switch token.string {
@@ -1660,7 +1661,7 @@ public struct _FormatRules {
             lastSpecifier.map { specifiers[$0.0] = $0.1 }
             guard !specifiers.isEmpty else { return }
             var sortedSpecifiers = [Token]()
-            for specifier in specifierOrder {
+            for specifier in formatter.specifierOrder {
                 if let tokens = specifiers[specifier] {
                     sortedSpecifiers += tokens
                 }

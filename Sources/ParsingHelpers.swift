@@ -1138,6 +1138,33 @@ extension Formatter {
         }
         removeToken(at: index)
     }
+
+    // Swift specifier keywords, in preferred order
+    var specifierOrder: [String] {
+        var priorities = [String: Int]()
+        for (i, specifiers) in _FormatRules.defaultSpecifierOrder.enumerated() {
+            for specifier in specifiers {
+                priorities[specifier] = i
+            }
+        }
+        var order = options.specifierOrder
+        for (i, specifiers) in _FormatRules.defaultSpecifierOrder.enumerated() {
+            for specifier in specifiers where !order.contains(specifier) {
+                var insertionPoint = order.count
+                for (index, s) in order.enumerated() {
+                    if let j = priorities[s] {
+                        if j > i {
+                            insertionPoint = index
+                        } else if j == i {
+                            insertionPoint = index + 1
+                        }
+                    }
+                }
+                order.insert(specifier, at: insertionPoint)
+            }
+        }
+        return order
+    }
 }
 
 extension _FormatRules {
@@ -1162,24 +1189,24 @@ extension _FormatRules {
     }()
 
     // All specifiers
-    static let allSpecifiers = Set(specifierOrder)
+    static let allSpecifiers = Set(defaultSpecifierOrder.flatMap { $0 })
 
     // ACL specifiers
     static let aclSpecifiers = ["private", "fileprivate", "internal", "public"]
 
-    // Swift specifier keywords, in preferred order
-    static let specifierOrder = [
-        "override",
-        "private", "fileprivate", "internal", "public", "open",
-        "private(set)", "fileprivate(set)", "internal(set)", "public(set)",
-        "final", "dynamic", // Can't be both
-        "optional", "required",
-        "convenience",
-        "indirect",
-        "lazy",
-        "weak", "unowned",
-        "static", "class",
-        "mutating", "nonmutating",
-        "prefix", "postfix",
+    // Swift specifier keywords, in default order
+    static let defaultSpecifierOrder = [
+        ["override"],
+        ["private", "fileprivate", "internal", "public", "open"],
+        ["private(set)", "fileprivate(set)", "internal(set)", "public(set)"],
+        ["final", "dynamic"], // Can't be both
+        ["optional", "required"],
+        ["convenience"],
+        ["indirect"],
+        ["lazy"],
+        ["weak", "unowned"],
+        ["static", "class"],
+        ["mutating", "nonmutating"],
+        ["prefix", "postfix"],
     ]
 }

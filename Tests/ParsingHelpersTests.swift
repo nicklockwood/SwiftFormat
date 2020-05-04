@@ -445,4 +445,25 @@ class ParsingHelpersTests: XCTestCase {
         """))
         XCTAssert(formatter.isAccessorKeyword(at: 10, checkKeyword: false))
     }
+
+    // MARK: specifierOrder
+
+    func testSpecifierOrder() {
+        let options = FormatOptions(specifierOrder: ["convenience", "override"])
+        let formatter = Formatter([], options: options)
+        XCTAssertEqual(formatter.specifierOrder, [
+            "private", "fileprivate", "internal", "public", "open",
+            "private(set)", "fileprivate(set)", "internal(set)", "public(set)",
+            "final", "dynamic",
+            "optional", "required",
+            "convenience",
+            "override",
+            "indirect",
+            "lazy",
+            "weak", "unowned",
+            "static", "class",
+            "mutating", "nonmutating",
+            "prefix", "postfix",
+        ])
+    }
 }

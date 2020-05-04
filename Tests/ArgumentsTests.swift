@@ -200,7 +200,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testCommandLineArgumentsAreCorrect() {
-        let output = ["allman": "false", "wraparguments": "preserve", "wrapparameters": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": "", "xcodeindentation": "disabled", "fragment": "false", "conflictmarkers": "reject", "tabwidth": "unspecified", "maxwidth": "none", "nospaceoperators": ""]
+        let output = ["allman": "false", "wraparguments": "preserve", "wrapparameters": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "empty": "void", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": "", "xcodeindentation": "disabled", "fragment": "false", "conflictmarkers": "reject", "tabwidth": "unspecified", "maxwidth": "none", "nospaceoperators": "", "specifierorder": ""]
         XCTAssertEqual(argumentsFor(.default), output)
     }
 
@@ -556,6 +556,11 @@ class ArgumentsTests: XCTestCase {
     func testParseNoSpaceOperatorsOption() throws {
         let options = try Options(["nospaceoperators": "...,..<"], in: "")
         XCTAssertEqual(options.formatOptions?.noSpaceOperators, ["...", "..<"])
+    }
+
+    func testParseSpecifierOrderOption() throws {
+        let options = try Options(["specifierorder": "private(set),public"], in: "")
+        XCTAssertEqual(options.formatOptions?.specifierOrder, ["private(set)", "public"])
     }
 
     // MARK: parse rules

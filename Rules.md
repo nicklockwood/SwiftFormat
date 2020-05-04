@@ -1259,6 +1259,10 @@ Remove space inside parentheses.
 
 Use consistent ordering for member specifiers.
 
+Option | Description
+--- | ---
+`--specifierorder` | Comma-delimited list of specifiers in preferred order
+
 <details>
 <summary>Examples</summary>
 

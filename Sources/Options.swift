@@ -275,6 +275,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var tabWidth: Int
     public var maxWidth: Int
     public var noSpaceOperators: [String]
+    public var specifierOrder: [String]
 
     // Deprecated
     public var indentComments: Bool
@@ -327,6 +328,7 @@ public struct FormatOptions: CustomStringConvertible {
                 tabWidth: Int = 0,
                 maxWidth: Int = 0,
                 noSpaceOperators: [String] = [],
+                specifierOrder: [String] = [],
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -371,6 +373,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.tabWidth = tabWidth
         self.maxWidth = maxWidth
         self.noSpaceOperators = noSpaceOperators
+        self.specifierOrder = specifierOrder
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

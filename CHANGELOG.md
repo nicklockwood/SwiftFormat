@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.44.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.9) (2020-05-05)
+
+- Added `--specifierorder` argument for overriding default order used by `specifiers` rule
+- Added `--nowrapoperators` argument for preventing `wrap` rule breaking at specific operators
+- The `redundantNilInit` rule no longer removes `nil` defaults from vars in structs using synthesized init
+- Fix indenting of trailing comment delimiter in multiline comments
+
 ## [0.44.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.8) (2020-05-01)
 
 - Fixed a significant performance regression introduced in 0.44.6

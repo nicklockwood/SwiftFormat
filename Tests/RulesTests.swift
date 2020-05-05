@@ -5220,6 +5220,35 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantNilInit)
     }
 
+    func testNoRemoveNilInitInStructWithDefaultInit() {
+        let input = """
+        struct Foo {
+            var bar: String? = nil
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantNilInit)
+    }
+
+    func testRemoveNilInitInStructWithCustomInit() {
+        let input = """
+        struct Foo {
+            var bar: String? = nil
+            init() {
+                bar = "bar"
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar: String?
+            init() {
+                bar = "bar"
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantNilInit)
+    }
+
     // MARK: - redundantLet
 
     func testRemoveRedundantLet() {

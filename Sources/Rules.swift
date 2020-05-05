@@ -1943,7 +1943,12 @@ public struct _FormatRules {
                     switch formatter.tokens[index] {
                     case .identifier("Codable"), .identifier("Decodable"):
                         return // Can't safely remove the default value
-                    case .delimiter(":"), .keyword:
+                    case .keyword("struct"):
+                        if formatter.index(of: .keyword("init"), after: scopeIndex) == nil {
+                            return // Can't safely remove the default value
+                        }
+                        break loop
+                    case .keyword:
                         break loop
                     default:
                         break

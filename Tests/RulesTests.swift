@@ -8027,6 +8027,47 @@ class RulesTests: XCTestCase {
                        exclude: ["spaceAroundOperators"])
     }
 
+    func testNoWrapSingleParameter() {
+        let input = "let fooBar = try unkeyedContainer.decode(FooBar.self)"
+        let output = """
+        let fooBar = try unkeyedContainer
+            .decode(FooBar.self)
+        """
+        let options = FormatOptions(maxWidth: 50)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapSingleParameter() {
+        let input = "let fooBar = try unkeyedContainer.decode(FooBar.self)"
+        let output = """
+        let fooBar = try unkeyedContainer.decode(
+            FooBar.self
+        )
+        """
+        let options = FormatOptions(maxWidth: 50, noWrapOperators: [".", "="])
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapFunctionArrow() {
+        let input = "func foo() -> Int {}"
+        let output = """
+        func foo()
+            -> Int {}
+        """
+        let options = FormatOptions(maxWidth: 14)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testNoWrapFunctionArrow() {
+        let input = "func foo() -> Int {}"
+        let output = """
+        func foo(
+        ) -> Int {}
+        """
+        let options = FormatOptions(maxWidth: 14, noWrapOperators: ["->"])
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
     func testNoCrashWrap() {
         let input = """
         struct Foo {
@@ -8036,7 +8077,9 @@ class RulesTests: XCTestCase {
         let output = """
         struct Foo {
             func bar(
-                a: Set<B>,
+                a: Set<
+                    B
+                >,
                 c: D
             ) {}
         }
@@ -8060,7 +8103,7 @@ class RulesTests: XCTestCase {
                 _: WKWebView,
                 didReceive challenge: URLAuthenticationChallenge,
                 completionHandler: @escaping (URLSession.AuthChallengeDisposition,
-                URLCredential?) -> Void
+                                              URLCredential?) -> Void
             ) {
                 authenticationChallengeProcessor.process(
                     challenge: challenge,

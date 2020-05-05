@@ -253,6 +253,7 @@ extension FormatOptions.Descriptor {
         tabWidth,
         maxWidth,
         noSpaceOperators,
+        noWrapOperators,
         specifierOrder,
 
         // Deprecated
@@ -579,6 +580,23 @@ extension FormatOptions.Descriptor {
             case "?":
                 throw FormatError.options("Spacing around ? operator is not optional")
             case ":":
+                break
+            case _ where !$0.isOperator:
+                throw FormatError.options("'\($0)' is not a valid infix operator")
+            default:
+                break
+            }
+        }
+    )
+    static let noWrapOperators = FormatOptions.Descriptor(
+        argumentName: "nowrapoperators",
+        propertyName: "noWrapOperators",
+        displayName: "No-wrap Operators",
+        help: "Comma-delimited list of operators that shouldn't be wrapped",
+        keyPath: \FormatOptions.noWrapOperators,
+        validate: {
+            switch $0 {
+            case ":", ";", "is", "as", "as!", "as?":
                 break
             case _ where !$0.isOperator:
                 throw FormatError.options("'\($0)' is not a valid infix operator")

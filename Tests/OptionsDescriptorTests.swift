@@ -641,6 +641,29 @@ class OptionsDescriptorTests: XCTestCase {
         validateArgumentsFreeTextType(descriptor, expectations: validations)
     }
 
+    func testNoWrapOperators() {
+        let descriptor = FormatOptions.Descriptor.noWrapOperators
+        let validations: [FreeTextValidationExpectation] = [
+            (input: "+", isValid: true),
+            (input: "", isValid: true),
+            (input: ":", isValid: true),
+            (input: "foo", isValid: false),
+            (input: ";", isValid: true),
+            (input: "?", isValid: true),
+            (input: "try", isValid: false),
+            (input: "as", isValid: true),
+            (input: "as?", isValid: true),
+            (input: "is", isValid: true),
+            (input: "do", isValid: false),
+        ]
+        let fromOptionExpectations: [OptionArgumentMapping<[String]>] = [
+            (optionValue: [], argumentValue: ""),
+            (optionValue: ["*", "/"], argumentValue: "*,/"),
+        ]
+        validateFromOptions(descriptor, keyPath: \FormatOptions.noWrapOperators, expectations: fromOptionExpectations)
+        validateArgumentsFreeTextType(descriptor, expectations: validations)
+    }
+
     // MARK: Deprecated
 
     func testInsertBlankLines() {

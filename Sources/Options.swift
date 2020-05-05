@@ -275,6 +275,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var tabWidth: Int
     public var maxWidth: Int
     public var noSpaceOperators: [String]
+    public var noWrapOperators: [String]
     public var specifierOrder: [String]
 
     // Deprecated
@@ -328,6 +329,7 @@ public struct FormatOptions: CustomStringConvertible {
                 tabWidth: Int = 0,
                 maxWidth: Int = 0,
                 noSpaceOperators: [String] = [],
+                noWrapOperators: [String] = [],
                 specifierOrder: [String] = [],
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
@@ -373,6 +375,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.tabWidth = tabWidth
         self.maxWidth = maxWidth
         self.noSpaceOperators = noSpaceOperators
+        self.noWrapOperators = noWrapOperators
         self.specifierOrder = specifierOrder
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment

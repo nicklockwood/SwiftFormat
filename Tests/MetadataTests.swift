@@ -137,6 +137,8 @@ class MetadataTests: XCTestCase {
                         .wrapArguments, .wrapParameters, .wrapCollections, .closingParen,
                         .indentation, .truncateBlankLines, .lineBreak, .tabWidth, .maxWidth,
                     ]
+                case .identifier("indexWhereLineShouldWrapInLine"):
+                    referencedOptions.append(.noWrapOperators)
                 case .identifier("specifierOrder"):
                     referencedOptions.append(.specifierOrder)
                 case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):

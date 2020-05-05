@@ -3074,7 +3074,7 @@ public struct _FormatRules {
 
     public let wrap = FormatRule(
         help: "Wrap lines that exceed the specified maximum width.",
-        options: ["maxwidth"],
+        options: ["maxwidth", "nowrapoperators"],
         sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "indent",
                         "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
     ) { formatter in
@@ -3082,7 +3082,8 @@ public struct _FormatRules {
         guard maxWidth > 0 else { return }
 
         // Wrap collections first to avoid conflict
-        formatter.wrapCollectionsAndArguments(completePartialWrapping: false)
+        formatter.wrapCollectionsAndArguments(completePartialWrapping: false,
+                                              wrapSingleArguments: false)
 
         // Wrap other line types
         var currentIndex = 0
@@ -3118,6 +3119,9 @@ public struct _FormatRules {
                 currentIndex = formatter.endOfLine(at: i)
             }
         }
+
+        formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
+                                              wrapSingleArguments: true)
     }
 
     /// Normalize argument wrapping style
@@ -3127,7 +3131,8 @@ public struct _FormatRules {
         options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen"],
         sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
     ) { formatter in
-        formatter.wrapCollectionsAndArguments(completePartialWrapping: true)
+        formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
+                                              wrapSingleArguments: false)
     }
 
     /// Normalize the use of void in closure arguments and return values

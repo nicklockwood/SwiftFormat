@@ -29,7 +29,7 @@ extension UICollectionViewLayout {
 }
 
 private class LayoutCollectionView: UICollectionView {
-    override open var intrinsicContentSize: CGSize {
+    open override var intrinsicContentSize: CGSize {
         guard layoutNode != nil else {
             return super.intrinsicContentSize
         }
@@ -39,7 +39,7 @@ private class LayoutCollectionView: UICollectionView {
         )
     }
 
-    override open var contentSize: CGSize {
+    open override var contentSize: CGSize {
         didSet {
             if oldValue != contentSize, let layoutNode = layoutNode {
                 layoutNode.contentSizeChanged()
@@ -79,7 +79,7 @@ private extension UICollectionView {
 }
 
 extension UICollectionView: LayoutBacked {
-    override open class func create(with node: LayoutNode) throws -> UICollectionView {
+    open override class func create(with node: LayoutNode) throws -> UICollectionView {
         // UICollectionView cannot be created with a nil collectionViewLayout
         // so we cannot allow create(with:) to throw. Instead, we'll intercept the error
         let layout = node.attempt {
@@ -103,7 +103,7 @@ extension UICollectionView: LayoutBacked {
         return collectionView
     }
 
-    override open class var expressionTypes: [String: RuntimeType] {
+    open override class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         for (key, type) in UICollectionViewFlowLayout.allPropertyTypes() {
             types["collectionViewLayout.\(key)"] = type
@@ -122,7 +122,7 @@ extension UICollectionView: LayoutBacked {
         return types
     }
 
-    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "collectionViewLayout":
             setCollectionViewLayout(value as! UICollectionViewLayout, animated: true)
@@ -131,7 +131,7 @@ extension UICollectionView: LayoutBacked {
         }
     }
 
-    override open func setValue(_ value: Any, forExpression name: String) throws {
+    open override func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "reorderingCadence", "collectionViewLayout.sectionInsetReference":
             // Does nothing on iOS 10 and earlier
@@ -143,7 +143,7 @@ extension UICollectionView: LayoutBacked {
         }
     }
 
-    override open func shouldInsertChildNode(_ node: LayoutNode, at _: Int) -> Bool {
+    open override func shouldInsertChildNode(_ node: LayoutNode, at _: Int) -> Bool {
         if node.viewClass is UICollectionViewCell.Type {
             do {
                 if let reuseIdentifier = try node.value(forExpression: "reuseIdentifier") as? String {
@@ -159,7 +159,7 @@ extension UICollectionView: LayoutBacked {
         return true
     }
 
-    override open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
+    open override func didInsertChildNode(_ node: LayoutNode, at index: Int) {
         if backgroundView == nil {
             backgroundView = node.view // TODO: this is a bit inconsistent with UITableView - reconsider?
         } else {
@@ -167,7 +167,7 @@ extension UICollectionView: LayoutBacked {
         }
     }
 
-    override open func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
+    open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
         let hadView = (node._view != nil)
         super.willRemoveChildNode(node, at: index)
         if node._view == backgroundView {
@@ -178,7 +178,7 @@ extension UICollectionView: LayoutBacked {
         assert(hadView || node._view == nil)
     }
 
-    override open func didUpdateLayout(for _: LayoutNode) {
+    open override func didUpdateLayout(for _: LayoutNode) {
         for cell in visibleCells {
             cell.layoutNode?.update()
         }
@@ -195,7 +195,7 @@ extension UICollectionView: LayoutDelegate {
 }
 
 extension UICollectionViewController: LayoutBacked {
-    override open class func create(with node: LayoutNode) throws -> UICollectionViewController {
+    open override class func create(with node: LayoutNode) throws -> UICollectionViewController {
         let layout = try node.value(forExpression: "collectionViewLayout") as? UICollectionViewLayout ?? .defaultLayout(for: node)
         let viewController = self.init(collectionViewLayout: layout)
         guard let collectionView = viewController.collectionView else {
@@ -209,7 +209,7 @@ extension UICollectionViewController: LayoutBacked {
         return viewController
     }
 
-    override open class var expressionTypes: [String: RuntimeType] {
+    open override class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["collectionViewLayout"] = RuntimeType(UICollectionViewFlowLayout.self)
         for (key, type) in UICollectionViewFlowLayout.allPropertyTypes() {
@@ -223,7 +223,7 @@ extension UICollectionViewController: LayoutBacked {
         return types
     }
 
-    override open func setValue(_ value: Any, forExpression name: String) throws {
+    open override func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "collectionViewLayout":
             collectionView?.collectionViewLayout = value as! UICollectionViewLayout
@@ -236,7 +236,7 @@ extension UICollectionViewController: LayoutBacked {
         }
     }
 
-    override open func shouldInsertChildNode(_ node: LayoutNode, at index: Int) -> Bool {
+    open override func shouldInsertChildNode(_ node: LayoutNode, at index: Int) -> Bool {
         switch node.viewClass {
         case is UICollectionViewCell.Type:
             return collectionView?.shouldInsertChildNode(node, at: index) ?? false
@@ -245,7 +245,7 @@ extension UICollectionViewController: LayoutBacked {
         }
     }
 
-    override open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
+    open override func didInsertChildNode(_ node: LayoutNode, at index: Int) {
         // TODO: what if more than one collectionView is added?
         if node.viewClass is UICollectionView.Type {
             let wasLoaded = (viewIfLoaded != nil)
@@ -258,7 +258,7 @@ extension UICollectionViewController: LayoutBacked {
         collectionView?.didInsertChildNode(node, at: index)
     }
 
-    override open func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
+    open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
         if node.viewClass is UICollectionView.Type {
             collectionView = nil
             return
@@ -383,14 +383,14 @@ extension UICollectionView {
 }
 
 private class LayoutCollectionViewCell: UICollectionViewCell {
-    override open var intrinsicContentSize: CGSize {
+    open override var intrinsicContentSize: CGSize {
         guard let layoutNode = layoutNode, layoutNode.children.isEmpty else {
             return super.intrinsicContentSize
         }
         return CGSize(width: UIView.noIntrinsicMetric, height: 44)
     }
 
-    override open func sizeThatFits(_ size: CGSize) -> CGSize {
+    open override func sizeThatFits(_ size: CGSize) -> CGSize {
         if let layoutNode = layoutNode {
             let height = (try? layoutNode.doubleValue(forSymbol: "height")) ?? 0
             return CGSize(width: size.width, height: CGFloat(height))
@@ -427,15 +427,15 @@ private extension UICollectionViewCell {
 }
 
 extension UICollectionViewCell: LayoutBacked {
-    override open class func create(with _: LayoutNode) throws -> UICollectionViewCell {
+    open override class func create(with _: LayoutNode) throws -> UICollectionViewCell {
         throw LayoutError.message("UICollectionViewCells must be created by UICollectionView")
     }
 
-    override open class var parameterTypes: [String: RuntimeType] {
+    open override class var parameterTypes: [String: RuntimeType] {
         return ["reuseIdentifier": .string]
     }
 
-    override open class var expressionTypes: [String: RuntimeType] {
+    open override class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         for (key, type) in UIView.cachedExpressionTypes {
             types["contentView.\(key)"] = type
@@ -445,7 +445,7 @@ extension UICollectionViewCell: LayoutBacked {
         return types
     }
 
-    override open func setValue(_ value: Any, forExpression name: String) throws {
+    open override func setValue(_ value: Any, forExpression name: String) throws {
         if name.hasPrefix("backgroundView."), backgroundView == nil {
             // Add a backgroundView view if required
             backgroundView = UIView(frame: bounds)
@@ -456,7 +456,7 @@ extension UICollectionViewCell: LayoutBacked {
         try super.setValue(value, forExpression: name)
     }
 
-    override open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
+    open override func didInsertChildNode(_ node: LayoutNode, at index: Int) {
         // Insert child views into `contentView` instead of directly
         contentView.didInsertChildNode(node, at: index)
     }

@@ -1595,6 +1595,7 @@ extension RulesTests {
         ("testSpaceRemovedInMultipleOptionalChaining", testSpaceRemovedInMultipleOptionalChaining),
         ("testSpaceRemovedInNestedPropertyWrapper", testSpaceRemovedInNestedPropertyWrapper),
         ("testSpaceRemovedInOptionalChaining", testSpaceRemovedInOptionalChaining),
+        ("testSpecifierOrder", testSpecifierOrder),
         ("testSplitLineMultipleOptionalChaining", testSplitLineMultipleOptionalChaining),
         ("testSplitLineOptionalChaining", testSplitLineOptionalChaining),
         ("testStringEqualsStringNonYodaCondition", testStringEqualsStringNonYodaCondition),

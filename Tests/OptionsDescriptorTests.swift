@@ -633,7 +633,7 @@ class OptionsDescriptorTests: XCTestCase {
             (input: ";", isValid: false),
             (input: "?", isValid: false),
         ]
-        let fromOptionExpectations: [OptionArgumentMapping<[String]>] = [
+        let fromOptionExpectations: [OptionArgumentMapping<Set<String>>] = [
             (optionValue: [], argumentValue: ""),
             (optionValue: ["*", "/"], argumentValue: "*,/"),
         ]
@@ -656,7 +656,7 @@ class OptionsDescriptorTests: XCTestCase {
             (input: "is", isValid: true),
             (input: "do", isValid: false),
         ]
-        let fromOptionExpectations: [OptionArgumentMapping<[String]>] = [
+        let fromOptionExpectations: [OptionArgumentMapping<Set<String>>] = [
             (optionValue: [], argumentValue: ""),
             (optionValue: ["*", "/"], argumentValue: "*,/"),
         ]

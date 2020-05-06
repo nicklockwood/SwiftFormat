@@ -3,7 +3,7 @@
 import Foundation
 
 extension UIScrollView {
-    override open class var expressionTypes: [String: RuntimeType] {
+    open override class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["contentInsetAdjustmentBehavior"] = .uiScrollViewContentInsetAdjustmentBehavior
         types["indicatorStyle"] = .uiScrollViewIndicatorStyle
@@ -38,7 +38,7 @@ extension UIScrollView {
         return types
     }
 
-    override open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
+    open override func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "contentOffset":
             setContentOffset(value as! CGPoint, animated: true)
@@ -55,7 +55,7 @@ extension UIScrollView {
         }
     }
 
-    override open func setValue(_ value: Any, forExpression name: String) throws {
+    open override func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "contentInsetAdjustmentBehavior":
             // Does nothing on iOS 10 and earlier
@@ -67,7 +67,7 @@ extension UIScrollView {
         }
     }
 
-    override open func didUpdateLayout(for _: LayoutNode) {
+    open override func didUpdateLayout(for _: LayoutNode) {
         // Prevents contentOffset glitch when rotating from portrait to landscape
         // TODO: needs improvement - result can be off by one page sometimes
         if isPagingEnabled {

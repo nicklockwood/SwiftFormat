@@ -275,7 +275,7 @@ public class LayoutNode: NSObject {
         }
     }
 
-    override public func observeValue(
+    public override func observeValue(
         forKeyPath _: String?,
         of _: Any?,
         change _: [NSKeyValueChangeKey: Any]?,

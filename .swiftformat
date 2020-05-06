@@ -34,6 +34,7 @@
 --trimwhitespace always
 --wraparguments preserve
 --wrapcollections preserve
+--specifierorder public,override
 
 # rules
 

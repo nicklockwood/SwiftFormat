@@ -38,6 +38,7 @@ extension FormatOptions {
             case binary(true: [String], false: [String])
             case `enum`([String])
             case text
+            case array
             case set
         }
 
@@ -197,8 +198,29 @@ extension FormatOptions {
         init(argumentName: String,
              propertyName: String,
              displayName: String,
-             help: String = "",
+             help: String,
              keyPath: WritableKeyPath<FormatOptions, [String]>,
+             validate: @escaping (String) throws -> Void = { _ in }) {
+            self.argumentName = argumentName
+            self.propertyName = propertyName
+            self.displayName = displayName
+            self.help = help
+            type = .array
+            toOptions = { value, options in
+                let values = parseCommaDelimitedList(value)
+                try values.forEach(validate)
+                options[keyPath: keyPath] = values
+            }
+            fromOptions = { options in
+                options[keyPath: keyPath].joined(separator: ",")
+            }
+        }
+
+        init(argumentName: String,
+             propertyName: String,
+             displayName: String,
+             help: String,
+             keyPath: WritableKeyPath<FormatOptions, Set<String>>,
              validate: @escaping (String) throws -> Void = { _ in }) {
             self.argumentName = argumentName
             self.propertyName = propertyName
@@ -208,10 +230,10 @@ extension FormatOptions {
             toOptions = { value, options in
                 let values = parseCommaDelimitedList(value)
                 try values.forEach(validate)
-                options[keyPath: keyPath] = values
+                options[keyPath: keyPath] = Set(values)
             }
             fromOptions = { options in
-                options[keyPath: keyPath].joined(separator: ",")
+                options[keyPath: keyPath].sorted().joined(separator: ",")
             }
         }
     }

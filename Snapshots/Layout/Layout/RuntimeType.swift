@@ -375,7 +375,7 @@ public class RuntimeType: NSObject {
         availability = .available
     }
 
-    override public var description: String {
+    public override var description: String {
         switch availability {
         case .available:
             return kind.description
@@ -384,7 +384,7 @@ public class RuntimeType: NSObject {
         }
     }
 
-    override public func isEqual(_ object: Any?) -> Bool {
+    public override func isEqual(_ object: Any?) -> Bool {
         guard let object = object as? RuntimeType else {
             return false
         }
@@ -401,7 +401,7 @@ public class RuntimeType: NSObject {
         }
     }
 
-    override public var hash: Int {
+    public override var hash: Int {
         return description.hashValue
     }
 

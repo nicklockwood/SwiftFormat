@@ -6,7 +6,7 @@ import XCTest
 private class TestView: UIView {
     @objc var nestedTestView = TestView()
 
-    @objc override open class var expressionTypes: [String: RuntimeType] {
+    @objc open override class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["backgroundColor"] = .unavailable("For reasons")
         return types

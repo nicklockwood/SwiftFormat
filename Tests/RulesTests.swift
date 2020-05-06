@@ -4066,6 +4066,13 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.specifiers, options: options)
     }
 
+    func testSpecifierOrder() {
+        let input = "override public var foo: Int { 5 }"
+        let output = "public override var foo: Int { 5 }"
+        let options = FormatOptions(specifierOrder: ["public", "override"])
+        testFormatting(for: input, output, rule: FormatRules.specifiers, options: options)
+    }
+
     func testNoConfusePostfixIdentifierWithKeyword() {
         let input = "var foo = .postfix\noverride init() {}"
         testFormatting(for: input, rule: FormatRules.specifiers)

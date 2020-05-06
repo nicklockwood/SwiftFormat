@@ -267,15 +267,15 @@ public struct FormatOptions: CustomStringConvertible {
     public var stripUnusedArguments: ArgumentStrippingMode
     public var elseOnNextLine: Bool
     public var explicitSelf: SelfMode
-    public var selfRequired: [String]
+    public var selfRequired: Set<String>
     public var experimentalRules: Bool
     public var importGrouping: ImportGrouping
-    public var trailingClosures: [String]
+    public var trailingClosures: Set<String>
     public var xcodeIndentation: Bool
     public var tabWidth: Int
     public var maxWidth: Int
-    public var noSpaceOperators: [String]
-    public var noWrapOperators: [String]
+    public var noSpaceOperators: Set<String>
+    public var noWrapOperators: Set<String>
     public var specifierOrder: [String]
 
     // Deprecated
@@ -321,15 +321,15 @@ public struct FormatOptions: CustomStringConvertible {
                 stripUnusedArguments: ArgumentStrippingMode = .all,
                 elseOnNextLine: Bool = false,
                 explicitSelf: SelfMode = .remove,
-                selfRequired: [String] = [],
+                selfRequired: Set<String> = [],
                 experimentalRules: Bool = false,
                 importGrouping: ImportGrouping = .alphabetized,
-                trailingClosures: [String] = [],
+                trailingClosures: Set<String> = [],
                 xcodeIndentation: Bool = false,
                 tabWidth: Int = 0,
                 maxWidth: Int = 0,
-                noSpaceOperators: [String] = [],
-                noWrapOperators: [String] = [],
+                noSpaceOperators: Set<String> = [],
+                noWrapOperators: Set<String> = [],
                 specifierOrder: [String] = [],
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,

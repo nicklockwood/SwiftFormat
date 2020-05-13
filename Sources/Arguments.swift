@@ -391,6 +391,9 @@ private func processOption(_ key: String,
         guard !value.isEmpty else {
             throw FormatError.options("--\(key) option expects a value")
         }
+        if case let FormatError.options(string) = error {
+            throw FormatError.options("\(string) in --\(key)")
+        }
         throw FormatError.options("Unsupported --\(key) value '\(value)'")
     }
 }

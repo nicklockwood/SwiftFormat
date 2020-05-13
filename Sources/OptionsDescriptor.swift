@@ -208,7 +208,12 @@ extension FormatOptions {
             type = .array
             toOptions = { value, options in
                 let values = parseCommaDelimitedList(value)
-                try values.forEach(validate)
+                for (index, value) in values.enumerated() {
+                    if values[0 ..< index].contains(value) {
+                        throw FormatError.options("Duplicate value '\(value)'")
+                    }
+                    try validate(value)
+                }
                 options[keyPath: keyPath] = values
             }
             fromOptions = { options in

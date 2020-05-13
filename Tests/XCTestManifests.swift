@@ -315,6 +315,7 @@ extension OptionsDescriptorTests {
         ("testRemoveBlankLines", testRemoveBlankLines),
         ("testSpaceAroundOperatorDeclarations", testSpaceAroundOperatorDeclarations),
         ("testSpaceAroundRangeOperators", testSpaceAroundRangeOperators),
+        ("testSpecifierOrder", testSpecifierOrder),
         ("testStripUnusedArguments", testStripUnusedArguments),
         ("testTrailingCommas", testTrailingCommas),
         ("testTruncateBlankLines", testTruncateBlankLines),

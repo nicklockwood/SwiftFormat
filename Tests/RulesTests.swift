@@ -7726,6 +7726,12 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.hoistPatternLet, options: options)
     }
 
+    func testNoUnhoistIfCaseFollowedByLetTuple() {
+        let input = "if case .foo = bar, let (foo, bar) = baz {}"
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
     func testNoUnhoistIfArgIsNamespacedEnumCaseLiteralInParens() {
         let input = "switch foo {\ncase (Foo.bar(let baz)):\n}"
         let options = FormatOptions(hoistPatternLet: false)

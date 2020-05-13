@@ -1166,6 +1166,7 @@ extension RulesTests {
         ("testNoStripPackageHeader", testNoStripPackageHeader),
         ("testNoTruncateBlankLine", testNoTruncateBlankLine),
         ("testNoUnhoistIfArgIsNamespacedEnumCaseLiteralInParens", testNoUnhoistIfArgIsNamespacedEnumCaseLiteralInParens),
+        ("testNoUnhoistIfCaseFollowedByLetTuple", testNoUnhoistIfCaseFollowedByLetTuple),
         ("testNoUnhoistIfLetTuple", testNoUnhoistIfLetTuple),
         ("testNoUnhoistTupleLet", testNoUnhoistTupleLet),
         ("testNoWrapAfterFirstArgumentInStringInterpolation", testNoWrapAfterFirstArgumentInStringInterpolation),

@@ -2989,31 +2989,16 @@ public struct _FormatRules {
                         // No changes needed
                         return
                     }
-                    var prevKeywordIndex = prevIndex
-                    loop: while let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevKeywordIndex) {
-                        switch formatter.tokens[index] {
-                        case .keyword("case"), .endOfScope("case"):
-                            break loop
-                        case .keyword("let"), .keyword("var"),
-                             .keyword("as"), .keyword("is"), .keyword("try"):
-                            break
-                        case .keyword, .startOfScope("{"), .endOfScope("}"):
-                            // Tuple assignment, not a pattern
-                            return
-                        default:
-                            break
-                        }
-                        prevKeywordIndex = index
-                    }
-                    guard let prevPrevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
-                        [.keyword("case"), .endOfScope("case"), .delimiter(",")].contains(prevPrevToken) else {
+                    switch formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) {
+                    case .keyword("case")?, .endOfScope("case")?:
+                        keyword = prevToken.string
+                        formatter.removeTokens(inRange: prevIndex ..< startIndex)
+                        openParenIndex -= (startIndex - prevIndex)
+                        startIndex = prevIndex
+                    default:
                         // Tuple assignment, not a pattern
                         return
                     }
-                    keyword = prevToken.string
-                    formatter.removeTokens(inRange: prevIndex ..< startIndex)
-                    openParenIndex -= (startIndex - prevIndex)
-                    startIndex = prevIndex
                 } else if hoist == false {
                     // No changes needed
                     return

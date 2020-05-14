@@ -7561,6 +7561,12 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
     }
 
+    func testHoistLabelledCaseLet() {
+        let input = "if case .foo(bar: let bar, baz: let baz) = quux {}"
+        let output = "if case let .foo(bar: bar, baz: baz) = quux {}"
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
+    }
+
     func testHoistCaseVar() {
         let input = "if case .foo(var bar, var baz) = quux {}"
         let output = "if case var .foo(bar, baz) = quux {}"
@@ -7659,6 +7665,13 @@ class RulesTests: XCTestCase {
     func testUnhoistCaseLet() {
         let input = "if case let .foo(bar, baz) = quux {}"
         let output = "if case .foo(let bar, let baz) = quux {}"
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
+    func testUnhoistLabelledCaseLet() {
+        let input = "if case let .foo(bar: bar, baz: baz) = quux {}"
+        let output = "if case .foo(bar: let bar, baz: let baz) = quux {}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
     }

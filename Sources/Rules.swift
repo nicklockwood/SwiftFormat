@@ -3036,21 +3036,22 @@ public struct _FormatRules {
                 // Find variable indices
                 var indices = [Int]()
                 var index = openParenIndex + 1
-                var wasParenOrComma = true
+                var wasParenOrCommaOrLabel = true
                 while index < endIndex {
                     let token = formatter.tokens[index]
                     switch token {
-                    case .delimiter(","), .startOfScope("("):
-                        wasParenOrComma = true
-                    case let .identifier(name) where wasParenOrComma:
-                        wasParenOrComma = false
-                        if name != "_", formatter.next(.nonSpaceOrComment, after: index) != .operator(".", .infix) {
+                    case .delimiter(","), .startOfScope("("), .delimiter(":"):
+                        wasParenOrCommaOrLabel = true
+                    case let .identifier(name) where wasParenOrCommaOrLabel:
+                        wasParenOrCommaOrLabel = false
+                        let next = formatter.next(.nonSpaceOrComment, after: index)
+                        if name != "_", next != .operator(".", .infix), next != .delimiter(":") {
                             indices.append(index)
                         }
                     case _ where token.isSpaceOrCommentOrLinebreak:
                         break
                     default:
-                        wasParenOrComma = false
+                        wasParenOrCommaOrLabel = false
                     }
                     index += 1
                 }

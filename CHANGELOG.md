@@ -1,11 +1,18 @@
 # Change Log
 
+## [0.44.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.10) (2020-05-14)
+
+- Fixed bug where `--specifierorder` option values were sorted alphabetically
+- Fixed a couple of bugs in `hoistPatternLet` when `--patternlet` is set to `inline`
+- Added support for hoisting/unhoisting `var` and `let` in `do ... catch` patterns
+- Added error if `--specifierorder` contains duplicate values
+
 ## [0.44.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.9) (2020-05-05)
 
 - Added `--specifierorder` argument for overriding default order used by `specifiers` rule
 - Added `--nowrapoperators` argument for preventing `wrap` rule breaking at specific operators
 - The `redundantNilInit` rule no longer removes `nil` defaults from vars in structs using synthesized init
-- Fix indenting of trailing comment delimiter in multiline comments
+- Fixed indenting of trailing comment delimiter in multiline comments
 
 ## [0.44.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.8) (2020-05-01)
 
@@ -26,7 +33,7 @@
 
 - Fixed indenting of wrapped closures after a switch statement
 - Fixed bug with `redundantNilInit` removing `nil` for properties using parameterized property wrappers
-- Fixed `redundantRawValues` rule not removing values for backtick-escaped case names
+- Fixed `redundantRawValues` rule not removing values for back-tick-escaped case names
 - Improved error messages for misnamed rules
 - Documentation improvements
 
@@ -51,7 +58,7 @@
 - Allman braces are now applied correctly for lines that end in a numeric literal
 - Blank line is now removed when stripping a redundant `return` keyword on its own line
 - Fixed space being inserted before the `.` in a nested PropertyWrapper expression
-- Fixed `return` being incorrectly removed inside `if` statements containing an unparenthesized closure
+- Fixed `return` being incorrectly removed inside `if` statements containing an un-parenthesized closure
 
 ## [0.44.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.3) (2020-02-20)
 

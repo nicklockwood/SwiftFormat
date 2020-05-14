@@ -2992,7 +2992,7 @@ public struct _FormatRules {
                         return
                     }
                     switch formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) {
-                    case .keyword("case")?, .endOfScope("case")?,
+                    case .keyword("catch")?, .keyword("case")?, .endOfScope("case")?,
                          .delimiter(",")? where !isTuple:
                         keyword = prevToken.string
                         formatter.removeTokens(inRange: prevIndex ..< startIndex)

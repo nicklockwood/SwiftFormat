@@ -7630,6 +7630,12 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
     }
 
+    func testHoistCatchLet() {
+        let input = "do {} catch Foo.foo(bar: let bar) {}"
+        let output = "do {} catch let Foo.foo(bar: bar) {}"
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
+    }
+
     func testNoNestedHoistLetWithSpecifiedArgs() {
         let input = "if case (.foo(let a, b), .bar(let c, d)) = quux {}"
         testFormatting(for: input, rule: FormatRules.hoistPatternLet)
@@ -7750,6 +7756,13 @@ class RulesTests: XCTestCase {
     func testUnhoistCommaSeparatedSwitchCaseLets2() {
         let input = "switch foo {\ncase let Foo.foo(bar), let Foo.bar(bar):\n}"
         let output = "switch foo {\ncase Foo.foo(let bar), Foo.bar(let bar):\n}"
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
+    func testUnhoistCatchLet() {
+        let input = "do {} catch let Foo.foo(bar: bar) {}"
+        let output = "do {} catch Foo.foo(bar: let bar) {}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
     }

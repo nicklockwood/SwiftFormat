@@ -2975,8 +2975,10 @@ public struct _FormatRules {
             var openParenIndex = i
             var startIndex = i
             var keyword = "let"
+            var isTuple = true
             if var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) {
                 if case .identifier = formatter.tokens[prevIndex] {
+                    isTuple = false
                     prevIndex = formatter.index(before: prevIndex) {
                         $0.isSpaceOrCommentOrLinebreak || $0.isStartOfScope || $0 == .endOfScope("case")
                     } ?? -1
@@ -2990,7 +2992,8 @@ public struct _FormatRules {
                         return
                     }
                     switch formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) {
-                    case .keyword("case")?, .endOfScope("case")?:
+                    case .keyword("case")?, .endOfScope("case")?,
+                         .delimiter(",")? where !isTuple:
                         keyword = prevToken.string
                         formatter.removeTokens(inRange: prevIndex ..< startIndex)
                         openParenIndex -= (startIndex - prevIndex)

@@ -7624,6 +7624,12 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
     }
 
+    func testHoistCommaSeparatedSwitchCaseLets() {
+        let input = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
+        let output = "switch foo {\ncase let .foo(bar), let .bar(bar):\n}"
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
+    }
+
     func testNoNestedHoistLetWithSpecifiedArgs() {
         let input = "if case (.foo(let a, b), .bar(let c, d)) = quux {}"
         testFormatting(for: input, rule: FormatRules.hoistPatternLet)
@@ -7723,6 +7729,27 @@ class RulesTests: XCTestCase {
     func testUnhoistIfArgIsUnderscore() {
         let input = "if case let .foo(_, baz) = quux {}"
         let output = "if case .foo(_, let baz) = quux {}"
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
+    func testNestedUnhoistLet() {
+        let input = "if case let (.foo(a, b), .bar(c, d)) = quux {}"
+        let output = "if case (.foo(let a, let b), .bar(let c, let d)) = quux {}"
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
+    func testUnhoistCommaSeparatedSwitchCaseLets() {
+        let input = "switch foo {\ncase let .foo(bar), let .bar(bar):\n}"
+        let output = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
+    func testUnhoistCommaSeparatedSwitchCaseLets2() {
+        let input = "switch foo {\ncase let Foo.foo(bar), let Foo.bar(bar):\n}"
+        let output = "switch foo {\ncase Foo.foo(let bar), Foo.bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
     }

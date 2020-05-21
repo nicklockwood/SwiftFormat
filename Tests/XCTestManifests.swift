@@ -900,6 +900,7 @@ extension RulesTests {
         ("testNoConfusePostfixIdentifierWithKeyword2", testNoConfusePostfixIdentifierWithKeyword2),
         ("testNoCrashWrap", testNoCrashWrap),
         ("testNoCrashWrap2", testNoCrashWrap2),
+        ("testNoCrashWrap3", testNoCrashWrap3),
         ("testNoDecimalGrouping", testNoDecimalGrouping),
         ("testNoDeleteCodeBetweenImports", testNoDeleteCodeBetweenImports),
         ("testNoDeleteCodeBetweenImports2", testNoDeleteCodeBetweenImports2),

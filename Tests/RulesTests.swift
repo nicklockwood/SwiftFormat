@@ -41,7 +41,7 @@ class RulesTests: XCTestCase {
                        options: options, exclude: exclude)
     }
 
-    func testFormatting(for input: String, _ outputs: [String], rules: [FormatRule],
+    func testFormatting(for input: String, _ outputs: [String] = [], rules: [FormatRule],
                         options: FormatOptions = .default, exclude: [String] = []) {
         precondition(input != outputs.first || input != outputs.last, "Redundant output parameter")
         precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
@@ -8210,6 +8210,19 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(maxWidth: 80)
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options,
                        exclude: ["indent", "wrapArguments"])
+    }
+
+    func testNoCrashWrap3() throws {
+        let input = """
+        override func invalidationContext(forBoundsChange newBounds: CGRect) -> UICollectionViewLayoutInvalidationContext {
+            let context = super.invalidationContext(forBoundsChange: newBounds) as! UICollectionViewFlowLayoutInvalidationContext
+            context.invalidateFlowLayoutDelegateMetrics = newBounds.size != collectionView?.bounds.size
+            return context
+        }
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 100)
+        let rules = [FormatRules.wrap, FormatRules.wrapArguments]
+        XCTAssertNoThrow(try format(input, rules: rules, options: options))
     }
 
     // MARK: - wrapArguments

@@ -1068,8 +1068,7 @@ extension Formatter {
 
                 func wrapArgumentsWithoutPartialWrapping() {
                     switch mode {
-                    case .preserve, .beforeFirst,
-                         .afterFirst where !hasMultipleArguments:
+                    case .preserve, .beforeFirst:
                         wrapArgumentsBeforeFirst(startOfScope: i,
                                                  endOfScope: endOfScope,
                                                  allowGrouping: false,

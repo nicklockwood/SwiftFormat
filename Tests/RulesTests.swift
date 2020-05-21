@@ -8308,6 +8308,36 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
+    func testIndentFirstElementWhenApplyingWrap() {
+        let input = """
+        let foo = Set([
+        Thing(),
+        Thing(),
+        ])
+        """
+        let output = """
+        let foo = Set([
+            Thing(),
+            Thing(),
+        ])
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments)
+    }
+
+    func testWrapArgumentsDoesntIndentTrailingComment() {
+        let input = """
+        foo( // foo
+        bar: Int
+        )
+        """
+        let output = """
+        foo( // foo
+            bar: Int
+        )
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments)
+    }
+
     // MARK: afterFirst
 
     func testBeforeFirstConvertedToAfterFirst() {

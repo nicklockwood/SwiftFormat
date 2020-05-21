@@ -900,10 +900,14 @@ extension Formatter {
                 }
                 index = commaIndex
             }
-            // Insert linebreak after opening paren
-            if next(.nonSpaceOrComment, after: i)?.isLinebreak == false {
-                insertSpace(indent + options.indent, at: i + 1)
-                insertLinebreak(at: i + 1)
+            // Insert linebreak and indent after opening paren
+            if let nextIndex = self.index(of: .nonSpaceOrComment, after: i) {
+                if !tokens[nextIndex].isLinebreak {
+                    insertLinebreak(at: nextIndex)
+                }
+                if nextIndex + 1 < endOfScope {
+                    insertSpace(indent + options.indent, at: nextIndex + 1)
+                }
             }
         }
         func wrapArgumentsAfterFirst(startOfScope i: Int, endOfScope: Int, allowGrouping: Bool) {

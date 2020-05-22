@@ -948,6 +948,7 @@ extension RulesTests {
         ("testNoIndentWrappedSpecifiersForProtocol", testNoIndentWrappedSpecifiersForProtocol),
         ("testNoInsertBlankLineAfterMarkAtEndOfScope", testNoInsertBlankLineAfterMarkAtEndOfScope),
         ("testNoInsertBlankLineBeforeMarkAtStartOfScope", testNoInsertBlankLineBeforeMarkAtStartOfScope),
+        ("testNoInsertBlankLinesInConditionalCompilation", testNoInsertBlankLinesInConditionalCompilation),
         ("testNoInsertExtraBlankLinesAroundMark", testNoInsertExtraBlankLinesAroundMark),
         ("testNoInsertSelfForArrayElements", testNoInsertSelfForArrayElements),
         ("testNoInsertSelfForConditionalLocal", testNoInsertSelfForConditionalLocal),

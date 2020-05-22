@@ -821,7 +821,7 @@ public struct _FormatRules {
                 switch formatter.tokens[nextTokenIndex] {
                 case .error, .endOfScope,
                      .operator(".", _), .delimiter(","), .delimiter(":"),
-                     .keyword("else"), .keyword("catch"):
+                     .keyword("else"), .keyword("catch"), .keyword("#else"):
                     break
                 case .keyword("while"):
                     if let previousBraceIndex = formatter.index(of: .startOfScope("{"), before: i),

@@ -1319,6 +1319,22 @@ class RulesTests: XCTestCase {
                        exclude: ["emptyBraces"])
     }
 
+    func testNoInsertBlankLinesInConditionalCompilation() {
+        let input = """
+        struct Foo {
+            #if BAR
+                func something() {
+                }
+            #else
+                func something() {
+                }
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes,
+                       exclude: ["emptyBraces"])
+    }
+
     // MARK: - blankLinesAroundMark
 
     func testInsertBlankLinesAroundMark() {

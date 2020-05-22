@@ -418,30 +418,30 @@ public func newOffset(for offset: SourceOffset, in tokens: [Token], tabWidth: In
 
 /// Process parsing errors
 public func parsingError(for tokens: [Token], options: FormatOptions) -> FormatError? {
-    if let index = tokens.index(where: {
+    guard let index = tokens.index(where: {
         guard options.fragment || !$0.isError else { return true }
         guard !options.ignoreConflictMarkers, case let .operator(string, _) = $0 else { return false }
         return string.hasPrefix("<<<<<") || string.hasPrefix("=====") || string.hasPrefix(">>>>>")
-    }) {
-        let message: String
-        switch tokens[index] {
-        case .error(""):
-            message = "Unexpected end of file"
-        case let .error(string):
-            if string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                message = "Inconsistent whitespace in multi-line string literal"
-            } else {
-                message = "Unexpected token \(string)"
-            }
-        case let .operator(string, _):
-            message = "Found conflict marker \(string)"
-        default:
-            preconditionFailure()
-        }
-        let offset = offsetForToken(at: index, in: tokens, tabWidth: options.tabWidth)
-        return .parsing("\(message) at \(offset)")
+    }) else {
+        return nil
     }
-    return nil
+    let message: String
+    switch tokens[index] {
+    case .error(""):
+        message = "Unexpected end of file"
+    case let .error(string):
+        if string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            message = "Inconsistent whitespace in multi-line string literal"
+        } else {
+            message = "Unexpected token \(string)"
+        }
+    case let .operator(string, _):
+        message = "Found conflict marker \(string)"
+    default:
+        preconditionFailure()
+    }
+    let offset = offsetForToken(at: index, in: tokens, tabWidth: options.tabWidth)
+    return .parsing("\(message) at \(offset)")
 }
 
 /// Convert a token array back into a string

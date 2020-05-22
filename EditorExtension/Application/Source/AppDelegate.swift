@@ -42,7 +42,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         do {
             data = try Data(contentsOf: url)
         } catch {
-            showError(FormatError.reading("problem reading configuration from \(url.path). [\(error)]"))
+            showError(FormatError.reading("Problem reading configuration from \(url.path). [\(error)]"))
             return false
         }
 
@@ -127,7 +127,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 try config.write(to: url, atomically: true, encoding: .utf8)
             } catch {
-                self.showError(FormatError.writing("problem writing configuration to \(url.path). [\(error)]"))
+                self.showError(FormatError.writing("Problem writing configuration to \(url.path). [\(error)]"))
             }
         }
     }

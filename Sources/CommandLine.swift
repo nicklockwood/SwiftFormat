@@ -455,14 +455,16 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         let defaultCacheFileName = "swiftformat.cache"
         let manager = FileManager.default
         func setDefaultCacheURL() {
-            var cacheDirectory: URL!
-            #if os(macOS)
-                if let cachePath = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first {
-                    cacheDirectory = URL(fileURLWithPath: cachePath)
-                }
-            #endif
-            cacheDirectory = (cacheDirectory ?? URL(fileURLWithPath: "/var/tmp/"))
-                .appendingPathComponent("com.charcoaldesign.swiftformat")
+            let cacheDirectory = { () -> URL in
+                #if os(macOS)
+                    if let cachePath = NSSearchPathForDirectoriesInDomains(
+                        .cachesDirectory, .userDomainMask, true
+                    ).first {
+                        return URL(fileURLWithPath: cachePath)
+                    }
+                #endif
+                return URL(fileURLWithPath: "/var/tmp/")
+            }().appendingPathComponent("com.charcoaldesign.swiftformat")
             do {
                 try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)
                 cacheURL = cacheDirectory.appendingPathComponent(defaultCacheFileName)
@@ -741,7 +743,10 @@ func processInput(_ inputURLs: [URL],
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
     var cache: [String: String]?
     if let cacheURL = cacheURL {
-        cache = NSDictionary(contentsOf: cacheURL) as? [String: String] ?? [:]
+        if let data = try? Data(contentsOf: cacheURL) {
+            cache = try? JSONDecoder().decode([String: String].self, from: data)
+        }
+        cache = cache ?? [:]
     }
     // Logging skipped files
     var outputFlags: OutputFlags = (0, 0, 0, 0)
@@ -905,15 +910,17 @@ func processInput(_ inputURLs: [URL],
             errors.append(FormatError.writing("\(errorCount) file\(errorCount == 1 ? "" : "s") could not be formatted"))
         }
     }
-    if outputFlags.filesChecked > 0 {
-        // Save cache
-        if let cache = cache, let cacheURL = cacheURL, let cacheDirectory = cacheDirectory {
-            if !(cache as NSDictionary).write(to: cacheURL, atomically: true) {
-                if FileManager.default.fileExists(atPath: cacheDirectory.path) {
-                    errors.append(FormatError.writing("Failed to write cache file at \(cacheURL.path)"))
-                } else {
-                    errors.append(FormatError.reading("Specified cache file directory does not exist: \(cacheDirectory.path)"))
-                }
+    // Save cache
+    if outputFlags.filesChecked > 0, let cache = cache, let cacheURL = cacheURL,
+        let cacheDirectory = cacheDirectory {
+        do {
+            let data = try JSONEncoder().encode(cache)
+            try data.write(to: cacheURL, options: .atomic)
+        } catch {
+            if FileManager.default.fileExists(atPath: cacheDirectory.path) {
+                errors.append(FormatError.writing("Failed to write cache file at \(cacheURL.path)"))
+            } else {
+                errors.append(FormatError.reading("Specified cache file directory does not exist: \(cacheDirectory.path)"))
             }
         }
     }

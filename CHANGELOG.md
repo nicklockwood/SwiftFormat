@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.44.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.11) (2020-05-23)
+
+- Fixed failure to terminate when wrapping functions after first parameter
+- First element in a wrapped collection or function is now correctly indented
+- Added workaround for Swift type sugar parsing bug
+- The `blankLinesBetweenScopes` rule no longer inserts a blank line before an `#else` block
+- Downgraded "No eligible files found" error to a warning
+- Removed "Failed to format any files" error, which was sometimes triggered erroneously
+- Fixed deprecation warning when building on Linux
+
 ## [0.44.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.10) (2020-05-14)
 
 - Fixed bug where `--specifierorder` option values were sorted alphabetically

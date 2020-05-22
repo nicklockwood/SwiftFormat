@@ -72,14 +72,33 @@ private func print(_ message: String, as type: CLI.OutputType = .info) {
     }
 }
 
-private func printWarnings(_ errors: [Error]) {
+private func printWarnings(_ errors: [Error]) -> Bool {
+    var containsError = false
     for error in errors {
         var errorMessage = "\(error)"
         if ![".", "?", "!"].contains(errorMessage.last ?? " ") {
             errorMessage += "."
         }
-        print("warning: \(errorMessage)", as: .warning)
+        guard let error = error as? FormatError else {
+            continue
+        }
+        let isError: Bool
+        switch error {
+        case let .options(string):
+            isError = string.contains("File not found") || string.contains("Malformed")
+        case let .writing(string):
+            isError = !string.contains(" cache ")
+        case .parsing, .reading:
+            isError = true
+        }
+        if isError {
+            containsError = true
+            print("error: \(errorMessage)", as: .error)
+        } else {
+            print("warning: \(errorMessage)", as: .warning)
+        }
     }
+    return containsError
 }
 
 // Represents the exit codes to the command line. See `man sysexits` for more information.
@@ -426,8 +445,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 let time = formatTime(timeEvent {
                     (filesParsed, formatOptions, errors) = inferOptions(from: inputURLs, options: fileOptions)
                 })
-                printWarnings(errors)
-                if filesParsed == 0 {
+                if printWarnings(errors) || filesParsed == 0 {
                     throw FormatError.parsing("Failed to to infer options")
                 }
                 var filesChecked = filesParsed
@@ -604,15 +622,17 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             errors += _errors
         })
 
+        if printWarnings(errors) {
+            return .error
+        }
         if outputFlags.filesChecked == 0, outputFlags.filesSkipped == 0 {
             let inputPaths = inputURLs.map { $0.path }.joined(separator: ", ")
-            errors.append(FormatError.options("No eligible files found at \(inputPaths)"))
+            print("warning: No eligible files found at \(inputPaths).", as: .warning)
         }
-        printWarnings(errors)
         print("SwiftFormat completed in \(time).", as: .success)
         return printResult(dryrun, lint, lenient, outputFlags)
     } catch {
-        printWarnings(errors)
+        _ = printWarnings(errors)
         // Fatal error
         var errorMessage = "\(error)"
         if ![".", "?", "!"].contains(errorMessage.last ?? " ") {

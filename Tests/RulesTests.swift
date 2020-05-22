@@ -10663,6 +10663,57 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.typeSugar)
     }
 
+    func testAvoidSwiftParserBugWithClosuresInsideArrays() {
+        let input = "var foo = Array<(_ image: Data?) -> Void>()"
+        testFormatting(for: input, rule: FormatRules.typeSugar)
+    }
+
+    func testAvoidSwiftParserBugWithClosuresInsideDictionaries() {
+        let input = "var foo = Dictionary<String, (_ image: Data?) -> Void>()"
+        testFormatting(for: input, rule: FormatRules.typeSugar)
+    }
+
+    func testAvoidSwiftParserBugWithClosuresInsideOptionals() {
+        let input = "var foo = Optional<(_ image: Data?) -> Void>()"
+        testFormatting(for: input, rule: FormatRules.typeSugar)
+    }
+
+    func testDontOverApplyBugWorkaround() {
+        let input = "var foo: Array<(_ image: Data?) -> Void>"
+        let output = "var foo: [(_ image: Data?) -> Void]"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    func testDontOverApplyBugWorkaround2() {
+        let input = "var foo: Dictionary<String, (_ image: Data?) -> Void>"
+        let output = "var foo: [String: (_ image: Data?) -> Void]"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    func testDontOverApplyBugWorkaround3() {
+        let input = "var foo: Optional<(_ image: Data?) -> Void>"
+        let output = "var foo: ((_ image: Data?) -> Void)?"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    func testDontOverApplyBugWorkaround4() {
+        let input = "var foo = Array<(image: Data?) -> Void>()"
+        let output = "var foo = [(image: Data?) -> Void]()"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    func testDontOverApplyBugWorkaround5() {
+        let input = "var foo = Array<(Data?) -> Void>()"
+        let output = "var foo = [(Data?) -> Void]()"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    func testDontOverApplyBugWorkaround6() {
+        let input = "var foo = Dictionary<Int, Array<(_ image: Data?) -> Void>>()"
+        let output = "var foo = [Int: Array<(_ image: Data?) -> Void>]()"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
     // MARK: - redundantExtensionACL
 
     func testPublicExtensionMemberACLStripped() {

@@ -3854,6 +3854,21 @@ public struct _FormatRules {
             }) != nil {
                 return
             }
+            // Workaround for https://bugs.swift.org/browse/SR-12856
+            if formatter.last(.nonSpaceOrCommentOrLinebreak, before: typeIndex) != .delimiter(":") ||
+                formatter.currentScope(at: i) == .startOfScope("[") {
+                var startIndex = i
+                if formatter.tokens[typeIndex] == .identifier("Dictionary") {
+                    startIndex = formatter.index(of: .delimiter(","), in: i + 1 ..< endIndex) ?? startIndex
+                }
+                if let parenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex, if: {
+                    $0 == .startOfScope("(")
+                }), let underscoreIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: parenIndex, if: {
+                    $0 == .identifier("_")
+                }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: underscoreIndex)?.isIdentifier == true {
+                    return
+                }
+            }
             func dropSwiftNamespaceIfPresent() {
                 if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: typeIndex, if: {
                     $0.isOperator(".")

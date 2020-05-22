@@ -612,7 +612,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 }
                 if outputFlags.filesSkipped == 0 {
                     let inputPaths = inputURLs.map { $0.path }.joined(separator: ", ")
-                    throw FormatError.options("No eligible files found at \(inputPaths)")
+                    errors.append(FormatError.options("No eligible files found at \(inputPaths)"))
                 }
             } else if !dryrun, !errors.isEmpty {
                 throw FormatError.options("Failed to format any files")

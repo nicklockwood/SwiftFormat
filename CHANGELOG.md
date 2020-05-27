@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.44.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.12) (2020-05-27)
+
+- Fixed indenting of chained methods with trailing closures
+- SwiftFormat command-line tool now logs the location of .swiftformat configuration files that it encounters
+
 ## [0.44.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.11) (2020-05-23)
 
 - Fixed failure to terminate when wrapping functions after first parameter

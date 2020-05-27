@@ -7,7 +7,7 @@ matrix:
       language: swift
       osx_image: xcode10.1
       before_install:
-        - rvm install ruby-2.4.2
+        - rvm install ruby-2.5.0
       install:
         - bundle install --without=documentation
       script:

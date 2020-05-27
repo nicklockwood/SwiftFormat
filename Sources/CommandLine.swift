@@ -675,7 +675,11 @@ func inferOptions(from inputURLs: [URL], options: FileOptions) -> (Int, FormatOp
     var filesParsed = 0
     let baseOptions = Options(fileOptions: options)
     for inputURL in inputURLs {
-        errors += enumerateFiles(withInputURL: inputURL, options: baseOptions) { inputURL, _, _ in
+        errors += enumerateFiles(
+            withInputURL: inputURL,
+            options: baseOptions,
+            logger: { print($0, as: .info) }
+        ) { inputURL, _, _ in
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("Failed to read file \(inputURL.path)")
             }
@@ -784,12 +788,14 @@ func processInput(_ inputURLs: [URL],
     // Format files
     var errors = [Error]()
     for inputURL in inputURLs {
-        errors += enumerateFiles(withInputURL: inputURL,
-                                 outputURL: outputURL,
-                                 options: options,
-                                 concurrent: !verbose,
-                                 skipped: skippedHandler) { inputURL, outputURL, options in
-
+        errors += enumerateFiles(
+            withInputURL: inputURL,
+            outputURL: outputURL,
+            options: options,
+            concurrent: !verbose,
+            logger: { print($0, as: .info) },
+            skipped: skippedHandler
+        ) { inputURL, outputURL, options in
             guard let input = try? String(contentsOf: inputURL) else {
                 throw FormatError.reading("Failed to read file \(inputURL.path)")
             }

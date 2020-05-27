@@ -73,6 +73,9 @@ public typealias FileEnumerationHandler = (
     _ options: Options
 ) throws -> () throws -> Void
 
+/// Callback for info-level logging
+public typealias Logger = (String) -> Void
+
 /// Enumerate all swift files at the specified location and (optionally) calculate an output file URL for each.
 /// Ignores the file if any of the excluded file URLs is a prefix of the input file URL.
 ///
@@ -86,6 +89,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                            outputURL: URL? = nil,
                            options baseOptions: Options = .default,
                            concurrent: Bool = true,
+                           logger print: Logger? = nil,
                            skipped: FileEnumerationHandler? = nil,
                            handler: @escaping FileEnumerationHandler) -> [Error] {
     let manager = FileManager.default
@@ -234,6 +238,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
             let data = try Data(contentsOf: configFile)
             let args = try parseConfigFile(data)
             try options.addArguments(args, in: inputURL.path)
+            print?("Reading config file at \(configFile.path)")
         }
         let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
         if manager.fileExists(atPath: versionFile.path) {

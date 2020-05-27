@@ -434,7 +434,7 @@ extension Formatter {
             guard let braceIndex = lastIndex(of: .endOfScope("}"), in: index + 1 ..< i) else {
                 return false
             }
-            return self.index(of: .linebreak, in: braceIndex + 1 ..< i) != nil
+            return self.index(of: .nonSpaceOrCommentOrLinebreak, in: braceIndex + 1 ..< i) != nil
         }
 
         switch tokens[index].string {

@@ -505,6 +505,7 @@ extension RulesTests {
         ("testCatchLetError", testCatchLetError),
         ("testChainedClosureIndents", testChainedClosureIndents),
         ("testChainedClosureIndentsAfterIfCondition", testChainedClosureIndentsAfterIfCondition),
+        ("testChainedClosureIndentsAfterIfCondition2", testChainedClosureIndentsAfterIfCondition2),
         ("testChainedClosureIndentsAfterLetDeclaration", testChainedClosureIndentsAfterLetDeclaration),
         ("testChainedClosureIndentsAfterVarDeclaration", testChainedClosureIndentsAfterVarDeclaration),
         ("testChainedFunctionEndingInOpenParenNotDoubleIndented", testChainedFunctionEndingInOpenParenNotDoubleIndented),

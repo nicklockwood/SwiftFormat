@@ -378,7 +378,7 @@ private func processOption(_ key: String,
                            in args: [String: String],
                            from: inout Set<String>,
                            handler: (String) throws -> Void) throws {
-    precondition(optionsArguments.contains(key))
+    precondition(optionsArguments.contains(key), "\(key) not in optionsArguments")
     var arguments = from
     arguments.remove(key)
     from = arguments
@@ -391,8 +391,11 @@ private func processOption(_ key: String,
         guard !value.isEmpty else {
             throw FormatError.options("--\(key) option expects a value")
         }
-        if case let FormatError.options(string) = error {
-            throw FormatError.options("\(string) in --\(key)")
+        if case var FormatError.options(string) = error, !string.isEmpty {
+            if !string.contains(key) {
+                string += " in --\(key)"
+            }
+            throw FormatError.options(string)
         }
         throw FormatError.options("Unsupported --\(key) value '\(value)'")
     }

@@ -1755,6 +1755,7 @@ extension RulesTests {
         ("testWrapArgumentsDoesNotAffectInit", testWrapArgumentsDoesNotAffectInit),
         ("testWrapArgumentsDoesNotAffectLessThanOperator", testWrapArgumentsDoesNotAffectLessThanOperator),
         ("testWrapArgumentsDoesNotAffectSubscript", testWrapArgumentsDoesNotAffectSubscript),
+        ("testWrapArgumentsDoesntIndentClosingBracket", testWrapArgumentsDoesntIndentClosingBracket),
         ("testWrapArgumentsDoesntIndentTrailingComment", testWrapArgumentsDoesntIndentTrailingComment),
         ("testWrapBeforeFirstIfMaxLengthExceeded", testWrapBeforeFirstIfMaxLengthExceeded),
         ("testWrapChainedFunctionAfterSubscriptCollection", testWrapChainedFunctionAfterSubscriptCollection),

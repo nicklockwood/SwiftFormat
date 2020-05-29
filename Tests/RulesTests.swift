@@ -8360,6 +8360,16 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.wrapArguments)
     }
 
+    func testWrapArgumentsDoesntIndentClosingBracket() {
+        let input = """
+        [
+            "foo": [
+            ],
+        ]
+        """
+        testFormatting(for: input, rule: FormatRules.wrapArguments)
+    }
+
     // MARK: afterFirst
 
     func testBeforeFirstConvertedToAfterFirst() {

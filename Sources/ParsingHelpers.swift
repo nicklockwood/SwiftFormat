@@ -906,7 +906,11 @@ extension Formatter {
                     insertLinebreak(at: nextIndex)
                 }
                 if nextIndex + 1 < endOfScope {
-                    insertSpace(indent + options.indent, at: nextIndex + 1)
+                    var indent = indent
+                    if (self.index(of: .nonSpace, after: nextIndex) ?? 0) < endOfScope {
+                        indent += options.indent
+                    }
+                    insertSpace(indent, at: nextIndex + 1)
                 }
             }
         }

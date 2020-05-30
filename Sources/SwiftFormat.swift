@@ -77,7 +77,7 @@ public typealias FileEnumerationHandler = (
 /// Callback for info-level logging
 public typealias Logger = (String) -> Void
 
-/// Enumerate all swift files at the specified location and (optionally) calculate an output file URL for each.
+/// Enumerate all Swift files at the specified location and (optionally) calculate an output file URL for each.
 /// Ignores the file if any of the excluded file URLs is a prefix of the input file URL.
 ///
 /// Files are enumerated concurrently. For convenience, the enumeration block returns a completion block, which

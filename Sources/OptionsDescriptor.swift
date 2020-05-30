@@ -669,7 +669,7 @@ extension FormatOptions.Descriptor {
         argumentName: "swiftversion",
         propertyName: "swiftVersion",
         displayName: "Swift Version",
-        help: "The version of swift used in the project being formatted",
+        help: "The version of Swift used in the files being formatted",
         keyPath: \.swiftVersion
     )
 

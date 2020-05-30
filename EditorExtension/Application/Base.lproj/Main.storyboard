@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="16096" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15702"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16096"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -436,7 +436,6 @@
                                             <tableColumns>
                                                 <tableColumn editable="NO" width="473" minWidth="40" maxWidth="1000" id="jXL-aR-Mks">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
-                                                        <font key="font" metaFont="smallSystem"/>
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                     </tableHeaderCell>
@@ -626,7 +625,7 @@
                                 <rect key="frame" x="18" y="388" width="349" height="64"/>
                                 <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="xVj-5Y-11n">
                                     <font key="font" metaFont="system"/>
-                                    <string key="title">SwiftFormat for Xcode is an extension for Apple's IDE, Xcode that reformats swift code. It applies a set of rules to the whitespace around the code, leaving the meaning intact.</string>
+                                    <string key="title">SwiftFormat for Xcode is an extension for Apple's IDE, Xcode that reformats Swift code. It applies a set of rules to the whitespace around the code, leaving the meaning intact.</string>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
@@ -686,7 +685,7 @@
                             </textField>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="f7w-oN-I0u">
                                 <rect key="frame" x="18" y="84" width="349" height="16"/>
-                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Formats the entire swift file you’re currently editing." id="TvB-5m-5S4">
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Formats the entire Swift file you’re currently editing." id="TvB-5m-5S4">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -694,7 +693,7 @@
                             </textField>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="3tw-Xe-luV">
                                 <rect key="frame" x="18" y="132" width="349" height="16"/>
-                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Formats just the swift code you have selected." id="kCm-Pj-5CN">
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Formats just the Swift code you have selected." id="kCm-Pj-5CN">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -710,7 +709,7 @@
                             </textField>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="aqr-5C-gJh">
                                 <rect key="frame" x="18" y="20" width="349" height="32"/>
-                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Lints the currently open swift file and warns if formatting changes are needed (no actual changes are applied)." id="L2T-8z-YeX">
+                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Lints the currently open Swift file and warns if formatting changes are needed (no actual changes are applied)." id="L2T-8z-YeX">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>

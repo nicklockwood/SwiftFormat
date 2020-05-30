@@ -93,7 +93,7 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
-    func testAddSpaceBetweenAutoclosureEscapingAndBlock() { // swift 2.3 only
+    func testAddSpaceBetweenAutoclosureEscapingAndBlock() { // Swift 2.3 only
         let input = "@autoclosure(escaping)() -> Void"
         let output = "@autoclosure(escaping) () -> Void"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)

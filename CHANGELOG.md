@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.44.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.13) (2020-05-28)
+
+- Fixed indenting of closing bracket when using `wrapArguments` rule
+- Added `--shortoptionals` argument to selectively disable shortening of `Optional<T>` to `T?` for properties
+- Added `--minversion` argument to specify minimum SwiftFormat version to use for a given codebase
+
 ## [0.44.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.12) (2020-05-27)
 
 - Fixed indenting of chained methods with trailing closures

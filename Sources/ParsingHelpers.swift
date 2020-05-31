@@ -468,14 +468,6 @@ extension Formatter {
             let index = token.isKeyword ? i : index(of: .keyword, before: i) else {
             return nil
         }
-//        if let endBraceIndex = lastIndex(of: .endOfScope("}"), in: index ..< i) {
-//            if let startIndex = self.index(of: .startOfScope("{"), before: endBraceIndex),
-//                isStartOfClosure(at: startIndex) {
-//                return calculateIndexOfLastSignificantKeyword(at: startIndex - 1, excluding: excluding)
-//            } else {
-//                return nil
-//            }
-//        }
         switch tokens[index].string {
         case let name where
             name.hasPrefix("#") || name.hasPrefix("@") || excluding.contains(name):

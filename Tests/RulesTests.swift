@@ -10606,6 +10606,8 @@ class RulesTests: XCTestCase {
 
     // MARK: - typeSugar
 
+    // arrays
+
     func testArrayTypeConvertedToSugar() {
         let input = "var foo: Array<String>"
         let output = "var foo: [String]"
@@ -10615,42 +10617,6 @@ class RulesTests: XCTestCase {
     func testSwiftArrayTypeConvertedToSugar() {
         let input = "var foo: Swift.Array<String>"
         let output = "var foo: [String]"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
-    }
-
-    func testDictionaryTypeConvertedToSugar() {
-        let input = "var foo: Dictionary<String, Int>"
-        let output = "var foo: [String: Int]"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
-    }
-
-    func testSwiftDictionaryTypeConvertedToSugar() {
-        let input = "var foo: Swift.Dictionary<String, Int>"
-        let output = "var foo: [String: Int]"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
-    }
-
-    func testOptionalTypeConvertedToSugar() {
-        let input = "var foo: Optional<String>"
-        let output = "var foo: String?"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
-    }
-
-    func testSwiftOptionalTypeConvertedToSugar() {
-        let input = "var foo: Swift.Optional<String>"
-        let output = "var foo: String?"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
-    }
-
-    func testOptionalClosureParenthesizedConvertedToSugar() {
-        let input = "var foo: Optional<(Int) -> String>"
-        let output = "var foo: ((Int) -> String)?"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
-    }
-
-    func testSwiftOptionalClosureParenthesizedConvertedToSugar() {
-        let input = "var foo: Swift.Optional<(Int) -> String>"
-        let output = "var foo: ((Int) -> String)?"
         testFormatting(for: input, output, rule: FormatRules.typeSugar)
     }
 
@@ -10683,6 +10649,46 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.typeSugar)
     }
 
+    // dictionaries
+
+    func testDictionaryTypeConvertedToSugar() {
+        let input = "var foo: Dictionary<String, Int>"
+        let output = "var foo: [String: Int]"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    func testSwiftDictionaryTypeConvertedToSugar() {
+        let input = "var foo: Swift.Dictionary<String, Int>"
+        let output = "var foo: [String: Int]"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    // optionals
+
+    func testOptionalTypeConvertedToSugar() {
+        let input = "var foo: Optional<String>"
+        let output = "var foo: String?"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    func testSwiftOptionalTypeConvertedToSugar() {
+        let input = "var foo: Swift.Optional<String>"
+        let output = "var foo: String?"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    func testOptionalClosureParenthesizedConvertedToSugar() {
+        let input = "var foo: Optional<(Int) -> String>"
+        let output = "var foo: ((Int) -> String)?"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    func testSwiftOptionalClosureParenthesizedConvertedToSugar() {
+        let input = "var foo: Swift.Optional<(Int) -> String>"
+        let output = "var foo: ((Int) -> String)?"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
     func testStrippingSwiftNamespaceInOptionalTypeWhenConvertedToSugar() {
         let input = "Swift.Optional<String>"
         let output = "String?"
@@ -10694,6 +10700,16 @@ class RulesTests: XCTestCase {
         let output = "let a: Swift.String = String?"
         testFormatting(for: input, output, rule: FormatRules.typeSugar)
     }
+
+    // shortOptionals = exceptProperties
+
+    func testPropertyTypeNotConvertedToSugar() {
+        let input = "var foo: Optional<String>"
+        let options = FormatOptions(shortOptionals: .exceptProperties)
+        testFormatting(for: input, rule: FormatRules.typeSugar, options: options)
+    }
+
+    // swift parser bug
 
     func testAvoidSwiftParserBugWithClosuresInsideArrays() {
         let input = "var foo = Array<(_ image: Data?) -> Void>()"

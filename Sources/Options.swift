@@ -235,6 +235,12 @@ public enum SelfMode: String {
     case initOnly = "init-only"
 }
 
+/// Optionals mode
+public enum OptionalsMode: String {
+    case exceptProperties = "except-properties"
+    case always
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -277,6 +283,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var noSpaceOperators: Set<String>
     public var noWrapOperators: Set<String>
     public var specifierOrder: [String]
+    public var shortOptionals: OptionalsMode
 
     // Deprecated
     public var indentComments: Bool
@@ -331,6 +338,7 @@ public struct FormatOptions: CustomStringConvertible {
                 noSpaceOperators: Set<String> = [],
                 noWrapOperators: Set<String> = [],
                 specifierOrder: [String] = [],
+                shortOptionals: OptionalsMode = .always,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -377,6 +385,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.noSpaceOperators = noSpaceOperators
         self.noWrapOperators = noWrapOperators
         self.specifierOrder = specifierOrder
+        self.shortOptionals = shortOptionals
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

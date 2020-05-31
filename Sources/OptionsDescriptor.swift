@@ -282,6 +282,7 @@ extension FormatOptions.Descriptor {
         noSpaceOperators,
         noWrapOperators,
         specifierOrder,
+        shortOptionals,
 
         // Deprecated
         indentComments,
@@ -643,6 +644,14 @@ extension FormatOptions.Descriptor {
                 throw FormatError.options("'\($0)' is not a valid specifier")
             }
         }
+    )
+    static let shortOptionals = FormatOptions.Descriptor(
+        argumentName: "shortoptionals",
+        propertyName: "shortOptionals",
+        displayName: "Short Optional Syntax",
+        help: "Use ? for Optionals \"always\" (default) or \"except-properties\"",
+        keyPath: \.shortOptionals,
+        options: ["always", "except-properties"]
     )
 
     // MARK: - Internal

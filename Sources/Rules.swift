@@ -3837,7 +3837,8 @@ public struct _FormatRules {
 
     /// Replace Array<T>, Dictionary<T, U> and Optional<T> with [T], [T: U] and T?
     public let typeSugar = FormatRule(
-        help: "Prefer shorthand syntax for Arrays, Dictionaries and Optionals."
+        help: "Prefer shorthand syntax for Arrays, Dictionaries and Optionals.",
+        options: ["shortoptionals"]
     ) { formatter in
         formatter.forEach(.startOfScope("<")) { i, _ in
             guard let typeIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {
@@ -3892,6 +3893,11 @@ public struct _FormatRules {
                     [.startOfScope("[")] + formatter.tokens[typeStart ... typeEnd] + [.endOfScope("]")])
                 dropSwiftNamespaceIfPresent()
             case .identifier("Optional"):
+                if formatter.options.shortOptionals == .exceptProperties,
+                    let lastKeyword = formatter.lastSignificantKeyword(at: i),
+                    ["var", "let"].contains(lastKeyword) {
+                    return
+                }
                 var typeTokens = formatter.tokens[typeStart ... typeEnd]
                 if formatter.tokens[typeStart] == .startOfScope("("),
                     let commaEnd = formatter.index(of: .endOfScope(")"), after: typeStart),

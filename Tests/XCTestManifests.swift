@@ -1314,6 +1314,7 @@ extension RulesTests {
         ("testPrivateExtensionMemberACLNotStrippedUnlessFileprivate", testPrivateExtensionMemberACLNotStrippedUnlessFileprivate),
         ("testPrivateRequiredStaticFuncSpecifiers", testPrivateRequiredStaticFuncSpecifiers),
         ("testPrivateSetSpecifierNotMangled", testPrivateSetSpecifierNotMangled),
+        ("testPropertyTypeNotConvertedToSugar", testPropertyTypeNotConvertedToSugar),
         ("testPublicExtensionMemberACLStripped", testPublicExtensionMemberACLStripped),
         ("testReduceIndentAtEndOfFile", testReduceIndentAtEndOfFile),
         ("testReduceIndentAtStartOfFile", testReduceIndentAtStartOfFile),

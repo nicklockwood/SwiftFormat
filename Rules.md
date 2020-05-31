@@ -1315,7 +1315,7 @@ Remove backticks around `self` in Optional unwrap expressions.
 ```
 
 **NOTE:** assignment to un-escaped `self` is only supported in Swift 4.2 and
-above, so the `strongifiedSelf` rule is disabled unless the swift version is
+above, so the `strongifiedSelf` rule is disabled unless the Swift version is
 set to 4.2 or above.
 
 </details>
@@ -1404,6 +1404,10 @@ Option | Description
 ## typeSugar
 
 Prefer shorthand syntax for Arrays, Dictionaries and Optionals.
+
+Option | Description
+--- | ---
+`--shortoptionals` | Use ? for Optionals "always" (default) or "except-properties"
 
 <details>
 <summary>Examples</summary>

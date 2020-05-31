@@ -340,6 +340,12 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             }
             arguments.remove("unexclude")
         }
+        do {
+            if !excludingDefaults || fileOptions.minVersion != FileOptions.default.minVersion {
+                args["minversion"] = fileOptions.minVersion.description
+            }
+            arguments.remove("minversion")
+        }
         assert(arguments.isEmpty)
     }
     if let formatOptions = options.formatOptions {
@@ -441,6 +447,16 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
         containsFileOption = true
         options.unexcludedGlobs += expandGlobs($0, in: directory)
     }
+    try processOption("minversion", in: args, from: &arguments) {
+        containsFileOption = true
+        guard let minVersion = Version(rawValue: $0) else {
+            throw FormatError.options("Unsupported --minversion value '\($0)'")
+        }
+        guard minVersion <= Version(stringLiteral: swiftFormatVersion) else {
+            throw FormatError.options("Project specifies SwiftFormat --minversion of \(minVersion)")
+        }
+        options.minVersion = minVersion
+    }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return containsFileOption ? options : nil
 }
@@ -482,6 +498,7 @@ let fileArguments = [
     "symlinks",
     "exclude",
     "unexclude",
+    "minversion",
 ]
 
 let rulesArguments = [

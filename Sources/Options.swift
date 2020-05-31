@@ -409,17 +409,20 @@ public struct FileOptions {
     public var supportedFileExtensions: [String]
     public var excludedGlobs: [Glob]
     public var unexcludedGlobs: [Glob]
+    public var minVersion: Version
 
     public static let `default` = FileOptions()
 
     public init(followSymlinks: Bool = false,
                 supportedFileExtensions: [String] = ["swift"],
                 excludedGlobs: [Glob] = [],
-                unexcludedGlobs: [Glob] = []) {
+                unexcludedGlobs: [Glob] = [],
+                minVersion: Version = .undefined) {
         self.followSymlinks = followSymlinks
         self.supportedFileExtensions = supportedFileExtensions
         self.excludedGlobs = excludedGlobs
         self.unexcludedGlobs = unexcludedGlobs
+        self.minVersion = minVersion
     }
 }
 

@@ -85,7 +85,9 @@ private func printWarnings(_ errors: [Error]) -> Bool {
         let isError: Bool
         switch error {
         case let .options(string):
-            isError = string.contains("File not found") || string.contains("Malformed")
+            isError = ["File not found", "Malformed", "--minversion"].contains(where: {
+                string.contains($0)
+            })
         case let .writing(string):
             isError = !string.contains(" cache ")
         case .parsing, .reading:
@@ -183,6 +185,7 @@ func printHelp(as type: CLI.OutputType) {
     --fragment         \(stripMarkdown(FormatOptions.Descriptor.fragment.help))
     --conflictmarkers  \(stripMarkdown(FormatOptions.Descriptor.ignoreConflictMarkers.help))
     --swiftversion     \(stripMarkdown(FormatOptions.Descriptor.swiftVersion.help))
+    --minversion       The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --dryrun           Run in "dry" mode (without actually changing any files)
     --lint             Like --dryrun, but returns an error if formatting is needed

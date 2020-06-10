@@ -245,7 +245,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
         if manager.fileExists(atPath: versionFile.path) {
             let versionString = try String(contentsOf: versionFile, encoding: .utf8)
             guard let version = Version(rawValue: versionString) else {
-                throw FormatError.options("Malformed \(swiftVersionFile) file at \(versionFile.path)")
+                throw FormatError.options("Unrecognized swift version string '\(versionString)' "
+                    + "found in file \(versionFile.path)")
             }
             assert(options.formatOptions != nil)
             options.formatOptions?.swiftVersion = version
@@ -284,8 +285,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
             do {
                 try processDirectory(inputURL, with: &options)
             } catch {
+                // Non-fatal error - no need to return
                 onComplete { throw error }
-                return
             }
             let enumerationOptions: FileManager.DirectoryEnumerationOptions
             #if os(macOS)
@@ -325,8 +326,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
             do {
                 try processDirectory(directory, with: &options)
             } catch {
+                // Non-fatal error - no need to return
                 onComplete { throw error }
-                return
             }
         }
         enumerate(inputURL: inputURL, outputURL: outputURL, options: options)

@@ -4353,6 +4353,11 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantParens)
     }
 
+    func testMeaningfulParensNotRemovedAroundFileLiteral() {
+        let input = "func foo(_ file: String = (#file)) {}"
+        testFormatting(for: input, rule: FormatRules.redundantParens, exclude: ["unusedArguments"])
+    }
+
     // around conditions
 
     func testRedundantParensRemovedInIf() {

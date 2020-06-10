@@ -856,6 +856,7 @@ extension RulesTests {
         ("testMarkWithColonSeparatedBySpace", testMarkWithColonSeparatedBySpace),
         ("testMarkWithNoSpaceAfterColon", testMarkWithNoSpaceAfterColon),
         ("testMarkWithTripleSlash", testMarkWithTripleSlash),
+        ("testMeaningfulParensNotRemovedAroundFileLiteral", testMeaningfulParensNotRemovedAroundFileLiteral),
         ("testMeaningfulParensNotRemovedAroundSelectorStringLiteral", testMeaningfulParensNotRemovedAroundSelectorStringLiteral),
         ("testMembersAreNotArguments", testMembersAreNotArguments),
         ("testMixedCaseLiteralConvertedToUpper", testMixedCaseLiteralConvertedToUpper),

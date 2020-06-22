@@ -2143,8 +2143,8 @@ public struct _FormatRules {
                     }
                 }
                 let prevToken = formatter.tokens[prevIndex]
-                guard ![.delimiter(":"), .startOfScope("(")].contains(prevToken),
-                    var prevKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startIndex) else {
+                guard ![.delimiter(":"), .startOfScope("(")].contains(prevToken), var prevKeywordIndex =
+                    formatter.indexOfLastSignificantKeyword(at: startIndex, excluding: ["where"]) else {
                     break
                 }
                 switch formatter.tokens[prevKeywordIndex].string {

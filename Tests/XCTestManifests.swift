@@ -995,6 +995,7 @@ extension RulesTests {
         ("testNoRemoveBackticksAroundAnyProperty", testNoRemoveBackticksAroundAnyProperty),
         ("testNoRemoveBackticksAroundClassSelfInTypealias", testNoRemoveBackticksAroundClassSelfInTypealias),
         ("testNoRemoveBackticksAroundContextualGet", testNoRemoveBackticksAroundContextualGet),
+        ("testNoRemoveBackticksAroundGetInSubscript", testNoRemoveBackticksAroundGetInSubscript),
         ("testNoRemoveBackticksAroundKeypathKeywordProperty", testNoRemoveBackticksAroundKeypathKeywordProperty),
         ("testNoRemoveBackticksAroundKeyword", testNoRemoveBackticksAroundKeyword),
         ("testNoRemoveBackticksAroundKeywordFollowedByType", testNoRemoveBackticksAroundKeywordFollowedByType),

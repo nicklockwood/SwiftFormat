@@ -5788,6 +5788,15 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantBackticks)
     }
 
+    func testNoRemoveBackticksAroundGetInSubscript() {
+        let input = """
+        subscript<T>(_ name: String) -> T where T: Equatable {
+            `get`(name)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantBackticks)
+    }
+
     // MARK: - redundantSelf
 
     // explicitSelf = .remove

@@ -411,7 +411,7 @@ extension Formatter {
             }
             return isAccessorKeyword(at: prevIndex)
         } else if tokens[prevIndex] == .startOfScope("{") {
-            switch lastSignificantKeyword(at: prevIndex) {
+            switch lastSignificantKeyword(at: prevIndex, excluding: ["where"]) {
             case "var"?, "subscript"?:
                 return true
             default:
@@ -459,8 +459,10 @@ extension Formatter {
         }
     }
 
-    func lastSignificantKeyword(at i: Int) -> String? {
-        return indexOfLastSignificantKeyword(at: i).map { tokens[$0].string }
+    func lastSignificantKeyword(at i: Int, excluding: [String] = []) -> String? {
+        return indexOfLastSignificantKeyword(at: i, excluding: excluding).map {
+            tokens[$0].string
+        }
     }
 
     func indexOfLastSignificantKeyword(at i: Int, excluding: [String] = []) -> Int? {

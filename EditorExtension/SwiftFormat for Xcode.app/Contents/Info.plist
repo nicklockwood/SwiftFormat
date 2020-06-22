@@ -23,6 +23,10 @@
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>SwiftFormat for Xcode</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.charcoaldesign.SwiftFormat-for-Xcode</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -32,7 +36,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.44.10</string>
+	<string>0.44.14</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>

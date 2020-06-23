@@ -4353,6 +4353,11 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantParens)
     }
 
+    func testMeaningfulParensNotRemovedAroundFileLiteral() {
+        let input = "func foo(_ file: String = (#file)) {}"
+        testFormatting(for: input, rule: FormatRules.redundantParens, exclude: ["unusedArguments"])
+    }
+
     // around conditions
 
     func testRedundantParensRemovedInIf() {
@@ -5641,6 +5646,38 @@ class RulesTests: XCTestCase {
                        exclude: ["indent"])
     }
 
+    func testRemoveRedundantReturnInFunctionWithWhereClause() {
+        let input = """
+        func foo<T>(_ name: String) -> T where T: Equatable {
+            return name
+        }
+        """
+        let output = """
+        func foo<T>(_ name: String) -> T where T: Equatable {
+            name
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn,
+                       options: options)
+    }
+
+    func testRemoveRedundantReturnInSubscriptWithWhereClause() {
+        let input = """
+        subscript<T>(_ name: String) -> T where T: Equatable {
+            return name
+        }
+        """
+        let output = """
+        subscript<T>(_ name: String) -> T where T: Equatable {
+            name
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn,
+                       options: options)
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {
@@ -5780,6 +5817,15 @@ class RulesTests: XCTestCase {
 
     func testNoRemoveBackticksAroundAnyProperty() {
         let input = "enum Foo {\n    case `Any`\n}"
+        testFormatting(for: input, rule: FormatRules.redundantBackticks)
+    }
+
+    func testNoRemoveBackticksAroundGetInSubscript() {
+        let input = """
+        subscript<T>(_ name: String) -> T where T: Equatable {
+            `get`(name)
+        }
+        """
         testFormatting(for: input, rule: FormatRules.redundantBackticks)
     }
 

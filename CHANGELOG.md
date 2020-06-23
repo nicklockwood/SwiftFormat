@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.44.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.14) (2020-06-23)
+
+- Added new icon for SwiftFormat for Xcode app (thanks to Vikram Kriplaney for the icon design)
+- Fixed `redundantParens` rule stripping parens around `#file` (used to silence warning in Swift 5.3)
+- Avoid raising "Malformed .swift-version file" error when using unusual formats (e.g. for beta releases)
+- Fixed `redundantBackticks` rule unescaping `get` inside subscript with `where` clause
+- Fixed `redundantReturn` failing to remove `return` in function or subscript with `where` clause
+- Fixed SwiftFormat for Xcode version number
+
 ## [0.44.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.13) (2020-05-28)
 
 - Fixed indenting of closing bracket when using `wrapArguments` rule

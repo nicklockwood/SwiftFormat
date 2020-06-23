@@ -723,11 +723,12 @@ SwiftFormat is not a commercially-funded product, it's a labour of love given fr
 Credits
 ------------
 
-* [Tony Arnold](https://github.com/tonyarnold) - Xcode source editor extension
-* [Vincent Bernier](https://github.com/vinceburn) - Xcode extension settings UI
+* [Tony Arnold](https://github.com/tonyarnold) - SwiftFormat for Xcode
+* [Vincent Bernier](https://github.com/vinceburn) - SwiftFormat for Xcode settings UI
+* [Vikram Kriplaney](https://github.com/markiv) - SwiftFormat for Xcode icon
 * [Maxime Marinel](https://github.com/bourvill) - Git pre-commit hook script
 * [Romain Pouclet](https://github.com/palleas) - Homebrew formula
-* [Aerobounce](https://github.com/aerobounce) - Homebrew cask for source editor extension
+* [Aerobounce](https://github.com/aerobounce) - Homebrew cask for SwiftFormat for Xcode
 * [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
 * [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
 * [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions

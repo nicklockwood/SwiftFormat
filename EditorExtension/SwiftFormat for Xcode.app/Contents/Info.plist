@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BuildMachineOSBuild</key>
-	<string>18G4032</string>
+	<string>19F101</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDocumentTypes</key>
@@ -23,6 +23,10 @@
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>SwiftFormat for Xcode</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.charcoaldesign.SwiftFormat-for-Xcode</string>
 	<key>CFBundleInfoDictionaryVersion</key>

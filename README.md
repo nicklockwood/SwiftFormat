@@ -158,7 +158,13 @@ If you prefer, you can use unix pipes to include SwiftFormat as part of a comman
 $ cat /path/to/file.swift | swiftformat --output /path/to/file.swift
 ```
 
-Omitting the `--output /path/to/file.swift` will print the formatted file to Standard Output (stdout). You can also use `>` to specify the output path as follows:
+Omitting the `--output /path/to/file.swift` will print the formatted file to Standard Output (stdout). You can also pass "stdout" explicitly as the output path:
+
+```bash
+$ cat /path/to/file.swift | swiftformat --output stdout
+```
+
+Or you can use `>` to specify the output path as follows:
 
 ```bash
 $ cat /path/to/file.swift | swiftformat > /path/to/file.swift
@@ -320,14 +326,16 @@ Git pre-commit hook
 
 3. Edit or create a `.git/hooks/pre-commit` file in your project folder. The .git folder is hidden but should already exist if you are using Git with your project, so open it with the terminal, or the Finder's `Go > Go to Folder...` menu.
 
-4. Add the following line in the pre-commit file (unlike the Xcode build phase approach, this uses your locally installed version of SwiftFormat, not a separate copy in your project repository)
+4. Add the following line in the pre-commit file. The `{}` will be replaced automatically by the path to the Swift file being formatted:
 
     ```bash
     #!/bin/bash
-    git-format-staged --formatter "swiftformat --config .swiftformat stdin" "*.swift"
+    git-format-staged --formatter "swiftformat {} --output stdout" "*.swift"
     ```
-
-5. enable the hook by typing `chmod +x .git/hooks/pre-commit` in the terminal
+    
+    (Note that this example uses your locally installed version of SwiftFormat, not a separate copy in your project repository. You can replace `swiftformat` with the path to a copy inside your project if you prefer.)
+    
+5. enable the hook by typing `chmod +x .git/hooks/pre-commit` in the terminal.
  
 The pre-commit hook will now run whenever you run `git commit`. Running `git commit --no-verify` will skip the pre-commit hook.
 

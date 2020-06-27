@@ -427,12 +427,15 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         try addInputPaths(for: "inferoptions")
 
         // Output path
+        var useStdout = false
         let outputURL = try args["output"].map { try parsePath($0, for: "--output", in: directory) }
         if outputURL != nil {
             if args["output"] == "" {
                 throw FormatError.options("--output argument expects a value")
             } else if inputURLs.count > 1 {
                 throw FormatError.options("--output argument is only valid for a single input file or directory")
+            } else if outputURL?.absoluteString.lowercased() == "stdout" {
+                useStdout = true
             }
         }
 
@@ -555,7 +558,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 } else {
                     printRunningMessage()
                     let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
-                    if let outputURL = outputURL {
+                    if let outputURL = outputURL, !useStdout {
                         if (try? String(contentsOf: outputURL)) != output, !dryrun {
                             do {
                                 try output.write(to: outputURL, atomically: true, encoding: .utf8)
@@ -848,7 +851,18 @@ func processInput(_ inputURLs: [URL],
                     // Only bother computing this if cache is enabled
                     cachePrefix + (sourceHash ?? computeHash(output))
                 }
-                if outputURL != inputURL, (try? String(contentsOf: outputURL)) != output {
+                if outputURL.absoluteString.lowercased() == "stdout" {
+                    if !dryrun {
+                        // Write to stdout
+                        print(output, as: .raw)
+                        return {
+                            outputFlags.filesChecked += 1
+                            outputFlags.filesFailed += 1
+                            outputFlags.filesWritten += 1
+                            showConfigurationWarnings(options)
+                        }
+                    }
+                } else if outputURL != inputURL, (try? String(contentsOf: outputURL)) != output {
                     if !dryrun {
                         do {
                             try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(),

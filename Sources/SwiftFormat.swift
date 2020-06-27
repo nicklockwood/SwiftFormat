@@ -516,6 +516,22 @@ private func applyRules(
     }
     inferFormatOptions(sharedOptions, from: tokens, into: &options)
 
+    // Check if required FileInfo is available
+    if rules.contains(FormatRules.fileHeader) {
+        if options.fileHeader.rawValue.contains("{created"),
+            options.fileInfo.creationDate == nil {
+            throw FormatError.options(
+                "Failed to apply {created} template in file header as file info is unavailable"
+            )
+        }
+        if options.fileHeader.rawValue.contains("{file"),
+            options.fileInfo.fileName == nil {
+            throw FormatError.options(
+                "Failed to apply {file} template in file header as file name was not provided"
+            )
+        }
+    }
+
     // Recursively apply rules until no changes are detected
     let group = DispatchGroup()
     let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)

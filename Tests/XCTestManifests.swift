@@ -660,6 +660,8 @@ extension RulesTests {
         ("testFileHeaderCreationDateReplacement", testFileHeaderCreationDateReplacement),
         ("testFileHeaderCreationYearReplacement", testFileHeaderCreationYearReplacement),
         ("testFileHeaderFileReplacement", testFileHeaderFileReplacement),
+        ("testFileHeaderRuleThrowsIfCreationDateUnavailable", testFileHeaderRuleThrowsIfCreationDateUnavailable),
+        ("testFileHeaderRuleThrowsIfFileNameUnavailable", testFileHeaderRuleThrowsIfFileNameUnavailable),
         ("testFileHeaderYearReplacement", testFileHeaderYearReplacement),
         ("testFileprivateClassMemberChangedToPrivateEvenIfConstructorCalledOutsideType", testFileprivateClassMemberChangedToPrivateEvenIfConstructorCalledOutsideType),
         ("testFileprivateClassTypeMemberNotChangedToPrivate", testFileprivateClassTypeMemberNotChangedToPrivate),

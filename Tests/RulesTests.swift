@@ -9750,12 +9750,24 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
+    func testFileHeaderRuleThrowsIfCreationDateUnavailable() {
+        let input = "let foo = bar"
+        let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: FileInfo())
+        XCTAssertThrowsError(try format(input, rules: [FormatRules.fileHeader], options: options))
+    }
+
     func testFileHeaderFileReplacement() {
         let input = "let foo = bar"
         let output = "// MyFile.swift\n\nlet foo = bar"
         let fileInfo = FileInfo(filePath: "~/MyFile.swift")
         let options = FormatOptions(fileHeader: "// {file}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderRuleThrowsIfFileNameUnavailable() {
+        let input = "let foo = bar"
+        let options = FormatOptions(fileHeader: "// {file}.", fileInfo: FileInfo())
+        XCTAssertThrowsError(try format(input, rules: [FormatRules.fileHeader], options: options))
     }
 
     // MARK: - redundantInit

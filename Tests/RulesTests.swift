@@ -1501,7 +1501,7 @@ class RulesTests: XCTestCase {
         Foo(bar:
             Bar(
                 baz: quux
-            ))
+        ))
         """
         testFormatting(for: input, rule: FormatRules.indent)
     }
@@ -1549,6 +1549,20 @@ class RulesTests: XCTestCase {
         let input = "({\nfoo()\nbar\n})"
         let output = "({\n    foo()\n    bar\n})"
         testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["redundantParens"])
+    }
+
+    func testUnindentClosingParenAroundBraces() {
+        let input = """
+        foo(success: {
+            self.bar()
+                })
+        """
+        let output = """
+        foo(success: {
+            self.bar()
+        })
+        """
+        testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
     // indent switch/case
@@ -1899,8 +1913,18 @@ class RulesTests: XCTestCase {
     }
 
     func testDoubleIndentWhenScopesSeparatedByWrap() {
-        let input = "(foo\nas Bar {\nbaz\n})"
-        let output = "(foo\n    as Bar {\n        baz\n})"
+        let input = """
+        (foo
+        as Bar {
+        baz
+        })
+        """
+        let output = """
+        (foo
+            as Bar {
+                baz
+        })
+        """
         testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["redundantParens"])
     }
 
@@ -2527,12 +2551,21 @@ class RulesTests: XCTestCase {
     }
 
     func testIndentMultilineStringWrappedAfter() {
-        let input = "foo(baz:\n    \"\"\"\n    baz\n    \"\"\")"
+        let input = """
+        foo(baz:
+            \"""
+            baz
+            \""")
+        """
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
     func testIndentMultilineStringInNestedCalls() {
-        let input = "foo(bar(\"\"\"\nbaz\n\"\"\"))"
+        let input = """
+        foo(bar(\"""
+        baz
+        \"""))
+        """
         testFormatting(for: input, rule: FormatRules.indent)
     }
 

@@ -1113,11 +1113,11 @@ public struct _FormatRules {
                         stringBodyIndentStack.removeLast()
                         stringBodyIndentStack.append(stringBodyIndentStack.last ?? "")
                     }
-                    // Check if line on which scope ends should be unindented
+                    // Don't reduce indent if line doesn't start with end of scope
+                    // or starts with a multiline string delimiter
                     let start = formatter.startOfLine(at: i)
-                    guard !formatter.isCommentedCode(at: start),
-                        // Don't reduce indent if end of scope is not first token in line
-                        formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: start - 1) == i else {
+                    guard let firstToken = formatter.next(.nonSpaceOrComment, after: start - 1),
+                        firstToken.isEndOfScope, !firstToken.isMultilineStringDelimiter else {
                         break
                     }
                     // Reduce indent for closing scope of guard else back to normal

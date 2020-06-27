@@ -1721,6 +1721,7 @@ extension RulesTests {
         ("testUnhoistIfArgIsUnderscore", testUnhoistIfArgIsUnderscore),
         ("testUnhoistLabelledCaseLet", testUnhoistLabelledCaseLet),
         ("testUnhoistSingleCaseLet", testUnhoistSingleCaseLet),
+        ("testUnindentClosingParenAroundBraces", testUnindentClosingParenAroundBraces),
         ("testUnterminatedFragment", testUnterminatedFragment),
         ("testUnusedInoutClosureArgumentsNotMangled", testUnusedInoutClosureArgumentsNotMangled),
         ("testUnusedInoutFunctionArgumentIsNotMangled", testUnusedInoutFunctionArgumentIsNotMangled),

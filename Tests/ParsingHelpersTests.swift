@@ -122,6 +122,11 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 6))
     }
 
+    func testGenericFunctionNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("func foo<T: Equatable>(_: T) {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 16))
+    }
+
     func testNonVoidFunctionBracesNotTreatedAsClosure() {
         let formatter = Formatter(tokenize("func foo() -> Int {}"))
         XCTAssertFalse(formatter.isStartOfClosure(at: 10))

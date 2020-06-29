@@ -53,7 +53,7 @@ class InferenceTests: XCTestCase {
         let tokens = files.flatMap { tokenize($0) }
         let options = Options(formatOptions: inferFormatOptions(from: tokens))
         let arguments = serialize(options: options, excludingDefaults: true, separator: " ")
-        XCTAssertEqual(arguments, "--binarygrouping none --decimalgrouping none --hexgrouping none --octalgrouping none --semicolons never --wrapcollections before-first")
+        XCTAssertEqual(arguments, "--binarygrouping none --decimalgrouping none --hexgrouping none --octalgrouping none --semicolons never")
     }
 
     // MARK: indent
@@ -236,19 +236,43 @@ class InferenceTests: XCTestCase {
     // MARK: wrapArguments
 
     func testInferWrapBeforeFirstArgument() {
-        let input = "func foo(\n    bar: Int,\n    baz: String) {}\nfunc foo(\n    bar: Int,\n    baz: String)"
+        let input = """
+        func foo(
+            bar: Int,
+            baz: String) {}
+        func foo(
+            bar: Int,
+            baz: String)
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.wrapArguments, .beforeFirst)
     }
 
     func testInferWrapAfterFirstArgument() {
-        let input = "func foo(bar: Int,\n    baz: String,\n    quux: String) {}"
+        let input = """
+        func foo(bar: Int,
+                 baz: String,
+                 quux: String) {}
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.wrapArguments, .afterFirst)
     }
 
     func testInferWrapPreserve() {
-        let input = "func foo(bar: Int,\n    baz: String) {}\nfunc foo(\n    bar: Int,\n    baz: String) {}\nfunc foo(\n    bar: Int,\n    baz: String)\nfunc foo(bar: Int,\n    baz: String,\n    quux: String) {}"
+        let input = """
+        func foo(
+            bar: Int,
+            baz: String) {}
+        func foo(
+            bar: Int,
+            baz: String) {}
+        func foo(
+            bar: Int,
+            baz: String)
+        func foo(bar: Int,
+                 baz: String,
+                 quux: String) {}
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.wrapArguments, .preserve)
     }

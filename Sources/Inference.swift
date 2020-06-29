@@ -1230,8 +1230,7 @@ private extension Formatter {
         var beforeFirst = 0, afterFirst = 0
         forEachToken(where: { $0.isStartOfScope && scopes.contains($0.string) }) { i, _ in
             guard let closingBraceIndex = endOfScope(at: i),
-                index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil,
-                index(of: .delimiter(","), in: i + 1 ..< closingBraceIndex) != nil else {
+                index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil else {
                 return
             }
             // Check if linebreak is after opening paren or first comma
@@ -1241,9 +1240,9 @@ private extension Formatter {
                 afterFirst += 1
             }
         }
-        if beforeFirst > afterFirst * 3 {
+        if beforeFirst > 0, afterFirst == 0 {
             return .beforeFirst
-        } else if afterFirst > beforeFirst * 3 {
+        } else if afterFirst > 0, beforeFirst == 0 {
             return .afterFirst
         } else {
             return .preserve

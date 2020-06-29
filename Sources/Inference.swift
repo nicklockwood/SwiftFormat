@@ -315,7 +315,11 @@ private struct Inference {
     }
 
     let wrapArguments = OptionInferrer { formatter, options in
-        options.wrapArguments = formatter.wrapMode(for: "(", "<")
+        options.wrapArguments = formatter.wrapMode(forParameters: false)
+    }
+
+    let wrapParameters = OptionInferrer { formatter, options in
+        options.wrapParameters = formatter.wrapMode(forParameters: true)
     }
 
     let wrapCollections = OptionInferrer { formatter, options in
@@ -1226,6 +1230,30 @@ private struct Inference {
 }
 
 private extension Formatter {
+    func wrapMode(forParameters parameters: Bool) -> WrapMode {
+        var beforeFirst = 0, afterFirst = 0
+        forEachToken(where: { [.startOfScope("("), .startOfScope("<")].contains($0) }) { i, _ in
+            guard isParameterList(at: i) == parameters,
+                let closingBraceIndex = endOfScope(at: i),
+                index(of: .linebreak, in: i + 1 ..< closingBraceIndex) != nil else {
+                return
+            }
+            // Check if linebreak is after opening paren or first comma
+            if next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
+                beforeFirst += 1
+            } else {
+                afterFirst += 1
+            }
+        }
+        if beforeFirst > 0, afterFirst == 0 {
+            return .beforeFirst
+        } else if afterFirst > 0, beforeFirst == 0 {
+            return .afterFirst
+        } else {
+            return .preserve
+        }
+    }
+
     func wrapMode(for scopes: String...) -> WrapMode {
         var beforeFirst = 0, afterFirst = 0
         forEachToken(where: { $0.isStartOfScope && scopes.contains($0.string) }) { i, _ in

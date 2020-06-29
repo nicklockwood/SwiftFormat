@@ -713,7 +713,7 @@ extension Formatter {
     }
 
     func isParameterList(at i: Int) -> Bool {
-        assert(tokens[i] == .startOfScope("("))
+        assert([.startOfScope("("), .startOfScope("<")].contains(tokens[i]))
         if let endIndex = endOfScope(at: i),
             let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
             [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {

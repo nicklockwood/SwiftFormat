@@ -237,6 +237,20 @@ class InferenceTests: XCTestCase {
 
     func testInferWrapBeforeFirstArgument() {
         let input = """
+        foo(
+            bar: Int,
+            baz: String)
+        foo(
+            bar: Int,
+            baz: String
+        )
+        """
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.wrapArguments, .beforeFirst)
+    }
+
+    func testInferWrapBeforeFirstParameter() {
+        let input = """
         func foo(
             bar: Int,
             baz: String) {}
@@ -245,17 +259,26 @@ class InferenceTests: XCTestCase {
             baz: String)
         """
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertEqual(options.wrapArguments, .beforeFirst)
+        XCTAssertEqual(options.wrapParameters, .beforeFirst)
     }
 
     func testInferWrapAfterFirstArgument() {
+        let input = """
+        foo(bar: Int,
+            baz: String, quux: String)
+        """
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.wrapArguments, .afterFirst)
+    }
+
+    func testInferWrapAfterFirstParameter() {
         let input = """
         func foo(bar: Int,
                  baz: String,
                  quux: String) {}
         """
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertEqual(options.wrapArguments, .afterFirst)
+        XCTAssertEqual(options.wrapParameters, .afterFirst)
     }
 
     func testInferWrapPreserve() {

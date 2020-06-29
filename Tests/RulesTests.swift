@@ -367,10 +367,14 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.spaceInsideBraces, exclude: ["trailingClosures"])
     }
 
-    func testNoSpaceInsideEmptybraces() {
-        let input = "foo({ })"
-        let output = "foo({})"
-        testFormatting(for: input, output, rule: FormatRules.spaceInsideBraces, exclude: ["trailingClosures"])
+    func testNoSpaceAddedInsideEmptybraces() {
+        let input = "foo({})"
+        testFormatting(for: input, rule: FormatRules.spaceInsideBraces, exclude: ["trailingClosures"])
+    }
+
+    func testNoSpaceAddedBetweenDoublebraces() {
+        let input = "func foo() -> () -> Void {{ bar() }}"
+        testFormatting(for: input, rule: FormatRules.spaceInsideBraces)
     }
 
     // MARK: - spaceAroundGenerics
@@ -10118,6 +10122,12 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(fragment: true)
         testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+    }
+
+    func testSpaceRemovedInsideEmptybraces() {
+        let input = "foo { }"
+        let output = "foo {}"
+        testFormatting(for: input, output, rule: FormatRules.emptyBraces)
     }
 
     // MARK: - andOperator

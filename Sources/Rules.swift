@@ -355,23 +355,22 @@ public struct _FormatRules {
 
     /// Ensure that there is space immediately inside braces
     public let spaceInsideBraces = FormatRule(
-        help: "Add or remove space inside curly braces."
+        help: "Add space inside curly braces."
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             if let nextToken = formatter.token(at: i + 1) {
-                if nextToken.isSpace {
-                    if formatter.token(at: i + 2) == .endOfScope("}") {
-                        formatter.removeToken(at: i + 1)
-                    }
-                } else if !nextToken.isLinebreak, nextToken != .endOfScope("}") {
+                if !nextToken.isSpaceOrLinebreak,
+                    ![.endOfScope("}"), .startOfScope("{")].contains(nextToken) {
                     formatter.insertToken(.space(" "), at: i + 1)
                 }
             }
         }
         formatter.forEach(.endOfScope("}")) { i, _ in
-            if let prevToken = formatter.token(at: i - 1),
-                !prevToken.isSpaceOrLinebreak, prevToken != .startOfScope("{") {
-                formatter.insertToken(.space(" "), at: i)
+            if let prevToken = formatter.token(at: i - 1) {
+                if !prevToken.isSpaceOrLinebreak,
+                    ![.endOfScope("}"), .startOfScope("{")].contains(prevToken) {
+                    formatter.insertToken(.space(" "), at: i)
+                }
             }
         }
     }

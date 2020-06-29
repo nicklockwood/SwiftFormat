@@ -1177,7 +1177,7 @@ Add or remove space around parentheses.
 
 ## spaceInsideBraces
 
-Add or remove space inside curly braces.
+Add space inside curly braces.
 
 <details>
 <summary>Examples</summary>

@@ -1569,6 +1569,17 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
+    func testIndentDoubleParenthesizedClosures() {
+        let input = """
+        foo(bar: Foo(success: { _ in
+            self.bar()
+        }, failure: { _ in
+            self.baz()
+        }))
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent switch/case
 
     func testSwitchCaseIndenting() {

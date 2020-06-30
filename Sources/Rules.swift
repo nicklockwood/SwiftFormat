@@ -1107,10 +1107,12 @@ public struct _FormatRules {
                     }
                     // If indentCount > 0, drop back to previous indent level
                     if indentCount > 0 {
-                        indentStack.removeLast()
-                        indentStack.append(indentStack.last ?? "")
-                        stringBodyIndentStack.removeLast()
-                        stringBodyIndentStack.append(stringBodyIndentStack.last ?? "")
+                        indentStack.removeLast(indentCount)
+                        stringBodyIndentStack.removeLast(indentCount)
+                        for _ in 0 ..< indentCount {
+                            indentStack.append(indentStack.last ?? "")
+                            stringBodyIndentStack.append(stringBodyIndentStack.last ?? "")
+                        }
                     }
                     // Don't reduce indent if line doesn't start with end of scope
                     // or starts with a multiline string delimiter
@@ -1126,7 +1128,8 @@ public struct _FormatRules {
                         linewrapStack[linewrapStack.count - 1] = false
                     }
                     // Only indent if this is the last scope terminator in the line
-                    guard formatter.next(.endOfScope, in: i + 1 ..< formatter.endOfLine(at: i)) == nil else {
+                    let range = i + 1 ..< formatter.endOfLine(at: i)
+                    guard formatter.next(.endOfScope, in: range) == nil else {
                         break
                     }
                     if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {

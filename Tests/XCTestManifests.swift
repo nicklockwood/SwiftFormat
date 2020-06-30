@@ -762,6 +762,7 @@ extension RulesTests {
         ("testIndentClosureStartingOnIndentedLineInTypedLet", testIndentClosureStartingOnIndentedLineInTypedLet),
         ("testIndentClosureStartingOnIndentedLineInTypedVar", testIndentClosureStartingOnIndentedLineInTypedVar),
         ("testIndentClosureStartingOnIndentedLineInVar", testIndentClosureStartingOnIndentedLineInVar),
+        ("testIndentDoubleParenthesizedClosures", testIndentDoubleParenthesizedClosures),
         ("testIndentedIfElseEndifOutdenting", testIndentedIfElseEndifOutdenting),
         ("testIndentedIfElseifEndifOutdenting", testIndentedIfElseifEndifOutdenting),
         ("testIndentedIfEndifIndenting", testIndentedIfEndifIndenting),

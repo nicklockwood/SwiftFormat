@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.44.15](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.15) (2020-07-01)
+
+- Fixed incorrect indenting for double-nested closures
+- Added inference for `--wrapparameters` option
+- Fixed incorrect `--wraparguments` inference
+- The `spaceInsideBraces` rule will no longer add space between nested braces
+- Fixed bug in `isStartOfClosure()` helper
+- Fixed indent logic for closing braces
+- You can now use `--output stdout` even when using a file path for input
+- SwiftFormat will now raise an error if missing info needed for `fileHeader` rule
+- Improved SwiftFormat for Xcode app icon
+- Updated instructions for git pre-commit hook
+
 ## [0.44.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.14) (2020-06-23)
 
 - Added new icon for SwiftFormat for Xcode app (thanks to Vikram Kriplaney for the icon design)

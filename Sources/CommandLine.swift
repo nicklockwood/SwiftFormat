@@ -428,15 +428,16 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
 
         // Output path
         var useStdout = false
-        let outputURL = try args["output"].map { try parsePath($0, for: "--output", in: directory) }
-        if outputURL != nil {
-            if args["output"] == "" {
+        let outputURL = try args["output"].flatMap { arg -> URL? in
+            if arg == "" {
                 throw FormatError.options("--output argument expects a value")
             } else if inputURLs.count > 1 {
                 throw FormatError.options("--output argument is only valid for a single input file or directory")
-            } else if outputURL?.absoluteString.lowercased() == "stdout" {
+            } else if arg == "stdout" {
                 useStdout = true
+                return URL(string: arg)
             }
+            return try parsePath(arg, for: "--output", in: directory)
         }
 
         // Infer options
@@ -851,7 +852,7 @@ func processInput(_ inputURLs: [URL],
                     // Only bother computing this if cache is enabled
                     cachePrefix + (sourceHash ?? computeHash(output))
                 }
-                if outputURL.absoluteString.lowercased() == "stdout" {
+                if outputURL.lastPathComponent.lowercased() == "stdout" {
                     if !dryrun {
                         // Write to stdout
                         print(output, as: .raw)

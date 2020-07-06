@@ -176,6 +176,7 @@ func printHelp(as type: CLI.OutputType) {
     <file> <file> ...  Swift files or directories to be processed, or "stdin"
 
     --filelist         Path to a file with names of files to process, one per line
+    --stdinpath        Path to stdin source file (used for generating header)
     --config           Path to a configuration file containing rules and options
     --inferoptions     Instead of formatting input, use it to infer format options
     --output           Output path for formatted file(s) (defaults to input path)
@@ -358,7 +359,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // Options
-        let options = try Options(args, in: directory)
+        var options = try Options(args, in: directory)
 
         // Show rules
         if showRules {
@@ -386,7 +387,6 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // Input path(s)
-        var useStdin = false
         var inputURLs = [URL]()
         if let fileListPath = args["filelist"] {
             let fileListURL = try parsePath(fileListPath, for: "filelist", in: directory)
@@ -397,12 +397,37 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 throw FormatError.options("Failed to read file list at \(fileListPath)")
             }
         }
-        while !useStdin, let inputPath = args[String(inputURLs.count + 1)] {
+        var useStdin = false
+        while let inputPath = args[String(inputURLs.count + 1)] {
+            inputURLs += try parsePaths(inputPath, for: "input", in: directory)
             if inputPath.lowercased() == "stdin" {
                 useStdin = true
-            } else {
-                inputURLs += try parsePaths(inputPath, for: "input", in: directory)
             }
+        }
+        if useStdin {
+            if inputURLs.count > 1 {
+                if args["filelist"] != nil {
+                    throw FormatError.options("--filelist option cannot be combined with stdin input")
+                }
+                throw FormatError.options("Cannot combine stdin with other file inputs")
+            }
+            inputURLs = []
+        }
+        if let stdinPath = args["stdinpath"] {
+            if !useStdin {
+                print("warning: --stdinpath option only applies when using stdin", as: .warning)
+            }
+            let stdinURL = try parsePath(stdinPath, for: "stdinpath", in: directory)
+            let resourceValues = try getResourceValues(
+                for: stdinURL.standardizedFileURL,
+                keys: [.creationDateKey, .pathKey]
+            )
+            var formatOptions = options.formatOptions ?? .default
+            formatOptions.fileInfo = FileInfo(
+                filePath: resourceValues.path,
+                creationDate: resourceValues.creationDate
+            )
+            options.formatOptions = formatOptions
         }
 
         // Treat values for arguments that do not take a value as input paths
@@ -719,6 +744,10 @@ func applyRules(_ source: String, options: Options, verbose: Bool, lint: Bool) t
     let rulesByName = FormatRules.byName
     let ruleNames = Array(options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)).sorted()
     let rules = ruleNames.compactMap { rulesByName[$0] }
+
+    if verbose, let path = options.formatOptions?.fileInfo.filePath {
+        print("\(lint ? "Linting" : "Formatting") \(path)", as: .info)
+    }
 
     // Apply rules
     let formatOptions = options.formatOptions ?? .default

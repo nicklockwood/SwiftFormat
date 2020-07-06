@@ -326,11 +326,11 @@ Git pre-commit hook
 
 3. Edit or create a `.git/hooks/pre-commit` file in your project folder. The .git folder is hidden but should already exist if you are using Git with your project, so open it with the terminal, or the Finder's `Go > Go to Folder...` menu.
 
-4. Add the following line in the pre-commit file:
+4. Add the following line in the pre-commit file. The `{}` will be replaced automatically by the path to the Swift file being formatted:
 
     ```bash
     #!/bin/bash
-    git-format-staged --formatter "swiftformat --config .swiftformat stdin" "*.swift"
+    git-format-staged --formatter "swiftformat stdin --stdinpath {}" "*.swift"
     ```
     
     (Note that this example uses your locally installed version of SwiftFormat, not a separate copy in your project repository. You can replace `swiftformat` with the path to a copy inside your project if you prefer.)

@@ -100,47 +100,6 @@ public func enumerateFiles(withInputURL inputURL: URL,
         .creationDateKey, .pathKey,
     ]
 
-    struct ResourceValues {
-        let isRegularFile: Bool?
-        let isDirectory: Bool?
-        let isAliasFile: Bool?
-        let isSymbolicLink: Bool?
-        let creationDate: Date?
-        let path: String?
-    }
-
-    func getResourceValues(for url: URL) throws -> ResourceValues {
-        #if os(macOS)
-            if let resourceValues = try? url.resourceValues(forKeys: Set(keys)) {
-                return ResourceValues(
-                    isRegularFile: resourceValues.isRegularFile,
-                    isDirectory: resourceValues.isDirectory,
-                    isAliasFile: resourceValues.isAliasFile,
-                    isSymbolicLink: resourceValues.isSymbolicLink,
-                    creationDate: resourceValues.creationDate,
-                    path: resourceValues.path
-                )
-            }
-            if manager.fileExists(atPath: url.path) {
-                throw FormatError.reading("Failed to read attributes for \(url.path)")
-            }
-            throw FormatError.options("File not found at \(url.path)")
-        #else
-            var isDirectory: ObjCBool = false
-            if manager.fileExists(atPath: url.path, isDirectory: &isDirectory) {
-                return ResourceValues(
-                    isRegularFile: !isDirectory.boolValue,
-                    isDirectory: isDirectory.boolValue,
-                    isAliasFile: false,
-                    isSymbolicLink: false,
-                    creationDate: nil,
-                    path: url.path
-                )
-            }
-            throw FormatError.options("File not found at \(url.path)")
-        #endif
-    }
-
     let group = DispatchGroup()
     var completionBlocks = [() throws -> Void]()
     let completionQueue = DispatchQueue(label: "swiftformat.enumeration")
@@ -156,12 +115,12 @@ public func enumerateFiles(withInputURL inputURL: URL,
         let fileOptions = options.fileOptions ?? .default
         let inputURL = inputURL.standardizedFileURL
         do {
-            let resourceValues = try getResourceValues(for: inputURL)
+            let resourceValues = try getResourceValues(for: inputURL, keys: keys)
             if resourceValues.isAliasFile == true {
                 #if os(macOS)
                     if fileOptions.followSymlinks {
                         let resolvedURL = try URL(resolvingAliasFileAt: inputURL)
-                        return (resolvedURL, try getResourceValues(for: resolvedURL), baseOptions)
+                        return (resolvedURL, try getResourceValues(for: resolvedURL, keys: keys), baseOptions)
                     } else if let handler = skipped {
                         onComplete(try handler(inputURL, inputURL, options))
                         return nil
@@ -170,7 +129,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
             } else if resourceValues.isSymbolicLink == true {
                 if fileOptions.followSymlinks {
                     let resolvedURL = inputURL.resolvingSymlinksInPath()
-                    return (resolvedURL, try getResourceValues(for: resolvedURL), baseOptions)
+                    return (resolvedURL, try getResourceValues(for: resolvedURL, keys: keys), baseOptions)
                 } else if let handler = skipped {
                     onComplete(try handler(inputURL, inputURL, options))
                     return nil
@@ -185,7 +144,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
 
     let fileOptions = baseOptions.fileOptions ?? .default
     do {
-        let resourceValues = try getResourceValues(for: inputURL.standardizedFileURL)
+        let resourceValues = try getResourceValues(for: inputURL.standardizedFileURL, keys: keys)
         if !fileOptions.followSymlinks,
             resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true {
             return [FormatError.options("Symbolic link or alias was skipped: \(inputURL.path)")]
@@ -610,6 +569,47 @@ public func expandPath(_ path: String, in directory: String) -> URL {
         return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
     }
     return URL(fileURLWithPath: directory).appendingPathComponent(path)
+}
+
+struct ResourceValues {
+    let isRegularFile: Bool?
+    let isDirectory: Bool?
+    let isAliasFile: Bool?
+    let isSymbolicLink: Bool?
+    let creationDate: Date?
+    let path: String?
+}
+
+func getResourceValues(for url: URL, keys: [URLResourceKey]) throws -> ResourceValues {
+    let manager = FileManager.default
+    #if os(macOS)
+        if let resourceValues = try? url.resourceValues(forKeys: Set(keys)) {
+            return ResourceValues(
+                isRegularFile: resourceValues.isRegularFile,
+                isDirectory: resourceValues.isDirectory,
+                isAliasFile: resourceValues.isAliasFile,
+                isSymbolicLink: resourceValues.isSymbolicLink,
+                creationDate: resourceValues.creationDate,
+                path: resourceValues.path
+            )
+        }
+        if manager.fileExists(atPath: url.path) {
+            throw FormatError.reading("Failed to read attributes for \(url.path)")
+        }
+    #else
+        var isDirectory: ObjCBool = false
+        if manager.fileExists(atPath: url.path, isDirectory: &isDirectory) {
+            return ResourceValues(
+                isRegularFile: !isDirectory.boolValue,
+                isDirectory: isDirectory.boolValue,
+                isAliasFile: false,
+                isSymbolicLink: false,
+                creationDate: nil,
+                path: url.path
+            )
+        }
+    #endif
+    throw FormatError.options("File not found at \(url.path)")
 }
 
 // MARK: Documentation utilities

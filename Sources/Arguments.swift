@@ -514,6 +514,7 @@ let optionsArguments = fileArguments + rulesArguments + formattingArguments + in
 let commandLineArguments = [
     // Input options
     "filelist",
+    "stdinpath",
     "config",
     "inferoptions",
     "output",

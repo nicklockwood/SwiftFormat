@@ -3,6 +3,7 @@
 ## [0.44.16](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.16) (2020-07-02)
 
 - Fixed bug in `--output stdout` processing
+- Reverted git pre-commit hook instructions
 
 ## [0.44.15](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.15) (2020-07-01)
 

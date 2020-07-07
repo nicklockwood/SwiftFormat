@@ -801,6 +801,7 @@ extension RulesTests {
         ("testIndentNestedArrayLiteral", testIndentNestedArrayLiteral),
         ("testIndentSwitchAfterRangeCase", testIndentSwitchAfterRangeCase),
         ("testIndentSwitchCaseCommentsCorrectly", testIndentSwitchCaseCommentsCorrectly),
+        ("testIndentUnbalancedBraces", testIndentUnbalancedBraces),
         ("testIndentUnknownCase", testIndentUnknownCase),
         ("testIndentUnknownCaseCorrectlyWhenIndentCaseTrue", testIndentUnknownCaseCorrectlyWhenIndentCaseTrue),
         ("testIndentUnknownDefault", testIndentUnknownDefault),

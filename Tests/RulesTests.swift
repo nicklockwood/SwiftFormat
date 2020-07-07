@@ -1580,6 +1580,16 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentUnbalancedBraces() {
+        let input = """
+        foo(bar()
+            .map {
+                .baz($0)
+            })
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent switch/case
 
     func testSwitchCaseIndenting() {
@@ -1938,7 +1948,7 @@ class RulesTests: XCTestCase {
         (foo
             as Bar {
                 baz
-        })
+            })
         """
         testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["redundantParens"])
     }

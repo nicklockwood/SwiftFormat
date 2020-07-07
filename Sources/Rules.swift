@@ -1127,10 +1127,17 @@ public struct _FormatRules {
                         indentStack.removeLast()
                         linewrapStack[linewrapStack.count - 1] = false
                     }
-                    // Only indent if this is the last scope terminator in the line
-                    let range = i + 1 ..< formatter.endOfLine(at: i)
-                    guard formatter.next(.endOfScope, in: range) == nil else {
-                        break
+                    // Ensure braces are balanced
+                    if firstToken == .endOfScope("}") {
+                        if token != .endOfScope("}") {
+                            break
+                        }
+                    } else {
+                        // Only indent if this is the last scope terminator in the line
+                        let range = i + 1 ..< formatter.endOfLine(at: i)
+                        guard formatter.next(.endOfScope, in: range) == nil else {
+                            break
+                        }
                     }
                     if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {
                         i += formatter.insertSpace("", at: start)

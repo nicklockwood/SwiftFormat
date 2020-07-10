@@ -2571,7 +2571,7 @@ class RulesTests: XCTestCase {
     }
 
     func testMultilineStringWithEscapedLinebreak() {
-        let input = "\"\"\"\n    hello \\\n    world\n\"\"\""
+        let input = "\"\"\"\n    hello \\n    world\n\"\"\""
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
@@ -8353,7 +8353,7 @@ class RulesTests: XCTestCase {
 
     // MARK: - wrapArguments
 
-    // MARK: wrapParameters
+    // MARK: wrapArguments
 
     func testWrapParametersDoesNotAffectFunctionDeclaration() {
         let input = "foo(\n    bar _: Int,\n    baz _: String\n)"

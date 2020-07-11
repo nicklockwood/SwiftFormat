@@ -1794,6 +1794,7 @@ extension RulesTests {
         ("testWrapIfElseStatement", testWrapIfElseStatement),
         ("testWrapIfStatement", testWrapIfStatement),
         ("testWrapParametersAfterFirstIfMaxLengthExceededInReturnType", testWrapParametersAfterFirstIfMaxLengthExceededInReturnType),
+        ("testWrapParametersAfterFirstWithSeparatedArgumentLabels", testWrapParametersAfterFirstWithSeparatedArgumentLabels),
         ("testWrapParametersBeforeFirstIfMaxLengthExceededInReturnType", testWrapParametersBeforeFirstIfMaxLengthExceededInReturnType),
         ("testWrapParametersBeforeFirstWithSeparatedArgumentLabels", testWrapParametersBeforeFirstWithSeparatedArgumentLabels),
         ("testWrapParametersClosureAfterParameterListDoesNotWrapClosureArguments", testWrapParametersClosureAfterParameterListDoesNotWrapClosureArguments),

@@ -866,10 +866,14 @@ extension Formatter {
             var linebreakIndiciesToRemove = [Int]()
             for index in i ..< endOfScope {
                 if tokens[index].is(.linebreak),
+                    // Check if this linebreak sits between two identifiers (e.g. the external and internal argument labels)
+                    let nextCommaOrClosingParen = self.index(of: .delimiter(","), after: index)
+                    ?? self.index(of: .endOfScope(")"), after: index),
                     let previousNonwhitespace = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
                     tokens[previousNonwhitespace].is(.identifier),
                     let nextNonwhitespace = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                    tokens[nextNonwhitespace].is(.identifier) {
+                    tokens[nextNonwhitespace].is(.identifier),
+                    nextNonwhitespace < nextCommaOrClosingParen {
                     linebreakIndiciesToRemove.append(index)
                 }
             }

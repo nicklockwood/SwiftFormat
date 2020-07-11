@@ -856,9 +856,6 @@ func processInput(_ inputURLs: [URL],
                 return path
             }()
             do {
-                if verbose {
-                    print("\(lint ? "Linting" : "Formatting") \(inputURL.path)", as: .info)
-                }
                 var cacheHash: String?
                 var sourceHash: String?
                 if let cacheEntry = cache?[cacheKey], cacheEntry.hasPrefix(cachePrefix) {

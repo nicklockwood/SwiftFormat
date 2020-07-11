@@ -8914,6 +8914,24 @@ class RulesTests: XCTestCase {
                        options: options, exclude: ["unusedArguments"])
     }
 
+    func testWrapParametersBeforeFirstWithSeparatedArgumentLabels() {
+        let input = """
+        func foo(with
+            bar: Int, and
+            baz: String
+        ) -> LongReturnType {}
+        """
+        let output = """
+        func foo(
+            with bar: Int,
+            and baz: String
+        ) -> LongReturnType {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments,
+                       options: options, exclude: ["unusedArguments"])
+    }
+
     func testWrapParametersListBeforeFirstInClosureTypeWithMaxWidth() {
         let input = """
         var mathFunction: (Int, Int, String) -> Int = { _, _, _ in

@@ -860,6 +860,31 @@ extension Formatter {
             // Get indent
             let indent = indentForLine(at: i)
             var endOfScope = endOfScope
+
+            // Remove existing linebreaks between two identifiers
+            // (This makes sure the internal and external argument labels stay on the same line)
+            var linebreakIndiciesToRemove = [Int]()
+            for index in i ..< endOfScope {
+                if tokens[index].is(.linebreak),
+                    let previousNonwhitespace = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
+                    tokens[previousNonwhitespace].is(.identifier),
+                    let nextNonwhitespace = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                    tokens[nextNonwhitespace].is(.identifier) {
+                    linebreakIndiciesToRemove.append(index)
+                }
+            }
+
+            for linebreakIndexToRemove in linebreakIndiciesToRemove.reversed() {
+                removeToken(at: linebreakIndexToRemove)
+                endOfScope -= 1
+
+                // We also have to clean up any extra spaces that may sit
+                // between the two identifiers.
+                if tokens[linebreakIndexToRemove].is(.space) {
+                    replaceToken(at: linebreakIndexToRemove, with: .space(" "))
+                }
+            }
+
             if endOfScopeOnSameLine {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
             } else {
@@ -872,6 +897,7 @@ extension Formatter {
                     }
                 }
             }
+
             // Insert linebreak after each comma
             var index = self.index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope)!
             if tokens[index] != .delimiter(",") {

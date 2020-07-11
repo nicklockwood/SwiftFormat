@@ -8661,6 +8661,24 @@ class RulesTests: XCTestCase {
                        options: options, exclude: ["unusedArguments"])
     }
 
+    func testWrapParametersAfterFirstWithSeparatedArgumentLabels() {
+        let input = """
+        func foo(with
+            bar: Int, and
+            baz: String, and
+            quux: Bool
+        ) -> LongReturnType {}
+        """
+        let output = """
+        func foo(with bar: Int,
+                 and baz: String,
+                 and quux: Bool) -> LongReturnType {}
+        """
+        let options = FormatOptions(wrapParameters: .afterFirst)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments,
+                       options: options, exclude: ["unusedArguments"])
+    }
+
     // MARK: beforeFirst
 
     func testWrapAfterFirstConvertedToWrapBefore() {
@@ -8935,6 +8953,24 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 50)
         testFormatting(for: input, [input, output2], rules: [FormatRules.wrapArguments],
+                       options: options, exclude: ["unusedArguments"])
+    }
+
+    func testWrapParametersBeforeFirstWithSeparatedArgumentLabels() {
+        let input = """
+        func foo(with
+            bar: Int, and
+            baz: String
+        ) -> LongReturnType {}
+        """
+        let output = """
+        func foo(
+            with bar: Int,
+            and baz: String
+        ) -> LongReturnType {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments,
                        options: options, exclude: ["unusedArguments"])
     }
 

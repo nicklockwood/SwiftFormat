@@ -853,6 +853,47 @@ extension Formatter {
                 endOfScope -= 1
             }
         }
+
+        func keepArgumentParametersOnSameLine(
+            startOfScope i: Int,
+            endOfScope: inout Int
+        ) {
+            // Remove existing linebreaks between two identifiers
+            // (This makes sure the internal and external argument labels stay on the same line)
+            var linebreakIndiciesToRemove = [Int]()
+            for index in i ..< endOfScope {
+                if tokens[index].is(.linebreak),
+                    // Check if this linebreak sits between two identifiers (e.g. the external and internal argument labels)
+                    let nextCommaOrClosingParen = self.index(of: .delimiter(","), after: index)
+                    ?? self.index(of: .endOfScope(")"), after: index),
+                    let previousNonwhitespace = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
+                    tokens[previousNonwhitespace].is(.identifier),
+                    let nextNonwhitespace = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                    tokens[nextNonwhitespace].is(.identifier),
+                    nextNonwhitespace < nextCommaOrClosingParen {
+                    linebreakIndiciesToRemove.append(index)
+                }
+            }
+
+            for linebreakIndexToRemove in linebreakIndiciesToRemove.reversed() {
+                removeToken(at: linebreakIndexToRemove)
+                endOfScope -= 1
+
+                // We also have to clean up any extra spaces that may sit
+                // between the two identifiers.
+                if tokens[linebreakIndexToRemove].is(.space) {
+                    replaceToken(at: linebreakIndexToRemove, with: .space(" "))
+                }
+
+                // Insert a replacement linebreak after the next comma
+                if let nextComma = self.index(of: .delimiter(","), after: linebreakIndexToRemove - 1),
+                    nextComma < endOfScope {
+                    insertLinebreak(at: nextComma + 1)
+                    endOfScope += 1
+                }
+            }
+        }
+
         func wrapArgumentsBeforeFirst(startOfScope i: Int,
                                       endOfScope: Int,
                                       allowGrouping: Bool,
@@ -860,6 +901,10 @@ extension Formatter {
             // Get indent
             let indent = indentForLine(at: i)
             var endOfScope = endOfScope
+
+            keepArgumentParametersOnSameLine(startOfScope: i,
+                                             endOfScope: &endOfScope)
+
             if endOfScopeOnSameLine {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
             } else {
@@ -872,6 +917,7 @@ extension Formatter {
                     }
                 }
             }
+
             // Insert linebreak after each comma
             var index = self.index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope)!
             if tokens[index] != .delimiter(",") {
@@ -913,9 +959,14 @@ extension Formatter {
             guard var firstArgumentIndex = self.index(of: .nonSpaceOrLinebreak, in: i + 1 ..< endOfScope) else {
                 return
             }
+
+            var endOfScope = endOfScope
+            keepArgumentParametersOnSameLine(startOfScope: i,
+                                             endOfScope: &endOfScope)
+
             // Remove linebreak after opening paren
             removeTokens(inRange: i + 1 ..< firstArgumentIndex)
-            var endOfScope = endOfScope - (firstArgumentIndex - (i + 1))
+            endOfScope -= (firstArgumentIndex - (i + 1))
             firstArgumentIndex = i + 1
             // Get indent
             let start = startOfLine(at: i)

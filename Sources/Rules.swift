@@ -2219,6 +2219,8 @@ public struct _FormatRules {
             assert(isWhereClause || formatter.currentScope(at: index).map { token -> Bool in
                 [.startOfScope("{"), .startOfScope(":"), .startOfScope("#if")].contains(token)
             } ?? true)
+            let isCaseClause = !isWhereClause && index > 0 &&
+                [.endOfScope("case"), .endOfScope("default")].contains(formatter.tokens[index - 1])
             if explicitSelf == .remove {
                 // Check if scope actually includes self before we waste a bunch of time
                 var scopeCount = 0
@@ -2229,7 +2231,7 @@ public struct _FormatRules {
                     case .startOfScope("{"), .startOfScope(":"):
                         scopeCount += 1
                     case .endOfScope("}"), .endOfScope("case"), .endOfScope("default"):
-                        if scopeCount == 0 {
+                        if scopeCount == 0 || (scopeCount == 1 && isCaseClause) {
                             index = i + 1
                             return // Does not contain self
                         }
@@ -2663,6 +2665,7 @@ public struct _FormatRules {
                               typeStack: inout [String],
                               membersByType: inout [String: Set<String>],
                               classMembersByType: inout [String: Set<String>]) {
+            assert(formatter.tokens[index] == .startOfScope("{"))
             var foundAccessors = false
             var localNames = localNames
             while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {

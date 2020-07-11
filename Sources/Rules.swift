@@ -980,7 +980,8 @@ public struct _FormatRules {
                 switch string {
                 case ":" where scopeStack.last == .endOfScope("case"):
                     popScope()
-                case "{" where !formatter.isStartOfClosure(at: i, in: scopeStack.last) && linewrapStack.last == true &&
+                case "{" where !formatter.isStartOfClosure(at: i, in: scopeStack.last) &&
+                    linewrapStack.last == true &&
                     (!formatter.options.xcodeIndentation || !isGuardElseClause(at: i, token: token)):
                     indentStack.removeLast()
                     linewrapStack[linewrapStack.count - 1] = false
@@ -991,6 +992,10 @@ public struct _FormatRules {
                 scopeStack.append(token)
                 var indentCount: Int
                 if lineIndex > scopeStartLineIndexes.last ?? -1 {
+                    indentCount = 1
+                } else if token.isMultilineStringDelimiter, let endIndex = formatter.endOfScope(at: i),
+                    let closingIndex = formatter.index(of: .endOfScope(")"), after: endIndex),
+                    formatter.next(.linebreak, in: endIndex + 1 ..< closingIndex) != nil {
                     indentCount = 1
                 } else {
                     indentCount = indentCounts.last! + 1
@@ -1037,7 +1042,6 @@ public struct _FormatRules {
                         i += formatter.insertSpace("", at: formatter.startOfLine(at: i))
                     }
                 case _ where token.isStringDelimiter, "//":
-                    // Note: multiline string literals not-indented
                     break
                 case "[", "(":
                     guard let linebreakIndex = formatter.index(of: .linebreak, after: i),
@@ -1114,10 +1118,9 @@ public struct _FormatRules {
                         }
                     }
                     // Don't reduce indent if line doesn't start with end of scope
-                    // or starts with a multiline string delimiter
                     let start = formatter.startOfLine(at: i)
                     guard let firstToken = formatter.next(.nonSpaceOrComment, after: start - 1),
-                        firstToken.isEndOfScope, !firstToken.isMultilineStringDelimiter else {
+                        firstToken.isEndOfScope else {
                         break
                     }
                     // Reduce indent for closing scope of guard else back to normal
@@ -1126,9 +1129,9 @@ public struct _FormatRules {
                         indentStack.removeLast()
                         linewrapStack[linewrapStack.count - 1] = false
                     }
-                    // Ensure braces are balanced
-                    if firstToken == .endOfScope("}") {
-                        if token != .endOfScope("}") {
+                    // Ensure braces and string delimiters are balanced
+                    if firstToken == .endOfScope("}") || firstToken.isMultilineStringDelimiter {
+                        if token != firstToken {
                             break
                         }
                     } else {
@@ -1148,6 +1151,15 @@ public struct _FormatRules {
                         }
                         let stringIndent = stringBodyIndentStack.last!
                         i += formatter.insertSpace(stringIndent + indent, at: start)
+//                        if firstToken.isMultilineStringDelimiter,
+//                            let startOfString = formatter.index(of: .startOfScope, before: start) {
+//                            var j = start - 1
+//                            while j > startOfString {
+//                                let start = formatter.startOfLine(at: j)
+//                                i += formatter.insertSpace(stringIndent + indent, at: start)
+//                                j = start - 1
+//                            }
+//                        }
                     }
                 } else if token == .endOfScope("#endif"), indentStack.count > 1 {
                     var indent = indentStack[indentStack.count - 2]
@@ -1337,6 +1349,10 @@ public struct _FormatRules {
                             break
                         }
                     }
+//                case .stringBody:
+//                    // String body indent is determined retrospectively once
+//                    // the closing string delimiter is reached
+//                    break
                 default:
                     formatter.insertSpace(indent, at: i + 1)
                 }

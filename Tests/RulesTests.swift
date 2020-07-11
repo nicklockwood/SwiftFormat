@@ -2594,6 +2594,15 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentMultilineStringInFunctionWithfollowingArgument() {
+        let input = """
+        foo(bar(\"""
+        baz
+        \""", quux: 5))
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     func testReduceIndentForMultilineString() {
         let input = """
         switch foo {
@@ -8391,6 +8400,21 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(wrapArguments: .preserve)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
+
+    func testIndentMultilineStringWhenWrappingArguments() {
+        let input = """
+        foobar(foo: \"""
+                   baz
+               \""",
+               bar: \"""
+                   baz
+               \""")
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    // MARK: wrapParameters
 
     // MARK: preserve
 

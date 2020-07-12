@@ -2383,6 +2383,21 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testSingleIndentTrailingClosureBodyThatStartsOnFollowingLine() {
+        let input = """
+        method(
+            withParameter: 1,
+            otherParameter: 2)
+        { [weak self] in
+            guard let error = error else { return }
+            print("and a trailing closure")
+        }
+        """
+
+        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     // indent xcodeindentation
 
     func testChainedFunctionsInPropertySetterOnNewLineWithXcodeIndentation() {

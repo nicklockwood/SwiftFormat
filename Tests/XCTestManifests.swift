@@ -1524,6 +1524,7 @@ extension RulesTests {
         ("testSingleClosureArgumentAfterCaptureListUnwrapped", testSingleClosureArgumentAfterCaptureListUnwrapped),
         ("testSingleClosureArgumentUnwrapped", testSingleClosureArgumentUnwrapped),
         ("testSingleIndentTrailingClosureBody", testSingleIndentTrailingClosureBody),
+        ("testSingleIndentTrailingClosureBodyOfShortMethod", testSingleIndentTrailingClosureBodyOfShortMethod),
         ("testSingleIndentTrailingClosureBodyThatStartsOnFollowingLine", testSingleIndentTrailingClosureBodyThatStartsOnFollowingLine),
         ("testSingleLineGuardFollowingLine", testSingleLineGuardFollowingLine),
         ("testSolitaryClosureMadeTrailingForNumericTupleMember", testSolitaryClosureMadeTrailingForNumericTupleMember),

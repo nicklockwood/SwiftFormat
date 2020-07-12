@@ -160,7 +160,7 @@ public class Formatter: NSObject {
     }
 
     /// Replaces the token at the specified index with one or more new tokens
-    public func replaceToken(at index: Int, with tokens: Token...) {
+    public func replaceToken(at index: Int, with tokens: [Token]) {
         if tokens.isEmpty {
             removeToken(at: index)
         } else if tokens.count != 1 || tokens[0] != self.tokens[index] {
@@ -170,6 +170,11 @@ public class Formatter: NSObject {
                 insertToken(token, at: index + i + 1)
             }
         }
+    }
+
+    /// Replaces the token at the specified index with one or more new tokens
+    public func replaceToken(at index: Int, with tokens: Token...) {
+        replaceToken(at: index, with: tokens)
     }
 
     /// Replaces the tokens in the specified range with new tokens

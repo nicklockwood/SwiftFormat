@@ -854,42 +854,33 @@ extension Formatter {
             }
         }
 
-        func keepArgumentParametersOnSameLine(
-            startOfScope i: Int,
-            endOfScope: inout Int
-        ) {
-            // Remove existing linebreaks between two identifiers
-            // (This makes sure the internal and external argument labels stay on the same line)
-            var linebreakIndiciesToRemove = [Int]()
-            for index in i ..< endOfScope {
-                if tokens[index].is(.linebreak),
-                    // Check if this linebreak sits between two identifiers (e.g. the external and internal argument labels)
-                    let nextCommaOrClosingParen = self.index(of: .delimiter(","), after: index)
-                    ?? self.index(of: .endOfScope(")"), after: index),
-                    let previousNonwhitespace = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
-                    tokens[previousNonwhitespace].is(.identifier),
-                    let nextNonwhitespace = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                    tokens[nextNonwhitespace].is(.identifier),
-                    nextNonwhitespace < nextCommaOrClosingParen {
-                    linebreakIndiciesToRemove.append(index)
+        func keepParameterLabelsOnSameLine(startOfScope i: Int, endOfScope: inout Int) {
+            var endIndex = endOfScope
+            while let index = self.lastIndex(of: .linebreak, in: i + 1 ..< endIndex) {
+                endIndex = index
+                // Check if this linebreak sits between two identifiers
+                // (e.g. the external and internal argument labels)
+                guard let lastIndex = self.index(of: .nonSpaceOrLinebreak, before: index, if: {
+                    $0.isIdentifier
+                }), let nextIndex = self.index(of: .nonSpaceOrLinebreak, after: index, if: {
+                    $0.isIdentifier
+                }) else {
+                    continue
                 }
-            }
-
-            for linebreakIndexToRemove in linebreakIndiciesToRemove.reversed() {
-                removeToken(at: linebreakIndexToRemove)
-                endOfScope -= 1
-
-                // We also have to clean up any extra spaces that may sit
-                // between the two identifiers.
-                if tokens[linebreakIndexToRemove].is(.space) {
-                    replaceToken(at: linebreakIndexToRemove, with: .space(" "))
-                }
-
-                // Insert a replacement linebreak after the next comma
-                if let nextComma = self.index(of: .delimiter(","), after: linebreakIndexToRemove - 1),
-                    nextComma < endOfScope {
-                    insertLinebreak(at: nextComma + 1)
-                    endOfScope += 1
+                // Remove linebreak
+                let range = lastIndex + 1 ..< nextIndex
+                let linebreakAndIndent = tokens[index ..< nextIndex]
+                replaceTokens(inRange: range, with: [.space(" ")])
+                endOfScope -= (range.count - 1)
+                // Insert replacement linebreak after next comma
+                if let nextComma = self.index(of: .delimiter(","), after: index) {
+                    if token(at: nextComma + 1)?.isSpace == true {
+                        replaceToken(at: nextComma + 1, with: Array(linebreakAndIndent))
+                        endOfScope += linebreakAndIndent.count - 1
+                    } else {
+                        insertTokens(Array(linebreakAndIndent), at: nextComma + 1)
+                        endOfScope += linebreakAndIndent.count
+                    }
                 }
             }
         }
@@ -902,8 +893,8 @@ extension Formatter {
             let indent = indentForLine(at: i)
             var endOfScope = endOfScope
 
-            keepArgumentParametersOnSameLine(startOfScope: i,
-                                             endOfScope: &endOfScope)
+            keepParameterLabelsOnSameLine(startOfScope: i,
+                                          endOfScope: &endOfScope)
 
             if endOfScopeOnSameLine {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
@@ -961,8 +952,8 @@ extension Formatter {
             }
 
             var endOfScope = endOfScope
-            keepArgumentParametersOnSameLine(startOfScope: i,
-                                             endOfScope: &endOfScope)
+            keepParameterLabelsOnSameLine(startOfScope: i,
+                                          endOfScope: &endOfScope)
 
             // Remove linebreak after opening paren
             removeTokens(inRange: i + 1 ..< firstArgumentIndex)

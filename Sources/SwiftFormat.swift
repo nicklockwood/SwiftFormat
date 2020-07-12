@@ -470,9 +470,12 @@ private func applyRules(
 
     // Infer shared options
     var options = options
-    let sharedOptions = FormatRules.sharedOptionsForRules(rules).compactMap {
-        FormatOptions.Descriptor.byName[$0]?.propertyName
-    }
+    let sharedOptions = FormatRules
+        .sharedOptionsForRules(rules)
+        .compactMap { FormatOptions.Descriptor.byName[$0] }
+        .filter { $0.defaultArgument == $0.fromOptions(options) }
+        .map { $0.propertyName }
+
     inferFormatOptions(sharedOptions, from: tokens, into: &options)
 
     // Check if required FileInfo is available

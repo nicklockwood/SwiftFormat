@@ -3987,14 +3987,13 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.ranges)
     }
 
-    // spaceAroundRangeOperators = true
-
-    func testNoSpaceAroundRangeOperatorsWithCustomOptions() {
-        let input = "foo ..< bar"
-        let output = "foo..<bar"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
-        testFormatting(for: input, output, rule: FormatRules.ranges, options: options)
+    func testNoSpaceAroundRangeOperatorsWithExplicitNoSpace() {
+        let input = "foo..<bar"
+        let options = FormatOptions(noSpaceOperators: ["..<"])
+        testFormatting(for: input, rule: FormatRules.ranges, options: options)
     }
+
+    // spaceAroundRangeOperators = true
 
     func testNoSpaceAddedAroundVariadic() {
         let input = "foo(bar: Int...)"
@@ -4040,6 +4039,13 @@ class RulesTests: XCTestCase {
     }
 
     // spaceAroundRangeOperators = false
+
+    func testNoSpaceAroundRangeOperatorsWithCustomOptions() {
+        let input = "foo ..< bar"
+        let output = "foo..<bar"
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        testFormatting(for: input, output, rule: FormatRules.ranges, options: options)
+    }
 
     func testSpaceNotRemovedBeforeLeadingRangeOperatorWithSpaceAroundRangeOperatorsFalse() {
         let input = "let range = ..<foo.endIndex"

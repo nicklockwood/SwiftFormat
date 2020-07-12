@@ -138,20 +138,6 @@ class InferenceTests: XCTestCase {
         XCTAssertFalse(options.allowInlineSemicolons)
     }
 
-    // MARK: spaceAroundRangeOperators
-
-    func testInferSpaceAroundRangeOperators() {
-        let input = "let foo = 0 ..< bar\n;let baz = 1...quux"
-        let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertTrue(options.spaceAroundRangeOperators)
-    }
-
-    func testInferNoSpaceAroundRangeOperators() {
-        let input = "let foo = 0..<bar\n;let baz = 1...quux"
-        let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertFalse(options.spaceAroundRangeOperators)
-    }
-
     // MARK: useVoid
 
     func testInferUseVoid() {
@@ -630,5 +616,49 @@ class InferenceTests: XCTestCase {
         let input = "switch {\ncase foo: break\n}"
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertFalse(options.indentCase)
+    }
+
+    // MARK: nospaceoperators
+
+    func testInferNoSpaceAroundTimesOperator() {
+        let input = "let foo = a*b + c / d + e*f"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.noSpaceOperators, ["*"])
+    }
+
+    func testInferSpaceAroundTimesOperator() {
+        let input = "let foo = a*b + c * d + e*f"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.noSpaceOperators, [])
+    }
+
+    func testInferNoSpaceAroundTimesAndDivideOperator() {
+        let input = "let foo = a*b + c*d"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.noSpaceOperators, ["/", "*"])
+    }
+
+    func testInferSpaceAroundRangeOperators() {
+        let input = "let foo = a ... b"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.noSpaceOperators, [])
+    }
+
+    func testInferSpaceAroundRangeOperators2() {
+        let input = "let foo = a ..< b"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.noSpaceOperators, [])
+    }
+
+    func testInferSpaceAroundRangeOperators3() {
+        let input = "let foo = a...b; let bar = a...b; let baz = a ..< b"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.noSpaceOperators, ["..."])
+    }
+
+    func testInferNoSpaceAroundRangeOperators3() {
+        let input = "let foo = a...b; let bar = a...b"
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.noSpaceOperators, ["...", "..<"])
     }
 }

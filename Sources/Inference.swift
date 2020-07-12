@@ -139,20 +139,42 @@ private struct Inference {
         options.allowInlineSemicolons = allow
     }
 
-    let spaceAroundRangeOperators = OptionInferrer { formatter, options in
-        var spaced = 0, unspaced = 0
-        formatter.forEach(.rangeOperator) { i, _ in
-            guard let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
+    let noSpaceOperators = OptionInferrer { formatter, options in
+        var spaced = [String: Int](), unspaced = [String: Int]()
+        formatter.forEach(.operator) { i, token in
+            guard case let .operator(name, .infix) = token, name != ".",
+                let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
                 nextToken.string != ")", nextToken.string != "," else {
                 return
             }
             if formatter.token(at: i + 1)?.isSpaceOrLinebreak == true {
-                spaced += 1
+                spaced[name, default: 0] += 1
             } else {
-                unspaced += 1
+                unspaced[name, default: 0] += 1
             }
         }
-        options.spaceAroundRangeOperators = (spaced >= unspaced)
+        var noSpaceOperators = Set<String>()
+        let operators = Set(spaced.keys).union(unspaced.keys)
+        for name in operators where unspaced[name, default: 0] > spaced[name, default: 0] + 1 {
+            noSpaceOperators.insert(name)
+        }
+        // Related pairs
+        let relatedPairs = [
+            ("...", "..<"), ("*", "/"), ("*=", "/="), ("+", "-"), ("+=", "-="),
+            ("==", "!="), ("<", ">"), ("<=", ">="), ("<<", ">>"),
+        ]
+        for pair in relatedPairs {
+            if noSpaceOperators.contains(pair.0),
+                !noSpaceOperators.contains(pair.1),
+                !operators.contains(pair.1) {
+                noSpaceOperators.insert(pair.1)
+            } else if noSpaceOperators.contains(pair.1),
+                !noSpaceOperators.contains(pair.0),
+                !operators.contains(pair.0) {
+                noSpaceOperators.insert(pair.0)
+            }
+        }
+        options.noSpaceOperators = noSpaceOperators
     }
 
     let useVoid = OptionInferrer { formatter, options in

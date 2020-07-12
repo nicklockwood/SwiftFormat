@@ -608,8 +608,7 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.rangeOperator) { i, token in
             guard case let .operator(name, .infix) = token else { return }
-            if !formatter.options.spaceAroundRangeOperators ||
-                formatter.options.noSpaceOperators.contains(name) {
+            if !formatter.options.spaceAroundRangeOperators {
                 if formatter.token(at: i + 1)?.isSpace == true,
                     formatter.token(at: i - 1)?.isSpace == true,
                     let nextToken = formatter.next(.nonSpace, after: i),
@@ -619,7 +618,8 @@ public struct _FormatRules {
                     formatter.removeToken(at: i + 1)
                     formatter.removeToken(at: i - 1)
                 }
-            } else {
+            } else if formatter.options.spaceAroundRangeOperators,
+                !formatter.options.noSpaceOperators.contains(name) {
                 if formatter.token(at: i + 1)?.isSpaceOrLinebreak == false {
                     formatter.insertToken(.space(" "), at: i + 1)
                 }

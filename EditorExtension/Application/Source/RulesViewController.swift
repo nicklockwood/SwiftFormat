@@ -157,7 +157,7 @@ final class RulesViewController: NSViewController {
                                                 var updatedRule = rule
                                                 updatedRule.isEnabled = $0
                                                 self?.ruleStore.save(updatedRule)
-                })
+                                            })
 
                 results.append(UserSelectionType.binary(d))
                 results.append(contentsOf: associatedOptions)

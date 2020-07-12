@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.44.17](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.17) (2020-07-12)
+
+- The `wrapArguments` rule now keeps internal and external parameter labels on the same line
+- Multiline string literals are now indented more consistently 
+- Fixed infinite recursion bug in the `redundantSelf` rule
+- Fixed duplicate file path logging in `--verbose` mode
+- Indented braces are now always balanced
+- Add `--stdinpath` option, allowing git pre-commit hook to support file header info
+- Updated instructions for git pre-commit hook (again)
+- Added inference for `--noSpaceOperators` option
+
 ## [0.44.16](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.16) (2020-07-02)
 
 - Fixed bug in `--output stdout` processing

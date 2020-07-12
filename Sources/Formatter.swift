@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.44.16
+//  Version 0.44.17
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -160,7 +160,7 @@ public class Formatter: NSObject {
     }
 
     /// Replaces the token at the specified index with one or more new tokens
-    public func replaceToken(at index: Int, with tokens: Token...) {
+    public func replaceToken(at index: Int, with tokens: [Token]) {
         if tokens.isEmpty {
             removeToken(at: index)
         } else if tokens.count != 1 || tokens[0] != self.tokens[index] {
@@ -169,6 +169,20 @@ public class Formatter: NSObject {
             for (i, token) in tokens.dropFirst().enumerated() {
                 insertToken(token, at: index + i + 1)
             }
+        }
+    }
+
+    /// Replaces the token at the specified index with one or more new tokens
+    @available(*, deprecated, message: "Use non-variadic replaceToken() method instead")
+    public func replaceToken(at index: Int, with tokens: Token...) {
+        replaceToken(at: index, with: tokens)
+    }
+
+    /// Replaces the token at the specified index with a new token
+    public func replaceToken(at index: Int, with token: Token) {
+        if token != tokens[index] {
+            trackChange(at: index)
+            tokens[index] = token
         }
     }
 

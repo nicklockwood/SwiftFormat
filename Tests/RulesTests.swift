@@ -2615,7 +2615,7 @@ class RulesTests: XCTestCase {
     }
 
     func testMultilineStringWithEscapedLinebreak() {
-        let input = "\"\"\"\n    hello \\\n    world\n\"\"\""
+        let input = "\"\"\"\n    hello \\n    world\n\"\"\""
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
@@ -2634,6 +2634,15 @@ class RulesTests: XCTestCase {
         foo(bar(\"""
         baz
         \"""))
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentMultilineStringInFunctionWithfollowingArgument() {
+        let input = """
+        foo(bar(\"""
+        baz
+        \""", quux: 5))
         """
         testFormatting(for: input, rule: FormatRules.indent)
     }
@@ -4022,14 +4031,13 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.ranges)
     }
 
-    // spaceAroundRangeOperators = true
-
-    func testNoSpaceAroundRangeOperatorsWithCustomOptions() {
-        let input = "foo ..< bar"
-        let output = "foo..<bar"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
-        testFormatting(for: input, output, rule: FormatRules.ranges, options: options)
+    func testNoSpaceAroundRangeOperatorsWithExplicitNoSpace() {
+        let input = "foo..<bar"
+        let options = FormatOptions(noSpaceOperators: ["..<"])
+        testFormatting(for: input, rule: FormatRules.ranges, options: options)
     }
+
+    // spaceAroundRangeOperators = true
 
     func testNoSpaceAddedAroundVariadic() {
         let input = "foo(bar: Int...)"
@@ -4075,6 +4083,13 @@ class RulesTests: XCTestCase {
     }
 
     // spaceAroundRangeOperators = false
+
+    func testNoSpaceAroundRangeOperatorsWithCustomOptions() {
+        let input = "foo ..< bar"
+        let output = "foo..<bar"
+        let options = FormatOptions(spaceAroundRangeOperators: false)
+        testFormatting(for: input, output, rule: FormatRules.ranges, options: options)
+    }
 
     func testSpaceNotRemovedBeforeLeadingRangeOperatorWithSpaceAroundRangeOperatorsFalse() {
         let input = "let range = ..<foo.endIndex"
@@ -8397,7 +8412,7 @@ class RulesTests: XCTestCase {
 
     // MARK: - wrapArguments
 
-    // MARK: wrapParameters
+    // MARK: wrapArguments
 
     func testWrapParametersDoesNotAffectFunctionDeclaration() {
         let input = "foo(\n    bar _: Int,\n    baz _: String\n)"
@@ -8435,6 +8450,21 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(wrapArguments: .preserve)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
+
+    func testIndentMultilineStringWhenWrappingArguments() {
+        let input = """
+        foobar(foo: \"""
+                   baz
+               \""",
+               bar: \"""
+                   baz
+               \""")
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    // MARK: wrapParameters
 
     // MARK: preserve
 
@@ -8678,6 +8708,24 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 50)
         testFormatting(for: input, [input, output2], rules: [FormatRules.wrapArguments],
+                       options: options, exclude: ["unusedArguments"])
+    }
+
+    func testWrapParametersAfterFirstWithSeparatedArgumentLabels() {
+        let input = """
+        func foo(with
+            bar: Int, and
+            baz: String, and
+            quux: Bool
+        ) -> LongReturnType {}
+        """
+        let output = """
+        func foo(with bar: Int,
+                 and baz: String,
+                 and quux: Bool) -> LongReturnType {}
+        """
+        let options = FormatOptions(wrapParameters: .afterFirst)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments,
                        options: options, exclude: ["unusedArguments"])
     }
 
@@ -8955,6 +9003,24 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 50)
         testFormatting(for: input, [input, output2], rules: [FormatRules.wrapArguments],
+                       options: options, exclude: ["unusedArguments"])
+    }
+
+    func testWrapParametersBeforeFirstWithSeparatedArgumentLabels() {
+        let input = """
+        func foo(with
+            bar: Int, and
+            baz: String
+        ) -> LongReturnType {}
+        """
+        let output = """
+        func foo(
+            with bar: Int,
+            and baz: String
+        ) -> LongReturnType {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments,
                        options: options, exclude: ["unusedArguments"])
     }
 

@@ -154,7 +154,7 @@ extension FormatOptions {
                               return key
                           }
                           return keys[0]
-            })
+                      })
             type = .enum(keys)
         }
 

@@ -62,6 +62,7 @@
 * [void](#void)
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
+* [wrapMultilineConditionalBraces](#wrapMultilineConditionalBraces)
 * [yodaConditions](#yodaConditions)
 
 ----------
@@ -1584,6 +1585,42 @@ provided for `--wrapparameters`, the value for `--wraparguments` will be used.
     baz,
 +   quuz
 + ]
+```
+
+</details>
+<br/>
+
+## wrapMultilineConditionalBraces
+
+Wrap the opening brace of multiline conditionals.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- if foo,
+-   bar {
+-   // ...
+- }
+
++ if foo,
++   bar
++ {
++   // ...
++ }
+```
+
+```diff
+- guard foo,
+-   bar else {
+-   // ...
+- }
+
++ guard foo,
++   bar else
++ {
++   // ...
++ }
 ```
 
 </details>

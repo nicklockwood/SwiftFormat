@@ -984,6 +984,34 @@ private struct Examples {
     ```
     """
 
+    let wrapMultilineConditionalBraces = """
+    ```diff
+    - if foo,
+    -   bar {
+    -   // ...
+    - }
+
+    + if foo,
+    +   bar
+    + {
+    +   // ...
+    + }
+    ```
+
+    ```diff
+    - guard foo,
+    -   bar else {
+    -   // ...
+    - }
+
+    + guard foo,
+    +   bar else
+    + {
+    +   // ...
+    + }
+    ```
+    """
+
     let leadingDelimiters = """
     ```diff
     - guard let foo = maybeFoo // first

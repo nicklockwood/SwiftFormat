@@ -3159,6 +3159,9 @@ public struct _FormatRules {
                     let previousNonspaceToken = formatter.last(.nonSpace, before: openBraceIndex),
                     !previousNonspaceToken.is(.linebreak) {
                     formatter.insertLinebreak(at: openBraceIndex)
+                    // Insert a space to align the opening brace with the if / guard keyword:
+                    let indentation = formatter.indentForLine(at: i)
+                    formatter.insertToken(.space(indentation), at: openBraceIndex + 1)
                     // If we left behind a trailing space on the previous line, clean it up:
                     let previousTokenIndex = openBraceIndex - 1
                     if formatter.tokens[previousTokenIndex].is(.space) {

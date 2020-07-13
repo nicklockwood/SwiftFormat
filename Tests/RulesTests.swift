@@ -1837,6 +1837,27 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.wrapMultilineConditionalBraces, exclude: ["braces"])
     }
 
+    func testInnerMultilineIfBraceOnNextLine() {
+        let input = """
+        if outerConditional {
+            if firstConditional,
+                array.contains(where: { secondConditional }) {
+                print("statement body")
+            }
+        }
+        """
+        let output = """
+        if outerConditional {
+            if firstConditional,
+                array.contains(where: { secondConditional })
+            {
+                print("statement body")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineConditionalBraces, exclude: ["braces"])
+    }
+
     func testSingleLineIfBraceOnSameLine() {
         let input = """
         if firstConditional {

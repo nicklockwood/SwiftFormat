@@ -1598,29 +1598,29 @@ Wrap the opening brace of multiline conditionals.
 <summary>Examples</summary>
 
 ```diff
-- if foo,
+  if foo,
 -   bar {
--   // ...
-- }
+    // ...
+  }
 
-+ if foo,
+  if foo,
 +   bar
 + {
-+   // ...
-+ }
+    // ...
+  }
 ```
 
 ```diff
-- guard foo,
+  guard foo,
 -   bar else {
--   // ...
-- }
+    // ...
+  }
 
-+ guard foo,
+  guard foo,
 +   bar else
 + {
-+   // ...
-+ }
+    // ...
+  }
 ```
 
 </details>

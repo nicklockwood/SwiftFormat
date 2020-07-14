@@ -172,7 +172,8 @@ extension UIView: LayoutManaged {
         let types = cachedExpressionTypes
         for key in ["attributedText", "attributedTitle", "text", "title"] {
             if let type = types[key], case let .any(subtype) = type.kind,
-                subtype is String.Type || subtype is NSAttributedString.Type {
+                subtype is String.Type || subtype is NSAttributedString.Type
+            {
                 return key
             }
         }

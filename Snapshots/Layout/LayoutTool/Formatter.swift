@@ -11,7 +11,8 @@ func format(_ files: [String]) -> (filesChecked: Int, filesUpdated: Int, errors:
             do {
                 let data = try Data(contentsOf: inputURL)
                 if let input = String(data: data, encoding: .utf8),
-                    let xml = try parseLayoutXML(data, for: inputURL) {
+                    let xml = try parseLayoutXML(data, for: inputURL)
+                {
                     checked = true
                     let output = try format(xml)
                     if output != input {
@@ -208,7 +209,8 @@ extension XMLNode {
                     xml += ">\n"
                     let body = try children.toString(withIndent: indent + "    ", isHTML: isHTML)
                     if (!isHTML && attributes.count >= attributeWrap) ||
-                        children.first(where: { !$0.isLinebreak })?.isComment == true {
+                        children.first(where: { !$0.isLinebreak })?.isComment == true
+                    {
                         xml += "\n"
                     }
                     xml += "\(body)\(indent)</\(name)>"

@@ -28,7 +28,8 @@ private extension UITableView {
     @objc var layout_intrinsicContentSize: CGSize {
         guard layoutNode != nil else {
             if imp(of: #selector(getter: intrinsicContentSize), of: type(of: self),
-                   matches: #selector(getter: self.layout_intrinsicContentSize)) {
+                   matches: #selector(getter: self.layout_intrinsicContentSize))
+            {
                 return super.intrinsicContentSize
             }
             return self.layout_intrinsicContentSize
@@ -41,7 +42,8 @@ private extension UITableView {
 
     @objc func layout_setContentSize(_ size: CGSize) {
         if imp(of: #selector(setter: contentSize), of: type(of: self),
-               matches: #selector(layout_setContentSize(_:))) {
+               matches: #selector(layout_setContentSize(_:)))
+        {
             super.contentSize = size
         } else {
             layout_setContentSize(size)
@@ -353,7 +355,8 @@ extension UITableView {
             // permanently hidden, which breaks layout. figure out why that is
         }
         guard let layoutsData = objc_getAssociatedObject(self, &headerDataKey) as? NSMutableDictionary,
-            let layoutData = layoutsData[identifier] as? LayoutData else {
+            let layoutData = layoutsData[identifier] as? LayoutData else
+        {
             return nil
         }
         var nodes = objc_getAssociatedObject(self, &nodesKey) as? NSMutableArray
@@ -420,7 +423,8 @@ extension UITableView {
             return node
         }
         guard let layoutsData = objc_getAssociatedObject(self, &cellDataKey) as? NSMutableDictionary,
-            let layoutData = layoutsData[identifier] as? LayoutData else {
+            let layoutData = layoutsData[identifier] as? LayoutData else
+        {
             return nil
         }
         do {
@@ -481,7 +485,8 @@ private extension UITableViewHeaderFooterView {
             return CGSize(width: size.width, height: CGFloat(height))
         }
         if imp(of: #selector(sizeThatFits(_:)), of: type(of: self),
-               matches: #selector(layout_sizeThatFits(_:))) {
+               matches: #selector(layout_sizeThatFits(_:)))
+        {
             return super.sizeThatFits(size)
         } else {
             return layout_sizeThatFits(size)
@@ -505,7 +510,8 @@ extension UITableViewHeaderFooterView: LayoutBacked {
             }
         }()
         if node.expressions.keys.contains(where: { $0.hasPrefix("backgroundView.") }),
-            !node.expressions.keys.contains("backgroundView") {
+            !node.expressions.keys.contains("backgroundView")
+        {
             // Add a background view if required
             view.backgroundView = UIView(frame: view.bounds)
         }
@@ -589,7 +595,8 @@ private extension UITableViewCell {
             return CGSize(width: size.width, height: CGFloat(height))
         }
         if imp(of: #selector(sizeThatFits(_:)), of: type(of: self),
-               matches: #selector(layout_sizeThatFits(_:))) {
+               matches: #selector(layout_sizeThatFits(_:)))
+        {
             return super.sizeThatFits(size)
         } else {
             return layout_sizeThatFits(size)
@@ -614,12 +621,14 @@ extension UITableViewCell: LayoutBacked {
             }
         }()
         if node.expressions.keys.contains(where: { $0.hasPrefix("backgroundView.") }),
-            !node.expressions.keys.contains("backgroundView") {
+            !node.expressions.keys.contains("backgroundView")
+        {
             // Add a backgroundView view if required
             cell.backgroundView = UIView(frame: cell.bounds)
         }
         if node.expressions.keys.contains(where: { $0.hasPrefix("selectedBackgroundView.") }),
-            !node.expressions.keys.contains("selectedBackgroundView") {
+            !node.expressions.keys.contains("selectedBackgroundView")
+        {
             // Add a selectedBackground view if required
             cell.selectedBackgroundView = UIView(frame: cell.bounds)
         }

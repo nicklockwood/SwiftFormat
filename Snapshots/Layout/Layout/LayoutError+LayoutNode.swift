@@ -132,7 +132,8 @@ func bestMatches(for symbol: String, in suggestions: Set<String>) -> [String] {
             let lowercaseString = string.lowercased()
             // Eliminate keyPaths unless symbol itself is a keyPath or is part of result
             guard !lowercaseString.contains(".") || symbol.contains(".") ||
-                lowercaseString.hasPrefix("\(lowercasedSymbol).") else {
+                lowercaseString.hasPrefix("\(lowercasedSymbol).") else
+            {
                 return nil
             }
             return (string, levenshtein(lowercaseString, lowercasedSymbol))

@@ -1858,6 +1858,18 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.wrapMultilineConditionalBraces, exclude: ["braces"])
     }
 
+    func testMultilineIfBraceOnSameLine() {
+        let input = """
+        if let object = Object([
+            foo,
+            bar,
+        ]) {
+            print("statement body")
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.wrapMultilineConditionalBraces)
+    }
+
     func testSingleLineIfBraceOnSameLine() {
         let input = """
         if firstConditional {

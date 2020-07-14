@@ -3151,17 +3151,21 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.keyword) { i, _ in
             switch formatter.tokens[i] {
-            case .keyword("if"), .keyword("guard"):
+            case .keyword("if"), .keyword("guard"), .keyword("while"):
                 if let openBraceIndex = formatter.index(of: .startOfScope("{"), after: i),
                     // Make sure the brace is on a separate line from the if / guard
                     i < formatter.startOfLine(at: openBraceIndex),
                     // When the token before the brace _isn't_ a newline, then we have to insert a newline.
                     let previousNonspaceToken = formatter.last(.nonSpace, before: openBraceIndex),
-                    !previousNonspaceToken.is(.linebreak) {
+                    !previousNonspaceToken.is(.linebreak),
+                    // But we should only wrap when the brace's line is more indented than the if / guard
+                    formatter.indentForLine(at: i) < formatter.indentForLine(at: openBraceIndex) {
                     formatter.insertLinebreak(at: openBraceIndex)
+
                     // Insert a space to align the opening brace with the if / guard keyword:
                     let indentation = formatter.indentForLine(at: i)
                     formatter.insertToken(.space(indentation), at: openBraceIndex + 1)
+
                     // If we left behind a trailing space on the previous line, clean it up:
                     let previousTokenIndex = openBraceIndex - 1
                     if formatter.tokens[previousTokenIndex].is(.space) {

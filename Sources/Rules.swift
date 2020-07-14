@@ -3144,14 +3144,14 @@ public struct _FormatRules {
                                               wrapSingleArguments: false)
     }
 
-    public let wrapMultilineConditionalBraces = FormatRule(
-        help: "Wrap the opening brace of multiline conditionals.",
+    public let wrapMultilineStatementBraces = FormatRule(
+        help: "Wrap the opening brace of multiline statements (if/guard/while/func).",
         orderAfter: ["wrapArguments"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.keyword) { i, _ in
             switch formatter.tokens[i] {
-            case .keyword("if"), .keyword("guard"), .keyword("while"):
+            case .keyword("if"), .keyword("guard"), .keyword("while"), .keyword("func"):
                 if let openBraceIndex = formatter.index(of: .startOfScope("{"), after: i),
                     // Make sure the brace is on a separate line from the if / guard
                     i < formatter.startOfLine(at: openBraceIndex),
@@ -3159,7 +3159,9 @@ public struct _FormatRules {
                     let previousNonspaceToken = formatter.last(.nonSpace, before: openBraceIndex),
                     !previousNonspaceToken.is(.linebreak),
                     // But we should only wrap when the brace's line is more indented than the if / guard
-                    formatter.indentForLine(at: i) < formatter.indentForLine(at: openBraceIndex) {
+                    formatter.indentForLine(at: i) < formatter.indentForLine(at: openBraceIndex),
+                    // And we should only wrap when there's actual code inside the brace block
+                    formatter.next(.nonSpace, after: openBraceIndex) != .endOfScope("}") {
                     formatter.insertLinebreak(at: openBraceIndex)
 
                     // Insert a space to align the opening brace with the if / guard keyword:

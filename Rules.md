@@ -62,7 +62,7 @@
 * [void](#void)
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
-* [wrapMultilineConditionalBraces](#wrapMultilineConditionalBraces)
+* [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
 * [yodaConditions](#yodaConditions)
 
 ----------
@@ -1590,9 +1590,9 @@ provided for `--wrapparameters`, the value for `--wraparguments` will be used.
 </details>
 <br/>
 
-## wrapMultilineConditionalBraces
+## wrapMultilineStatementBraces
 
-Wrap the opening brace of multiline conditionals.
+Wrap the opening brace of multiline statements (if/guard/while/func).
 
 <details>
 <summary>Examples</summary>
@@ -1618,6 +1618,21 @@ Wrap the opening brace of multiline conditionals.
 
   guard foo,
 +   bar else
++ {
+    // ...
+  }
+```
+
+```diff
+  func foo(
+    bar: Int,
+-   baz: Int) {
+    // ...
+  }
+
+  func foo(
+    bar: Int,
++   baz: Int)
 + {
     // ...
   }

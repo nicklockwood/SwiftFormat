@@ -873,6 +873,7 @@ extension RulesTests {
         ("testMultilineCommentHeader", testMultilineCommentHeader),
         ("testMultilineDisableNextRemoveSelf", testMultilineDisableNextRemoveSelf),
         ("testMultilineDisableRemoveSelf", testMultilineDisableRemoveSelf),
+        ("testMultilineFuncBraceOnNextLine", testMultilineFuncBraceOnNextLine),
         ("testMultilineGuardBraceOnNextLine", testMultilineGuardBraceOnNextLine),
         ("testMultilineIfBraceOnNextLine", testMultilineIfBraceOnNextLine),
         ("testMultilineIfBraceOnSameLine", testMultilineIfBraceOnSameLine),

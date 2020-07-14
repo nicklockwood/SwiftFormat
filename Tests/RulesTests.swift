@@ -1652,7 +1652,7 @@ class RulesTests: XCTestCase {
         let output = "if case .foo = foo,\n    true {\n    return false\n}"
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, output, rule: FormatRules.indent,
-                       options: options, exclude: ["wrapMultilineConditionalBraces"])
+                       options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testGenericEnumCaseIndenting() {
@@ -1740,7 +1740,7 @@ class RulesTests: XCTestCase {
     func testIndentIfCaseCommaCase() {
         let input = "{\nif case let .foo(msg) = a,\ncase let .bar(msg) = b {}\n}"
         let output = "{\n    if case let .foo(msg) = a,\n        case let .bar(msg) = b {}\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.indent)
         let options = FormatOptions(xcodeIndentation: true)
         XCTAssertEqual(try format(input, rules: [FormatRules.indent]),
                        try format(input, rules: [FormatRules.indent], options: options))
@@ -1801,91 +1801,6 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
-    }
-
-    func testMultilineIfBraceOnNextLine() {
-        let input = """
-        if firstConditional,
-            array.contains(where: { secondConditional }) {
-            print("statement body")
-        }
-        """
-        let output = """
-        if firstConditional,
-            array.contains(where: { secondConditional })
-        {
-            print("statement body")
-        }
-        """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineConditionalBraces, exclude: ["braces"])
-    }
-
-    func testMultilineGuardBraceOnNextLine() {
-        let input = """
-        guard firstConditional,
-            array.contains(where: { secondConditional }) else {
-            print("statement body")
-        }
-        """
-        let output = """
-        guard firstConditional,
-            array.contains(where: { secondConditional }) else
-        {
-            print("statement body")
-        }
-        """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineConditionalBraces, exclude: ["braces"])
-    }
-
-    func testInnerMultilineIfBraceOnNextLine() {
-        let input = """
-        if outerConditional {
-            if firstConditional,
-                array.contains(where: { secondConditional }) {
-                print("statement body")
-            }
-        }
-        """
-        let output = """
-        if outerConditional {
-            if firstConditional,
-                array.contains(where: { secondConditional })
-            {
-                print("statement body")
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineConditionalBraces, exclude: ["braces"])
-    }
-
-    func testMultilineIfBraceOnSameLine() {
-        let input = """
-        if let object = Object([
-            foo,
-            bar,
-        ]) {
-            print("statement body")
-        }
-        """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineConditionalBraces)
-    }
-
-    func testSingleLineIfBraceOnSameLine() {
-        let input = """
-        if firstConditional {
-            print("statement body")
-        }
-        """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineConditionalBraces)
-    }
-
-    func testSingleLineGuardBraceOnSameLine() {
-        let input = """
-        guard firstConditional else {
-            print("statement body")
-        }
-        """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineConditionalBraces)
     }
 
     // indentCase = true
@@ -2102,7 +2017,7 @@ class RulesTests: XCTestCase {
 
     func testWrappedLineBeforeGuardElse() {
         let input = "guard let foo = bar\nelse { return }"
-        testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, rule: FormatRules.indent)
     }
 
     func testSingleLineGuardFollowingLine() {
@@ -2115,7 +2030,7 @@ class RulesTests: XCTestCase {
         let input = "guard let foo = bar\nelse { return }"
         let output = "guard let foo = bar\n    else { return }"
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrappedLineAfterGuardElseWithXcodeStyleNotIndented() {
@@ -2128,28 +2043,28 @@ class RulesTests: XCTestCase {
         let input = "guard let foo = foo\nelse {\nreturn\n}"
         let output = "guard let foo = foo\n    else {\n        return\n}"
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrappedLineAfterGuardCommaIndented() {
         let input = "guard let foo = foo,\nlet bar = bar else {}"
         let output = "guard let foo = foo,\n    let bar = bar else {}"
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
     func testXcodeIndentationGuardClosure() {
         let input = "guard let foo = bar(baz, completion: {\nfalse\n}) else { return }"
         let output = "guard let foo = bar(baz, completion: {\n    false\n}) else { return }"
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testNestedScopesForXcodeGuardIndentation() {
         let input = "enum Foo {\ncase bar\n\nvar foo: String {\nguard self == .bar\nelse {\nreturn \"\"\n}\nreturn \"bar\"\n}\n}"
         let output = "enum Foo {\n    case bar\n\n    var foo: String {\n        guard self == .bar\n            else {\n                return \"\"\n        }\n        return \"bar\"\n    }\n}"
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrappedLineAfterGuardElse() {
@@ -2177,7 +2092,7 @@ class RulesTests: XCTestCase {
                 let bar = bar else { break }
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testConsecutiveWraps() {
@@ -2246,7 +2161,7 @@ class RulesTests: XCTestCase {
     func testNestedWrappedIfIndents() {
         let input = "if foo {\nif bar &&\n(baz ||\nquux) {\nfoo()\n}\n}"
         let output = "if foo {\n    if bar &&\n        (baz ||\n            quux) {\n        foo()\n    }\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["andOperator", "wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["andOperator", "wrapMultilineStatementBraces"])
     }
 
     func testWrappedEnumThatLooksLikeIf() {
@@ -2346,7 +2261,7 @@ class RulesTests: XCTestCase {
     func testIndentInsideWrappedIfStatementWithClosureCondition() {
         let input = "if foo({ 1 }) ||\nbar {\nbaz()\n}"
         let output = "if foo({ 1 }) ||\n    bar {\n    baz()\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testIndentInsideWrappedClassDefinition() {
@@ -3728,7 +3643,7 @@ class RulesTests: XCTestCase {
 
     func testGuardNotAffectedByElseOnSameLine() {
         let input = "guard true\nelse { return }"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine)
     }
 
     func testElseOnSameLineDoesntEatPreviousStatement() {
@@ -5127,7 +5042,7 @@ class RulesTests: XCTestCase {
 
     func testClosureArgumentAfterLinebreakInGuardNotMadeTrailing() {
         let input = "guard let foo =\n    bar({ /* some code */ })\nelse { return }"
-        testFormatting(for: input, rule: FormatRules.trailingClosures, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, rule: FormatRules.trailingClosures)
     }
 
     func testClosureMadeTrailingForNumericTupleMember() {
@@ -6804,7 +6719,7 @@ class RulesTests: XCTestCase {
             _ = self.myVar
         }) {}
         """
-        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
     // explicitSelf = .insert
@@ -8016,7 +7931,7 @@ class RulesTests: XCTestCase {
             let baz = baz {}
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
     func testWrapIfElseStatement() {
@@ -8034,7 +7949,7 @@ class RulesTests: XCTestCase {
             bar {}
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
     }
 
     func testWrapGuardStatement() {
@@ -8058,7 +7973,7 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapClosure() {
@@ -8129,7 +8044,7 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(maxWidth: 25)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidthWithXcodeIndentation() {
@@ -8154,7 +8069,7 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 25)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth2() {
@@ -8170,7 +8085,7 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(maxWidth: 35)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth2WithXcodeIndentation() {
@@ -8192,7 +8107,7 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth3() {
@@ -8208,7 +8123,7 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(maxWidth: 35)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth3WithXcodeIndentation() {
@@ -8230,7 +8145,7 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth4() {
@@ -8246,7 +8161,7 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(maxWidth: 35)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth4WithXcodeIndentation() {
@@ -8268,7 +8183,7 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapChainedFunctionAfterSubscriptCollection() {
@@ -8308,7 +8223,7 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(maxWidth: 42)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testNoWrapInterpolatedStringLiteral() {
@@ -10248,7 +10163,7 @@ class RulesTests: XCTestCase {
     func testGuardAndReplaced() {
         let input = "guard true && true\nelse { return }"
         let output = "guard true, true\nelse { return }"
-        testFormatting(for: input, output, rule: FormatRules.andOperator, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.andOperator)
     }
 
     func testWhileAndReplaced() {
@@ -10322,13 +10237,13 @@ class RulesTests: XCTestCase {
     func testHandleAndAtStartOfLine() {
         let input = "if a == b\n    && b == c {}"
         let output = "if a == b,\n    b == c {}"
-        testFormatting(for: input, output, rule: FormatRules.andOperator, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.andOperator)
     }
 
     func testHandleAndAtStartOfLineAfterComment() {
         let input = "if a == b // foo\n    && b == c {}"
         let output = "if a == b, // foo\n    b == c {}"
-        testFormatting(for: input, output, rule: FormatRules.andOperator, exclude: ["wrapMultilineConditionalBraces"])
+        testFormatting(for: input, output, rule: FormatRules.andOperator)
     }
 
     func testNoReplaceAndInViewBuilder() {
@@ -11732,5 +11647,112 @@ class RulesTests: XCTestCase {
             bar = 6
         """
         testFormatting(for: input, output, rule: FormatRules.leadingDelimiters)
+    }
+
+    // MARK: wrapMultilineStatementBraces
+
+    func testMultilineIfBraceOnNextLine() {
+        let input = """
+        if firstConditional,
+            array.contains(where: { secondConditional }) {
+            print("statement body")
+        }
+        """
+        let output = """
+        if firstConditional,
+            array.contains(where: { secondConditional })
+        {
+            print("statement body")
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces, exclude: ["braces"])
+    }
+
+    func testMultilineFuncBraceOnNextLine() {
+        let input = """
+        func method(
+            foo: Int,
+            bar: Int) {
+            print("function body")
+        }
+        """
+        let output = """
+        func method(
+            foo: Int,
+            bar: Int)
+        {
+            print("function body")
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
+                       exclude: ["braces", "wrapArguments", "unusedArguments"])
+    }
+
+    func testMultilineGuardBraceOnNextLine() {
+        let input = """
+        guard firstConditional,
+            array.contains(where: { secondConditional }) else {
+            print("statement body")
+        }
+        """
+        let output = """
+        guard firstConditional,
+            array.contains(where: { secondConditional }) else
+        {
+            print("statement body")
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces, exclude: ["braces"])
+    }
+
+    func testInnerMultilineIfBraceOnNextLine() {
+        let input = """
+        if outerConditional {
+            if firstConditional,
+                array.contains(where: { secondConditional }) {
+                print("statement body")
+            }
+        }
+        """
+        let output = """
+        if outerConditional {
+            if firstConditional,
+                array.contains(where: { secondConditional })
+            {
+                print("statement body")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces, exclude: ["braces"])
+    }
+
+    func testMultilineIfBraceOnSameLine() {
+        let input = """
+        if let object = Object([
+            foo,
+            bar,
+        ]) {
+            print("statement body")
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+    }
+
+    func testSingleLineIfBraceOnSameLine() {
+        let input = """
+        if firstConditional {
+            print("statement body")
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+    }
+
+    func testSingleLineGuardBraceOnSameLine() {
+        let input = """
+        guard firstConditional else {
+            print("statement body")
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }
 }

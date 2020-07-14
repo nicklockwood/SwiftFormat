@@ -984,7 +984,7 @@ private struct Examples {
     ```
     """
 
-    let wrapMultilineConditionalBraces = """
+    let wrapMultilineStatementBraces = """
     ```diff
       if foo,
     -   bar {
@@ -1006,6 +1006,21 @@ private struct Examples {
 
       guard foo,
     +   bar else
+    + {
+        // ...
+      }
+    ```
+
+    ```diff
+      func foo(
+        bar: Int,
+    -   baz: Int) {
+        // ...
+      }
+
+      func foo(
+        bar: Int,
+    +   baz: Int)
     + {
         // ...
       }

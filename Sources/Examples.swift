@@ -984,6 +984,49 @@ private struct Examples {
     ```
     """
 
+    let wrapMultilineStatementBraces = """
+    ```diff
+      if foo,
+    -   bar {
+        // ...
+      }
+
+      if foo,
+    +   bar
+    + {
+        // ...
+      }
+    ```
+
+    ```diff
+      guard foo,
+    -   bar else {
+        // ...
+      }
+
+      guard foo,
+    +   bar else
+    + {
+        // ...
+      }
+    ```
+
+    ```diff
+      func foo(
+        bar: Int,
+    -   baz: Int) {
+        // ...
+      }
+
+      func foo(
+        bar: Int,
+    +   baz: Int)
+    + {
+        // ...
+      }
+    ```
+    """
+
     let leadingDelimiters = """
     ```diff
     - guard let foo = maybeFoo // first

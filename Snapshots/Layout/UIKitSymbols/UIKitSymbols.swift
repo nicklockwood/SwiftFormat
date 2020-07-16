@@ -23,7 +23,8 @@ class UIKitSymbols: XCTestCase {
         var names = ["SKView"] // Doesn't load otherwise for some reason
         for cls in UnsafeBufferPointer(start: classes, count: Int(classCount)) {
             if class_getSuperclass(cls) != nil,
-                cls.isSubclass(of: UIView.self) || cls.isSubclass(of: UIViewController.self) {
+                cls.isSubclass(of: UIView.self) || cls.isSubclass(of: UIViewController.self)
+            {
                 let name = NSStringFromClass(cls)
                 if !name.contains("_"), !name.contains(".") {
                     names.append(name)
@@ -215,7 +216,8 @@ class UIKitSymbols: XCTestCase {
             let props = properties[name]!
             var superclassName: String?
             if let cls = NSClassFromString(name), let superclass = class_getSuperclass(cls),
-                superclass is UIView.Type || superclass is UIViewController.Type {
+                superclass is UIView.Type || superclass is UIViewController.Type
+            {
                 superclassName = NSStringFromClass(superclass)
             }
             output += "    symbols[\"\(name)\"] = ["

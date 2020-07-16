@@ -83,7 +83,8 @@ func rename(_ old: String, to new: String, in xml: [XMLNode]) -> [XMLNode] {
                         attributes[key] = renamed
                     }
                 } else if let parts = try? parseStringExpression(value),
-                    let result = rename(old, to: new, in: parts) {
+                    let result = rename(old, to: new, in: parts)
+                {
                     attributes[key] = result
                 }
             }

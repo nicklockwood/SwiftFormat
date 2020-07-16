@@ -172,12 +172,6 @@ public class Formatter: NSObject {
         }
     }
 
-    /// Replaces the token at the specified index with one or more new tokens
-    @available(*, deprecated, message: "Use non-variadic replaceToken() method instead")
-    public func replaceToken(at index: Int, with tokens: Token...) {
-        replaceToken(at: index, with: tokens)
-    }
-
     /// Replaces the token at the specified index with a new token
     public func replaceToken(at index: Int, with token: Token) {
         if token != tokens[index] {

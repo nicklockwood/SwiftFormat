@@ -56,18 +56,6 @@ public extension String {
         return swiftKeywords.contains(self)
     }
 
-    /// Is this string a keyword in some contexts?
-    @available(*, deprecated, message: "Not reliable - use a different approach")
-    var isContextualKeyword: Bool {
-        switch self {
-        case "Any", "super", "self", "nil", "true", "false",
-             "Self", "get", "set", "willSet", "didSet":
-            return true
-        default:
-            return isSwiftKeyword
-        }
-    }
-
     /// Is this string a valid operator?
     var isOperator: Bool {
         let tokens = tokenize(self)
@@ -145,12 +133,6 @@ public enum Token: Equatable {
     case space(String)
     case commentBody(String)
     case error(String)
-
-    /// Backwards-compatible convenience function for creating linebreaks
-    @available(*, deprecated, message: "Use linebreak(String, OriginalLine) instead")
-    public static func linebreak(_ string: String) -> Token {
-        return linebreak(string, 1)
-    }
 
     /// The original token string
     public var string: String {

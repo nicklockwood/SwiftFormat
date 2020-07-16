@@ -88,7 +88,8 @@ extension NSObject {
                 if let cattribs = property_getAttributes(cprop) {
                     var name = String(cString: cname)
                     guard !name.contains("_"), // We don't want to mess with private stuff
-                        allProperties[name] == nil else {
+                        allProperties[name] == nil else
+                    {
                         continue
                     }
                     // Get attributes
@@ -102,7 +103,8 @@ extension NSObject {
                         continue
                     }
                     if case let .any(type) = type.kind, type is Bool.Type,
-                        let attrib = attribs.first(where: { $0.hasPrefix("Gis") }) {
+                        let attrib = attribs.first(where: { $0.hasPrefix("Gis") })
+                    {
                         name = String(attrib.unicodeScalars.dropFirst())
                     }
                     let typeName = type.description
@@ -123,7 +125,8 @@ extension NSObject {
                 let selector: Selector = method_getName(method)
                 var name = "\(selector)"
                 guard name.hasPrefix("set"), let colonRange = name.range(of: ":"),
-                    colonRange.upperBound == name.endIndex, !name.hasPrefix("set_") else {
+                    colonRange.upperBound == name.endIndex, !name.hasPrefix("set_") else
+                {
                     continue
                 }
                 name = String(name["set".endIndex ..< colonRange.lowerBound])
@@ -145,7 +148,8 @@ extension NSObject {
                     continue
                 }
                 if case let .any(type) = type.kind, type is Bool.Type,
-                    instancesRespond(to: Selector(isName)) {
+                    instancesRespond(to: Selector(isName))
+                {
                     name = isName
                 }
                 addProperty(name, type)
@@ -154,7 +158,8 @@ extension NSObject {
         }
         // Accessibility properties (TODO: find a way to automate this)
         if conforms(to: UIAccessibilityIdentification.self) ||
-            self is UIView.Type || self is UIBarItem.Type || self is UIImage.Type {
+            self is UIView.Type || self is UIBarItem.Type || self is UIImage.Type
+        {
             addProperty("accessibilityIdentifier", .string)
         }
         addProperty("isAccessibilityElement", .bool)

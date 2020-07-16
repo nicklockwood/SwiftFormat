@@ -66,7 +66,8 @@ public extension CGPath {
         func endPath() {
             if points.count > 1 {
                 if points.count > 2, points.first == points.last,
-                    let firstElement = firstElement {
+                    let firstElement = firstElement
+                {
                     updateLastPoint(nextElement: firstElement)
                 }
                 let points = sanitizePoints(points)

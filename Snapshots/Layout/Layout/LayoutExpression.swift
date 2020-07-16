@@ -25,7 +25,8 @@ private let colorSymbols: [AnyExpression.Symbol: AnyExpression.SymbolEvaluator] 
     },
     .function("rgba", arity: 4): { args in
         guard let r = args[0] as? Double, let g = args[1] as? Double,
-            let b = args[2] as? Double, let a = args[3] as? Double else {
+            let b = args[2] as? Double, let a = args[3] as? Double else
+        {
             throw Expression.Error.message("Type mismatch")
         }
         return UIColor(red: CGFloat(r / 255), green: CGFloat(g / 255), blue: CGFloat(b / 255), alpha: CGFloat(a))
@@ -139,7 +140,8 @@ private func stringToAsset(_ string: String) throws -> (name: String, bundle: Bu
         if let name = name,
             let bundle = framework.url(forResource: name, withExtension: "bundle").flatMap({
                 Bundle(url: $0)
-            }) {
+            })
+        {
             _bundle = bundle
         }
 
@@ -480,7 +482,8 @@ struct LayoutExpression {
                             }
                             return macroFn
                         } else if let value = try constants(key) ?? type.values[key] ??
-                            node.constantValue(forSymbol: key) ?? staticConstant(for: key) {
+                            node.constantValue(forSymbol: key) ?? staticConstant(for: key)
+                        {
                             allConstants[name] = value
                             return nil
                         } else if circular {
@@ -729,7 +732,8 @@ struct LayoutExpression {
                 if symbols.contains("font"), let font = try node.value(forSymbol: "font") as? UIFont {
                     correctFont = font
                 } else if symbols.contains("titleLabel.font"),
-                    let font = try node.value(forSymbol: "titleLabel.font") as? UIFont {
+                    let font = try node.value(forSymbol: "titleLabel.font") as? UIFont
+                {
                     // TODO: find a less hacky solution for this
                     correctFont = font
                 } else {
@@ -747,11 +751,13 @@ struct LayoutExpression {
                     }
                 }
                 if symbols.contains("textColor"),
-                    let color = try node.value(forSymbol: "textColor") as? UIColor {
+                    let color = try node.value(forSymbol: "textColor") as? UIColor
+                {
                     result.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
                 } else if symbols.contains("titleColor"),
                     // TODO: support UIButton states (like selectedTitleColor, etc.) correctly
-                    let color = try node.value(forSymbol: "titleColor") as? UIColor {
+                    let color = try node.value(forSymbol: "titleColor") as? UIColor
+                {
                     result.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
                 }
 
@@ -798,11 +804,13 @@ struct LayoutExpression {
                 return font
             }
             if let font = UIFont(name: name, size: UIFont.defaultSize),
-                font.fontName.lowercased() == name.lowercased() {
+                font.fontName.lowercased() == name.lowercased()
+            {
                 return font
             }
             if let fontName = UIFont.fontNames(forFamilyName: name).first,
-                let font = UIFont(name: fontName, size: UIFont.defaultSize) {
+                let font = UIFont(name: fontName, size: UIFont.defaultSize)
+            {
                 let descriptor = UIFontDescriptor().withFamily(font.familyName)
                 return UIFont(descriptor: descriptor, size: UIFont.defaultSize)
             }
@@ -837,7 +845,8 @@ struct LayoutExpression {
                     return size
                 }
                 if string.hasSuffix("%"),
-                    let size = Double(String(string.unicodeScalars.dropLast())) {
+                    let size = Double(String(string.unicodeScalars.dropLast()))
+                {
                     return UIFont.RelativeSize(factor: CGFloat(size / 100))
                 }
                 if let font = font(named: string) {
@@ -1060,7 +1069,8 @@ struct LayoutExpression {
                         } catch let error as SymbolError {
                             // TODO: find a less stringly-typed solution for this
                             if imageExpression.description == error.symbol,
-                                "\(error)".contains("Unknown property") {
+                                "\(error)".contains("Unknown property")
+                            {
                                 throw Expression.Error.message("Image named '\(error.symbol)' not found in main bundle")
                             }
                             throw error
@@ -1210,7 +1220,8 @@ struct LayoutExpression {
                     case let .expression(expression):
                         guard expression.symbols.count == 1,
                             case let .variable(name) = expression.symbols.first!,
-                            let first = name.first, !"'\"".contains(first) else {
+                            let first = name.first, !"'\"".contains(first) else
+                        {
                             continue
                         }
                         var parent = node.parent

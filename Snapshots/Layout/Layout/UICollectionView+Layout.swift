@@ -16,8 +16,7 @@ extension UICollectionViewLayout {
         let flowLayout = UICollectionViewFlowLayout()
         if node.expressions["collectionViewLayout.itemSize"] ??
             node.expressions["collectionViewLayout.itemSize.width"] ??
-            node.expressions["collectionViewLayout.itemSize.height"] == nil
-        {
+            node.expressions["collectionViewLayout.itemSize.height"] == nil {
             flowLayout.estimatedItemSize = flowLayout.itemSize
         }
         if #available(iOS 10.0, *) {
@@ -55,8 +54,7 @@ private extension UICollectionView {
     @objc var layout_intrinsicContentSize: CGSize {
         guard layoutNode != nil else {
             if imp(of: #selector(getter: intrinsicContentSize), of: type(of: self),
-                   matches: #selector(getter: self.layout_intrinsicContentSize))
-            {
+                   matches: #selector(getter: self.layout_intrinsicContentSize)) {
                 return super.intrinsicContentSize
             }
             return self.layout_intrinsicContentSize
@@ -69,8 +67,7 @@ private extension UICollectionView {
 
     @objc func layout_setContentSize(_ size: CGSize) {
         if imp(of: #selector(setter: contentSize), of: type(of: self),
-               matches: #selector(layout_setContentSize(_:)))
-        {
+               matches: #selector(layout_setContentSize(_:))) {
             super.contentSize = size
         } else {
             layout_setContentSize(size)
@@ -305,8 +302,7 @@ extension UICollectionView {
             if cellClass == UICollectionViewCell.self {
                 cellClass = LayoutCollectionViewCell.self
             } else if !cellClass.isSubclass(of: LayoutCollectionViewCell.self),
-                !swizzled.contains(cellClass)
-            {
+                !swizzled.contains(cellClass) {
                 replace(#selector(getter: intrinsicContentSize), of: cellClass,
                         with: #selector(getter: layout_intrinsicContentSize))
                 replace(#selector(sizeThatFits(_:)), of: cellClass,
@@ -349,8 +345,7 @@ extension UICollectionView {
     public func dequeueReusableCellNode(withIdentifier identifier: String, for indexPath: IndexPath) -> LayoutNode {
         do {
             guard let layoutsData = objc_getAssociatedObject(self, &cellDataKey) as? NSMutableDictionary,
-                let layoutData = layoutsData[identifier] as? LayoutData else
-            {
+                let layoutData = layoutsData[identifier] as? LayoutData else {
                 throw LayoutError.message("No cell layout has been registered for \(identifier)")
             }
             let cell = dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath)
@@ -408,8 +403,7 @@ private extension UICollectionViewCell {
     @objc var layout_intrinsicContentSize: CGSize {
         guard let layoutNode = layoutNode, layoutNode.children.isEmpty else {
             if imp(of: #selector(getter: intrinsicContentSize), of: type(of: self),
-                   matches: #selector(getter: self.layout_intrinsicContentSize))
-            {
+                   matches: #selector(getter: self.layout_intrinsicContentSize)) {
                 return super.intrinsicContentSize
             } else {
                 return self.layout_intrinsicContentSize
@@ -424,8 +418,7 @@ private extension UICollectionViewCell {
             return CGSize(width: size.width, height: CGFloat(height))
         }
         if imp(of: #selector(sizeThatFits(_:)), of: type(of: self),
-               matches: #selector(layout_sizeThatFits(_:)))
-        {
+               matches: #selector(layout_sizeThatFits(_:))) {
             return super.sizeThatFits(size)
         } else {
             return layout_sizeThatFits(size)

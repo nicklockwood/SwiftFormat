@@ -227,8 +227,7 @@ class LayoutLoader {
     ) throws -> Layout {
         assert(Thread.isMainThread)
         guard let xmlURL = bundle.url(forResource: named, withExtension: nil) ??
-            bundle.url(forResource: named, withExtension: "xml") else
-        {
+            bundle.url(forResource: named, withExtension: "xml") else {
             throw LayoutError.message("No layout XML file found for \(named)")
         }
         var _layout: Layout?
@@ -277,8 +276,7 @@ class LayoutLoader {
             let bundlePath = Bundle.main.bundleURL.absoluteString
             if xmlURL.absoluteString.hasPrefix(bundlePath) {
                 if _projectDirectory == nil, let relativeTo = relativeTo,
-                    let projectDirectory = findProjectDirectory(at: relativeTo)
-                {
+                    let projectDirectory = findProjectDirectory(at: relativeTo) {
                     _projectDirectory = projectDirectory
                 }
                 if let projectDirectory = _projectDirectory {
@@ -435,8 +433,7 @@ class LayoutLoader {
     private func _findProjectDirectory(at path: String) -> URL? {
         var url = URL(fileURLWithPath: path).standardizedFileURL
         if let projectDirectory = _projectDirectory,
-            url.absoluteString.hasPrefix(projectDirectory.absoluteString)
-        {
+            url.absoluteString.hasPrefix(projectDirectory.absoluteString) {
             return projectDirectory
         }
         if !url.hasDirectoryPath {

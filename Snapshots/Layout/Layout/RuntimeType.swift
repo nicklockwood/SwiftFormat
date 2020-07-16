@@ -149,8 +149,7 @@ public class RuntimeType: NSObject {
         }
         let instanceName = sanitizedTypeName(typeName)
         guard RuntimeType.responds(to: Selector(instanceName)),
-            let type = RuntimeType.value(forKey: instanceName) as? RuntimeType else
-        {
+            let type = RuntimeType.value(forKey: instanceName) as? RuntimeType else {
             return nil // No point updating cache, as it's already nil
         }
         queue.sync { cache[typeName] = type }
@@ -539,8 +538,7 @@ public class RuntimeType: NSObject {
 // Return the human-readable name, without braces or underscores, etc
 private func sanitizedStructName(_ objCType: String) -> String {
     guard let equalRange = objCType.range(of: "="),
-        let braceRange = objCType.range(of: "{") else
-    {
+        let braceRange = objCType.range(of: "{") else {
         return objCType
     }
     let name: String = String(objCType[braceRange.upperBound ..< equalRange.lowerBound])

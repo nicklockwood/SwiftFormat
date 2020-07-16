@@ -72,8 +72,7 @@ public extension Path {
         }
 
         func arc(_ p0: PathPoint, _ p1: PathPoint, _ p2: PathPoint,
-                 _ detail: Int, _ range: ArcRange = .all) -> [PathPoint]
-        {
+                 _ detail: Int, _ range: ArcRange = .all) -> [PathPoint] {
             let detail = detail + 1
             assert(detail >= 2)
             let steps: [Double]
@@ -182,8 +181,7 @@ public extension Mesh {
     static func cube(center c: Vector = .init(0, 0, 0),
                      size s: Vector,
                      faces: Faces = .default,
-                     material: Polygon.Material = nil) -> Mesh
-    {
+                     material: Polygon.Material = nil) -> Mesh {
         let polygons: [Polygon] = [
             [[5, 1, 3, 7], [+1, 0, 0]],
             [[0, 4, 6, 2], [-1, 0, 0]],
@@ -231,8 +229,7 @@ public extension Mesh {
     static func cube(center c: Vector = .init(0, 0, 0),
                      size s: Double = 1,
                      faces: Faces = .default,
-                     material: Polygon.Material = nil) -> Mesh
-    {
+                     material: Polygon.Material = nil) -> Mesh {
         return cube(center: c, size: Vector(s, s, s), faces: faces, material: material)
     }
 
@@ -243,8 +240,7 @@ public extension Mesh {
                        poleDetail: Int = 0,
                        faces: Faces = .default,
                        wrapMode: WrapMode = .default,
-                       material: Polygon.Material = nil) -> Mesh
-    {
+                       material: Polygon.Material = nil) -> Mesh {
         var semicircle = [PathPoint]()
         let stacks = max(2, stacks ?? (slices / 2))
         let r = max(abs(r), epsilon)
@@ -269,8 +265,7 @@ public extension Mesh {
                          poleDetail: Int = 0,
                          faces: Faces = .default,
                          wrapMode: WrapMode = .default,
-                         material: Polygon.Material = nil) -> Mesh
-    {
+                         material: Polygon.Material = nil) -> Mesh {
         let r = max(abs(r), epsilon)
         let h = max(abs(h), epsilon)
         let wrapMode = wrapMode == .default ? .tube : wrapMode
@@ -298,8 +293,7 @@ public extension Mesh {
                      addDetailAtBottomPole: Bool = false,
                      faces: Faces = .default,
                      wrapMode: WrapMode = .default,
-                     material: Polygon.Material = nil) -> Mesh
-    {
+                     material: Polygon.Material = nil) -> Mesh {
         let r = max(abs(r), epsilon)
         let h = max(abs(h), epsilon)
         let poleDetail = poleDetail ?? Int(sqrt(Double(slices)))
@@ -338,8 +332,7 @@ public extension Mesh {
                       addDetailForFlatPoles: Bool = false,
                       faces: Faces = .default,
                       wrapMode: WrapMode = .default,
-                      material: Polygon.Material = nil) -> Mesh
-    {
+                      material: Polygon.Material = nil) -> Mesh {
         let subpaths = profile.subpaths
         if subpaths.count > 1 {
             return .xor(subpaths.map {
@@ -490,8 +483,7 @@ public extension Mesh {
             // TODO: improve this by not adding backfaces inside closed subsectors
             if let first = vertices.first?.position,
                 let last = vertices.last?.position,
-                first != last, first.x != 0 || last.x != 0
-            {
+                first != last, first.x != 0 || last.x != 0 {
                 polygons += polygons.map { $0.inverted() }
             }
             return Mesh(polygons)
@@ -502,8 +494,7 @@ public extension Mesh {
     static func extrude(_ shape: Path,
                         depth: Double = 1,
                         faces: Faces = .default,
-                        material: Polygon.Material = nil) -> Mesh
-    {
+                        material: Polygon.Material = nil) -> Mesh {
         let offset = (shape.plane?.normal ?? Vector(0, 0, 1)) * (depth / 2)
         if offset.lengthSquared < epsilon {
             return fill(shape, faces: faces, material: material)
@@ -517,8 +508,7 @@ public extension Mesh {
     /// Connect multiple 3D paths
     static func loft(_ shapes: [Path],
                      faces: Faces = .default,
-                     material: Polygon.Material = nil) -> Mesh
-    {
+                     material: Polygon.Material = nil) -> Mesh {
         var subpathCount = 0
         let arrayOfSubpaths: [[Path]] = shapes.map {
             let subpaths = $0.subpaths
@@ -569,8 +559,7 @@ public extension Mesh {
             // TODO: better handling of case where e0 and e1 counts don't match
             let invert: Bool
             if let n = prev.plane?.normal,
-                let p0p1 = directionBetweenShapes(prev, path), p0p1.dot(n) > 0
-            {
+                let p0p1 = directionBetweenShapes(prev, path), p0p1.dot(n) > 0 {
                 invert = false
             } else {
                 invert = true
@@ -610,8 +599,7 @@ public extension Mesh {
         }
         if !isClosed, var polygon = Polygon(shape: prev, material: material) {
             if let p0p1 = directionBetweenShapes(shapes[shapes.count - 2], prev),
-                p0p1.dot(polygon.plane.normal) < 0
-            {
+                p0p1.dot(polygon.plane.normal) < 0 {
                 polygon = polygon.inverted()
             }
             polygons.append(polygon)
@@ -629,8 +617,7 @@ public extension Mesh {
     /// Fill a path to form a polygon
     static func fill(_ shape: Path,
                      faces: Faces = .default,
-                     material: Polygon.Material = nil) -> Mesh
-    {
+                     material: Polygon.Material = nil) -> Mesh {
         let subpaths = shape.subpaths
         if subpaths.count > 1 {
             return .xor(subpaths.map { .fill($0, faces: faces, material: material) })

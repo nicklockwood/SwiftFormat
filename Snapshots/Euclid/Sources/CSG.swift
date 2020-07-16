@@ -227,8 +227,7 @@ private func reduce(_ meshes: [Mesh], using fn: (Mesh, Mesh) -> Mesh) -> Mesh {
 }
 
 private func reduce(_ meshesAndBounds: inout [(Mesh, Bounds)],
-                    at i: Int, using fn: (Mesh, Mesh) -> Mesh) -> Mesh
-{
+                    at i: Int, using fn: (Mesh, Mesh) -> Mesh) -> Mesh {
     var (m, mb) = meshesAndBounds[i]
     var j = i + 1, count = meshesAndBounds.count
     while j < count {
@@ -303,8 +302,7 @@ private class BSPNode {
     private func clip(_ polygons: [Polygon],
                       _ keeping: ClipRule,
                       _ clipBackfaces: Bool,
-                      _ id: inout Int) -> [Polygon]
-    {
+                      _ id: inout Int) -> [Polygon] {
         var polygons = polygons
         var node = self
         var total = [Polygon]()
@@ -460,8 +458,7 @@ extension Polygon {
     func clip(to polygons: [Polygon],
               _ inside: inout [Polygon],
               _ outside: inout [Polygon],
-              _ id: inout Int)
-    {
+              _ id: inout Int) {
         precondition(isConvex)
         var toTest = [self]
         for polygon in polygons where !toTest.isEmpty {
@@ -478,8 +475,7 @@ extension Polygon {
     func clip(_ polygon: Polygon,
               _ inside: inout [Polygon],
               _ outside: inout [Polygon],
-              _ id: inout Int)
-    {
+              _ id: inout Int) {
         precondition(isConvex)
         guard polygon.isConvex else {
             polygon.tessellate().forEach {
@@ -504,8 +500,7 @@ extension Polygon {
                _ coplanar: inout [Polygon],
                _ front: inout [Polygon],
                _ back: inout [Polygon],
-               _ id: inout Int)
-    {
+               _ id: inout Int) {
         enum PolygonType: Int {
             case coplanar = 0
             case front = 1

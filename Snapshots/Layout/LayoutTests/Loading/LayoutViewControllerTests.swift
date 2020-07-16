@@ -5,8 +5,7 @@ import XCTest
 
 private func url(forXml name: String) throws -> URL {
     guard let url = Bundle(for: LayoutViewControllerTests.self)
-        .url(forResource: name, withExtension: "xml") else
-    {
+        .url(forResource: name, withExtension: "xml") else {
         throw NSError(domain: "Could not locate: \(name).xml", code: 0)
     }
     return url

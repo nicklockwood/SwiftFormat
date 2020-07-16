@@ -560,8 +560,7 @@ public struct AnyExpression: CustomStringConvertible {
             default:
                 // TODO: should we numberify Bool values like this?
                 if let boolValue = anyValue as? Bool,
-                    let value: T = AnyExpression.cast(boolValue ? 1 : 0)
-                {
+                    let value: T = AnyExpression.cast(boolValue ? 1 : 0) {
                     return value
                 }
             }

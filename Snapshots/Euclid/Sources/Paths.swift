@@ -379,8 +379,7 @@ internal extension Path {
                     points.remove(at: i - 1)
                 } else if p0.position.x >= 0 {
                     if i == 1 ||
-                        (p1.position.y == p0.position.y && p1.position.z == p0.position.z)
-                    {
+                        (p1.position.y == p0.position.y && p1.position.z == p0.position.z) {
                         points.remove(at: i - 1)
                     }
                 } else {
@@ -402,8 +401,7 @@ internal extension Path {
 // TODO: extend this to work in 3D
 // TODO: improve this using https://en.wikipedia.org/wiki/Line–line_intersection
 private func lineIntersection(_ p0: Vector, _ p1: Vector,
-                              _ p2: Vector, _ p3: Vector) -> Vector?
-{
+                              _ p2: Vector, _ p3: Vector) -> Vector? {
     let x1 = p0.x, y1 = p0.y
     let x2 = p1.x, y2 = p1.y
     let x3 = p2.x, y3 = p2.y
@@ -433,8 +431,7 @@ private func lineIntersection(_ p0: Vector, _ p1: Vector,
 
 // TODO: extend this to work in 3D
 private func lineSegmentsIntersect(_ p0: Vector, _ p1: Vector,
-                                   _ p2: Vector, _ p3: Vector) -> Bool
-{
+                                   _ p2: Vector, _ p3: Vector) -> Bool {
     guard let pi = lineIntersection(p0, p1, p2, p3) else {
         return false // lines are parallel
     }
@@ -442,8 +439,7 @@ private func lineSegmentsIntersect(_ p0: Vector, _ p1: Vector,
     if pi.x < min(p0.x, p1.x) || pi.x > max(p0.x, p1.x) ||
         pi.x < min(p2.x, p3.x) || pi.x > max(p2.x, p3.x) ||
         pi.y < min(p0.y, p1.y) || pi.y > max(p0.y, p1.y) ||
-        pi.y < min(p2.y, p3.y) || pi.y > max(p2.y, p3.y)
-    {
+        pi.y < min(p2.y, p3.y) || pi.y > max(p2.y, p3.y) {
         return false
     }
     return true

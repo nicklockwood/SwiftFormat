@@ -283,7 +283,8 @@ public class LayoutNode: NSObject {
     ) {
         guard _setupComplete, _updateLock == 0, _evaluating.isEmpty,
             root._setupComplete, root._updateLock == 0, root._evaluating.isEmpty,
-            let view = _view, !view.bounds.size.isNearlyEqual(to: _previousBounds.size) else {
+            let view = _view, !view.bounds.size.isNearlyEqual(to: _previousBounds.size) else
+        {
             return
         }
         root.update()
@@ -309,7 +310,8 @@ public class LayoutNode: NSObject {
         children: [LayoutNode] = []
     ) throws {
         guard let _class = `class` as? LayoutManaged.Type,
-            _class is UIView.Type || _class is UIViewController.Type else {
+            _class is UIView.Type || _class is UIViewController.Type else
+        {
             throw LayoutError.message("\(`class`) is not a subclass of UIView or UIViewController")
         }
         self._class = _class
@@ -526,25 +528,29 @@ public class LayoutNode: NSObject {
         var errors = Set<LayoutError>()
         if hasExpression("leading"),
             !value(forSymbol: "width", dependsOn: "leading"),
-            !value(forSymbol: "left", dependsOn: "leading") {
+            !value(forSymbol: "left", dependsOn: "leading")
+        {
             errors.insert(LayoutError(SymbolError("Expression for leading is redundant",
                                                   for: "leading"), for: self))
         }
         if hasExpression("trailing"),
             !value(forSymbol: "width", dependsOn: "trailing"),
-            !value(forSymbol: "left", dependsOn: "trailing") {
+            !value(forSymbol: "left", dependsOn: "trailing")
+        {
             errors.insert(LayoutError(SymbolError("Expression for trailing is redundant",
                                                   for: "trailing"), for: self))
         }
         if hasExpression("right"),
             !value(forSymbol: "width", dependsOn: "right"),
-            !value(forSymbol: "left", dependsOn: "right") {
+            !value(forSymbol: "left", dependsOn: "right")
+        {
             errors.insert(LayoutError(SymbolError("Expression for right is redundant",
                                                   for: "right"), for: self))
         }
         if hasExpression("bottom"),
             !value(forSymbol: "height", dependsOn: "bottom"),
-            !value(forSymbol: "top", dependsOn: "bottom") {
+            !value(forSymbol: "top", dependsOn: "bottom")
+        {
             errors.insert(LayoutError(SymbolError("Expression for bottom is redundant",
                                                   for: "bottom"), for: self))
         }
@@ -601,7 +607,8 @@ public class LayoutNode: NSObject {
             parent._unhandledWarnings += _unhandledWarnings
             _unhandledWarnings.removeAll()
             if let error = _unhandledError, parent._unhandledError == nil ||
-                (parent._unhandledError?.isTransient == true && !error.isTransient) {
+                (parent._unhandledError?.isTransient == true && !error.isTransient)
+            {
                 parent._unhandledError = LayoutError(error, for: parent)
                 if error.isTransient {
                     _unhandledError = nil
@@ -750,7 +757,8 @@ public class LayoutNode: NSObject {
     /// Returns nil if this is a root node, or is the last child of its parent
     var next: LayoutNode? {
         if let siblings = parent?.children, let index = siblings.index(where: { $0 === self }),
-            index < siblings.count - 1 {
+            index < siblings.count - 1
+        {
             return siblings[index + 1]
         }
         return nil
@@ -903,7 +911,8 @@ public class LayoutNode: NSObject {
                     oldViewController?.removeFromParent()
                     parent.insertChild(self, at: index)
                 } else if let superview = oldView?.superview,
-                    let index = superview.subviews.index(of: oldView!) {
+                    let index = superview.subviews.index(of: oldView!)
+                {
                     if let parentViewController = oldViewController?.parent {
                         oldViewController?.removeFromParent()
                         parentViewController.addChild(viewController!)
@@ -959,7 +968,8 @@ public class LayoutNode: NSObject {
             } else if hasExpression("left"), hasExpression("right") {
                 expressions["width"] = _useLegacyLayoutMode ? "right - left" : "100% - right - left"
             } else if !(_view is UIScrollView), _view is UIImageView || _usesAutoLayout ||
-                _view?.intrinsicContentSize.width != UIView.noIntrinsicMetric {
+                _view?.intrinsicContentSize.width != UIView.noIntrinsicMetric
+            {
                 expressions["width"] = "100% == 0 ? auto : min(auto, 100%)"
             } else if parent != nil {
                 expressions["width"] = "100%"
@@ -986,7 +996,8 @@ public class LayoutNode: NSObject {
             if hasExpression("top"), hasExpression("bottom") {
                 expressions["height"] = _useLegacyLayoutMode ? "bottom - top" : "100% - bottom - top"
             } else if !(_view is UIScrollView), _view is UIImageView || _usesAutoLayout ||
-                _view?.intrinsicContentSize.height != UIView.noIntrinsicMetric {
+                _view?.intrinsicContentSize.height != UIView.noIntrinsicMetric
+            {
                 expressions["height"] = "auto"
             } else if parent != nil {
                 expressions["height"] = "100%"
@@ -1205,12 +1216,14 @@ public class LayoutNode: NSObject {
                     }
                     if let viewControllerClass = self.viewControllerClass,
                         let viewController = try? viewControllerClass.create(with: self),
-                        let _ = try? viewController.value(forSymbol: symbol) {
+                        let _ = try? viewController.value(forSymbol: symbol)
+                    {
                         throw SymbolError(fatal: "\(_class).\(symbol) is private or read-only", for: symbol)
                     }
                     // TODO: disallow setting view properties directly if type is a UIViewController
                     if let view = try? viewClass.create(with: self),
-                        let _ = try? view.value(forSymbol: symbol) {
+                        let _ = try? view.value(forSymbol: symbol)
+                    {
                         throw SymbolError(fatal: "\(_class).\(symbol) is private or read-only", for: symbol)
                     }
                     throw SymbolError("Unknown property \(symbol) of \(_class)", for: symbol)
@@ -1492,7 +1505,8 @@ public class LayoutNode: NSObject {
     private func expressionIsConstant(_ name: String) -> Bool {
         attempt { try setUpExpression(for: name) }
         if let expression = _layoutExpressions[name] ??
-            _viewControllerExpressions[name] ?? _viewExpressions[name] {
+            _viewControllerExpressions[name] ?? _viewExpressions[name]
+        {
             return expression.isConstant
         }
         return true
@@ -1587,7 +1601,8 @@ public class LayoutNode: NSObject {
                 alternative = _alternative
             } else if _class is UIViewController.Type,
                 // TODO: disallow setting view properties directly if type is a UIViewController
-                _viewExpressions[symbol] != nil, _viewControllerExpressions[symbol] == nil {
+                _viewExpressions[symbol] != nil, _viewControllerExpressions[symbol] == nil
+            {
                 alternative = "view.\(symbol)"
             } else {
                 return
@@ -1611,7 +1626,8 @@ public class LayoutNode: NSObject {
                 return true
             }
             if let expression = _layoutExpressions[name] ?? _viewControllerExpressions[name] ??
-                _viewExpressions[name] {
+                _viewExpressions[name]
+            {
                 checking.append(name)
                 defer { checking.removeLast() }
                 for name in expression.symbols where
@@ -1628,7 +1644,8 @@ public class LayoutNode: NSObject {
         for name in expressions.keys {
             if let expression = _layoutExpressions[name] ??
                 _viewControllerExpressions[name] ?? _viewExpressions[name],
-                symbols.contains(where: { expression.symbols.contains($0) }) {
+                symbols.contains(where: { expression.symbols.contains($0) })
+            {
                 return true
             }
         }
@@ -1864,7 +1881,8 @@ public class LayoutNode: NSObject {
                     // TODO: disallow setting view properties directly if type is a UIViewController
                     fallback = { [unowned self] in
                         if let viewController = self._viewController,
-                            let value = try? viewController.value(forSymbol: symbol) { // TODO: find a non-throwing solution for this
+                            let value = try? viewController.value(forSymbol: symbol)
+                        { // TODO: find a non-throwing solution for this
                             return value
                         }
                         guard let view = self._view else {
@@ -2275,13 +2293,15 @@ public class LayoutNode: NSObject {
         }
         assert(_setupComplete)
         if value(forSymbol: "width", dependsOn: "parent.width") ||
-            value(forSymbol: "width", dependsOn: "parent.containerSize.width") {
+            value(forSymbol: "width", dependsOn: "parent.containerSize.width")
+        {
             _widthDependsOnParent = true
             return true
         }
         if value(forSymbol: "width", dependsOn: "inferredSize.width"),
             !hasExpression("contentSize"), !hasExpression("contentSize.width"),
-            !_usesAutoLayout, _view?.intrinsicContentSize.width == UIView.noIntrinsicMetric, children.isEmpty {
+            !_usesAutoLayout, _view?.intrinsicContentSize.width == UIView.noIntrinsicMetric, children.isEmpty
+        {
             _widthDependsOnParent = true
             return true
         }
@@ -2296,13 +2316,15 @@ public class LayoutNode: NSObject {
         }
         assert(_setupComplete)
         if value(forSymbol: "height", dependsOn: "parent.height") ||
-            value(forSymbol: "height", dependsOn: "parent.containerSize.height") {
+            value(forSymbol: "height", dependsOn: "parent.containerSize.height")
+        {
             _heightDependsOnParent = true
             return true
         }
         if value(forSymbol: "height", dependsOn: "inferredSize.height"),
             !hasExpression("contentSize"), !hasExpression("contentSize.height"),
-            !_usesAutoLayout, _view?.intrinsicContentSize.height == UIView.noIntrinsicMetric, children.isEmpty {
+            !_usesAutoLayout, _view?.intrinsicContentSize.height == UIView.noIntrinsicMetric, children.isEmpty
+        {
             _heightDependsOnParent = true
             return true
         }
@@ -2323,7 +2345,8 @@ public class LayoutNode: NSObject {
             }
             return size
         } else if hasExpression("contentSize.width"), !_evaluating.contains("contentSize.width"),
-            hasExpression("contentSize.height"), !_evaluating.contains("contentSize.height") {
+            hasExpression("contentSize.height"), !_evaluating.contains("contentSize.height")
+        {
             return CGSize(
                 width: try cgFloatValue(forSymbol: "contentSize.width"),
                 height: try cgFloatValue(forSymbol: "contentSize.height")
@@ -2393,7 +2416,8 @@ public class LayoutNode: NSObject {
             if !child.widthDependsOnParent {
                 var left: CGFloat = 0
                 if !child.value(forSymbol: "left", dependsOn: "parent.width"),
-                    !child.value(forSymbol: "top", dependsOn: "parent.containerSize.width") {
+                    !child.value(forSymbol: "top", dependsOn: "parent.containerSize.width")
+                {
                     left = try child.cgFloatValue(forSymbol: "left")
                 }
                 size.width = try max(size.width, left + child.cgFloatValue(forSymbol: "width"))
@@ -2401,7 +2425,8 @@ public class LayoutNode: NSObject {
             if !child.heightDependsOnParent {
                 var top: CGFloat = 0
                 if !child.value(forSymbol: "top", dependsOn: "parent.height"),
-                    !child.value(forSymbol: "top", dependsOn: "parent.containerSize.height") {
+                    !child.value(forSymbol: "top", dependsOn: "parent.containerSize.height")
+                {
                     top = try child.cgFloatValue(forSymbol: "top")
                 }
                 size.height = try max(size.height, top + child.cgFloatValue(forSymbol: "height"))
@@ -2479,7 +2504,8 @@ public class LayoutNode: NSObject {
                 }
                 let alwaysBounceVertical = try value(forSymbol: "alwaysBounceVertical") as! Bool
                 if alwaysBounceVertical || contentSize.height > size.height ||
-                    contentInsetAdjustmentBehavior == .automatic {
+                    contentInsetAdjustmentBehavior == .automatic
+                {
                     contentInset.top += safeAreaInsets.top
                     contentInset.bottom += safeAreaInsets.bottom
                 }
@@ -2525,7 +2551,8 @@ public class LayoutNode: NSObject {
 
     private func computeExplicitWidth() throws -> CGFloat? {
         if !_evaluating.contains("width"),
-            !_evaluating.contains("height") || !value(forSymbol: "width", dependsOn: "height") {
+            !_evaluating.contains("height") || !value(forSymbol: "width", dependsOn: "height")
+        {
             return try cgFloatValue(forSymbol: "width")
         }
         if hasExpression("contentSize.width"), !_evaluating.contains("contentSize.width") {
@@ -2562,7 +2589,8 @@ public class LayoutNode: NSObject {
 
     private func computeExplicitHeight() throws -> CGFloat? {
         if !_evaluating.contains("height"),
-            !_evaluating.contains("width") || !value(forSymbol: "height", dependsOn: "width") {
+            !_evaluating.contains("width") || !value(forSymbol: "height", dependsOn: "width")
+        {
             return try cgFloatValue(forSymbol: "height")
         }
         if hasExpression("contentSize.height"), !_evaluating.contains("contentSize.height") {
@@ -2594,7 +2622,8 @@ public class LayoutNode: NSObject {
                 _widthConstraint?.constant = width
                 _widthConstraint?.isActive = true
             } else if intrinsicSize.width != UIView.noIntrinsicMetric,
-                _view.constraints.contains(where: { $0.firstAttribute == .width }) {
+                _view.constraints.contains(where: { $0.firstAttribute == .width })
+            {
                 _widthConstraint?.constant = intrinsicSize.width
                 _widthConstraint?.isActive = true
             } else {
@@ -2604,7 +2633,8 @@ public class LayoutNode: NSObject {
                 _heightConstraint?.constant = height
                 _heightConstraint?.isActive = true
             } else if intrinsicSize.height != UIView.noIntrinsicMetric,
-                _view.constraints.contains(where: { $0.firstAttribute == .height }) {
+                _view.constraints.contains(where: { $0.firstAttribute == .height })
+            {
                 _widthConstraint?.constant = intrinsicSize.height
                 _widthConstraint?.isActive = true
             } else {
@@ -2731,7 +2761,8 @@ public class LayoutNode: NSObject {
             }
         }
         if viewClass == UIScrollView.self, // Skip this behavior for subclasses like UITableView
-            let scrollView = _view as? UIScrollView {
+            let scrollView = _view as? UIScrollView
+        {
             let oldContentSize = scrollView.contentSize
             var contentSize = try value(forSymbol: "contentSize") as! CGSize
             if hasExpression("contentSize.width") {
@@ -2791,7 +2822,8 @@ public class LayoutNode: NSObject {
                 viewController.addChild(controller)
             }
             if (viewController is UITableViewController && view is UITableView) ||
-                (viewController is UICollectionViewController && view is UICollectionView) {
+                (viewController is UICollectionViewController && view is UICollectionView)
+            {
                 throw LayoutError("Cannot replace existing \(view.classForCoder) with a new instance", for: self)
             }
             // Add as subview of view controller's view
@@ -2969,7 +3001,8 @@ public class LayoutNode: NSObject {
             for (name, type) in viewExpressionTypes where expressions[name] == nil {
                 if case let .protocol(proto) = type.kind, owner.conforms(to: proto),
                     name == "delegate" || name == "dataSource" ||
-                    name.hasSuffix("Delegate") || name.hasSuffix("DataSource") {
+                    name.hasSuffix("Delegate") || name.hasSuffix("DataSource")
+                {
                     try self._view?.setValue(owner, forExpression: name)
                 }
             }

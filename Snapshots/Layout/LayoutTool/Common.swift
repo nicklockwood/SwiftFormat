@@ -68,7 +68,8 @@ func enumerateFiles(withInputURL inputURL: URL,
                     outputURL: URL? = nil,
                     options: FileOptions = FileOptions(),
                     concurrent: Bool = true,
-                    block: @escaping (URL, URL) throws -> () throws -> Void) -> [Error] {
+                    block: @escaping (URL, URL) throws -> () throws -> Void) -> [Error]
+{
     guard let resourceValues = try? inputURL.resourceValues(
         forKeys: Set([.isDirectoryKey, .isAliasFileKey, .isSymbolicLinkKey])
     ) else {
@@ -101,7 +102,8 @@ func enumerateFiles(withInputURL inputURL: URL,
                    excluding excludedURLs: [URL],
                    outputURL: URL?,
                    options: FileOptions,
-                   block: @escaping (URL, URL) throws -> () throws -> Void) {
+                   block: @escaping (URL, URL) throws -> () throws -> Void)
+    {
         let inputURL = inputURL.standardizedFileURL
         for excludedURL in excludedURLs {
             if inputURL.absoluteString.hasPrefix(excludedURL.standardizedFileURL.absoluteString) {
@@ -149,7 +151,8 @@ func enumerateFiles(withInputURL inputURL: URL,
                 }
             }
         } else if options.followSymlinks,
-            resourceValues.isSymbolicLink == true || resourceValues.isAliasFile == true {
+            resourceValues.isSymbolicLink == true || resourceValues.isAliasFile == true
+        {
             let resolvedURL = inputURL.resolvingSymlinksInPath()
             enumerate(inputURL: resolvedURL,
                       excluding: excludedURLs,
@@ -314,7 +317,8 @@ func attributeIsString(_ key: String, inNode node: XMLNode) -> Bool? {
     switch type {
     case "UIColor", "CGColor":
         if let expression = node.attributes[key], !expression.contains("{"),
-            expression.contains("rgb(") || expression.contains("rgba(") {
+            expression.contains("rgb(") || expression.contains("rgba(")
+        {
             return false
         }
         return true

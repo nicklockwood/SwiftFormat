@@ -292,7 +292,8 @@ extension UIViewController: LayoutManaged {
                 navigationItem.leftBarButtonItem =
                     UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
             } else if name.hasPrefix("navigationItem.rightBarButtonItem."),
-                navigationItem.rightBarButtonItem == nil {
+                navigationItem.rightBarButtonItem == nil
+            {
                 navigationItem.rightBarButtonItem =
                     UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
             }
@@ -443,7 +444,8 @@ extension UITabBarController {
     open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
         if let viewController = node.viewController,
             var viewControllers = self.viewControllers,
-            let index = viewControllers.index(of: viewController) {
+            let index = viewControllers.index(of: viewController)
+        {
             viewControllers.remove(at: index)
             setViewControllers(viewControllers, animated: false)
         } else if !(node.viewClass is UITabBar.Type) {
@@ -645,7 +647,8 @@ extension UINavigationController {
     open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
         var viewControllers = self.viewControllers
         if let viewController = node.viewController,
-            let index = viewControllers.index(of: viewController) {
+            let index = viewControllers.index(of: viewController)
+        {
             viewControllers.remove(at: index)
             self.viewControllers = viewControllers
         } else {

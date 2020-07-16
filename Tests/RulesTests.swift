@@ -11877,4 +11877,12 @@ class RulesTests: XCTestCase {
         """
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }
+
+    func testMultilineGuardClosingBraceOnSameLine() {
+        let input = """
+        guard let foo = bar,
+            let baz = quux { return }
+        """
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+    }
 }

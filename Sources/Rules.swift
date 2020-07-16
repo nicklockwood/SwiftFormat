@@ -894,7 +894,7 @@ public struct _FormatRules {
         help: "Indent code in accordance with the scope level.",
         orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
         options: ["indent", "tabwidth", "indentcase", "ifdef", "xcodeindentation"],
-        sharedOptions: ["trimwhitespace"]
+        sharedOptions: ["trimwhitespace", "closingparen"]
     ) { formatter in
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []
@@ -1040,6 +1040,22 @@ public struct _FormatRules {
                         i += formatter.insertSpace(indent, at: formatter.startOfLine(at: i))
                     case .outdent:
                         i += formatter.insertSpace("", at: formatter.startOfLine(at: i))
+                    }
+                case "{" where formatter.options.closingParenOnSameLine && formatter.isStartOfClosure(at: i):
+                    // When a trailing closure starts on the same line as the end of
+                    // a multi-line method call, and `closingParenOnSameLine` is enabled,
+                    // the trailing closure body should be double-indented.
+                    //  - Check that the trailing closure starts on the same line as the end of a parameter list
+                    //    But _not_ on the same line as the start of the parameter list
+                    let startOfLine = formatter.startOfLine(at: i)
+                    if let previousTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i),
+                        formatter.tokens[previousTokenIndex] == .endOfScope(")"),
+                        startOfLine < previousTokenIndex,
+                        let startOfParameterList = formatter.index(of: .startOfScope("("), before: previousTokenIndex),
+                        startOfParameterList < startOfLine {
+                        indent += formatter.options.indent + formatter.options.indent
+                    } else {
+                        indent += formatter.options.indent
                     }
                 case _ where token.isStringDelimiter, "//":
                     break

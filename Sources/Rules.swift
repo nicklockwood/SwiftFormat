@@ -34,6 +34,7 @@ import Foundation
 public final class FormatRule: Equatable, Comparable {
     private let fn: (Formatter) -> Void
     fileprivate(set) var name = ""
+    fileprivate(set) var index = 0
     let help: String
     let orderAfter: [String]
     let options: [String]
@@ -70,10 +71,7 @@ public final class FormatRule: Equatable, Comparable {
     }
 
     public static func < (lhs: FormatRule, rhs: FormatRule) -> Bool {
-        if lhs.orderAfter.contains(rhs.name) {
-            return false
-        }
-        return rhs.orderAfter.contains(lhs.name) || lhs.name < rhs.name
+        return lhs.index < rhs.index
     }
 
     static let deprecatedMessage = [
@@ -91,6 +89,25 @@ private let rulesByName: [String: FormatRule] = {
         }
         rule.name = name
         rules[name] = rule
+    }
+    let values = rules.values.sorted(by: { $0.name < $1.name })
+    for (index, value) in values.enumerated() {
+        value.index = index * 10
+    }
+    var changedOrder = true
+    while changedOrder {
+        changedOrder = false
+        for value in values {
+            value.orderAfter.forEach { name in
+                guard let rule = rules[name] else {
+                    preconditionFailure(name)
+                }
+                if rule.index >= value.index {
+                    value.index = rule.index + 1
+                    changedOrder = true
+                }
+            }
+        }
     }
     return rules
 }()
@@ -892,7 +909,7 @@ public struct _FormatRules {
     /// indenting can be configured with the `options` parameter of the formatter.
     public let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
-        orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
+        orderAfter: ["trailingSpace", "wrap", "wrapArguments", "wrapMultilineStatementBraces"],
         options: ["indent", "tabwidth", "indentcase", "ifdef", "xcodeindentation"],
         sharedOptions: ["trimwhitespace", "closingparen"]
     ) { formatter in

@@ -788,6 +788,7 @@ extension RulesTests {
         ("testIndentIfCase", testIndentIfCase),
         ("testIndentIfCaseCommaCase", testIndentIfCaseCommaCase),
         ("testIndentImbalancedNestedClosingParens", testIndentImbalancedNestedClosingParens),
+        ("testIndentImbalancedNestedClosingParensLikeXcode", testIndentImbalancedNestedClosingParensLikeXcode),
         ("testIndentIndentedSimpleMultilineString", testIndentIndentedSimpleMultilineString),
         ("testIndentIndentedSimpleRawMultilineString", testIndentIndentedSimpleRawMultilineString),
         ("testIndentInsideWrappedClassDefinition", testIndentInsideWrappedClassDefinition),

@@ -1152,8 +1152,7 @@ public struct _FormatRules {
                     }
                     // Don't reduce indent if line doesn't start with end of scope
                     let start = formatter.startOfLine(at: i)
-                    guard let firstToken = formatter.next(.nonSpaceOrComment, after: start - 1),
-                        firstToken.isEndOfScope else {
+                    guard let firstIndex = formatter.index(of: .nonSpaceOrComment, after: start - 1) else {
                         break
                     }
                     // Reduce indent for closing scope of guard else back to normal
@@ -1162,17 +1161,18 @@ public struct _FormatRules {
                         indentStack.removeLast()
                         linewrapStack[linewrapStack.count - 1] = false
                     }
-                    // Ensure braces and string delimiters are balanced
-                    if firstToken == .endOfScope("}") || firstToken.isMultilineStringDelimiter {
-                        if token != firstToken {
+                    // Xcode indenting
+                    if formatter.options.xcodeIndentation, token == .endOfScope(")") {
+                        guard firstIndex == i || formatter.tokens[firstIndex] == token else {
                             break
                         }
-                    } else {
                         // Only indent if this is the last scope terminator in the line
                         let range = i + 1 ..< formatter.endOfLine(at: i)
                         guard formatter.next(.endOfScope, in: range) == nil else {
                             break
                         }
+                    } else if firstIndex != i {
+                        break
                     }
                     if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {
                         i += formatter.insertSpace("", at: start)

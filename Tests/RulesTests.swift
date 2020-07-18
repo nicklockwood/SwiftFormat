@@ -1505,7 +1505,7 @@ class RulesTests: XCTestCase {
         Foo(bar:
             Bar(
                 baz: quux
-        ))
+            ))
         """
         testFormatting(for: input, rule: FormatRules.indent)
     }
@@ -2529,6 +2529,17 @@ class RulesTests: XCTestCase {
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentImbalancedNestedClosingParensLikeXcode() {
+        let input = """
+        Foo(bar:
+            Bar(
+                baz: quux
+        ))
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
     // indent comments

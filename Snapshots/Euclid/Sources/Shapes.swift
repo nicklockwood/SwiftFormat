@@ -428,12 +428,12 @@ public extension Mesh {
                         )
                         let v2 = Vertex(unchecked:
                             Vector(cos0 * v1.position.x, v1.position.y, sin0 * -v1.position.x),
-                                        Vector(cos0 * v1.normal.x, v1.normal.y, sin0 * -v1.normal.x),
-                                        Vector(v1.texcoord.x + t0, v1.texcoord.y, 0))
+                            Vector(cos0 * v1.normal.x, v1.normal.y, sin0 * -v1.normal.x),
+                            Vector(v1.texcoord.x + t0, v1.texcoord.y, 0))
                         let v3 = Vertex(unchecked:
                             Vector(cos1 * v1.position.x, v1.position.y, sin1 * -v1.position.x),
-                                        Vector(cos1 * v1.normal.x, v1.normal.y, sin1 * -v1.normal.x),
-                                        Vector(v1.texcoord.x + t1, v1.texcoord.y, 0))
+                            Vector(cos1 * v1.normal.x, v1.normal.y, sin1 * -v1.normal.x),
+                            Vector(v1.texcoord.x + t1, v1.texcoord.y, 0))
                         polygons.append(Polygon(unchecked: [v0, v2, v3], isConvex: true, material: material))
                     }
                 } else if v1.position.x == 0 {
@@ -445,31 +445,31 @@ public extension Mesh {
                     )
                     let v2 = Vertex(unchecked:
                         Vector(cos1 * v0.position.x, v0.position.y, sin1 * -v0.position.x),
-                                    Vector(cos1 * v0.normal.x, v0.normal.y, sin1 * -v0.normal.x),
-                                    Vector(v0.texcoord.x + t1, v0.texcoord.y, 0))
+                        Vector(cos1 * v0.normal.x, v0.normal.y, sin1 * -v0.normal.x),
+                        Vector(v0.texcoord.x + t1, v0.texcoord.y, 0))
                     let v3 = Vertex(unchecked:
                         Vector(cos0 * v0.position.x, v0.position.y, sin0 * -v0.position.x),
-                                    Vector(cos0 * v0.normal.x, v0.normal.y, sin0 * -v0.normal.x),
-                                    Vector(v0.texcoord.x + t0, v0.texcoord.y, 0))
+                        Vector(cos0 * v0.normal.x, v0.normal.y, sin0 * -v0.normal.x),
+                        Vector(v0.texcoord.x + t0, v0.texcoord.y, 0))
                     polygons.append(Polygon(unchecked: [v2, v3, v1], isConvex: true, material: material))
                 } else {
                     // quad face
                     let v2 = Vertex(unchecked:
                         Vector(cos1 * v0.position.x, v0.position.y, sin1 * -v0.position.x),
-                                    Vector(cos1 * v0.normal.x, v0.normal.y, sin1 * -v0.normal.x),
-                                    Vector(v0.texcoord.x + t1, v0.texcoord.y, 0))
+                        Vector(cos1 * v0.normal.x, v0.normal.y, sin1 * -v0.normal.x),
+                        Vector(v0.texcoord.x + t1, v0.texcoord.y, 0))
                     let v3 = Vertex(unchecked:
                         Vector(cos0 * v0.position.x, v0.position.y, sin0 * -v0.position.x),
-                                    Vector(cos0 * v0.normal.x, v0.normal.y, sin0 * -v0.normal.x),
-                                    Vector(v0.texcoord.x + t0, v0.texcoord.y, 0))
+                        Vector(cos0 * v0.normal.x, v0.normal.y, sin0 * -v0.normal.x),
+                        Vector(v0.texcoord.x + t0, v0.texcoord.y, 0))
                     let v4 = Vertex(unchecked:
                         Vector(cos0 * v1.position.x, v1.position.y, sin0 * -v1.position.x),
-                                    Vector(cos0 * v1.normal.x, v1.normal.y, sin0 * -v1.normal.x),
-                                    Vector(v1.texcoord.x + t0, v1.texcoord.y, 0))
+                        Vector(cos0 * v1.normal.x, v1.normal.y, sin0 * -v1.normal.x),
+                        Vector(v1.texcoord.x + t0, v1.texcoord.y, 0))
                     let v5 = Vertex(unchecked:
                         Vector(cos1 * v1.position.x, v1.position.y, sin1 * -v1.position.x),
-                                    Vector(cos1 * v1.normal.x, v1.normal.y, sin1 * -v1.normal.x),
-                                    Vector(v1.texcoord.x + t1, v1.texcoord.y, 0))
+                        Vector(cos1 * v1.normal.x, v1.normal.y, sin1 * -v1.normal.x),
+                        Vector(v1.texcoord.x + t1, v1.texcoord.y, 0))
                     let vertices = [v2, v3, v4, v5]
                     if !verticesAreDegenerate(vertices) {
                         polygons.append(Polygon(unchecked: vertices, isConvex: true, material: material))

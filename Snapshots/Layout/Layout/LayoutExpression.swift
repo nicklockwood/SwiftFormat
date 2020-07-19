@@ -666,7 +666,8 @@ struct LayoutExpression {
         }
         var symbols = expression.symbols
         for symbol in ["font", "textColor", "textAlignment", "lineBreakMode", "titleColor", "titleLabel.font"]
-            where node.viewExpressionTypes[symbol] != nil {
+            where node.viewExpressionTypes[symbol] != nil
+        {
             symbols.insert(symbol)
         }
         func makeToken(_ index: Int) -> String {

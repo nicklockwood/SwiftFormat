@@ -34,6 +34,7 @@ import Foundation
 public final class FormatRule: Equatable, Comparable {
     private let fn: (Formatter) -> Void
     fileprivate(set) var name = ""
+    fileprivate(set) var index = 0
     let help: String
     let orderAfter: [String]
     let options: [String]
@@ -70,10 +71,7 @@ public final class FormatRule: Equatable, Comparable {
     }
 
     public static func < (lhs: FormatRule, rhs: FormatRule) -> Bool {
-        if lhs.orderAfter.contains(rhs.name) {
-            return false
-        }
-        return rhs.orderAfter.contains(lhs.name) || lhs.name < rhs.name
+        return lhs.index < rhs.index
     }
 
     static let deprecatedMessage = [
@@ -91,6 +89,25 @@ private let rulesByName: [String: FormatRule] = {
         }
         rule.name = name
         rules[name] = rule
+    }
+    let values = rules.values.sorted(by: { $0.name < $1.name })
+    for (index, value) in values.enumerated() {
+        value.index = index * 10
+    }
+    var changedOrder = true
+    while changedOrder {
+        changedOrder = false
+        for value in values {
+            value.orderAfter.forEach { name in
+                guard let rule = rules[name] else {
+                    preconditionFailure(name)
+                }
+                if rule.index >= value.index {
+                    value.index = rule.index + 1
+                    changedOrder = true
+                }
+            }
+        }
     }
     return rules
 }()
@@ -892,9 +909,9 @@ public struct _FormatRules {
     /// indenting can be configured with the `options` parameter of the formatter.
     public let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
-        orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
+        orderAfter: ["trailingSpace", "wrap", "wrapArguments", "wrapMultilineStatementBraces"],
         options: ["indent", "tabwidth", "indentcase", "ifdef", "xcodeindentation"],
-        sharedOptions: ["trimwhitespace"]
+        sharedOptions: ["trimwhitespace", "closingparen"]
     ) { formatter in
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []
@@ -1041,6 +1058,22 @@ public struct _FormatRules {
                     case .outdent:
                         i += formatter.insertSpace("", at: formatter.startOfLine(at: i))
                     }
+                case "{" where formatter.options.closingParenOnSameLine && formatter.isStartOfClosure(at: i):
+                    // When a trailing closure starts on the same line as the end of
+                    // a multi-line method call, and `closingParenOnSameLine` is enabled,
+                    // the trailing closure body should be double-indented.
+                    //  - Check that the trailing closure starts on the same line as the end of a parameter list
+                    //    But _not_ on the same line as the start of the parameter list
+                    let startOfLine = formatter.startOfLine(at: i)
+                    if let previousTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i),
+                        formatter.tokens[previousTokenIndex] == .endOfScope(")"),
+                        startOfLine < previousTokenIndex,
+                        let startOfParameterList = formatter.index(of: .startOfScope("("), before: previousTokenIndex),
+                        startOfParameterList < startOfLine {
+                        indent += formatter.options.indent + formatter.options.indent
+                    } else {
+                        indent += formatter.options.indent
+                    }
                 case _ where token.isStringDelimiter, "//":
                     break
                 case "[", "(":
@@ -1119,8 +1152,7 @@ public struct _FormatRules {
                     }
                     // Don't reduce indent if line doesn't start with end of scope
                     let start = formatter.startOfLine(at: i)
-                    guard let firstToken = formatter.next(.nonSpaceOrComment, after: start - 1),
-                        firstToken.isEndOfScope else {
+                    guard let firstIndex = formatter.index(of: .nonSpaceOrComment, after: start - 1) else {
                         break
                     }
                     // Reduce indent for closing scope of guard else back to normal
@@ -1129,17 +1161,18 @@ public struct _FormatRules {
                         indentStack.removeLast()
                         linewrapStack[linewrapStack.count - 1] = false
                     }
-                    // Ensure braces and string delimiters are balanced
-                    if firstToken == .endOfScope("}") || firstToken.isMultilineStringDelimiter {
-                        if token != firstToken {
+                    // Xcode indenting
+                    if formatter.options.xcodeIndentation, token == .endOfScope(")") {
+                        guard firstIndex == i || formatter.tokens[firstIndex] == token else {
                             break
                         }
-                    } else {
                         // Only indent if this is the last scope terminator in the line
                         let range = i + 1 ..< formatter.endOfLine(at: i)
                         guard formatter.next(.endOfScope, in: range) == nil else {
                             break
                         }
+                    } else if firstIndex != i {
+                        break
                     }
                     if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {
                         i += formatter.insertSpace("", at: start)
@@ -1151,15 +1184,6 @@ public struct _FormatRules {
                         }
                         let stringIndent = stringBodyIndentStack.last!
                         i += formatter.insertSpace(stringIndent + indent, at: start)
-//                        if firstToken.isMultilineStringDelimiter,
-//                            let startOfString = formatter.index(of: .startOfScope, before: start) {
-//                            var j = start - 1
-//                            while j > startOfString {
-//                                let start = formatter.startOfLine(at: j)
-//                                i += formatter.insertSpace(stringIndent + indent, at: start)
-//                                j = start - 1
-//                            }
-//                        }
                     }
                 } else if token == .endOfScope("#endif"), indentStack.count > 1 {
                     var indent = indentStack[indentStack.count - 2]
@@ -1349,10 +1373,6 @@ public struct _FormatRules {
                             break
                         }
                     }
-//                case .stringBody:
-//                    // String body indent is determined retrospectively once
-//                    // the closing string delimiter is reached
-//                    break
                 default:
                     formatter.insertSpace(indent, at: i + 1)
                 }
@@ -3164,30 +3184,38 @@ public struct _FormatRules {
         orderAfter: ["wrapArguments"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        formatter.forEach(.keyword) { i, _ in
+        formatter.forEachToken { i, _ in
             switch formatter.tokens[i] {
-            case .keyword("if"), .keyword("guard"), .keyword("while"), .keyword("func"):
-                if let openBraceIndex = formatter.index(of: .startOfScope("{"), after: i),
-                    // Make sure the brace is on a separate line from the if / guard
-                    i < formatter.startOfLine(at: openBraceIndex),
-                    // When the token before the brace _isn't_ a newline, then we have to insert a newline.
-                    let previousNonspaceToken = formatter.last(.nonSpace, before: openBraceIndex),
-                    !previousNonspaceToken.is(.linebreak),
-                    // But we should only wrap when the brace's line is more indented than the if / guard
+            case .keyword("if"), .keyword("for"), .keyword("guard"), .keyword("while"), .keyword("func"):
+                guard let openBraceIndex = formatter.index(of: .startOfScope("{"), after: i) else {
+                    break
+                }
+                let startOfLine = formatter.startOfLine(at: openBraceIndex)
+                // Make sure the brace is on a separate line from the if / guard
+                guard i < startOfLine,
+                    // If token before the brace isn't a newline or guard else then insert a newline
+                    let prevIndex = formatter.index(of: .nonSpace, before: openBraceIndex),
+                    let prevToken = formatter.token(at: prevIndex),
+                    !prevToken.isLinebreak, !(prevToken == .keyword("else") &&
+                        prevIndex == formatter.index(of: .nonSpace, after: startOfLine)),
+                    // Only wrap when the brace's line is more indented than the if / guard
                     formatter.indentForLine(at: i) < formatter.indentForLine(at: openBraceIndex),
-                    // And we should only wrap when there's actual code inside the brace block
-                    formatter.next(.nonSpace, after: openBraceIndex) != .endOfScope("}") {
-                    formatter.insertLinebreak(at: openBraceIndex)
+                    // And only when closing brace is not on same line
+                    let closingIndex = formatter.endOfScope(at: openBraceIndex),
+                    formatter.tokens[openBraceIndex ..< closingIndex].contains(where: { $0.isLinebreak })
+                else {
+                    break
+                }
+                formatter.insertLinebreak(at: openBraceIndex)
 
-                    // Insert a space to align the opening brace with the if / guard keyword:
-                    let indentation = formatter.indentForLine(at: i)
-                    formatter.insertToken(.space(indentation), at: openBraceIndex + 1)
+                // Insert a space to align the opening brace with the if / guard keyword
+                let indentation = formatter.indentForLine(at: i)
+                formatter.insertSpace(indentation, at: openBraceIndex + 1)
 
-                    // If we left behind a trailing space on the previous line, clean it up:
-                    let previousTokenIndex = openBraceIndex - 1
-                    if formatter.tokens[previousTokenIndex].is(.space) {
-                        formatter.removeToken(at: previousTokenIndex)
-                    }
+                // If we left behind a trailing space on the previous line, clean it up
+                let previousTokenIndex = openBraceIndex - 1
+                if formatter.tokens[previousTokenIndex].isSpace {
+                    formatter.removeToken(at: previousTokenIndex)
                 }
             default:
                 break

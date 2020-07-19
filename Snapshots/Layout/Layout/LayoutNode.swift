@@ -1631,7 +1631,8 @@ public class LayoutNode: NSObject {
                 checking.append(name)
                 defer { checking.removeLast() }
                 for name in expression.symbols where
-                    name == symbol || _value(forSymbol: name, dependsOn: symbol) {
+                    name == symbol || _value(forSymbol: name, dependsOn: symbol)
+                {
                     return true
                 }
             }

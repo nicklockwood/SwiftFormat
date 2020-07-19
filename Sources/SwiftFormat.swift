@@ -417,21 +417,6 @@ public func sourceCode(for tokens: [Token]) -> String {
     return output
 }
 
-/// Apply specified rules to a token array with optional callback
-/// Useful for perfoming additional logic after each rule is applied
-@available(*, deprecated, message: "Use other applyRules() method, or format() or lint() instead")
-public func applyRules(_ rules: [FormatRule],
-                       to originalTokens: [Token],
-                       with options: FormatOptions,
-                       callback: ((Int, [Token]) -> Void)?) throws -> [Token] {
-    return try applyRules(rules,
-                          to: originalTokens,
-                          with: options,
-                          trackChanges: false,
-                          range: nil,
-                          callback: callback).tokens
-}
-
 /// Apply specified rules to a token array and optionally capture list of changes
 public func applyRules(_ rules: [FormatRule],
                        to originalTokens: [Token],

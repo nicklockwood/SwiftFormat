@@ -342,7 +342,8 @@ func validateLayoutExpression(_ parsedExpression: ParsedLayoutExpression) throws
             }
         case let .function(called, arity):
             for case let .function(name, requiredArity) in standardSymbols
-                where name == called && arity != requiredArity {
+                where name == called && arity != requiredArity
+            {
                 throw Expression.Error.arityMismatch(.function(called, arity: requiredArity))
             }
         }

@@ -2061,10 +2061,34 @@ class RulesTests: XCTestCase {
     }
 
     func testNestedScopesForXcodeGuardIndentation() {
-        let input = "enum Foo {\ncase bar\n\nvar foo: String {\nguard self == .bar\nelse {\nreturn \"\"\n}\nreturn \"bar\"\n}\n}"
-        let output = "enum Foo {\n    case bar\n\n    var foo: String {\n        guard self == .bar\n            else {\n                return \"\"\n        }\n        return \"bar\"\n    }\n}"
+        let input = """
+        enum Foo {
+        case bar
+
+        var foo: String {
+        guard self == .bar
+        else {
+        return ""
+        }
+        return "bar"
+        }
+        }
+        """
+        let output = """
+        enum Foo {
+            case bar
+
+            var foo: String {
+                guard self == .bar
+                    else {
+                        return ""
+                }
+                return "bar"
+            }
+        }
+        """
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
     func testWrappedLineAfterGuardElse() {
@@ -11880,7 +11904,7 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }
 
-    func testSingleLineGuardBraceOnSameLine() {
+    func testSingleLineGuardBrace() {
         let input = """
         guard firstConditional else {
             print("statement body")
@@ -11889,10 +11913,34 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }
 
+    func testGuardElseOnOwnLineBraceNotWrapped() {
+        let input = """
+        guard let foo = bar,
+            bar == baz
+        else {
+            print("statement body")
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+    }
+
+    func testGuardElseOnOwnLineBraceNotWrappedWithXcodeIndentation() {
+        let input = """
+        guard let foo = bar,
+            bar == baz
+            else {
+                print("statement body")
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
+                       options: options)
+    }
+
     func testMultilineGuardClosingBraceOnSameLine() {
         let input = """
         guard let foo = bar,
-            let baz = quux { return }
+            let baz = quux else { return }
         """
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }

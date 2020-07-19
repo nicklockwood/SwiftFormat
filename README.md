@@ -738,7 +738,7 @@ Credits
 * [Vikram Kriplaney](https://github.com/markiv) - SwiftFormat for Xcode icon
 * [Maxime Marinel](https://github.com/bourvill) - Git pre-commit hook script
 * [Romain Pouclet](https://github.com/palleas) - Homebrew formula
-* [Aerobounce](https://github.com/aerobounce) - Homebrew cask for SwiftFormat for Xcode
+* [Aerobounce](https://github.com/aerobounce) - Homebrew cask for SwiftFormat for Xcode, SwiftFormat for Sublime Text 3
 * [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
 * [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
 * [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions

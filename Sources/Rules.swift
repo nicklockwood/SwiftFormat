@@ -4356,4 +4356,71 @@ public struct _FormatRules {
             formatter.removeTokens(inRange: startIndex + 1 ..< endOfLine)
         }
     }
+
+    /// Strip header comments from the file
+    public let attributes = FormatRule(
+        help: "Wrap @ attrubutes onto a separate line, or keep them on the same line.",
+        options: ["funcattributes", "typeattributes"],
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        formatter.forEach(.identifierOrKeyword) { i, _ in
+            guard
+                formatter.token(at: i)?.string.starts(with: "@") == true,
+                let nextOpenBracket = formatter.index(of: .startOfScope("{"), after: i) else {
+                return
+            }
+
+            // Check the declaration for func or class/struct/enum to determine
+            // which `AttributesMode` option to use.
+            let declaration = CountableRange<Int>(i ... nextOpenBracket)
+            let attributeMode: AttributeMode
+
+            if formatter.index(of: .keyword("func"), in: declaration) != nil {
+                attributeMode = formatter.options.funcAttributes
+            } else if (formatter.index(of: .keyword("class"), in: declaration)
+                ?? formatter.index(of: .keyword("struct"), in: declaration)
+                ?? formatter.index(of: .keyword("enum"), in: declaration)) != nil {
+                attributeMode = formatter.options.typeAttributes
+            } else {
+                return
+            }
+
+            // Determine the end index of the attrubute
+            //  - Attributes like `@objc` are single tokens,
+            //    but attributes like `@available(iOS 14.0, *)` are multiple tokens.
+            let attributeEndIndex: Int
+            if let argumentStartIndex = formatter.index(of: .nonSpaceOrComment, after: i),
+                formatter.token(at: argumentStartIndex) == .startOfScope("("),
+                let endOfArgumentScope = formatter.endOfScope(at: argumentStartIndex) {
+                attributeEndIndex = endOfArgumentScope
+            } else {
+                attributeEndIndex = i
+            }
+
+            // Apply the `AttributeMode`
+            switch attributeMode {
+            case .preserve:
+                return
+            case .newLine:
+                // Make sure there's a newline immediately following the attribute
+                if let nextTokenIndex = formatter.index(of: .nonSpaceOrComment, after: attributeEndIndex),
+                    formatter.token(at: nextTokenIndex)?.isLinebreak != true {
+                    formatter.insertLinebreak(at: nextTokenIndex)
+                    // Remove any trailing whitespace left on the line with the attributes
+                    if let previousToken = formatter.token(at: nextTokenIndex - 1),
+                        previousToken.isSpace {
+                        formatter.removeToken(at: nextTokenIndex - 1)
+                    }
+                }
+            case .sameLine:
+                // Make sure there _isn't_ a newline immediately following the attributes
+                if let nextTokenIndex = formatter.index(of: .nonSpaceOrComment, after: attributeEndIndex),
+                    formatter.token(at: nextTokenIndex)?.isLinebreak != false {
+                    // Replace the newline with a space so the attribute doesn't
+                    // merge with the next token.
+                    formatter.replaceToken(at: nextTokenIndex, with: .space(" "))
+                }
+            }
+        }
+    }
 }

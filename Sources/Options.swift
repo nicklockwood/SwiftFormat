@@ -84,6 +84,13 @@ public enum ArgumentStrippingMode: String {
     case all = "always"
 }
 
+// Wrap mode for @ attributes
+public enum AttributeMode: String {
+    case newLine = "new-line"
+    case sameLine = "same-line"
+    case preserve
+}
+
 /// Version number wrapper
 public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral, CustomStringConvertible {
     public let rawValue: String
@@ -284,6 +291,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var noWrapOperators: Set<String>
     public var specifierOrder: [String]
     public var shortOptionals: OptionalsMode
+    public var funcAttributes: AttributeMode
+    public var typeAttributes: AttributeMode
 
     // Deprecated
     public var indentComments: Bool
@@ -339,6 +348,8 @@ public struct FormatOptions: CustomStringConvertible {
                 noWrapOperators: Set<String> = [],
                 specifierOrder: [String] = [],
                 shortOptionals: OptionalsMode = .always,
+                funcAttributes: AttributeMode = .preserve,
+                typeAttributes: AttributeMode = .preserve,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -386,6 +397,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.noWrapOperators = noWrapOperators
         self.specifierOrder = specifierOrder
         self.shortOptionals = shortOptionals
+        self.funcAttributes = funcAttributes
+        self.typeAttributes = typeAttributes
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

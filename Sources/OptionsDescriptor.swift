@@ -283,6 +283,8 @@ extension FormatOptions.Descriptor {
         noWrapOperators,
         specifierOrder,
         shortOptionals,
+        funcAttributes,
+        typeAttributes,
 
         // Deprecated
         indentComments,
@@ -680,6 +682,20 @@ extension FormatOptions.Descriptor {
         displayName: "Swift Version",
         help: "The version of Swift used in the files being formatted",
         keyPath: \.swiftVersion
+    )
+    static let funcAttributes = FormatOptions.Descriptor(
+        argumentName: "funcattributes",
+        propertyName: "funcAttributes",
+        displayName: "Function Attributes",
+        help: "Function @ attributes: \"preserve\", \"new-line\", or \"same-line\"",
+        keyPath: \.funcAttributes
+    )
+    static let typeAttributes = FormatOptions.Descriptor(
+        argumentName: "typeattributes",
+        propertyName: "typeAttributes",
+        displayName: "Type Attributes",
+        help: "Type @ attributes: \"preserve\", \"new-line\", or \"same-line\"",
+        keyPath: \.typeAttributes
     )
 
     // MARK: - DEPRECATED

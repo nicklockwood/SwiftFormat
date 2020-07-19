@@ -2,6 +2,7 @@
 
 * [andOperator](#andOperator)
 * [anyObjectProtocol](#anyObjectProtocol)
+* [attributes](#attributes)
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
@@ -112,6 +113,57 @@ Prefer `AnyObject` over `class` in protocol definitions.
 **NOTE:** The guideline to use `AnyObject` instead of `class` was only
 introduced in Swift 4.1, so the `anyObjectProtocol` rule is disabled unless the
 swift version is set to 4.1 or above.
+
+</details>
+<br/>
+
+## attributes
+
+Wrap @ attrubutes onto a separate line, or keep them on the same line.
+
+Option | Description
+--- | ---
+`--funcattributes` | Function @ attributes: "preserve", "new-line", or "same-line"
+`--typeattributes` | Type @ attributes: "preserve", "new-line", or "same-line"
+
+<details>
+<summary>Examples</summary>
+
+`--funcattributes new-line`
+
+```diff
+- @objc func foo() {}
+
++ @objc
++ func foo() { }
+```
+
+`--funcattributes same-line`
+
+```diff
+- @objc
+- func foo() { }
+
++ @objc func foo() {}
+```
+
+`--typeattributes new-line`
+
+```diff
+- @objc class Foo {}
+
++ @objc
++ class Foo { }
+```
+
+`--typeattributes same-line`
+
+```diff
+- @objc
+- enum Foo { }
+
++ @objc enun Foo {}
+```
 
 </details>
 <br/>

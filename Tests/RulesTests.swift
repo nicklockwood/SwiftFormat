@@ -11845,6 +11845,55 @@ class RulesTests: XCTestCase {
                        exclude: ["braces", "wrapArguments", "unusedArguments"])
     }
 
+    func testMultilineForLoopBraceOnNextLine() {
+        let input = """
+        for foo in
+            [1, 2] {
+            print(foo)
+        }
+        """
+        let output = """
+        for foo in
+            [1, 2]
+        {
+            print(foo)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
+                       exclude: ["braces"])
+    }
+
+    func testMultilineForLoopBraceOnNextLine2() {
+        let input = """
+        for foo in [
+            1,
+            2,
+        ] {
+            print(foo)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
+                       exclude: ["braces"])
+    }
+
+    func testMultilineForWhereLoopBraceOnNextLine() {
+        let input = """
+        for foo in bar
+            where foo != baz {
+            print(foo)
+        }
+        """
+        let output = """
+        for foo in bar
+            where foo != baz
+        {
+            print(foo)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
+                       exclude: ["braces"])
+    }
+
     func testMultilineGuardBraceOnNextLine() {
         let input = """
         guard firstConditional,

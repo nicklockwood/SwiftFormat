@@ -3184,18 +3184,23 @@ public struct _FormatRules {
         orderAfter: ["wrapArguments"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        formatter.forEach(.keyword) { i, _ in
+        formatter.forEachToken { i, _ in
             switch formatter.tokens[i] {
             case .keyword("if"), .keyword("guard"), .keyword("while"), .keyword("func"):
-                guard let openBraceIndex = formatter.index(of: .startOfScope("{"), after: i),
-                    // Make sure the brace is on a separate line from the if / guard
-                    i < formatter.startOfLine(at: openBraceIndex),
-                    // When the token before the brace _isn't_ a newline, then we have to insert a newline.
-                    let previousNonspaceToken = formatter.last(.nonSpace, before: openBraceIndex),
-                    !previousNonspaceToken.isLinebreak,
-                    // But we should only wrap when the brace's line is more indented than the if / guard
+                guard let openBraceIndex = formatter.index(of: .startOfScope("{"), after: i) else {
+                    break
+                }
+                let startOfLine = formatter.startOfLine(at: openBraceIndex)
+                // Make sure the brace is on a separate line from the if / guard
+                guard i < startOfLine,
+                    // If token before the brace isn't a newline or guard else then insert a newline
+                    let prevIndex = formatter.index(of: .nonSpace, before: openBraceIndex),
+                    let prevToken = formatter.token(at: prevIndex),
+                    !prevToken.isLinebreak, !(prevToken == .keyword("else") &&
+                        prevIndex == formatter.index(of: .nonSpace, after: startOfLine)),
+                    // Only wrap when the brace's line is more indented than the if / guard
                     formatter.indentForLine(at: i) < formatter.indentForLine(at: openBraceIndex),
-                    // And we should only wrap when closing brace is not on same line
+                    // And only when closing brace is not on same line
                     let closingIndex = formatter.endOfScope(at: openBraceIndex),
                     formatter.tokens[openBraceIndex ..< closingIndex].contains(where: { $0.isLinebreak })
                 else {
@@ -3203,11 +3208,11 @@ public struct _FormatRules {
                 }
                 formatter.insertLinebreak(at: openBraceIndex)
 
-                // Insert a space to align the opening brace with the if / guard keyword:
+                // Insert a space to align the opening brace with the if / guard keyword
                 let indentation = formatter.indentForLine(at: i)
                 formatter.insertSpace(indentation, at: openBraceIndex + 1)
 
-                // If we left behind a trailing space on the previous line, clean it up:
+                // If we left behind a trailing space on the previous line, clean it up
                 let previousTokenIndex = openBraceIndex - 1
                 if formatter.tokens[previousTokenIndex].isSpace {
                     formatter.removeToken(at: previousTokenIndex)

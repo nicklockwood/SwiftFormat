@@ -11885,4 +11885,15 @@ class RulesTests: XCTestCase {
         """
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }
+
+    func testMultilineXcodeIndentationGuard() {
+        let input = """
+        guard self == .bar
+            else {
+                return ""
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces, options: options)
+    }
 }

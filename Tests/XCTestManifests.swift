@@ -887,6 +887,7 @@ extension RulesTests {
         ("testMultilineIfBraceOnNextLine", testMultilineIfBraceOnNextLine),
         ("testMultilineIfBraceOnSameLine", testMultilineIfBraceOnSameLine),
         ("testMultilineStringWithEscapedLinebreak", testMultilineStringWithEscapedLinebreak),
+        ("testMultilineXcodeIndentationGuard", testMultilineXcodeIndentationGuard),
         ("testMultipleClosureArgumentUnwrapped", testMultipleClosureArgumentUnwrapped),
         ("testMultipleNestedClosures", testMultipleNestedClosures),
         ("testNamedClosureArgumentNotMadeTrailing", testNamedClosureArgumentNotMadeTrailing),

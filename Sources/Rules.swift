@@ -3197,6 +3197,16 @@ public struct _FormatRules {
                 else {
                     break
                 }
+
+                // For guard statements, we should avoid splitting up the `else` and the `{`
+                // tokens if they are the only tokens on the line.
+                if formatter.tokens[i] == .keyword("guard"),
+                    formatter.range(formatter.rangeOfLine(at: openBraceIndex),
+                                    doesNotContainsTokensExcept: [.keyword("else"), .startOfScope("{")],
+                                    allowingWhitespaceAndComments: true) {
+                    break
+                }
+
                 formatter.insertLinebreak(at: openBraceIndex)
 
                 // Insert a space to align the opening brace with the if / guard keyword:

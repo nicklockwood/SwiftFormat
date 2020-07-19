@@ -35,6 +35,11 @@ extension Formatter {
         return index
     }
 
+    /// The range of the line that includes the given index.
+    public func rangeOfLine(at index: Int) -> CountableRange<Int> {
+        CountableRange<Int>(startOfLine(at: index) ... endOfLine(at: index))
+    }
+
     /// Returns the space at the start of the line containing the specified index
     func indentForLine(at index: Int) -> String {
         if case let .space(string)? = token(at: startOfLine(at: index)) {

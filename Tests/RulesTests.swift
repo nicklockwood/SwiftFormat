@@ -12052,6 +12052,17 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.attributes, options: options)
     }
 
+    func testVarAttributeIsNotWrapped() {
+        let input = """
+        @IBOutlet var foo: UIView?
+
+        @available(iOS 14.0, *)
+        func foo() {}
+        """
+        let options = FormatOptions(funcAttributes: .newLine)
+        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+    }
+
     func testWrapTypeAttribute() {
         let input = """
         @available(iOS 14.0, *) class Foo {}
@@ -12090,6 +12101,17 @@ class RulesTests: XCTestCase {
         @objc class Foo {}
         """
         let options = FormatOptions(typeAttributes: .sameLine)
+        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+    }
+
+    func testTestableImportIsNotWrapped() {
+        let input = """
+        @testable import Framework
+
+        @available(iOS 14.0, *)
+        class Foo {}
+        """
+        let options = FormatOptions(typeAttributes: .newLine)
         testFormatting(for: input, rule: FormatRules.attributes, options: options)
     }
 }

@@ -4400,16 +4400,28 @@ public struct _FormatRules {
 
             // Check the declaration for func or class/struct/enum to determine
             // which `AttributesMode` option to use.
-            let declaration = CountableRange<Int>(i ... nextOpenBracket)
+            let rangeToNextOpenBracket = CountableRange<Int>(i ... nextOpenBracket)
             let attributeMode: AttributeMode
+            let keywordIndex: Int
 
-            if formatter.index(of: .keyword("func"), in: declaration) != nil {
+            if let funcKeyworkIndex = formatter.index(of: .keyword("func"), in: rangeToNextOpenBracket) {
                 attributeMode = formatter.options.funcAttributes
-            } else if (formatter.index(of: .keyword("class"), in: declaration)
-                ?? formatter.index(of: .keyword("struct"), in: declaration)
-                ?? formatter.index(of: .keyword("enum"), in: declaration)) != nil {
+                keywordIndex = funcKeyworkIndex
+            } else if let typeKeywordIndex = formatter.index(of: .keyword("class"), in: rangeToNextOpenBracket)
+                ?? formatter.index(of: .keyword("struct"), in: rangeToNextOpenBracket)
+                ?? formatter.index(of: .keyword("enum"), in: rangeToNextOpenBracket)
+                ?? formatter.index(of: .keyword("protocol"), in: rangeToNextOpenBracket) {
                 attributeMode = formatter.options.typeAttributes
+                keywordIndex = typeKeywordIndex
             } else {
+                return
+            }
+
+            // Make sure we don't accidentially wrap import or var/let annotations
+            let rangeUpToKeyword = CountableRange<Int>(i ... keywordIndex)
+            if (formatter.index(of: .keyword("import"), in: rangeToNextOpenBracket)
+                ?? formatter.index(of: .keyword("let"), in: rangeToNextOpenBracket)
+                ?? formatter.index(of: .keyword("var"), in: rangeToNextOpenBracket)) != nil {
                 return
             }
 

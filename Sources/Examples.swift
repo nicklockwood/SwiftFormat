@@ -1036,4 +1036,42 @@ private struct Examples {
     +      let bar = maybeBar else { ... }
     ```
     """
+
+    let attributes = """
+    `--funcattributes new-line`
+
+    ```diff
+    - @objc func foo() {}
+
+    + @objc
+    + func foo() { }
+    ```
+
+    `--funcattributes same-line`
+
+    ```diff
+    - @objc
+    - func foo() { }
+
+    + @objc func foo() {}
+    ```
+
+    `--typeattributes new-line`
+
+    ```diff
+    - @objc class Foo {}
+
+    + @objc
+    + class Foo { }
+    ```
+
+    `--typeattributes same-line`
+
+    ```diff
+    - @objc
+    - enum Foo { }
+
+    + @objc enun Foo {}
+    ```
+    """
 }

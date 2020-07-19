@@ -11993,4 +11993,125 @@ class RulesTests: XCTestCase {
         """
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }
+
+    // MARK: - attributes
+
+    func testPreserveWrappedFuncAttributeByDefault() {
+        let input = """
+        @objc
+        func foo() {}
+        """
+        testFormatting(for: input, rule: FormatRules.attributes)
+    }
+
+    func testPreserveUnwrappedFuncAttributeByDefault() {
+        let input = """
+        @objc func foo() {}
+        """
+        testFormatting(for: input, rule: FormatRules.attributes)
+    }
+
+    func testWrapFuncAttribute() {
+        let input = """
+        @available(iOS 14.0, *) func foo() {}
+        """
+        let output = """
+        @available(iOS 14.0, *)
+        func foo() {}
+        """
+        let options = FormatOptions(funcAttributes: .newLine)
+        testFormatting(for: input, output, rule: FormatRules.attributes, options: options)
+    }
+
+    func testFuncAttributeStaysWrapped() {
+        let input = """
+        @available(iOS 14.0, *)
+        func foo() {}
+        """
+        let options = FormatOptions(funcAttributes: .newLine)
+        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+    }
+
+    func testUnwrapFuncAttribute() {
+        let input = """
+        @available(iOS 14.0, *)
+        func foo() {}
+        """
+        let output = """
+        @available(iOS 14.0, *) func foo() {}
+        """
+        let options = FormatOptions(funcAttributes: .sameLine)
+        testFormatting(for: input, output, rule: FormatRules.attributes, options: options)
+    }
+
+    func testFuncAttributeStaysUnwrapped() {
+        let input = """
+        @objc func foo() {}
+        """
+        let options = FormatOptions(funcAttributes: .sameLine)
+        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+    }
+
+    func testVarAttributeIsNotWrapped() {
+        let input = """
+        @IBOutlet var foo: UIView?
+
+        @available(iOS 14.0, *)
+        func foo() {}
+        """
+        let options = FormatOptions(funcAttributes: .newLine)
+        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+    }
+
+    func testWrapTypeAttribute() {
+        let input = """
+        @available(iOS 14.0, *) class Foo {}
+        """
+        let output = """
+        @available(iOS 14.0, *)
+        class Foo {}
+        """
+        let options = FormatOptions(typeAttributes: .newLine)
+        testFormatting(for: input, output, rule: FormatRules.attributes, options: options)
+    }
+
+    func testTypeAttributeStaysWrapped() {
+        let input = """
+        @available(iOS 14.0, *)
+        struct Foo {}
+        """
+        let options = FormatOptions(typeAttributes: .newLine)
+        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+    }
+
+    func testUnwrapTypeAttribute() {
+        let input = """
+        @available(iOS 14.0, *)
+        enum Foo {}
+        """
+        let output = """
+        @available(iOS 14.0, *) enum Foo {}
+        """
+        let options = FormatOptions(typeAttributes: .sameLine)
+        testFormatting(for: input, output, rule: FormatRules.attributes, options: options)
+    }
+
+    func testTypeAttributeStaysUnwrapped() {
+        let input = """
+        @objc class Foo {}
+        """
+        let options = FormatOptions(typeAttributes: .sameLine)
+        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+    }
+
+    func testTestableImportIsNotWrapped() {
+        let input = """
+        @testable import Framework
+
+        @available(iOS 14.0, *)
+        class Foo {}
+        """
+        let options = FormatOptions(typeAttributes: .newLine)
+        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+    }
 }

@@ -12019,7 +12019,7 @@ class RulesTests: XCTestCase {
         @available(iOS 14.0, *)
         func foo() {}
         """
-        let options = FormatOptions(funcAttributes: .newLine)
+        let options = FormatOptions(funcAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.attributes, options: options)
     }
 
@@ -12028,7 +12028,7 @@ class RulesTests: XCTestCase {
         @available(iOS 14.0, *)
         func foo() {}
         """
-        let options = FormatOptions(funcAttributes: .newLine)
+        let options = FormatOptions(funcAttributes: .prevLine)
         testFormatting(for: input, rule: FormatRules.attributes, options: options)
     }
 
@@ -12059,7 +12059,7 @@ class RulesTests: XCTestCase {
         @available(iOS 14.0, *)
         func foo() {}
         """
-        let options = FormatOptions(funcAttributes: .newLine)
+        let options = FormatOptions(funcAttributes: .prevLine)
         testFormatting(for: input, rule: FormatRules.attributes, options: options)
     }
 
@@ -12071,7 +12071,7 @@ class RulesTests: XCTestCase {
         @available(iOS 14.0, *)
         class Foo {}
         """
-        let options = FormatOptions(typeAttributes: .newLine)
+        let options = FormatOptions(typeAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.attributes, options: options)
     }
 
@@ -12080,7 +12080,7 @@ class RulesTests: XCTestCase {
         @available(iOS 14.0, *)
         struct Foo {}
         """
-        let options = FormatOptions(typeAttributes: .newLine)
+        let options = FormatOptions(typeAttributes: .prevLine)
         testFormatting(for: input, rule: FormatRules.attributes, options: options)
     }
 
@@ -12111,7 +12111,7 @@ class RulesTests: XCTestCase {
         @available(iOS 14.0, *)
         class Foo {}
         """
-        let options = FormatOptions(typeAttributes: .newLine)
+        let options = FormatOptions(typeAttributes: .prevLine)
         testFormatting(for: input, rule: FormatRules.attributes, options: options)
     }
 }

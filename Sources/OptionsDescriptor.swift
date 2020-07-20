@@ -687,14 +687,14 @@ extension FormatOptions.Descriptor {
         argumentName: "funcattributes",
         propertyName: "funcAttributes",
         displayName: "Function Attributes",
-        help: "Function @ attributes: \"preserve\", \"new-line\", or \"same-line\"",
+        help: "Function @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.funcAttributes
     )
     static let typeAttributes = FormatOptions.Descriptor(
         argumentName: "typeattributes",
         propertyName: "typeAttributes",
         displayName: "Type Attributes",
-        help: "Type @ attributes: \"preserve\", \"new-line\", or \"same-line\"",
+        help: "Type @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.typeAttributes
     )
 

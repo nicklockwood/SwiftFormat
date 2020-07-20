@@ -119,17 +119,17 @@ swift version is set to 4.1 or above.
 
 ## attributes
 
-Wrap @ attrubutes onto a separate line, or keep them on the same line.
+Wrap @attributes onto a separate line, or keep them on the same line.
 
 Option | Description
 --- | ---
-`--funcattributes` | Function @ attributes: "preserve", "new-line", or "same-line"
-`--typeattributes` | Type @ attributes: "preserve", "new-line", or "same-line"
+`--funcattributes` | Function @attributes: "preserve", "prev-line", or "same-line"
+`--typeattributes` | Type @attributes: "preserve", "prev-line", or "same-line"
 
 <details>
 <summary>Examples</summary>
 
-`--funcattributes new-line`
+`--funcattributes prev-line`
 
 ```diff
 - @objc func foo() {}
@@ -147,7 +147,7 @@ Option | Description
 + @objc func foo() {}
 ```
 
-`--typeattributes new-line`
+`--typeattributes prev-line`
 
 ```diff
 - @objc class Foo {}
@@ -162,7 +162,7 @@ Option | Description
 - @objc
 - enum Foo { }
 
-+ @objc enun Foo {}
++ @objc enum Foo {}
 ```
 
 </details>

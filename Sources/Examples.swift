@@ -1038,7 +1038,7 @@ private struct Examples {
     """
 
     let attributes = """
-    `--funcattributes new-line`
+    `--funcattributes prev-line`
 
     ```diff
     - @objc func foo() {}
@@ -1056,7 +1056,7 @@ private struct Examples {
     + @objc func foo() {}
     ```
 
-    `--typeattributes new-line`
+    `--typeattributes prev-line`
 
     ```diff
     - @objc class Foo {}
@@ -1071,7 +1071,7 @@ private struct Examples {
     - @objc
     - enum Foo { }
 
-    + @objc enun Foo {}
+    + @objc enum Foo {}
     ```
     """
 }

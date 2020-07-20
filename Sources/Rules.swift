@@ -4387,7 +4387,7 @@ public struct _FormatRules {
 
     /// Strip header comments from the file
     public let attributes = FormatRule(
-        help: "Wrap @ attrubutes onto a separate line, or keep them on the same line.",
+        help: "Wrap @attributes onto a separate line, or keep them on the same line.",
         options: ["funcattributes", "typeattributes"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -4441,7 +4441,7 @@ public struct _FormatRules {
             switch attributeMode {
             case .preserve:
                 return
-            case .newLine:
+            case .prevLine:
                 // Make sure there's a newline immediately following the attribute
                 if let nextTokenIndex = formatter.index(of: .nonSpaceOrComment, after: attributeEndIndex),
                     formatter.token(at: nextTokenIndex)?.isLinebreak != true {

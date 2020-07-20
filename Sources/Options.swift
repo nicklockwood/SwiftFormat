@@ -86,7 +86,7 @@ public enum ArgumentStrippingMode: String {
 
 // Wrap mode for @ attributes
 public enum AttributeMode: String {
-    case newLine = "new-line"
+    case prevLine = "prev-line"
     case sameLine = "same-line"
     case preserve
 }

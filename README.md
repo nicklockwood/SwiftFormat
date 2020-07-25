@@ -18,6 +18,7 @@ Table of Contents
     - [Xcode build phase](#xcode-build-phase)
     - [Via Applescript](#via-applescript)
     - [VSCode plugin](#vscode-plugin)
+    - [Sublime Text plugin](#sublime-text-plugin)
     - [Git pre-commit hook](#git-pre-commit-hook)
     - [On CI using Danger](#on-ci-using-danger)
 - [Configuration](#configuration)
@@ -315,6 +316,12 @@ VSCode plugin
 --------------
 
 If you prefer to use Microsoft's [VSCode](https://code.visualstudio.com) editor for writing Swift, [Valentin Knabel](https://github.com/vknabel) has created a [VSCode plugin](https://marketplace.visualstudio.com/items?itemName=vknabel.vscode-swiftformat) for SwiftFormat.
+
+
+Sublime Text plugin
+--------------------
+
+If you prefer to use the [Sublime Text](https://www.sublimetext.com) editor, try the [Sublime-Swift-Format plugin](https://github.com/aerobounce/Sublime-Swift-Format) by [Aerobounce](https://github.com/aerobounce).
 
 
 Git pre-commit hook
@@ -738,7 +745,7 @@ Credits
 * [Vikram Kriplaney](https://github.com/markiv) - SwiftFormat for Xcode icon
 * [Maxime Marinel](https://github.com/bourvill) - Git pre-commit hook script
 * [Romain Pouclet](https://github.com/palleas) - Homebrew formula
-* [Aerobounce](https://github.com/aerobounce) - Homebrew cask for SwiftFormat for Xcode
+* [Aerobounce](https://github.com/aerobounce) - Homebrew cask and Sublime Text plugin
 * [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
 * [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
 * [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions

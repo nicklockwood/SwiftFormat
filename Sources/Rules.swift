@@ -4386,7 +4386,7 @@ public struct _FormatRules {
     }
 
     /// Strip header comments from the file
-    public let attributes = FormatRule(
+    public let wrapAttributes = FormatRule(
         help: "Wrap @attributes onto a separate line, or keep them on the same line.",
         options: ["funcattributes", "typeattributes"],
         sharedOptions: ["linebreaks"]

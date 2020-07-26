@@ -193,7 +193,7 @@ class MetadataTests: XCTestCase {
 
     func testAllExamplesMatchRule() {
         for key in FormatRules.examplesByName.keys {
-            XCTAssertNotNil(FormatRules.byName[key], "Examples includes entry for unknown rule 'key'")
+            XCTAssertNotNil(FormatRules.byName[key], "Examples includes entry for unknown rule '\(key)'")
         }
     }
 

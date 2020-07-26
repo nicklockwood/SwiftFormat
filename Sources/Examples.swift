@@ -1037,7 +1037,7 @@ private struct Examples {
     ```
     """
 
-    let attributes = """
+    let wrapAttributes = """
     `--funcattributes prev-line`
 
     ```diff

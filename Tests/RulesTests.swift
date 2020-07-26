@@ -11994,21 +11994,21 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }
 
-    // MARK: - attributes
+    // MARK: - wrapAttributes
 
     func testPreserveWrappedFuncAttributeByDefault() {
         let input = """
         @objc
         func foo() {}
         """
-        testFormatting(for: input, rule: FormatRules.attributes)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes)
     }
 
     func testPreserveUnwrappedFuncAttributeByDefault() {
         let input = """
         @objc func foo() {}
         """
-        testFormatting(for: input, rule: FormatRules.attributes)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes)
     }
 
     func testWrapFuncAttribute() {
@@ -12020,7 +12020,7 @@ class RulesTests: XCTestCase {
         func foo() {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.attributes, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testMultipleAttributesNotSeparated() {
@@ -12032,7 +12032,7 @@ class RulesTests: XCTestCase {
         func foo {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.attributes,
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes,
                        options: options, exclude: ["redundantObjc"])
     }
 
@@ -12042,7 +12042,7 @@ class RulesTests: XCTestCase {
         func foo() {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testUnwrapFuncAttribute() {
@@ -12054,7 +12054,7 @@ class RulesTests: XCTestCase {
         @available(iOS 14.0, *) func foo() {}
         """
         let options = FormatOptions(funcAttributes: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.attributes, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testFuncAttributeStaysUnwrapped() {
@@ -12062,7 +12062,7 @@ class RulesTests: XCTestCase {
         @objc func foo() {}
         """
         let options = FormatOptions(funcAttributes: .sameLine)
-        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testVarAttributeIsNotWrapped() {
@@ -12073,7 +12073,7 @@ class RulesTests: XCTestCase {
         func foo() {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testWrapTypeAttribute() {
@@ -12085,7 +12085,7 @@ class RulesTests: XCTestCase {
         class Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.attributes, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testTypeAttributeStaysWrapped() {
@@ -12094,7 +12094,7 @@ class RulesTests: XCTestCase {
         struct Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testUnwrapTypeAttribute() {
@@ -12106,7 +12106,7 @@ class RulesTests: XCTestCase {
         @available(iOS 14.0, *) enum Foo {}
         """
         let options = FormatOptions(typeAttributes: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.attributes, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testTypeAttributeStaysUnwrapped() {
@@ -12114,7 +12114,7 @@ class RulesTests: XCTestCase {
         @objc class Foo {}
         """
         let options = FormatOptions(typeAttributes: .sameLine)
-        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testTestableImportIsNotWrapped() {
@@ -12125,6 +12125,6 @@ class RulesTests: XCTestCase {
         class Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.attributes, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 }

@@ -2,7 +2,6 @@
 
 * [andOperator](#andOperator)
 * [anyObjectProtocol](#anyObjectProtocol)
-* [attributes](#attributes)
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
@@ -63,6 +62,7 @@
 * [void](#void)
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
+* [wrapAttributes](#wrapAttributes)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
 * [yodaConditions](#yodaConditions)
 
@@ -113,57 +113,6 @@ Prefer `AnyObject` over `class` in protocol definitions.
 **NOTE:** The guideline to use `AnyObject` instead of `class` was only
 introduced in Swift 4.1, so the `anyObjectProtocol` rule is disabled unless the
 swift version is set to 4.1 or above.
-
-</details>
-<br/>
-
-## attributes
-
-Wrap @attributes onto a separate line, or keep them on the same line.
-
-Option | Description
---- | ---
-`--funcattributes` | Function @attributes: "preserve", "prev-line", or "same-line"
-`--typeattributes` | Type @attributes: "preserve", "prev-line", or "same-line"
-
-<details>
-<summary>Examples</summary>
-
-`--funcattributes prev-line`
-
-```diff
-- @objc func foo() {}
-
-+ @objc
-+ func foo() { }
-```
-
-`--funcattributes same-line`
-
-```diff
-- @objc
-- func foo() { }
-
-+ @objc func foo() {}
-```
-
-`--typeattributes prev-line`
-
-```diff
-- @objc class Foo {}
-
-+ @objc
-+ class Foo { }
-```
-
-`--typeattributes same-line`
-
-```diff
-- @objc
-- enum Foo { }
-
-+ @objc enum Foo {}
-```
 
 </details>
 <br/>
@@ -1637,6 +1586,57 @@ provided for `--wrapparameters`, the value for `--wraparguments` will be used.
     baz,
 +   quuz
 + ]
+```
+
+</details>
+<br/>
+
+## wrapAttributes
+
+Wrap @attributes onto a separate line, or keep them on the same line.
+
+Option | Description
+--- | ---
+`--funcattributes` | Function @attributes: "preserve", "prev-line", or "same-line"
+`--typeattributes` | Type @attributes: "preserve", "prev-line", or "same-line"
+
+<details>
+<summary>Examples</summary>
+
+`--funcattributes prev-line`
+
+```diff
+- @objc func foo() {}
+
++ @objc
++ func foo() { }
+```
+
+`--funcattributes same-line`
+
+```diff
+- @objc
+- func foo() { }
+
++ @objc func foo() {}
+```
+
+`--typeattributes prev-line`
+
+```diff
+- @objc class Foo {}
+
++ @objc
++ class Foo { }
+```
+
+`--typeattributes same-line`
+
+```diff
+- @objc
+- enum Foo { }
+
++ @objc enum Foo {}
 ```
 
 </details>

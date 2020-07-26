@@ -12023,6 +12023,19 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.attributes, options: options)
     }
 
+    func testMultipleAttributesNotSeparated() {
+        let input = """
+        @objc @IBAction func foo {}
+        """
+        let output = """
+        @objc @IBAction
+        func foo {}
+        """
+        let options = FormatOptions(funcAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.attributes,
+                       options: options, exclude: ["redundantObjc"])
+    }
+
     func testFuncAttributeStaysWrapped() {
         let input = """
         @available(iOS 14.0, *)

@@ -4391,26 +4391,34 @@ public struct _FormatRules {
         options: ["funcattributes", "typeattributes"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        formatter.forEach(.identifierOrKeyword) { i, _ in
-            guard
-                formatter.token(at: i)?.string.starts(with: "@") == true,
-                let nextOpenBracket = formatter.index(of: .startOfScope("{"), after: i) else {
+        formatter.forEach(.attribute) { i, _ in
+            // Determine the end index of the attribute
+            let endIndex: Int
+            if let argumentStartIndex = formatter.index(of: .nonSpaceOrComment, after: i),
+                formatter.token(at: argumentStartIndex) == .startOfScope("("),
+                let endOfArgumentScope = formatter.endOfScope(at: argumentStartIndex) {
+                endIndex = endOfArgumentScope
+            } else {
+                endIndex = i
+            }
+
+            // Ignore sequential attributes
+            guard formatter.next(.nonSpaceOrComment, after: endIndex)?.isAttribute == false,
+                let openBrace = formatter.index(of: .startOfScope("{"), after: i) else {
                 return
             }
 
-            // Check the declaration for func or class/struct/enum to determine
-            // which `AttributesMode` option to use.
-            let rangeToNextOpenBracket = CountableRange<Int>(i ... nextOpenBracket)
+            // Check declaration to determine which `AttributeMode` option to use
+            let rangeToOpenBrace = CountableRange<Int>(endIndex + 1 ... openBrace)
             let attributeMode: AttributeMode
             let keywordIndex: Int
-
-            if let funcKeyworkIndex = formatter.index(of: .keyword("func"), in: rangeToNextOpenBracket) {
+            if let funcKeyworkIndex = formatter.index(of: .keyword("func"), in: rangeToOpenBrace) {
                 attributeMode = formatter.options.funcAttributes
                 keywordIndex = funcKeyworkIndex
-            } else if let typeKeywordIndex = formatter.index(of: .keyword("class"), in: rangeToNextOpenBracket)
-                ?? formatter.index(of: .keyword("struct"), in: rangeToNextOpenBracket)
-                ?? formatter.index(of: .keyword("enum"), in: rangeToNextOpenBracket)
-                ?? formatter.index(of: .keyword("protocol"), in: rangeToNextOpenBracket) {
+            } else if let typeKeywordIndex = formatter.index(in: rangeToOpenBrace, where: {
+                [.keyword("class"), .keyword("struct"),
+                 .keyword("enum"), .keyword("protocol")].contains($0)
+            }) {
                 attributeMode = formatter.options.typeAttributes
                 keywordIndex = typeKeywordIndex
             } else {
@@ -4419,22 +4427,10 @@ public struct _FormatRules {
 
             // Make sure we don't accidentially wrap import or var/let annotations
             let rangeUpToKeyword = CountableRange<Int>(i ... keywordIndex)
-            if (formatter.index(of: .keyword("import"), in: rangeToNextOpenBracket)
-                ?? formatter.index(of: .keyword("let"), in: rangeToNextOpenBracket)
-                ?? formatter.index(of: .keyword("var"), in: rangeToNextOpenBracket)) != nil {
+            guard !formatter.tokens[rangeToOpenBrace].contains(where: {
+                [.keyword("import"), .keyword("let"), .keyword("var")].contains($0)
+            }) else {
                 return
-            }
-
-            // Determine the end index of the attrubute
-            //  - Attributes like `@objc` are single tokens,
-            //    but attributes like `@available(iOS 14.0, *)` are multiple tokens.
-            let attributeEndIndex: Int
-            if let argumentStartIndex = formatter.index(of: .nonSpaceOrComment, after: i),
-                formatter.token(at: argumentStartIndex) == .startOfScope("("),
-                let endOfArgumentScope = formatter.endOfScope(at: argumentStartIndex) {
-                attributeEndIndex = endOfArgumentScope
-            } else {
-                attributeEndIndex = i
             }
 
             // Apply the `AttributeMode`
@@ -4443,22 +4439,21 @@ public struct _FormatRules {
                 return
             case .prevLine:
                 // Make sure there's a newline immediately following the attribute
-                if let nextTokenIndex = formatter.index(of: .nonSpaceOrComment, after: attributeEndIndex),
-                    formatter.token(at: nextTokenIndex)?.isLinebreak != true {
-                    formatter.insertLinebreak(at: nextTokenIndex)
+                if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: endIndex),
+                    formatter.token(at: nextIndex)?.isLinebreak != true {
+                    formatter.insertLinebreak(at: nextIndex)
                     // Remove any trailing whitespace left on the line with the attributes
-                    if let previousToken = formatter.token(at: nextTokenIndex - 1),
-                        previousToken.isSpace {
-                        formatter.removeToken(at: nextTokenIndex - 1)
+                    if let prevToken = formatter.token(at: nextIndex - 1), prevToken.isSpace {
+                        formatter.removeToken(at: nextIndex - 1)
                     }
                 }
             case .sameLine:
-                // Make sure there _isn't_ a newline immediately following the attributes
-                if let nextTokenIndex = formatter.index(of: .nonSpaceOrComment, after: attributeEndIndex),
-                    formatter.token(at: nextTokenIndex)?.isLinebreak != false {
+                // Make sure there isn't a newline immediately following the attribute
+                if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: endIndex),
+                    formatter.token(at: nextIndex)?.isLinebreak != false {
                     // Replace the newline with a space so the attribute doesn't
                     // merge with the next token.
-                    formatter.replaceToken(at: nextTokenIndex, with: .space(" "))
+                    formatter.replaceToken(at: nextIndex, with: .space(" "))
                 }
             }
         }

@@ -895,6 +895,7 @@ extension RulesTests {
         ("testMultilineIfBraceOnNextLine", testMultilineIfBraceOnNextLine),
         ("testMultilineIfBraceOnSameLine", testMultilineIfBraceOnSameLine),
         ("testMultilineStringWithEscapedLinebreak", testMultilineStringWithEscapedLinebreak),
+        ("testMultipleAttributesNotSeparated", testMultipleAttributesNotSeparated),
         ("testMultipleClosureArgumentUnwrapped", testMultipleClosureArgumentUnwrapped),
         ("testMultipleNestedClosures", testMultipleNestedClosures),
         ("testNamedClosureArgumentNotMadeTrailing", testNamedClosureArgumentNotMadeTrailing),

@@ -3284,15 +3284,18 @@ public struct _FormatRules {
                     // Remove Void
                     formatter.removeTokens(inRange: prevIndex + 1 ..< nextIndex)
                 }
-            } else if !formatter.options.useVoid || isArgumentToken(at: i) {
-                if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-                    [.operator(".", .prefix), .operator(".", .infix), .keyword("typealias")].contains(prevToken) {
+            } else if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
+                [.operator(".", .prefix), .operator(".", .infix), .keyword("typealias")].contains(prevToken) {
+                return
+            } else {
+                if formatter.next(.nonSpace, after: i) == .startOfScope("(") {
+                    formatter.removeToken(at: i)
                     return
                 }
-                if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .startOfScope("(") { return }
-                // Convert to parens
-                formatter.replaceToken(at: i, with: .endOfScope(")"))
-                formatter.insertToken(.startOfScope("("), at: i)
+                if !formatter.options.useVoid || isArgumentToken(at: i) {
+                    // Convert to parens
+                    formatter.replaceToken(at: i, with: [.startOfScope("("), .endOfScope(")")])
+                }
             }
         }
         guard formatter.options.useVoid else {

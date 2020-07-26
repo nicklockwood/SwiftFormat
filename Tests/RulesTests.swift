@@ -4370,8 +4370,20 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.void, exclude: ["unusedArguments"])
     }
 
-    func testVoidLiteralNotConvertedToParens() {
+    func testVoidLiteralConvertedToParens() {
         let input = "foo(Void())"
+        let output = "foo(())"
+        testFormatting(for: input, output, rule: FormatRules.void)
+    }
+
+    func testVoidLiteralConvertedToParens2() {
+        let input = "let foo = Void()"
+        let output = "let foo = ()"
+        testFormatting(for: input, output, rule: FormatRules.void)
+    }
+
+    func testNamespacedVoidLiteralNotConverted() {
+        let input = "let foo = Swift.Void()"
         testFormatting(for: input, rule: FormatRules.void)
     }
 
@@ -4412,12 +4424,6 @@ class RulesTests: XCTestCase {
         let output = "{ () -> () in }"
         let options = FormatOptions(useVoid: false)
         testFormatting(for: input, output, rule: FormatRules.void, options: options)
-    }
-
-    func testVoidLiteralNotConvertedToParensWithVoidOptionFalse() {
-        let input = "foo(Void())"
-        let options = FormatOptions(useVoid: false)
-        testFormatting(for: input, rule: FormatRules.void, options: options)
     }
 
     // MARK: - redundantParens

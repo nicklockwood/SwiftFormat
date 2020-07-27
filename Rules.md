@@ -1482,7 +1482,7 @@ Use `Void` for type declarations and `()` for values.
 
 Option | Description
 --- | ---
-`--empty` | How empty values are represented: "void" (default) or "tuple"
+`--voidtype` | How Void types are represented: "void" (default) or "tuple"
 
 <details>
 <summary>Examples</summary>

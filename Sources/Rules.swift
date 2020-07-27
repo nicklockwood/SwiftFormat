@@ -3226,7 +3226,7 @@ public struct _FormatRules {
     /// Normalize the use of void in closure arguments and return values
     public let void = FormatRule(
         help: "Use `Void` for type declarations and `()` for values.",
-        options: ["empty"]
+        options: ["voidtype"]
     ) { formatter in
         func isArgumentToken(at index: Int) -> Bool {
             guard let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) else {

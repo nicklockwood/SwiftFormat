@@ -287,6 +287,7 @@ extension FormatOptions.Descriptor {
         typeAttributes,
 
         // Deprecated
+        empty,
         indentComments,
         insertBlankLines,
         removeBlankLines,
@@ -359,13 +360,13 @@ extension FormatOptions.Descriptor {
         falseValues: ["no-space", "nospace"]
     )
     static let useVoid = FormatOptions.Descriptor(
-        argumentName: "empty",
+        argumentName: "voidtype",
         propertyName: "useVoid",
-        displayName: "Empty",
-        help: "How empty values are represented: \"void\" (default) or \"tuple\"",
+        displayName: "Void Type",
+        help: "How Void types are represented: \"void\" (default) or \"tuple\"",
         keyPath: \.useVoid,
         trueValues: ["void"],
-        falseValues: ["tuple", "tuples"]
+        falseValues: ["tuple", "tuples", "()"]
     )
     static let indentCase = FormatOptions.Descriptor(
         argumentName: "indentcase",
@@ -701,6 +702,7 @@ extension FormatOptions.Descriptor {
     // MARK: - DEPRECATED
 
     static let deprecatedMessage = [
+        empty.argumentName: "--empty option is deprecated. Use --voidtype instead.",
         indentComments.argumentName: "--comments option is deprecated. Relative indent within multiline comments is now preserved by default.",
         insertBlankLines.argumentName: "--insertlines option is deprecated. Use '--enable blankLinesBetweenScopes' or '--enable blankLinesAroundMark' or '--disable blankLinesBetweenScopes' or '--disable blankLinesAroundMark' instead.",
         removeBlankLines.argumentName: "--removelines option is deprecated. Use '--enable blankLinesAtStartOfScope' or '--enable blankLinesAtEndOfScope' or '--disable blankLinesAtStartOfScope' or '--disable blankLinesAtEndOfScope' instead.",
@@ -710,6 +712,15 @@ extension FormatOptions.Descriptor {
         spaceAroundRangeOperators.argumentName: "--ranges option is deprecated. Use --nospaceoperators instead.",
     ]
 
+    static let empty = FormatOptions.Descriptor(
+        argumentName: "empty",
+        propertyName: "empty",
+        displayName: "Empty",
+        help: "deprecated",
+        keyPath: \.useVoid,
+        trueValues: ["void"],
+        falseValues: ["tuple", "tuples"]
+    )
     static let indentComments = FormatOptions.Descriptor(
         argumentName: "comments",
         propertyName: "indentComments",

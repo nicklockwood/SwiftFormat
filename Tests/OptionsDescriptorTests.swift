@@ -205,8 +205,8 @@ class OptionsDescriptorTests: XCTestCase {
             (optionValue: false, argumentValue: "tuple"),
             (optionValue: true, argumentValue: "void"),
         ]
-        validateDescriptor(descriptor, displayName: "Empty", argumentName: "empty", propertyName: "useVoid")
-        validateArgumentsBinaryType(descriptor, controlTrue: ["void"], controlFalse: ["tuple", "tuples"])
+        validateDescriptor(descriptor, displayName: "Void Type", argumentName: "voidtype", propertyName: "useVoid")
+        validateArgumentsBinaryType(descriptor, controlTrue: ["void"], controlFalse: ["tuple", "tuples", "()"])
         validateFromOptions(descriptor, keyPath: \FormatOptions.useVoid, expectations: fromOptionsExpectation)
         validateFromArgumentsBinaryType(descriptor, keyPath: \FormatOptions.useVoid)
         validateDescriptorThrowsOptionsError(descriptor)

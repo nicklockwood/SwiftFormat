@@ -866,6 +866,7 @@ func processInput(_ inputURLs: [URL],
                 if let cacheHash = cacheHash, cacheHash == sourceHash {
                     output = input
                     if verbose {
+                        print("\(lint ? "Linting" : "Formatting") \(inputURL.path)", as: .info)
                         print("-- no changes (cached)", as: .success)
                     }
                 } else {

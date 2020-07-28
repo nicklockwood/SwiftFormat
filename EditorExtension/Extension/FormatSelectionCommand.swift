@@ -42,7 +42,7 @@ class FormatSelectionCommand: NSObject, XCSourceEditorCommand {
             return completionHandler(FormatCommandError.noSelection)
         }
 
-        // Grab the selected source to format
+        // Grab the file source to format
         let sourceToFormat = invocation.buffer.completeBuffer
         let input = tokenize(sourceToFormat)
 
@@ -54,14 +54,14 @@ class FormatSelectionCommand: NSObject, XCSourceEditorCommand {
         var formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
         formatOptions.indent = invocation.buffer.indentationString
         formatOptions.tabWidth = invocation.buffer.tabWidth
+        formatOptions.swiftVersion = store.formatOptions.swiftVersion
 
         // Apply formatting for each range
         var output = input
-        let tabWidth = invocation.buffer.tabWidth
         for selection in selections {
             let startOffset = SourceOffset(selection.start), endOffset = SourceOffset(selection.end)
-            let start = tokenIndexForOffset(startOffset, in: output, tabWidth: tabWidth)
-            let end = tokenIndexForOffset(endOffset, in: output, tabWidth: tabWidth)
+            let start = tokenIndexForOffset(startOffset, in: output, tabWidth: formatOptions.tabWidth)
+            let end = tokenIndexForOffset(endOffset, in: output, tabWidth: formatOptions.tabWidth)
             do {
                 output = try format(output, rules: rules, options: formatOptions, range: start ..< end)
             } catch {

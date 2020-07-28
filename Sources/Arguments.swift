@@ -285,22 +285,35 @@ func parseConfigFile(_ data: Data) throws -> [String: String] {
 
 // Serialize a set of options into either an arguments string or a file
 func serialize(options: Options,
+               swiftVersion: Version = .undefined,
                excludingDefaults: Bool = false,
                separator: String = "\n") -> String {
-    var optionSets = [Options]()
+    var arguments = [[String: String]]()
     if let fileOptions = options.fileOptions {
-        optionSets.append(Options(fileOptions: fileOptions))
+        arguments.append(argumentsFor(
+            Options(fileOptions: fileOptions),
+            excludingDefaults: excludingDefaults
+        ))
     }
     if let formatOptions = options.formatOptions {
-        optionSets.append(Options(formatOptions: formatOptions))
+        arguments.append(argumentsFor(
+            Options(formatOptions: formatOptions),
+            excludingDefaults: excludingDefaults
+        ))
+    } else if swiftVersion != .undefined {
+        let descriptor = FormatOptions.Descriptor.swiftVersion
+        arguments.append([descriptor.argumentName: swiftVersion.rawValue])
     }
     if let rules = options.rules {
-        optionSets.append(Options(rules: rules))
+        arguments.append(argumentsFor(
+            Options(rules: rules),
+            excludingDefaults: excludingDefaults
+        ))
     }
-    return optionSets.map {
-        let arguments = argumentsFor($0, excludingDefaults: excludingDefaults)
-        return serialize(arguments: arguments, separator: separator)
-    }.filter { !$0.isEmpty }.joined(separator: separator)
+    return arguments
+        .map { serialize(arguments: $0, separator: separator) }
+        .filter { !$0.isEmpty }
+        .joined(separator: separator)
 }
 
 // Serialize arguments

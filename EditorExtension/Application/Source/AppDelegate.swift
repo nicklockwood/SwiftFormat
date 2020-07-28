@@ -50,6 +50,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         do {
             let args = try parseConfigFile(data)
             options = try Options(args, in: url.deletingLastPathComponent().path)
+            OptionsStore().inferOptions = Set(args.keys)
+                .intersection(formattingArguments)
+                .subtracting([FormatOptions.Descriptor.swiftVersion.argumentName])
+                .isEmpty
         } catch {
             showError(error)
             return false
@@ -60,10 +64,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             Rule(name: $0, isEnabled: rules.contains($0))
         })
         if let formatOptions = options.formatOptions {
-            OptionsStore().inferOptions = false
             OptionsStore().restore(formatOptions)
-        } else {
-            OptionsStore().inferOptions = true
         }
         return true
     }
@@ -123,7 +124,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let optionsStore = OptionsStore()
             let formatOptions = optionsStore.inferOptions ? nil : optionsStore.formatOptions
             let rules = RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil }
-            let config = serialize(options: Options(formatOptions: formatOptions, rules: Set(rules))) + "\n"
+            let config = serialize(
+                options: Options(formatOptions: formatOptions, rules: Set(rules)),
+                swiftVersion: optionsStore.formatOptions.swiftVersion
+            ) + "\n"
             do {
                 try config.write(to: url, atomically: true, encoding: .utf8)
             } catch {

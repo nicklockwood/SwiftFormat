@@ -38,7 +38,7 @@ class FormatFileCommand: NSObject, XCSourceEditorCommand {
             return completionHandler(FormatCommandError.notSwiftLanguage)
         }
 
-        // Grab the selected source to format
+        // Grab the file source to format
         let sourceToFormat = invocation.buffer.completeBuffer
         let input = tokenize(sourceToFormat)
 
@@ -50,6 +50,7 @@ class FormatFileCommand: NSObject, XCSourceEditorCommand {
         var formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
         formatOptions.indent = invocation.buffer.indentationString
         formatOptions.tabWidth = invocation.buffer.tabWidth
+        formatOptions.swiftVersion = store.formatOptions.swiftVersion
 
         let output: [Token]
         do {
@@ -63,7 +64,7 @@ class FormatFileCommand: NSObject, XCSourceEditorCommand {
         }
 
         // Remove all selections to avoid a crash when changing the contents of the buffer.
-        let selections = invocation.buffer.selections.copy() as! [XCSourceTextRange]
+        let selections = invocation.buffer.selections.copy() as? [XCSourceTextRange] ?? []
         invocation.buffer.selections.removeAllObjects()
 
         // Update buffer

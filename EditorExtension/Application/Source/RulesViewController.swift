@@ -54,10 +54,14 @@ final class RulesViewController: NSViewController {
 
     @IBOutlet var tableView: NSTableView!
     @IBOutlet var inferOptionsButton: NSButton!
+    @IBOutlet var swiftVersionDropDown: NSPopUpButton!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         inferOptionsButton.state = optionStore.inferOptions ? .on : .off
+        swiftVersionDropDown.removeAllItems()
+        swiftVersionDropDown.addItems(withTitles: ["auto"] + swiftVersions)
+        updateSelectedVersion()
         viewModels = buildRules()
         NotificationCenter.default.addObserver(self, selector: #selector(didLoadNewConfiguration),
                                                name: .applicationDidLoadNewConfiguration, object: nil)
@@ -67,12 +71,31 @@ final class RulesViewController: NSViewController {
         viewModels = buildRules()
         tableView?.reloadData()
         inferOptionsButton?.state = (optionStore.inferOptions ? .on : .off)
+        updateSelectedVersion()
     }
 
     @IBAction private func toggleInferOptions(_ sender: NSButton) {
         optionStore.inferOptions = (sender.state == .on)
         viewModels = buildRules()
         tableView?.reloadData()
+    }
+
+    @IBAction func selectVersion(_ sender: NSPopUpButton) {
+        var formatOptions = optionStore.formatOptions
+        let version = Version(rawValue: sender.selectedItem?.title ?? "0") ?? .undefined
+        formatOptions.swiftVersion = version
+        optionStore.save(formatOptions)
+    }
+
+    private func updateSelectedVersion() {
+        let currentVersion = optionStore.formatOptions.swiftVersion
+        var selectedIndex = 0
+        for (i, versionString) in (["0"] + swiftVersions).enumerated() {
+            if currentVersion >= Version(rawValue: versionString) ?? .undefined {
+                selectedIndex = i
+            }
+        }
+        swiftVersionDropDown.selectItem(at: selectedIndex)
     }
 
     private func buildRules() -> [UserSelectionType] {

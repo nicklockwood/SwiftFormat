@@ -29,6 +29,7 @@ class LintFileCommand: NSObject, XCSourceEditorCommand {
         var formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
         formatOptions.indent = invocation.buffer.indentationString
         formatOptions.tabWidth = invocation.buffer.tabWidth
+        formatOptions.swiftVersion = store.formatOptions.swiftVersion
 
         // Apply linting
         do {

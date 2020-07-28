@@ -208,7 +208,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testCommandLineArgumentsAreCorrect() {
-        let output = ["allman": "false", "wraparguments": "preserve", "wrapparameters": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "voidtype": "void", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": "", "xcodeindentation": "disabled", "fragment": "false", "conflictmarkers": "reject", "tabwidth": "unspecified", "maxwidth": "none", "nospaceoperators": "", "nowrapoperators": "", "specifierorder": "", "minversion": "0", "shortoptionals": "always", "funcattributes": "preserve", "typeattributes": "preserve"]
+        let output = ["allman": "false", "wraparguments": "preserve", "wrapparameters": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "voidtype": "void", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": "", "xcodeindentation": "disabled", "fragment": "false", "conflictmarkers": "reject", "tabwidth": "unspecified", "maxwidth": "none", "nospaceoperators": "", "nowrapoperators": "", "modifierorder": "", "minversion": "0", "shortoptionals": "always", "funcattributes": "preserve", "typeattributes": "preserve"]
         XCTAssertEqual(argumentsFor(.default), output)
     }
 
@@ -588,9 +588,14 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(options.formatOptions?.noWrapOperators, [".", ":", "*"])
     }
 
+    func testParseModifierOrderOption() throws {
+        let options = try Options(["modifierorder": "private(set),public"], in: "")
+        XCTAssertEqual(options.formatOptions?.modifierOrder, ["private(set)", "public"])
+    }
+
     func testParseSpecifierOrderOption() throws {
         let options = try Options(["specifierorder": "private(set),public"], in: "")
-        XCTAssertEqual(options.formatOptions?.specifierOrder, ["private(set)", "public"])
+        XCTAssertEqual(options.formatOptions?.modifierOrder, ["private(set)", "public"])
     }
 
     func testParseSwiftVersionOption() throws {

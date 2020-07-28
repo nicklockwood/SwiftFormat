@@ -778,7 +778,7 @@ private struct Examples {
     ```
     """
 
-    let specifiers = """
+    let modifierOrder = """
     ```diff
     - lazy public weak private(set) var foo: UIView?
     + public private(set) lazy weak var foo: UIView?

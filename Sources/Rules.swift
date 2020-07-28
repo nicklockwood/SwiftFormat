@@ -76,6 +76,7 @@ public final class FormatRule: Equatable, Comparable {
 
     static let deprecatedMessage = [
         "ranges": "ranges rule is deprecated. Use spaceAroundOperators instead.",
+        "specifiers": "specifiers rule is deprecated. Use modifierOrder instead.",
     ]
 }
 
@@ -617,7 +618,7 @@ public struct _FormatRules {
         }
     }
 
-    /// Adds or removes the space around range operators
+    /// Deprecated
     public let ranges = FormatRule(
         help: "Add or remove space around range operators.",
         options: ["ranges"],
@@ -1653,10 +1654,19 @@ public struct _FormatRules {
         }
     }
 
-    /// Standardise the order of property specifiers
+    /// Deprecated
     public let specifiers = FormatRule(
-        help: "Use consistent ordering for member specifiers.",
-        options: ["specifierorder"]
+        help: "Use consistent ordering for member modifiers.",
+        options: ["modifierorder"]
+    ) { formatter in
+        _ = formatter.options.modifierOrder
+        FormatRules.modifierOrder.apply(with: formatter)
+    }
+
+    /// Standardise the order of property modifiers
+    public let modifierOrder = FormatRule(
+        help: "Use consistent ordering for member modifiers.",
+        options: ["modifierorder"]
     ) { formatter in
         formatter.forEach(.keyword) { i, token in
             switch token.string {
@@ -1666,51 +1676,51 @@ public struct _FormatRules {
             default:
                 return
             }
-            var specifiers = [String: [Token]]()
-            var lastSpecifier: (String, [Token])?
+            var modifiers = [String: [Token]]()
+            var lastModifier: (String, [Token])?
             var lastIndex = i
             var previousIndex = lastIndex
             loop: while let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: lastIndex) {
                 switch formatter.tokens[index] {
                 case .operator(_, .prefix), .operator(_, .infix), .keyword("case"):
-                    // Last specifier was invalid
-                    lastSpecifier = nil
+                    // Last modifier was invalid
+                    lastModifier = nil
                     lastIndex = previousIndex
                     break loop
                 case let .keyword(string), let .identifier(string):
-                    if !allSpecifiers.contains(string) {
+                    if !allModifiers.contains(string) {
                         break loop
                     }
-                    lastSpecifier.map { specifiers[$0.0] = $0.1 }
-                    lastSpecifier = (string, [Token](formatter.tokens[index ..< lastIndex]))
+                    lastModifier.map { modifiers[$0.0] = $0.1 }
+                    lastModifier = (string, [Token](formatter.tokens[index ..< lastIndex]))
                     previousIndex = lastIndex
                     lastIndex = index
                 case .endOfScope(")"):
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("set"),
                         let openParenIndex = formatter.index(of: .startOfScope("("), before: index),
                         let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: openParenIndex),
-                        case let .keyword(string)? = formatter.token(at: index), aclSpecifiers.contains(string) {
-                        lastSpecifier.map { specifiers[$0.0] = $0.1 }
-                        lastSpecifier = (string + "(set)", [Token](formatter.tokens[index ..< lastIndex]))
+                        case let .keyword(string)? = formatter.token(at: index), aclModifiers.contains(string) {
+                        lastModifier.map { modifiers[$0.0] = $0.1 }
+                        lastModifier = (string + "(set)", [Token](formatter.tokens[index ..< lastIndex]))
                         previousIndex = lastIndex
                         lastIndex = index
                     } else {
                         break loop
                     }
                 default:
-                    // Not a specifier
+                    // Not a modifier
                     break loop
                 }
             }
-            lastSpecifier.map { specifiers[$0.0] = $0.1 }
-            guard !specifiers.isEmpty else { return }
-            var sortedSpecifiers = [Token]()
-            for specifier in formatter.specifierOrder {
-                if let tokens = specifiers[specifier] {
-                    sortedSpecifiers += tokens
+            lastModifier.map { modifiers[$0.0] = $0.1 }
+            guard !modifiers.isEmpty else { return }
+            var sortedModifiers = [Token]()
+            for modifier in formatter.modifierOrder {
+                if let tokens = modifiers[modifier] {
+                    sortedModifiers += tokens
                 }
             }
-            formatter.replaceTokens(inRange: lastIndex ..< i, with: sortedSpecifiers)
+            formatter.replaceTokens(inRange: lastIndex ..< i, with: sortedModifiers)
         }
     }
 
@@ -1975,9 +1985,9 @@ public struct _FormatRules {
             }
         }
 
-        // Check specifiers don't include `lazy`
+        // Check modifiers don't include `lazy`
         formatter.forEach(.keyword("var")) { i, _ in
-            if formatter.specifiersForType(at: i, contains: {
+            if formatter.modifiersForType(at: i, contains: {
                 let string = $1.string
                 return string == "lazy" || (string != "@objc" && string.hasPrefix("@"))
             }) {
@@ -3601,7 +3611,7 @@ public struct _FormatRules {
 
     /// Strip unnecessary `weak` from @IBOutlet properties (except delegates and datasources)
     public let strongOutlets = FormatRule(
-        help: "Remove `weak` specifier from `@IBOutlet` properties."
+        help: "Remove `weak` modifier from `@IBOutlet` properties."
     ) { formatter in
         formatter.forEach(.keyword("@IBOutlet")) { i, _ in
             guard let varIndex = formatter.index(of: .keyword("var"), after: i),
@@ -3889,7 +3899,7 @@ public struct _FormatRules {
                         nextIndex = endIndex
                     }
                 case let .keyword(name), let .identifier(name):
-                    if !allSpecifiers.contains(name) {
+                    if !allModifiers.contains(name) {
                         break loop
                     }
                 default:
@@ -3919,11 +3929,11 @@ public struct _FormatRules {
             }
             switch formatter.tokens[keywordIndex] {
             case .keyword("class"):
-                if formatter.specifiersForType(at: keywordIndex, contains: "@objcMembers") {
+                if formatter.modifiersForType(at: keywordIndex, contains: "@objcMembers") {
                     removeAttribute()
                 }
             case .keyword("extension"):
-                if formatter.specifiersForType(at: keywordIndex, contains: "@objc") {
+                if formatter.modifiersForType(at: keywordIndex, contains: "@objc") {
                     removeAttribute()
                 }
             default:
@@ -4013,13 +4023,13 @@ public struct _FormatRules {
 
     /// Remove redundant access control level modifiers in extensions
     public let redundantExtensionACL = FormatRule(
-        help: "Remove redundant access control specifiers."
+        help: "Remove redundant access control modifiers."
     ) { formatter in
         formatter.forEach(.keyword("extension")) { i, _ in
             var acl = ""
-            guard formatter.specifiersForType(at: i, contains: {
+            guard formatter.modifiersForType(at: i, contains: {
                 acl = $1.string
-                return aclSpecifiers.contains(acl)
+                return aclModifiers.contains(acl)
             }), let startIndex = formatter.index(of: .startOfScope("{"), after: i),
                 var endIndex = formatter.index(of: .endOfScope("}"), after: startIndex) else {
                 return
@@ -4107,7 +4117,7 @@ public struct _FormatRules {
         func isInitOverridden(for type: String, in range: CountableRange<Int>) -> Bool {
             for i in range {
                 guard case .keyword("init") = formatter.tokens[i],
-                    formatter.specifiersForType(at: i, contains: "override"),
+                    formatter.modifiersForType(at: i, contains: "override"),
                     let scopeIndex = formatter.index(of: .startOfScope("{"), before: i),
                     let colonIndex = formatter.index(of: .delimiter(":"), before: scopeIndex),
                     formatter.next(.nonSpaceOrCommentOrLinebreak, in: colonIndex + 1 ..< scopeIndex)
@@ -4159,7 +4169,7 @@ public struct _FormatRules {
                 return
             }
             // Check for code outside of main type definition
-            let startIndex = formatter.startOfSpecifiers(at: typeIndex)
+            let startIndex = formatter.startOfModifiers(at: typeIndex)
             if fileJustContainsOneType == nil {
                 fileJustContainsOneType = !ifCodeInRange(0 ..< startIndex) &&
                     !ifCodeInRange(endIndex + 1 ..< formatter.tokens.count)

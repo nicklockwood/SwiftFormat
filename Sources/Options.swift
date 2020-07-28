@@ -287,7 +287,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var maxWidth: Int
     public var noSpaceOperators: Set<String>
     public var noWrapOperators: Set<String>
-    public var specifierOrder: [String]
+    public var modifierOrder: [String]
     public var shortOptionals: OptionalsMode
     public var funcAttributes: AttributeMode
     public var typeAttributes: AttributeMode
@@ -344,7 +344,7 @@ public struct FormatOptions: CustomStringConvertible {
                 maxWidth: Int = 0,
                 noSpaceOperators: Set<String> = [],
                 noWrapOperators: Set<String> = [],
-                specifierOrder: [String] = [],
+                modifierOrder: [String] = [],
                 shortOptionals: OptionalsMode = .always,
                 funcAttributes: AttributeMode = .preserve,
                 typeAttributes: AttributeMode = .preserve,
@@ -393,7 +393,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.maxWidth = maxWidth
         self.noSpaceOperators = noSpaceOperators
         self.noWrapOperators = noWrapOperators
-        self.specifierOrder = specifierOrder
+        self.modifierOrder = modifierOrder
         self.shortOptionals = shortOptionals
         self.funcAttributes = funcAttributes
         self.typeAttributes = typeAttributes

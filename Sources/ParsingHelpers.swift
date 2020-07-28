@@ -98,8 +98,8 @@ extension Formatter {
         }
     }
 
-    func specifiersForType(at index: Int, contains: (Int, Token) -> Bool) -> Bool {
-        let allSpecifiers = _FormatRules.allSpecifiers
+    func modifiersForType(at index: Int, contains: (Int, Token) -> Bool) -> Bool {
+        let allModifiers = _FormatRules.allModifiers
         var index = index
         while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
             switch tokens[prevIndex] {
@@ -108,13 +108,13 @@ extension Formatter {
             case .endOfScope(")"):
                 guard let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
                     last(.nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
-                        $0.isAttribute || _FormatRules.aclSpecifiers.contains($0.string)
+                        $0.isAttribute || _FormatRules.aclModifiers.contains($0.string)
                     }) != nil else {
                     return false
                 }
                 prevIndex = startIndex
             case let .keyword(name), let .identifier(name):
-                if !allSpecifiers.contains(name), !name.hasPrefix("@") {
+                if !allModifiers.contains(name), !name.hasPrefix("@") {
                     return false
                 }
             default:
@@ -125,21 +125,21 @@ extension Formatter {
         return false
     }
 
-    func specifiersForType(at index: Int, contains: String) -> Bool {
-        return specifiersForType(at: index, contains: { $1.string == contains })
+    func modifiersForType(at index: Int, contains: String) -> Bool {
+        return modifiersForType(at: index, contains: { $1.string == contains })
     }
 
-    // first index of specifier list
-    func startOfSpecifiers(at index: Int) -> Int {
+    // first index of modifier list
+    func startOfModifiers(at index: Int) -> Int {
         var startIndex = index
-        _ = specifiersForType(at: index, contains: { i, _ in
+        _ = modifiersForType(at: index, contains: { i, _ in
             startIndex = i
             return false
         })
         return startIndex
     }
 
-    // get type of declaratiob starting at index of declaration keyword
+    // get type of declaration starting at index of declaration keyword
     func declarationType(at index: Int) -> String? {
         guard case let .keyword(keyword)? = token(at: index) else {
             return nil
@@ -1184,17 +1184,17 @@ extension Formatter {
         removeToken(at: index)
     }
 
-    // Swift specifier keywords, in preferred order
-    var specifierOrder: [String] {
+    // Swift modifier keywords, in preferred order
+    var modifierOrder: [String] {
         var priorities = [String: Int]()
-        for (i, specifiers) in _FormatRules.defaultSpecifierOrder.enumerated() {
-            for specifier in specifiers {
-                priorities[specifier] = i
+        for (i, modifiers) in _FormatRules.defaultModifierOrder.enumerated() {
+            for modifier in modifiers {
+                priorities[modifier] = i
             }
         }
-        var order = options.specifierOrder
-        for (i, specifiers) in _FormatRules.defaultSpecifierOrder.enumerated() {
-            for specifier in specifiers where !order.contains(specifier) {
+        var order = options.modifierOrder
+        for (i, modifiers) in _FormatRules.defaultModifierOrder.enumerated() {
+            for modifier in modifiers where !order.contains(modifier) {
                 var insertionPoint = order.count
                 for (index, s) in order.enumerated() {
                     if let j = priorities[s] {
@@ -1205,7 +1205,7 @@ extension Formatter {
                         }
                     }
                 }
-                order.insert(specifier, at: insertionPoint)
+                order.insert(modifier, at: insertionPoint)
             }
         }
         return order
@@ -1338,14 +1338,14 @@ extension _FormatRules {
         yearFormatter(Date())
     }()
 
-    // All specifiers
-    static let allSpecifiers = Set(defaultSpecifierOrder.flatMap { $0 })
+    // All modifiers
+    static let allModifiers = Set(defaultModifierOrder.flatMap { $0 })
 
-    // ACL specifiers
-    static let aclSpecifiers = ["private", "fileprivate", "internal", "public"]
+    // ACL modifiers
+    static let aclModifiers = ["private", "fileprivate", "internal", "public"]
 
-    // Swift specifier keywords, in default order
-    static let defaultSpecifierOrder = [
+    // Swift modifier keywords, in default order
+    static let defaultModifierOrder = [
         ["override"],
         ["private", "fileprivate", "internal", "public", "open"],
         ["private(set)", "fileprivate(set)", "internal(set)", "public(set)"],

@@ -1510,9 +1510,9 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
-    // indent specifiers
+    // indent modifiers
 
-    func testNoIndentWrappedSpecifiersForProtocol() {
+    func testNoIndentWrappedModifiersForProtocol() {
         let input = "@objc\nprivate\nprotocol Foo {}"
         testFormatting(for: input, rule: FormatRules.indent)
     }
@@ -4213,64 +4213,64 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.ranges, options: options)
     }
 
-    // MARK: - specifiers
+    // MARK: - modifierOrder
 
-    func testVarSpecifiersCorrected() {
+    func testVarModifiersCorrected() {
         let input = "unowned private static var foo"
         let output = "private unowned static var foo"
-        testFormatting(for: input, output, rule: FormatRules.specifiers)
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder)
     }
 
-    func testPrivateSetSpecifierNotMangled() {
+    func testPrivateSetModifierNotMangled() {
         let input = "private(set) public weak lazy var foo"
         let output = "public private(set) lazy weak var foo"
-        testFormatting(for: input, output, rule: FormatRules.specifiers)
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder)
     }
 
-    func testPrivateRequiredStaticFuncSpecifiers() {
+    func testPrivateRequiredStaticFuncModifiers() {
         let input = "required static private func foo()"
         let output = "private required static func foo()"
         let options = FormatOptions(fragment: true)
-        testFormatting(for: input, output, rule: FormatRules.specifiers, options: options)
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder, options: options)
     }
 
     func testPrivateConvenienceInit() {
         let input = "convenience private init()"
         let output = "private convenience init()"
-        testFormatting(for: input, output, rule: FormatRules.specifiers)
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder)
     }
 
-    func testSpaceInSpecifiersLeftIntact() {
+    func testSpaceInModifiersLeftIntact() {
         let input = "weak private(set) /* read-only */\npublic var"
         let output = "public private(set) /* read-only */\nweak var"
-        testFormatting(for: input, output, rule: FormatRules.specifiers)
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder)
     }
 
-    func testPrefixSpecifier() {
+    func testPrefixModifier() {
         let input = "prefix public static func - (rhs: Foo) -> Foo"
         let output = "public static prefix func - (rhs: Foo) -> Foo"
         let options = FormatOptions(fragment: true)
-        testFormatting(for: input, output, rule: FormatRules.specifiers, options: options)
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder, options: options)
     }
 
-    func testSpecifierOrder() {
+    func testModifierOrder() {
         let input = "override public var foo: Int { 5 }"
         let output = "public override var foo: Int { 5 }"
-        let options = FormatOptions(specifierOrder: ["public", "override"])
-        testFormatting(for: input, output, rule: FormatRules.specifiers, options: options)
+        let options = FormatOptions(modifierOrder: ["public", "override"])
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder, options: options)
     }
 
     func testNoConfusePostfixIdentifierWithKeyword() {
         let input = "var foo = .postfix\noverride init() {}"
-        testFormatting(for: input, rule: FormatRules.specifiers)
+        testFormatting(for: input, rule: FormatRules.modifierOrder)
     }
 
     func testNoConfusePostfixIdentifierWithKeyword2() {
         let input = "var foo = postfix\noverride init() {}"
-        testFormatting(for: input, rule: FormatRules.specifiers)
+        testFormatting(for: input, rule: FormatRules.modifierOrder)
     }
 
-    func testNoConfuseCaseWithSpecifier() {
+    func testNoConfuseCaseWithModifier() {
         let input = """
         enum Foo {
             case strong
@@ -4278,7 +4278,7 @@ class RulesTests: XCTestCase {
             public init() {}
         }
         """
-        testFormatting(for: input, rule: FormatRules.specifiers)
+        testFormatting(for: input, rule: FormatRules.modifierOrder)
     }
 
     // MARK: - void
@@ -5391,7 +5391,8 @@ class RulesTests: XCTestCase {
 
     func testNoRemoveLazyPublicPrivateSetVarNilInit() {
         let input = "lazy private(set) public var foo: Int? = nil"
-        testFormatting(for: input, rule: FormatRules.redundantNilInit, exclude: ["specifiers"])
+        testFormatting(for: input, rule: FormatRules.redundantNilInit,
+                       exclude: ["modifierOrder", "specifiers"])
     }
 
     func testNoRemoveCodableNilInit() {
@@ -6341,10 +6342,11 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
-    func testRemoveSelfInClassFunctionWithSpecifiers() {
+    func testRemoveSelfInClassFunctionWithModifiers() {
         let input = "class Foo {\n    class private func foo() {\n        func bar() { self.foo() }\n    }\n}"
         let output = "class Foo {\n    class private func foo() {\n        func bar() { foo() }\n    }\n}"
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf, exclude: ["specifiers"])
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf,
+                       exclude: ["modifierOrder", "specifiers"])
     }
 
     func testNoRemoveSelfInClassFunction() {
@@ -6412,7 +6414,7 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
-    func testNoMistakeProtocolClassSpecifierForClassFunction() {
+    func testNoMistakeProtocolClassModifierForClassFunction() {
         let input = "protocol Foo: class {}\nfunc bar() {}"
         XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf]))
         XCTAssertNoThrow(try format(input, rules: FormatRules.all))

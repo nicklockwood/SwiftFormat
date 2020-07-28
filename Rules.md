@@ -19,6 +19,7 @@
 * [leadingDelimiters](#leadingDelimiters)
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
+* [modifierOrder](#modifierOrder)
 * [numberFormatting](#numberFormatting)
 * [ranges *(deprecated)*](#ranges)
 * [redundantBackticks](#redundantBackticks)
@@ -50,7 +51,7 @@
 * [spaceInsideComments](#spaceInsideComments)
 * [spaceInsideGenerics](#spaceInsideGenerics)
 * [spaceInsideParens](#spaceInsideParens)
-* [specifiers](#specifiers)
+* [specifiers *(deprecated)*](#specifiers)
 * [strongOutlets](#strongOutlets)
 * [strongifiedSelf](#strongifiedSelf)
 * [todos](#todos)
@@ -577,6 +578,35 @@ Option | Description
 --- | ---
 `--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
+## modifierOrder
+
+Use consistent ordering for member modifiers.
+
+Option | Description
+--- | ---
+`--modifierorder` | Comma-delimited list of modifiers in preferred order
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- lazy public weak private(set) var foo: UIView?
++ public private(set) lazy weak var foo: UIView?
+```
+
+```diff
+- final public override func foo()
++ override public final func foo()
+```
+
+```diff
+- convenience private init()
++ private convenience init()
+```
+
+</details>
+<br/>
+
 ## numberFormatting
 
 Use consistent grouping for numeric literals.
@@ -657,7 +687,7 @@ Remove redundant `break` in switch case.
 
 ## redundantExtensionACL
 
-Remove redundant access control specifiers.
+Remove redundant access control modifiers.
 
 <details>
 <summary>Examples</summary>
@@ -1259,36 +1289,13 @@ Remove space inside parentheses.
 
 ## specifiers
 
-Use consistent ordering for member specifiers.
+Use consistent ordering for member modifiers.
 
-Option | Description
---- | ---
-`--specifierorder` | Comma-delimited list of specifiers in preferred order
-
-<details>
-<summary>Examples</summary>
-
-```diff
-- lazy public weak private(set) var foo: UIView?
-+ public private(set) lazy weak var foo: UIView?
-```
-
-```diff
-- final public override func foo()
-+ override public final func foo()
-```
-
-```diff
-- convenience private init()
-+ private convenience init()
-```
-
-</details>
-<br/>
+*Note: specifiers rule is deprecated. Use modifierOrder instead.*
 
 ## strongOutlets
 
-Remove `weak` specifier from `@IBOutlet` properties.
+Remove `weak` modifier from `@IBOutlet` properties.
 
 <details>
 <summary>Examples</summary>

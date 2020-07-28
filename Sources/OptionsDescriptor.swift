@@ -279,9 +279,9 @@ extension FormatOptions.Descriptor {
         xcodeIndentation,
         tabWidth,
         maxWidth,
+        modifierOrder,
         noSpaceOperators,
         noWrapOperators,
-        specifierOrder,
         shortOptionals,
         funcAttributes,
         typeAttributes,
@@ -292,6 +292,7 @@ extension FormatOptions.Descriptor {
         insertBlankLines,
         removeBlankLines,
         spaceAroundRangeOperators,
+        specifierOrder,
 
         // Renamed
         // NOTE: these must go after the non-deprecated versions
@@ -636,15 +637,15 @@ extension FormatOptions.Descriptor {
             }
         }
     )
-    static let specifierOrder = FormatOptions.Descriptor(
-        argumentName: "specifierorder",
-        propertyName: "specifierOrder",
-        displayName: "Specifier Order",
-        help: "Comma-delimited list of specifiers in preferred order",
-        keyPath: \FormatOptions.specifierOrder,
+    static let modifierOrder = FormatOptions.Descriptor(
+        argumentName: "modifierorder",
+        propertyName: "modifierOrder",
+        displayName: "Modifier Order",
+        help: "Comma-delimited list of modifiers in preferred order",
+        keyPath: \FormatOptions.modifierOrder,
         validate: {
-            guard _FormatRules.allSpecifiers.contains($0) else {
-                throw FormatError.options("'\($0)' is not a valid specifier")
+            guard _FormatRules.allModifiers.contains($0) else {
+                throw FormatError.options("'\($0)' is not a valid modifier")
             }
         }
     )
@@ -710,6 +711,7 @@ extension FormatOptions.Descriptor {
         wrapElements.argumentName: "--wrapelements option is deprecated. Use --wrapcollections instead.",
         experimentalRules.argumentName: "--experimentalRules option is deprecated. Use --enable to opt-in to rules individually.",
         spaceAroundRangeOperators.argumentName: "--ranges option is deprecated. Use --nospaceoperators instead.",
+        specifierOrder.argumentName: "--specifierorder option is deprecated. Use --modifierorder instead.",
     ]
 
     static let empty = FormatOptions.Descriptor(
@@ -782,5 +784,17 @@ extension FormatOptions.Descriptor {
         keyPath: \.spaceAroundRangeOperators,
         trueValues: ["spaced", "space", "spaces"],
         falseValues: ["no-space", "nospace"]
+    )
+    static let specifierOrder = FormatOptions.Descriptor(
+        argumentName: "specifierorder",
+        propertyName: "modifierOrder",
+        displayName: "Specifier Order",
+        help: "deprecated",
+        keyPath: \FormatOptions.modifierOrder,
+        validate: {
+            guard _FormatRules.allModifiers.contains($0) else {
+                throw FormatError.options("'\($0)' is not a valid specifier")
+            }
+        }
     )
 }

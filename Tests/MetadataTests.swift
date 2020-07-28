@@ -107,7 +107,7 @@ class MetadataTests: XCTestCase {
                 let rule = FormatRules.byName[name] else {
                 return
             }
-            for option in rule.options {
+            for option in rule.options where !rule.isDeprecated {
                 if let oldName = rulesByOption[option] {
                     XCTFail("\(option) set as (non-shared) option for both \(name) and \(oldName)")
                 }
@@ -139,8 +139,8 @@ class MetadataTests: XCTestCase {
                     ]
                 case .identifier("indexWhereLineShouldWrapInLine"):
                     referencedOptions.append(.noWrapOperators)
-                case .identifier("specifierOrder"):
-                    referencedOptions.append(.specifierOrder)
+                case .identifier("modifierOrder"):
+                    referencedOptions.append(.modifierOrder)
                 case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
                     if case let .identifier(property)? = formatter.token(at: index + 2),
                         let option = optionsByProperty[property] {

@@ -814,7 +814,7 @@ func processInput(_ inputURLs: [URL],
         }
         let formatOptions = options.formatOptions ?? .default
         if formatOptions.swiftVersion == .undefined {
-            print("warning: No Swift version was specified, so some formatting features were disabled. Specify the version of Swift you are using with the --swiftversion command line option, or by adding a \(swiftVersionFile) file to your project.", as: .warning)
+            print("warning: No Swift version was specified, so some formatting features were disabled. Specify the version of Swift you are using with the --swiftversion option, or by adding a \(swiftVersionFile) file to your project.", as: .warning)
         }
         if formatOptions.useTabs, formatOptions.tabWidth <= 0 {
             print("warning: The --indent option is set to tabs, but no --tabwidth was specified.", as: .warning)

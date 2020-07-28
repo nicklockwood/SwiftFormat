@@ -309,6 +309,14 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(options.formatOptions?.fileHeader, .ignore)
     }
 
+    func testParseArgumentsContainingSwiftVersion() throws {
+        let config = "--swiftversion 5.1"
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        XCTAssertEqual(args.count, 1)
+        XCTAssertEqual(args["swiftversion"], "5.1")
+    }
+
     // MARK: config file serialization
 
     // file header comment encoding
@@ -382,6 +390,15 @@ class ArgumentsTests: XCTestCase {
         XCTAssertTrue(config.contains("--disable"))
         XCTAssertFalse(config.contains("--enable"))
         XCTAssertNotEqual(config.last, "\n")
+    }
+
+    // swift version
+
+    func testSerializeSwiftVersion() throws {
+        let version = Version(rawValue: "5.2") ?? "0"
+        let options = Options(formatOptions: FormatOptions(swiftVersion: version))
+        let config = serialize(options: options, excludingDefaults: true)
+        XCTAssertEqual(config, "--swiftversion 5.2")
     }
 
     // MARK: config file merging
@@ -574,6 +591,11 @@ class ArgumentsTests: XCTestCase {
     func testParseSpecifierOrderOption() throws {
         let options = try Options(["specifierorder": "private(set),public"], in: "")
         XCTAssertEqual(options.formatOptions?.specifierOrder, ["private(set)", "public"])
+    }
+
+    func testParseSwiftVersionOption() throws {
+        let options = try Options(["swiftversion": "4.2"], in: "")
+        XCTAssertEqual(options.formatOptions?.swiftVersion, "4.2")
     }
 
     // MARK: parse rules

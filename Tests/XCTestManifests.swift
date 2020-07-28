@@ -44,6 +44,7 @@ extension ArgumentsTests {
         ("testParseArgumentsContainingEscapedCharacters", testParseArgumentsContainingEscapedCharacters),
         ("testParseArgumentsContainingQuotedCharacters", testParseArgumentsContainingQuotedCharacters),
         ("testParseArgumentsContainingSpaces", testParseArgumentsContainingSpaces),
+        ("testParseArgumentsContainingSwiftVersion", testParseArgumentsContainingSwiftVersion),
         ("testParseDeprecatedOption", testParseDeprecatedOption),
         ("testParseEmptyOptions", testParseEmptyOptions),
         ("testParseEscapedN", testParseEscapedN),
@@ -61,6 +62,7 @@ extension ArgumentsTests {
         ("testParseRulesCaseInsensitive", testParseRulesCaseInsensitive),
         ("testParseSimpleArguments", testParseSimpleArguments),
         ("testParseSpecifierOrderOption", testParseSpecifierOrderOption),
+        ("testParseSwiftVersionOption", testParseSwiftVersionOption),
         ("testParseUnexcludedURLsFileOption", testParseUnexcludedURLsFileOption),
         ("testParseUppercaseIgnoreFileHeader", testParseUppercaseIgnoreFileHeader),
         ("testPreprocessArguments", testPreprocessArguments),
@@ -76,6 +78,7 @@ extension ArgumentsTests {
         ("testSerializeOptionsEnabledAllRulesEnabledNoTerminatingSeparator", testSerializeOptionsEnabledAllRulesEnabledNoTerminatingSeparator),
         ("testSerializeOptionsEnabledDefaultRulesEnabledNoTerminatingSeparator", testSerializeOptionsEnabledDefaultRulesEnabledNoTerminatingSeparator),
         ("testSerializeOptionsEnabledSomeRulesDisabledNoTerminatingSeparator", testSerializeOptionsEnabledSomeRulesDisabledNoTerminatingSeparator),
+        ("testSerializeSwiftVersion", testSerializeSwiftVersion),
     ]
 }
 

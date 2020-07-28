@@ -50,4 +50,11 @@ class VersionTests: XCTestCase {
         XCTAssertLessThan(version ?? "0", "4.0")
         XCTAssertGreaterThan(version ?? "0", "2.0")
     }
+
+    func testWildcardVersion() throws {
+        let version = Version(rawValue: "3.x")
+        XCTAssertNotNil(version)
+        XCTAssertLessThan(version ?? "0", "4.0")
+        XCTAssertGreaterThan(version ?? "0", "2.0")
+    }
 }

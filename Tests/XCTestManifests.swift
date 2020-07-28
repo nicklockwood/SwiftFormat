@@ -2173,6 +2173,7 @@ extension VersionTests {
         ("testParsePreviewVersion", testParsePreviewVersion),
         ("testParseThreePartVersion", testParseThreePartVersion),
         ("testPreviewComparison", testPreviewComparison),
+        ("testWildcardVersion", testWildcardVersion),
     ]
 }
 

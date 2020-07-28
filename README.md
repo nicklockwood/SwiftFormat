@@ -261,7 +261,7 @@ You can also use `swift run -c release --package-path BuildTools swiftformat "$S
 
 ### Using Cocoapods
 
-#### 1) Add the SwitfFormat CLI to your Podfile
+#### 1) Add the SwiftFormat CLI to your Podfile
 
 1. Add the `swiftformat` binary to your project directory via [CocoaPods](https://cocoapods.org/), by adding the following line to your Podfile then running `pod install`:
 
@@ -281,7 +281,7 @@ You can also use `swift run -c release --package-path BuildTools swiftformat "$S
     "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat" "$SRCROOT"
     ```
 
-### Alternative: Locally installed swiftformat
+### Alternative: Locally installed SwiftFormat
 
 Alternatively, you could use a locally installed swiftformat command-line tool instead by putting the following in your Run Script build phase:
 

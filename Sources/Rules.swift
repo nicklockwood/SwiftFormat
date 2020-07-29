@@ -1418,9 +1418,6 @@ public struct _FormatRules {
                     formatter.removeToken(at: closingBraceIndex - 1)
                 }
             }
-            guard !formatter.isStartOfClosure(at: i) else {
-                return
-            }
             if formatter.options.allmanBraces {
                 // Implement Allman-style braces, where opening brace appears on the next line
                 switch formatter.last(.nonSpace, before: i) ?? .space("") {

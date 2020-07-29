@@ -2420,7 +2420,8 @@ class RulesTests: XCTestCase {
         """
 
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["braces"])
     }
 
     func testSingleIndentTrailingClosureBodyOfShortMethod() {
@@ -2514,7 +2515,8 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options,
+                       exclude: ["braces"])
     }
 
     func testWrappedMultilineStringOnNewLineWithXcodeIndentation() {
@@ -3412,31 +3414,6 @@ class RulesTests: XCTestCase {
     func testKnRInlineBracesNotWrapped() {
         let input = "func foo() { print(bar) }"
         testFormatting(for: input, rule: FormatRules.braces)
-    }
-
-    func testKnRBracesIgnoresClosure() {
-        let input = """
-        let foo =
-            { bar in
-                print(bar)
-            }
-        """
-        testFormatting(for: input, rule: FormatRules.braces)
-    }
-
-    func testUnbalancedClosingClosureBraceCorrected() {
-        let input = """
-        let foo =
-            { bar in
-                print(bar) }
-        """
-        let output = """
-        let foo =
-            { bar in
-                print(bar)
-            }
-        """
-        testFormatting(for: input, output, rule: FormatRules.braces)
     }
 
     func testAllmanComputedPropertyBracesConverted() {
@@ -8105,7 +8082,7 @@ class RulesTests: XCTestCase {
                 true
             }
         """
-        let options = FormatOptions(maxWidth: 20)
+        let options = FormatOptions(allmanBraces: true, maxWidth: 20)
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
     }
 
@@ -8124,7 +8101,7 @@ class RulesTests: XCTestCase {
                 bar
             }
         """
-        let options = FormatOptions(maxWidth: 20)
+        let options = FormatOptions(allmanBraces: true, maxWidth: 20)
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
     }
 
@@ -8743,8 +8720,7 @@ class RulesTests: XCTestCase {
         var mathFunction: (Int,
                            Int,
                            String)
-            -> Int =
-            { _, _, _ in
+            -> Int = { _, _, _ in
                 0
             }
         """

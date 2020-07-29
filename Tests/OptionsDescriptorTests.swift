@@ -14,7 +14,8 @@ class OptionsDescriptorTests: XCTestCase {
 
     private func validateDescriptorThrowsOptionsError(_ descriptor: FormatOptions.Descriptor,
                                                       invalidArguments: String = "invalid",
-                                                      testName: String = #function) {
+                                                      testName: String = #function)
+    {
         var options = FormatOptions.default
         XCTAssertThrowsError(try descriptor.toOptions(invalidArguments, &options),
                              "\(testName): Invalid format Throws") { err in
@@ -28,7 +29,8 @@ class OptionsDescriptorTests: XCTestCase {
     private func validateFromArguments<T: Equatable>(_ descriptor: FormatOptions.Descriptor,
                                                      keyPath: WritableKeyPath<FormatOptions, T>,
                                                      expectations: [OptionArgumentMapping<T>],
-                                                     testName: String = #function) {
+                                                     testName: String = #function)
+    {
         var options = FormatOptions.default
         expectations.forEach {
             do {
@@ -48,7 +50,8 @@ class OptionsDescriptorTests: XCTestCase {
                                                              keyPath: WritableKeyPath<FormatOptions, T>,
                                                              expectations: [OptionArgumentMapping<T>],
                                                              testCaseVariation: Bool = true,
-                                                             testName: String = #function) {
+                                                             testName: String = #function)
+    {
         var options = FormatOptions.default
         expectations.forEach {
             do {
@@ -82,7 +85,8 @@ class OptionsDescriptorTests: XCTestCase {
                                         keyPath: WritableKeyPath<FormatOptions, T>,
                                         expectations: [OptionArgumentMapping<T>],
                                         invalid: T? = nil,
-                                        testName: String = #function) {
+                                        testName: String = #function)
+    {
         var options = FormatOptions.default
         for item in expectations {
             options[keyPath: keyPath] = item.optionValue
@@ -99,7 +103,8 @@ class OptionsDescriptorTests: XCTestCase {
 
     private func validateArgumentsFreeTextType(_ descriptor: FormatOptions.Descriptor,
                                                expectations: [FreeTextValidationExpectation],
-                                               testName: String = #function) {
+                                               testName: String = #function)
+    {
         expectations.forEach {
             let isValid = descriptor.validateArgument($0.input)
             XCTAssertEqual(isValid, $0.isValid, "\(testName): \(isValid) != \($0.isValid)")

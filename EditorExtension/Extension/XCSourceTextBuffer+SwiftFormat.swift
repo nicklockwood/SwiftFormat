@@ -35,7 +35,8 @@ extension XCSourceTextBuffer {
     }
 
     func newPosition(for position: XCSourceTextPosition,
-                     in tokens: [Token]) -> XCSourceTextPosition {
+                     in tokens: [Token]) -> XCSourceTextPosition
+    {
         let offset = newOffset(for: SourceOffset(position), in: tokens, tabWidth: tabWidth)
         return XCSourceTextPosition(offset)
     }

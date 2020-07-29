@@ -131,7 +131,8 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             ["exclude", "unexclude", "disable", "enable", "rules"].contains(name) ||
             FormatOptions.Descriptor.all.contains(where: {
                 $0.argumentName == name && $0.isSetType
-            }) {
+            })
+        {
             namedArgs[name] = existing + "," + arg
         } else {
             namedArgs[name] = arg
@@ -199,13 +200,15 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
     var output = args
     // Merge excluded urls
     if let exclude = output["exclude"].map(parseCommaDelimitedList),
-        var excluded = input["exclude"].map({ Set(parseCommaDelimitedList($0)) }) {
+        var excluded = input["exclude"].map({ Set(parseCommaDelimitedList($0)) })
+    {
         excluded.formUnion(exclude)
         output["exclude"] = Array(excluded).sorted().joined(separator: ",")
     }
     // Merge unexcluded urls
     if let unexclude = output["unexclude"].map(parseCommaDelimitedList),
-        var unexcluded = input["unexclude"].map({ Set(parseCommaDelimitedList($0)) }) {
+        var unexcluded = input["unexclude"].map({ Set(parseCommaDelimitedList($0)) })
+    {
         unexcluded.formUnion(unexclude)
         output["unexclude"] = Array(unexcluded).sorted().joined(separator: ",")
     }
@@ -287,7 +290,8 @@ func parseConfigFile(_ data: Data) throws -> [String: String] {
 func serialize(options: Options,
                swiftVersion: Version = .undefined,
                excludingDefaults: Bool = false,
-               separator: String = "\n") -> String {
+               separator: String = "\n") -> String
+{
     var arguments = [[String: String]]()
     if let fileOptions = options.fileOptions {
         arguments.append(argumentsFor(
@@ -318,7 +322,8 @@ func serialize(options: Options,
 
 // Serialize arguments
 func serialize(arguments: [String: String],
-               separator: String = "\n") -> String {
+               separator: String = "\n") -> String
+{
     return arguments.map {
         var value = $1
         if value.contains(" ") {
@@ -365,13 +370,15 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
         for descriptor in FormatOptions.Descriptor.all where !descriptor.isRenamed {
             let value = descriptor.fromOptions(formatOptions)
             guard value != descriptor.fromOptions(.default) ||
-                (!excludingDefaults && !descriptor.isDeprecated) else {
+                (!excludingDefaults && !descriptor.isDeprecated)
+            else {
                 continue
             }
             // Special case for swiftVersion
             // TODO: find a better solution for this
             if descriptor.argumentName == FormatOptions.Descriptor.swiftVersion.argumentName,
-                value == Version.undefined.rawValue {
+                value == Version.undefined.rawValue
+            {
                 continue
             }
             args[descriptor.argumentName] = value
@@ -396,7 +403,8 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
 private func processOption(_ key: String,
                            in args: [String: String],
                            from: inout Set<String>,
-                           handler: (String) throws -> Void) throws {
+                           handler: (String) throws -> Void) throws
+{
     precondition(optionsArguments.contains(key), "\(key) not in optionsArguments")
     var arguments = from
     arguments.remove(key)

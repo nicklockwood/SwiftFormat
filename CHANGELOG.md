@@ -1,5 +1,24 @@
 # Change Log
 
+## [0.45.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.0) (2020-07-29)
+
+- Added `wrapAttributes` rule for controlling attribute position
+- Added `wrapMultilineConditionalBraces` rule for opening braces for wrapped expressions
+- Added `preferKeyPath` rule for converting trivial closures to keyPaths in Swift 5.2
+- Added `--smarttabs` option to support consistent indenting regardless of `--tabwidth`
+- Updated Xcode extension for Xcode 12 and macOS Big Sur
+- Added Swift version dropdown to SwiftFormat for Xcode configuration app
+- Added `--guardelse` option to control wrapping of `else` clauses in `guard` statements
+- Allman braces are now applied to closure braces, which were previously ignored
+- The `void` rule now converts `Void()` literals to just `()`
+- Improved indenting of closing parentheses and brackets
+- Renamed `--empty` option to `--voidtype`, which better describes its function
+- Renamed `specifiers` rule to `modifierOrder` for consistency with SwiftLint
+- Renamed `--specifierorder` configuration option to `--modifierorder`
+- Fixed bug where `--verbose` mode didn't log path for unchanged files
+- Improved documentation of `numberFormatting` configuration options
+- Added Sublime Text plugin instructions
+
 ## [0.44.17](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.44.17) (2020-07-12)
 
 - The `wrapArguments` rule now keeps internal and external parameter labels on the same line

@@ -782,7 +782,8 @@ func processInput(_ inputURLs: [URL],
                   verbose: Bool,
                   dryrun: Bool,
                   lint: Bool,
-                  cacheURL: URL?) -> (OutputFlags, [Error]) {
+                  cacheURL: URL?) -> (OutputFlags, [Error])
+{
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
     var cache: [String: String]?
@@ -963,7 +964,8 @@ func processInput(_ inputURLs: [URL],
     }
     // Save cache
     if outputFlags.filesChecked > 0, let cache = cache, let cacheURL = cacheURL,
-        let cacheDirectory = cacheDirectory {
+        let cacheDirectory = cacheDirectory
+    {
         do {
             let data = try JSONEncoder().encode(cache)
             try data.write(to: cacheURL, options: .atomic)

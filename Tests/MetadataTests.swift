@@ -104,7 +104,8 @@ class MetadataTests: XCTestCase {
                 case let .identifier(name)? = formatter.last(.identifier, before: i),
                 let scopeStart = formatter.index(of: .startOfScope("{"), after: i),
                 let scopeEnd = formatter.index(of: .endOfScope("}"), after: scopeStart),
-                let rule = FormatRules.byName[name] else {
+                let rule = FormatRules.byName[name]
+            else {
                 return
             }
             for option in rule.options where !rule.isDeprecated {
@@ -117,7 +118,8 @@ class MetadataTests: XCTestCase {
             var referencedOptions = [FormatOptions.Descriptor]()
             for index in scopeStart + 1 ..< scopeEnd {
                 guard formatter.token(at: index - 1) == .operator(".", .infix),
-                    formatter.token(at: index - 2) == .identifier("formatter") else {
+                    formatter.token(at: index - 2) == .identifier("formatter")
+                else {
                     continue
                 }
                 switch formatter.tokens[index] {
@@ -142,7 +144,8 @@ class MetadataTests: XCTestCase {
                     referencedOptions.append(.modifierOrder)
                 case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
                     if case let .identifier(property)? = formatter.token(at: index + 2),
-                        let option = optionsByProperty[property] {
+                        let option = optionsByProperty[property]
+                    {
                         referencedOptions.append(option)
                     }
                 default:

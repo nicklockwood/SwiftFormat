@@ -210,7 +210,8 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
             }
             guard (1 ... 2).contains(parts.count),
                 let group = parts.first.flatMap(Int.init),
-                let threshold = parts.last.flatMap(Int.init) else {
+                let threshold = parts.last.flatMap(Int.init)
+            else {
                 return nil
             }
             self = (group == 0) ? .none : .group(group, threshold)

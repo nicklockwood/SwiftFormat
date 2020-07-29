@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.44.17
+//  Version 0.45.0
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -69,7 +69,8 @@ public class Formatter: NSObject {
         let prefix = "swiftformat:"
         guard let rule = currentRule, comment.hasPrefix(prefix),
             let directive = ["disable", "enable"].first(where: { comment.hasPrefix("\(prefix)\($0)") }),
-            comment.range(of: "\\b(\(rule.name)|all)\\b", options: .regularExpression) != nil else {
+            comment.range(of: "\\b(\(rule.name)|all)\\b", options: .regularExpression) != nil
+        else {
             return
         }
         wasNextDirective = comment.hasPrefix("\(prefix)\(directive):next")
@@ -315,7 +316,8 @@ public class Formatter: NSObject {
                     return i
                 }
             } else if token == .endOfScope("case") || token == .endOfScope("default"),
-                scopeStack.last == .startOfScope("#if") {
+                scopeStack.last == .startOfScope("#if")
+            {
                 continue
             } else if scopeStack.isEmpty, matches(token) {
                 return i
@@ -456,11 +458,13 @@ public class Formatter: NSObject {
     ///   - allowingWhitespaceAndComments:If spaces, linebreaks, and comments should also be allowed.
     public func range(_ range: CountableRange<Int>,
                       doesNotContainsTokensExcept allowedTokens: [Token],
-                      allowingWhitespaceAndComments: Bool) -> Bool {
+                      allowingWhitespaceAndComments: Bool) -> Bool
+    {
         let range = range.clamped(to: 0 ..< tokens.count)
         for token in tokens[range] {
             if allowedTokens.contains(token) ||
-                (allowingWhitespaceAndComments && token.isSpaceOrCommentOrLinebreak) {
+                (allowingWhitespaceAndComments && token.isSpaceOrCommentOrLinebreak)
+            {
                 continue
             }
             return false

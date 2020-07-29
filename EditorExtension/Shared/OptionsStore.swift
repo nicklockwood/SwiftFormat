@@ -182,7 +182,8 @@ extension OptionsStore {
 
     private func load() -> OptionStoreRepresentation {
         guard let options = store
-            .value(forKey: optionsKey) as? OptionStoreRepresentation else {
+            .value(forKey: optionsKey) as? OptionStoreRepresentation
+        else {
             return OptionStoreRepresentation()
         }
         return options

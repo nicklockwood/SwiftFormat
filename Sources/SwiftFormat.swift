@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-let swiftFormatVersion = "0.44.17"
+let swiftFormatVersion = "0.45.0"
 public let version = swiftFormatVersion
 
 /// The standard SwiftFormat config file name
@@ -95,7 +95,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
                            concurrent: Bool = true,
                            logger print: Logger? = nil,
                            skipped: FileEnumerationHandler? = nil,
-                           handler: @escaping FileEnumerationHandler) -> [Error] {
+                           handler: @escaping FileEnumerationHandler) -> [Error]
+{
     let manager = FileManager.default
     let keys: [URLResourceKey] = [
         .isRegularFileKey, .isDirectoryKey,
@@ -149,7 +150,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
     do {
         let resourceValues = try getResourceValues(for: inputURL.standardizedFileURL, keys: keys)
         if !fileOptions.followSymlinks,
-            resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true {
+            resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true
+        {
             return [FormatError.options("Symbolic link or alias was skipped: \(inputURL.path)")]
         }
     } catch {
@@ -159,7 +161,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
         return []
     }
     if resourceValues.isDirectory == false,
-        !fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
+        !fileOptions.supportedFileExtensions.contains(inputURL.pathExtension)
+    {
         return [FormatError.options("Unsupported file type: \(inputURL.path)")]
     }
 
@@ -173,7 +176,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 continue
             }
             if let unexcluded = options.fileOptions?.unexcludedGlobs,
-                unexcluded.contains(where: { $0.matches(path) }) {
+                unexcluded.contains(where: { $0.matches(path) })
+            {
                 return false
             }
             if let handler = skipped {
@@ -217,7 +221,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
 
     func enumerate(inputURL: URL,
                    outputURL: URL?,
-                   options: Options) {
+                   options: Options)
+    {
         guard let (inputURL, resourceValues, options) = resolveInputURL(inputURL, options: options) else {
             return
         }
@@ -425,7 +430,8 @@ public func applyRules(_ rules: [FormatRule],
                        to originalTokens: [Token],
                        with options: FormatOptions,
                        trackChanges: Bool,
-                       range: Range<Int>?) throws -> (tokens: [Token], changes: [Formatter.Change]) {
+                       range: Range<Int>?) throws -> (tokens: [Token], changes: [Formatter.Change])
+{
     return try applyRules(rules,
                           to: originalTokens,
                           with: options,
@@ -469,13 +475,15 @@ private func applyRules(
     // Check if required FileInfo is available
     if rules.contains(FormatRules.fileHeader) {
         if options.fileHeader.rawValue.contains("{created"),
-            options.fileInfo.creationDate == nil {
+            options.fileInfo.creationDate == nil
+        {
             throw FormatError.options(
                 "Failed to apply {created} template in file header as file info is unavailable"
             )
         }
         if options.fileHeader.rawValue.contains("{file"),
-            options.fileInfo.fileName == nil {
+            options.fileInfo.fileName == nil
+        {
             throw FormatError.options(
                 "Failed to apply {file} template in file header as file name was not provided"
             )
@@ -527,26 +535,30 @@ private func applyRules(
 /// Format a pre-parsed token array
 /// Returns the formatted token array
 public func format(_ tokens: [Token], rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = .default, range: Range<Int>? = nil) throws -> [Token] {
+                   options: FormatOptions = .default, range: Range<Int>? = nil) throws -> [Token]
+{
     return try applyRules(rules, to: tokens, with: options, trackChanges: false, range: range).tokens
 }
 
 /// Format code with specified rules and options
 public func format(_ source: String, rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = .default) throws -> String {
+                   options: FormatOptions = .default) throws -> String
+{
     return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
 }
 
 /// Lint a pre-parsed token array
 /// Returns the list of edits made
 public func lint(_ tokens: [Token], rules: [FormatRule] = FormatRules.default,
-                 options: FormatOptions = .default) throws -> [Formatter.Change] {
+                 options: FormatOptions = .default) throws -> [Formatter.Change]
+{
     return try applyRules(rules, to: tokens, with: options, trackChanges: true, range: nil).changes
 }
 
 /// Lint code with specified rules and options
 public func lint(_ source: String, rules: [FormatRule] = FormatRules.default,
-                 options: FormatOptions = .default) throws -> [Formatter.Change] {
+                 options: FormatOptions = .default) throws -> [Formatter.Change]
+{
     return try lint(tokenize(source), rules: rules, options: options)
 }
 

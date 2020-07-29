@@ -36,13 +36,15 @@ class RulesTests: XCTestCase {
     // MARK: - shared test infra
 
     func testFormatting(for input: String, _ output: String? = nil, rule: FormatRule,
-                        options: FormatOptions = .default, exclude: [String] = []) {
+                        options: FormatOptions = .default, exclude: [String] = [])
+    {
         testFormatting(for: input, output.map { [$0] } ?? [], rules: [rule],
                        options: options, exclude: exclude)
     }
 
     func testFormatting(for input: String, _ outputs: [String] = [], rules: [FormatRule],
-                        options: FormatOptions = .default, exclude: [String] = []) {
+                        options: FormatOptions = .default, exclude: [String] = [])
+    {
         precondition(input != outputs.first || input != outputs.last, "Redundant output parameter")
         precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
         precondition(Set(exclude).intersection(rules.map { $0.name }).isEmpty, "Cannot exclude rule under test")

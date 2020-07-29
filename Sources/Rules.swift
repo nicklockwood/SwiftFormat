@@ -1399,7 +1399,7 @@ public struct _FormatRules {
     public let braces = FormatRule(
         help: "Wrap braces in accordance with selected style (K&R or Allman).",
         options: ["allman"],
-        sharedOptions: ["linebreaks"]
+        sharedOptions: ["linebreaks", "maxwidth", "indent", "tabwidth"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard let closingBraceIndex = formatter.endOfScope(at: i),
@@ -1441,6 +1441,21 @@ public struct _FormatRules {
                     formatter.tokens[prevIndex ..< i].contains(where: { $0.isLinebreak }),
                     !formatter.tokens[prevIndex].isComment else {
                     return
+                }
+                let maxWidth = formatter.options.maxWidth
+                if maxWidth == 0 {
+                    // Check that brace doesn't have inline content after it
+                    guard formatter.next(.nonSpace, after: i)?.isLinebreak == true else {
+                        return
+                    }
+                } else {
+                    // Check that unwrapping wouldn't exceed line length
+                    let endOfLine = formatter.endOfLine(at: i)
+                    let length = formatter.lineLength(from: i, upTo: endOfLine)
+                    let prevLineLength = formatter.lineLength(at: prevIndex)
+                    guard prevLineLength + length + 1 <= maxWidth else {
+                        return
+                    }
                 }
                 formatter.replaceTokens(inRange: prevIndex + 1 ..< i, with: [.space(" ")])
             }

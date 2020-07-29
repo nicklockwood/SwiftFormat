@@ -8082,7 +8082,7 @@ class RulesTests: XCTestCase {
                 true
             }
         """
-        let options = FormatOptions(allmanBraces: true, maxWidth: 20)
+        let options = FormatOptions(maxWidth: 20)
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
     }
 

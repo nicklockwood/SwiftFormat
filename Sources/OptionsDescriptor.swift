@@ -272,6 +272,7 @@ extension FormatOptions.Descriptor {
         letPatternPlacement,
         stripUnusedArguments,
         elsePosition,
+        guardElse,
         explicitSelf,
         selfRequired,
         importGrouping,
@@ -544,6 +545,13 @@ extension FormatOptions.Descriptor {
         keyPath: \.elseOnNextLine,
         trueValues: ["next-line", "nextline"],
         falseValues: ["same-line", "sameline"]
+    )
+    static let guardElse = FormatOptions.Descriptor(
+        argumentName: "guardelse",
+        propertyName: "guardElsePosition",
+        displayName: "Guard Else Position",
+        help: "Guard else: \"same-line\", \"next-line\" or \"auto\" (default)",
+        keyPath: \.guardElsePosition
     )
     static let explicitSelf = FormatOptions.Descriptor(
         argumentName: "self",

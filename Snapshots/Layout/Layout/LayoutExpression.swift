@@ -25,8 +25,8 @@ private let colorSymbols: [AnyExpression.Symbol: AnyExpression.SymbolEvaluator] 
     },
     .function("rgba", arity: 4): { args in
         guard let r = args[0] as? Double, let g = args[1] as? Double,
-            let b = args[2] as? Double, let a = args[3] as? Double else
-        {
+            let b = args[2] as? Double, let a = args[3] as? Double
+        else {
             throw Expression.Error.message("Type mismatch")
         }
         return UIColor(red: CGFloat(r / 255), green: CGFloat(g / 255), blue: CGFloat(b / 255), alpha: CGFloat(a))
@@ -1221,8 +1221,8 @@ struct LayoutExpression {
                     case let .expression(expression):
                         guard expression.symbols.count == 1,
                             case let .variable(name) = expression.symbols.first!,
-                            let first = name.first, !"'\"".contains(first) else
-                        {
+                            let first = name.first, !"'\"".contains(first)
+                        else {
                             continue
                         }
                         var parent = node.parent

@@ -206,8 +206,8 @@ class EditViewController: UIViewController, UITextFieldDelegate {
         classField?.backgroundColor = .white
         guard let classField = classField,
             let textRange = classField.textRange(from: classField.beginningOfDocument, to: classField.selectedTextRange?.start ?? classField.endOfDocument),
-            let text = classField.text(in: textRange) else
-        {
+            let text = classField.text(in: textRange)
+        else {
             return
         }
         var match = ""
@@ -241,8 +241,8 @@ class EditViewController: UIViewController, UITextFieldDelegate {
         }
         classField?.attributedText = NSAttributedString(string: text, attributes: [NSAttributedStringKey.foregroundColor: UIColor.black])
         guard let cls = NSClassFromString(text) as? NSObject.Type,
-            cls is UIView.Type || cls is UIViewController.Type else
-        {
+            cls is UIView.Type || cls is UIViewController.Type
+        else {
             classField?.backgroundColor = UIColor(red: 1, green: 0.5, blue: 0.5, alpha: 1)
             return
         }

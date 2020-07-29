@@ -91,6 +91,13 @@ public enum AttributeMode: String {
     case preserve
 }
 
+/// Argument type for else position
+public enum ElsePosition: String {
+    case sameLine = "same-line"
+    case nextLine = "next-line"
+    case auto
+}
+
 /// Version number wrapper
 public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral, CustomStringConvertible {
     public let rawValue: String
@@ -277,6 +284,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var hoistPatternLet: Bool
     public var stripUnusedArguments: ArgumentStrippingMode
     public var elseOnNextLine: Bool
+    public var guardElsePosition: ElsePosition
     public var explicitSelf: SelfMode
     public var selfRequired: Set<String>
     public var experimentalRules: Bool
@@ -335,6 +343,7 @@ public struct FormatOptions: CustomStringConvertible {
                 hoistPatternLet: Bool = true,
                 stripUnusedArguments: ArgumentStrippingMode = .all,
                 elseOnNextLine: Bool = false,
+                guardElsePosition: ElsePosition = .auto,
                 explicitSelf: SelfMode = .remove,
                 selfRequired: Set<String> = [],
                 experimentalRules: Bool = false,
@@ -385,6 +394,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.hoistPatternLet = hoistPatternLet
         self.stripUnusedArguments = stripUnusedArguments
         self.elseOnNextLine = elseOnNextLine
+        self.guardElsePosition = guardElsePosition
         self.explicitSelf = explicitSelf
         self.selfRequired = selfRequired
         self.experimentalRules = experimentalRules

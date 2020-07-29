@@ -227,8 +227,8 @@ class LayoutLoader {
     ) throws -> Layout {
         assert(Thread.isMainThread)
         guard let xmlURL = bundle.url(forResource: named, withExtension: nil) ??
-            bundle.url(forResource: named, withExtension: "xml") else
-        {
+            bundle.url(forResource: named, withExtension: "xml")
+        else {
             throw LayoutError.message("No layout XML file found for \(named)")
         }
         var _layout: Layout?

@@ -271,7 +271,7 @@ private struct Inference {
                 }
             }
         }
-        options.allmanBraces = (allman > knr)
+        options.allmanBraces = (allman > 1 && allman > knr)
     }
 
     let ifdefIndent = OptionInferrer { formatter, options in

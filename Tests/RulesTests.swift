@@ -2036,7 +2036,7 @@ class RulesTests: XCTestCase {
     func testWrappedLineAfterGuardElseWithXcodeStyleNotIndented() {
         let input = "guard let foo = bar else\n{ return }"
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["elseOnSameLine"])
     }
 
     func testWrappedLineBeforeGuardElseAndReturnWithXcodeStyle() {
@@ -2094,7 +2094,7 @@ class RulesTests: XCTestCase {
     func testWrappedLineAfterGuardElse() {
         // Don't indent because this case is handled by braces rule
         let input = "guard let foo = bar else\n{ return }"
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["elseOnSameLine"])
     }
 
     func testWrappedLineAfterComment() {
@@ -3792,6 +3792,142 @@ class RulesTests: XCTestCase {
     func testCommentsNotDiscardedByElseOnSameLineRule() {
         let input = "if true {\n    1\n}\n\n// comment\nelse {}"
         testFormatting(for: input, rule: FormatRules.elseOnSameLine)
+    }
+
+    // guardelse = auto
+
+    func testSingleLineGuardElseNotWrappedByDefault() {
+        let input = "guard foo = bar else {}"
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine)
+    }
+
+    func testSingleLineGuardElseNotUnwrappedByDefault() {
+        let input = "guard foo = bar\nelse {}"
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine)
+    }
+
+    func testSingleLineGuardElseWrappedByDefaultIfBracesOnNextLine() {
+        let input = "guard foo = bar else\n{}"
+        let output = "guard foo = bar\nelse {}"
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine)
+    }
+
+    func testMultilineGuardElseNotWrappedByDefault() {
+        let input = """
+        guard let foo = bar,
+            bar > 5 else {
+            return
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+                       exclude: ["wrapMultilineStatementBraces"])
+    }
+
+    func testMultilineGuardElseWrappedByDefaultIfBracesOnNextLine() {
+        let input = """
+        guard let foo = bar,
+            bar > 5 else
+        {
+            return
+        }
+        """
+        let output = """
+        guard let foo = bar,
+            bar > 5
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine)
+    }
+
+    // guardelse = nextLine
+
+    func testSingleLineGuardElseNotWrapped() {
+        let input = "guard foo = bar else {}"
+        let options = FormatOptions(guardElsePosition: .nextLine)
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options)
+    }
+
+    func testSingleLineGuardElseNotUnwrapped() {
+        let input = "guard foo = bar\nelse {}"
+        let options = FormatOptions(guardElsePosition: .nextLine)
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options)
+    }
+
+    func testSingleLineGuardElseWrappedIfBracesOnNextLine() {
+        let input = "guard foo = bar else\n{}"
+        let output = "guard foo = bar\nelse {}"
+        let options = FormatOptions(guardElsePosition: .nextLine)
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine, options: options)
+    }
+
+    func testMultilineGuardElseWrapped() {
+        let input = """
+        guard let foo = bar,
+            bar > 5 else {
+            return
+        }
+        """
+        let output = """
+        guard let foo = bar,
+            bar > 5
+        else {
+            return
+        }
+        """
+        let options = FormatOptions(guardElsePosition: .nextLine)
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+                       options: options, exclude: ["wrapMultilineStatementBraces"])
+    }
+
+    func testMultilineGuardElseEndingInParen() {
+        let input = """
+        guard let foo = bar,
+            let baz = quux() else
+        {
+            return
+        }
+        """
+        let output = """
+        guard let foo = bar,
+            let baz = quux()
+        else {
+            return
+        }
+        """
+        let options = FormatOptions(guardElsePosition: .auto)
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+                       options: options)
+    }
+
+    // guardelse = sameLine
+
+    func testMultilineGuardElseUnwrapped() {
+        let input = """
+        guard let foo = bar,
+            bar > 5
+        else {
+            return
+        }
+        """
+        let output = """
+        guard let foo = bar,
+            bar > 5 else {
+            return
+        }
+        """
+        let options = FormatOptions(guardElsePosition: .sameLine)
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+                       options: options, exclude: ["wrapMultilineStatementBraces"])
+    }
+
+    func testGuardElseUnwrappedIfBracesOnNextLine() {
+        let input = "guard foo = bar\nelse {}"
+        let output = "guard foo = bar else {}"
+        let options = FormatOptions(guardElsePosition: .sameLine)
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+                       options: options)
     }
 
     // MARK: - trailingCommas
@@ -11932,7 +12068,8 @@ class RulesTests: XCTestCase {
             print("statement body")
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces, exclude: ["braces"])
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
+                       exclude: ["braces", "elseOnSameLine"])
     }
 
     func testInnerMultilineIfBraceOnNextLine() {
@@ -12014,6 +12151,17 @@ class RulesTests: XCTestCase {
         let input = """
         guard let foo = bar,
             let baz = quux else { return }
+        """
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+    }
+
+    func testMultilineGuardBraceOnSameLineAsElse() {
+        let input = """
+        guard let foo = bar,
+            let baz = quux
+        else {
+            return
+        }
         """
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }

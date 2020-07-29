@@ -355,8 +355,8 @@ extension UITableView {
             // permanently hidden, which breaks layout. figure out why that is
         }
         guard let layoutsData = objc_getAssociatedObject(self, &headerDataKey) as? NSMutableDictionary,
-            let layoutData = layoutsData[identifier] as? LayoutData else
-        {
+            let layoutData = layoutsData[identifier] as? LayoutData
+        else {
             return nil
         }
         var nodes = objc_getAssociatedObject(self, &nodesKey) as? NSMutableArray
@@ -423,8 +423,8 @@ extension UITableView {
             return node
         }
         guard let layoutsData = objc_getAssociatedObject(self, &cellDataKey) as? NSMutableDictionary,
-            let layoutData = layoutsData[identifier] as? LayoutData else
-        {
+            let layoutData = layoutsData[identifier] as? LayoutData
+        else {
             return nil
         }
         do {

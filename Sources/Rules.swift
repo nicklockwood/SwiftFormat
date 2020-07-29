@@ -1470,7 +1470,8 @@ public struct _FormatRules {
         Place `else`, `catch` or `while` keyword in accordance with current style (same or
         next line).
         """,
-        options: ["elseposition"],
+        orderAfter: ["wrapMultilineStatementBraces"],
+        options: ["elseposition", "guardelse"],
         sharedOptions: ["allman", "linebreaks"]
     ) { formatter in
         func bracesContainLinebreak(_ endIndex: Int) -> Bool {
@@ -1488,7 +1489,52 @@ public struct _FormatRules {
                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex) == .keyword("repeat") {
                     fallthrough
                 }
-            case .keyword("else"), .keyword("catch"):
+            case .keyword("else"):
+                guard var prevIndex = formatter.index(of: .nonSpace, before: i),
+                    let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
+                        !$0.isComment
+                    }) else {
+                    return
+                }
+                let isOnNewLine = formatter.tokens[prevIndex].isLinebreak
+                if isOnNewLine {
+                    prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i) ?? prevIndex
+                }
+                if formatter.tokens[prevIndex] == .endOfScope("}") {
+                    fallthrough
+                }
+                guard let guardIndex = formatter.indexOfLastSignificantKeyword(at: prevIndex + 1, excluding: [
+                    "var", "let", "case",
+                ]), formatter.tokens[guardIndex] == .keyword("guard") else {
+                    return
+                }
+                let isAllman = formatter.options.allmanBraces
+                let shouldWrap: Bool
+                switch formatter.options.guardElsePosition {
+                case .auto:
+                    // Only wrap if else or following brace is on next line
+                    shouldWrap = isOnNewLine ||
+                        formatter.tokens[i + 1 ..< nextIndex].contains { $0.isLinebreak }
+                case .nextLine:
+                    // Only wrap if guard statement spans multiple lines
+                    shouldWrap = isOnNewLine ||
+                        formatter.tokens[guardIndex + 1 ..< nextIndex].contains { $0.isLinebreak }
+                case .sameLine:
+                    shouldWrap = false
+                }
+                if shouldWrap {
+                    if !isAllman {
+                        formatter.replaceTokens(inRange: i + 1 ..< nextIndex, with: [.space(" ")])
+                    }
+                    if !isOnNewLine {
+                        formatter.replaceTokens(inRange: prevIndex + 1 ..< i, with:
+                            [formatter.linebreakToken(for: prevIndex + 1)])
+                        formatter.insertSpace(formatter.indentForLine(at: i), at: prevIndex + 2)
+                    }
+                } else if isOnNewLine {
+                    formatter.replaceTokens(inRange: prevIndex + 1 ..< i, with: [.space(" ")])
+                }
+            case .keyword("catch"):
                 guard let prevIndex = formatter.index(of: .nonSpace, before: i) else {
                     return
                 }

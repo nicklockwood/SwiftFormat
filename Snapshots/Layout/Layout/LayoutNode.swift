@@ -283,8 +283,8 @@ public class LayoutNode: NSObject {
     ) {
         guard _setupComplete, _updateLock == 0, _evaluating.isEmpty,
             root._setupComplete, root._updateLock == 0, root._evaluating.isEmpty,
-            let view = _view, !view.bounds.size.isNearlyEqual(to: _previousBounds.size) else
-        {
+            let view = _view, !view.bounds.size.isNearlyEqual(to: _previousBounds.size)
+        else {
             return
         }
         root.update()
@@ -310,8 +310,8 @@ public class LayoutNode: NSObject {
         children: [LayoutNode] = []
     ) throws {
         guard let _class = `class` as? LayoutManaged.Type,
-            _class is UIView.Type || _class is UIViewController.Type else
-        {
+            _class is UIView.Type || _class is UIViewController.Type
+        else {
             throw LayoutError.message("\(`class`) is not a subclass of UIView or UIViewController")
         }
         self._class = _class

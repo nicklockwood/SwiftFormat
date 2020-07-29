@@ -50,8 +50,8 @@ public extension Polygon {
     /// Vertices are assumed to be in anticlockwise order for the purpose of deriving the plane
     init?(_ vertices: [Vertex], material: Material = nil) {
         guard vertices.count > 2, !verticesAreDegenerate(vertices),
-            let plane = Plane(points: vertices.map { $0.position }) else
-        {
+            let plane = Plane(points: vertices.map { $0.position })
+        else {
             return nil
         }
         self.init(unchecked: vertices, plane: plane, material: material)

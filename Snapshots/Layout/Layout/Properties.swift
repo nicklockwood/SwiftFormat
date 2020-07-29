@@ -88,8 +88,8 @@ extension NSObject {
                 if let cattribs = property_getAttributes(cprop) {
                     var name = String(cString: cname)
                     guard !name.contains("_"), // We don't want to mess with private stuff
-                        allProperties[name] == nil else
-                    {
+                        allProperties[name] == nil
+                    else {
                         continue
                     }
                     // Get attributes
@@ -125,8 +125,8 @@ extension NSObject {
                 let selector: Selector = method_getName(method)
                 var name = "\(selector)"
                 guard name.hasPrefix("set"), let colonRange = name.range(of: ":"),
-                    colonRange.upperBound == name.endIndex, !name.hasPrefix("set_") else
-                {
+                    colonRange.upperBound == name.endIndex, !name.hasPrefix("set_")
+                else {
                     continue
                 }
                 name = String(name["set".endIndex ..< colonRange.lowerBound])

@@ -44,8 +44,8 @@ extension UIFont {
         }
         // Use the weight attribute as a fallback, but this is not very reliable for 3rd party fonts
         guard let traits = fontDescriptor.object(forKey: UIFontDescriptor.AttributeName.traits) as? [UIFontDescriptor.TraitKey: Any],
-            let weight = traits[UIFontDescriptor.TraitKey.weight] as? UIFont.Weight else
-        {
+            let weight = traits[UIFontDescriptor.TraitKey.weight] as? UIFont.Weight
+        else {
             fontWeights[fontName] = .regular
             return UIFont.Weight.regular
         }

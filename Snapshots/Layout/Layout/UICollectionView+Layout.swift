@@ -349,8 +349,8 @@ extension UICollectionView {
     public func dequeueReusableCellNode(withIdentifier identifier: String, for indexPath: IndexPath) -> LayoutNode {
         do {
             guard let layoutsData = objc_getAssociatedObject(self, &cellDataKey) as? NSMutableDictionary,
-                let layoutData = layoutsData[identifier] as? LayoutData else
-            {
+                let layoutData = layoutsData[identifier] as? LayoutData
+            else {
                 throw LayoutError.message("No cell layout has been registered for \(identifier)")
             }
             let cell = dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath)

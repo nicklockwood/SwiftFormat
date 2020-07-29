@@ -358,6 +358,7 @@ next line).
 Option | Description
 --- | ---
 `--elseposition` | Placement of else/catch: "same-line" (default) or "next-line"
+`--guardelse` | Guard else: "same-line", "next-line" or "auto" (default)
 
 <details>
 <summary>Examples</summary>

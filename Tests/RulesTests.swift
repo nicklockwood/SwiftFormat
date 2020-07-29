@@ -12151,4 +12151,70 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(typeAttributes: .prevLine)
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
+
+    // MARK: - preferKeyPath
+
+    func testMapPropertyToKeyPath() {
+        let input = "let foo = bar.map { $0.foo }"
+        let output = "let foo = bar.map(\\.foo)"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, output, rule: FormatRules.preferKeyPath,
+                       options: options)
+    }
+
+    func testCompactMapPropertyToKeyPath() {
+        let input = "let foo = bar.compactMap { $0.foo }"
+        let output = "let foo = bar.compactMap(\\.foo)"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, output, rule: FormatRules.preferKeyPath,
+                       options: options)
+    }
+
+    func testFlatMapPropertyToKeyPath() {
+        let input = "let foo = bar.flatMap { $0.foo }"
+        let output = "let foo = bar.flatMap(\\.foo)"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, output, rule: FormatRules.preferKeyPath,
+                       options: options)
+    }
+
+    func testMapNestedPropertyWithSpacesToKeyPath() {
+        let input = "let foo = bar.map { $0 . foo . bar }"
+        let output = "let foo = bar.map(\\ . foo . bar)"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, output, rule: FormatRules.preferKeyPath,
+                       options: options, exclude: ["spaceAroundOperators"])
+    }
+
+    func testMultilineMapPropertyToKeyPath() {
+        let input = """
+        let foo = bar.map {
+            $0.foo
+        }
+        """
+        let output = "let foo = bar.map(\\.foo)"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, output, rule: FormatRules.preferKeyPath,
+                       options: options)
+    }
+
+    func testParenthesizedMapPropertyToKeyPath() {
+        let input = "let foo = bar.map({ $0.foo })"
+        let output = "let foo = bar.map(\\.foo)"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, output, rule: FormatRules.preferKeyPath,
+                       options: options)
+    }
+
+    func testNoMapSelfToKeyPath() {
+        let input = "let foo = bar.map { $0 }"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
+    }
+
+    func testNoMapPropertyToKeyPathForSwiftLessThan5_2() {
+        let input = "let foo = bar.map { $0.foo }"
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
+    }
 }

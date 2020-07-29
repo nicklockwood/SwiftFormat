@@ -1074,4 +1074,12 @@ private struct Examples {
     + @objc enum Foo {}
     ```
     """
+
+    let preferKeyPath = """
+    ```diff
+    - let barArray = fooArray.map { $0.bar }
+
+    + let barArray = fooArray.map(\\.bar)
+    ```
+    """
 }

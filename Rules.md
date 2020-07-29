@@ -21,6 +21,7 @@
 * [linebreaks](#linebreaks)
 * [modifierOrder](#modifierOrder)
 * [numberFormatting](#numberFormatting)
+* [preferKeyPath](#preferKeyPath)
 * [ranges *(deprecated)*](#ranges)
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
@@ -637,6 +638,22 @@ Option | Description
 ```diff
 - let big = 123456.123
 + let big = 123_456.123
+```
+
+</details>
+<br/>
+
+## preferKeyPath
+
+Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let barArray = fooArray.map { $0.bar }
+
++ let barArray = fooArray.map(\.bar)
 ```
 
 </details>

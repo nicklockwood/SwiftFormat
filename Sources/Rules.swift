@@ -4488,4 +4488,48 @@ public struct _FormatRules {
             }
         }
     }
+
+    public let preferKeyPath = FormatRule(
+        help: "Convert trivial `map { $0.foo }` closures to keyPath-based syntax."
+    ) { formatter in
+        guard formatter.options.swiftVersion >= "5.2" else {
+            return
+        }
+        formatter.forEach(.startOfScope("{")) { i, _ in
+            guard let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i) else {
+                return
+            }
+            var prevToken = formatter.tokens[prevIndex]
+            let parenthesized = prevToken == .startOfScope("(")
+            if parenthesized {
+                prevToken = formatter.last(.nonSpaceOrLinebreak, before: prevIndex) ?? prevToken
+            }
+            guard [.identifier("map"), .identifier("flatMap"),
+                   .identifier("compactMap")].contains(prevToken),
+                let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
+                    $0 == .identifier("$0")
+                }),
+                let endIndex = formatter.endOfScope(at: i),
+                let lastIndex = formatter.index(of: .nonSpaceOrLinebreak, before: endIndex)
+            else {
+                return
+            }
+            var replacementTokens: [Token]
+            if nextIndex == lastIndex {
+                // TODO: add this when https://bugs.swift.org/browse/SR-12897 is fixed
+                // replacementTokens = tokenize("\\.self")
+                return
+            } else {
+                let tokens = formatter.tokens[nextIndex + 1 ... lastIndex]
+                guard tokens.allSatisfy({ $0.isSpace || !$0.isIdentifier || !$0.isOperator(".") }) else {
+                    return
+                }
+                replacementTokens = [.operator("\\", .prefix)] + tokens
+            }
+            if !parenthesized {
+                replacementTokens = [.startOfScope("(")] + replacementTokens + [.endOfScope(")")]
+            }
+            formatter.replaceTokens(inRange: prevIndex + 1 ... endIndex, with: replacementTokens)
+        }
+    }
 }

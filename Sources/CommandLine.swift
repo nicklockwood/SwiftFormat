@@ -816,8 +816,8 @@ func processInput(_ inputURLs: [URL],
         if formatOptions.swiftVersion == .undefined {
             print("warning: No Swift version was specified, so some formatting features were disabled. Specify the version of Swift you are using with the --swiftversion option, or by adding a \(swiftVersionFile) file to your project.", as: .warning)
         }
-        if formatOptions.useTabs, formatOptions.tabWidth <= 0 {
-            print("warning: The --indent option is set to tabs, but no --tabwidth was specified.", as: .warning)
+        if formatOptions.useTabs, formatOptions.tabWidth <= 0, !formatOptions.smartTabs {
+            print("warning: The --smarttabs option is disabled, but no --tabwidth was specified.", as: .warning)
         }
         showedConfigurationWarnings = true
     }
@@ -838,11 +838,7 @@ func processInput(_ inputURLs: [URL],
             // Override options
             var options = options
             try options.addArguments(overrides, in: "") // No need for directory as overrides are formatOptions only
-            // Validate options
             let formatOptions = options.formatOptions ?? .default
-            if formatOptions.useTabs, formatOptions.tabWidth <= 0 {
-                throw FormatError.options("Indenting with tabs requires --tabwidth to also be set")
-            }
             // Check cache
             let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
             let configHash = computeHash("\(formatOptions)\(rules.sorted().joined(separator: ","))")

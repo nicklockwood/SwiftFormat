@@ -3251,7 +3251,16 @@ class RulesTests: XCTestCase {
 
     // indent with tabs
 
-    func testTabIndentWrappedTuple() {
+    func testTabIndentWrappedTupleWithSmartTabs() {
+        let input = """
+        let foo = (bar: Int,
+                   baz: Int)
+        """
+        let options = FormatOptions(indent: "\t", tabWidth: 2, smartTabs: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testTabIndentWrappedTupleWithoutSmartTabs() {
         let input = """
         let foo = (bar: Int,
                    baz: Int)
@@ -3260,11 +3269,30 @@ class RulesTests: XCTestCase {
         let foo = (bar: Int,
         \t\t\t\t\t baz: Int)
         """
-        let options = FormatOptions(indent: "\t", tabWidth: 2)
+        let options = FormatOptions(indent: "\t", tabWidth: 2, smartTabs: false)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
-    func testTabIndentCase() {
+    func testTabIndentCaseWithSmartTabs() {
+        let input = """
+        switch x {
+        case .foo,
+             .bar:
+          break
+        }
+        """
+        let output = """
+        switch x {
+        case .foo,
+             .bar:
+        \tbreak
+        }
+        """
+        let options = FormatOptions(indent: "\t", tabWidth: 2, smartTabs: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testTabIndentCaseWithoutSmartTabs() {
         let input = """
         switch x {
         case .foo,
@@ -3279,11 +3307,11 @@ class RulesTests: XCTestCase {
         \tbreak
         }
         """
-        let options = FormatOptions(indent: "\t", tabWidth: 2)
+        let options = FormatOptions(indent: "\t", tabWidth: 2, smartTabs: false)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
-    func testTabIndentCase2() {
+    func testTabIndentCaseWithoutSmartTabs2() {
         let input = """
         switch x {
             case .foo,
@@ -3298,7 +3326,8 @@ class RulesTests: XCTestCase {
         \t\tbreak
         }
         """
-        let options = FormatOptions(indent: "\t", indentCase: true, tabWidth: 2)
+        let options = FormatOptions(indent: "\t", indentCase: true,
+                                    tabWidth: 2, smartTabs: false)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
@@ -9153,7 +9182,17 @@ class RulesTests: XCTestCase {
 
     // MARK: indent with tabs
 
-    func testTabIndentWrappedFunction() {
+    func testTabIndentWrappedFunctionWithSmartTabs() {
+        let input = """
+        func foo(bar: Int,
+                 baz: Int) {}
+        """
+        let options = FormatOptions(indent: "\t", wrapParameters: .afterFirst, tabWidth: 2)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testTabIndentWrappedFunctionWithoutSmartTabs() {
         let input = """
         func foo(bar: Int,
                  baz: Int) {}
@@ -9162,7 +9201,8 @@ class RulesTests: XCTestCase {
         func foo(bar: Int,
         \t\t\t\t baz: Int) {}
         """
-        let options = FormatOptions(indent: "\t", wrapParameters: .afterFirst, tabWidth: 2)
+        let options = FormatOptions(indent: "\t", wrapParameters: .afterFirst,
+                                    tabWidth: 2, smartTabs: false)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
                        exclude: ["unusedArguments"])
     }

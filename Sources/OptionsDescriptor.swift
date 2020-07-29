@@ -279,6 +279,7 @@ extension FormatOptions.Descriptor {
         xcodeIndentation,
         tabWidth,
         maxWidth,
+        smartTabs,
         modifierOrder,
         noSpaceOperators,
         noWrapOperators,
@@ -600,6 +601,15 @@ extension FormatOptions.Descriptor {
         keyPath: \.maxWidth,
         fromArgument: { $0.lowercased() == "none" ? 0 : Int($0).map { max(0, $0) } },
         toArgument: { $0 > 0 ? String($0) : "none" }
+    )
+    static let smartTabs = FormatOptions.Descriptor(
+        argumentName: "smarttabs",
+        propertyName: "smartTabs",
+        displayName: "Smart Tabs",
+        help: "Align code independently of tab width. defaults to \"enabled\"",
+        keyPath: \.smartTabs,
+        trueValues: ["enabled", "true"],
+        falseValues: ["disabled", "false"]
     )
     static let noSpaceOperators = FormatOptions.Descriptor(
         argumentName: "nospaceoperators",

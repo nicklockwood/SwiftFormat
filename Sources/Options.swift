@@ -285,6 +285,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var xcodeIndentation: Bool
     public var tabWidth: Int
     public var maxWidth: Int
+    public var smartTabs: Bool
     public var noSpaceOperators: Set<String>
     public var noWrapOperators: Set<String>
     public var modifierOrder: [String]
@@ -342,6 +343,7 @@ public struct FormatOptions: CustomStringConvertible {
                 xcodeIndentation: Bool = false,
                 tabWidth: Int = 0,
                 maxWidth: Int = 0,
+                smartTabs: Bool = true,
                 noSpaceOperators: Set<String> = [],
                 noWrapOperators: Set<String> = [],
                 modifierOrder: [String] = [],
@@ -391,6 +393,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.xcodeIndentation = xcodeIndentation
         self.tabWidth = tabWidth
         self.maxWidth = maxWidth
+        self.smartTabs = smartTabs
         self.noSpaceOperators = noSpaceOperators
         self.noWrapOperators = noWrapOperators
         self.modifierOrder = modifierOrder

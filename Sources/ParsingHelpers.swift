@@ -76,7 +76,7 @@ extension Formatter {
 
     /// Returns white space made up of indent characters equvialent to the specified width
     func spaceEquivalentToWidth(_ width: Int) -> String {
-        if options.useTabs, options.tabWidth > 0 {
+        if !options.smartTabs, options.useTabs, options.tabWidth > 0 {
             let tabs = width / options.tabWidth
             let remainder = width % options.tabWidth
             return String(repeating: "\t", count: tabs) + String(repeating: " ", count: remainder)
@@ -86,7 +86,7 @@ extension Formatter {
 
     /// Returns white space made up of indent characters equvialent to the specified token range
     func spaceEquivalentToTokens(from start: Int, upTo end: Int) -> String {
-        if options.useTabs, options.tabWidth > 0 {
+        if !options.smartTabs, options.useTabs, options.tabWidth > 0 {
             return spaceEquivalentToWidth(lineLength(from: start, upTo: end))
         }
         return tokens[start ..< end].reduce(into: "") { result, token in

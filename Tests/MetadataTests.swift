@@ -121,12 +121,10 @@ class MetadataTests: XCTestCase {
                     continue
                 }
                 switch formatter.tokens[index] {
-                case let .identifier(fn) where [
-                    "spaceEquivalentToWidth",
-                    "spaceEquivalentToTokens",
-                    "tokenLength",
-                    "lineLength",
-                ].contains(fn):
+                case .identifier("spaceEquivalentToWidth"),
+                     .identifier("spaceEquivalentToTokens"):
+                    referencedOptions += [.indentation, .tabWidth, .smartTabs]
+                case .identifier("tokenLength"), .identifier("lineLength"):
                     referencedOptions += [.indentation, .tabWidth]
                 case .identifier("isCommentedCode"):
                     referencedOptions.append(.indentation)
@@ -134,8 +132,9 @@ class MetadataTests: XCTestCase {
                     referencedOptions.append(.lineBreak)
                 case .identifier("wrapCollectionsAndArguments"):
                     referencedOptions += [
-                        .wrapArguments, .wrapParameters, .wrapCollections, .closingParen,
-                        .indentation, .truncateBlankLines, .lineBreak, .tabWidth, .maxWidth,
+                        .wrapArguments, .wrapParameters, .wrapCollections,
+                        .closingParen, .lineBreak, .truncateBlankLines,
+                        .indentation, .tabWidth, .maxWidth, .smartTabs,
                     ]
                 case .identifier("indexWhereLineShouldWrapInLine"):
                     referencedOptions.append(.noWrapOperators)

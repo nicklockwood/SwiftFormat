@@ -911,7 +911,7 @@ public struct _FormatRules {
     public let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
         orderAfter: ["trailingSpace", "wrap", "wrapArguments", "wrapMultilineStatementBraces"],
-        options: ["indent", "tabwidth", "indentcase", "ifdef", "xcodeindentation"],
+        options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation"],
         sharedOptions: ["trimwhitespace", "closingparen"]
     ) { formatter in
         var scopeStack: [Token] = []
@@ -3142,7 +3142,7 @@ public struct _FormatRules {
         help: "Wrap lines that exceed the specified maximum width.",
         options: ["maxwidth", "nowrapoperators"],
         sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "indent",
-                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
+                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs"]
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
         guard maxWidth > 0 else { return }
@@ -3195,7 +3195,7 @@ public struct _FormatRules {
         help: "Align wrapped function arguments or collection elements.",
         orderAfter: ["wrap"],
         options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen"],
-        sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth"]
+        sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
                                               wrapSingleArguments: false)

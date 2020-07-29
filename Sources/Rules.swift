@@ -3330,7 +3330,12 @@ public struct _FormatRules {
 
     /// Standardize formatting of numeric literals
     public let numberFormatting = FormatRule(
-        help: "Use consistent grouping for numeric literals.",
+        help: """
+        Use consistent grouping for numeric literals. Groups will be separated by `_`
+        delimiters to improve readability. For each numeric type you can specify a group
+        size (the number of digits in each group) and a threshold (the minimum number of
+        digits in a number before grouping is applied).
+        """,
         options: ["decimalgrouping", "binarygrouping", "octalgrouping", "hexgrouping",
                   "fractiongrouping", "exponentgrouping", "hexliteralcase", "exponentcase"]
     ) { formatter in

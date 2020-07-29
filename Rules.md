@@ -609,7 +609,10 @@ Option | Description
 
 ## numberFormatting
 
-Use consistent grouping for numeric literals.
+Use consistent grouping for numeric literals. Groups will be separated by `_`
+delimiters to improve readability. For each numeric type you can specify a group
+size (the number of digits in each group) and a threshold (the minimum number of
+digits in a number before grouping is applied).
 
 Option | Description
 --- | ---

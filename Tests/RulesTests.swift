@@ -12397,4 +12397,16 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.1")
         testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
     }
+
+    func testNoMapPropertyToKeyPathForFunctionCalls() {
+        let input = "let foo = bar.map { $0.foo() }"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
+    }
+
+    func testNoMapPropertyToKeyPathForCompoundExpressions() {
+        let input = "let foo = bar.map { $0.foo || baz }"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
+    }
 }

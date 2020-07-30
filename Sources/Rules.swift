@@ -4713,7 +4713,7 @@ public struct _FormatRules {
                 return
             } else {
                 let tokens = formatter.tokens[nextIndex + 1 ... lastIndex]
-                guard tokens.allSatisfy({ $0.isSpace || !$0.isIdentifier || !$0.isOperator(".") }) else {
+                guard tokens.allSatisfy({ $0.isSpace || $0.isIdentifier || $0.isOperator(".") }) else {
                     return
                 }
                 replacementTokens = [.operator("\\", .prefix)] + tokens

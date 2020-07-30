@@ -47,6 +47,10 @@ struct Rule {
 }
 
 extension Rule: Comparable {
+    var isDeprecated: Bool {
+        return FormatRules.byName[name]?.isDeprecated == true
+    }
+
     static func < (lhs: Rule, rhs: Rule) -> Bool {
         if lhs.name == rhs.name {
             return lhs.isEnabled
@@ -82,7 +86,9 @@ struct RulesStore {
     }
 
     var rules: [Rule] {
-        return load().map { Rule($0) }
+        return load()
+            .map { Rule($0) }
+            .filter { !$0.isDeprecated }
     }
 
     func save(_ rule: Rule) {

@@ -743,9 +743,11 @@ Credits
 * [Tony Arnold](https://github.com/tonyarnold) - SwiftFormat for Xcode
 * [Vincent Bernier](https://github.com/vinceburn) - SwiftFormat for Xcode settings UI
 * [Vikram Kriplaney](https://github.com/markiv) - SwiftFormat for Xcode icon
+* [Hyperphonic](https://github.com/hyperphonic0) - Xcode 12 compatibility for SwiftFormat
 * [Maxime Marinel](https://github.com/bourvill) - Git pre-commit hook script
 * [Romain Pouclet](https://github.com/palleas) - Homebrew formula
 * [Aerobounce](https://github.com/aerobounce) - Homebrew cask and Sublime Text plugin
+* [Cal Stephens](https://github.com/calda) - Several formatting rules and options
 * [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
 * [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
 * [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions

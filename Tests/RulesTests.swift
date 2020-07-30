@@ -12409,4 +12409,10 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.2")
         testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
     }
+
+    func testNoMapPropertyToKeyPathForOptionalChaining() {
+        let input = "let foo = bar.map { $0?.foo }"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
+    }
 }

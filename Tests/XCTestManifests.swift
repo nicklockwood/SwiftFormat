@@ -998,6 +998,7 @@ extension RulesTests {
         ("testNoMangleYodaConditionInTernary3", testNoMangleYodaConditionInTernary3),
         ("testNoMapPropertyToKeyPathForCompoundExpressions", testNoMapPropertyToKeyPathForCompoundExpressions),
         ("testNoMapPropertyToKeyPathForFunctionCalls", testNoMapPropertyToKeyPathForFunctionCalls),
+        ("testNoMapPropertyToKeyPathForOptionalChaining", testNoMapPropertyToKeyPathForOptionalChaining),
         ("testNoMapPropertyToKeyPathForSwiftLessThan5_2", testNoMapPropertyToKeyPathForSwiftLessThan5_2),
         ("testNoMapSelfToKeyPath", testNoMapSelfToKeyPath),
         ("testNoMarkFunctionArgument", testNoMarkFunctionArgument),

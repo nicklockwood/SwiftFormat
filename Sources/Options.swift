@@ -364,7 +364,8 @@ public struct FormatOptions: CustomStringConvertible {
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
                 swiftVersion: Version = .undefined,
-                fileInfo: FileInfo = FileInfo()) {
+                fileInfo: FileInfo = FileInfo())
+    {
         self.indent = indent
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons
@@ -451,7 +452,8 @@ public struct FileOptions {
                 supportedFileExtensions: [String] = ["swift"],
                 excludedGlobs: [Glob] = [],
                 unexcludedGlobs: [Glob] = [],
-                minVersion: Version = .undefined) {
+                minVersion: Version = .undefined)
+    {
         self.followSymlinks = followSymlinks
         self.supportedFileExtensions = supportedFileExtensions
         self.excludedGlobs = excludedGlobs
@@ -474,7 +476,8 @@ public struct Options {
 
     public init(fileOptions: FileOptions? = nil,
                 formatOptions: FormatOptions? = nil,
-                rules: Set<String>? = nil) {
+                rules: Set<String>? = nil)
+    {
         self.fileOptions = fileOptions
         self.formatOptions = formatOptions
         self.rules = rules

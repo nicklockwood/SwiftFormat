@@ -86,7 +86,8 @@ extension FormatOptions {
              help: String,
              keyPath: WritableKeyPath<FormatOptions, Bool>,
              trueValues: [String],
-             falseValues: [String]) {
+             falseValues: [String])
+        {
             assert(argumentName.count <= Options.maxArgumentNameLength)
             self.argumentName = argumentName
             self.propertyName = propertyName
@@ -114,7 +115,8 @@ extension FormatOptions {
                 help: String,
                 keyPath: WritableKeyPath<FormatOptions, T>,
                 fromArgument: @escaping (String) -> T?,
-                toArgument: @escaping (T) -> String) {
+                toArgument: @escaping (T) -> String)
+        {
             self.argumentName = argumentName
             self.propertyName = propertyName
             self.displayName = displayName
@@ -136,7 +138,8 @@ extension FormatOptions {
              displayName: String,
              help: String,
              keyPath: WritableKeyPath<FormatOptions, String>,
-             options: DictionaryLiteral<String, String>) {
+             options: DictionaryLiteral<String, String>)
+        {
             let map: [String: String] = Dictionary(options.map { ($0, $1) }, uniquingKeysWith: { $1 })
             let keys = Array(map.keys)
             self.init(argumentName: argumentName,
@@ -162,7 +165,8 @@ extension FormatOptions {
                                   propertyName: String,
                                   displayName: String,
                                   help: String = "",
-                                  keyPath: WritableKeyPath<FormatOptions, T>) where T.RawValue == String {
+                                  keyPath: WritableKeyPath<FormatOptions, T>) where T.RawValue == String
+        {
             self.argumentName = argumentName
             self.propertyName = propertyName
             self.displayName = displayName
@@ -184,7 +188,8 @@ extension FormatOptions {
                                   displayName: String,
                                   help: String = "",
                                   keyPath: WritableKeyPath<FormatOptions, T>,
-                                  options: [String]) where T.RawValue == String {
+                                  options: [String]) where T.RawValue == String
+        {
             self.init(
                 argumentName: argumentName,
                 propertyName: propertyName,
@@ -200,7 +205,8 @@ extension FormatOptions {
              displayName: String,
              help: String,
              keyPath: WritableKeyPath<FormatOptions, [String]>,
-             validate: @escaping (String) throws -> Void = { _ in }) {
+             validate: @escaping (String) throws -> Void = { _ in })
+        {
             self.argumentName = argumentName
             self.propertyName = propertyName
             self.displayName = displayName
@@ -226,7 +232,8 @@ extension FormatOptions {
              displayName: String,
              help: String,
              keyPath: WritableKeyPath<FormatOptions, Set<String>>,
-             validate: @escaping (String) throws -> Void = { _ in }) {
+             validate: @escaping (String) throws -> Void = { _ in })
+        {
             self.argumentName = argumentName
             self.propertyName = propertyName
             self.displayName = displayName

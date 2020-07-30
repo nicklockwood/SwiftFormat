@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.45.0
+//  Version 0.45.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -109,7 +109,8 @@ public class Formatter: NSObject {
 
     /// Create a new formatter instance from a token array
     public init(_ tokens: [Token], options: FormatOptions = FormatOptions(),
-                trackChanges: Bool = false, range: Range<Int>? = nil) {
+                trackChanges: Bool = false, range: Range<Int>? = nil)
+    {
         self.tokens = tokens
         self.options = options
         self.trackChanges = trackChanges

@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.45.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.1) (2020-07-30)
+
+- Fixed bug where `preferKeyPath` was incorrectly applied to function calls and compound expressions
+- The `wrapMultilineStatementBraces` rule is now applied to `init` and `subscript` braces
+- The `wrapAttributes` rule now handles `init` and `subscript` the same way as functions
+
 ## [0.45.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.0) (2020-07-29)
 
 - Added `wrapAttributes` rule for controlling attribute position

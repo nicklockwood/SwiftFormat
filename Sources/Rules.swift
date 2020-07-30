@@ -52,7 +52,8 @@ public final class FormatRule: Equatable, Comparable {
                      orderAfter: [String] = [],
                      options: [String] = [],
                      sharedOptions: [String] = [],
-                     _ fn: @escaping (Formatter) -> Void) {
+                     _ fn: @escaping (Formatter) -> Void)
+    {
         self.fn = fn
         self.help = help
         self.orderAfter = orderAfter

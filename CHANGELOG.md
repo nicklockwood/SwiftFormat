@@ -3,7 +3,7 @@
 ## [0.45.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.0) (2020-07-29)
 
 - Added `wrapAttributes` rule for controlling attribute position
-- Added `wrapMultilineConditionalBraces` rule for opening braces for wrapped expressions
+- Added `wrapMultilineStatementBraces` rule for opening braces for wrapped expressions
 - Added `preferKeyPath` rule for converting trivial closures to keyPaths in Swift 5.2
 - Added `--smarttabs` option to support consistent indenting regardless of `--tabwidth`
 - Updated Xcode extension for Xcode 12 and macOS Big Sur

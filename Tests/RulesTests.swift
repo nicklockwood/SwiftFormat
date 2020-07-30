@@ -12197,6 +12197,18 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testWrapInitAttribute() {
+        let input = """
+        @available(iOS 14.0, *) init() {}
+        """
+        let output = """
+        @available(iOS 14.0, *)
+        init() {}
+        """
+        let options = FormatOptions(funcAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     func testMultipleAttributesNotSeparated() {
         let input = """
         @objc @IBAction func foo {}

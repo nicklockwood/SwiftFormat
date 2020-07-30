@@ -4629,7 +4629,9 @@ public struct _FormatRules {
             let rangeToOpenBrace = CountableRange<Int>(endIndex + 1 ... openBrace)
             let attributeMode: AttributeMode
             let keywordIndex: Int
-            if let funcKeyworkIndex = formatter.index(of: .keyword("func"), in: rangeToOpenBrace) {
+            if let funcKeyworkIndex = formatter.index(in: rangeToOpenBrace, where: {
+                [.keyword("func"), .keyword("init"), .keyword("subscript")].contains($0)
+            }) {
                 attributeMode = formatter.options.funcAttributes
                 keywordIndex = funcKeyworkIndex
             } else if let typeKeywordIndex = formatter.index(in: rangeToOpenBrace, where: {

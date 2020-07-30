@@ -741,6 +741,8 @@ extension RulesTests {
         ("testIgnoreFractionGrouping", testIgnoreFractionGrouping),
         ("testIgnoreInlineSemicolon", testIgnoreInlineSemicolon),
         ("testIndentClassDeclarationContainingComment", testIndentClassDeclarationContainingComment),
+        ("testIndentClosureArguments", testIndentClosureArguments),
+        ("testIndentClosureArguments2", testIndentClosureArguments2),
         ("testIndentClosureStartingOnIndentedLine", testIndentClosureStartingOnIndentedLine),
         ("testIndentClosureStartingOnIndentedLineInLet", testIndentClosureStartingOnIndentedLineInLet),
         ("testIndentClosureStartingOnIndentedLineInTypedLet", testIndentClosureStartingOnIndentedLineInTypedLet),

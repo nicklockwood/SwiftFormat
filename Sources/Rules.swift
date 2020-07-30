@@ -987,6 +987,23 @@ public struct _FormatRules {
             return formatter.last(.nonSpaceOrComment, before: returnOperatorIndex)?.isLinebreak == true
         }
 
+        func isFirstStackedClosureArgument(at i: Int) -> Bool {
+            assert(formatter.tokens[i] == .startOfScope("{"))
+            if let prevIndex = formatter.index(of: .nonSpace, before: i),
+                let prevToken = formatter.token(at: prevIndex), prevToken == .startOfScope("(") ||
+                (prevToken == .delimiter(":") && formatter.token(at: prevIndex - 1)?.isIdentifier == true
+                    && formatter.last(.nonSpace, before: prevIndex - 1) == .startOfScope("(")),
+                let endIndex = formatter.endOfScope(at: i),
+                let commaIndex = formatter.index(of: .nonSpace, after: endIndex, if: {
+                    $0 == .delimiter(",")
+                }),
+                formatter.next(.nonSpaceOrComment, after: commaIndex)?.isLinebreak == true
+            {
+                return true
+            }
+            return false
+        }
+
         if formatter.options.fragment,
             let firstIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1),
             let indentToken = formatter.token(at: firstIndex - 1), case let .space(string) = indentToken
@@ -1111,6 +1128,29 @@ public struct _FormatRules {
                     } else {
                         indent += formatter.options.indent
                     }
+                case "{" where isFirstStackedClosureArgument(at: i):
+                    guard var prevIndex = formatter.index(of: .nonSpace, before: i) else {
+                        assertionFailure()
+                        break
+                    }
+                    if formatter.tokens[prevIndex] == .delimiter(":") {
+                        guard formatter.token(at: prevIndex - 1)?.isIdentifier == true,
+                            let parenIndex = formatter.index(of: .nonSpace, before: prevIndex - 1, if: {
+                                $0 == .startOfScope("(")
+                            })
+                        else {
+                            let stringIndent = stringBodyIndent(at: i)
+                            stringBodyIndentStack[stringBodyIndentStack.count - 1] = stringIndent
+                            indent += stringIndent + formatter.options.indent
+                            break
+                        }
+                        prevIndex = parenIndex
+                    }
+                    let startIndex = formatter.startOfLine(at: i)
+                    indent = formatter.spaceEquivalentToTokens(from: startIndex, upTo: prevIndex + 1)
+                    indentStack[indentStack.count - 1] = indent
+                    indent += formatter.options.indent
+                    indentCount -= 1
                 case _ where token.isStringDelimiter, "//":
                     break
                 case "[", "(":

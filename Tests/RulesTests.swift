@@ -1592,6 +1592,31 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentClosureArguments() {
+        let input = """
+        foo(bar: {
+                print(bar)
+            },
+            baz: {
+                print(baz)
+            })
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentClosureArguments2() {
+        let input = """
+        foo(bar: {
+                print(bar)
+            },
+            baz: {
+                print(baz)
+            }
+        )
+        """
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapArguments"])
+    }
+
     // indent switch/case
 
     func testSwitchCaseIndenting() {

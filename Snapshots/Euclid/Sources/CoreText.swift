@@ -43,7 +43,8 @@ public extension Mesh {
          width: Double? = nil,
          depth: Double = 1,
          detail: Int = 2,
-         material: Polygon.Material = nil) {
+         material: Polygon.Material = nil)
+    {
         let font = font ?? CTFontCreateWithName("Helvetica" as CFString, 1, nil)
         let attributes = [NSAttributedString.Key.font: font]
         let attributedString = NSAttributedString(string: text, attributes: attributes)
@@ -55,7 +56,8 @@ public extension Mesh {
          width: Double? = nil,
          depth: Double = 1,
          detail _: Int = 2,
-         material: Polygon.Material = nil) {
+         material: Polygon.Material = nil)
+    {
         var meshes = [Mesh]()
         var cache = [CGPath: Mesh]()
         for (cgPath, cgPoint) in cgPaths(for: text, width: width) {

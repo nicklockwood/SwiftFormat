@@ -83,7 +83,8 @@ public extension Rotation {
     /// Define a rotation using 3x3 matrix coefficients
     init(_ m11: Double, _ m12: Double, _ m13: Double,
          _ m21: Double, _ m22: Double, _ m23: Double,
-         _ m31: Double, _ m32: Double, _ m33: Double) {
+         _ m31: Double, _ m32: Double, _ m33: Double)
+    {
         assert(!m11.isNaN)
         self.m11 = m11
         self.m12 = m12

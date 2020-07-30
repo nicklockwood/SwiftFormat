@@ -48,7 +48,8 @@ struct FileOptions {
     public var supportedFileExtensions: [String]
 
     public init(followSymlinks: Bool = false,
-                supportedFileExtensions: [String] = ["xml"]) {
+                supportedFileExtensions: [String] = ["xml"])
+    {
         self.followSymlinks = followSymlinks
         self.supportedFileExtensions = supportedFileExtensions
     }

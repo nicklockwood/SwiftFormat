@@ -876,6 +876,7 @@ extension RulesTests {
         ("testMultilineGuardElseWrappedByDefaultIfBracesOnNextLine", testMultilineGuardElseWrappedByDefaultIfBracesOnNextLine),
         ("testMultilineIfBraceOnNextLine", testMultilineIfBraceOnNextLine),
         ("testMultilineIfBraceOnSameLine", testMultilineIfBraceOnSameLine),
+        ("testMultilineInitBraceOnNextLine", testMultilineInitBraceOnNextLine),
         ("testMultilineMapPropertyToKeyPath", testMultilineMapPropertyToKeyPath),
         ("testMultilineStringWithEscapedLinebreak", testMultilineStringWithEscapedLinebreak),
         ("testMultipleAttributesNotSeparated", testMultipleAttributesNotSeparated),

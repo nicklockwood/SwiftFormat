@@ -259,7 +259,8 @@ struct LayoutExpression {
 
     private init?(percentageExpression: String,
                   for prop: String, in node: LayoutNode,
-                  impureSymbols: (AnyExpression.Symbol) -> AnyExpression.SymbolEvaluator? = { _ in nil }) {
+                  impureSymbols: (AnyExpression.Symbol) -> AnyExpression.SymbolEvaluator? = { _ in nil })
+    {
         guard let expression = LayoutExpression(
             anyExpression: percentageExpression,
             type: .cgFloat,
@@ -361,7 +362,8 @@ struct LayoutExpression {
                   constants: @escaping (String) -> Any? = { _ in nil },
                   pureSymbols: (AnyExpression.Symbol) -> AnyExpression.SymbolEvaluator? = { _ in nil },
                   impureSymbols: (AnyExpression.Symbol) -> AnyExpression.SymbolEvaluator? = { _ in nil },
-                  for node: LayoutNode) {
+                  for node: LayoutNode)
+    {
         do {
             self.init(
                 anyExpression: try parseExpression(anyExpression),
@@ -384,7 +386,8 @@ struct LayoutExpression {
                   pureSymbols: (AnyExpression.Symbol) -> AnyExpression.SymbolEvaluator? = { _ in nil },
                   impureSymbols: (AnyExpression.Symbol) -> AnyExpression.SymbolEvaluator? = { _ in nil },
                   macroReferences: [String] = [],
-                  for node: LayoutNode) {
+                  for node: LayoutNode)
+    {
         if parsedExpression.isEmpty {
             return nil
         }

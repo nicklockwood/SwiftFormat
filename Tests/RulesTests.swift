@@ -12007,6 +12007,24 @@ class RulesTests: XCTestCase {
                        exclude: ["braces", "wrapArguments", "unusedArguments"])
     }
 
+    func testMultilineInitBraceOnNextLine() {
+        let input = """
+        init(foo: Int,
+             bar: Int) {
+            print("function body")
+        }
+        """
+        let output = """
+        init(foo: Int,
+             bar: Int)
+        {
+            print("function body")
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
+                       exclude: ["braces", "wrapArguments", "unusedArguments"])
+    }
+
     func testMultilineForLoopBraceOnNextLine() {
         let input = """
         for foo in

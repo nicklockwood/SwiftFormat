@@ -43,6 +43,7 @@ public class Formatter: NSObject {
     private var enumerationIndex = -1
     private var disabledCount = 0
     private var disabledNext = 0
+    private var tempOptions: FormatOptions?
     private var wasNextDirective = false
 
     // Formatting range
@@ -66,29 +67,50 @@ public class Formatter: NSObject {
 
     // Process a comment token (which may contain directives)
     func processCommentBody(_ comment: String) {
-        let prefix = "swiftformat:"
+        var prefix = "swiftformat:"
         guard let rule = currentRule, comment.hasPrefix(prefix),
-            let directive = ["disable", "enable"].first(where: { comment.hasPrefix("\(prefix)\($0)") }),
-            comment.range(of: "\\b(\(rule.name)|all)\\b", options: .regularExpression) != nil
+            let directive = ["disable", "enable", "options"].first(where: {
+                comment.hasPrefix("\(prefix)\($0)")
+            })
         else {
             return
         }
-        wasNextDirective = comment.hasPrefix("\(prefix)\(directive):next")
+        prefix += directive
+        wasNextDirective = comment.hasPrefix("\(prefix):next")
+        func containsRule() -> Bool {
+            return comment.range(of: "\\b(\(rule.name)|all)\\b",
+                                 options: .regularExpression) != nil
+        }
         switch directive {
-        case "disable":
+        case "options":
+            if wasNextDirective {
+                tempOptions = options
+            }
+            let index = (wasNextDirective ? "\(prefix):next" : prefix).endIndex
+            let args = parseArguments(String(comment[index...]))
+            do {
+                let args = try preprocessArguments(args, formattingArguments + internalArguments)
+                var options = Options(formatOptions: self.options)
+                try options.addArguments(args, in: "")
+                self.options = options.formatOptions ?? self.options
+            } catch {
+                // TODO: handle errors
+                return
+            }
+        case "disable" where containsRule():
             if wasNextDirective {
                 disabledNext = 1
             } else {
                 disabledCount += 1
             }
-        case "enable":
+        case "enable" where containsRule():
             if wasNextDirective {
                 disabledNext = -1
             } else {
                 disabledCount -= 1
             }
         default:
-            preconditionFailure()
+            return
         }
     }
 
@@ -96,13 +118,19 @@ public class Formatter: NSObject {
     func processLinebreak() {
         if wasNextDirective {
             wasNextDirective = false
-        } else if disabledNext != 0 {
-            disabledNext = 0
+        } else {
+            if let options = tempOptions {
+                self.options = options
+                tempOptions = nil
+            }
+            if disabledNext != 0 {
+                disabledNext = 0
+            }
         }
     }
 
     /// The options that the formatter was initialized with
-    public let options: FormatOptions
+    public private(set) var options: FormatOptions
 
     /// The token array managed by the formatter (read-only)
     public private(set) var tokens: [Token]

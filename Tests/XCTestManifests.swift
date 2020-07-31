@@ -126,6 +126,7 @@ extension FormatterTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__FormatterTests = [
+        ("testAllmanOption", testAllmanOption),
         ("testCodeOutsideRangeNotFormatted", testCodeOutsideRangeNotFormatted),
         ("testDisableAllRules", testDisableAllRules),
         ("testDisableAllRulesAndReEnableOneRule", testDisableAllRulesAndReEnableOneRule),
@@ -140,6 +141,7 @@ extension FormatterTests {
         ("testEnableNext", testEnableNext),
         ("testEnableNextWithMultilineComment", testEnableNextWithMultilineComment),
         ("testEndOfScopeInSwitch", testEndOfScopeInSwitch),
+        ("testIndentNext", testIndentNext),
         ("testIndexBeforeComment", testIndexBeforeComment),
         ("testIndexBeforeMultilineComment", testIndexBeforeMultilineComment),
         ("testLinebreakAfterLinebreakReturnsCorrectIndex", testLinebreakAfterLinebreakReturnsCorrectIndex),
@@ -147,6 +149,7 @@ extension FormatterTests {
         ("testRemoveCurrentTokenWhileEnumerating", testRemoveCurrentTokenWhileEnumerating),
         ("testRemoveNextTokenWhileEnumerating", testRemoveNextTokenWhileEnumerating),
         ("testRemovePreviousTokenWhileEnumerating", testRemovePreviousTokenWhileEnumerating),
+        ("testSwiftVersionNext", testSwiftVersionNext),
     ]
 }
 

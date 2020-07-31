@@ -4017,17 +4017,16 @@ public struct _FormatRules {
     public let anyObjectProtocol = FormatRule(
         help: "Prefer `AnyObject` over `class` in protocol definitions."
     ) { formatter in
-        guard formatter.options.swiftVersion >= "4.1" else {
-            return
-        }
         formatter.forEach(.keyword("protocol")) { i, _ in
-            guard let nameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
-                $0.isIdentifier
-            }), let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nameIndex, if: {
-                $0 == .delimiter(":")
-            }), let classIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex, if: {
-                $0 == .keyword("class")
-            }) else {
+            guard formatter.options.swiftVersion >= "4.1",
+                let nameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                    $0.isIdentifier
+                }), let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nameIndex, if: {
+                    $0 == .delimiter(":")
+                }), let classIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex, if: {
+                    $0 == .keyword("class")
+                })
+            else {
                 return
             }
             formatter.replaceToken(at: classIndex, with: .identifier("AnyObject"))
@@ -4058,13 +4057,12 @@ public struct _FormatRules {
     public let strongifiedSelf = FormatRule(
         help: "Remove backticks around `self` in Optional unwrap expressions."
     ) { formatter in
-        guard formatter.options.swiftVersion >= "4.2" else {
-            return
-        }
         formatter.forEach(.identifier("`self`")) { i, _ in
-            guard let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
-                $0 == .operator("=", .infix)
-            }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: equalIndex) == .identifier("self") else {
+            guard formatter.options.swiftVersion >= "4.2",
+                let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                    $0 == .operator("=", .infix)
+                }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: equalIndex) == .identifier("self")
+            else {
                 return
             }
             formatter.replaceToken(at: i, with: .identifier("self"))
@@ -4269,7 +4267,7 @@ public struct _FormatRules {
                 hasUnreplacedFileprivates = true
             }
         }
-        guard hasUnreplacedFileprivates, formatter.options.swiftVersion >= "4" else {
+        guard hasUnreplacedFileprivates else {
             return
         }
         let importRanges = formatter.parseImports()
@@ -4359,11 +4357,12 @@ public struct _FormatRules {
         }
         formatter.forEach(.keyword("fileprivate")) { i, _ in
             // Check if definition is a member of a file-scope type
-            guard let scopeIndex = formatter.index(of: .startOfScope, before: i, if: {
-                $0 == .startOfScope("{")
-            }), let typeIndex = formatter.index(of: .keyword, before: scopeIndex, if: {
-                ["class", "struct", "enum"].contains($0.string)
-            }), case let .identifier(typeName)? = formatter.next(.identifier, after: typeIndex),
+            guard formatter.options.swiftVersion >= "4",
+                let scopeIndex = formatter.index(of: .startOfScope, before: i, if: {
+                    $0 == .startOfScope("{")
+                }), let typeIndex = formatter.index(of: .keyword, before: scopeIndex, if: {
+                    ["class", "struct", "enum"].contains($0.string)
+                }), case let .identifier(typeName)? = formatter.next(.identifier, after: typeIndex),
                 let endIndex = formatter.index(of: .endOfScope, after: scopeIndex),
                 formatter.currentScope(at: typeIndex) == nil
             else {
@@ -4703,11 +4702,10 @@ public struct _FormatRules {
     public let preferKeyPath = FormatRule(
         help: "Convert trivial `map { $0.foo }` closures to keyPath-based syntax."
     ) { formatter in
-        guard formatter.options.swiftVersion >= "5.2" else {
-            return
-        }
         formatter.forEach(.startOfScope("{")) { i, _ in
-            guard let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i) else {
+            guard formatter.options.swiftVersion >= "5.2",
+                let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i)
+            else {
                 return
             }
             var prevToken = formatter.tokens[prevIndex]

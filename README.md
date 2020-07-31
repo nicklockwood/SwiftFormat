@@ -382,6 +382,19 @@ Rules are configured by adding `--[option_name] [value]` to your command-line ar
 
 A given option may affect multiple rules. Use `--ruleinfo [rule_name]` command for details about which options affect a given rule, or see the [Rules.md](https://github.com/nicklockwood/SwiftFormat/blob/master/Rules.md) file.
 
+You can configure options for specific files or code ranges by using `swiftformat:options` directive in comments inside your Swift file. To temporarily set one or more options inside a source file, use:
+
+```swift
+// swiftformat:options --indent 2 --allman true
+```
+
+To apply an options override only to a particular line, use the `:next` modifier:
+
+```swift
+// swiftformat:options:next --semicolons inline
+doTheThing(); print("Did the thing")
+```
+
 
 Rules
 -----
@@ -415,7 +428,7 @@ To avoid automatically opting-in to new rules when SwiftFormat is updated, you c
 
 To see exactly which rules were applied to a given file, you can use the `--verbose` command-line option to force SwiftFormat to print a more detailed log as it applies the formatting. **NOTE:** running in verbose mode is slower than the default mode.
 
-You can disable rules for specific files or code ranges by using `swiftformat:` directives in comments inside your Swift files. To temporarily disable one or more rules inside a source file, use:
+You can disable rules for specific files or code ranges by using `swiftformat:` directives in comments inside your Swift file. To temporarily disable one or more rules inside a source file, use:
 
 ```swift
 // swiftformat:disable <rule1> [<rule2> [rule<3> ...]]

@@ -249,6 +249,73 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default, options: options), input)
     }
 
+    // MARK: options directive
+
+    func testAllmanOption() {
+        let input = """
+        // swiftformat:options --allman true
+        func foo() {
+            print("bar")
+        }
+
+        """
+        let output = """
+        // swiftformat:options --allman true
+        func foo()
+        {
+            print("bar")
+        }
+
+        """
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
+    func testIndentNext() {
+        let input = """
+        class Foo {
+            // swiftformat:options:next --indent 2
+            func bar() {
+                print("bar")
+            }
+
+            func baz() {
+                print("bar")
+            }
+        }
+
+        """
+        let output = """
+        class Foo {
+            // swiftformat:options:next --indent 2
+            func bar() {
+              print("bar")
+            }
+
+            func baz() {
+                print("bar")
+            }
+        }
+
+        """
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
+    func testSwiftVersionNext() {
+        let input = """
+        // swiftformat:options:next --swiftversion 5.2
+        let foo1 = bar.map { $0.foo }
+        let foo2 = bar.map { $0.foo }
+
+        """
+        let output = """
+        // swiftformat:options:next --swiftversion 5.2
+        let foo1 = bar.map(\\.foo)
+        let foo2 = bar.map { $0.foo }
+
+        """
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
     // MARK: linebreaks
 
     func testLinebreakAfterLinebreakReturnsCorrectIndex() {

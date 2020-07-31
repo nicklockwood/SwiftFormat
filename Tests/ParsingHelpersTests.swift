@@ -381,6 +381,14 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isStartOfClosure(at: 20))
     }
 
+    func testClosureInsideIfCondition() {
+        let formatter = Formatter(tokenize("""
+        if let foo = bar(), { x == y }() {}
+        """))
+        XCTAssert(formatter.isStartOfClosure(at: 13))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 25))
+    }
+
     // MARK: isAccessorKeyword
 
     func testDidSet() {
@@ -470,5 +478,97 @@ class ParsingHelpersTests: XCTestCase {
             "mutating", "nonmutating",
             "prefix", "postfix",
         ])
+    }
+
+    // MARK: processDeclaredVariables
+
+    func testProcessCommaDelimitedDeclaredVariables() {
+        let formatter = Formatter(tokenize("""
+        let foo = bar(), x = y, baz = quux {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo", "x", "baz"])
+    }
+
+    func testProcessDeclaredVariablesInIfCondition() {
+        let formatter = Formatter(tokenize("""
+        if let foo = bar(), x == y, let baz = quux {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo", "baz"])
+    }
+
+    func testProcessDeclaredVariablesInIfWithParenthetical() {
+        let formatter = Formatter(tokenize("""
+        if let foo = bar(), (x == y), let baz = quux {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo", "baz"])
+    }
+
+    func testProcessDeclaredVariablesInIfWithClosure() {
+        let formatter = Formatter(tokenize("""
+        if let foo = bar(), { x == y }(), let baz = quux {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo", "baz"])
+    }
+
+    func testProcessDeclaredVariablesInIfWithArrayLiteral() {
+        let formatter = Formatter(tokenize("""
+        if let foo = bar(), [x] == y, let baz = quux {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo", "baz"])
+    }
+
+    func testProcessCaseDeclaredVariablesInIf() {
+        let formatter = Formatter(tokenize("""
+        if let foo = bar(), case .bar(var baz) = quux {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo", "baz"])
+    }
+
+    func testProcessCaseDeclaredVariablesInIf2() {
+        let formatter = Formatter(tokenize("""
+        if case let .foo(bar, baz) = quux {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["bar", "baz"])
+    }
+
+    func testProcessTupleDeclaredVariablesInIf() {
+        let formatter = Formatter(tokenize("""
+        if let (bar, baz) = quux, x = y {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["bar", "baz"])
+    }
+
+    func testProcessTupleDeclaredVariablesInIf2() {
+        let formatter = Formatter(tokenize("""
+        if let ((bar, baz), (x, y)) = quux {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["bar", "baz", "x", "y"])
     }
 }

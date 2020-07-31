@@ -202,12 +202,15 @@ extension Formatter {
 
     // gather declared variable names, starting at index after let/var keyword
     func processDeclaredVariables(at index: inout Int, names: inout Set<String>, removeSelf: Bool) {
+        let isConditional = isConditionalStatement(at: index)
+        var declarationIndex: Int? = -1
+        var scopeIndexStack = [Int]()
         while let token = self.token(at: index) {
             switch token {
             case .identifier where
                 last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false:
                 let name = token.unescaped()
-                if name != "_" {
+                if name != "_", declarationIndex != nil || !isConditional {
                     names.insert(name)
                 }
                 inner: while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
@@ -239,7 +242,15 @@ extension Formatter {
                         continue
                     case .keyword, .startOfScope("{"), .endOfScope("}"), .startOfScope(":"):
                         return
+                    case .endOfScope(")"):
+                        let scopeIndex = scopeIndexStack.popLast() ?? -1
+                        if let d = declarationIndex, d > scopeIndex {
+                            declarationIndex = nil
+                        }
                     case .delimiter(","):
+                        if let d = declarationIndex, d > scopeIndexStack.last ?? -1 {
+                            declarationIndex = nil
+                        }
                         index = nextIndex
                         break inner
                     case .identifier("self") where removeSelf && isEnabled:
@@ -249,6 +260,16 @@ extension Formatter {
                     }
                     index = nextIndex
                 }
+            case .keyword("let"), .keyword("var"):
+                declarationIndex = index
+            case .startOfScope("("):
+                scopeIndexStack.append(index)
+            case .startOfScope("{"):
+                guard isStartOfClosure(at: index), let nextIndex = endOfScope(at: index) else {
+                    index -= 1
+                    return
+                }
+                index = nextIndex
             default:
                 break
             }
@@ -442,7 +463,7 @@ extension Formatter {
         }
 
         func isAfterBrace(_ index: Int) -> Bool {
-            guard let braceIndex = lastIndex(of: .endOfScope("}"), in: index + 1 ..< i) else {
+            guard let braceIndex = lastIndex(of: .endOfScope("}"), in: index ..< i) else {
                 return false
             }
             return self.index(of: .nonSpaceOrCommentOrLinebreak, in: braceIndex + 1 ..< i) != nil

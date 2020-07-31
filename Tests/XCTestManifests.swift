@@ -1392,6 +1392,8 @@ extension RulesTests {
         ("testRedundantSelfDoesntGetStuckIfNoParensFound", testRedundantSelfDoesntGetStuckIfNoParensFound),
         ("testRedundantSelfRemovedInsideConditionalCase", testRedundantSelfRemovedInsideConditionalCase),
         ("testRedundantSelfRemovedWhenFollowedBySwitchContainingIfdef", testRedundantSelfRemovedWhenFollowedBySwitchContainingIfdef),
+        ("testRedundantSelfWithStaticMethodAfterForLoop", testRedundantSelfWithStaticMethodAfterForLoop),
+        ("testRedundantSelfWithStaticMethodAfterForWhereLoop", testRedundantSelfWithStaticMethodAfterForWhereLoop),
         ("testRemoveBacktickCaseRawStringCases", testRemoveBacktickCaseRawStringCases),
         ("testRemoveBackticksAroundClassSelfArgument", testRemoveBackticksAroundClassSelfArgument),
         ("testRemoveBackticksAroundClassSelfAsParameterType", testRemoveBackticksAroundClassSelfAsParameterType),

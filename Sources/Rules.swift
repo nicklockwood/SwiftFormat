@@ -2454,6 +2454,8 @@ public struct _FormatRules {
                     switch formatter.tokens[i] {
                     case .identifier("self"):
                         break loop // Contains self
+                    case .startOfScope("{") where isWhereClause && scopeCount == 0:
+                        return // Does not contain self
                     case .startOfScope("{"), .startOfScope(":"):
                         scopeCount += 1
                     case .endOfScope("}"), .endOfScope("case"), .endOfScope("default"):
@@ -2639,7 +2641,8 @@ public struct _FormatRules {
                         lastKeyword = token.string
                     }
                     classOrStatic = false
-                case .keyword("where") where lastKeyword == "in":
+                case .keyword("where") where lastKeyword == "in",
+                     .startOfScope("{") where lastKeyword == "in" && !formatter.isStartOfClosure(at: index):
                     lastKeyword = ""
                     var localNames = localNames
                     guard let keywordIndex = formatter.index(of: .keyword, before: index),
@@ -2692,31 +2695,6 @@ public struct _FormatRules {
                     processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
                                 isTypeRoot: false, isInit: isInit)
-                    continue
-                case .startOfScope("{") where lastKeyword == "in":
-                    lastKeyword = ""
-                    var localNames = localNames
-                    guard let keywordIndex = formatter.index(of: .keyword, before: index),
-                        let prevKeywordIndex = formatter.index(of: .keyword, before: keywordIndex),
-                        let prevKeywordToken = formatter.token(at: prevKeywordIndex),
-                        case .keyword("for") = prevKeywordToken else { return }
-                    for token in formatter.tokens[prevKeywordIndex + 1 ..< keywordIndex] {
-                        if case let .identifier(name) = token, name != "_" {
-                            localNames.insert(token.unescaped())
-                        }
-                    }
-                    index += 1
-                    if classOrStatic {
-                        assert(isTypeRoot)
-                        processBody(at: &index, localNames: localNames, members: classMembers, typeStack: &typeStack,
-                                    membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                    isTypeRoot: false, isInit: false)
-                        classOrStatic = false
-                    } else {
-                        processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
-                                    membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                    isTypeRoot: false, isInit: isInit)
-                    }
                     continue
                 case .startOfScope("{") where isWhereClause:
                     return

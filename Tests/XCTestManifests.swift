@@ -1018,6 +1018,7 @@ extension RulesTests {
         ("testNoRemoveBackticksAroundClassSelfInTypealias", testNoRemoveBackticksAroundClassSelfInTypealias),
         ("testNoRemoveBackticksAroundContextualGet", testNoRemoveBackticksAroundContextualGet),
         ("testNoRemoveBackticksAroundGetInSubscript", testNoRemoveBackticksAroundGetInSubscript),
+        ("testNoRemoveBackticksAroundInitPropertyInSwift5", testNoRemoveBackticksAroundInitPropertyInSwift5),
         ("testNoRemoveBackticksAroundKeypathKeywordProperty", testNoRemoveBackticksAroundKeypathKeywordProperty),
         ("testNoRemoveBackticksAroundKeyword", testNoRemoveBackticksAroundKeyword),
         ("testNoRemoveBackticksAroundKeywordFollowedByType", testNoRemoveBackticksAroundKeywordFollowedByType),

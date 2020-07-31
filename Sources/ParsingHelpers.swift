@@ -687,9 +687,12 @@ extension Formatter {
                 return false
             }
         }
-        if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i),
-            tokens[prevIndex].isOperator(".")
-        {
+        if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+            $0.isOperator(".")
+        }) {
+            if unescaped == "init" {
+                return true
+            }
             if options.swiftVersion >= "5" || self.token(at: prevIndex - 1)?.isOperator("\\") != true {
                 return ignoreLeadingDot
             }

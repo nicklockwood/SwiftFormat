@@ -6156,6 +6156,12 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantBackticks, options: options)
     }
 
+    func testNoRemoveBackticksAroundInitPropertyInSwift5() {
+        let input = "let foo: Foo = .`init`"
+        let options = FormatOptions(swiftVersion: "5")
+        testFormatting(for: input, rule: FormatRules.redundantBackticks, options: options)
+    }
+
     func testNoRemoveBackticksAroundAnyProperty() {
         let input = "enum Foo {\n    case `Any`\n}"
         testFormatting(for: input, rule: FormatRules.redundantBackticks)

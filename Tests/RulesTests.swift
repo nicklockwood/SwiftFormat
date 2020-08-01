@@ -2450,8 +2450,7 @@ class RulesTests: XCTestCase {
         """
 
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options,
-                       exclude: ["braces"])
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
     func testSingleIndentTrailingClosureBodyOfShortMethod() {
@@ -12073,7 +12072,7 @@ class RulesTests: XCTestCase {
             print("statement body")
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces, exclude: ["braces"])
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces)
     }
 
     func testMultilineFuncBraceOnNextLine() {
@@ -12093,7 +12092,7 @@ class RulesTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
-                       exclude: ["braces", "wrapArguments", "unusedArguments"])
+                       exclude: ["wrapArguments", "unusedArguments"])
     }
 
     func testMultilineInitBraceOnNextLine() {
@@ -12111,7 +12110,7 @@ class RulesTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
-                       exclude: ["braces", "wrapArguments", "unusedArguments"])
+                       exclude: ["wrapArguments", "unusedArguments"])
     }
 
     func testMultilineForLoopBraceOnNextLine() {
@@ -12128,8 +12127,7 @@ class RulesTests: XCTestCase {
             print(foo)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
-                       exclude: ["braces"])
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces)
     }
 
     func testMultilineForLoopBraceOnNextLine2() {
@@ -12141,8 +12139,7 @@ class RulesTests: XCTestCase {
             print(foo)
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
-                       exclude: ["braces"])
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }
 
     func testMultilineForWhereLoopBraceOnNextLine() {
@@ -12159,8 +12156,7 @@ class RulesTests: XCTestCase {
             print(foo)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
-                       exclude: ["braces"])
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces)
     }
 
     func testMultilineGuardBraceOnNextLine() {
@@ -12199,7 +12195,7 @@ class RulesTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces, exclude: ["braces"])
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces)
     }
 
     func testMultilineIfBraceOnSameLine() {
@@ -12283,8 +12279,7 @@ class RulesTests: XCTestCase {
             init() {}
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
-                       exclude: ["braces"])
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }
 
     func testMultilineClassBraceNotAppliedForXcodeIndentationMode() {

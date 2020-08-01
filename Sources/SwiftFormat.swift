@@ -507,6 +507,9 @@ private func applyRules(
             }
             callback?(i, formatter.tokens)
         }
+        if let error = formatter.errors.first, !options.fragment {
+            throw error
+        }
         changes += formatter.changes
         if tokens == formatter.tokens {
             // Sort changes

@@ -2481,33 +2481,35 @@ public struct _FormatRules {
                     switch token {
                     case .keyword("import"):
                         guard let nextIndex = formatter.index(of: .identifier, after: i) else {
-                            return // error
+                            return formatter.fatalError("Expected identifier", at: i)
                         }
                         i = nextIndex
                     case .keyword("class"), .keyword("static"):
                         classOrStatic = true
                     case .keyword("repeat"):
                         guard let nextIndex = formatter.index(of: .keyword("while"), after: i) else {
-                            return // error
+                            return formatter.fatalError("Expected while", at: i)
                         }
                         i = nextIndex
                     case .keyword("if"), .keyword("while"):
                         guard let nextIndex = formatter.index(of: .startOfScope("{"), after: i) else {
-                            return // error
+                            return formatter.fatalError("Expected {", at: i)
                         }
                         i = nextIndex
                         continue
                     case .keyword("switch"):
-                        guard let nextIndex = formatter.index(of: .startOfScope("{"), after: i),
-                            var endIndex = formatter.index(of: .endOfScope, after: nextIndex)
-                        else {
-                            return // error
+                        guard let nextIndex = formatter.index(of: .startOfScope("{"), after: i) else {
+                            return formatter.fatalError("Expected {", at: i)
+                        }
+                        guard var endIndex = formatter.index(of: .endOfScope, after: nextIndex) else {
+                            return formatter.fatalError("Expected }", at: i)
                         }
                         while formatter.tokens[endIndex] != .endOfScope("}") {
-                            guard let nextIndex = formatter.index(of: .startOfScope(":"), after: endIndex),
-                                let _endIndex = formatter.index(of: .endOfScope, after: nextIndex)
-                            else {
-                                return // error
+                            guard let nextIndex = formatter.index(of: .startOfScope(":"), after: endIndex) else {
+                                return formatter.fatalError("Expected :", at: i)
+                            }
+                            guard let _endIndex = formatter.index(of: .endOfScope, after: nextIndex) else {
+                                return formatter.fatalError("Expected end of scope", at: i)
                             }
                             endIndex = _endIndex
                         }
@@ -2569,7 +2571,7 @@ public struct _FormatRules {
                     lastKeyword = ""
                     if classOrStatic {
                         if !isTypeRoot {
-                            return // error unless formatter.options.fragment = true
+                            return formatter.fatalError("Unexpected class/static \(token.string)", at: index)
                         }
                         processFunction(at: &index, localNames: localNames, members: classMembers,
                                         typeStack: &typeStack, membersByType: &membersByType,
@@ -2597,7 +2599,7 @@ public struct _FormatRules {
                     guard let nameToken = formatter.next(.identifier, after: index),
                         case let .identifier(name) = nameToken
                     else {
-                        return // error
+                        return formatter.fatalError("Expected identifier", at: index)
                     }
                     index = scopeStart + 1
                     typeStack.append(name)
@@ -2630,7 +2632,7 @@ public struct _FormatRules {
                         formatter.processDeclaredVariables(at: &index, names: &scopedNames,
                                                            removeSelf: explicitSelf != .insert)
                         guard let startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
-                            return // error
+                            return formatter.fatalError("Expected {", at: index)
                         }
                         index = startIndex + 1
                         processBody(at: &index, localNames: scopedNames, members: members, typeStack: &typeStack,
@@ -2645,12 +2647,10 @@ public struct _FormatRules {
                      .startOfScope("{") where lastKeyword == "in" && !formatter.isStartOfClosure(at: index):
                     lastKeyword = ""
                     var localNames = localNames
-                    guard let keywordIndex = formatter.index(of: .keyword, before: index),
-                        let prevKeywordIndex = formatter.index(of: .keyword, before: keywordIndex),
-                        let prevKeywordToken = formatter.token(at: prevKeywordIndex),
-                        case .keyword("for") = prevKeywordToken
+                    guard let keywordIndex = formatter.index(of: .keyword("in"), before: index),
+                        let prevKeywordIndex = formatter.index(of: .keyword("for"), before: keywordIndex)
                     else {
-                        return
+                        return formatter.fatalError("Expected for keyword", at: index)
                     }
                     for token in formatter.tokens[prevKeywordIndex + 1 ..< keywordIndex] {
                         if case let .identifier(name) = token, name != "_" {
@@ -2669,7 +2669,7 @@ public struct _FormatRules {
                     lastKeywordIndex = index
                 case .startOfScope("//"), .startOfScope("/*"):
                     if case let .commentBody(comment)? = formatter.next(.nonSpace, after: index) {
-                        formatter.processCommentBody(comment)
+                        formatter.processCommentBody(comment, at: index)
                         if token == .startOfScope("//") {
                             formatter.processLinebreak()
                         }
@@ -3645,7 +3645,7 @@ public struct _FormatRules {
             switch formatter.tokens[startIndex] {
             case .startOfScope("//"):
                 if case let .commentBody(body)? = formatter.next(.nonSpace, after: startIndex) {
-                    formatter.processCommentBody(body)
+                    formatter.processCommentBody(body, at: startIndex)
                     if !formatter.isEnabled || (body.hasPrefix("/") && !body.hasPrefix("//")) ||
                         body.hasPrefix("swift-tools-version")
                     {
@@ -3669,7 +3669,7 @@ public struct _FormatRules {
                 }
             case .startOfScope("/*"):
                 if case let .commentBody(body)? = formatter.next(.nonSpace, after: startIndex) {
-                    formatter.processCommentBody(body)
+                    formatter.processCommentBody(body, at: startIndex)
                     if !formatter.isEnabled || (body.hasPrefix("*") && !body.hasPrefix("**")) {
                         return
                     }

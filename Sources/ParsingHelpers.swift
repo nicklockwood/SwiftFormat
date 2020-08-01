@@ -220,7 +220,7 @@ extension Formatter {
                     case .startOfScope("<"), .startOfScope("["), .startOfScope("("),
                          .startOfScope where token.isStringDelimiter:
                         guard let endIndex = endOfScope(at: nextIndex) else {
-                            return // error
+                            return fatalError("Expected end of scope", at: nextIndex)
                         }
                         if removeSelf, isEnabled {
                             var i = endIndex - 1

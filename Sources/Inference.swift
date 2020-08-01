@@ -834,7 +834,7 @@ private struct Inference {
                     lastKeywordIndex = index
                 case .startOfScope("//"), .startOfScope("/*"):
                     if case let .commentBody(comment)? = formatter.next(.nonSpace, after: index) {
-                        formatter.processCommentBody(comment)
+                        formatter.processCommentBody(comment, at: index)
                         if token == .startOfScope("//") {
                             formatter.processLinebreak()
                         }

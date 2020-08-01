@@ -153,7 +153,7 @@ class RulesTests: XCTestCase {
     }
 
     func testSpaceBetweenLetAndTuple() {
-        let input = "if let (foo, bar) = baz"
+        let input = "if let (foo, bar) = baz {}"
         testFormatting(for: input, rule: FormatRules.spaceAroundParens)
     }
 
@@ -205,8 +205,8 @@ class RulesTests: XCTestCase {
     }
 
     func testKeywordAsIdentifierParensSpacing() {
-        let input = "if foo.let (foo, bar)"
-        let output = "if foo.let(foo, bar)"
+        let input = "if foo.let (foo, bar) {}"
+        let output = "if foo.let(foo, bar) {}"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
@@ -277,13 +277,13 @@ class RulesTests: XCTestCase {
     }
 
     func testIsArrayTestingSpacing() {
-        let input = "if foo is[String]"
-        let output = "if foo is [String]"
+        let input = "if foo is[String] {}"
+        let output = "if foo is [String] {}"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets)
     }
 
     func testKeywordAsIdentifierBracketSpacing() {
-        let input = "if foo.is[String]"
+        let input = "if foo.is[String] {}"
         testFormatting(for: input, rule: FormatRules.spaceAroundBrackets)
     }
 
@@ -7691,6 +7691,11 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testRedundantSelfRuleDoesntErrorInForInTryLoop() {
+        let input = "for foo in try bar() {}"
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     // enable/disable
 
     func testDisableRemoveSelf() {
@@ -9368,7 +9373,9 @@ class RulesTests: XCTestCase {
     }
 
     func testNoWrapColorLiteral() {
-        let input = "if let color = #colorLiteral(red: 0.2392156863, green: 0.6470588235, blue: 0.3647058824, alpha: 1)"
+        let input = """
+        if let color = #colorLiteral(red: 0.2392156863, green: 0.6470588235, blue: 0.3647058824, alpha: 1) {}
+        """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 30)
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
                        exclude: ["wrap"])

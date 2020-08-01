@@ -43,6 +43,7 @@ public class Formatter: NSObject {
     private var enumerationIndex = -1
     private var disabledCount = 0
     private var disabledNext = 0
+    private var ruleDisabled = false
     private var tempOptions: FormatOptions?
     private var wasNextDirective = false
 
@@ -54,48 +55,65 @@ public class Formatter: NSObject {
         didSet {
             disabledCount = 0
             disabledNext = 0
+            ruleDisabled = false
         }
     }
 
     // Is current rule enabled
     var isEnabled: Bool {
-        guard range?.contains(enumerationIndex) != false else {
+        if ruleDisabled || disabledCount + disabledNext > 0 ||
+            range?.contains(enumerationIndex) == false
+        {
             return false
         }
-        return disabledCount + disabledNext <= 0
+        return true
     }
 
     // Process a comment token (which may contain directives)
-    func processCommentBody(_ comment: String) {
+    func processCommentBody(_ comment: String, at index: Int) {
         var prefix = "swiftformat:"
-        guard let rule = currentRule, comment.hasPrefix(prefix),
-            let directive = ["disable", "enable", "options"].first(where: {
-                comment.hasPrefix("\(prefix)\($0)")
-            })
-        else {
+        guard comment.hasPrefix(prefix) else {
             return
+        }
+        guard let directive = ["disable", "enable", "options"].first(where: {
+            comment.hasPrefix("\(prefix)\($0)")
+        }) else {
+            let parts = comment.components(separatedBy: ":")
+            var directive = parts[1]
+            if let range = directive.rangeOfCharacter(from: .whitespacesAndNewlines) {
+                directive = String(directive[..<range.lowerBound])
+            }
+            return fatalError("Unknown directive swiftformat:\(directive)", at: index)
         }
         prefix += directive
         wasNextDirective = comment.hasPrefix("\(prefix):next")
+        let offset = (wasNextDirective ? "\(prefix):next" : prefix).endIndex
+        let argumentsString = String(comment[offset...])
         func containsRule() -> Bool {
-            return comment.range(of: "\\b(\(rule.name)|all)\\b",
-                                 options: .regularExpression) != nil
+            guard let rule = currentRule else {
+                return false
+            }
+            // TODO: handle typos, error for invalid rule names
+            // TODO: warn when trying to enable a rule that isn't enabled at file level
+            return argumentsString.range(of: "\\b(\(rule.name)|all)\\b",
+                                         options: .regularExpression) != nil
         }
         switch directive {
         case "options":
             if wasNextDirective {
                 tempOptions = options
             }
-            let index = (wasNextDirective ? "\(prefix):next" : prefix).endIndex
-            let args = parseArguments(String(comment[index...]))
+            let args = parseArguments(argumentsString)
             do {
                 let args = try preprocessArguments(args, formattingArguments + internalArguments)
+                if let arg = args["1"] {
+                    throw FormatError.options("Unknown option \(arg)")
+                }
                 var options = Options(formatOptions: self.options)
                 try options.addArguments(args, in: "")
                 self.options = options.formatOptions ?? self.options
             } catch {
-                // TODO: handle errors
-                return
+                return fatalError("\(error)", at: index)
             }
         case "disable" where containsRule():
             if wasNextDirective {
@@ -160,9 +178,11 @@ public class Formatter: NSObject {
     }
 
     /// Changes made
+    // TODO: make private(set)
     public var changes = [Change]()
 
     /// Should formatter track changes?
+    // TODO: make let/private
     public var trackChanges = false
 
     private func trackChange(at index: Int) {
@@ -179,6 +199,16 @@ public class Formatter: NSObject {
             return
         }
         self.range = range.lowerBound ..< range.upperBound + delta
+    }
+
+    // MARK: errors and warning
+
+    private(set) var errors = [FormatError]()
+
+    func fatalError(_ error: String, at tokenIndex: Int) {
+        let line = originalLine(at: tokenIndex)
+        errors.append(.parsing(error + " on line \(line)"))
+        ruleDisabled = true
     }
 
     // MARK: access and mutation
@@ -292,7 +322,7 @@ public class Formatter: NSObject {
             let token = tokens[enumerationIndex]
             switch token {
             case let .commentBody(comment):
-                processCommentBody(comment)
+                processCommentBody(comment, at: enumerationIndex)
             case .linebreak:
                 processLinebreak()
             default:

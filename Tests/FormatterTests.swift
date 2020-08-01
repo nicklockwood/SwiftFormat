@@ -249,6 +249,15 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default, options: options), input)
     }
 
+    func testMalformedDirective() {
+        let input = """
+        // swiftformat:disbible all
+        """
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default)) { error in
+            XCTAssert("\(error)".contains("Unknown directive swiftformat:disbible"))
+        }
+    }
+
     // MARK: options directive
 
     func testAllmanOption() {
@@ -314,6 +323,40 @@ class FormatterTests: XCTestCase {
 
         """
         XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
+    func testMalformedOption() {
+        let input = """
+        // swiftformat:options blooblahbleh
+        """
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default)) { error in
+            XCTAssert("\(error)".contains("Unknown option blooblahbleh"))
+        }
+    }
+
+    func testInvalidOption() {
+        let input = """
+        // swiftformat:options --foobar baz
+        """
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default)) { error in
+            XCTAssert("\(error)".contains("Unknown option --foobar"))
+        }
+    }
+
+    func testInvalidOptionValue() {
+        let input = """
+        // swiftformat:options --indent baz
+        """
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default)) { error in
+            XCTAssert("\(error)".contains("Unsupported --indent value"))
+        }
+    }
+
+    func testDeprecatedOptionValue() {
+        let input = """
+        // swiftformat:options --ranges spaced
+        """
+        XCTAssertNoThrow(try format(input, rules: FormatRules.default))
     }
 
     // MARK: linebreaks

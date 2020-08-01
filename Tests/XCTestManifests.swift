@@ -879,6 +879,8 @@ extension RulesTests {
         ("testMixedCaseMarkColonIsUpdated", testMixedCaseMarkColonIsUpdated),
         ("testMixedCaseMarkIsNotUpdated", testMixedCaseMarkIsNotUpdated),
         ("testModifierOrder", testModifierOrder),
+        ("testMultilineClassBrace", testMultilineClassBrace),
+        ("testMultilineClassBraceNotAppliedForXcodeIndentationMode", testMultilineClassBraceNotAppliedForXcodeIndentationMode),
         ("testMultilineCommentHeader", testMultilineCommentHeader),
         ("testMultilineDisableNextRemoveSelf", testMultilineDisableNextRemoveSelf),
         ("testMultilineDisableRemoveSelf", testMultilineDisableRemoveSelf),

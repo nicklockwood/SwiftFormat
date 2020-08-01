@@ -1025,6 +1025,19 @@ private struct Examples {
         // ...
       }
     ```
+
+    ```diff
+      class Foo: NSObject,
+    -   BarProtocol {
+        // ...
+      }
+
+      class Foo: NSObject,
+    +   BarProtocol
+    + {
+        // ...
+      }
+    ```
     """
 
     let leadingDelimiters = """

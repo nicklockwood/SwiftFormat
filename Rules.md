@@ -1673,7 +1673,7 @@ Option | Description
 
 ## wrapMultilineStatementBraces
 
-Wrap the opening brace of multiline statements (if/guard/while/func).
+Wrap the opening brace of multiline statements.
 
 <details>
 <summary>Examples</summary>
@@ -1714,6 +1714,19 @@ Wrap the opening brace of multiline statements (if/guard/while/func).
   func foo(
     bar: Int,
 +   baz: Int)
++ {
+    // ...
+  }
+```
+
+```diff
+  class Foo: NSObject,
+-   BarProtocol {
+    // ...
+  }
+
+  class Foo: NSObject,
++   BarProtocol
 + {
     // ...
   }

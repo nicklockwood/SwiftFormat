@@ -1810,7 +1810,8 @@ class RulesTests: XCTestCase {
             init() {}
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent,
+                       exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrappedClassDeclarationLikeXcode() {
@@ -2318,13 +2319,15 @@ class RulesTests: XCTestCase {
     func testIndentInsideWrappedClassDefinition() {
         let input = "class Foo\n: Bar {\nbaz()\n}"
         let output = "class Foo\n    : Bar {\n    baz()\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["leadingDelimiters"])
+        testFormatting(for: input, output, rule: FormatRules.indent,
+                       exclude: ["leadingDelimiters", "wrapMultilineStatementBraces"])
     }
 
     func testIndentInsideWrappedProtocolDefinition() {
         let input = "protocol Foo\n: Bar, Baz {\nbaz()\n}"
         let output = "protocol Foo\n    : Bar, Baz {\n    baz()\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["leadingDelimiters"])
+        testFormatting(for: input, output, rule: FormatRules.indent,
+                       exclude: ["leadingDelimiters", "wrapMultilineStatementBraces"])
     }
 
     func testIndentInsideWrappedVarStatement() {
@@ -12270,6 +12273,29 @@ class RulesTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+    }
+
+    func testMultilineClassBrace() {
+        let input = """
+        class Foo: BarProtocol,
+            BazProtocol
+        {
+            init() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
+                       exclude: ["braces"])
+    }
+
+    func testMultilineClassBraceNotAppliedForXcodeIndentationMode() {
+        let input = """
+        class Foo: BarProtocol,
+        BazProtocol {
+            init() {}
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces, options: options)
     }
 
     // MARK: - wrapAttributes

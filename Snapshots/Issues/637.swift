@@ -10,3 +10,10 @@ class TestClass {
         self.foo = foo
     }
 }
+
+class MyClass: NSObject,
+    FooProtocol,
+    BarProtocol
+{
+    func someFunction() {}
+}

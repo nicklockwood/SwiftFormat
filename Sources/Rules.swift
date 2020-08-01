@@ -3369,46 +3369,45 @@ public struct _FormatRules {
     }
 
     public let wrapMultilineStatementBraces = FormatRule(
-        help: "Wrap the opening brace of multiline statements (if/guard/while/func).",
+        help: "Wrap the opening brace of multiline statements.",
         orderAfter: ["wrapArguments"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        formatter.forEachToken { i, _ in
-            switch formatter.tokens[i] {
-            case .keyword("if"), .keyword("for"), .keyword("guard"), .keyword("while"),
-                 .keyword("func"), .keyword("init"), .keyword("subscript"):
-                guard let openBraceIndex = formatter.index(of: .startOfScope("{"), after: i) else {
-                    break
-                }
-                let startOfLine = formatter.startOfLine(at: openBraceIndex)
-                // Make sure the brace is on a separate line from the if / guard
-                guard i < startOfLine,
-                    // If token before the brace isn't a newline or guard else then insert a newline
-                    let prevIndex = formatter.index(of: .nonSpace, before: openBraceIndex),
-                    let prevToken = formatter.token(at: prevIndex),
-                    !prevToken.isLinebreak, !(prevToken == .keyword("else") &&
-                        prevIndex == formatter.index(of: .nonSpace, after: startOfLine)),
-                    // Only wrap when the brace's line is more indented than the if / guard
-                    formatter.indentForLine(at: i) < formatter.indentForLine(at: openBraceIndex),
-                    // And only when closing brace is not on same line
-                    let closingIndex = formatter.endOfScope(at: openBraceIndex),
-                    formatter.tokens[openBraceIndex ..< closingIndex].contains(where: { $0.isLinebreak })
-                else {
-                    break
-                }
-                formatter.insertLinebreak(at: openBraceIndex)
+        formatter.forEachToken { i, token in
+            guard case let .keyword(keyword) = token, [
+                "if", "for", "guard", "while", "switch", "func", "init", "subscript",
+                "extension", "class", "struct", "enum", "protocol",
+            ].contains(keyword),
+                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: i)
+            else {
+                return
+            }
+            let startOfLine = formatter.startOfLine(at: openBraceIndex)
+            // Make sure the brace is on a separate line from the if / guard
+            guard i < startOfLine,
+                // If token before the brace isn't a newline or guard else then insert a newline
+                let prevIndex = formatter.index(of: .nonSpace, before: openBraceIndex),
+                let prevToken = formatter.token(at: prevIndex),
+                !prevToken.isLinebreak, !(prevToken == .keyword("else") &&
+                    prevIndex == formatter.index(of: .nonSpace, after: startOfLine)),
+                // Only wrap when the brace's line is more indented than the if / guard
+                formatter.indentForLine(at: i) < formatter.indentForLine(at: openBraceIndex),
+                // And only when closing brace is not on same line
+                let closingIndex = formatter.endOfScope(at: openBraceIndex),
+                formatter.tokens[openBraceIndex ..< closingIndex].contains(where: { $0.isLinebreak })
+            else {
+                return
+            }
+            formatter.insertLinebreak(at: openBraceIndex)
 
-                // Insert a space to align the opening brace with the if / guard keyword
-                let indentation = formatter.indentForLine(at: i)
-                formatter.insertSpace(indentation, at: openBraceIndex + 1)
+            // Insert a space to align the opening brace with the if / guard keyword
+            let indentation = formatter.indentForLine(at: i)
+            formatter.insertSpace(indentation, at: openBraceIndex + 1)
 
-                // If we left behind a trailing space on the previous line, clean it up
-                let previousTokenIndex = openBraceIndex - 1
-                if formatter.tokens[previousTokenIndex].isSpace {
-                    formatter.removeToken(at: previousTokenIndex)
-                }
-            default:
-                break
+            // If we left behind a trailing space on the previous line, clean it up
+            let previousTokenIndex = openBraceIndex - 1
+            if formatter.tokens[previousTokenIndex].isSpace {
+                formatter.removeToken(at: previousTokenIndex)
             }
         }
     }

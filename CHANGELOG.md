@@ -2,6 +2,7 @@
 
 ## [0.45.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.2) (2020-08-01)
 
+- You can now tweak formatting options inside source files using `// swiftformat:options ...` directive
 - The `wrapMultilineStatementBraces` rule is now applied to more statement types
 - Fixed spurious lint warnings due to conflict between `braces` and `wrapMultilineStatementBraces` rules
 - Fixed several bugs in `redundantSelf` rule relating to for loops

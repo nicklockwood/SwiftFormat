@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.45.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.2) (2020-08-01)
+
+- The `wrapMultilineStatementBraces` rule is now applied to more statement types
+- Fixed spurious lint warnings due to conflict between `braces` and `wrapMultilineStatementBraces` rules
+- Fixed several bugs in `redundantSelf` rule relating to for loops
+- Fixed bug with indenting of closure arguments
+- Fixed unsafe removal of backticks around `init`
+- Rules can now raise an error if they encounter malformed code instead of failing silently
+- SwiftFormat for Xcode app no longer shows deprecated rules in the rules tab
+
 ## [0.45.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.1) (2020-07-30)
 
 - Fixed bug where `preferKeyPath` was incorrectly applied to function calls and compound expressions

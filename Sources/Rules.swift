@@ -3438,17 +3438,17 @@ public struct _FormatRules {
                 while let caseKeywordIndex = formatter.index(of: .keyword("case"), after: lastCase),
                     let breaklineIndex = formatter.index(of: .linebreak, after: caseKeywordIndex)
                 {
-                    var identifier: String = ""
-                    var associatedValue: String?
-
                     for jdx in (caseKeywordIndex + 1) ... breaklineIndex {
-                        if let token = formatter.token(at: jdx), token == .delimiter(",") {
-                            formatter.removeToken(at: jdx)
-                            formatter.insertLinebreak(at: jdx)
-                            formatter.insertSpace(formatter.indentForLine(at: jdx), at: jdx + 1)
-                            formatter.insertToken(.keyword("case"), at: jdx + 2)
-                            formatter.insertToken(.space(" "), at: jdx + 3)
-                        }
+                        guard
+                            let token = formatter.token(at: jdx),
+                            token == .delimiter(","),
+                            formatter.index(of: .startOfScope("("), in: lastCase ..< jdx) == nil else { continue }
+
+                        formatter.removeToken(at: jdx)
+                        formatter.insertLinebreak(at: jdx)
+                        formatter.insertSpace(formatter.indentForLine(at: jdx), at: jdx + 1)
+                        formatter.insertToken(.keyword("case"), at: jdx + 2)
+                        formatter.insertToken(.space(" "), at: jdx + 3)
                     }
 
                     lastCase = breaklineIndex

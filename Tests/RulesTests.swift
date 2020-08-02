@@ -4459,6 +4459,7 @@ class RulesTests: XCTestCase {
         enum Enum1: Int {
             case a = 0, p, c, d
             case e, k
+            case m(String, String)
         }
         """
         let output = """
@@ -4469,6 +4470,7 @@ class RulesTests: XCTestCase {
             case d
             case e
             case k
+            case m(String, String)
         }
         """
         testFormatting(for: input, output, rule: FormatRules.multilineEnumCases)

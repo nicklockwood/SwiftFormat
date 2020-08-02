@@ -3423,6 +3423,40 @@ public struct _FormatRules {
         }
     }
 
+    /// Rewrites the enum cases one per line
+    public let multilineEnumCases = FormatRule(
+        help: "Sort switch cases alphabetically.",
+        options: [],
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        formatter.forEach(.keyword("enum")) { idx, _ in
+            if let start = formatter.index(of: .startOfScope("{"), after: idx),
+                let end = formatter.index(of: .endOfScope("}"), after: start)
+            {
+                var lastCase = start
+
+                while let caseKeywordIndex = formatter.index(of: .keyword("case"), after: lastCase),
+                    let breaklineIndex = formatter.index(of: .linebreak, after: caseKeywordIndex)
+                {
+                    var identifier: String = ""
+                    var associatedValue: String?
+
+                    for jdx in (caseKeywordIndex + 1) ... breaklineIndex {
+                        if let token = formatter.token(at: jdx), token == .delimiter(",") {
+                            formatter.removeToken(at: jdx)
+                            formatter.insertLinebreak(at: jdx)
+                            formatter.insertSpace(formatter.indentForLine(at: jdx), at: jdx + 1)
+                            formatter.insertToken(.keyword("case"), at: jdx + 2)
+                            formatter.insertToken(.space(" "), at: jdx + 3)
+                        }
+                    }
+
+                    lastCase = breaklineIndex
+                }
+            }
+        }
+    }
+
     /// Normalize the use of void in closure arguments and return values
     public let void = FormatRule(
         help: "Use `Void` for type declarations and `()` for values.",

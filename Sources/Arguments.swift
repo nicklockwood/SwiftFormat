@@ -538,6 +538,7 @@ let commandLineArguments = [
     "stdinpath",
     "config",
     "inferoptions",
+    "linerange",
     "output",
     "cache",
     "dryrun",

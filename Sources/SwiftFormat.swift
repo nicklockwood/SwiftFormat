@@ -371,6 +371,15 @@ public func tokenIndexForOffset(_ offset: SourceOffset, in tokens: [Token], tabW
     return tokenIndex(for: offset, in: tokens, tabWidth: tabWidth)
 }
 
+/// Get token index range for line range
+public func tokenRange(forLineRange lineRange: ClosedRange<Int>, in tokens: [Token]) -> Range<Int> {
+    let startOffset = SourceOffset(line: lineRange.lowerBound, column: 0)
+    let endOffset = SourceOffset(line: lineRange.upperBound + 1, column: 0)
+    // NOTE: tab width is not relevant for line-based offsets
+    return tokenIndex(for: startOffset, in: tokens, tabWidth: 1)
+        ..< tokenIndex(for: endOffset, in: tokens, tabWidth: 1)
+}
+
 /// Get new offset for an original offset (before formatting)
 public func newOffset(for offset: SourceOffset, in tokens: [Token], tabWidth: Int) -> SourceOffset {
     var closestLine = 0
@@ -543,32 +552,40 @@ private func applyRules(
 
 /// Format a pre-parsed token array
 /// Returns the formatted token array
-public func format(_ tokens: [Token], rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = .default, range: Range<Int>? = nil) throws -> [Token]
-{
+public func format(
+    _ tokens: [Token], rules: [FormatRule] = FormatRules.default,
+    options: FormatOptions = .default, range: Range<Int>? = nil
+) throws -> [Token] {
     return try applyRules(rules, to: tokens, with: options, trackChanges: false, range: range).tokens
 }
 
 /// Format code with specified rules and options
-public func format(_ source: String, rules: [FormatRule] = FormatRules.default,
-                   options: FormatOptions = .default) throws -> String
-{
-    return sourceCode(for: try format(tokenize(source), rules: rules, options: options))
+public func format(
+    _ source: String, rules: [FormatRule] = FormatRules.default,
+    options: FormatOptions = .default, lineRange: ClosedRange<Int>? = nil
+) throws -> String {
+    let tokens = tokenize(source)
+    let range = lineRange.map { tokenRange(forLineRange: $0, in: tokens) }
+    return sourceCode(for: try format(tokens, rules: rules, options: options, range: range))
 }
 
 /// Lint a pre-parsed token array
 /// Returns the list of edits made
-public func lint(_ tokens: [Token], rules: [FormatRule] = FormatRules.default,
-                 options: FormatOptions = .default) throws -> [Formatter.Change]
-{
-    return try applyRules(rules, to: tokens, with: options, trackChanges: true, range: nil).changes
+public func lint(
+    _ tokens: [Token], rules: [FormatRule] = FormatRules.default,
+    options: FormatOptions = .default, range: Range<Int>? = nil
+) throws -> [Formatter.Change] {
+    return try applyRules(rules, to: tokens, with: options, trackChanges: true, range: range).changes
 }
 
 /// Lint code with specified rules and options
-public func lint(_ source: String, rules: [FormatRule] = FormatRules.default,
-                 options: FormatOptions = .default) throws -> [Formatter.Change]
-{
-    return try lint(tokenize(source), rules: rules, options: options)
+public func lint(
+    _ source: String, rules: [FormatRule] = FormatRules.default,
+    options: FormatOptions = .default, lineRange: ClosedRange<Int>? = nil
+) throws -> [Formatter.Change] {
+    let tokens = tokenize(source)
+    let range = lineRange.map { tokenRange(forLineRange: $0, in: tokens) }
+    return try lint(tokens, rules: rules, options: options, range: range)
 }
 
 // MARK: Path utilities

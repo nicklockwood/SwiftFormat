@@ -1938,6 +1938,7 @@ extension SwiftFormatTests {
         ("testFormatReturnsInputWithNoRules", testFormatReturnsInputWithNoRules),
         ("testFormattingFailsForConflict", testFormattingFailsForConflict),
         ("testFormattingFailsForFragment", testFormattingFailsForFragment),
+        ("testFormattingRange", testFormattingRange),
         ("testFormattingSucceedsForConflictWithOption", testFormattingSucceedsForConflictWithOption),
         ("testFormattingSucceedsForFragmentWithOption", testFormattingSucceedsForFragmentWithOption),
         ("testFormatUsesDefaultRulesIfNoneSpecified", testFormatUsesDefaultRulesIfNoneSpecified),
@@ -1960,6 +1961,7 @@ extension SwiftFormatTests {
         ("testTokenIndexForOffset", testTokenIndexForOffset),
         ("testTokenIndexForOffsetWithTabs", testTokenIndexForOffsetWithTabs),
         ("testTokenIndexPastEndOfFile", testTokenIndexPastEndOfFile),
+        ("testTokenRange", testTokenRange),
     ]
 }
 

@@ -183,6 +183,7 @@ func printHelp(as type: CLI.OutputType) {
     --exclude          Comma-delimited list of ignored paths (supports glob syntax)
     --unexclude        Paths to not exclude, even if excluded elsewhere in config
     --symlinks         How symlinks are handled: "follow" or "ignore" (default)
+    --linerange        Range of lines to process within the input file (first, last)
     --fragment         \(stripMarkdown(FormatOptions.Descriptor.fragment.help))
     --conflictmarkers  \(stripMarkdown(FormatOptions.Descriptor.ignoreConflictMarkers.help))
     --swiftversion     \(stripMarkdown(FormatOptions.Descriptor.swiftVersion.help))
@@ -465,10 +466,32 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             return try parsePath(arg, for: "--output", in: directory)
         }
 
+        // Source range
+        let lineRange = try args["linerange"].flatMap { arg -> ClosedRange<Int>? in
+            if arg == "" {
+                throw FormatError.options("--linerange argument expects a value")
+            } else if inputURLs.count > 1 {
+                throw FormatError.options("--linerange argument is only valid for a single input file")
+            }
+            let parts = arg.components(separatedBy: ",").map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            guard (1 ... 2).contains(parts.count),
+                let start = parts.first.flatMap(Int.init),
+                let end = parts.last.flatMap(Int.init)
+            else {
+                throw FormatError.options("Unsupported --linerange value '\(arg)'")
+            }
+            return start ... end
+        }
+
         // Infer options
         if args["inferoptions"] != nil {
             guard args["config"] == nil else {
                 throw FormatError.options("--inferoptions option can't be used along with a config file")
+            }
+            guard args["range"] == nil else {
+                throw FormatError.options("--inferoptions option can't be applied to a line range")
             }
             if !inputURLs.isEmpty {
                 print("Inferring swiftformat options from source file(s)...", as: .info)
@@ -583,7 +606,8 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                     try serializeOptions(options, to: outputURL)
                 } else {
                     printRunningMessage()
-                    let output = try applyRules(input, options: options, verbose: verbose, lint: lint)
+                    let output = try applyRules(input, options: options, lineRange: lineRange,
+                                                verbose: verbose, lint: lint)
                     if let outputURL = outputURL, !useStdout {
                         if (try? String(contentsOf: outputURL)) != output, !dryrun {
                             do {
@@ -647,6 +671,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                                                   andWriteToOutput: outputURL,
                                                   options: options,
                                                   overrides: overrides,
+                                                  lineRange: lineRange,
                                                   verbose: verbose,
                                                   dryrun: dryrun,
                                                   lint: lint,
@@ -735,7 +760,9 @@ func computeHash(_ source: String) -> String {
     return "\(count)\(hash)"
 }
 
-func applyRules(_ source: String, options: Options, verbose: Bool, lint: Bool) throws -> String {
+func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?,
+                verbose: Bool, lint: Bool) throws -> String
+{
     // Parse source
     let originalTokens = tokenize(source)
     var tokens = originalTokens
@@ -752,8 +779,9 @@ func applyRules(_ source: String, options: Options, verbose: Bool, lint: Bool) t
     // Apply rules
     let formatOptions = options.formatOptions ?? .default
     var changes = [Formatter.Change]()
+    let range = lineRange.map { tokenRange(forLineRange: $0, in: tokens) }
     (tokens, changes) = try applyRules(rules, to: tokens, with: formatOptions,
-                                       trackChanges: lint || verbose, range: nil)
+                                       trackChanges: lint || verbose, range: range)
 
     // Display info
     if lint, tokens != originalTokens {
@@ -779,6 +807,7 @@ func processInput(_ inputURLs: [URL],
                   andWriteToOutput outputURL: URL?,
                   options: Options,
                   overrides: [String: String],
+                  lineRange: ClosedRange<Int>?,
                   verbose: Bool,
                   dryrun: Bool,
                   lint: Bool,
@@ -840,9 +869,10 @@ func processInput(_ inputURLs: [URL],
             var options = options
             try options.addArguments(overrides, in: "") // No need for directory as overrides are formatOptions only
             let formatOptions = options.formatOptions ?? .default
+            let range = lineRange.map { "\($0.lowerBound),\($0.upperBound);" } ?? ""
             // Check cache
             let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
-            let configHash = computeHash("\(formatOptions)\(rules.sorted().joined(separator: ","))")
+            let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))")
             let cachePrefix = "\(version);\(configHash);"
             let cacheKey: String = {
                 var path = inputURL.absoluteURL.path
@@ -867,7 +897,8 @@ func processInput(_ inputURLs: [URL],
                         print("-- no changes (cached)", as: .success)
                     }
                 } else {
-                    output = try applyRules(input, options: options, verbose: verbose, lint: lint)
+                    output = try applyRules(input, options: options, lineRange: lineRange,
+                                            verbose: verbose, lint: lint)
                     if output != input {
                         sourceHash = nil
                     }

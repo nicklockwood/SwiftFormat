@@ -327,6 +327,7 @@ extension ParsingHelpersTests {
         ("testChainedTrailingClosureInVarChain2", testChainedTrailingClosureInVarChain2),
         ("testChainedTrailingClosureInVarChain3", testChainedTrailingClosureInVarChain3),
         ("testClassBracesNotTreatedAsClosure", testClassBracesNotTreatedAsClosure),
+        ("testClosureAfterGenericType", testClosureAfterGenericType),
         ("testClosureInsideIfCondition", testClosureInsideIfCondition),
         ("testComputedVarAllmanBracesNotTreatedAsClosure", testComputedVarAllmanBracesNotTreatedAsClosure),
         ("testComputedVarBracesNotTreatedAsClosure", testComputedVarBracesNotTreatedAsClosure),

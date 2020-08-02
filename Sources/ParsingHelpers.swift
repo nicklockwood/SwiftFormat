@@ -325,11 +325,15 @@ extension Formatter {
                 return false
             }
             return !isStartOfClosure(at: startOfScope)
-        case .endOfScope(")"):
-            guard let startOfScope = index(of: .startOfScope("("), before: prevIndex),
-                let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope)
+        case .endOfScope(")"), .endOfScope(">"):
+            guard var startOfScope = index(of: .startOfScope, before: prevIndex),
+                var prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope)
             else {
                 return true
+            }
+            if tokens[prevIndex] == .endOfScope(">"), tokens[prev] == .endOfScope(")") {
+                startOfScope = index(of: .startOfScope, before: prev) ?? startOfScope
+                prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) ?? prev
             }
             switch tokens[prev] {
             case .identifier:

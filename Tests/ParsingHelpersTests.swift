@@ -389,6 +389,11 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 25))
     }
 
+    func testClosureAfterGenericType() {
+        let formatter = Formatter(tokenize("let foo = Foo<String> {}"))
+        XCTAssert(formatter.isStartOfClosure(at: 11))
+    }
+
     // MARK: isAccessorKeyword
 
     func testDidSet() {

@@ -4640,7 +4640,7 @@ public struct _FormatRules {
     /// Strip header comments from the file
     public let wrapAttributes = FormatRule(
         help: "Wrap @attributes onto a separate line, or keep them on the same line.",
-        options: ["funcattributes", "typeattributes"],
+        options: ["funcattributes", "typeattributes", "varattributes"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.attribute) { i, _ in
@@ -4656,36 +4656,36 @@ public struct _FormatRules {
             }
 
             // Ignore sequential attributes
-            guard formatter.next(.nonSpaceOrComment, after: endIndex)?.isAttribute == false,
-                let openBrace = formatter.index(of: .startOfScope("{"), after: i)
+            guard var keywordIndex = formatter.index(of: .keyword, after: endIndex),
+                var keyword = formatter.token(at: keywordIndex),
+                !formatter.tokens[keywordIndex].isAttribute
             else {
                 return
             }
 
-            // Check declaration to determine which `AttributeMode` option to use
-            let rangeToOpenBrace = CountableRange<Int>(endIndex + 1 ... openBrace)
-            let attributeMode: AttributeMode
-            let keywordIndex: Int
-            if let funcKeyworkIndex = formatter.index(in: rangeToOpenBrace, where: {
-                [.keyword("func"), .keyword("init"), .keyword("subscript")].contains($0)
-            }) {
-                attributeMode = formatter.options.funcAttributes
-                keywordIndex = funcKeyworkIndex
-            } else if let typeKeywordIndex = formatter.index(in: rangeToOpenBrace, where: {
-                [.keyword("class"), .keyword("struct"),
-                 .keyword("enum"), .keyword("protocol")].contains($0)
-            }) {
-                attributeMode = formatter.options.typeAttributes
-                keywordIndex = typeKeywordIndex
-            } else {
-                return
+            // Skip modifiers
+            while _FormatRules.allModifiers.contains(keyword.string) {
+                guard let nextIndex = formatter
+                    .index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex, if: {
+                        $0.isKeyword
+                    })
+                else {
+                    break
+                }
+                keywordIndex = nextIndex
+                keyword = formatter.tokens[keywordIndex]
             }
 
-            // Make sure we don't accidentially wrap import or var/let annotations
-            let rangeUpToKeyword = CountableRange<Int>(i ... keywordIndex)
-            guard !formatter.tokens[rangeToOpenBrace].contains(where: {
-                [.keyword("import"), .keyword("let"), .keyword("var")].contains($0)
-            }) else {
+            // Check which `AttributeMode` option to use
+            let attributeMode: AttributeMode
+            switch keyword.string {
+            case "func", "init", "subscript":
+                attributeMode = formatter.options.funcAttributes
+            case "class", "struct", "enum", "protocol":
+                attributeMode = formatter.options.typeAttributes
+            case "var", "let":
+                attributeMode = formatter.options.varAttributes
+            default:
                 return
             }
 

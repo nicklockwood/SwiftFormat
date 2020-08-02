@@ -294,6 +294,7 @@ extension FormatOptions.Descriptor {
         shortOptionals,
         funcAttributes,
         typeAttributes,
+        varAttributes,
 
         // Deprecated
         empty,
@@ -723,6 +724,13 @@ extension FormatOptions.Descriptor {
         displayName: "Type Attributes",
         help: "Type @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.typeAttributes
+    )
+    static let varAttributes = FormatOptions.Descriptor(
+        argumentName: "varattributes",
+        propertyName: "varAttributes",
+        displayName: "Var Attributes",
+        help: "Property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        keyPath: \.varAttributes
     )
 
     // MARK: - DEPRECATED

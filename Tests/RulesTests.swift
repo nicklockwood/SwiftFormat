@@ -12439,6 +12439,46 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testModifiersDontAffectAttributeWrapping() {
+        let input = """
+        @objc override public func foo {}
+        """
+        let output = """
+        @objc
+        override public func foo {}
+        """
+        let options = FormatOptions(funcAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testClassFuncAttributeTreatedAsFunction() {
+        let input = """
+        @objc class func foo {}
+        """
+        let output = """
+        @objc
+        class func foo {}
+        """
+        let options = FormatOptions(funcAttributes: .prevLine, fragment: true)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testClassFuncAttributeNotTreatedAsType() {
+        let input = """
+        @objc class func foo {}
+        """
+        let options = FormatOptions(typeAttributes: .prevLine, fragment: true)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testClassImportAttributeNotTreatedAsType() {
+        let input = """
+        @testable import class Framework.Foo
+        """
+        let options = FormatOptions(typeAttributes: .prevLine)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     // MARK: - preferKeyPath
 
     func testMapPropertyToKeyPath() {

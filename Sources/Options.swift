@@ -301,6 +301,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var shortOptionals: OptionalsMode
     public var funcAttributes: AttributeMode
     public var typeAttributes: AttributeMode
+    public var varAttributes: AttributeMode
 
     // Deprecated
     public var indentComments: Bool
@@ -360,6 +361,7 @@ public struct FormatOptions: CustomStringConvertible {
                 shortOptionals: OptionalsMode = .always,
                 funcAttributes: AttributeMode = .preserve,
                 typeAttributes: AttributeMode = .preserve,
+                varAttributes: AttributeMode = .preserve,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -412,6 +414,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.shortOptionals = shortOptionals
         self.funcAttributes = funcAttributes
         self.typeAttributes = typeAttributes
+        self.varAttributes = varAttributes
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

@@ -1628,6 +1628,7 @@ Option | Description
 --- | ---
 `--funcattributes` | Function @attributes: "preserve", "prev-line", or "same-line"
 `--typeattributes` | Type @attributes: "preserve", "prev-line", or "same-line"
+`--varattributes` | Property @attributes: "preserve", "prev-line", or "same-line"
 
 <details>
 <summary>Examples</summary>

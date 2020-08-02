@@ -4452,6 +4452,28 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.modifierOrder)
     }
 
+    // MARK: multilineEnumCases
+
+    func testMultilineEnumCases() {
+        let input = """
+        enum Enum1: Int {
+            case a = 0, p, c, d
+            case e, k
+        }
+        """
+        let output = """
+        enum Enum1: Int {
+            case a = 0
+            case p
+            case c
+            case d
+            case e
+            case k
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.multilineEnumCases)
+    }
+
     // MARK: - void
 
     func testEmptyParensReturnValueConvertedToVoid() {

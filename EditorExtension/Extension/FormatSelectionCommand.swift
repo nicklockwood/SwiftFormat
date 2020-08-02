@@ -60,8 +60,8 @@ class FormatSelectionCommand: NSObject, XCSourceEditorCommand {
         var output = input
         for selection in selections {
             let startOffset = SourceOffset(selection.start), endOffset = SourceOffset(selection.end)
-            let start = tokenIndexForOffset(startOffset, in: output, tabWidth: formatOptions.tabWidth)
-            let end = tokenIndexForOffset(endOffset, in: output, tabWidth: formatOptions.tabWidth)
+            let start = tokenIndex(for: startOffset, in: output, tabWidth: formatOptions.tabWidth)
+            let end = tokenIndex(for: endOffset, in: output, tabWidth: formatOptions.tabWidth)
             do {
                 output = try format(output, rules: rules, options: formatOptions, range: start ..< end)
             } catch {

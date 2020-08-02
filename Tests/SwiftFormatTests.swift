@@ -176,18 +176,46 @@ class SwiftFormatTests: XCTestCase {
         XCTAssertEqual(offset, SourceOffset(line: 2, column: 7))
     }
 
-    // MARK: tokenIndexForOffset
+    // MARK: tokenIndex for offset
 
     func testTokenIndexForOffset() {
         let tokens = tokenize("// a comment\n    let foo = 5\n")
         let offset = SourceOffset(line: 2, column: 9)
-        XCTAssertEqual(tokenIndexForOffset(offset, in: tokens, tabWidth: 1), 7)
+        XCTAssertEqual(tokenIndex(for: offset, in: tokens, tabWidth: 1), 7)
     }
 
     func testTokenIndexForOffsetWithTabs() {
         let tokens = tokenize("// a comment\n\tlet foo = 5\n")
         let offset = SourceOffset(line: 2, column: 7)
-        XCTAssertEqual(tokenIndexForOffset(offset, in: tokens, tabWidth: 2), 7)
+        XCTAssertEqual(tokenIndex(for: offset, in: tokens, tabWidth: 2), 7)
+    }
+
+    func testTokenIndexForLastLine() {
+        let tokens = tokenize("""
+        let foo = 5
+        let bar = 6
+        """)
+        let offset = SourceOffset(line: 2, column: 0)
+        XCTAssertEqual(tokenIndex(for: offset, in: tokens, tabWidth: 1), 8)
+    }
+
+    func testTokenIndexPastEndOfFile() {
+        let tokens = tokenize("""
+        let foo = 5
+        let bar = 6
+        """)
+        let offset = SourceOffset(line: 3, column: 0)
+        XCTAssertEqual(tokenIndex(for: offset, in: tokens, tabWidth: 1), 15)
+    }
+
+    func testTokenIndexForBlankLastLine() {
+        let tokens = tokenize("""
+        let foo = 5
+        let bar = 6
+
+        """)
+        let offset = SourceOffset(line: 3, column: 0)
+        XCTAssertEqual(tokenIndex(for: offset, in: tokens, tabWidth: 1), 16)
     }
 
     // MARK: newOffset

@@ -342,7 +342,7 @@ public func offsetForToken(at index: Int, in tokens: [Token], tabWidth: Int) -> 
 }
 
 /// Get token index for offset
-public func tokenIndexForOffset(_ offset: SourceOffset, in tokens: [Token], tabWidth: Int) -> Int {
+public func tokenIndex(for offset: SourceOffset, in tokens: [Token], tabWidth: Int) -> Int {
     var tokenIndex = 0, line = 1
     for index in tokens.indices {
         guard case let .linebreak(_, originalLine) = tokens[index] else {
@@ -354,7 +354,7 @@ public func tokenIndexForOffset(_ offset: SourceOffset, in tokens: [Token], tabW
         }
         tokenIndex = index + 1
     }
-    if line < offset.line {
+    if line < offset.line - 1 {
         return tokens.endIndex
     }
     var column = 1
@@ -363,6 +363,12 @@ public func tokenIndexForOffset(_ offset: SourceOffset, in tokens: [Token], tabW
         tokenIndex += 1
     }
     return tokenIndex
+}
+
+/// Deprecated
+@available(*, deprecated, message: "Use tokenIndex(for:) instead")
+public func tokenIndexForOffset(_ offset: SourceOffset, in tokens: [Token], tabWidth: Int) -> Int {
+    return tokenIndex(for: offset, in: tokens, tabWidth: tabWidth)
 }
 
 /// Get new offset for an original offset (before formatting)

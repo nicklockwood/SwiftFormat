@@ -1955,8 +1955,11 @@ extension SwiftFormatTests {
         ("testNoTimeoutForEmptyFile", testNoTimeoutForEmptyFile),
         ("testOffsetForToken", testOffsetForToken),
         ("testOffsetForTokenWithTabs", testOffsetForTokenWithTabs),
+        ("testTokenIndexForBlankLastLine", testTokenIndexForBlankLastLine),
+        ("testTokenIndexForLastLine", testTokenIndexForLastLine),
         ("testTokenIndexForOffset", testTokenIndexForOffset),
         ("testTokenIndexForOffsetWithTabs", testTokenIndexForOffsetWithTabs),
+        ("testTokenIndexPastEndOfFile", testTokenIndexPastEndOfFile),
     ]
 }
 

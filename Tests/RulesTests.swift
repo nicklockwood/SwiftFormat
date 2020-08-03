@@ -4457,7 +4457,7 @@ class RulesTests: XCTestCase {
     func testMultilineEnumCases() {
         let input = """
         enum Enum1: Int {
-            case a = 0, p, c, d
+            case a = 0, p = 2, c, d
             case e, k
             case m(String, String)
         }
@@ -4465,7 +4465,7 @@ class RulesTests: XCTestCase {
         let output = """
         enum Enum1: Int {
             case a = 0
-            case p
+            case p = 2
             case c
             case d
             case e

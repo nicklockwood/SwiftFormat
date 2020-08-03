@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.45.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.3) (2020-08-03)
+
+- Added `--linerange` command-line argument for partial file formatting or linting
+- Added `--varattributes` option to complement `--funcattributes` and `--typeattributes`
+- Fixed spurious "Unexpected static/class ..." warning in `redundantSelf` rule 
+- Fixed bug in tokenIndex() calculation when last line does not end in a linebreak
+- Fixed bug where `self` was incorrectly removed inside trailing closures on generic type init
+- Blank lines are no longer indented when using `--trimwhitespace nonblank-lines`
+
 ## [0.45.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.2) (2020-08-01)
 
 - You can now tweak formatting options inside source files using `// swiftformat:options ...` directive

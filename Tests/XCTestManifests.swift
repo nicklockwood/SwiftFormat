@@ -986,6 +986,7 @@ extension RulesTests {
         ("testNoIndentAfterDefaultAsIdentifier", testNoIndentAfterDefaultAsIdentifier),
         ("testNoIndentAfterOperatorDeclaration", testNoIndentAfterOperatorDeclaration),
         ("testNoIndentBlankLines", testNoIndentBlankLines),
+        ("testNoIndentBlankLinesIfTrimWhitespaceDisabled", testNoIndentBlankLinesIfTrimWhitespaceDisabled),
         ("testNoIndentCommentBeforeIfdefAroundCase", testNoIndentCommentBeforeIfdefAroundCase),
         ("testNoIndentCommentedCodeBeforeIfdefAroundCase", testNoIndentCommentedCodeBeforeIfdefAroundCase),
         ("testNoIndentIfdefFollowedByCommentAroundCase", testNoIndentIfdefFollowedByCommentAroundCase),

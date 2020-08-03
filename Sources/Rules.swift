@@ -1429,8 +1429,10 @@ public struct _FormatRules {
                 }
                 // Apply indent
                 switch formatter.tokens[nextNonSpaceIndex] {
-                case .linebreak where formatter.options.truncateBlankLines:
-                    formatter.insertSpace("", at: i + 1)
+                case .linebreak:
+                    if formatter.options.truncateBlankLines {
+                        formatter.insertSpace("", at: i + 1)
+                    }
                 case .error, .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"),
                      .startOfScope("#if") where formatter.options.ifdefIndent != .indent:
                     break

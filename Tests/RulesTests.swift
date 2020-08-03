@@ -3363,19 +3363,32 @@ class RulesTests: XCTestCase {
     // indent blank lines
 
     func testTruncateBlankLineBeforeIndenting() {
-        // NOTE: don't convert to multiline string
-        let input =
-            "func foo() {\n" +
-            "    guard bar = baz else { return }\n" +
-            "    \n" + // should not be indented
-            "    quux()\n" +
-            "}"
-
+        let input = """
+        func foo() {
+        \tguard bar = baz else { return }
+        \t
+        \tquux()
+        }
+        """
         let rules = [FormatRules.indent, FormatRules.trailingSpace]
-        let options = FormatOptions(truncateBlankLines: true)
+        let options = FormatOptions(indent: "\t", truncateBlankLines: true, tabWidth: 2)
         XCTAssertEqual(try lint(input, rules: rules, options: options), [
             Formatter.Change(line: 3, rule: FormatRules.trailingSpace, filePath: nil),
         ])
+    }
+
+    func testNoIndentBlankLinesIfTrimWhitespaceDisabled() {
+        let input = """
+        func foo() {
+        \tguard bar = baz else { return }
+        \t
+
+        \tquux()
+        }
+        """
+        let options = FormatOptions(indent: "\t", truncateBlankLines: false, tabWidth: 2)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["consecutiveBlankLines"])
     }
 
     // MARK: - braces

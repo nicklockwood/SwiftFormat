@@ -3423,9 +3423,9 @@ public struct _FormatRules {
         }
     }
 
-    /// Rewrites the enum cases one per line
+    /// Formats enum cases declaration into one case per line
     public let multilineEnumCases = FormatRule(
-        help: "Sort switch cases alphabetically.",
+        help: "Writes one enum case per line",
         options: [],
         sharedOptions: ["linebreaks"]
     ) { formatter in

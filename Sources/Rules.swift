@@ -2607,14 +2607,19 @@ public struct _FormatRules {
                     continue
                 case .keyword("static"):
                     classOrStatic = true
-                case .keyword("class"):
-                    if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)?.isIdentifier == true {
-                        fallthrough
-                    }
+                case .keyword("class") where
+                    formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)?.isIdentifier == false:
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .delimiter(":") {
                         classOrStatic = true
                     }
-                case .keyword("extension"), .keyword("struct"), .keyword("enum"):
+                case .keyword("where") where lastKeyword == "protocol", .keyword("protocol"):
+                    if let startIndex = formatter.index(of: .startOfScope("{"), after: index),
+                        let endIndex = formatter.endOfScope(at: startIndex)
+                    {
+                        index = endIndex
+                    }
+                case .keyword("extension"), .keyword("struct"), .keyword("enum"), .keyword("class"),
+                     .keyword("where") where ["extension", "struct", "enum", "class"].contains(lastKeyword):
                     guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .keyword("import"),
                         let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
                     guard let nameToken = formatter.next(.identifier, after: index),
@@ -2880,9 +2885,9 @@ public struct _FormatRules {
                                 break
                             }
                         }
-                    } else if let _ /* scope */ = scopeStack.last {
+                    } else if let scope = scopeStack.last {
                         // TODO: fix this bug
-//                        assert(token.isEndOfScope(scope))
+                        assert(token.isEndOfScope(scope))
                         scopeStack.removeLast()
                     } else {
                         assert(token.isEndOfScope(formatter.currentScope(at: index)!))

@@ -7711,6 +7711,36 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testRedundantSelfRuleDoesntErrorForStaticFuncInProtocolWithWhere() {
+        let input = """
+        protocol Foo where Self: Bar {
+            static func baz() -> Self
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testRedundantSelfRuleDoesntErrorForStaticFuncInStructWithWhere() {
+        let input = """
+        struct Foo<T> where T: Bar {
+            static func baz() -> Foo {}
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testRedundantSelfRuleDoesntErrorForClassFuncInClassWithWhere() {
+        let input = """
+        class Foo<T> where T: Bar {
+            class func baz() -> Foo {}
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // enable/disable
 
     func testDisableRemoveSelf() {

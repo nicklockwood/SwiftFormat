@@ -610,7 +610,6 @@ private struct Inference {
         }
     }
 
-    // TODO: handle init-only case
     let explicitSelf = OptionInferrer { formatter, options in
         func processBody(at index: inout Int, localNames: Set<String>, members: Set<String>,
                          typeStack: inout [String],

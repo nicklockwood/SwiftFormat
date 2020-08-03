@@ -1004,6 +1004,14 @@ public struct _FormatRules {
             return false
         }
 
+        // Disable when using range
+        // TODO: find better solution
+        if let range = formatter.range, formatter.tokens[0 ..< range.lowerBound].contains(where: {
+            $0.isStartOfScope && $0 != .startOfScope("//")
+        }) {
+            return
+        }
+
         if formatter.options.fragment,
             let firstIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1),
             let indentToken = formatter.token(at: firstIndex - 1), case let .space(string) = indentToken

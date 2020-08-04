@@ -20,6 +20,7 @@
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
 * [modifierOrder](#modifierOrder)
+* [multilineSwitchCases](#multilineSwitchCases)
 * [numberFormatting](#numberFormatting)
 * [preferKeyPath](#preferKeyPath)
 * [ranges *(deprecated)*](#ranges)
@@ -609,6 +610,10 @@ Option | Description
 
 </details>
 <br/>
+
+## multilineSwitchCases
+
+Writes one switch case per line.
 
 ## numberFormatting
 

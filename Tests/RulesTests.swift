@@ -4456,28 +4456,16 @@ class RulesTests: XCTestCase {
 
     func testMultilineSwitchCases() {
         let input = """
-        enum Enum1 {
-            case a, b, c, d
-        }
-
-        let enum1 = Enum1.c
-
         switch enum1 {
-        case .a, .b, .c:
+        case .a(_), .b, .c:
             print("")
         case .d:
             print("")
         }
         """
         let output = """
-        enum Enum1 {
-            case a, b, c, d
-        }
-
-        let enum1 = Enum1.c
-
         switch enum1 {
-        case .a,
+        case .a(_),
              .b,
              .c:
             print("")

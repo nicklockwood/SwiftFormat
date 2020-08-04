@@ -3526,33 +3526,23 @@ public struct _FormatRules {
 
     /// Writes one switch case per line
     public let multilineSwitchCases = FormatRule(
-        help: "Writes one switch case per line",
+        help: "Writes one switch case per line.",
         options: [],
-        sharedOptions: ["linebreaks"]
+        sharedOptions: ["linebreaks", "tabwidth", "indent", "indentCase"]
     ) { formatter in
-        formatter.forEach(.keyword("switch")) { idx, _ in
-            var lastCase = idx
+        formatter.forEach(.endOfScope("case")) { idx, _ in
+            guard let colonIndex = formatter.index(of: .startOfScope(":"), after: idx) else { return }
 
-            if let start = formatter.index(of: .startOfScope("{"), after: idx),
-                let end = formatter.index(of: .endOfScope("}"), after: start)
+            var startIndex = idx
+            while let delimiterIndex = formatter.index(of: .delimiter(","), after: startIndex),
+                let nextCaseIndex = formatter.index(of: .operator(".", .prefix), after: delimiterIndex)
             {
-                print("Found this")
-            }
-
-            while let caseKeywordIndex = formatter.index(of: .keyword("case"), after: lastCase),
-                let breaklineIndex = formatter.index(of: .linebreak, after: caseKeywordIndex)
-            {
-                for jdx in (caseKeywordIndex + 1) ... breaklineIndex {
-                    guard
-                        let token = formatter.token(at: jdx),
-                        token == .delimiter(","),
-                        formatter.index(of: .startOfScope("("), in: lastCase ..< jdx) == nil else { continue }
-
-                    formatter.insertLinebreak(at: jdx + 1)
-                    formatter.insertSpace(formatter.indentForLine(at: jdx + 2), at: jdx + 2)
+                if formatter.index(of: .linebreak, in: delimiterIndex ..< nextCaseIndex) == nil {
+                    formatter.insertLinebreak(at: delimiterIndex + 1)
+                    formatter.insertSpace(formatter.spaceEquivalentToWidth(5), at: delimiterIndex + 2)
                 }
 
-                lastCase = breaklineIndex
+                startIndex = nextCaseIndex
             }
         }
     }

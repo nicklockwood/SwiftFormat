@@ -8122,7 +8122,7 @@ class RulesTests: XCTestCase {
     func testHoistCommaSeparatedSwitchCaseLets() {
         let input = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let output = "switch foo {\ncase let .foo(bar), let .bar(bar):\n}"
-        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, exclude: ["multilineSwitchCases"])
     }
 
     func testHoistCatchLet() {
@@ -8245,7 +8245,11 @@ class RulesTests: XCTestCase {
         let input = "switch foo {\ncase let .foo(bar), let .bar(bar):\n}"
         let output = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
-        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
+        testFormatting(for: input,
+                       output,
+                       rule: FormatRules.hoistPatternLet,
+                       options: options,
+                       exclude: ["multilineSwitchCases"])
     }
 
     func testUnhoistCommaSeparatedSwitchCaseLets2() {

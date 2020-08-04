@@ -3528,7 +3528,7 @@ public struct _FormatRules {
     public let multilineSwitchCases = FormatRule(
         help: "Writes one switch case per line.",
         options: [],
-        sharedOptions: ["linebreaks", "tabwidth", "indent", "indentCase"]
+        sharedOptions: ["linebreaks", "tabwidth", "indent", "smarttabs"]
     ) { formatter in
         formatter.forEach(.endOfScope("case")) { idx, _ in
             guard let colonIndex = formatter.index(of: .startOfScope(":"), after: idx) else { return }

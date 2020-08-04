@@ -1643,7 +1643,7 @@ public struct _FormatRules {
                     if !isOnNewLine {
                         formatter.replaceTokens(inRange: prevIndex + 1 ..< i, with:
                             [formatter.linebreakToken(for: prevIndex + 1)])
-                        formatter.insertSpace(formatter.indentForLine(at: i), at: prevIndex + 2)
+                        formatter.insertSpace(formatter.indentForLine(at: guardIndex), at: prevIndex + 2)
                     }
                 } else if isOnNewLine {
                     formatter.replaceTokens(inRange: prevIndex + 1 ..< i, with: [.space(" ")])

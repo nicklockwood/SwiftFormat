@@ -1920,6 +1920,7 @@ extension RulesTests {
         ("testWrappedLineInClosure", testWrappedLineInClosure),
         ("testWrappedLinesWithComments", testWrappedLinesWithComments),
         ("testWrappedMultilineClosureOnNewLineWithXcodeIndentation", testWrappedMultilineClosureOnNewLineWithXcodeIndentation),
+        ("testWrappedMultilineGuardElseCorrectlyIndented", testWrappedMultilineGuardElseCorrectlyIndented),
         ("testWrappedMultilineStringOnNewLineWithXcodeIndentation", testWrappedMultilineStringOnNewLineWithXcodeIndentation),
         ("testWrapReset", testWrapReset),
         ("testWrapSingleParameter", testWrapSingleParameter),

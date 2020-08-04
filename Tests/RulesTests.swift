@@ -3883,6 +3883,28 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.elseOnSameLine)
     }
 
+    func testWrappedMultilineGuardElseCorrectlyIndented() {
+        let input = """
+        func foo() {
+            guard let foo = bar,
+                bar > 5 else
+            {
+                return
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            guard let foo = bar,
+                bar > 5
+            else {
+                return
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine)
+    }
+
     // guardelse = nextLine
 
     func testSingleLineGuardElseNotWrapped() {

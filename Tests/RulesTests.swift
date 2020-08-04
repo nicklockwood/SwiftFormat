@@ -1664,14 +1664,14 @@ class RulesTests: XCTestCase {
     func testEnumCaseIndentingCommas() {
         let input = "enum Foo {\ncase Bar,\nBaz\n}"
         let output = "enum Foo {\n    case Bar,\n        Baz\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent)
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["multilineEnumCases"])
     }
 
     func testEnumCaseIndentingCommasWithXcodeStyle() {
         let input = "enum Foo {\ncase Bar,\nBaz\n}"
         let output = "enum Foo {\n    case Bar,\n    Baz\n}"
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["multilineEnumCases"])
     }
 
     func testEnumCaseWrappedIfWithXcodeStyle() {
@@ -11694,7 +11694,10 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+        testFormatting(for: input,
+                       rule: FormatRules.redundantFileprivate,
+                       options: options,
+                       exclude: ["multilineEnumCases"])
     }
 
     func testFileprivateClassTypeMemberNotChangedToPrivate() {

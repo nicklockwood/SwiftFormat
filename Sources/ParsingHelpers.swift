@@ -1124,6 +1124,10 @@ extension Formatter {
                     wrapArgumentsAfterFirst(startOfScope: i,
                                             endOfScope: endOfScope,
                                             allowGrouping: true)
+                case .atFirst:
+                    wrapArgumentsAfterFirst(startOfScope: i,
+                                            endOfScope: endOfScope,
+                                            allowGrouping: false)
                 case .disabled, .default:
                     assertionFailure() // Shouldn't happen
                 }
@@ -1180,6 +1184,10 @@ extension Formatter {
                         wrapArgumentsAfterFirst(startOfScope: i,
                                                 endOfScope: endOfScope,
                                                 allowGrouping: true)
+                    case .atFirst:
+                        wrapArgumentsAfterFirst(startOfScope: i,
+                                                endOfScope: endOfScope,
+                                                allowGrouping: false)
                     case .disabled, .default:
                         assertionFailure() // Shouldn't happen
                     }

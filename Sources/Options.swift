@@ -55,6 +55,7 @@ public enum IndentMode: String {
 public enum WrapMode: String {
     case beforeFirst = "before-first"
     case afterFirst = "after-first"
+    case atFirst = "at-first"
     case preserve
     case disabled
     case `default`
@@ -65,6 +66,8 @@ public enum WrapMode: String {
             self = .beforeFirst
         case "after-first", "afterfirst":
             self = .afterFirst
+        case "at-first", "atfirst":
+            self = .atFirst
         case "preserve":
             self = .preserve
         case "disabled":

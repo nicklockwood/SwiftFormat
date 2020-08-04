@@ -435,25 +435,25 @@ extension FormatOptions.Descriptor {
         argumentName: "wraparguments",
         propertyName: "wrapArguments",
         displayName: "Wrap Arguments",
-        help: "Wrap all arguments: \"before-first\", \"after-first\", \"preserve\"",
+        help: "Wrap all arguments: \"before-first\", \"after-first\", \"at-first\", \"preserve\"",
         keyPath: \.wrapArguments,
-        options: ["before-first", "after-first", "preserve", "disabled"]
+        options: ["before-first", "after-first", "at-first", "preserve", "disabled"]
     )
     static let wrapParameters = FormatOptions.Descriptor(
         argumentName: "wrapparameters",
         propertyName: "wrapParameters",
         displayName: "Wrap Parameters",
-        help: "Wrap func params: \"before-first\", \"after-first\", \"preserve\"",
+        help: "Wrap func params: \"before-first\", \"after-first\", \"at-first\", \"preserve\"",
         keyPath: \.wrapParameters,
-        options: ["before-first", "after-first", "preserve", "disabled"]
+        options: ["before-first", "after-first", "at-first", "preserve", "disabled"]
     )
     static let wrapCollections = FormatOptions.Descriptor(
         argumentName: "wrapcollections",
         propertyName: "wrapCollections",
         displayName: "Wrap Collections",
-        help: "Wrap array/dict: \"before-first\", \"after-first\", \"preserve\"",
+        help: "Wrap array/dict: \"before-first\", \"after-first\", \"at-first\", \"preserve\"",
         keyPath: \.wrapCollections,
-        options: ["before-first", "after-first", "preserve", "disabled"]
+        options: ["before-first", "after-first", "at-first", "preserve", "disabled"]
     )
     static let closingParen = FormatOptions.Descriptor(
         argumentName: "closingparen",

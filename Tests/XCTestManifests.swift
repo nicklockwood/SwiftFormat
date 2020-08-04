@@ -1867,6 +1867,7 @@ extension RulesTests {
         ("testWrapInitAttribute", testWrapInitAttribute),
         ("testWrapParametersAfterFirstIfMaxLengthExceededInReturnType", testWrapParametersAfterFirstIfMaxLengthExceededInReturnType),
         ("testWrapParametersAfterFirstWithSeparatedArgumentLabels", testWrapParametersAfterFirstWithSeparatedArgumentLabels),
+        ("testWrapParametersAtFirstIfMaxLengthExceededInReturnType", testWrapParametersAtFirstIfMaxLengthExceededInReturnType),
         ("testWrapParametersBeforeFirstIfMaxLengthExceededInReturnType", testWrapParametersBeforeFirstIfMaxLengthExceededInReturnType),
         ("testWrapParametersBeforeFirstWithSeparatedArgumentLabels", testWrapParametersBeforeFirstWithSeparatedArgumentLabels),
         ("testWrapParametersClosureAfterParameterListDoesNotWrapClosureArguments", testWrapParametersClosureAfterParameterListDoesNotWrapClosureArguments),

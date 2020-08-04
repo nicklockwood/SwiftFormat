@@ -9026,6 +9026,20 @@ class RulesTests: XCTestCase {
                        options: options)
     }
 
+    func testWrapParametersAtFirstIfMaxLengthExceededInReturnType() {
+        let input = """
+        func foo(bar: Int, baz: String, quux: Bool) -> LongReturnType {}
+        """
+        let output2 = """
+        func foo(bar: Int,
+                 baz: String,
+                 quux: Bool) -> LongReturnType {}
+        """
+        let options = FormatOptions(wrapParameters: .atFirst, maxWidth: 50)
+        testFormatting(for: input, [input, output2], rules: [FormatRules.wrapArguments],
+                       options: options, exclude: ["unusedArguments"])
+    }
+
     func testWrapParametersAfterFirstIfMaxLengthExceededInReturnType() {
         let input = """
         func foo(bar: Int, baz: String, quux: Bool) -> LongReturnType {}

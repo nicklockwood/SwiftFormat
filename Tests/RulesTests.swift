@@ -10197,6 +10197,25 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
     }
 
+    func testNoStripFormatDirective() {
+        let input = "// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
+        let options = FormatOptions(fileHeader: "")
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testNoStripFormatDirectiveAfterHeader() {
+        let input = "// header\n// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
+        let options = FormatOptions(fileHeader: "")
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testNoReplaceFormatDirective() {
+        let input = "// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
+        let output = "// Hello World\n\n// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
+        let options = FormatOptions(fileHeader: "// Hello World")
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
     func testSetSingleLineHeader() {
         let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
         let output = "// Hello World\n\n// func\nfunc foo() {}"

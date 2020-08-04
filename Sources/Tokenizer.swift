@@ -61,6 +61,14 @@ public extension String {
         let tokens = tokenize(self)
         return tokens.count == 1 && tokens[0].isOperator
     }
+
+    /// Is this string a formatting directive?
+    var isFormattingDirective: Bool {
+        let lowercased = self.lowercased()
+        return ["swiftformat:", "swiftlint:"].contains(where: {
+            lowercased.hasPrefix($0)
+        })
+    }
 }
 
 /// Classes of token used for matching

@@ -3675,28 +3675,37 @@ public struct _FormatRules {
                         body.hasPrefix("swift-tools-version")
                     {
                         return
+                    } else if body.isFormattingDirective {
+                        break
                     }
                 }
                 var lastIndex = startIndex
                 while let index = formatter.index(of: .linebreak, after: lastIndex) {
-                    if let nextToken = formatter.token(at: index + 1), nextToken != .startOfScope("//") {
-                        switch nextToken {
-                        case .linebreak:
-                            lastHeaderTokenIndex = index + 1
-                        case .space where formatter.token(at: index + 2)?.isLinebreak == true:
-                            lastHeaderTokenIndex = index + 2
-                        default:
+                    switch formatter.token(at: index + 1) ?? .space("") {
+                    case .startOfScope("//"):
+                        if case let .commentBody(body)? = formatter.next(.nonSpace, after: index + 1),
+                            body.isFormattingDirective
+                        {
                             break
                         }
+                        lastIndex = index
+                        continue
+                    case .linebreak:
+                        lastHeaderTokenIndex = index + 1
+                    case .space where formatter.token(at: index + 2)?.isLinebreak == true:
+                        lastHeaderTokenIndex = index + 2
+                    default:
                         break
                     }
-                    lastIndex = index
+                    break
                 }
             case .startOfScope("/*"):
                 if case let .commentBody(body)? = formatter.next(.nonSpace, after: startIndex) {
                     formatter.processCommentBody(body, at: startIndex)
                     if !formatter.isEnabled || (body.hasPrefix("*") && !body.hasPrefix("**")) {
                         return
+                    } else if body.isFormattingDirective {
+                        break
                     }
                 }
                 while let endIndex = formatter.index(of: .endOfScope("*/"), after: startIndex) {

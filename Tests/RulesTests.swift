@@ -4452,6 +4452,42 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.modifierOrder)
     }
 
+    // MARK: multilineSwitchCases
+
+    func testMultilineSwitchCases() {
+        let input = """
+        enum Enum1 {
+            case a, b, c, d
+        }
+
+        let enum1 = Enum1.c
+
+        switch enum1 {
+        case .a, .b, .c:
+            print("")
+        case .d:
+            print("")
+        }
+        """
+        let output = """
+        enum Enum1 {
+            case a, b, c, d
+        }
+
+        let enum1 = Enum1.c
+
+        switch enum1 {
+        case .a,
+             .b,
+             .c:
+            print("")
+        case .d:
+            print("")
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.multilineSwitchCases)
+    }
+
     // MARK: - void
 
     func testEmptyParensReturnValueConvertedToVoid() {

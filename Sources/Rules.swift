@@ -3524,6 +3524,39 @@ public struct _FormatRules {
         }
     }
 
+    /// Writes one switch case per line
+    public let multilineSwitchCases = FormatRule(
+        help: "Writes one switch case per line",
+        options: [],
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        formatter.forEach(.keyword("switch")) { idx, _ in
+            var lastCase = idx
+
+            if let start = formatter.index(of: .startOfScope("{"), after: idx),
+                let end = formatter.index(of: .endOfScope("}"), after: start)
+            {
+                print("Found this")
+            }
+
+            while let caseKeywordIndex = formatter.index(of: .keyword("case"), after: lastCase),
+                let breaklineIndex = formatter.index(of: .linebreak, after: caseKeywordIndex)
+            {
+                for jdx in (caseKeywordIndex + 1) ... breaklineIndex {
+                    guard
+                        let token = formatter.token(at: jdx),
+                        token == .delimiter(","),
+                        formatter.index(of: .startOfScope("("), in: lastCase ..< jdx) == nil else { continue }
+
+                    formatter.insertLinebreak(at: jdx + 1)
+                    formatter.insertSpace(formatter.indentForLine(at: jdx + 2), at: jdx + 2)
+                }
+
+                lastCase = breaklineIndex
+            }
+        }
+    }
+
     /// Standardize formatting of numeric literals
     public let numberFormatting = FormatRule(
         help: """

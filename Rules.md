@@ -613,7 +613,7 @@ Option | Description
 
 ## multilineEnumCases
 
-Sort switch cases alphabetically.
+Writes one enum case per line
 
 ## numberFormatting
 

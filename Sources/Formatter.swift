@@ -573,7 +573,11 @@ public class Formatter: NSObject {
     /// Either modifies or removes the existing space token at the specified
     /// index, or inserts a new one if there is not already a space token present.
     /// Returns the number of tokens inserted or removed
-    @discardableResult func insertSpace(_ space: String, at index: Int) -> Int {
+    @discardableResult
+    public func insertSpace(_ space: String, at index: Int) -> Int {
+        guard isEnabled else {
+            return 0
+        }
         if token(at: index)?.isSpace == true {
             if space.isEmpty {
                 removeToken(at: index)
@@ -585,6 +589,12 @@ public class Formatter: NSObject {
             return 1 // Inserted 1 token
         }
         return 0 // Inserted 0 tokens
+    }
+
+    // As above, but only if formatting is enabled
+    @discardableResult
+    func insertSpaceIfEnabled(_ space: String, at index: Int) -> Int {
+        return isEnabled ? insertSpace(space, at: index) : 0
     }
 
     /// Returns the original line number at the specified index

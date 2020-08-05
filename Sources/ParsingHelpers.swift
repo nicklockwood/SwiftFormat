@@ -1051,8 +1051,11 @@ extension Formatter {
         }
 
         var lastIndex = -1
-        forEach(.startOfScope) { i, token in
-            guard ["(", "[", "<"].contains(token.string) else {
+        forEachToken(onlyWhereEnabled: false) { i, token in
+            guard case let .startOfScope(string) = token else {
+                return
+            }
+            guard ["(", "[", "<"].contains(string) else {
                 lastIndex = i
                 return
             }
@@ -1071,7 +1074,7 @@ extension Formatter {
             var endOfScopeOnSameLine = false
             let hasMultipleArguments = index(of: .delimiter(","), in: i + 1 ..< endOfScope) != nil
             var isParameters = false
-            switch token.string {
+            switch string {
             case "(":
                 /// Don't wrap color/image literals due to Xcode bug
                 guard let prevToken = self.token(at: i - 1),
@@ -1102,6 +1105,11 @@ extension Formatter {
                 index(of: .nonSpaceOrCommentOrLinebreak, after: i),
                 !isStringLiteral(at: i)
             else {
+                lastIndex = i
+                return
+            }
+
+            guard isEnabled else {
                 lastIndex = i
                 return
             }

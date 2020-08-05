@@ -1305,7 +1305,7 @@ private extension Formatter {
         } else if afterFirst > 0, beforeFirst == 0 {
             return .afterFirst
         } else {
-            return .preserve
+            return parameters ? .default : .preserve
         }
     }
 

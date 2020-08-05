@@ -1125,7 +1125,11 @@ extension Formatter {
 
                 endOfScopeOnSameLine = options.closingParenOnSameLine
                 isParameters = isParameterList(at: i)
-                mode = isParameters ? options.wrapParameters : options.wrapArguments
+                if isParameters, options.wrapParameters != .default {
+                    mode = options.wrapParameters
+                } else {
+                    mode = options.wrapArguments
+                }
             case "<":
                 mode = options.wrapArguments
             case "[":

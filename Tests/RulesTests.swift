@@ -8797,7 +8797,7 @@ class RulesTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(maxWidth: 80)
+        let options = FormatOptions(wrapParameters: .preserve, maxWidth: 80)
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options,
                        exclude: ["indent", "wrapArguments"])
     }

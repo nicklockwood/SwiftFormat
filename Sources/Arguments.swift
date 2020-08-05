@@ -383,6 +383,11 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             }
             args[descriptor.argumentName] = value
         }
+        // Special case for wrapParameters
+        let argumentName = FormatOptions.Descriptor.wrapParameters.argumentName
+        if args[argumentName] == WrapMode.default.rawValue {
+            args[argumentName] = args[FormatOptions.Descriptor.wrapArguments.argumentName]
+        }
     }
     if let rules = options.rules {
         let defaultRules = allRules.subtracting(FormatRules.disabledByDefault)

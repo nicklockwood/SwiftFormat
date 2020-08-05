@@ -384,7 +384,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.fileHeader = fileHeader
         self.ifdefIndent = ifdefIndent
         self.wrapArguments = wrapArguments
-        self.wrapParameters = wrapParameters == .default ? wrapArguments : wrapParameters
+        self.wrapParameters = wrapParameters
         self.wrapCollections = wrapCollections
         self.closingParenOnSameLine = closingParenOnSameLine
         self.uppercaseHex = uppercaseHex

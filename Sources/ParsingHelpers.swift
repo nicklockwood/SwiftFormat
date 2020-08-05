@@ -497,25 +497,39 @@ extension Formatter {
     }
 
     func lastSignificantKeyword(at i: Int, excluding: [String] = []) -> String? {
-        return indexOfLastSignificantKeyword(at: i, excluding: excluding).map {
-            tokens[$0].string
+        guard let index = indexOfLastSignificantKeyword(at: i, excluding: excluding),
+            case let .keyword(keyword) = tokens[index]
+        else {
+            return nil
         }
+        return keyword
     }
 
     func indexOfLastSignificantKeyword(at i: Int, excluding: [String] = []) -> Int? {
         guard let token = token(at: i),
-            let index = token.isKeyword ? i : index(of: .keyword, before: i)
+            let index = token.isKeyword ? i : index(of: .keyword, before: i),
+            case let .keyword(keyword) = tokens[index]
         else {
             return nil
         }
-        switch tokens[index].string {
+        switch keyword {
         case let name where
             name.hasPrefix("#") || name.hasPrefix("@") || excluding.contains(name):
             fallthrough
         case "in", "as", "is", "try":
             return indexOfLastSignificantKeyword(at: index - 1, excluding: excluding)
         default:
-            return index
+            guard let braceIndex = self.index(of: .startOfScope("{"), in: index ..< i) else {
+                return index
+            }
+            if keyword == "if" || ["var", "let"].contains(keyword) &&
+                last(.nonSpaceOrCommentOrLinebreak, before: index) == .keyword("if"),
+                let endIndex = endOfScope(at: braceIndex),
+                self.index(of: .startOfScope("{"), in: endIndex ..< i) == nil
+            {
+                return index
+            }
+            return nil
         }
     }
 
@@ -624,6 +638,24 @@ extension Formatter {
             return ["<", "[", "(", "case"].contains(scope.string)
         case .delimiter, .operator(_, .infix), .operator(_, .postfix):
             return false
+        case .startOfScope("{") where isStartOfClosure(at: i):
+            guard last(.nonSpaceOrComment, before: i)?.isLinebreak == true,
+                let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                let prevToken = self.token(at: prevIndex)
+            else {
+                return false
+            }
+            if prevToken.isIdentifier, !["true", "false", "nil"].contains(prevToken.string) {
+                return false
+            }
+            if [.endOfScope(")"), .endOfScope("]")].contains(prevToken),
+                let startIndex = index(of: .startOfScope, before: prevIndex),
+                !tokens[startIndex ..< prevIndex].contains(where: { $0.isLinebreak })
+                || indentForLine(at: startIndex) == indentForLine(at: prevIndex)
+            {
+                return false
+            }
+            return true
         default:
             return true
         }

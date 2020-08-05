@@ -394,6 +394,18 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isStartOfClosure(at: 11))
     }
 
+    func testAllmanClosureAfterFunction() {
+        let formatter = Formatter(tokenize("""
+        func foo() {}
+        Foo
+            .baz
+            {
+                baz()
+            }
+        """))
+        XCTAssert(formatter.isStartOfClosure(at: 16))
+    }
+
     // MARK: isAccessorKeyword
 
     func testDidSet() {

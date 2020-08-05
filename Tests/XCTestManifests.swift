@@ -317,6 +317,7 @@ extension ParsingHelpersTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__ParsingHelpersTests = [
+        ("testAllmanClosureAfterFunction", testAllmanClosureAfterFunction),
         ("testArrayReturningFunctionBracesNotTreatedAsClosure", testArrayReturningFunctionBracesNotTreatedAsClosure),
         ("testChainedTrailingClosureInLetChain", testChainedTrailingClosureInLetChain),
         ("testChainedTrailingClosureInTypedLetChain", testChainedTrailingClosureInTypedLetChain),
@@ -762,6 +763,8 @@ extension RulesTests {
         ("testIgnoreDecimalGrouping", testIgnoreDecimalGrouping),
         ("testIgnoreFractionGrouping", testIgnoreFractionGrouping),
         ("testIgnoreInlineSemicolon", testIgnoreInlineSemicolon),
+        ("testIndentAllmanTrailingClosureArguments", testIndentAllmanTrailingClosureArguments),
+        ("testIndentAllmanTrailingClosureArgumentsAfterFunction", testIndentAllmanTrailingClosureArgumentsAfterFunction),
         ("testIndentClassDeclarationContainingComment", testIndentClassDeclarationContainingComment),
         ("testIndentClosureArguments", testIndentClosureArguments),
         ("testIndentClosureArguments2", testIndentClosureArguments2),
@@ -959,6 +962,7 @@ extension RulesTests {
         ("testNoDeleteCodeBetweenImports", testNoDeleteCodeBetweenImports),
         ("testNoDeleteCodeBetweenImports2", testNoDeleteCodeBetweenImports2),
         ("testNoDeleteCodeBetweenImports3", testNoDeleteCodeBetweenImports3),
+        ("testNoDoubleIndentClosureArguments", testNoDoubleIndentClosureArguments),
         ("testNoDoubleIndentOfWrapAfterAsAfterOpenScope", testNoDoubleIndentOfWrapAfterAsAfterOpenScope),
         ("testNoDoubleIndentOfWrapBeforeAsAfterOpenScope", testNoDoubleIndentOfWrapBeforeAsAfterOpenScope),
         ("testNoDoubleIndentWhenScopesSeparatedByWrap", testNoDoubleIndentWhenScopesSeparatedByWrap),

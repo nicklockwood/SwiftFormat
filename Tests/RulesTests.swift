@@ -1312,7 +1312,12 @@ class RulesTests: XCTestCase {
     }
 
     func testNoBlankLineBeforeWhileInRepeatWhile() {
-        let input = "repeat\n{}\nwhile true\n{}()"
+        let input = """
+        repeat
+        { print("foo") }
+        while false
+        { print("bar") }()
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes, options: options)
     }
@@ -1615,6 +1620,54 @@ class RulesTests: XCTestCase {
         )
         """
         testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapArguments"])
+    }
+
+    func testIndentAllmanTrailingClosureArguments() {
+        let input = """
+        let foo = Foo
+            .bar
+            { _ in
+                bar()
+            }
+            .baz(5)
+            {
+                baz()
+            }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentAllmanTrailingClosureArgumentsAfterFunction() {
+        let input = """
+        func foo()
+        {
+            return
+        }
+
+        Foo
+            .bar()
+            .baz
+            {
+                baz()
+            }
+            .quux
+            {
+                quux()
+            }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testNoDoubleIndentClosureArguments() {
+        let input = """
+        let foo = foo(bar(
+            { baz },
+            { quux }
+        ))
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
     }
 
     // indent switch/case
@@ -2440,15 +2493,16 @@ class RulesTests: XCTestCase {
 
     func testSingleIndentTrailingClosureBodyThatStartsOnFollowingLine() {
         let input = """
-        method(
-            withParameter: 1,
-            otherParameter: 2)
-        { [weak self] in
-            guard let error = error else { return }
-            print("and a trailing closure")
+        func foo() {
+            method(
+                withParameter: 1,
+                otherParameter: 2)
+            { [weak self] in
+                guard let error = error else { return }
+                print("and a trailing closure")
+            }
         }
         """
-
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }

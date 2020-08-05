@@ -827,7 +827,7 @@ public struct _FormatRules {
         guard formatter.options.insertBlankLines else { return }
         var spaceableScopeStack = [true]
         var isSpaceableScopeType = false
-        formatter.forEachToken { i, token in
+        formatter.forEachToken(onlyWhereEnabled: false) { i, token in
             switch token {
             case .keyword("class"),
                  .keyword("struct"),
@@ -873,10 +873,10 @@ public struct _FormatRules {
                         fallthrough
                     }
                 default:
-                    if let firstLinebreakIndex = formatter.index(of: .linebreak, in: i + 1 ..< nextTokenIndex),
+                    if formatter.isEnabled,
+                        let firstLinebreakIndex = formatter.index(of: .linebreak, in: i + 1 ..< nextTokenIndex),
                         formatter.index(of: .linebreak, in: firstLinebreakIndex + 1 ..< nextTokenIndex) == nil
                     {
-                        // Insert linebreak
                         formatter.insertLinebreak(at: firstLinebreakIndex)
                     }
                 }

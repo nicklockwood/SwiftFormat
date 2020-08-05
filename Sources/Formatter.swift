@@ -312,10 +312,7 @@ public class Formatter: NSObject {
 
     // MARK: enumeration
 
-    /// Loops through each token in the array. It is safe to mutate the token
-    /// array inside the body block, but note that the index and token arguments
-    /// may not reflect the current token any more after a mutation
-    public func forEachToken(_ body: (Int, Token) -> Void) {
+    func forEachToken(onlyWhereEnabled: Bool, _ body: (Int, Token) -> Void) {
         assert(enumerationIndex == -1, "forEachToken does not support re-entrancy")
         enumerationIndex = 0
         while enumerationIndex < tokens.count {
@@ -328,12 +325,19 @@ public class Formatter: NSObject {
             default:
                 break
             }
-            if isEnabled {
+            if isEnabled || !onlyWhereEnabled {
                 body(enumerationIndex, token) // May mutate enumerationIndex
             }
             enumerationIndex += 1
         }
         enumerationIndex = -1
+    }
+
+    /// Loops through each token in the array. It is safe to mutate the token
+    /// array inside the body block, but note that the index and token arguments
+    /// may not reflect the current token any more after a mutation
+    public func forEachToken(_ body: (Int, Token) -> Void) {
+        forEachToken(onlyWhereEnabled: true, body)
     }
 
     /// As above, but only loops through tokens that match the specified filter block

@@ -1952,6 +1952,7 @@ extension SwiftFormatTests {
         ("testFormattingFailsForConflict", testFormattingFailsForConflict),
         ("testFormattingFailsForFragment", testFormattingFailsForFragment),
         ("testFormattingRange", testFormattingRange),
+        ("testFormattingRangeNoCrash", testFormattingRangeNoCrash),
         ("testFormattingSucceedsForConflictWithOption", testFormattingSucceedsForConflictWithOption),
         ("testFormattingSucceedsForFragmentWithOption", testFormattingSucceedsForFragmentWithOption),
         ("testFormatUsesDefaultRulesIfNoneSpecified", testFormatUsesDefaultRulesIfNoneSpecified),

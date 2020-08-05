@@ -156,6 +156,17 @@ class SwiftFormatTests: XCTestCase {
         XCTAssertEqual(try format(input, lineRange: 2 ... 2), output)
     }
 
+    func testFormattingRangeNoCrash() {
+        let input = """
+        func foo() {
+          if bar {
+            print(  "foo")
+          }
+        }
+        """
+        XCTAssertNoThrow(try format(input, lineRange: 3 ... 4))
+    }
+
     // MARK: conflict markers
 
     func testFormattingFailsForConflict() {

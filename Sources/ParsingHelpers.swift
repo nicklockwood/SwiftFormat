@@ -392,7 +392,7 @@ extension Formatter {
                     }
                 }
                 return false
-            case "func", "subscript", "class", "struct", "protocol", "enum", "extension":
+            case "func", "subscript", "class", "struct", "protocol", "enum", "extension", "throws":
                 return false
             default:
                 return true

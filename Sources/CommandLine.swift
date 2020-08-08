@@ -599,13 +599,23 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 return
             }
             do {
+                var options = options
                 if args["inferoptions"] != nil {
                     let tokens = tokenize(input)
-                    var options = options
                     options.formatOptions = inferFormatOptions(from: tokens)
                     try serializeOptions(options, to: outputURL)
                 } else {
                     printRunningMessage()
+                    if let stdinURL = options.formatOptions?.fileInfo.filePath.map(URL.init(fileURLWithPath:)) {
+                        do {
+                            try gatherOptions(&options, for: stdinURL, with: { print($0, as: .info) })
+                        } catch {
+                            if printWarnings([error]) {
+                                status = .finished(error)
+                                return
+                            }
+                        }
+                    }
                     let output = try applyRules(input, options: options, lineRange: lineRange,
                                                 verbose: verbose, lint: lint)
                     if let outputURL = outputURL, !useStdout {

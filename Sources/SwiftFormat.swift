@@ -93,7 +93,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                            outputURL: URL? = nil,
                            options baseOptions: Options = .default,
                            concurrent: Bool = true,
-                           logger print: Logger? = nil,
+                           logger: Logger? = nil,
                            skipped: FileEnumerationHandler? = nil,
                            handler: @escaping FileEnumerationHandler) -> [Error]
 {
@@ -166,57 +166,18 @@ public func enumerateFiles(withInputURL inputURL: URL,
         return [FormatError.options("Unsupported file type: \(inputURL.path)")]
     }
 
-    func shouldSkipFile(_ inputURL: URL, with options: Options) -> Bool {
-        guard let excludedGlobs = options.fileOptions?.excludedGlobs else {
+    func wasSkipped(_ inputURL: URL, with options: Options) -> Bool {
+        guard shouldSkipFile(inputURL, with: options) else {
             return false
         }
-        let path = inputURL.path
-        for excluded in excludedGlobs {
-            guard excluded.matches(path) else {
-                continue
+        if let handler = skipped {
+            do {
+                onComplete(try handler(inputURL, inputURL, options))
+            } catch {
+                onComplete { throw error }
             }
-            if let unexcluded = options.fileOptions?.unexcludedGlobs,
-                unexcluded.contains(where: { $0.matches(path) })
-            {
-                return false
-            }
-            if let handler = skipped {
-                do {
-                    onComplete(try handler(inputURL, inputURL, options))
-                } catch {
-                    onComplete { throw error }
-                }
-            }
-            return true
         }
-        return false
-    }
-
-    func processDirectory(_ inputURL: URL, with options: inout Options) throws {
-        if options.formatOptions == nil {
-            options.formatOptions = .default
-        }
-        options.formatOptions?.fileInfo = FileInfo(
-            filePath: resourceValues.path,
-            creationDate: resourceValues.creationDate
-        )
-        let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
-        if manager.fileExists(atPath: configFile.path) {
-            let data = try Data(contentsOf: configFile)
-            let args = try parseConfigFile(data)
-            try options.addArguments(args, in: inputURL.path)
-            print?("Reading config file at \(configFile.path)")
-        }
-        let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
-        if manager.fileExists(atPath: versionFile.path) {
-            let versionString = try String(contentsOf: versionFile, encoding: .utf8)
-            guard let version = Version(rawValue: versionString) else {
-                throw FormatError.options("Unrecognized swift version string '\(versionString)' "
-                    + "found in file \(versionFile.path)")
-            }
-            assert(options.formatOptions != nil)
-            options.formatOptions?.swiftVersion = version
-        }
+        return true
     }
 
     func enumerate(inputURL: URL,
@@ -229,7 +190,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
         let fileOptions = options.fileOptions ?? .default
         if resourceValues.isRegularFile == true {
             if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
-                if shouldSkipFile(inputURL, with: options) {
+                if wasSkipped(inputURL, with: options) {
                     return
                 }
                 let fileInfo = FileInfo(
@@ -245,12 +206,12 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 }
             }
         } else if resourceValues.isDirectory == true {
-            if shouldSkipFile(inputURL, with: options) {
+            if wasSkipped(inputURL, with: options) {
                 return
             }
             var options = options
             do {
-                try processDirectory(inputURL, with: &options)
+                try processDirectory(inputURL, with: &options, logger: logger)
             } catch {
                 // Non-fatal error - no need to return
                 onComplete { throw error }
@@ -284,18 +245,18 @@ public func enumerateFiles(withInputURL inputURL: URL,
             return
         }
         var options = baseOptions
-        var directory = URL(fileURLWithPath: inputURL.pathComponents[0])
-        for part in inputURL.pathComponents.dropFirst().dropLast() {
-            directory.appendPathComponent(part)
-            if shouldSkipFile(directory, with: options) {
-                return
-            }
-            do {
-                try processDirectory(directory, with: &options)
-            } catch {
-                // Non-fatal error - no need to return
-                onComplete { throw error }
-            }
+        if options.formatOptions == nil {
+            options.formatOptions = .default
+        }
+        options.formatOptions?.fileInfo = FileInfo(
+            filePath: resourceValues.path,
+            creationDate: resourceValues.creationDate
+        )
+        do {
+            try gatherOptions(&options, for: inputURL, with: logger)
+        } catch {
+            // Non-fatal error - no need to return
+            onComplete { throw error }
         }
         enumerate(inputURL: inputURL, outputURL: outputURL, options: options)
     }
@@ -310,6 +271,60 @@ public func enumerateFiles(withInputURL inputURL: URL,
         }
     }
     return errors
+}
+
+// Process configuration in all directories in specified path.
+func gatherOptions(_ options: inout Options, for inputURL: URL, with logger: Logger?) throws {
+    var directory = URL(fileURLWithPath: inputURL.pathComponents[0])
+    for part in inputURL.pathComponents.dropFirst().dropLast() {
+        directory.appendPathComponent(part)
+        if shouldSkipFile(directory, with: options) {
+            return
+        }
+        try processDirectory(directory, with: &options, logger: logger)
+    }
+}
+
+// Determine if file should be skipped
+private func shouldSkipFile(_ inputURL: URL, with options: Options) -> Bool {
+    guard let excludedGlobs = options.fileOptions?.excludedGlobs else {
+        return false
+    }
+    let path = inputURL.path
+    for excluded in excludedGlobs {
+        guard excluded.matches(path) else {
+            continue
+        }
+        if let unexcluded = options.fileOptions?.unexcludedGlobs,
+            unexcluded.contains(where: { $0.matches(path) })
+        {
+            return false
+        }
+        return true
+    }
+    return false
+}
+
+// Process configuration files in specified directory.
+private func processDirectory(_ inputURL: URL, with options: inout Options, logger: Logger?) throws {
+    let manager = FileManager.default
+    let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
+    if manager.fileExists(atPath: configFile.path) {
+        let data = try Data(contentsOf: configFile)
+        let args = try parseConfigFile(data)
+        try options.addArguments(args, in: inputURL.path)
+        logger?("Reading config file at \(configFile.path)")
+    }
+    let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
+    if manager.fileExists(atPath: versionFile.path) {
+        let versionString = try String(contentsOf: versionFile, encoding: .utf8)
+        guard let version = Version(rawValue: versionString) else {
+            throw FormatError.options("Unrecognized swift version string '\(versionString)' "
+                + "found in file \(versionFile.path)")
+        }
+        assert(options.formatOptions != nil)
+        options.formatOptions?.swiftVersion = version
+    }
 }
 
 /// Line and column offset in source

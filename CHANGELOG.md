@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.45.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.4) (2020-08-08)
+
+- Improved indenting of wrapped closure braces when using `--allman` indenting
+- Fixed crash in `blankLinesBetweenScopes` rule when using `--linerange` argument
+- Fixed `indent` rules behavior when using `--linerange` argument
+- Audited all rules for `--linerange` compatibility
+- Improved `Format Selection` behavior in Swiftformat for Xcode extension
+- Fixed bug with `fileHeader` rule stripping formatting comment directives at top of file
+- Documented known issue with `preferKeyPath` and `compactMap()` in README file
+- The value for `--wrapparameters` now defaults to match `--wraparguments`
+- Fixed indenting of wrapped guard else
+
 ## [0.45.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.3) (2020-08-03)
 
 - Added `--linerange` command-line argument for partial file formatting or linting

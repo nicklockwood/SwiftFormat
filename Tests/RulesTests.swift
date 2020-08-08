@@ -12700,4 +12700,47 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.2")
         testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
     }
+
+    // MARK: organizeDeclarations
+
+    func testParseDeclarations() {
+        let input = """
+        let global = 10
+        @objc
+        @available(iOS 13.0, *)
+        @propertyWrapper("parameter")
+        weak
+        var multilineGlobal = ["string"]
+            .map(\\.count)
+        let anotherGlobal = "hello"
+
+        func globalFunction() {
+            print("hi")
+        }
+
+        class Type {
+
+            enum
+
+            private(set)
+            var instanceVar = "test"
+
+            @objc
+            private var computed: String {
+                get {
+                    "computed string"
+                }
+            }
+
+            func instanceMethod() {
+                print("method")
+            }
+
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.organizeDeclarations)
+
+        XCTAssert(false)
+    }
 }

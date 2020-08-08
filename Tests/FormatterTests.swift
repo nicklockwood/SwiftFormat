@@ -441,4 +441,203 @@ class FormatterTests: XCTestCase {
         """))
         XCTAssertEqual(formatter.endOfScope(at: 4), 13)
     }
+
+    // MARK: parseDeclarations
+
+    func testParseDeclarations() {
+        let input = """
+        let global = 10
+
+        @objc
+        @available(iOS 13.0, *)
+        @propertyWrapper("parameter")
+        weak var multilineGlobal = ["string"]
+            .map(\\.count)
+        let anotherGlobal = "hello"
+
+        func globalFunction() {
+            print("hi")
+        }
+
+        protocol SomeProtocol {
+            var getter: String { get }
+            func protocolMethod() -> Bool
+        }
+
+        class SomeClass {
+
+            enum NestedEnum {
+                case bar
+                func test() {}
+            }
+
+            private(set)
+            var instanceVar = "test"
+
+            @objc
+            private var computed: String {
+                get {
+                    "computed string"
+                }
+            }
+
+        }
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        // Verify we didn't lose any tokens
+        XCTAssertEqual(originalTokens, declarations.flatMap { $0.tokens })
+
+        // Verify that the tokens were grouped into the correct declarations
+        func string(of declaration: SwiftFormat.Formatter.Declaration) -> String {
+            declaration.tokens.map { $0.string }.joined()
+        }
+
+        XCTAssertEqual(
+            string(of: declarations[0]),
+            """
+            let global = 10
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[1]),
+            """
+            @objc
+            @available(iOS 13.0, *)
+            @propertyWrapper("parameter")
+            weak var multilineGlobal = ["string"]
+                .map(\\.count)
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[2]),
+            """
+            let anotherGlobal = "hello"
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[3]),
+            """
+            func globalFunction() {
+                print("hi")
+            }
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[4]),
+            """
+            protocol SomeProtocol {
+                var getter: String { get }
+                func protocolMethod() -> Bool
+            }
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[4].body![0]),
+            """
+                var getter: String { get }
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[4].body![1]),
+            """
+                func protocolMethod() -> Bool
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[5]),
+            """
+            class SomeClass {
+
+                enum NestedEnum {
+                    case bar
+                    func test() {}
+                }
+
+                private(set)
+                var instanceVar = "test"
+
+                @objc
+                private var computed: String {
+                    get {
+                        "computed string"
+                    }
+                }
+
+            }
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[5].body![0]),
+            """
+                enum NestedEnum {
+                    case bar
+                    func test() {}
+                }
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[5].body![0].body![0]),
+            """
+                    case bar
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[5].body![0].body![1]),
+            """
+                    func test() {}
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[5].body![1]),
+            """
+                private(set)
+                var instanceVar = "test"
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[5].body![2]),
+            """
+                @objc
+                private var computed: String {
+                    get {
+                        "computed string"
+                    }
+                }
+
+
+            """
+        )
+    }
 }

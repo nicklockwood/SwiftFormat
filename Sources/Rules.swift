@@ -124,7 +124,7 @@ private func allRules(except rules: [String]) -> [FormatRule] {
 private let _allRules = allRules(except: [])
 private let _defaultRules = allRules(except: _disabledByDefault)
 private let _deprecatedRules = FormatRule.deprecatedMessage.keys
-private let _disabledByDefault = _deprecatedRules + ["isEmpty"]
+private let _disabledByDefault = _deprecatedRules + ["isEmpty", "organizeDeclarations"]
 
 public extension _FormatRules {
     /// A Dictionary of rules by name
@@ -4772,5 +4772,15 @@ public struct _FormatRules {
             }
             formatter.replaceTokens(inRange: prevIndex + 1 ... endIndex, with: replacementTokens)
         }
+    }
+
+    public let organizeDeclarations = FormatRule(
+        help: "Organizes declarations within the file by visibility"
+    ) { formatter in
+        let declarations = formatter.parseDeclarations()
+        
+        // TODO: Sort declarations within a type by a given order
+        
+        print(declarations)
     }
 }

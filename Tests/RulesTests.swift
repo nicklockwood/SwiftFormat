@@ -12703,7 +12703,9 @@ class RulesTests: XCTestCase {
 
     // MARK: organizeDeclarations
 
-    func testParseDeclarations() {
+    func testOrganizeDeclarations() {
+        // TODO: What happens when it re-sorts something that already has (potentially malformed) MARKs?
+
         let input = """
         class Foo {
 

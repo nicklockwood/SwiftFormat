@@ -39,6 +39,7 @@ public final class FormatRule: Equatable, Comparable {
     let orderAfter: [String]
     let options: [String]
     let sharedOptions: [String]
+    let rewritesEntireFile: Bool
 
     var deprecationMessage: String? {
         return FormatRule.deprecatedMessage[name]
@@ -52,6 +53,7 @@ public final class FormatRule: Equatable, Comparable {
                      orderAfter: [String] = [],
                      options: [String] = [],
                      sharedOptions: [String] = [],
+                     rewritesEntireFile: Bool = false,
                      _ fn: @escaping (Formatter) -> Void)
     {
         self.fn = fn
@@ -59,6 +61,7 @@ public final class FormatRule: Equatable, Comparable {
         self.orderAfter = orderAfter
         self.options = options
         self.sharedOptions = sharedOptions
+        self.rewritesEntireFile = rewritesEntireFile
     }
 
     public func apply(with formatter: Formatter) {
@@ -4775,8 +4778,11 @@ public struct _FormatRules {
     }
 
     public let organizeDeclarations = FormatRule(
-        help: "Organizes declarations within the file by visibility"
+        help: "Organizes declarations within the file by visibility",
+        rewritesEntireFile: true
     ) { formatter in
+
+        // TODO: This shouldn't organize decls in extensions, but should still organize nested types in extensions
 
         // Categorize the individual declarations
         enum Category: String {
@@ -4792,12 +4798,24 @@ public struct _FormatRules {
             case `private`
         }
 
+        // TODO: Determine the declaration type and sort by declaration type
+        enum DeclarationType {
+            case staticProperty
+            case staticPropertyWithBody
+            case instanceProperty
+            case instancePropertyWithBody
+            case staticMethod
+            case classMethod
+            case instanceMethod
+        }
+
         // TODO: make this customizable
         let categoryOrdering = [Category.lifecycle, .open, .public, .internal, .fileprivate, .private]
 
-        func sortedByCategory(_ declarations: [Formatter.Declaration]) -> [Formatter.Declaration] {
+        /// Organizes the flat list of declarations based on category and type
+        func organize(_ declarations: [Formatter.Declaration]) -> [Formatter.Declaration] {
             // Categorize each of the declarations into their primary groups
-            let categorizedDeclarations = declarations.map { declaration -> (Formatter.Declaration, Category?) in
+            let categorizedDeclarations: [(declaration: Formatter.Declaration, category: Category?)] = declarations.map { declaration in
                 switch declaration {
                 case .comment:
                     return (declaration, nil)
@@ -4828,7 +4846,8 @@ public struct _FormatRules {
                 }
             }
 
-            return categorizedDeclarations.enumerated().sorted(by: { lhs, rhs in
+            // Sort the declarations based on their category
+            var sortedDeclarations = categorizedDeclarations.enumerated().sorted(by: { lhs, rhs in
                 let (lhsOriginalIndex, (_, lhsCategory)) = lhs
                 let (rhsOriginalIndex, (_, rhsCategory)) = rhs
 
@@ -4844,28 +4863,69 @@ public struct _FormatRules {
 
                 // Respect the original declaration ordering when the categories are the same
                 return lhsOriginalIndex < rhsOriginalIndex
-            }).map { $0.element.0 }
-        }
+            }).map { $0.element }
 
-        // TODO: Support nested types
-
-        let topLevelDeclarations = formatter
-            .parseDeclarations()
-            .map { topLevelDeclaration -> Formatter.Declaration in
-                switch topLevelDeclaration {
-                case .declaration, .comment:
-                    return topLevelDeclaration
-                case let .type(open, body, close):
-                    return .type(
-                        open: open,
-                        body: sortedByCategory(body),
-                        close: close
-                    )
-                }
+            // Insert comments to separate the categories
+            func indexOfFirstDeclaration(in category: Category) -> Int? {
+                sortedDeclarations.firstIndex(where: { $0.category == category })
             }
 
-        let updatedTokens = topLevelDeclarations.flatMap { $0.tokens }
+            for category in categoryOrdering {
+                guard let indexOfFirstDeclaration = indexOfFirstDeclaration(in: category) else {
+                    continue
+                }
 
+                let firstDeclaration = sortedDeclarations[indexOfFirstDeclaration].declaration
+                let declarationParser = Formatter(firstDeclaration.tokens)
+                let indentation = declarationParser.indentForLine(at: 0)
+
+                let markComment = "// MARK: \(category.rawValue.capitalized)"
+
+                // Verify we don't already have a mark comment here
+                // TODO: Harden this with test cases
+                if firstDeclaration.tokens.map({ $0.string }).joined().contains(markComment) {
+                    continue
+                }
+
+                if indexOfFirstDeclaration != 0 {
+                    let previousDeclaration = sortedDeclarations[indexOfFirstDeclaration - 1].declaration
+                    if previousDeclaration.tokens.map({ $0.string }).joined().contains(markComment) {
+                        continue
+                    }
+                }
+
+                let markDeclaration = tokenize("\(indentation)\(markComment)\n\n")
+                sortedDeclarations.insert((.comment(markDeclaration), nil), at: indexOfFirstDeclaration)
+            }
+
+            return sortedDeclarations.map { $0.declaration }
+        }
+
+        /// Recursively organizes the body declarations of this declaration,
+        /// and any nested types.
+        func organizeBody(of declaration: Formatter.Declaration) -> Formatter.Declaration {
+            switch declaration {
+            // Organize the body of any nested types
+            case let .type(open, body, close):
+                return .type(
+                    open: open,
+                    body: organize(body.map { organizeBody(of: $0) }),
+                    close: close
+                )
+
+            // If the declaration doesn't have a body, there isn't any work to do
+            case .declaration, .comment:
+                return declaration
+            }
+        }
+
+        // Parse the file into declarations and organize the body of individual types
+        let organizedDeclarations = formatter
+            .parseDeclarations()
+            .map { organizeBody(of: $0) }
+
+        let updatedTokens = organizedDeclarations.flatMap { $0.tokens }
+        
         formatter.replaceTokens(
             inRange: 0 ..< formatter.tokens.count,
             with: updatedTokens

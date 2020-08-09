@@ -554,6 +554,7 @@ extension Formatter {
         }
     }
 
+    // Determine if next line after this token should be indented
     func isEndOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
         guard let token = self.token(at: i) else { return true }
         switch token {
@@ -615,6 +616,7 @@ extension Formatter {
         }
     }
 
+    // Determine if line starting with this token should be indented
     func isStartOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
         guard let token = self.token(at: i) else { return true }
         switch token {
@@ -622,9 +624,13 @@ extension Formatter {
             "where", "dynamicType", "rethrows", "throws",
         ].contains(string):
             return false
-        case .keyword("as"), .keyword("in"):
+        case .keyword("as"):
             // For case statements, we already indent
-            return currentScope(at: i)?.string == "case"
+            return (scope ?? currentScope(at: i))?.string == "case"
+        case .keyword("in"):
+            let scope = (scope ?? currentScope(at: i))?.string
+            // For case statements and closures, we already indent
+            return scope == "case" || (scope == "{" && lastSignificantKeyword(at: i) != "for")
         case .keyword("is"):
             guard let lastToken = last(.nonSpaceOrCommentOrLinebreak, before: i) else {
                 return false

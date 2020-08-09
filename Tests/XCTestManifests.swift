@@ -967,6 +967,7 @@ extension RulesTests {
         ("testNoDeleteCodeBetweenImports2", testNoDeleteCodeBetweenImports2),
         ("testNoDeleteCodeBetweenImports3", testNoDeleteCodeBetweenImports3),
         ("testNoDoubleIndentClosureArguments", testNoDoubleIndentClosureArguments),
+        ("testNoDoubleIndentInInsideClosure", testNoDoubleIndentInInsideClosure),
         ("testNoDoubleIndentOfWrapAfterAsAfterOpenScope", testNoDoubleIndentOfWrapAfterAsAfterOpenScope),
         ("testNoDoubleIndentOfWrapBeforeAsAfterOpenScope", testNoDoubleIndentOfWrapBeforeAsAfterOpenScope),
         ("testNoDoubleIndentWhenScopesSeparatedByWrap", testNoDoubleIndentWhenScopesSeparatedByWrap),

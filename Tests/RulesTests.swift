@@ -2514,9 +2514,18 @@ class RulesTests: XCTestCase {
             print("and a trailing closure")
         }
         """
-
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testNoDoubleIndentInInsideClosure() {
+        let input = """
+        let foo = bar({ baz
+            in
+            baz
+        })
+        """
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["trailingClosures"])
     }
 
     // indent xcodeindentation

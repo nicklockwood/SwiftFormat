@@ -4778,9 +4778,9 @@ public struct _FormatRules {
         help: "Organizes declarations within the file by visibility"
     ) { formatter in
         let declarations = formatter.parseDeclarations()
-        
+
         // TODO: Sort declarations within a type by a given order
-        
+
         print(declarations)
     }
 }

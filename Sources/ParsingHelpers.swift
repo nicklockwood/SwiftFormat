@@ -914,10 +914,11 @@ extension Formatter {
     public indirect enum Declaration: Equatable {
         case type(open: [Token], body: [Declaration], close: [Token])
         case declaration([Token])
+        case comment([Token])
 
         public var tokens: [Token] {
             switch self {
-            case let .declaration(tokens):
+            case let .declaration(tokens), let .comment(tokens):
                 return tokens
             case let .type(openTokens, bodyDeclarations, closeTokens):
                 return openTokens + bodyDeclarations.flatMap { $0.tokens } + closeTokens
@@ -926,7 +927,7 @@ extension Formatter {
 
         public var body: [Declaration]? {
             switch self {
-            case .declaration:
+            case .declaration, .comment:
                 return nil
             case let .type(_, body, _):
                 return body
@@ -935,7 +936,7 @@ extension Formatter {
     }
 
     public func parseDeclarations() -> [Declaration] {
-        var parser = Formatter(tokens)
+        let parser = Formatter(tokens)
         var declarations = [Declaration]()
 
         /// Whether or not this token "defines" the specific type of declaration
@@ -959,16 +960,9 @@ extension Formatter {
 
         /// Whether or not this token can preceed the token that `definesDeclarationType`
         /// in a given declaration. e.g. `public` can preceed `var` in `public var foo = "bar"`.
-        func tokenCanPrecedeDeclarationTypeKeyword(at index: Int) -> Bool {
-            let token = parser.tokens[index]
-            let previousToken = parser.token(at: index - 1)
-
-            if token.isLinebreak, previousToken?.isLinebreak != true {
-                return true
-            }
-
+        func canPrecedeDeclarationTypeKeyword(_ token: Token) -> Bool {
             /// All of the tokens that can typically preceed the main keyword of a declaration
-            if token.isAttribute || token.isKeyword || token.isSpace {
+            if token.isAttribute || token.isKeyword || token.isSpaceOrCommentOrLinebreak {
                 return true
             }
 
@@ -978,7 +972,7 @@ extension Formatter {
                                       "mutating", "nonmutating", "open", "optional", "override", "postfix",
                                       "precedence", "prefix", "required", "some", "unowned", "weak"]
 
-            if token.isIdentifierOrKeyword, contextualKeywords.contains(token.string) {
+            if token.isIdentifier, contextualKeywords.contains(token.string) {
                 return true
             }
 
@@ -989,7 +983,18 @@ extension Formatter {
             let startOfDeclaration = 0
             var endOfDeclaration: Int?
 
-            if let declarationTypeKeywordIndex = parser.index(
+            // Free-floating comments (separated from other declarations by blank lines)
+            // should be treated as their own declaration entry (otherwise they'd
+            // be tied to following declaration, which may be unexpected in some circumstances)
+            if let commentStartIndex = parser.index(of: .nonSpaceOrLinebreak, after: -1, if: { $0.isComment }),
+                let endOfCommentScope = parser.endOfScope(at: commentStartIndex),
+                parser.next(.nonSpace, after: endOfCommentScope)?.isLinebreak == true
+            {
+                endOfDeclaration = endOfCommentScope
+            }
+
+            // Determine the type of declaration and search for where it ends
+            else if let declarationTypeKeywordIndex = parser.index(
                 after: startOfDeclaration - 1,
                 where: definesDeclarationType
             ) {
@@ -1018,7 +1023,7 @@ extension Formatter {
                     searchIndex = nextDeclarationKeywordIndex
 
                     while searchIndex > declarationTypeKeywordIndex, startOfNextDeclaration == nil {
-                        if tokenCanPrecedeDeclarationTypeKeyword(at: searchIndex - 1) {
+                        if canPrecedeDeclarationTypeKeyword(parser.tokens[searchIndex - 1]) {
                             searchIndex -= 1
                         }
 
@@ -1040,7 +1045,7 @@ extension Formatter {
                                         of: .nonSpaceOrCommentOrLinebreak,
                                         before: searchIndex
                                     ),
-                                        !tokenCanPrecedeDeclarationTypeKeyword(at: previousNonwhitespace)
+                                        !canPrecedeDeclarationTypeKeyword(parser.tokens[previousNonwhitespace])
                                     {
                                         startOfNextDeclaration = encounteredEndOfScope + 1
                                     }

@@ -446,6 +446,11 @@ class FormatterTests: XCTestCase {
 
     func testParseDeclarations() {
         let input = """
+        // File leading comment
+
+        import CoreGraphics
+        import Foundation
+
         let global = 10
 
         @objc
@@ -455,6 +460,8 @@ class FormatterTests: XCTestCase {
             .map(\\.count)
         let anotherGlobal = "hello"
 
+        /// Doc comment
+        /// (multiple lines)
         func globalFunction() {
             print("hi")
         }
@@ -467,9 +474,14 @@ class FormatterTests: XCTestCase {
         class SomeClass {
 
             enum NestedEnum {
+                /// Doc comment
                 case bar
                 func test() {}
             }
+
+            /*
+             * Block comment
+             */
 
             private(set)
             var instanceVar = "test"
@@ -491,12 +503,39 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(originalTokens, declarations.flatMap { $0.tokens })
 
         // Verify that the tokens were grouped into the correct declarations
-        func string(of declaration: SwiftFormat.Formatter.Declaration) -> String {
-            declaration.tokens.map { $0.string }.joined()
+        func string(of declaration: SwiftFormat.Formatter.Declaration?) -> String? {
+            guard let declaration = declaration else { return nil }
+            return declaration.tokens.map { $0.string }.joined()
         }
 
         XCTAssertEqual(
             string(of: declarations[0]),
+            """
+            // File leading comment
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[1]),
+            """
+            import CoreGraphics
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[2]),
+            """
+            import Foundation
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[3]),
             """
             let global = 10
 
@@ -505,7 +544,7 @@ class FormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            string(of: declarations[1]),
+            string(of: declarations[4]),
             """
             @objc
             @available(iOS 13.0, *)
@@ -517,7 +556,7 @@ class FormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            string(of: declarations[2]),
+            string(of: declarations[5]),
             """
             let anotherGlobal = "hello"
 
@@ -526,8 +565,10 @@ class FormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            string(of: declarations[3]),
+            string(of: declarations[6]),
             """
+            /// Doc comment
+            /// (multiple lines)
             func globalFunction() {
                 print("hi")
             }
@@ -537,7 +578,7 @@ class FormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            string(of: declarations[4]),
+            string(of: declarations[7]),
             """
             protocol SomeProtocol {
                 var getter: String { get }
@@ -549,7 +590,7 @@ class FormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            string(of: declarations[4].body![0]),
+            string(of: declarations[7].body?[0]),
             """
                 var getter: String { get }
 
@@ -557,7 +598,7 @@ class FormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            string(of: declarations[4].body![1]),
+            string(of: declarations[7].body?[1]),
             """
                 func protocolMethod() -> Bool
 
@@ -565,14 +606,19 @@ class FormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            string(of: declarations[5]),
+            string(of: declarations[8]),
             """
             class SomeClass {
 
                 enum NestedEnum {
+                    /// Doc comment
                     case bar
                     func test() {}
                 }
+
+                /*
+                 * Block comment
+                 */
 
                 private(set)
                 var instanceVar = "test"
@@ -589,9 +635,10 @@ class FormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            string(of: declarations[5].body![0]),
+            string(of: declarations[8].body?[0]),
             """
                 enum NestedEnum {
+                    /// Doc comment
                     case bar
                     func test() {}
                 }
@@ -601,15 +648,16 @@ class FormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            string(of: declarations[5].body![0].body![0]),
+            string(of: declarations[8].body?[0].body?[0]),
             """
+                    /// Doc comment
                     case bar
 
             """
         )
 
         XCTAssertEqual(
-            string(of: declarations[5].body![0].body![1]),
+            string(of: declarations[8].body?[0].body?[1]),
             """
                     func test() {}
 
@@ -617,7 +665,18 @@ class FormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            string(of: declarations[5].body![1]),
+            string(of: declarations[8].body?[1]),
+            """
+                /*
+                 * Block comment
+                 */
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            string(of: declarations[8].body?[2]),
             """
                 private(set)
                 var instanceVar = "test"
@@ -627,7 +686,7 @@ class FormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            string(of: declarations[5].body![2]),
+            string(of: declarations[8].body?[3]),
             """
                 @objc
                 private var computed: String {

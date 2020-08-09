@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.45.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.5) (2020-08-09)
+
+- Fixed `.swiftformat` configuration file processing when using `--stdinpath` option
+- Fixed bug where conditional imports could be mangled by `sortedImports` rule
+- Fixed indenting of braces after throwing function with wrapped return type
+- Fixed indenting of wrapped `in` keyword inside closure
+
 ## [0.45.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.4) (2020-08-08)
 
 - Improved indenting of wrapped closure braces when using `--allman` indenting

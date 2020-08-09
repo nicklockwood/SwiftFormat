@@ -854,6 +854,9 @@ extension Formatter {
                 next(.nonSpace, after: prevIndex)?.isComment == true,
                 next(.nonSpaceOrComment, after: prevIndex)?.isLinebreak == true
             {
+                if prevIndex == 0, index(of: .startOfScope("#if"), before: startIndex) != nil {
+                    break
+                }
                 startIndex = prevIndex
                 prevIndex = index(of: .linebreak, before: startIndex) ?? 0
             }

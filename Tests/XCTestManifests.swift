@@ -1024,6 +1024,7 @@ extension RulesTests {
         ("testNoLinebreakAtEndOfFragment", testNoLinebreakAtEndOfFragment),
         ("testNoMangleCommentedLinesWhenWrappingArguments", testNoMangleCommentedLinesWhenWrappingArguments),
         ("testNoMangleCommentedLinesWhenWrappingArgumentsWithNoCommas", testNoMangleCommentedLinesWhenWrappingArgumentsWithNoCommas),
+        ("testNoMangleImportsPrecededByComment", testNoMangleImportsPrecededByComment),
         ("testNoMangleLabelWhenIndentCaseTrue", testNoMangleLabelWhenIndentCaseTrue),
         ("testNoMangleNestedFunctionCalls", testNoMangleNestedFunctionCalls),
         ("testNoMangleYodaConditionFollowedByAndOperator", testNoMangleYodaConditionFollowedByAndOperator),

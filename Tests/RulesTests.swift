@@ -10561,6 +10561,32 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.sortedImports)
     }
 
+    func testNoMangleImportsPrecededByComment() {
+        let input = """
+        // evil comment
+
+        #if canImport(Foundation)
+            import Foundation
+            #if canImport(UIKit) && canImport(AVFoundation)
+                import UIKit
+                import AVFoundation
+            #endif
+        #endif
+        """
+        let output = """
+        // evil comment
+
+        #if canImport(Foundation)
+            import Foundation
+            #if canImport(UIKit) && canImport(AVFoundation)
+                import AVFoundation
+                import UIKit
+            #endif
+        #endif
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
     // MARK: - duplicateImports
 
     func testRemoveDuplicateImport() {

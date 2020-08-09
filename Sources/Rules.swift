@@ -4777,10 +4777,98 @@ public struct _FormatRules {
     public let organizeDeclarations = FormatRule(
         help: "Organizes declarations within the file by visibility"
     ) { formatter in
-        let declarations = formatter.parseDeclarations()
 
-        // TODO: Sort declarations within a type by a given order
+        // Categorize the individual declarations
+        enum Category: String {
+            // TODO: Place things optionaly above the other categories,
+            // like enum cases, type aliases, and nested types
 
-        print(declarations)
+            // TODO: Support placing specific functions in lifecycle, like `viewDidLoad`
+            case lifecycle
+            case open
+            case `public`
+            case `internal`
+            case `fileprivate`
+            case `private`
+        }
+
+        // TODO: make this customizable
+        let categoryOrdering = [Category.lifecycle, .open, .public, .internal, .fileprivate, .private]
+
+        func sortedByCategory(_ declarations: [Formatter.Declaration]) -> [Formatter.Declaration] {
+            // Categorize each of the declarations into their primary groups
+            let categorizedDeclarations = declarations.map { declaration -> (Formatter.Declaration, Category?) in
+                switch declaration {
+                case .comment:
+                    return (declaration, nil)
+                case let .declaration(tokens), let .type(open: tokens, _, _):
+
+                    if tokens.contains(.keyword("init")) || tokens.contains(.keyword("deinit")) {
+                        return (declaration, .lifecycle)
+                    }
+
+                    // Search for a visibility keyword,
+                    // making sure we exclude groups like private(set)
+                    let parser = Formatter(tokens)
+                    var searchIndex = 0
+
+                    while searchIndex < parser.tokens.count {
+                        if parser.tokens[searchIndex].isKeyword,
+                            let visibilityCategory = Category(rawValue: parser.tokens[searchIndex].string),
+                            parser.next(.nonSpaceOrComment, after: searchIndex) != .startOfScope("(")
+                        {
+                            return (declaration, visibilityCategory)
+                        }
+
+                        searchIndex += 1
+                    }
+
+                    // `internal` is the default implied vibilility if no other is specified
+                    return (declaration, .internal)
+                }
+            }
+
+            return categorizedDeclarations.enumerated().sorted(by: { lhs, rhs in
+                let (lhsOriginalIndex, (_, lhsCategory)) = lhs
+                let (rhsOriginalIndex, (_, rhsCategory)) = rhs
+
+                // Sort primarily by the category sort order
+                if let lhsCategory = lhsCategory,
+                    let rhsCategory = rhsCategory,
+                    let lhsCategorySortOrder = categoryOrdering.index(of: lhsCategory),
+                    let rhsCategorySortOrder = categoryOrdering.index(of: rhsCategory),
+                    lhsCategorySortOrder != rhsCategorySortOrder
+                {
+                    return lhsCategorySortOrder < rhsCategorySortOrder
+                }
+
+                // Respect the original declaration ordering when the categories are the same
+                return lhsOriginalIndex < rhsOriginalIndex
+            }).map { $0.element.0 }
+        }
+
+        // TODO: Support nested types
+
+        let topLevelDeclarations = formatter
+            .parseDeclarations()
+            .map { topLevelDeclaration -> Formatter.Declaration in
+                switch topLevelDeclaration {
+                case .declaration, .comment:
+                    return topLevelDeclaration
+                case let .type(open, body, close):
+                    return .type(
+                        open: open,
+                        body: sortedByCategory(body),
+                        close: close
+                    )
+                }
+            }
+
+        let updatedTokens = topLevelDeclarations.flatMap { $0.tokens }
+
+        formatter.replaceTokens(
+            inRange: 0 ..< formatter.tokens.count,
+            with: updatedTokens
+        )
     }
 }

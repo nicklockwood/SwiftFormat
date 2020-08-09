@@ -12705,42 +12705,53 @@ class RulesTests: XCTestCase {
 
     func testParseDeclarations() {
         let input = """
-        let global = 10
-        @objc
-        @available(iOS 13.0, *)
-        @propertyWrapper("parameter")
-        weak
-        var multilineGlobal = ["string"]
-            .map(\\.count)
-        let anotherGlobal = "hello"
+        class Foo {
 
-        func globalFunction() {
-            print("hi")
-        }
-
-        class Type {
-
-            enum
-
-            private(set)
-            var instanceVar = "test"
-
-            @objc
-            private var computed: String {
-                get {
-                    "computed string"
-                }
+            private func privateMethod() {
             }
 
-            func instanceMethod() {
-                print("method")
+            private let bar = 1
+            public let baz = 1
+            var quux = 2
+
+            init() {
+            }
+
+            public func publicMethod() {
             }
 
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.organizeDeclarations)
+        let output = """
+        class Foo {
 
-        XCTAssert(false)
+            // MARK: Lifecycle
+
+            init() {
+            }
+
+            // MARK: Public
+
+            public let baz = 1
+
+            public func publicMethod() {
+            }
+
+            // MARK: Internal
+
+            var quux = 2
+
+            // MARK: Private
+
+            private let bar = 1
+
+            private func privateMethod() {
+            }
+
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations)
     }
 }

@@ -1289,7 +1289,7 @@ extension RulesTests {
         ("testOptionalCountNotEqualToZero", testOptionalCountNotEqualToZero),
         ("testOptionalFunctionCallNotUnwrapped", testOptionalFunctionCallNotUnwrapped),
         ("testOptionalTypeConvertedToSugar", testOptionalTypeConvertedToSugar),
-        ("testOrganizeDeclarations", testOrganizeDeclarations),
+        ("testOrganizeClassDeclarationsIntoCategories", testOrganizeClassDeclarationsIntoCategories),
         ("testOuterParensRemovedInIf", testOuterParensRemovedInIf),
         ("testOuterParensRemovedInWhile", testOuterParensRemovedInWhile),
         ("testOverriddenFileprivateInitNotChangedToPrivate", testOverriddenFileprivateInitNotChangedToPrivate),

@@ -12703,10 +12703,7 @@ class RulesTests: XCTestCase {
 
     // MARK: organizeDeclarations
 
-    func testOrganizeDeclarations() {
-        // TODO: What happens when it re-sorts something that already has (potentially malformed) MARKs?
-        //
-
+    func testOrganizeClassDeclarationsIntoCategories() {
         let input = """
         class Foo {
 
@@ -12749,6 +12746,10 @@ class RulesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations)
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
     }
 }

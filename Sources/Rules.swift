@@ -4784,8 +4784,7 @@ public struct _FormatRules {
 
         // TODO: This shouldn't organize decls in extensions, but should still organize nested types in extensions
 
-        // Categorize the individual declarations
-        enum Category: String {
+        enum Category: String, CaseIterable {
             // TODO: Place things optionaly above the other categories,
             // like enum cases, type aliases, and nested types
 
@@ -4796,9 +4795,14 @@ public struct _FormatRules {
             case `internal`
             case `fileprivate`
             case `private`
+
+            /// The comment tokens that should preceed all declarations in this category
+            // TODO: Make this customizable
+            var markComment: String {
+                "// MARK: \(rawValue.capitalized)"
+            }
         }
 
-        // TODO: Determine the declaration type and sort by declaration type
         enum DeclarationType {
             case staticProperty
             case staticPropertyWithBody
@@ -5032,6 +5036,31 @@ public struct _FormatRules {
             // If the declaration doesn't have a body, there isn't any work to do
             case .declaration, .comment:
                 return declaration
+            }
+        }
+
+        // Remove all of the existing category mark comments, so they can be readded
+        // at the correct location after sorting the declarations.
+        let categorySeparatorTokens = Category.allCases.map { tokenize($0.markComment) }
+        let commentStartToken = categorySeparatorTokens[0][0]
+
+        formatter.forEach(commentStartToken) { index, _ in
+            // Check if this comment matches an expected category separator mark comment
+            for category in Category.allCases {
+                let categorySeparator = tokenize(category.markComment)
+                let potentialSeparatorRange = index ..< (index + categorySeparator.count)
+
+                if formatter.tokens.indices.contains(potentialSeparatorRange.upperBound),
+                    Array(formatter.tokens[potentialSeparatorRange]) == categorySeparator
+                {
+                    // If we found a matching comment, remove it and all subsequent empty lines
+                    if let nextNonwhitespaceIndex = formatter.index(
+                        of: .nonSpaceOrLinebreak,
+                        after: potentialSeparatorRange.upperBound
+                    ) {
+                        formatter.removeTokens(inRange: index ..< nextNonwhitespaceIndex)
+                    }
+                }
             }
         }
 

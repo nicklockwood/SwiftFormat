@@ -12705,22 +12705,20 @@ class RulesTests: XCTestCase {
 
     func testOrganizeDeclarations() {
         // TODO: What happens when it re-sorts something that already has (potentially malformed) MARKs?
+        //
 
         let input = """
         class Foo {
 
-            private func privateMethod() {
-            }
+            private func privateMethod() {}
 
             private let bar = 1
             public let baz = 1
             var quux = 2
 
-            init() {
-            }
+            init() {}
 
-            public func publicMethod() {
-            }
+            public func publicMethod() {}
 
         }
         """
@@ -12730,15 +12728,13 @@ class RulesTests: XCTestCase {
 
             // MARK: Lifecycle
 
-            init() {
-            }
+            init() {}
 
             // MARK: Public
 
             public let baz = 1
 
-            public func publicMethod() {
-            }
+            public func publicMethod() {}
 
             // MARK: Internal
 
@@ -12748,8 +12744,7 @@ class RulesTests: XCTestCase {
 
             private let bar = 1
 
-            private func privateMethod() {
-            }
+            private func privateMethod() {}
 
         }
         """

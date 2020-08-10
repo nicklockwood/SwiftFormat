@@ -939,46 +939,6 @@ extension Formatter {
         let parser = Formatter(tokens)
         var declarations = [Declaration]()
 
-        /// Whether or not this token "defines" the specific type of declaration
-        ///  - A valid declaration will include exactly one of these keywords in its outermost scope.
-        func definesDeclarationType(_ token: Token) -> Bool {
-            // All of the keywords that map to individual Declaration grammars
-            // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
-            let declarationKeywords = ["import", "let", "var", "typealias", "func", "enum", "case",
-                                       "struct", "class", "protocol", "init", "deinit",
-                                       "extension", "subscript", "operator", "precedencegroup"]
-
-            return token.isKeyword && declarationKeywords.contains(token.string)
-        }
-
-        /// Whether or not this token defines the start of a type or type-like scope
-        /// (e.g. `class`, `struct`, `enum`, `protocol`, and `extension`
-        func definesType(_ token: Token) -> Bool {
-            let typeKeywords = ["class", "struct", "enum", "protocol", "extension"]
-            return token.isKeyword && typeKeywords.contains(token.string)
-        }
-
-        /// Whether or not this token can preceed the token that `definesDeclarationType`
-        /// in a given declaration. e.g. `public` can preceed `var` in `public var foo = "bar"`.
-        func canPrecedeDeclarationTypeKeyword(_ token: Token) -> Bool {
-            /// All of the tokens that can typically preceed the main keyword of a declaration
-            if token.isAttribute || token.isKeyword || token.isSpaceOrCommentOrLinebreak {
-                return true
-            }
-
-            // Some tokens are aren't treated as "keywords" by `token.isKeyword`,
-            // but count as keywords in the context of declarations:
-            let contextualKeywords = ["convenience", "dynamic", "final", "indirect", "infix", "lazy",
-                                      "mutating", "nonmutating", "open", "optional", "override", "postfix",
-                                      "precedence", "prefix", "required", "some", "unowned", "weak"]
-
-            if token.isIdentifier, contextualKeywords.contains(token.string) {
-                return true
-            }
-
-            return false
-        }
-
         while !parser.tokens.isEmpty {
             let startOfDeclaration = 0
             var endOfDeclaration: Int?
@@ -996,7 +956,7 @@ extension Formatter {
             // Determine the type of declaration and search for where it ends
             else if let declarationTypeKeywordIndex = parser.index(
                 after: startOfDeclaration - 1,
-                where: definesDeclarationType
+                where: { $0.definesDeclarationType }
             ) {
                 // Search for the next declaration so we know where this declaration ends.
                 var nextDeclarationKeywordIndex: Int?
@@ -1009,7 +969,7 @@ extension Formatter {
                         let endOfScope = parser.endOfScope(at: searchIndex)
                     {
                         searchIndex = endOfScope + 1
-                    } else if definesDeclarationType(parser.tokens[searchIndex]) {
+                    } else if parser.tokens[searchIndex].definesDeclarationType {
                         nextDeclarationKeywordIndex = searchIndex
                     } else {
                         searchIndex += 1
@@ -1023,7 +983,7 @@ extension Formatter {
                     searchIndex = nextDeclarationKeywordIndex
 
                     while searchIndex > declarationTypeKeywordIndex, startOfNextDeclaration == nil {
-                        if canPrecedeDeclarationTypeKeyword(parser.tokens[searchIndex - 1]) {
+                        if parser.tokens[searchIndex - 1].canPrecedeDeclarationTypeKeyword {
                             searchIndex -= 1
                         }
 
@@ -1045,7 +1005,7 @@ extension Formatter {
                                         of: .nonSpaceOrCommentOrLinebreak,
                                         before: searchIndex
                                     ),
-                                        !canPrecedeDeclarationTypeKeyword(parser.tokens[previousNonwhitespace])
+                                        !parser.tokens[previousNonwhitespace].canPrecedeDeclarationTypeKeyword
                                     {
                                         startOfNextDeclaration = encounteredEndOfScope + 1
                                     }
@@ -1088,9 +1048,9 @@ extension Formatter {
             // If this declaration represents a type, we need to parse its inner declarations as well.
             if let declarationTypeKeywordIndex = declarationParser.index(
                 after: -1,
-                where: definesDeclarationType
+                where: { $0.definesDeclarationType }
             ),
-                definesType(declarationParser.tokens[declarationTypeKeywordIndex]),
+                declarationParser.tokens[declarationTypeKeywordIndex].definesType,
                 let startOfBody = declarationParser.index(of: .startOfScope("{"), after: declarationTypeKeywordIndex),
                 let endOfBody = declarationParser.endOfScope(at: startOfBody)
             {

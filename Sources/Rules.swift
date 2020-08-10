@@ -939,7 +939,7 @@ public struct _FormatRules {
         help: "Indent code in accordance with the scope level.",
         orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
         options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation"],
-        sharedOptions: ["trimwhitespace", "closingparen"]
+        sharedOptions: ["trimwhitespace", "closingparen", "allman"]
     ) { formatter in
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []
@@ -1342,6 +1342,7 @@ public struct _FormatRules {
                     !(nextTokenIndex == nil ||
                         formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last)) ||
                     (formatter.options.xcodeIndentation && isGuardElseClause(at: i, token: token))
+
                 // Determine current indent
                 var indent = indentStack.last ?? ""
                 if linewrapped, lineIndex == scopeStartLineIndexes.last {
@@ -1369,6 +1370,12 @@ public struct _FormatRules {
                     }
                 }
 
+                guard var nextNonSpaceIndex = formatter.index(of: .nonSpace, after: i),
+                    let nextToken = formatter.token(at: nextNonSpaceIndex)
+                else {
+                    break
+                }
+
                 // Begin wrap scope
                 if linewrapStack.last == true {
                     if !linewrapped {
@@ -1377,8 +1384,6 @@ public struct _FormatRules {
                         indent = indentStack.last!
                     }
                 } else if linewrapped {
-                    linewrapStack[linewrapStack.count - 1] = true
-
                     func isWrappedDeclaration() -> Bool {
                         guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .delimiter(","),
                             let keywordIndex = formatter.index(of: .keyword, before: i, if: {
@@ -1400,25 +1405,27 @@ public struct _FormatRules {
                     // Don't indent enum cases if Xcode indentation is set
                     // Don't indent line starting with dot if previous line was just a closing scope
                     let lastToken = formatter.token(at: lastNonSpaceOrLinebreakIndex)
-                    if !formatter.options.xcodeIndentation || !isWrappedDeclaration(),
+                    if formatter.options.xcodeIndentation || formatter.options.allmanBraces,
+                        nextToken == .startOfScope("{"), formatter.isStartOfClosure(at: nextNonSpaceIndex)
+                    {
+                        // Don't indent further
+                    } else if !formatter.options.xcodeIndentation || !isWrappedDeclaration(),
                         formatter.token(at: nextTokenIndex ?? -1) != .operator(".", .infix) ||
                         !(lastToken?.isEndOfScope == true && lastToken != .endOfScope("case") &&
-                            formatter.last(.nonSpace, before:
-                                lastNonSpaceOrLinebreakIndex)?.isLinebreak == true)
+                            formatter.last(.nonSpace, before: lastNonSpaceOrLinebreakIndex)?.isLinebreak == true)
                     {
                         indent += formatter.options.indent
                     }
+                    linewrapStack[linewrapStack.count - 1] = true
                     indentStack.append(indent)
                     stringBodyIndentStack.append("")
                 }
-                guard var nextNonSpaceIndex = formatter.index(of: .nonSpace, after: i),
-                    // Avoid indenting commented code
-                    !formatter.isCommentedCode(at: nextNonSpaceIndex)
-                else {
+                // Avoid indenting commented code
+                guard !formatter.isCommentedCode(at: nextNonSpaceIndex) else {
                     break
                 }
                 // Apply indent
-                switch formatter.tokens[nextNonSpaceIndex] {
+                switch nextToken {
                 case .linebreak:
                     if formatter.options.truncateBlankLines {
                         formatter.insertSpaceIfEnabled("", at: i + 1)

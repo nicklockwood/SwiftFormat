@@ -914,11 +914,10 @@ extension Formatter {
     public indirect enum Declaration: Equatable {
         case type(open: [Token], body: [Declaration], close: [Token])
         case declaration([Token])
-        case comment([Token])
 
         public var tokens: [Token] {
             switch self {
-            case let .declaration(tokens), let .comment(tokens):
+            case let .declaration(tokens):
                 return tokens
             case let .type(openTokens, bodyDeclarations, closeTokens):
                 return openTokens + bodyDeclarations.flatMap { $0.tokens } + closeTokens
@@ -927,7 +926,7 @@ extension Formatter {
 
         public var body: [Declaration]? {
             switch self {
-            case .declaration, .comment:
+            case .declaration:
                 return nil
             case let .type(_, body, _):
                 return body
@@ -943,18 +942,8 @@ extension Formatter {
             let startOfDeclaration = 0
             var endOfDeclaration: Int?
 
-            // Free-floating comments (separated from other declarations by blank lines)
-            // should be treated as their own declaration entry (otherwise they'd
-            // be tied to following declaration, which may be unexpected in some circumstances)
-            if let commentStartIndex = parser.index(of: .nonSpaceOrLinebreak, after: -1, if: { $0.isComment }),
-                let endOfCommentScope = parser.endOfScope(at: commentStartIndex),
-                parser.next(.nonSpace, after: endOfCommentScope)?.isLinebreak == true
-            {
-                endOfDeclaration = endOfCommentScope
-            }
-
             // Determine the type of declaration and search for where it ends
-            else if let declarationTypeKeywordIndex = parser.index(
+            if let declarationTypeKeywordIndex = parser.index(
                 after: startOfDeclaration - 1,
                 where: { $0.definesDeclarationType }
             ) {

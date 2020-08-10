@@ -4781,9 +4781,6 @@ public struct _FormatRules {
         help: "Organizes declarations within the file by visibility",
         rewritesEntireFile: true
     ) { formatter in
-
-        // TODO: This shouldn't organize decls in extensions, but should still organize nested types in extensions
-
         enum Category: String, CaseIterable {
             // TODO: Place things optionaly above the other categories,
             // like enum cases, type aliases, and nested types
@@ -4804,6 +4801,7 @@ public struct _FormatRules {
         }
 
         enum DeclarationType {
+            case nestedType
             case staticProperty
             case staticPropertyWithBody
             case instanceProperty
@@ -4814,20 +4812,17 @@ public struct _FormatRules {
         }
 
         // TODO: make this customizable
-        let categoryOrdering = [Category.lifecycle, .open, .public, .internal, .fileprivate, .private]
+        let categoryOrdering: [Category] = [.lifecycle, .open, .public, .internal, .fileprivate, .private]
 
         // TODO: Make this customizable
-        let categorySubordering = [
-            DeclarationType.staticProperty, .staticPropertyWithBody, .instanceProperty,
+        let categorySubordering: [DeclarationType] = [
+            .nestedType, .staticProperty, .staticPropertyWithBody, .instanceProperty,
             .instancePropertyWithBody, .staticMethod, .classMethod, .instanceMethod,
         ]
 
         /// The `Category` of the given `Declaration`
-        func category(of declaration: Formatter.Declaration) -> Category? {
+        func category(of declaration: Formatter.Declaration) -> Category {
             switch declaration {
-            case .comment:
-                return nil
-
             case let .declaration(tokens), let .type(open: tokens, _, _):
                 if tokens.contains(.keyword("init")) || tokens.contains(.keyword("deinit")) {
                     return .lifecycle
@@ -4857,8 +4852,8 @@ public struct _FormatRules {
         /// The `DeclarationType` of the given `Declaration`
         func type(of declaration: Formatter.Declaration) -> DeclarationType? {
             switch declaration {
-            case .comment, .type:
-                return nil
+            case .type:
+                return .nestedType
 
             case let .declaration(tokens):
                 let declarationParser = Formatter(tokens)
@@ -4897,7 +4892,9 @@ public struct _FormatRules {
                 }
 
                 switch declarationTypeToken {
-                case .keyword("let"), .keyword("var"):
+                // Properties and property-like declarations
+                case .keyword("let"), .keyword("var"), .keyword("typealias"),
+                     .keyword("case"), .keyword("operator"), .keyword("precedencegroup"):
                     if isStaticDeclaration {
                         if hasBody {
                             return .staticPropertyWithBody
@@ -4912,7 +4909,8 @@ public struct _FormatRules {
                         }
                     }
 
-                case .keyword("func"), .keyword("init"), .keyword("deinit"):
+                // Functions and function-like declarations
+                case .keyword("func"), .keyword("init"), .keyword("deinit"), .keyword("subscript"):
                     if isStaticDeclaration {
                         return .staticMethod
                     } else if isClassDeclaration {
@@ -4942,10 +4940,8 @@ public struct _FormatRules {
                 let (rhsOriginalIndex, rhs) = rhs
 
                 // Sort primarily by category
-                if let lhsCategory = lhs.category,
-                    let rhsCategory = rhs.category,
-                    let lhsCategorySortOrder = categoryOrdering.index(of: lhsCategory),
-                    let rhsCategorySortOrder = categoryOrdering.index(of: rhsCategory),
+                if let lhsCategorySortOrder = categoryOrdering.index(of: lhs.category),
+                    let rhsCategorySortOrder = categoryOrdering.index(of: rhs.category),
                     lhsCategorySortOrder != rhsCategorySortOrder
                 {
                     return lhsCategorySortOrder < rhsCategorySortOrder
@@ -4971,12 +4967,17 @@ public struct _FormatRules {
                     .firstIndex(where: { $0.category == category })
                 else { continue }
 
+                // Build the MARK declaration
                 let firstDeclaration = sortedDeclarations[indexOfFirstDeclaration].declaration
                 let declarationParser = Formatter(firstDeclaration.tokens)
                 let indentation = declarationParser.indentForLine(at: 0)
 
-                let markDeclaration = tokenize("\(indentation)// MARK: \(category.rawValue.capitalized)\n\n")
-                sortedDeclarations.insert((.comment(markDeclaration), nil, nil), at: indexOfFirstDeclaration)
+                let markDeclaration = tokenize("\(indentation)\(category.markComment)\n\n")
+
+                sortedDeclarations.insert(
+                    (.declaration(markDeclaration), category, nil),
+                    at: indexOfFirstDeclaration
+                )
 
                 // Insert newlines to separate declaration types
                 for declarationType in categorySubordering {
@@ -4985,7 +4986,7 @@ public struct _FormatRules {
                     else { continue }
 
                     switch sortedDeclarations[indexOfLastDeclarationWithType].declaration {
-                    case .comment, .type:
+                    case .type:
                         continue
 
                     case let .declaration(tokens):
@@ -5034,7 +5035,7 @@ public struct _FormatRules {
                 )
 
             // If the declaration doesn't have a body, there isn't any work to do
-            case .declaration, .comment:
+            case .declaration:
                 return declaration
             }
         }

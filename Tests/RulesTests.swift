@@ -12713,8 +12713,13 @@ class RulesTests: XCTestCase {
             public let baz = 1
             var quux = 2
 
+            /*
+             * Block comment
+             */
+
             init() {}
 
+            /// Doc comment
             public func publicMethod() {}
 
         }
@@ -12725,12 +12730,17 @@ class RulesTests: XCTestCase {
 
             // MARK: Lifecycle
 
+            /*
+             * Block comment
+             */
+
             init() {}
 
             // MARK: Public
 
             public let baz = 1
 
+            /// Doc comment
             public func publicMethod() {}
 
             // MARK: Internal

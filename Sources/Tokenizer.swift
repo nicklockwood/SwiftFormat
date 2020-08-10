@@ -520,7 +520,8 @@ public enum Token: Equatable {
     }
 
     /// Whether or not this token "defines" the specific type of declaration
-    ///  - A valid declaration will include exactly one of these keywords in its outermost scope.
+    ///  - A valid declaration will usually include exactly one of these keywords in its outermost scope.
+    ///  - A notable exception is `class func`, which will include two of these keywords.
     public var definesDeclarationType: Bool {
         // All of the keywords that map to individual Declaration grammars
         // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
@@ -529,13 +530,6 @@ public enum Token: Equatable {
                                    "extension", "subscript", "operator", "precedencegroup"]
 
         return isKeyword && declarationKeywords.contains(string)
-    }
-
-    /// Whether or not this token defines the start of a type or type-like scope
-    /// (e.g. `class`, `struct`, `enum`, `protocol`, and `extension`)
-    public var definesType: Bool {
-        let typeKeywords = ["class", "struct", "enum", "protocol", "extension"]
-        return isKeyword && typeKeywords.contains(string)
     }
 
     /// Whether or not this token can preceed the token that `definesDeclarationType`

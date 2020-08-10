@@ -912,24 +912,39 @@ extension Formatter {
     }
 
     public indirect enum Declaration: Equatable {
-        case type(open: [Token], body: [Declaration], close: [Token])
-        case declaration([Token])
+        /// A Type of type-like declaration with body of additional declarations (`class`, `struct`, etc)
+        case type(kind: String, open: [Token], body: [Declaration], close: [Token])
 
+        /// A simple declaration (like a property or function)
+        case declaration(kind: String, tokens: [Token])
+
+        /// The tokens in this declaration
         public var tokens: [Token] {
             switch self {
-            case let .declaration(tokens):
+            case let .declaration(_, tokens):
                 return tokens
-            case let .type(openTokens, bodyDeclarations, closeTokens):
+            case let .type(_, openTokens, bodyDeclarations, closeTokens):
                 return openTokens + bodyDeclarations.flatMap { $0.tokens } + closeTokens
             }
         }
 
+        /// The body of this declaration, if applicable
         public var body: [Declaration]? {
             switch self {
             case .declaration:
                 return nil
-            case let .type(_, body, _):
+            case let .type(_, _, body, _):
                 return body
+            }
+        }
+
+        /// The keyword that determines the specific type of declaration that this is
+        /// (`class`, `func`, `let`, `var`, etc.)
+        public var keyword: String {
+            switch self {
+            case let .declaration(kind, _),
+                 let .type(kind, _, _, _):
+                return kind
             }
         }
     }
@@ -942,11 +957,42 @@ extension Formatter {
             let startOfDeclaration = 0
             var endOfDeclaration: Int?
 
-            // Determine the type of declaration and search for where it ends
-            if let declarationTypeKeywordIndex = parser.index(
+            // Determine what type of declaration this is
+            let declarationTypeKeywordIndex: Int?
+            let declarationKeyword: String?
+
+            if let firstDeclarationTypeKeywordIndex = parser.index(
                 after: startOfDeclaration - 1,
                 where: { $0.definesDeclarationType }
             ) {
+                // Most declarations will include exactly one token that `definesDeclarationType` in
+                // their outermost scope, but `class func` methods will not
+                if parser.tokens[firstDeclarationTypeKeywordIndex].string != "class" {
+                    declarationTypeKeywordIndex = firstDeclarationTypeKeywordIndex
+                    declarationKeyword = parser.tokens[firstDeclarationTypeKeywordIndex].string
+                }
+
+                // For `class` declarations, we have to look at the _last_ token that
+                // `definesDeclarationType` in the declaration's opening sequence (up until the `{`).
+                //  - This makes sure that we correctly identify `class func` declarations as being functions.
+                else if let endOfDeclarationOpeningSequence = parser.index(after: -1, where: { $0 == .startOfScope("{") }),
+                    let lastDeclarationTypeKeywordIndex = parser.lastIndex(
+                        in: CountableRange(0 ..< endOfDeclarationOpeningSequence),
+                        where: { $0.definesDeclarationType }
+                    )
+                {
+                    declarationTypeKeywordIndex = lastDeclarationTypeKeywordIndex
+                    declarationKeyword = parser.tokens[lastDeclarationTypeKeywordIndex].string
+                } else {
+                    declarationTypeKeywordIndex = nil
+                    declarationKeyword = nil
+                }
+            } else {
+                declarationTypeKeywordIndex = nil
+                declarationKeyword = nil
+            }
+
+            if let declarationTypeKeywordIndex = declarationTypeKeywordIndex {
                 // Search for the next declaration so we know where this declaration ends.
                 var nextDeclarationKeywordIndex: Int?
                 var searchIndex = declarationTypeKeywordIndex + 1
@@ -1028,18 +1074,21 @@ extension Formatter {
             let declarationRange = startOfDeclaration ... (endOfDeclaration ?? parser.tokens.count - 1)
             let declaration = Array(parser.tokens[declarationRange])
             parser.removeTokens(inRange: declarationRange)
-            declarations.append(.declaration(declaration))
+
+            declarations.append(.declaration(kind: declarationKeyword ?? "unknown", tokens: declaration))
         }
 
         return declarations.map { declaration in
             let declarationParser = Formatter(declaration.tokens)
 
             // If this declaration represents a type, we need to parse its inner declarations as well.
-            if let declarationTypeKeywordIndex = declarationParser.index(
-                after: -1,
-                where: { $0.definesDeclarationType }
-            ),
-                declarationParser.tokens[declarationTypeKeywordIndex].definesType,
+            let typelikeKeywords = ["class", "struct", "enum", "protocol", "extension"]
+
+            if typelikeKeywords.contains(declaration.keyword),
+                let declarationTypeKeywordIndex = declarationParser.index(
+                    after: -1,
+                    where: { $0.string == declaration.keyword }
+                ),
                 let startOfBody = declarationParser.index(of: .startOfScope("{"), after: declarationTypeKeywordIndex),
                 let endOfBody = declarationParser.endOfScope(at: startOfBody)
             {
@@ -1064,6 +1113,7 @@ extension Formatter {
                 let bodyDeclarations = Formatter(bodyTokens).parseDeclarations()
 
                 return .type(
+                    kind: declaration.keyword,
                     open: startTokens,
                     body: bodyDeclarations,
                     close: endTokens

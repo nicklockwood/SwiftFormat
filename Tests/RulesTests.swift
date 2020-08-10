@@ -12762,4 +12762,204 @@ class RulesTests: XCTestCase {
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }
+
+    func testClassNestedInClassIsOrganized() {
+        let input = """
+        public class Foo {
+            public class Bar {
+                fileprivate func baaz()
+                public var quux: Int
+                init() {}
+                deinit() {}
+            }
+        }
+        """
+
+        let output = """
+        public class Foo {
+
+            // MARK: Public
+
+            public class Bar {
+
+                // MARK: Lifecycle
+
+                init() {}
+                deinit() {}
+
+                // MARK: Public
+
+                public var quux: Int
+
+                // MARK: Fileprivate
+
+                fileprivate func baaz()
+
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "spaceAroundParens"]
+        )
+    }
+
+    func testStructNestedInExtensionIsOrganized() {
+        let input = """
+        public extension Foo {
+            struct Bar {
+                private var foo: Int
+                private let bar: Int
+
+                public var foobar: (Int, Int) {
+                    (foo, bar)
+                }
+
+                public init(foo: Int, bar: Int) {
+                    self.foo = foo
+                    self.bar = bar
+                }
+            }
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            struct Bar {
+
+                // MARK: Lifecycle
+
+                public init(foo: Int, bar: Int) {
+                    self.foo = foo
+                    self.bar = bar
+                }
+
+                // MARK: Public
+
+                public var foobar: (Int, Int) {
+                    (foo, bar)
+                }
+
+                // MARK: Private
+
+                private var foo: Int
+                private let bar: Int
+
+            }
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testOrganizePrivateSet() {
+        let input = """
+        struct Foo {
+            public private(set) var bar: Int
+            private(set) var baz: Int
+            internal private(set) var baz: Int
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            // MARK: Public
+
+            public private(set) var bar: Int
+
+            // MARK: Internal
+
+            private(set) var baz: Int
+            internal private(set) var baz: Int
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testSortDeclarationTypes() {
+        let input = """
+        struct Foo {
+            static var a1: Int = 1
+            static var a2: Int = 2
+            var d: CGFloat {
+                3.141592653589
+            }
+
+            func g() -> Int {
+                10
+            }
+
+            let c: String = String {
+                "closure body"
+            }()
+
+            static func e() {}
+
+            static var b: String {
+                "computed property"
+            }
+
+            class func f() -> Foo {
+                Foo()
+            }
+
+            enum NestedEnum {}
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            // MARK: Internal
+
+            enum NestedEnum {}
+
+            static var a1: Int = 1
+            static var a2: Int = 2
+
+            static var b: String {
+                "computed property"
+            }
+
+            let c: String = String {
+                "closure body"
+            }()
+
+            var d: CGFloat {
+                3.141592653589
+            }
+
+            static func e() {}
+
+            class func f() -> Foo {
+                Foo()
+            }
+
+            func g() -> Int {
+                10
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
 }

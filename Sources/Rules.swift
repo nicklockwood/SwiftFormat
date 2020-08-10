@@ -4823,7 +4823,7 @@ public struct _FormatRules {
         /// The `Category` of the given `Declaration`
         func category(of declaration: Formatter.Declaration) -> Category {
             switch declaration {
-            case let .declaration(tokens), let .type(open: tokens, _, _):
+            case let .declaration(_, tokens), let .type(_, open: tokens, _, _):
                 if tokens.contains(.keyword("init")) || tokens.contains(.keyword("deinit")) {
                     return .lifecycle
                 }
@@ -4855,12 +4855,12 @@ public struct _FormatRules {
             case .type:
                 return .nestedType
 
-            case let .declaration(tokens):
+            case let .declaration(keyword, tokens):
                 let declarationParser = Formatter(tokens)
 
                 guard let declarationTypeTokenIndex = declarationParser.index(
                     after: -1,
-                    where: { $0.definesDeclarationType }
+                    where: { $0.string == keyword }
                 )
                 else { return nil }
 
@@ -4925,10 +4925,51 @@ public struct _FormatRules {
             }
         }
 
+        /// Updates the given declaration tokens so it ends with at least one blank like
+        /// (e.g. so it ends with at least two newlines)
+        func endingWithBlankLine(_ tokens: [Token]) -> [Token] {
+            let parser = Formatter(tokens)
+
+            // Determine how many trailing linebreaks there are in this declaration
+            var numberOfTrailingLinebreaks = 0
+            var searchIndex = parser.tokens.count - 1
+
+            while searchIndex > 0,
+                let token = parser.token(at: searchIndex),
+                token.isSpaceOrCommentOrLinebreak
+            {
+                if token.isLinebreak {
+                    numberOfTrailingLinebreaks += 1
+                }
+
+                searchIndex -= 1
+            }
+
+            // Make sure there are atleast two newlines,
+            // so we get a blank line between individual declaration types
+            while numberOfTrailingLinebreaks < 2 {
+                parser.insertLinebreak(at: parser.tokens.count)
+                numberOfTrailingLinebreaks += 1
+            }
+
+            return parser.tokens
+        }
+
         /// Organizes the flat list of declarations based on category and type
-        func organize(_ declarations: [Formatter.Declaration]) -> [Formatter.Declaration] {
+        func organizeType(
+            _ typeDeclaration: (kind: String, open: [Token], body: [Formatter.Declaration], close: [Token]))
+            -> (kind: String, open: [Token], body: [Formatter.Declaration], close: [Token])
+        {
+            // Only organize the body of classes, structs, and enums (not protocols and extensions)
+            guard ["class", "struct", "enum"].contains(typeDeclaration.kind) else {
+                return typeDeclaration
+            }
+
+            var typeOpeningTokens = typeDeclaration.open
+            let typeClosingTokens = typeDeclaration.close
+
             // Categorize each of the declarations into their primary groups
-            let categorizedDeclarations = declarations.map {
+            let categorizedDeclarations = typeDeclaration.body.map {
                 (declaration: $0,
                  category: category(of: $0),
                  type: type(of: $0))
@@ -4975,9 +5016,16 @@ public struct _FormatRules {
                 let markDeclaration = tokenize("\(indentation)\(category.markComment)\n\n")
 
                 sortedDeclarations.insert(
-                    (.declaration(markDeclaration), category, nil),
+                    (.declaration(kind: "comment", tokens: markDeclaration), category, nil),
                     at: indexOfFirstDeclaration
                 )
+
+                // If this declaration is the first declaration in the type scope,
+                // make sure the type's opening sequence of tokens ends with
+                // at least one blank line (so the separator appears balanced)
+                if indexOfFirstDeclaration == 0 {
+                    typeOpeningTokens = endingWithBlankLine(typeOpeningTokens)
+                }
 
                 // Insert newlines to separate declaration types
                 for declarationType in categorySubordering {
@@ -4986,52 +5034,43 @@ public struct _FormatRules {
                     else { continue }
 
                     switch sortedDeclarations[indexOfLastDeclarationWithType].declaration {
-                    case .type:
-                        continue
+                    case let .type(kind, open, body, close):
+                        sortedDeclarations[indexOfLastDeclarationWithType].declaration = .type(
+                            kind: kind,
+                            open: open,
+                            body: body,
+                            close: endingWithBlankLine(close)
+                        )
 
-                    case let .declaration(tokens):
-                        let lastDeclarationParser = Formatter(tokens)
-
-                        // Determine how many trailing linebreaks there are in this declaration
-                        var numberOfTrailingLinebreaks = 0
-                        var searchIndex = lastDeclarationParser.tokens.count - 1
-
-                        while searchIndex > 0,
-                            let token = lastDeclarationParser.token(at: searchIndex),
-                            token.isSpaceOrCommentOrLinebreak
-                        {
-                            if token.isLinebreak {
-                                numberOfTrailingLinebreaks += 1
-                            }
-
-                            searchIndex -= 1
-                        }
-
-                        // Make sure there are atleast two newlines,
-                        // so we get a blank line between individual declaration types
-                        while numberOfTrailingLinebreaks < 2 {
-                            lastDeclarationParser.insertLinebreak(at: lastDeclarationParser.tokens.count)
-                            numberOfTrailingLinebreaks += 1
-                        }
-
-                        sortedDeclarations[indexOfLastDeclarationWithType].declaration = .declaration(lastDeclarationParser.tokens)
+                    case let .declaration(kind, tokens):
+                        sortedDeclarations[indexOfLastDeclarationWithType].declaration
+                            = .declaration(kind: kind, tokens: endingWithBlankLine(tokens))
                     }
                 }
             }
 
-            return sortedDeclarations.map { $0.declaration }
+            return (
+                kind: typeDeclaration.kind,
+                open: typeOpeningTokens,
+                body: sortedDeclarations.map { $0.declaration },
+                close: typeClosingTokens
+            )
         }
 
         /// Recursively organizes the body declarations of this declaration,
         /// and any nested types.
-        func organizeBody(of declaration: Formatter.Declaration) -> Formatter.Declaration {
+        func organize(_ declaration: Formatter.Declaration) -> Formatter.Declaration {
             switch declaration {
-            // Organize the body of any nested types
-            case let .type(open, body, close):
+            case let .type(kind, open, body, close):
+                // Organize the body of this type
+                let (_, organizedOpen, organizedBody, organizedClose) = organizeType((kind, open, body, close))
+
+                // And also organize any of its nested children
                 return .type(
-                    open: open,
-                    body: organize(body.map { organizeBody(of: $0) }),
-                    close: close
+                    kind: kind,
+                    open: organizedOpen,
+                    body: organizedBody.map { organize($0) },
+                    close: organizedClose
                 )
 
             // If the declaration doesn't have a body, there isn't any work to do
@@ -5068,7 +5107,7 @@ public struct _FormatRules {
         // Parse the file into declarations and organize the body of individual types
         let organizedDeclarations = formatter
             .parseDeclarations()
-            .map { organizeBody(of: $0) }
+            .map { organize($0) }
 
         let updatedTokens = organizedDeclarations.flatMap { $0.tokens }
 

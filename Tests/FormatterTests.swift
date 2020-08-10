@@ -681,4 +681,20 @@ class FormatterTests: XCTestCase {
             """
         )
     }
+
+    func testParseClassFuncDeclarationCorrectly() {
+        // `class func` is one of the few cases (possibly only!)
+        // where a declaration will have more than one token that `definesDeclarationType`
+        let input = """
+        class Foo() {}
+
+        class func foo() {}
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssert(declarations[0].keyword == "class")
+        XCTAssert(declarations[1].keyword == "func")
+    }
 }

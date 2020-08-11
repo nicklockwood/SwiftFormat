@@ -1384,22 +1384,28 @@ public struct _FormatRules {
                         indent = indentStack.last!
                     }
                 } else if linewrapped {
-                    func isWrappedDeclaration() -> Bool {
+                    func isWrappedCaseDeclaration() -> Bool {
                         guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .delimiter(","),
-                            let keywordIndex = formatter.index(of: .keyword, before: i, if: {
-                                ["class", "struct", "enum", "protocol", "case",
-                                 "func", "var", "let"].contains($0.string)
-                            }) else { return false }
+                            formatter.last(.keyword, before: i) == .keyword("case"),
+                            let scopeStart = formatter.index(of: .startOfScope, before: i, if: {
+                                $0 == .startOfScope("{")
+                            }), formatter.last(.keyword, before: scopeStart) == .keyword("enum")
+                        else { return false }
 
-                        let start: Int
-                        if let currentScope = formatter.currentScope(at: i) {
-                            start = formatter.index(of: currentScope, before: i) ?? formatter.startOfLine(at: i) - 1
-                        } else {
-                            start = formatter.startOfLine(at: i) - 1
-                        }
+                        return true
+                    }
 
-                        return keywordIndex > formatter.index(of: .startOfScope, before: i) ?? -1
-                            && keywordIndex <= formatter.index(of: .keyword, after: start) ?? i
+                    func isWrappedTypeDeclaration() -> Bool {
+                        guard let keywordIndex = formatter.indexOfLastSignificantKeyword(at: i, excluding: ["where"]),
+                            !formatter.tokens[keywordIndex ..< i].contains(.endOfScope("}")),
+                            case let .keyword(keyword) = formatter.tokens[keywordIndex],
+                            ["class", "struct", "enum", "protocol"].contains(keyword) else { return false }
+
+                        let end = formatter.endOfLine(at: i + 1)
+                        guard let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: end + 1),
+                            [.startOfScope("{"), .endOfScope("}")].contains(lastToken) else { return false }
+
+                        return true
                     }
 
                     // Don't indent enum cases if Xcode indentation is set
@@ -1409,7 +1415,8 @@ public struct _FormatRules {
                         nextToken == .startOfScope("{"), formatter.isStartOfClosure(at: nextNonSpaceIndex)
                     {
                         // Don't indent further
-                    } else if !formatter.options.xcodeIndentation || !isWrappedDeclaration(),
+                    } else if !formatter.options.xcodeIndentation ||
+                        !(isWrappedCaseDeclaration() || isWrappedTypeDeclaration()),
                         formatter.token(at: nextTokenIndex ?? -1) != .operator(".", .infix) ||
                         !(lastToken?.isEndOfScope == true && lastToken != .endOfScope("case") &&
                             formatter.last(.nonSpace, before: lastNonSpaceOrLinebreakIndex)?.isLinebreak == true)
@@ -1557,8 +1564,8 @@ public struct _FormatRules {
                 }
                 // Avoid conflicts with wrapMultilineStatementBraces
                 // TODO: find a better solution for this
-                if formatter.trackChanges, let keywordIndex = formatter
-                    .indexOfLastSignificantKeyword(at: prevIndex + 1, excluding: ["where"]),
+                if let keywordIndex =
+                    formatter.indexOfLastSignificantKeyword(at: prevIndex + 1, excluding: ["where"]),
                     case let .keyword(keyword) = formatter.tokens[keywordIndex],
                     ["if", "for", "guard", "while", "switch", "func", "init", "subscript",
                      "extension", "class", "struct", "enum", "protocol"].contains(keyword),

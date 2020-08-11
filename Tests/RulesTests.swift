@@ -1895,6 +1895,44 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    func testWrappedClassDeclarationWithBracesOnSameLineLikeXcode() {
+        let input = """
+        class Foo: Bar,
+        Baz {}
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testWrappedClassDeclarationWithBraceOnNextLineLikeXcode() {
+        let input = """
+        class Foo: Bar,
+            Baz
+        {
+            init() {}
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testWrappedClassWhereDeclarationLikeXcode() {
+        let input = """
+        class Foo<T>: Bar
+            where T: Baz {
+            init() {}
+        }
+        """
+        let output = """
+        class Foo<T>: Bar
+        where T: Baz {
+            init() {}
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
     // indentCase = true
 
     func testSwitchCaseWithIndentCaseTrue() {

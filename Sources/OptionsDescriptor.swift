@@ -693,7 +693,7 @@ extension FormatOptions.Descriptor {
         argumentName: "categorymark",
         propertyName: "categoryMarkComment",
         displayName: "Category Mark Comment",
-        help: "Comment template to separate declaration categories (with %c as placeholder)",
+        help: "Template for category mark comments (defaults to `MARK: %c`)",
         keyPath: \.categoryMarkComment,
         fromArgument: { $0 },
         toArgument: { $0 }
@@ -702,28 +702,28 @@ extension FormatOptions.Descriptor {
         argumentName: "beforemarks",
         propertyName: "beforeMarks",
         displayName: "Before Marks",
-        help: "Declaration types to place before the first mark (e.g. `typealias,struct,class`)",
+        help: "Declarations placed before first mark (e.g. `typealias,struct`)",
         keyPath: \.beforeMarks
     )
     static let lifecycleMethods = FormatOptions.Descriptor(
         argumentName: "lifecycle",
         propertyName: "lifecycleMethods",
         displayName: "Lifecycle Methods",
-        help: "Instance methods to place in the Lifecycle category (e.g. `viewDidLoad,viewDidAppear`)",
+        help: "Names of additional Lifecycle methods (e.g. `viewDidLoad`)",
         keyPath: \.lifecycleMethods
     )
     static let organizeStructThreshold = FormatOptions.Descriptor(
         argumentName: "structthreshold",
         propertyName: "organizeStructThreshold",
         displayName: "Organize Struct Threshold",
-        help: "The line count threshold for organizing the body of structs (e.g. `50`, defaults to `nil`)",
+        help: "Minimum line count to organize struct body (defaults to `nil`)",
         keyPath: \.organizeStructThreshold,
-        fromArgument: { Int($0) },
+        fromArgument: { .some(Int($0)) },
         toArgument: {
             if let lineCount = $0 {
                 return "\(lineCount)"
             } else {
-                return "nil"
+                return ""
             }
         }
     )
@@ -731,14 +731,14 @@ extension FormatOptions.Descriptor {
         argumentName: "classthreshold",
         propertyName: "organizeClassThreshold",
         displayName: "Organize Class Threshold",
-        help: "The line count threshold for organizing the body of classes (e.g. `50`, defaults to `nil`)",
+        help: "Minimum line count to organize class body (defaults to `nil`)",
         keyPath: \.organizeClassThreshold,
-        fromArgument: { Int($0) },
+        fromArgument: { .some(Int($0)) },
         toArgument: {
             if let lineCount = $0 {
                 return "\(lineCount)"
             } else {
-                return "nil"
+                return ""
             }
         }
     )
@@ -746,14 +746,14 @@ extension FormatOptions.Descriptor {
         argumentName: "enumthreshold",
         propertyName: "organizeEnumThreshold",
         displayName: "Organize Enum Threshold",
-        help: "The line count threshold for organizing the body of enums (e.g. `50`, defaults to `nil`)",
+        help: "Minimum line count to organize enum body (defaults to `nil`)",
         keyPath: \.organizeEnumThreshold,
-        fromArgument: { Int($0) },
+        fromArgument: { .some(Int($0)) },
         toArgument: {
             if let lineCount = $0 {
                 return "\(lineCount)"
             } else {
-                return "nil"
+                return ""
             }
         }
     )

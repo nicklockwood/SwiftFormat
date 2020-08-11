@@ -4778,7 +4778,8 @@ public struct _FormatRules {
     }
 
     public let organizeDeclarations = FormatRule(
-        help: "Organizes declarations within the file by visibility",
+        help: "Organizes declarations within class, struct, and enum bodies.",
+        options: ["categorymark", "beforemarks", "lifecycle", "structthreshold", "classthreshold", "enumthreshold"],
         rewritesEntireFile: true
     ) { formatter in
         /// Categories of declarations within an individual type

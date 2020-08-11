@@ -296,6 +296,7 @@ extension FormatOptions.Descriptor {
         typeAttributes,
         varAttributes,
         beforeMarks,
+        lifecycleMethods,
 
         // Deprecated
         empty,
@@ -687,9 +688,16 @@ extension FormatOptions.Descriptor {
     static let beforeMarks = FormatOptions.Descriptor(
         argumentName: "beforemarks",
         propertyName: "beforeMarks",
-        displayName: "Declarations Placed Before Marks",
-        help: "Comma-separate list of declaration types to place before the first mark",
+        displayName: "Before Marks",
+        help: "Declaration types to place before the first mark (e.g. `typealias,struct,class`)",
         keyPath: \.beforeMarks
+    )
+    static let lifecycleMethods = FormatOptions.Descriptor(
+        argumentName: "lifecycle",
+        propertyName: "lifecycleMethods",
+        displayName: "Lifecycle Methods",
+        help: "Instance methods to place in the Lifecycle category (e.g. `viewDidLoad,viewDidAppear`)",
+        keyPath: \.lifecycleMethods
     )
 
     // MARK: - Internal

@@ -599,6 +599,7 @@ extension RulesTests {
         ("testCurriedFunctionCallNotUnwrapped", testCurriedFunctionCallNotUnwrapped),
         ("testCurriedFunctionCallNotUnwrapped2", testCurriedFunctionCallNotUnwrapped2),
         ("testCustomHexGrouping", testCustomHexGrouping),
+        ("testCustomLifecycleMethods", testCustomLifecycleMethods),
         ("testCustomMethodMadeTrailing", testCustomMethodMadeTrailing),
         ("testCustomOctalGrouping", testCustomOctalGrouping),
         ("testDecimalGroupingThousands", testDecimalGroupingThousands),

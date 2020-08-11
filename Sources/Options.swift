@@ -303,6 +303,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var typeAttributes: AttributeMode
     public var varAttributes: AttributeMode
     public var beforeMarks: Set<String>
+    public var lifecycleMethods: Set<String>
 
     // Deprecated
     public var indentComments: Bool
@@ -364,6 +365,7 @@ public struct FormatOptions: CustomStringConvertible {
                 typeAttributes: AttributeMode = .preserve,
                 varAttributes: AttributeMode = .preserve,
                 beforeMarks: Set<String> = [],
+                lifecycleMethods: Set<String> = [],
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -418,6 +420,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.typeAttributes = typeAttributes
         self.varAttributes = varAttributes
         self.beforeMarks = beforeMarks
+        self.lifecycleMethods = lifecycleMethods
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

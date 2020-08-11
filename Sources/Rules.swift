@@ -4781,11 +4781,9 @@ public struct _FormatRules {
         help: "Organizes declarations within the file by visibility",
         rewritesEntireFile: true
     ) { formatter in
+        // TODO: Add a configurable minimum line count for
         enum Category: String, CaseIterable {
-            // TODO: Support choosing which types can go in beforeMarks
-            // (The Airbnb styleguide specifies typealiases should go here, probably also types themselves)
             case beforeMarks
-            // TODO: Support placing specific functions in lifecycle, like `viewDidLoad`
             case lifecycle
             case open
             case `public`
@@ -4830,7 +4828,8 @@ public struct _FormatRules {
         /// The `Category` of the given `Declaration`
         func category(of declaration: Formatter.Declaration) -> Category {
             switch declaration {
-            case let .declaration(_, tokens), let .type(_, open: tokens, _, _):
+            case let .declaration(keyword, tokens), let .type(keyword, open: tokens, _, _):
+                let parser = Formatter(tokens)
 
                 // Enum cases don't fit into any of the other categories,
                 // so they should go in the intial top section.
@@ -4839,13 +4838,30 @@ public struct _FormatRules {
                     return .beforeMarks
                 }
 
-                if tokens.contains(.keyword("init")) || tokens.contains(.keyword("deinit")) {
-                    return .lifecycle
+                if categoryOrdering.contains(.lifecycle) {
+                    // `init` and `deinit` always go in Lifecycle if it's present
+                    if tokens.contains(.keyword("init")) || tokens.contains(.keyword("deinit")) {
+                        return .lifecycle
+                    }
+
+                    // The user can also provide specific instance method names to place in Lifecycle
+                    //  - In the function declaration grammar, the function name always
+                    //    immediately follows the `func` keyword:
+                    //    https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_function-name
+                    if keyword == "func",
+                        let funcKeywordIndex = parser.index(
+                            after: -1,
+                            where: { $0.definesDeclarationType && $0.string == keyword }
+                        ),
+                        let methodName = parser.next(.nonSpaceOrCommentOrLinebreak, after: funcKeywordIndex),
+                        formatter.options.lifecycleMethods.contains(methodName.string)
+                    {
+                        return .lifecycle
+                    }
                 }
 
                 // Search for a visibility keyword,
                 // making sure we exclude groups like private(set)
-                let parser = Formatter(tokens)
                 var searchIndex = 0
 
                 while searchIndex < parser.tokens.count {

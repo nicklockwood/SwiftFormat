@@ -13029,7 +13029,60 @@ class RulesTests: XCTestCase {
             for: input, output,
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(beforeMarks: ["typealias", "struct"]),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "unusedArguments"]
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testCustomLifecycleMethods() {
+        let input = """
+        struct ViewController: UIViewController {
+
+            public init() {
+                super.init(nibName: nil, bundle: nil)
+            }
+
+            func viewDidLoad() {
+                super.viewDidLoad()
+            }
+
+            func internalInstanceMethod() {}
+
+            func viewDidAppear(_ animated: Bool) {
+                super.viewDidAppear(animated)
+            }
+
+        }
+        """
+
+        let output = """
+        struct ViewController: UIViewController {
+
+            // MARK: Lifecycle
+
+            public init() {
+                super.init(nibName: nil, bundle: nil)
+            }
+
+            func viewDidLoad() {
+                super.viewDidLoad()
+            }
+
+            func viewDidAppear(_ animated: Bool) {
+                super.viewDidAppear(animated)
+            }
+
+            // MARK: Internal
+
+            func internalInstanceMethod() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(lifecycleMethods: ["viewDidLoad", "viewWillAppear", "viewDidAppear"]),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }
 }

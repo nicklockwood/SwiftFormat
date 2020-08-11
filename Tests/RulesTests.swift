@@ -13035,7 +13035,7 @@ class RulesTests: XCTestCase {
 
     func testCustomLifecycleMethods() {
         let input = """
-        struct ViewController: UIViewController {
+        class ViewController: UIViewController {
 
             public init() {
                 super.init(nibName: nil, bundle: nil)
@@ -13055,7 +13055,7 @@ class RulesTests: XCTestCase {
         """
 
         let output = """
-        struct ViewController: UIViewController {
+        class ViewController: UIViewController {
 
             // MARK: Lifecycle
 
@@ -13082,6 +13082,36 @@ class RulesTests: XCTestCase {
             for: input, output,
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(lifecycleMethods: ["viewDidLoad", "viewWillAppear", "viewDidAppear"]),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testCustomCategoryMarkTemplate() {
+        let input = """
+        struct Foo {
+            public init() {}
+            public func publicInstanceMethod() {}
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            // - Lifecycle
+
+            public init() {}
+
+            // - Public
+
+            public func publicInstanceMethod() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(categoryMarkComment: "- %c"),
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }

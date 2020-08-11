@@ -302,6 +302,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var funcAttributes: AttributeMode
     public var typeAttributes: AttributeMode
     public var varAttributes: AttributeMode
+    public var categoryMarkComment: String
     public var beforeMarks: Set<String>
     public var lifecycleMethods: Set<String>
 
@@ -364,6 +365,7 @@ public struct FormatOptions: CustomStringConvertible {
                 funcAttributes: AttributeMode = .preserve,
                 typeAttributes: AttributeMode = .preserve,
                 varAttributes: AttributeMode = .preserve,
+                categoryMarkComment: String = "MARK: %c",
                 beforeMarks: Set<String> = [],
                 lifecycleMethods: Set<String> = [],
                 // Doesn't really belong here, but hard to put elsewhere
@@ -419,6 +421,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.funcAttributes = funcAttributes
         self.typeAttributes = typeAttributes
         self.varAttributes = varAttributes
+        self.categoryMarkComment = categoryMarkComment
         self.beforeMarks = beforeMarks
         self.lifecycleMethods = lifecycleMethods
         // Doesn't really belong here, but hard to put elsewhere

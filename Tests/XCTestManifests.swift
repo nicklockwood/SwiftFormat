@@ -598,6 +598,7 @@ extension RulesTests {
         ("testCountNotEqualToZero", testCountNotEqualToZero),
         ("testCurriedFunctionCallNotUnwrapped", testCurriedFunctionCallNotUnwrapped),
         ("testCurriedFunctionCallNotUnwrapped2", testCurriedFunctionCallNotUnwrapped2),
+        ("testCustomCategoryMarkTemplate", testCustomCategoryMarkTemplate),
         ("testCustomHexGrouping", testCustomHexGrouping),
         ("testCustomLifecycleMethods", testCustomLifecycleMethods),
         ("testCustomMethodMadeTrailing", testCustomMethodMadeTrailing),

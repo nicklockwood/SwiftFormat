@@ -4792,13 +4792,12 @@ public struct _FormatRules {
             case `private`
 
             /// The comment tokens that should preceed all declarations in this category
-            // TODO: Make this customizable
-            var markComment: String? {
+            func markComment(from template: String) -> String? {
                 switch self {
                 case .beforeMarks:
                     return nil
                 default:
-                    return "// MARK: \(rawValue.capitalized)"
+                    return "// \(template.replacingOccurrences(of: "%c", with: rawValue.capitalized))"
                 }
             }
         }
@@ -5042,7 +5041,7 @@ public struct _FormatRules {
                 else { continue }
 
                 // Build the MARK declaration
-                if let markComment = category.markComment {
+                if let markComment = category.markComment(from: formatter.options.categoryMarkComment) {
                     let firstDeclaration = sortedDeclarations[indexOfFirstDeclaration].declaration
                     let declarationParser = Formatter(firstDeclaration.tokens)
                     let indentation = declarationParser.indentForLine(at: 0)
@@ -5116,16 +5115,13 @@ public struct _FormatRules {
 
         // Remove all of the existing category mark comments, so they can be readded
         // at the correct location after sorting the declarations.
-        let categorySeparatorTokens = Category.allCases
-            .compactMap { $0.markComment }
-            .map { tokenize($0) }
-
-        let commentStartToken = categorySeparatorTokens[0][0]
-
-        formatter.forEach(commentStartToken) { index, _ in
+        formatter.forEach(.startOfScope("//")) { index, _ in
             // Check if this comment matches an expected category separator mark comment
             for category in Category.allCases {
-                guard let markComment = category.markComment else { continue }
+                guard let markComment = category.markComment(from: formatter.options.categoryMarkComment) else {
+                    continue
+                }
+
                 let categorySeparator = tokenize(markComment)
                 let potentialSeparatorRange = index ..< (index + categorySeparator.count)
 

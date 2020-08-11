@@ -295,6 +295,7 @@ extension FormatOptions.Descriptor {
         funcAttributes,
         typeAttributes,
         varAttributes,
+        categoryMark,
         beforeMarks,
         lifecycleMethods,
 
@@ -684,6 +685,15 @@ extension FormatOptions.Descriptor {
         help: "Use ? for Optionals \"always\" (default) or \"except-properties\"",
         keyPath: \.shortOptionals,
         options: ["always", "except-properties"]
+    )
+    static let categoryMark = FormatOptions.Descriptor(
+        argumentName: "categorymark",
+        propertyName: "categoryMarkComment",
+        displayName: "Category Mark Comment",
+        help: "Comment template to separate declaration categories (with %c as placeholder)",
+        keyPath: \.categoryMarkComment,
+        fromArgument: { $0 },
+        toArgument: { $0 }
     )
     static let beforeMarks = FormatOptions.Descriptor(
         argumentName: "beforemarks",

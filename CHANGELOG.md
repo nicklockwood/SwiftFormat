@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.45.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.6) (2020-08-12)
+
+- Added `--yodaswap` option for more fine-grained control of `yodaConditions` rule
+- Fixed indentation of wrapped type declarations when using `--xcodeindentation enabled`
+- Fixed alignment of closure braces when using `--allman` style
+
 ## [0.45.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.5) (2020-08-09)
 
 - Fixed `.swiftformat` configuration file processing when using `--stdinpath` option

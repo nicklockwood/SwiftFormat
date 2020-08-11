@@ -295,6 +295,7 @@ extension FormatOptions.Descriptor {
         funcAttributes,
         typeAttributes,
         varAttributes,
+        beforeMarks,
 
         // Deprecated
         empty,
@@ -682,6 +683,13 @@ extension FormatOptions.Descriptor {
         help: "Use ? for Optionals \"always\" (default) or \"except-properties\"",
         keyPath: \.shortOptionals,
         options: ["always", "except-properties"]
+    )
+    static let beforeMarks = FormatOptions.Descriptor(
+        argumentName: "beforemarks",
+        propertyName: "beforeMarks",
+        displayName: "Declarations Placed Before Marks",
+        help: "Comma-separate list of declaration types to place before the first mark",
+        keyPath: \.beforeMarks
     )
 
     // MARK: - Internal

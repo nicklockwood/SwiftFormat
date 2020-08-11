@@ -4834,7 +4834,8 @@ public struct _FormatRules {
 
                 // Enum cases don't fit into any of the other categories,
                 // so they should go in the intial top section.
-                if declaration.keyword == "case" {
+                //  - The user can also provide other declaration types to place in this category
+                if declaration.keyword == "case" || formatter.options.beforeMarks.contains(declaration.keyword) {
                     return .beforeMarks
                 }
 
@@ -5002,8 +5003,10 @@ public struct _FormatRules {
                     return lhsCategorySortOrder < rhsCategorySortOrder
                 }
 
-                // Within individual categories, sort by the declaration type
-                if let lhsType = lhs.type,
+                // Within individual categories (excluding .beforeMarks), sort by the declaration type
+                if lhs.category != .beforeMarks,
+                    rhs.category != .beforeMarks,
+                    let lhsType = lhs.type,
                     let rhsType = rhs.type,
                     let lhsTypeSortOrder = categorySubordering.index(of: lhsType),
                     let rhsTypeSortOrder = categorySubordering.index(of: rhsType),

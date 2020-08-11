@@ -12997,4 +12997,39 @@ class RulesTests: XCTestCase {
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "unusedArguments"]
         )
     }
+
+    func testPlacingCustomDeclarationsBeforeMarks() {
+        let input = """
+        struct Foo {
+
+            public init() {}
+
+            public typealias Bar = Int
+
+            public struct Baz {}
+
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            public typealias Bar = Int
+
+            public struct Baz {}
+
+            // MARK: Lifecycle
+
+            public init() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(beforeMarks: ["typealias", "struct"]),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "unusedArguments"]
+        )
+    }
 }

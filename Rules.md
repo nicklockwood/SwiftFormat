@@ -1739,3 +1739,7 @@ Wrap the opening brace of multiline statements.
 ## yodaConditions
 
 Prefer constant values to be on the right-hand-side of expressions.
+
+Option | Description
+--- | ---
+`--yodaswap` | Swap yoda values: "always" (default) or "literals-only"

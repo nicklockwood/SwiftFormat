@@ -12285,6 +12285,14 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.yodaConditions)
     }
 
+    // yodaSwap = literalsOnly
+
+    func testNoSwapYodaDotMember() {
+        let input = "foo(where: .bar == baz)"
+        let options = FormatOptions(yodaSwap: .literalsOnly)
+        testFormatting(for: input, rule: FormatRules.yodaConditions, options: options)
+    }
+
     // MARK: - leadingDelimiters
 
     func testLeadingCommaMovedToPreviousLine() {

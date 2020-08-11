@@ -1640,6 +1640,17 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testIndentAllmanTrailingClosureArguments2() {
+        let input = """
+        DispatchQueue.main.async
+        {
+            foo()
+        }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testIndentAllmanTrailingClosureArgumentsAfterFunction() {
         let input = """
         func foo()
@@ -2516,9 +2527,18 @@ class RulesTests: XCTestCase {
             print("and a trailing closure")
         }
         """
-
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testNoDoubleIndentInInsideClosure() {
+        let input = """
+        let foo = bar({ baz
+            in
+            baz
+        })
+        """
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["trailingClosures"])
     }
 
     // indent xcodeindentation
@@ -2582,6 +2602,40 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    func testWrappedSingleLineClosureOnNewLine() {
+        let input = """
+        func foo() {
+            let bar =
+                { print("foo") }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["braces"])
+    }
+
+    func testWrappedSingleLineClosureOnNewLineWithXcodeIndentation() {
+        let input = """
+        func foo() {
+            let bar =
+            { print("foo") }
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["braces"])
+    }
+
+    func testWrappedMultilineClosureOnNewLine() {
+        let input = """
+        func foo() {
+            let bar =
+                {
+                    print("foo")
+                }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["braces"])
+    }
+
     func testWrappedMultilineClosureOnNewLineWithXcodeIndentation() {
         let input = """
         func foo() {
@@ -2591,16 +2645,22 @@ class RulesTests: XCTestCase {
             }
         }
         """
-        let output = """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["braces"])
+    }
+
+    func testWrappedMultilineClosureOnNewLineWithAllmanBraces() {
+        let input = """
         func foo() {
             let bar =
-                {
-                    print("foo")
-                }
+            {
+                print("foo")
+            }
         }
         """
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options,
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["braces"])
     }
 
@@ -3530,6 +3590,30 @@ class RulesTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: FormatRules.braces)
+    }
+
+    func testKnRNoMangleClosureReturningClosure2() {
+        let input = """
+        foo {
+            {
+                bar()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.braces)
+    }
+
+    func testAllmanNoMangleClosureReturningClosure() {
+        let input = """
+        foo
+        { bar in
+            {
+                bar()
+            }
+        }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, rule: FormatRules.braces, options: options)
     }
 
     func testKnRClosingBraceWrapped() {
@@ -8475,6 +8559,25 @@ class RulesTests: XCTestCase {
                 bar
             }
         """
+        let options = FormatOptions(maxWidth: 20)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+    }
+
+    func testWrapClosureWithAllmanBraces() {
+        let input = """
+        let foo = { bar, _ in bar }
+        """
+        let output = """
+        let foo =
+            { bar, _ in
+            bar }
+        """
+        let output2 = """
+        let foo =
+        { bar, _ in
+            bar
+        }
+        """
         let options = FormatOptions(allmanBraces: true, maxWidth: 20)
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
     }
@@ -10563,6 +10666,32 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.sortedImports)
     }
 
+    func testNoMangleImportsPrecededByComment() {
+        let input = """
+        // evil comment
+
+        #if canImport(Foundation)
+            import Foundation
+            #if canImport(UIKit) && canImport(AVFoundation)
+                import UIKit
+                import AVFoundation
+            #endif
+        #endif
+        """
+        let output = """
+        // evil comment
+
+        #if canImport(Foundation)
+            import Foundation
+            #if canImport(UIKit) && canImport(AVFoundation)
+                import AVFoundation
+                import UIKit
+            #endif
+        #endif
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
     // MARK: - duplicateImports
 
     func testRemoveDuplicateImport() {
@@ -12156,6 +12285,14 @@ class RulesTests: XCTestCase {
     func testEnumCaseLessThanEnumCase() {
         let input = "XCTAssertFalse(.never < .never)"
         testFormatting(for: input, rule: FormatRules.yodaConditions)
+    }
+
+    // yodaSwap = literalsOnly
+
+    func testNoSwapYodaDotMember() {
+        let input = "foo(where: .bar == baz)"
+        let options = FormatOptions(yodaSwap: .literalsOnly)
+        testFormatting(for: input, rule: FormatRules.yodaConditions, options: options)
     }
 
     // MARK: - leadingDelimiters

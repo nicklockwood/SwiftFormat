@@ -254,6 +254,12 @@ public enum OptionalsMode: String {
     case always
 }
 
+/// Argument type for yoda conditions
+public enum YodaMode: String {
+    case literalsOnly = "literals-only"
+    case always
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -308,6 +314,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var organizeClassThreshold: Int?
     public var organizeStructThreshold: Int?
     public var organizeEnumThreshold: Int?
+    public var yodaSwap: YodaMode
 
     // Deprecated
     public var indentComments: Bool
@@ -374,6 +381,7 @@ public struct FormatOptions: CustomStringConvertible {
                 organizeClassThreshold: Int? = nil,
                 organizeStructThreshold: Int? = nil,
                 organizeEnumThreshold: Int? = nil,
+                yodaSwap: YodaMode = .always,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -433,6 +441,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.organizeClassThreshold = organizeClassThreshold
         self.organizeStructThreshold = organizeStructThreshold
         self.organizeEnumThreshold = organizeEnumThreshold
+        self.yodaSwap = yodaSwap
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

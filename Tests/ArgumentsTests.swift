@@ -207,11 +207,6 @@ class ArgumentsTests: XCTestCase {
         }
     }
 
-    func testCommandLineArgumentsAreCorrect() {
-        let output = ["allman": "false", "wraparguments": "preserve", "wrapparameters": "preserve", "stripunusedargs": "always", "self": "remove", "header": "ignore", "importgrouping": "alphabetized", "fractiongrouping": "disabled", "binarygrouping": "4,8", "octalgrouping": "4,8", "indentcase": "false", "trimwhitespace": "always", "decimalgrouping": "3,6", "exponentgrouping": "disabled", "patternlet": "hoist", "commas": "always", "wrapcollections": "preserve", "semicolons": "inline", "indent": "4", "exponentcase": "lowercase", "operatorfunc": "spaced", "symlinks": "ignore", "elseposition": "same-line", "guardelse": "auto", "voidtype": "void", "hexliteralcase": "uppercase", "linebreaks": "lf", "hexgrouping": "4,8", "ifdef": "indent", "closingparen": "balanced", "selfrequired": "", "trailingclosures": "", "xcodeindentation": "disabled", "fragment": "false", "conflictmarkers": "reject", "tabwidth": "unspecified", "maxwidth": "none", "smarttabs": "enabled", "nospaceoperators": "", "nowrapoperators": "", "modifierorder": "", "minversion": "0", "shortoptionals": "always", "funcattributes": "preserve", "typeattributes": "preserve", "varattributes": "preserve", "categorymark": "MARK: %c", "beforemarks": "", "lifecycle": "", "structthreshold": "", "classthreshold": "", "enumthreshold": ""]
-        XCTAssertEqual(argumentsFor(.default), output)
-    }
-
     func testFormattingArgumentsAreAllImplemented() throws {
         CLI.print = { _, _ in }
         for key in formattingArguments {

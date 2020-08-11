@@ -177,6 +177,12 @@ If you do not supply an input file, SwiftFormat will automatically take its inpu
 $ cat /path/to/file.swift | swiftformat stdin
 ```
 
+When using stdin, SwiftFormat does not have access to the file path of the input, so features that rely on the file location (such as inserting the creation date into header comments, or detecting `.swiftformat` configuration files in the file path) will not work. To solve this, you can provide the file path using the `--stdinpath` argument:
+
+```bash
+$ cat /path/to/file.swift | swiftformat stdin --stdinpath /path/to/file.swift
+```
+
 
 Xcode source editor extension
 -----------------------------

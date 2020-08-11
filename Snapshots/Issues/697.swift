@@ -391,24 +391,24 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
   public func nestedContainer<NestedKey>(keyedBy _: NestedKey.Type,
                                          forKey key: Key) throws
     -> KeyedDecodingContainer<NestedKey> {
-      decoder.codingPath.append(key)
-      defer { self.decoder.codingPath.removeLast() }
+    decoder.codingPath.append(key)
+    defer { self.decoder.codingPath.removeLast() }
 
-      guard let value = self.container[key.stringValue] else {
-        throw DecodingError.valueNotFound(KeyedDecodingContainer<NestedKey>.self,
-                                          DecodingError.Context(codingPath: codingPath,
-                                                                debugDescription: "Cannot get nested keyed container -- no value found for key \"\(key.stringValue)\""))
-      }
-
-      guard let dictionary = value as? [String: Any] else {
-        throw DecodingError
-          ._typeMismatch(at: codingPath, expectation: [String: Any].self, reality: value)
-      }
-
-      let container = _FirestoreKeyedDecodingContainer<NestedKey>(referencing: decoder,
-                                                                  wrapping: dictionary)
-      return KeyedDecodingContainer(container)
+    guard let value = self.container[key.stringValue] else {
+      throw DecodingError.valueNotFound(KeyedDecodingContainer<NestedKey>.self,
+                                        DecodingError.Context(codingPath: codingPath,
+                                                              debugDescription: "Cannot get nested keyed container -- no value found for key \"\(key.stringValue)\""))
     }
+
+    guard let dictionary = value as? [String: Any] else {
+      throw DecodingError
+        ._typeMismatch(at: codingPath, expectation: [String: Any].self, reality: value)
+    }
+
+    let container = _FirestoreKeyedDecodingContainer<NestedKey>(referencing: decoder,
+                                                                wrapping: dictionary)
+    return KeyedDecodingContainer(container)
+  }
 
   public func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
     decoder.codingPath.append(key)

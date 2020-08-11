@@ -298,6 +298,9 @@ extension FormatOptions.Descriptor {
         categoryMark,
         beforeMarks,
         lifecycleMethods,
+        organizeClassThreshold,
+        organizeStructThreshold,
+        organizeEnumThreshold,
 
         // Deprecated
         empty,
@@ -708,6 +711,51 @@ extension FormatOptions.Descriptor {
         displayName: "Lifecycle Methods",
         help: "Instance methods to place in the Lifecycle category (e.g. `viewDidLoad,viewDidAppear`)",
         keyPath: \.lifecycleMethods
+    )
+    static let organizeStructThreshold = FormatOptions.Descriptor(
+        argumentName: "structthreshold",
+        propertyName: "organizeStructThreshold",
+        displayName: "Organize Struct Threshold",
+        help: "The line count threshold for organizing the body of structs (e.g. `50`, defaults to `nil`)",
+        keyPath: \.organizeStructThreshold,
+        fromArgument: { Int($0) },
+        toArgument: {
+            if let lineCount = $0 {
+                return "\(lineCount)"
+            } else {
+                return "nil"
+            }
+        }
+    )
+    static let organizeClassThreshold = FormatOptions.Descriptor(
+        argumentName: "classthreshold",
+        propertyName: "organizeClassThreshold",
+        displayName: "Organize Class Threshold",
+        help: "The line count threshold for organizing the body of classes (e.g. `50`, defaults to `nil`)",
+        keyPath: \.organizeClassThreshold,
+        fromArgument: { Int($0) },
+        toArgument: {
+            if let lineCount = $0 {
+                return "\(lineCount)"
+            } else {
+                return "nil"
+            }
+        }
+    )
+    static let organizeEnumThreshold = FormatOptions.Descriptor(
+        argumentName: "enumthreshold",
+        propertyName: "organizeEnumThreshold",
+        displayName: "Organize Enum Threshold",
+        help: "The line count threshold for organizing the body of enums (e.g. `50`, defaults to `nil`)",
+        keyPath: \.organizeEnumThreshold,
+        fromArgument: { Int($0) },
+        toArgument: {
+            if let lineCount = $0 {
+                return "\(lineCount)"
+            } else {
+                return "nil"
+            }
+        }
     )
 
     // MARK: - Internal

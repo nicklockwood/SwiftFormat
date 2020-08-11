@@ -408,6 +408,7 @@ extension RulesTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__RulesTests = [
+        ("testAboveCustomStructOrganizationThreshold", testAboveCustomStructOrganizationThreshold),
         ("testAddSpaceAfterFuncEquals", testAddSpaceAfterFuncEquals),
         ("testAddSpaceAfterOperatorEquals", testAddSpaceAfterOperatorEquals),
         ("testAddSpaceAroundRange", testAddSpaceAroundRange),
@@ -467,6 +468,7 @@ extension RulesTests {
         ("testBeforeFirstPreservedAndTrailingCommaAddedInSingleLineNestedDictionaryWithOneNestedItem", testBeforeFirstPreservedAndTrailingCommaAddedInSingleLineNestedDictionaryWithOneNestedItem),
         ("testBeforeFirstPreservedIndentFixed", testBeforeFirstPreservedIndentFixed),
         ("testBeforeFirstPreservedNewlineAdded", testBeforeFirstPreservedNewlineAdded),
+        ("testBelowCustomStructOrganizationThreshold", testBelowCustomStructOrganizationThreshold),
         ("testBinaryGroupingCustom", testBinaryGroupingCustom),
         ("testBlankCodeCommentBlockLinesNotIndented", testBlankCodeCommentBlockLinesNotIndented),
         ("testBlankLineAfterProtocolBeforeProperty", testBlankLineAfterProtocolBeforeProperty),
@@ -599,6 +601,8 @@ extension RulesTests {
         ("testCurriedFunctionCallNotUnwrapped", testCurriedFunctionCallNotUnwrapped),
         ("testCurriedFunctionCallNotUnwrapped2", testCurriedFunctionCallNotUnwrapped2),
         ("testCustomCategoryMarkTemplate", testCustomCategoryMarkTemplate),
+        ("testCustomClassOrganizationThreshold", testCustomClassOrganizationThreshold),
+        ("testCustomEnumOrganizationThreshold", testCustomEnumOrganizationThreshold),
         ("testCustomHexGrouping", testCustomHexGrouping),
         ("testCustomLifecycleMethods", testCustomLifecycleMethods),
         ("testCustomMethodMadeTrailing", testCustomMethodMadeTrailing),

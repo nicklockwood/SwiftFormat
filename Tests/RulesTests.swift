@@ -13115,4 +13115,76 @@ class RulesTests: XCTestCase {
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }
+
+    func testBelowCustomStructOrganizationThreshold() {
+        let input = """
+        struct StructBelowThreshold {
+            init() {}
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeStructThreshold: 2)
+        )
+    }
+
+    func testAboveCustomStructOrganizationThreshold() {
+        let input = """
+        struct StructAboveThreshold {
+            init() {}
+            public func instanceMethod() {}
+        }
+        """
+
+        let output = """
+        struct StructAboveThreshold {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Public
+
+            public func instanceMethod() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeStructThreshold: 2),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testCustomClassOrganizationThreshold() {
+        let input = """
+        class ClassBelowThreshold {
+            init() {}
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeClassThreshold: 2)
+        )
+    }
+
+    func testCustomEnumOrganizationThreshold() {
+        let input = """
+        enum EnumBelowThreshold {
+            case enumCase
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeEnumThreshold: 2)
+        )
+    }
 }

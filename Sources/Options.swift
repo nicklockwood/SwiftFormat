@@ -305,6 +305,9 @@ public struct FormatOptions: CustomStringConvertible {
     public var categoryMarkComment: String
     public var beforeMarks: Set<String>
     public var lifecycleMethods: Set<String>
+    public var organizeClassThreshold: Int?
+    public var organizeStructThreshold: Int?
+    public var organizeEnumThreshold: Int?
 
     // Deprecated
     public var indentComments: Bool
@@ -368,6 +371,9 @@ public struct FormatOptions: CustomStringConvertible {
                 categoryMarkComment: String = "MARK: %c",
                 beforeMarks: Set<String> = [],
                 lifecycleMethods: Set<String> = [],
+                organizeClassThreshold: Int? = nil,
+                organizeStructThreshold: Int? = nil,
+                organizeEnumThreshold: Int? = nil,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -424,6 +430,9 @@ public struct FormatOptions: CustomStringConvertible {
         self.categoryMarkComment = categoryMarkComment
         self.beforeMarks = beforeMarks
         self.lifecycleMethods = lifecycleMethods
+        self.organizeClassThreshold = organizeClassThreshold
+        self.organizeStructThreshold = organizeStructThreshold
+        self.organizeEnumThreshold = organizeEnumThreshold
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

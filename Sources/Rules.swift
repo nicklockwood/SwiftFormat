@@ -4781,7 +4781,7 @@ public struct _FormatRules {
         help: "Organizes declarations within the file by visibility",
         rewritesEntireFile: true
     ) { formatter in
-        // TODO: Add a configurable minimum line count for
+        /// Categories of declarations within an individual type
         enum Category: String, CaseIterable {
             case beforeMarks
             case lifecycle
@@ -4802,6 +4802,7 @@ public struct _FormatRules {
             }
         }
 
+        /// Types of declarations that can be present within an individual category
         enum DeclarationType {
             case nestedType
             case staticProperty
@@ -4813,12 +4814,10 @@ public struct _FormatRules {
             case instanceMethod
         }
 
-        // TODO: make this customizable
         let categoryOrdering: [Category] = [
             .beforeMarks, .lifecycle, .open, .public, .internal, .fileprivate, .private,
         ]
 
-        // TODO: Make this customizable
         let categorySubordering: [DeclarationType] = [
             .nestedType, .staticProperty, .staticPropertyWithBody, .instanceProperty,
             .instancePropertyWithBody, .staticMethod, .classMethod, .instanceMethod,
@@ -4993,6 +4992,32 @@ public struct _FormatRules {
             // Only organize the body of classes, structs, and enums (not protocols and extensions)
             guard ["class", "struct", "enum"].contains(typeDeclaration.kind) else {
                 return typeDeclaration
+            }
+
+            // Make sure this type's body is longer than the organization threshold
+            let organizationThreshold: Int?
+            switch typeDeclaration.kind {
+            case "class":
+                organizationThreshold = formatter.options.organizeClassThreshold
+            case "struct":
+                organizationThreshold = formatter.options.organizeStructThreshold
+            case "enum":
+                organizationThreshold = formatter.options.organizeEnumThreshold
+            default:
+                organizationThreshold = nil
+            }
+
+            if let organizationThreshold = organizationThreshold {
+                // Count the number of lines in this declaration
+                let lineCount = typeDeclaration.body
+                    .flatMap { $0.tokens }
+                    .filter { $0.isLinebreak }
+                    .count
+
+                // Don't organize this type's body if it is shorter than the minimum organization threshold
+                if lineCount < organizationThreshold {
+                    return typeDeclaration
+                }
             }
 
             var typeOpeningTokens = typeDeclaration.open

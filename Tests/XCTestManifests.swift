@@ -1292,6 +1292,7 @@ extension RulesTests {
         ("testOptionalFunctionCallNotUnwrapped", testOptionalFunctionCallNotUnwrapped),
         ("testOptionalTypeConvertedToSugar", testOptionalTypeConvertedToSugar),
         ("testOrganizeClassDeclarationsIntoCategories", testOrganizeClassDeclarationsIntoCategories),
+        ("testOrganizeEnumCasesFirst", testOrganizeEnumCasesFirst),
         ("testOrganizePrivateSet", testOrganizePrivateSet),
         ("testOuterParensRemovedInIf", testOuterParensRemovedInIf),
         ("testOuterParensRemovedInWhile", testOuterParensRemovedInWhile),

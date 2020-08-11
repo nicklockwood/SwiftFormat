@@ -966,7 +966,7 @@ extension Formatter {
                 where: { $0.definesDeclarationType }
             ) {
                 // Most declarations will include exactly one token that `definesDeclarationType` in
-                // their outermost scope, but `class func` methods will not
+                // their outermost scope, but `class func` methods will have two (and the first one will be incorrect!)
                 if parser.tokens[firstDeclarationTypeKeywordIndex].string != "class" {
                     declarationTypeKeywordIndex = firstDeclarationTypeKeywordIndex
                     declarationKeyword = parser.tokens[firstDeclarationTypeKeywordIndex].string
@@ -977,7 +977,7 @@ extension Formatter {
                 //  - This makes sure that we correctly identify `class func` declarations as being functions.
                 else if let endOfDeclarationOpeningSequence = parser.index(after: -1, where: { $0 == .startOfScope("{") }),
                     let lastDeclarationTypeKeywordIndex = parser.lastIndex(
-                        in: CountableRange(0 ..< endOfDeclarationOpeningSequence),
+                        in: 0 ..< endOfDeclarationOpeningSequence,
                         where: { $0.definesDeclarationType }
                     )
                 {
@@ -1013,7 +1013,7 @@ extension Formatter {
 
                 if let nextDeclarationKeywordIndex = nextDeclarationKeywordIndex {
                     // Search backward from the next declaration's type keyword
-                    // to find exactly where that declaration begind.
+                    // to find exactly where that declaration begins.
                     var startOfNextDeclaration: Int?
                     searchIndex = nextDeclarationKeywordIndex
 

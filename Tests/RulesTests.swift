@@ -12962,4 +12962,39 @@ class RulesTests: XCTestCase {
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }
+
+    func testOrganizeEnumCasesFirst() {
+        let input = """
+        enum Foo {
+            init?(rawValue: String) {
+                return nil
+            }
+
+            case bar
+            case baz
+            case quux
+        }
+        """
+
+        let output = """
+        enum Foo {
+            case bar
+            case baz
+            case quux
+
+            // MARK: Lifecycle
+
+            init?(rawValue: String) {
+                return nil
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "unusedArguments"]
+        )
+    }
 }

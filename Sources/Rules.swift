@@ -4782,9 +4782,9 @@ public struct _FormatRules {
         rewritesEntireFile: true
     ) { formatter in
         enum Category: String, CaseIterable {
-            // TODO: Place things optionaly above the other categories,
-            // like enum cases, type aliases, and nested types
-
+            // TODO: Support choosing which types can go in beforeMarks
+            // (The Airbnb styleguide specifies typealiases should go here, probably also types themselves)
+            case beforeMarks
             // TODO: Support placing specific functions in lifecycle, like `viewDidLoad`
             case lifecycle
             case open
@@ -4795,8 +4795,13 @@ public struct _FormatRules {
 
             /// The comment tokens that should preceed all declarations in this category
             // TODO: Make this customizable
-            var markComment: String {
-                "// MARK: \(rawValue.capitalized)"
+            var markComment: String? {
+                switch self {
+                case .beforeMarks:
+                    return nil
+                default:
+                    return "// MARK: \(rawValue.capitalized)"
+                }
             }
         }
 
@@ -4812,7 +4817,9 @@ public struct _FormatRules {
         }
 
         // TODO: make this customizable
-        let categoryOrdering: [Category] = [.lifecycle, .open, .public, .internal, .fileprivate, .private]
+        let categoryOrdering: [Category] = [
+            .beforeMarks, .lifecycle, .open, .public, .internal, .fileprivate, .private,
+        ]
 
         // TODO: Make this customizable
         let categorySubordering: [DeclarationType] = [
@@ -4824,6 +4831,13 @@ public struct _FormatRules {
         func category(of declaration: Formatter.Declaration) -> Category {
             switch declaration {
             case let .declaration(_, tokens), let .type(_, open: tokens, _, _):
+
+                // Enum cases don't fit into any of the other categories,
+                // so they should go in the intial top section.
+                if declaration.keyword == "case" {
+                    return .beforeMarks
+                }
+
                 if tokens.contains(.keyword("init")) || tokens.contains(.keyword("deinit")) {
                     return .lifecycle
                 }
@@ -4860,7 +4874,7 @@ public struct _FormatRules {
 
                 guard let declarationTypeTokenIndex = declarationParser.index(
                     after: -1,
-                    where: { $0.string == keyword }
+                    where: { $0.isKeyword && $0.string == keyword }
                 )
                 else { return nil }
 
@@ -5009,22 +5023,24 @@ public struct _FormatRules {
                 else { continue }
 
                 // Build the MARK declaration
-                let firstDeclaration = sortedDeclarations[indexOfFirstDeclaration].declaration
-                let declarationParser = Formatter(firstDeclaration.tokens)
-                let indentation = declarationParser.indentForLine(at: 0)
+                if let markComment = category.markComment {
+                    let firstDeclaration = sortedDeclarations[indexOfFirstDeclaration].declaration
+                    let declarationParser = Formatter(firstDeclaration.tokens)
+                    let indentation = declarationParser.indentForLine(at: 0)
 
-                let markDeclaration = tokenize("\(indentation)\(category.markComment)\n\n")
+                    let markDeclaration = tokenize("\(indentation)\(markComment)\n\n")
 
-                sortedDeclarations.insert(
-                    (.declaration(kind: "comment", tokens: markDeclaration), category, nil),
-                    at: indexOfFirstDeclaration
-                )
+                    sortedDeclarations.insert(
+                        (.declaration(kind: "comment", tokens: markDeclaration), category, nil),
+                        at: indexOfFirstDeclaration
+                    )
 
-                // If this declaration is the first declaration in the type scope,
-                // make sure the type's opening sequence of tokens ends with
-                // at least one blank line (so the separator appears balanced)
-                if indexOfFirstDeclaration == 0 {
-                    typeOpeningTokens = endingWithBlankLine(typeOpeningTokens)
+                    // If this declaration is the first declaration in the type scope,
+                    // make sure the type's opening sequence of tokens ends with
+                    // at least one blank line (so the separator appears balanced)
+                    if indexOfFirstDeclaration == 0 {
+                        typeOpeningTokens = endingWithBlankLine(typeOpeningTokens)
+                    }
                 }
 
                 // Insert newlines to separate declaration types
@@ -5081,13 +5097,17 @@ public struct _FormatRules {
 
         // Remove all of the existing category mark comments, so they can be readded
         // at the correct location after sorting the declarations.
-        let categorySeparatorTokens = Category.allCases.map { tokenize($0.markComment) }
+        let categorySeparatorTokens = Category.allCases
+            .compactMap { $0.markComment }
+            .map { tokenize($0) }
+
         let commentStartToken = categorySeparatorTokens[0][0]
 
         formatter.forEach(commentStartToken) { index, _ in
             // Check if this comment matches an expected category separator mark comment
             for category in Category.allCases {
-                let categorySeparator = tokenize(category.markComment)
+                guard let markComment = category.markComment else { continue }
+                let categorySeparator = tokenize(markComment)
                 let potentialSeparatorRange = index ..< (index + categorySeparator.count)
 
                 if formatter.tokens.indices.contains(potentialSeparatorRange.upperBound),

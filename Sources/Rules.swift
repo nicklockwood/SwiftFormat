@@ -1482,6 +1482,53 @@ public struct _FormatRules {
         }
     }
 
+    // Add @available(*, unavailable) to init?(coder aDecoder: NSCoder)
+    public let initCoderUnavailable = FormatRule(
+        help: "Mark initWithCoder as unavaiable.",
+        options: [],
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        formatter.forEach(.identifier("required")) { idx, _ in
+            guard
+                let initTokenCandidate = formatter.next(.nonSpaceOrCommentOrLinebreak, after: idx),
+                initTokenCandidate == .keyword("init"),
+                let initIndex = formatter.index(of: initTokenCandidate, after: idx) else { return }
+
+            guard
+                let questionMarkCandidate = formatter.next(.nonSpaceOrCommentOrLinebreak, after: initIndex),
+                questionMarkCandidate == .operator("?", .postfix),
+                let questionMarkIndex = formatter.index(of: questionMarkCandidate,
+                                                        after: initIndex) else { return }
+
+            guard
+                let startOfScopeCandidate = formatter.next(.nonSpaceOrCommentOrLinebreak, after: questionMarkIndex),
+                startOfScopeCandidate == .startOfScope("("),
+                let startOfScopeCandidateIndex = formatter.index(of: startOfScopeCandidate,
+                                                                 after: questionMarkIndex) else { return }
+
+            guard
+                let coderCandidate = formatter.next(.nonSpaceOrCommentOrLinebreak,
+                                                    after: startOfScopeCandidateIndex),
+                coderCandidate == .identifier("coder") else { return }
+
+            if let previous = formatter.last(.nonSpaceOrCommentOrLinebreak, before: idx),
+                previous != .endOfScope(")")
+            {
+                let indent = formatter.indentForLine(at: idx)
+
+                formatter.insertToken(.keyword("@available"), at: idx)
+                formatter.insertToken(.startOfScope("("), at: idx + 1)
+                formatter.insertToken(.operator("*", .none), at: idx + 2)
+                formatter.insertToken(.delimiter(","), at: idx + 3)
+                formatter.insertToken(.space(" "), at: idx + 4)
+                formatter.insertToken(.identifier("unavailable"), at: idx + 5)
+                formatter.insertToken(.endOfScope(")"), at: idx + 6)
+                formatter.insertToken(formatter.linebreakToken(for: idx), at: idx + 7)
+                formatter.insertSpace(indent, at: idx + 8)
+            }
+        }
+    }
+
     // Implement brace-wrapping rules
     public let braces = FormatRule(
         help: "Wrap braces in accordance with selected style (K&R or Allman).",

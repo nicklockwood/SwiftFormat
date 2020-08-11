@@ -828,6 +828,8 @@ extension RulesTests {
         ("testIndentWrappedFunctionArgument", testIndentWrappedFunctionArgument),
         ("testIndentWrappedFunctionClosureArgument", testIndentWrappedFunctionClosureArgument),
         ("testIndentWrappedTrailingComment", testIndentWrappedTrailingComment),
+        ("testInitCoderUnavailable", testInitCoderUnavailable),
+        ("testInitCoderUnavailableIgnoringUnusedArguments", testInitCoderUnavailableIgnoringUnusedArguments),
         ("testInnerMultilineIfBraceOnNextLine", testInnerMultilineIfBraceOnNextLine),
         ("testInsertBlankLineAfterMarkAtStartOfFile", testInsertBlankLineAfterMarkAtStartOfFile),
         ("testInsertBlankLineBeforeMarkAtEndOfFile", testInsertBlankLineBeforeMarkAtEndOfFile),

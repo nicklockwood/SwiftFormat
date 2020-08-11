@@ -3454,6 +3454,41 @@ class RulesTests: XCTestCase {
                        exclude: ["consecutiveBlankLines"])
     }
 
+    // MARK: - initCoderUnavailable
+
+    func testInitCoderUnavailableIgnoringUnusedArguments() {
+        let input = """
+        struct A: UIView {
+            required init?(coder aDecoder: NSCoder) {}
+        }
+        """
+        let output = """
+        struct A: UIView {
+            @available(*, unavailable)
+            required init?(coder aDecoder: NSCoder) {}
+        }
+        """
+        testFormatting(for: input, output,
+                       rule: FormatRules.initCoderUnavailable,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testInitCoderUnavailable() {
+        let input = """
+        struct A: UIView {
+            required init?(coder _: NSCoder) {}
+        }
+        """
+        let output = """
+        struct A: UIView {
+            @available(*, unavailable)
+            required init?(coder _: NSCoder) {}
+        }
+        """
+        testFormatting(for: input, output,
+                       rule: FormatRules.initCoderUnavailable)
+    }
+
     // MARK: - braces
 
     func testAllmanBracesAreConverted() {

@@ -3475,14 +3475,22 @@ class RulesTests: XCTestCase {
 
     func testInitCoderUnavailable() {
         let input = """
-        struct A: UIView {
-            required init?(coder _: NSCoder) {}
+        extension Module {
+            final class A: UIView {
+                required init?(coder _: NSCoder) {
+                    fatalError()
+                }
+            }
         }
         """
         let output = """
-        struct A: UIView {
-            @available(*, unavailable)
-            required init?(coder _: NSCoder) {}
+        extension Module {
+            final class A: UIView {
+                @available(*, unavailable)
+                required init?(coder _: NSCoder) {
+                    fatalError()
+                }
+            }
         }
         """
         testFormatting(for: input, output,

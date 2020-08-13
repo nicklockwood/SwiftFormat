@@ -814,6 +814,14 @@ extension Formatter {
         return false
     }
 
+    func isEnumCase(at i: Int) -> Bool {
+        assert(tokens[i] == .keyword("case"))
+        if last(.keyword, before: i) == .keyword("case") {
+            return true
+        }
+        return last(.nonSpaceOrCommentOrLinebreak, before: i) == .startOfScope("{")
+    }
+
     struct ImportRange: Comparable {
         var module: String
         var range: Range<Int>

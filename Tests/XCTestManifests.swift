@@ -356,6 +356,8 @@ extension ParsingHelpersTests {
         ("testIfLetBracesNotTreatedAsClosure", testIfLetBracesNotTreatedAsClosure),
         ("testInitAllmanBracesNotTreatedAsClosure", testInitAllmanBracesNotTreatedAsClosure),
         ("testInitBracesNotTreatedAsClosure", testInitBracesNotTreatedAsClosure),
+        ("testIsEnumCase", testIsEnumCase),
+        ("testIsNotEnumCase", testIsNotEnumCase),
         ("testModifierOrder", testModifierOrder),
         ("testMultipleNestedTrailingClosures", testMultipleNestedTrailingClosures),
         ("testNonVoidFunctionAllmanBracesNotTreatedAsClosure", testNonVoidFunctionAllmanBracesNotTreatedAsClosure),

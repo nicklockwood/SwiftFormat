@@ -1728,14 +1728,14 @@ class RulesTests: XCTestCase {
     func testEnumCaseIndentingCommas() {
         let input = "enum Foo {\ncase Bar,\nBaz\n}"
         let output = "enum Foo {\n    case Bar,\n        Baz\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent)
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["multilineEnumCases"])
     }
 
     func testEnumCaseIndentingCommasWithXcodeStyle() {
         let input = "enum Foo {\ncase Bar,\nBaz\n}"
         let output = "enum Foo {\n    case Bar,\n    Baz\n}"
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["multilineEnumCases"])
     }
 
     func testEnumCaseWrappedIfWithXcodeStyle() {
@@ -4661,6 +4661,30 @@ class RulesTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: FormatRules.modifierOrder)
+    }
+
+    // MARK: multilineEnumCases
+
+    func testMultilineEnumCases() {
+        let input = """
+        enum Enum1: Int {
+            case a = 0, p = 2, c, d
+            case e, k
+            case m(String, String)
+        }
+        """
+        let output = """
+        enum Enum1: Int {
+            case a = 0
+            case p = 2
+            case c
+            case d
+            case e
+            case k
+            case m(String, String)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.multilineEnumCases)
     }
 
     // MARK: - void
@@ -11975,7 +11999,10 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+        testFormatting(for: input,
+                       rule: FormatRules.redundantFileprivate,
+                       options: options,
+                       exclude: ["multilineEnumCases"])
     }
 
     func testFileprivateClassTypeMemberNotChangedToPrivate() {

@@ -20,6 +20,7 @@
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
 * [modifierOrder](#modifierOrder)
+* [multilineEnumCases](#multilineEnumCases)
 * [numberFormatting](#numberFormatting)
 * [preferKeyPath](#preferKeyPath)
 * [ranges *(deprecated)*](#ranges)
@@ -609,6 +610,10 @@ Option | Description
 
 </details>
 <br/>
+
+## multilineEnumCases
+
+Writes one enum case per line
 
 ## numberFormatting
 

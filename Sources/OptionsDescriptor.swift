@@ -294,6 +294,8 @@ extension FormatOptions.Descriptor {
         shortOptionals,
         funcAttributes,
         typeAttributes,
+        varAttributes,
+        yodaSwap,
 
         // Deprecated
         empty,
@@ -723,6 +725,20 @@ extension FormatOptions.Descriptor {
         displayName: "Type Attributes",
         help: "Type @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.typeAttributes
+    )
+    static let varAttributes = FormatOptions.Descriptor(
+        argumentName: "varattributes",
+        propertyName: "varAttributes",
+        displayName: "Var Attributes",
+        help: "Property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        keyPath: \.varAttributes
+    )
+    static let yodaSwap = FormatOptions.Descriptor(
+        argumentName: "yodaswap",
+        propertyName: "yodaSwap",
+        displayName: "Yoda Swap",
+        help: "Swap yoda values: \"always\" (default) or \"literals-only\"",
+        keyPath: \.yodaSwap
     )
 
     // MARK: - DEPRECATED

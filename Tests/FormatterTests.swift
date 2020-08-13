@@ -230,7 +230,7 @@ class FormatterTests: XCTestCase {
 
     func testDisableNextWithMultilineComment() {
         let input = "/*swiftformat:disable:next all*/\nlet foo : Int=5;\nlet foo : Int=5;"
-        let output = "/* swiftformat:disable:next all */\nlet foo : Int=5;\n let foo: Int = 5\n"
+        let output = "/* swiftformat:disable:next all */\nlet foo : Int=5;\nlet foo: Int = 5\n"
         XCTAssertEqual(try format(input, rules: FormatRules.default), output)
     }
 

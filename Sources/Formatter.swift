@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.45.2
+//  Version 0.45.6
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -312,10 +312,7 @@ public class Formatter: NSObject {
 
     // MARK: enumeration
 
-    /// Loops through each token in the array. It is safe to mutate the token
-    /// array inside the body block, but note that the index and token arguments
-    /// may not reflect the current token any more after a mutation
-    public func forEachToken(_ body: (Int, Token) -> Void) {
+    func forEachToken(onlyWhereEnabled: Bool, _ body: (Int, Token) -> Void) {
         assert(enumerationIndex == -1, "forEachToken does not support re-entrancy")
         enumerationIndex = 0
         while enumerationIndex < tokens.count {
@@ -328,12 +325,19 @@ public class Formatter: NSObject {
             default:
                 break
             }
-            if isEnabled {
+            if isEnabled || !onlyWhereEnabled {
                 body(enumerationIndex, token) // May mutate enumerationIndex
             }
             enumerationIndex += 1
         }
         enumerationIndex = -1
+    }
+
+    /// Loops through each token in the array. It is safe to mutate the token
+    /// array inside the body block, but note that the index and token arguments
+    /// may not reflect the current token any more after a mutation
+    public func forEachToken(_ body: (Int, Token) -> Void) {
+        forEachToken(onlyWhereEnabled: true, body)
     }
 
     /// As above, but only loops through tokens that match the specified filter block
@@ -569,7 +573,11 @@ public class Formatter: NSObject {
     /// Either modifies or removes the existing space token at the specified
     /// index, or inserts a new one if there is not already a space token present.
     /// Returns the number of tokens inserted or removed
-    @discardableResult func insertSpace(_ space: String, at index: Int) -> Int {
+    @discardableResult
+    public func insertSpace(_ space: String, at index: Int) -> Int {
+        guard isEnabled else {
+            return 0
+        }
         if token(at: index)?.isSpace == true {
             if space.isEmpty {
                 removeToken(at: index)
@@ -581,6 +589,12 @@ public class Formatter: NSObject {
             return 1 // Inserted 1 token
         }
         return 0 // Inserted 0 tokens
+    }
+
+    // As above, but only if formatting is enabled
+    @discardableResult
+    func insertSpaceIfEnabled(_ space: String, at index: Int) -> Int {
+        return isEnabled ? insertSpace(space, at: index) : 0
     }
 
     /// Returns the original line number at the specified index

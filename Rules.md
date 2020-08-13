@@ -20,6 +20,7 @@
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
 * [modifierOrder](#modifierOrder)
+* [multilineEnumCases](#multilineEnumCases)
 * [multilineSwitchCases](#multilineSwitchCases)
 * [numberFormatting](#numberFormatting)
 * [preferKeyPath](#preferKeyPath)
@@ -610,6 +611,10 @@ Option | Description
 
 </details>
 <br/>
+
+## multilineEnumCases
+
+Writes one enum case per line
 
 ## multilineSwitchCases
 
@@ -1633,6 +1638,7 @@ Option | Description
 --- | ---
 `--funcattributes` | Function @attributes: "preserve", "prev-line", or "same-line"
 `--typeattributes` | Type @attributes: "preserve", "prev-line", or "same-line"
+`--varattributes` | Property @attributes: "preserve", "prev-line", or "same-line"
 
 <details>
 <summary>Examples</summary>
@@ -1743,3 +1749,7 @@ Wrap the opening brace of multiline statements.
 ## yodaConditions
 
 Prefer constant values to be on the right-hand-side of expressions.
+
+Option | Description
+--- | ---
+`--yodaswap` | Swap yoda values: "always" (default) or "literals-only"

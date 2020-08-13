@@ -254,6 +254,12 @@ public enum OptionalsMode: String {
     case always
 }
 
+/// Argument type for yoda conditions
+public enum YodaMode: String {
+    case literalsOnly = "literals-only"
+    case always
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -301,6 +307,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var shortOptionals: OptionalsMode
     public var funcAttributes: AttributeMode
     public var typeAttributes: AttributeMode
+    public var varAttributes: AttributeMode
+    public var yodaSwap: YodaMode
 
     // Deprecated
     public var indentComments: Bool
@@ -360,6 +368,8 @@ public struct FormatOptions: CustomStringConvertible {
                 shortOptionals: OptionalsMode = .always,
                 funcAttributes: AttributeMode = .preserve,
                 typeAttributes: AttributeMode = .preserve,
+                varAttributes: AttributeMode = .preserve,
+                yodaSwap: YodaMode = .always,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -382,7 +392,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.fileHeader = fileHeader
         self.ifdefIndent = ifdefIndent
         self.wrapArguments = wrapArguments
-        self.wrapParameters = wrapParameters == .default ? wrapArguments : wrapParameters
+        self.wrapParameters = wrapParameters
         self.wrapCollections = wrapCollections
         self.closingParenOnSameLine = closingParenOnSameLine
         self.uppercaseHex = uppercaseHex
@@ -412,6 +422,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.shortOptionals = shortOptionals
         self.funcAttributes = funcAttributes
         self.typeAttributes = typeAttributes
+        self.varAttributes = varAttributes
+        self.yodaSwap = yodaSwap
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

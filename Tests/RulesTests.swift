@@ -1312,7 +1312,12 @@ class RulesTests: XCTestCase {
     }
 
     func testNoBlankLineBeforeWhileInRepeatWhile() {
-        let input = "repeat\n{}\nwhile true\n{}()"
+        let input = """
+        repeat
+        { print("foo") }
+        while false
+        { print("bar") }()
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes, options: options)
     }
@@ -1617,6 +1622,65 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapArguments"])
     }
 
+    func testIndentAllmanTrailingClosureArguments() {
+        let input = """
+        let foo = Foo
+            .bar
+            { _ in
+                bar()
+            }
+            .baz(5)
+            {
+                baz()
+            }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentAllmanTrailingClosureArguments2() {
+        let input = """
+        DispatchQueue.main.async
+        {
+            foo()
+        }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentAllmanTrailingClosureArgumentsAfterFunction() {
+        let input = """
+        func foo()
+        {
+            return
+        }
+
+        Foo
+            .bar()
+            .baz
+            {
+                baz()
+            }
+            .quux
+            {
+                quux()
+            }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testNoDoubleIndentClosureArguments() {
+        let input = """
+        let foo = foo(bar(
+            { baz },
+            { quux }
+        ))
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent switch/case
 
     func testSwitchCaseIndenting() {
@@ -1664,14 +1728,14 @@ class RulesTests: XCTestCase {
     func testEnumCaseIndentingCommas() {
         let input = "enum Foo {\ncase Bar,\nBaz\n}"
         let output = "enum Foo {\n    case Bar,\n        Baz\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent)
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["multilineEnumCases"])
     }
 
     func testEnumCaseIndentingCommasWithXcodeStyle() {
         let input = "enum Foo {\ncase Bar,\nBaz\n}"
         let output = "enum Foo {\n    case Bar,\n    Baz\n}"
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["multilineEnumCases"])
     }
 
     func testEnumCaseWrappedIfWithXcodeStyle() {
@@ -1824,6 +1888,44 @@ class RulesTests: XCTestCase {
         let output = """
         class Foo: Bar,
         Baz {
+            init() {}
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testWrappedClassDeclarationWithBracesOnSameLineLikeXcode() {
+        let input = """
+        class Foo: Bar,
+        Baz {}
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testWrappedClassDeclarationWithBraceOnNextLineLikeXcode() {
+        let input = """
+        class Foo: Bar,
+            Baz
+        {
+            init() {}
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testWrappedClassWhereDeclarationLikeXcode() {
+        let input = """
+        class Foo<T>: Bar
+            where T: Baz {
+            init() {}
+        }
+        """
+        let output = """
+        class Foo<T>: Bar
+        where T: Baz {
             init() {}
         }
         """
@@ -2440,15 +2542,16 @@ class RulesTests: XCTestCase {
 
     func testSingleIndentTrailingClosureBodyThatStartsOnFollowingLine() {
         let input = """
-        method(
-            withParameter: 1,
-            otherParameter: 2)
-        { [weak self] in
-            guard let error = error else { return }
-            print("and a trailing closure")
+        func foo() {
+            method(
+                withParameter: 1,
+                otherParameter: 2)
+            { [weak self] in
+                guard let error = error else { return }
+                print("and a trailing closure")
+            }
         }
         """
-
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
@@ -2460,9 +2563,18 @@ class RulesTests: XCTestCase {
             print("and a trailing closure")
         }
         """
-
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testNoDoubleIndentInInsideClosure() {
+        let input = """
+        let foo = bar({ baz
+            in
+            baz
+        })
+        """
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["trailingClosures"])
     }
 
     // indent xcodeindentation
@@ -2526,6 +2638,40 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    func testWrappedSingleLineClosureOnNewLine() {
+        let input = """
+        func foo() {
+            let bar =
+                { print("foo") }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["braces"])
+    }
+
+    func testWrappedSingleLineClosureOnNewLineWithXcodeIndentation() {
+        let input = """
+        func foo() {
+            let bar =
+            { print("foo") }
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["braces"])
+    }
+
+    func testWrappedMultilineClosureOnNewLine() {
+        let input = """
+        func foo() {
+            let bar =
+                {
+                    print("foo")
+                }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["braces"])
+    }
+
     func testWrappedMultilineClosureOnNewLineWithXcodeIndentation() {
         let input = """
         func foo() {
@@ -2535,16 +2681,22 @@ class RulesTests: XCTestCase {
             }
         }
         """
-        let output = """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["braces"])
+    }
+
+    func testWrappedMultilineClosureOnNewLineWithAllmanBraces() {
+        let input = """
         func foo() {
             let bar =
-                {
-                    print("foo")
-                }
+            {
+                print("foo")
+            }
         }
         """
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options,
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["braces"])
     }
 
@@ -3363,19 +3515,32 @@ class RulesTests: XCTestCase {
     // indent blank lines
 
     func testTruncateBlankLineBeforeIndenting() {
-        // NOTE: don't convert to multiline string
-        let input =
-            "func foo() {\n" +
-            "    guard bar = baz else { return }\n" +
-            "    \n" + // should not be indented
-            "    quux()\n" +
-            "}"
-
+        let input = """
+        func foo() {
+        \tguard bar = baz else { return }
+        \t
+        \tquux()
+        }
+        """
         let rules = [FormatRules.indent, FormatRules.trailingSpace]
-        let options = FormatOptions(truncateBlankLines: true)
+        let options = FormatOptions(indent: "\t", truncateBlankLines: true, tabWidth: 2)
         XCTAssertEqual(try lint(input, rules: rules, options: options), [
             Formatter.Change(line: 3, rule: FormatRules.trailingSpace, filePath: nil),
         ])
+    }
+
+    func testNoIndentBlankLinesIfTrimWhitespaceDisabled() {
+        let input = """
+        func foo() {
+        \tguard bar = baz else { return }
+        \t
+
+        \tquux()
+        }
+        """
+        let options = FormatOptions(indent: "\t", truncateBlankLines: false, tabWidth: 2)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["consecutiveBlankLines"])
     }
 
     // MARK: - braces
@@ -3461,6 +3626,30 @@ class RulesTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: FormatRules.braces)
+    }
+
+    func testKnRNoMangleClosureReturningClosure2() {
+        let input = """
+        foo {
+            {
+                bar()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.braces)
+    }
+
+    func testAllmanNoMangleClosureReturningClosure() {
+        let input = """
+        foo
+        { bar in
+            {
+                bar()
+            }
+        }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, rule: FormatRules.braces, options: options)
     }
 
     func testKnRClosingBraceWrapped() {
@@ -3865,6 +4054,28 @@ class RulesTests: XCTestCase {
             bar > 5
         else {
             return
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine)
+    }
+
+    func testWrappedMultilineGuardElseCorrectlyIndented() {
+        let input = """
+        func foo() {
+            guard let foo = bar,
+                bar > 5 else
+            {
+                return
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            guard let foo = bar,
+                bar > 5
+            else {
+                return
+            }
         }
         """
         testFormatting(for: input, output, rule: FormatRules.elseOnSameLine)
@@ -4452,6 +4663,30 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.modifierOrder)
     }
 
+    // MARK: multilineEnumCases
+
+    func testMultilineEnumCases() {
+        let input = """
+        enum Enum1: Int {
+            case a = 0, p = 2, c, d
+            case e, k
+            case m(String, String)
+        }
+        """
+        let output = """
+        enum Enum1: Int {
+            case a = 0
+            case p = 2
+            case c
+            case d
+            case e
+            case k
+            case m(String, String)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.multilineEnumCases)
+    }
+
     // MARK: multilineSwitchCases
 
     func testMultilineSwitchCases() {
@@ -4475,7 +4710,7 @@ class RulesTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: FormatRules.multilineSwitchCases)
     }
-
+      
     // MARK: - void
 
     func testEmptyParensReturnValueConvertedToVoid() {
@@ -7722,6 +7957,36 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testRedundantSelfRuleDoesntErrorForStaticFuncInProtocolWithWhere() {
+        let input = """
+        protocol Foo where Self: Bar {
+            static func baz() -> Self
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testRedundantSelfRuleDoesntErrorForStaticFuncInStructWithWhere() {
+        let input = """
+        struct Foo<T> where T: Bar {
+            static func baz() -> Foo {}
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testRedundantSelfRuleDoesntErrorForClassFuncInClassWithWhere() {
+        let input = """
+        class Foo<T> where T: Bar {
+            class func baz() -> Foo {}
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // enable/disable
 
     func testDisableRemoveSelf() {
@@ -8382,6 +8647,25 @@ class RulesTests: XCTestCase {
                 bar
             }
         """
+        let options = FormatOptions(maxWidth: 20)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+    }
+
+    func testWrapClosureWithAllmanBraces() {
+        let input = """
+        let foo = { bar, _ in bar }
+        """
+        let output = """
+        let foo =
+            { bar, _ in
+            bar }
+        """
+        let output2 = """
+        let foo =
+        { bar, _ in
+            bar
+        }
+        """
         let options = FormatOptions(allmanBraces: true, maxWidth: 20)
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
     }
@@ -8706,7 +8990,7 @@ class RulesTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(maxWidth: 80)
+        let options = FormatOptions(wrapParameters: .preserve, maxWidth: 80)
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options,
                        exclude: ["indent", "wrapArguments"])
     }
@@ -10160,6 +10444,25 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
     }
 
+    func testNoStripFormatDirective() {
+        let input = "// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
+        let options = FormatOptions(fileHeader: "")
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testNoStripFormatDirectiveAfterHeader() {
+        let input = "// header\n// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
+        let options = FormatOptions(fileHeader: "")
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testNoReplaceFormatDirective() {
+        let input = "// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
+        let output = "// Hello World\n\n// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
+        let options = FormatOptions(fileHeader: "// Hello World")
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
     func testSetSingleLineHeader() {
         let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
         let output = "// Hello World\n\n// func\nfunc foo() {}"
@@ -10448,6 +10751,32 @@ class RulesTests: XCTestCase {
     func testSortContiguousImports() {
         let input = "import Foo\nimport Bar\nfunc bar() {}\nimport Quux\nimport Baz"
         let output = "import Bar\nimport Foo\nfunc bar() {}\nimport Baz\nimport Quux"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testNoMangleImportsPrecededByComment() {
+        let input = """
+        // evil comment
+
+        #if canImport(Foundation)
+            import Foundation
+            #if canImport(UIKit) && canImport(AVFoundation)
+                import UIKit
+                import AVFoundation
+            #endif
+        #endif
+        """
+        let output = """
+        // evil comment
+
+        #if canImport(Foundation)
+            import Foundation
+            #if canImport(UIKit) && canImport(AVFoundation)
+                import AVFoundation
+                import UIKit
+            #endif
+        #endif
+        """
         testFormatting(for: input, output, rule: FormatRules.sortedImports)
     }
 
@@ -11698,7 +12027,10 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+        testFormatting(for: input,
+                       rule: FormatRules.redundantFileprivate,
+                       options: options,
+                       exclude: ["multilineEnumCases"])
     }
 
     func testFileprivateClassTypeMemberNotChangedToPrivate() {
@@ -12044,6 +12376,14 @@ class RulesTests: XCTestCase {
     func testEnumCaseLessThanEnumCase() {
         let input = "XCTAssertFalse(.never < .never)"
         testFormatting(for: input, rule: FormatRules.yodaConditions)
+    }
+
+    // yodaSwap = literalsOnly
+
+    func testNoSwapYodaDotMember() {
+        let input = "foo(where: .bar == baz)"
+        let options = FormatOptions(yodaSwap: .literalsOnly)
+        testFormatting(for: input, rule: FormatRules.yodaConditions, options: options)
     }
 
     // MARK: - leadingDelimiters
@@ -12462,6 +12802,46 @@ class RulesTests: XCTestCase {
 
         @available(iOS 14.0, *)
         class Foo {}
+        """
+        let options = FormatOptions(typeAttributes: .prevLine)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testModifiersDontAffectAttributeWrapping() {
+        let input = """
+        @objc override public func foo {}
+        """
+        let output = """
+        @objc
+        override public func foo {}
+        """
+        let options = FormatOptions(funcAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testClassFuncAttributeTreatedAsFunction() {
+        let input = """
+        @objc class func foo {}
+        """
+        let output = """
+        @objc
+        class func foo {}
+        """
+        let options = FormatOptions(funcAttributes: .prevLine, fragment: true)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testClassFuncAttributeNotTreatedAsType() {
+        let input = """
+        @objc class func foo {}
+        """
+        let options = FormatOptions(typeAttributes: .prevLine, fragment: true)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testClassImportAttributeNotTreatedAsType() {
+        let input = """
+        @testable import class Framework.Foo
         """
         let options = FormatOptions(typeAttributes: .prevLine)
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)

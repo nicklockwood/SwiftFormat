@@ -1386,11 +1386,8 @@ public struct _FormatRules {
                 } else if linewrapped {
                     func isWrappedCaseDeclaration() -> Bool {
                         guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .delimiter(","),
-                            formatter.last(.keyword, before: i) == .keyword("case"),
-                            let scopeStart = formatter.index(of: .startOfScope, before: i, if: {
-                                $0 == .startOfScope("{")
-                            }), formatter.last(.keyword, before: scopeStart) == .keyword("enum")
-                        else { return false }
+                            let caseIndex = formatter.index(of: .keyword, before: i, if: { $0 == .keyword("case") }),
+                            formatter.isEnumCase(at: caseIndex) else { return false }
 
                         return true
                     }

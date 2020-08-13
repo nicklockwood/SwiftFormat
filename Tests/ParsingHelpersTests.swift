@@ -496,6 +496,26 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isAccessorKeyword(at: 10, checkKeyword: false))
     }
 
+    // MARK: isEnumCase
+
+    func testIsEnumCase() {
+        let formatter = Formatter(tokenize("""
+        enum Foo {
+            case foo, bar
+            case baz
+        }
+        """))
+        XCTAssert(formatter.isEnumCase(at: 7))
+        XCTAssert(formatter.isEnumCase(at: 15))
+    }
+
+    func testIsNotEnumCase() {
+        let formatter = Formatter(tokenize("""
+        if let case .foo(bar) = baz {}
+        """))
+        XCTAssertFalse(formatter.isEnumCase(at: 4))
+    }
+
     // MARK: modifierOrder
 
     func testModifierOrder() {

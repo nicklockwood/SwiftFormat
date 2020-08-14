@@ -918,6 +918,21 @@ private struct Examples {
     ```
     """
 
+    let multilineSwitchCases = """
+    ```diff
+      switch foo {
+    -   case .bar, .baz:
+          break
+      }
+
+      switch foo {
+    +   case .foo,
+    +        .bar:
+          break
+      }
+    ```
+    """
+
     let void = """
     ```diff
     - let foo: () -> ()

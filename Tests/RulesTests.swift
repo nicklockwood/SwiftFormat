@@ -4753,24 +4753,43 @@ class RulesTests: XCTestCase {
 
     func testMultilineSwitchCases() {
         let input = """
-        switch enum1 {
-        case .a(_), .b, .c:
-            print("")
-        case .d:
-            print("")
+        func foo() {
+            switch bar {
+            case .a(_), .b, "c":
+                print("")
+            case .d:
+                print("")
+            }
         }
         """
         let output = """
-        switch enum1 {
-        case .a(_),
-             .b,
-             .c:
-            print("")
-        case .d:
-            print("")
+        func foo() {
+            switch bar {
+            case .a(_),
+                 .b,
+                 "c":
+                print("")
+            case .d:
+                print("")
+            }
         }
         """
         testFormatting(for: input, output, rule: FormatRules.multilineSwitchCases)
+    }
+
+    func testIfAfterSwitchCaseNotWrapped() {
+        let input = """
+        switch foo {
+        case "foo":
+            print("")
+        default:
+            print("")
+        }
+        if let foo = bar, foo != .baz {
+            throw error
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.multilineSwitchCases)
     }
 
     // MARK: - void
@@ -8575,10 +8594,7 @@ class RulesTests: XCTestCase {
         let input = "switch foo {\ncase let .foo(bar), let .bar(bar):\n}"
         let output = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
-        testFormatting(for: input,
-                       output,
-                       rule: FormatRules.hoistPatternLet,
-                       options: options,
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options,
                        exclude: ["multilineSwitchCases"])
     }
 
@@ -8586,7 +8602,8 @@ class RulesTests: XCTestCase {
         let input = "switch foo {\ncase let Foo.foo(bar), let Foo.bar(bar):\n}"
         let output = "switch foo {\ncase Foo.foo(let bar), Foo.bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
-        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options,
+                       exclude: ["multilineSwitchCases"])
     }
 
     func testUnhoistCatchLet() {

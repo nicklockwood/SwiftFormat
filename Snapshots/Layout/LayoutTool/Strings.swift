@@ -10,7 +10,8 @@ private func strings(in parsedExpressionPart: ParsedExpressionPart) throws -> [S
         var strings = Set<String>()
         for symbol in expression.symbols {
             switch symbol {
-            case var .variable(name), var .function(name, _):
+            case var .variable(name),
+                 var .function(name, _):
                 if name.hasPrefix("`"), name.hasSuffix("`") {
                     name = String(name[name.index(after: name.startIndex) ..< name.index(before: name.endIndex)])
                 }

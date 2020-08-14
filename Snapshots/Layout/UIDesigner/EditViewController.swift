@@ -122,7 +122,8 @@ class EditViewController: UIViewController, UITextFieldDelegate {
         fieldNames.append(contentsOf: node.viewControllerExpressionTypes.compactMap(filterType).sorted())
         fieldNames.append(contentsOf: node.viewExpressionTypes.compactMap(filterType).sorted {
             switch ($0.hasPrefix("layer."), $1.hasPrefix("layer.")) {
-            case (true, true), (false, false):
+            case (true, true),
+                 (false, false):
                 return $0 < $1
             case (true, false):
                 return false

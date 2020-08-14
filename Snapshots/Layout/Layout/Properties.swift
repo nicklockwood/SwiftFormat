@@ -418,7 +418,12 @@ extension NSObject {
             ((prevTarget is UIView && prevKey == "transform") ||
                 (prevTarget is CALayer && prevKey == "affineTransform")):
             switch key {
-            case "rotation", "scale", "scale.x", "scale.y", "translation.x", "translation.y":
+            case "rotation",
+                 "scale",
+                 "scale.x",
+                 "scale.y",
+                 "translation.x",
+                 "translation.y":
                 prevTarget!.setValue(value, forKeyPath: "layer.transform.\(key)")
                 return
             default:
@@ -426,9 +431,17 @@ extension NSObject {
             }
         case var transform as CATransform3D where value is NSNumber && prevTarget != nil:
             switch key {
-            case "rotation", "rotation.x", "rotation.y", "rotation.z",
-                 "scale", "scale.x", "scale.y", "scale.z",
-                 "translation.x", "translation.y", "translation.z":
+            case "rotation",
+                 "rotation.x",
+                 "rotation.y",
+                 "rotation.z",
+                 "scale",
+                 "scale.x",
+                 "scale.y",
+                 "scale.z",
+                 "translation.x",
+                 "translation.y",
+                 "translation.z":
                 prevTarget!.setValue(value, forKeyPath: "\(prevKey).\(key)")
                 return
             case "m34": // Used for setting perspective
@@ -651,7 +664,10 @@ extension NSObject {
             switch target {
             case is CGRect:
                 switch key {
-                case "origin.x", "origin.y", "size.width", "size.height":
+                case "origin.x",
+                     "origin.y",
+                     "size.width",
+                     "size.height":
                     return prevTarget.value(forKeyPath: "\(prevKey).\(key)")
                 default:
                     break
@@ -660,16 +676,29 @@ extension NSObject {
                 (prevTarget is UIView && prevKey == "transform") ||
                 (prevTarget is CALayer && prevKey == "affineTransform"):
                 switch key {
-                case "rotation", "scale", "scale.x", "scale.y", "translation.x", "translation.y":
+                case "rotation",
+                     "scale",
+                     "scale.x",
+                     "scale.y",
+                     "translation.x",
+                     "translation.y":
                     return prevTarget.value(forKeyPath: "layer.transform.\(key)")
                 default:
                     break
                 }
             case is CATransform3D:
                 switch key {
-                case "rotation", "rotation.x", "rotation.y", "rotation.z",
-                     "scale", "scale.x", "scale.y", "scale.z",
-                     "translation.x", "translation.y", "translation.z":
+                case "rotation",
+                     "rotation.x",
+                     "rotation.y",
+                     "rotation.z",
+                     "scale",
+                     "scale.x",
+                     "scale.y",
+                     "scale.z",
+                     "translation.x",
+                     "translation.y",
+                     "translation.z":
                     return prevTarget.value(forKeyPath: "\(prevKey).\(key)")
                 default:
                     break

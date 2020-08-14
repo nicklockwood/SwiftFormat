@@ -73,7 +73,8 @@ extension Expression {
             switch (type1, type2) {
             case (.number, .number):
                 return (.number, "\(lhs) + \(rhs)")
-            case (.string, _), (_, .string):
+            case (.string, _),
+                 (_, .string):
                 return (.string, "\"\\(\(lhs))\\(\(rhs))\"")
             }
         }

@@ -471,9 +471,18 @@ public class LayoutNode: NSObject {
         _ name: String, for viewOrViewControllerClass: AnyClass
     ) -> Bool {
         switch name {
-        case "top", "left", "leading", "trailing",
-             "bottom", "right", "width", "height",
-             "center.x", "center.y", "firstBaseline", "lastBaseline",
+        case "top",
+             "left",
+             "leading",
+             "trailing",
+             "bottom",
+             "right",
+             "width",
+             "height",
+             "center.x",
+             "center.y",
+             "firstBaseline",
+             "lastBaseline",
              "outlet":
             return true
         default:
@@ -1102,11 +1111,17 @@ public class LayoutNode: NSObject {
         var symbols = Set(layoutSymbols)
         let type: RuntimeType
         switch name {
-        case "outlet", "id", "xml", "template":
+        case "outlet",
+             "id",
+             "xml",
+             "template":
             type = .string
         case "center":
             type = .cgPoint
-        case "width", "height", "contentSize.width", "contentSize.height":
+        case "width",
+             "height",
+             "contentSize.width",
+             "contentSize.height":
             symbols.insert("auto")
             fallthrough
         case _ where layoutSymbols.contains(name):
@@ -1167,9 +1182,17 @@ public class LayoutNode: NSObject {
             _evaluating.append(symbol)
             defer { _evaluating.removeLast() }
             switch symbol {
-            case "left", "right", "leading", "trailing", "center.x":
+            case "left",
+                 "right",
+                 "leading",
+                 "trailing",
+                 "center.x":
                 expression = LayoutExpression(xExpression: string, for: self)
-            case "top", "bottom", "center.y", "firstBaseline", "lastBaseline":
+            case "top",
+                 "bottom",
+                 "center.y",
+                 "firstBaseline",
+                 "lastBaseline":
                 expression = LayoutExpression(yExpression: string, for: self)
             case "width":
                 expression = LayoutExpression(widthExpression: string, for: self)
@@ -1547,12 +1570,14 @@ public class LayoutNode: NSObject {
             switch symbol[symbol.startIndex ..< range.lowerBound] {
             case "parent":
                 switch tail {
-                case "top", "left":
+                case "top",
+                     "left":
                     return true // Always zero
                 default:
                     return parent?.symbolIsConstant(tail) ?? false
                 }
-            case "previous", "next":
+            case "previous",
+                 "next":
                 return false // TODO: if previous/next isHidden is constant, we could still get a constant value here
             case "strings":
                 return true // Localizable strings are always constant
@@ -1844,11 +1869,13 @@ public class LayoutNode: NSObject {
             getter = { [unowned self] in
                 try self.inferContentSize()
             }
-        case "inferredContentSize.width", "contentSize.width":
+        case "inferredContentSize.width",
+             "contentSize.width":
             getter = { [unowned self] in
                 try self.inferContentSize().width
             }
-        case "inferredContentSize.height", "contentSize.height":
+        case "inferredContentSize.height",
+             "contentSize.height":
             getter = { [unowned self] in
                 try self.inferContentSize().height
             }
@@ -1908,7 +1935,8 @@ public class LayoutNode: NSObject {
                 switch symbol[symbol.startIndex ..< range.lowerBound] {
                 case "parent":
                     switch tail {
-                    case "top", "left":
+                    case "top",
+                         "left":
                         getter = { 0 }
                     case "center.x":
                         getter = { [unowned self] in
@@ -1928,13 +1956,15 @@ public class LayoutNode: NSObject {
                         getter = { [unowned self] in
                             try self.parent?.cgFloatValue(forSymbol: "lastBaselineOffset") ?? 0
                         }
-                    case "width", "containerSize.width",
+                    case "width",
+                         "containerSize.width",
                          "right" where _useLegacyLayoutMode:
                         getter = { [unowned self] in
                             try self.parent?.cgFloatValue(forSymbol: "containerSize.width") ??
                                 self._view?.superview?.bounds.width ?? 0
                         }
-                    case "height", "containerSize.height",
+                    case "height",
+                         "containerSize.height",
                          "bottom" where _useLegacyLayoutMode:
                         getter = { [unowned self] in
                             try self.parent?.cgFloatValue(forSymbol: "containerSize.height") ??
@@ -2232,13 +2262,20 @@ public class LayoutNode: NSObject {
                             throw SymbolError("Could not find node with id \(id)", for: symbol)
                         }
                     }
-                case "top", "left",
-                     "bottom", "right",
-                     "width", "height",
-                     "firstBaseline", "lastBaseline",
-                     "firstBaselineOffset", "lastBaselineOffset",
-                     "containerSize", "inferredSize",
-                     "contentSize", "inferredContentSize":
+                case "top",
+                     "left",
+                     "bottom",
+                     "right",
+                     "width",
+                     "height",
+                     "firstBaseline",
+                     "lastBaseline",
+                     "firstBaselineOffset",
+                     "lastBaselineOffset",
+                     "containerSize",
+                     "inferredSize",
+                     "contentSize",
+                     "inferredContentSize":
                     getter = {
                         throw SymbolError("Unknown property \(symbol)", for: symbol)
                     }
@@ -2407,9 +2444,11 @@ public class LayoutNode: NSObject {
             _view.textLabel?.sizeToFit()
             _view.detailTextLabel?.sizeToFit()
             switch try value(forSymbol: "style") as? UITableViewCell.CellStyle ?? .default {
-            case .default, .subtitle:
+            case .default,
+                 .subtitle:
                 size.height = (_view.textLabel?.frame.height ?? 0) + (_view.detailTextLabel?.frame.height ?? 0)
-            case .value1, .value2:
+            case .value1,
+                 .value2:
                 size.height = max(_view.textLabel?.frame.height ?? 0, _view.detailTextLabel?.frame.height ?? 0)
             }
         }
@@ -2478,7 +2517,8 @@ public class LayoutNode: NSObject {
             let contentInsetAdjustmentBehavior = try value(forSymbol: "contentInsetAdjustmentBehavior") as!
                 ContentInsetAdjustmentBehavior
             switch contentInsetAdjustmentBehavior {
-            case .automatic, .scrollableAxes:
+            case .automatic,
+                 .scrollableAxes:
                 var contentInset = contentInset
                 var contentSize: CGSize = .zero
                 if hasExpression("contentSize"), !_evaluating.contains("contentSize") {

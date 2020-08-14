@@ -740,6 +740,7 @@ extension RulesTests {
         ("testHoistLabelledCaseLet", testHoistLabelledCaseLet),
         ("testHoistLetWithNoSpaceAfterCase", testHoistLetWithNoSpaceAfterCase),
         ("testHoistSwitchCaseWithNestedParens", testHoistSwitchCaseWithNestedParens),
+        ("testIfAfterSwitchCaseNotWrapped", testIfAfterSwitchCaseNotWrapped),
         ("testIfAndParensReplaced", testIfAndParensReplaced),
         ("testIfAndReplaced", testIfAndReplaced),
         ("testIfAndReplacedInFunction", testIfAndReplacedInFunction),

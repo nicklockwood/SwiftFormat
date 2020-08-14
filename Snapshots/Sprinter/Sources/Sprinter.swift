@@ -192,32 +192,47 @@ public struct FormatString {
 
         func getSwiftType() throws -> Any.Type? {
             switch specifier {
-            case .decimal, .uppercaseDecimal, .int, .octal, .uppercaseOctal, .hex, .uppercaseHex:
+            case .decimal,
+                 .uppercaseDecimal,
+                 .int,
+                 .octal,
+                 .uppercaseOctal,
+                 .hex,
+                 .uppercaseHex:
                 guard let modifier = modifier else { return Int.self } // spec says Int32
                 switch modifier {
                 case .char: return CChar.self
                 case .short: return CShort.self
                 case .long: return CLong.self
-                case .longLong, .quadword: return CLongLong.self
+                case .longLong,
+                     .quadword: return CLongLong.self
                 case .intmax: return intmax_t.self
                 case .size: return size_t.self
                 case .ptrdiff: return ptrdiff_t.self
                 case .longDouble: throw Error.modifierMismatch(modifier.rawValue, Character(specifier.rawValue))
                 }
-            case .unsigned, .uppercaseUnsigned:
+            case .unsigned,
+                 .uppercaseUnsigned:
                 guard let modifier = modifier else { return UInt.self } // spec says UInt32
                 switch modifier {
                 case .char: return CUnsignedChar.self
                 case .short: return CUnsignedShort.self
                 case .long: return CUnsignedLong.self
-                case .longLong, .quadword: return CUnsignedLongLong.self
+                case .longLong,
+                     .quadword: return CUnsignedLongLong.self
                 case .intmax: return uintmax_t.self
                 case .size: return UInt.self
                 case .ptrdiff: return UInt.self
                 case .longDouble: throw Error.modifierMismatch(modifier.rawValue, Character(specifier.rawValue))
                 }
-            case .float, .uppercaseFloat, .variablePrecisionFloat, .uppercasevariablePrecisionFloat,
-                 .exponential, .uppercaseExponential, .hexFloat, .uppercaseHexFloat:
+            case .float,
+                 .uppercaseFloat,
+                 .variablePrecisionFloat,
+                 .uppercasevariablePrecisionFloat,
+                 .exponential,
+                 .uppercaseExponential,
+                 .hexFloat,
+                 .uppercaseHexFloat:
                 guard let modifier = modifier else { return Double.self }
                 switch modifier {
                 case .longDouble:
@@ -268,7 +283,8 @@ public struct FormatString {
                 format += "\(modifier.rawValue)\(specifier.rawValue)"
             } else {
                 switch specifier {
-                case .int, .decimal:
+                case .int,
+                     .decimal:
                     format += "zd"
                 case .uppercaseDecimal:
                     format += "zD"
@@ -320,14 +336,19 @@ public struct FormatString {
             }
             let formatter: NumberFormatter
             switch specifier {
-            case .decimal, .uppercaseDecimal, .int, .unsigned, .uppercaseUnsigned:
+            case .decimal,
+                 .uppercaseDecimal,
+                 .int,
+                 .unsigned,
+                 .uppercaseUnsigned:
                 if !flags.contains(.groupThousands) {
                     return nil // Prefer `String(format:)` for performance
                 }
                 formatter = NumberFormatter()
                 formatter.allowsFloats = false
                 formatter.minimumIntegerDigits = precision ?? 1
-            case .float, .uppercaseFloat:
+            case .float,
+                 .uppercaseFloat:
                 if !flags.contains(.groupThousands) {
                     return nil // Prefer `String(format:)` for performance
                 }
@@ -336,7 +357,8 @@ public struct FormatString {
                 formatter.minimumFractionDigits = precision ?? 6
                 formatter.maximumFractionDigits = precision ?? 6
                 formatter.alwaysShowsDecimalSeparator = flags.contains(.alternativeForm)
-            case .variablePrecisionFloat, .uppercasevariablePrecisionFloat:
+            case .variablePrecisionFloat,
+                 .uppercasevariablePrecisionFloat:
                 if !flags.contains(.groupThousands) {
                     return nil // Prefer `String(format:)` for performance
                 }
@@ -348,14 +370,22 @@ public struct FormatString {
                 } else {
                     formatter.maximumSignificantDigits = precision ?? 6
                 }
-            case .octal, .uppercaseOctal,
-                 .hex, .uppercaseHex,
-                 .exponential, .uppercaseExponential,
-                 .hexFloat, .uppercaseHexFloat,
-                 .char, .string,
-                 .wideChar, .wideString,
-                 .pointer, .bytesWritten,
-                 .percentChar, .object:
+            case .octal,
+                 .uppercaseOctal,
+                 .hex,
+                 .uppercaseHex,
+                 .exponential,
+                 .uppercaseExponential,
+                 .hexFloat,
+                 .uppercaseHexFloat,
+                 .char,
+                 .string,
+                 .wideChar,
+                 .wideString,
+                 .pointer,
+                 .bytesWritten,
+                 .percentChar,
+                 .object:
                 return nil // Not handled by NumberFormatter
             }
             formatter.locale = locale
@@ -387,10 +417,15 @@ public struct FormatString {
                 return formatter.string(from: number) ?? ""
             }
             switch specifier {
-            case .decimal, .uppercaseDecimal, .int,
-                 .octal, .uppercaseOctal,
-                 .hex, .uppercaseHex,
-                 .unsigned, .uppercaseUnsigned:
+            case .decimal,
+                 .uppercaseDecimal,
+                 .int,
+                 .octal,
+                 .uppercaseOctal,
+                 .hex,
+                 .uppercaseHex,
+                 .unsigned,
+                 .uppercaseUnsigned:
                 let value = Int(truncating: value as! NSNumber)
                 if let fieldWidth = fieldWidth, let precision = precision {
                     return String(format: formatString, locale: locale, fieldWidth, precision, value)
@@ -398,10 +433,14 @@ public struct FormatString {
                     return String(format: formatString, locale: locale, width, value)
                 }
                 return String(format: formatString, locale: locale, value)
-            case .float, .uppercaseFloat,
-                 .variablePrecisionFloat, .uppercasevariablePrecisionFloat,
-                 .exponential, .uppercaseExponential,
-                 .hexFloat, .uppercaseHexFloat:
+            case .float,
+                 .uppercaseFloat,
+                 .variablePrecisionFloat,
+                 .uppercasevariablePrecisionFloat,
+                 .exponential,
+                 .uppercaseExponential,
+                 .hexFloat,
+                 .uppercaseHexFloat:
                 #if os(macOS)
                 if let value = value as? Float80 {
                     return "\(value)" // TODO: respect formatting options
@@ -415,10 +454,13 @@ public struct FormatString {
                 return String(format: formatString, locale: locale, value as! Double)
             case .pointer:
                 return String(format: formatString, locale: locale, (value as AnyObject).hash)
-            case .bytesWritten, .percentChar, // Shouldn't actually happen
+            case .bytesWritten,
+                 .percentChar, // Shouldn't actually happen
                  .object,
-                 .string, .wideString,
-                 .char, .wideChar:
+                 .string,
+                 .wideString,
+                 .char,
+                 .wideChar:
                 return "\(value)"
             }
         }

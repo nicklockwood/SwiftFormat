@@ -221,7 +221,8 @@ public extension Mesh {
             )
         }
         switch faces {
-        case .front, .default:
+        case .front,
+             .default:
             return Mesh(polygons)
         case .back:
             return Mesh(polygons.map { $0.inverted() })
@@ -619,11 +620,13 @@ public extension Mesh {
             polygons.append(polygon)
         }
         switch faces {
-        case .default where !shapes.contains(where: { !$0.isClosed }), .front:
+        case .default where !shapes.contains(where: { !$0.isClosed }),
+             .front:
             return Mesh(polygons)
         case .back:
             return Mesh(polygons.map { $0.inverted() })
-        case .frontAndBack, .default:
+        case .frontAndBack,
+             .default:
             return Mesh(polygons + polygons.map { $0.inverted() })
         }
     }
@@ -646,7 +649,8 @@ public extension Mesh {
             return Mesh([polygon])
         case .back:
             return Mesh([polygon.inverted()])
-        case .frontAndBack, .default:
+        case .frontAndBack,
+             .default:
             return Mesh([polygon, polygon.inverted()])
         }
     }

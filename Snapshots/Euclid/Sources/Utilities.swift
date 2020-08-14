@@ -132,7 +132,8 @@ func faceNormalForConvexPoints(_ points: [Vector]) -> Vector {
     let count = points.count
     let unitZ = Vector(0, 0, 1)
     switch count {
-    case 0, 1:
+    case 0,
+         1:
         return unitZ
     case 2:
         let ab = points[1] - points[0]

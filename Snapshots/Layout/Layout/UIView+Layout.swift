@@ -394,7 +394,8 @@ extension UIImageView {
                 startAnimating()
             case (false, true):
                 stopAnimating()
-            case (true, true), (false, false):
+            case (true, true),
+                 (false, false):
                 break
             }
         default:
@@ -773,7 +774,9 @@ extension UITextField {
             if #available(iOS 11.0, *) {
                 smartInsertDeleteType = value as! UITextSmartInsertDeleteType
             }
-        case "textDragDelegate", "textDropDelegate", "textDragOptions":
+        case "textDragDelegate",
+             "textDropDelegate",
+             "textDragOptions":
             // Does nothing on iOS 10 and earlier
             if #available(iOS 11.0, *) {
                 fallthrough
@@ -845,7 +848,9 @@ extension UITextView {
             if #available(iOS 11.0, *) {
                 smartInsertDeleteType = value as! UITextSmartInsertDeleteType
             }
-        case "textDragDelegate", "textDropDelegate", "textDragOptions":
+        case "textDragDelegate",
+             "textDropDelegate",
+             "textDragOptions":
             // Does nothing on iOS 10 and earlier
             if #available(iOS 11.0, *) {
                 fallthrough
@@ -930,7 +935,8 @@ extension UISegmentedControl: TitleTextAttributes {
         var items = [Any]()
         for item in try node.value(forExpression: "items") as? [Any] ?? [] {
             switch item {
-            case is String, is UIImage:
+            case is String,
+                 is UIImage:
                 items.append(item)
             default:
                 throw LayoutError("\(type(of: item)) is not a valid item type for \(classForCoder())", for: node)
@@ -1181,7 +1187,8 @@ extension UIActivityIndicatorView {
                 startAnimating()
             case (false, true):
                 stopAnimating()
-            case (true, true), (false, false):
+            case (true, true),
+                 (false, false):
                 break
             }
         default:
@@ -1363,7 +1370,8 @@ extension UIRefreshControl {
                 beginRefreshing()
             case (false, true):
                 endRefreshing()
-            case (true, true), (false, false):
+            case (true, true),
+                 (false, false):
                 break
             }
         default:
@@ -1381,7 +1389,8 @@ extension UIVisualEffectView {
             effect = UIBlurEffect(style: style ?? defaultStyle)
         } else if let style = style {
             switch effect {
-            case nil, is UIBlurEffect:
+            case nil,
+                 is UIBlurEffect:
                 effect = UIBlurEffect(style: style)
             case is UIVibrancyEffect:
                 effect = UIVibrancyEffect(blurEffect: UIBlurEffect(style: style))

@@ -637,6 +637,25 @@ Writes one enum case per line.
 
 Writes one switch case per line.
 
+<details>
+<summary>Examples</summary>
+
+```diff
+  switch foo {
+-   case .bar, .baz:
+      break
+  }
+
+  switch foo {
++   case .foo,
++        .bar:
+      break
+  }
+```
+
+</details>
+<br/>
+
 ## numberFormatting
 
 Use consistent grouping for numeric literals. Groups will be separated by `_`

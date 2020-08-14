@@ -259,9 +259,11 @@ func isStringType(_ name: String) -> Bool {
 func typeOfAttribute(_ key: String, inNode node: XMLNode) -> String? {
     func typeForClass(_ className: String) -> String? {
         switch key {
-        case "outlet", "id":
+        case "outlet",
+             "id":
             return "String"
-        case "xml", "template":
+        case "xml",
+             "template":
             return "URL"
         case "center":
             return "CGPoint"
@@ -284,16 +286,27 @@ func typeOfAttribute(_ key: String, inNode node: XMLNode) -> String? {
             }
             // Guess the type from the name
             switch key.components(separatedBy: ".").last! {
-            case "left", "right", "x", "width", "top", "bottom", "y", "height":
+            case "left",
+                 "right",
+                 "x",
+                 "width",
+                 "top",
+                 "bottom",
+                 "y",
+                 "height":
                 return "CGFloat"
             case _ where key.hasPrefix("is") || key.hasPrefix("has"):
                 return "Bool"
-            case _ where key.hasSuffix("Color"), "color":
+            case _ where key.hasSuffix("Color"),
+                 "color":
                 return "UIColor"
-            case _ where key.hasSuffix("Size"), "size":
+            case _ where key.hasSuffix("Size"),
+                 "size":
                 return "CGSize"
-            case _ where key.hasSuffix("Delegate"), "delegate",
-                 _ where key.hasSuffix("DataSource"), "dataSource":
+            case _ where key.hasSuffix("Delegate"),
+                 "delegate",
+                 _ where key.hasSuffix("DataSource"),
+                 "dataSource":
                 return "Protocol"
             default:
                 return nil
@@ -316,7 +329,8 @@ func attributeIsString(_ key: String, inNode node: XMLNode) -> Bool? {
         return nil
     }
     switch type {
-    case "UIColor", "CGColor":
+    case "UIColor",
+         "CGColor":
         if let expression = node.attributes[key], !expression.contains("{"),
             expression.contains("rgb(") || expression.contains("rgba(")
         {
@@ -335,9 +349,12 @@ func validateLayoutExpression(_ parsedExpression: ParsedLayoutExpression) throws
     }
     for symbol in parsedExpression.symbols {
         switch symbol {
-        case .variable, .array:
+        case .variable,
+             .array:
             break
-        case .prefix, .infix, .postfix:
+        case .prefix,
+             .infix,
+             .postfix:
             guard standardSymbols.contains(symbol) else {
                 throw Expression.Error.undefinedSymbol(symbol)
             }

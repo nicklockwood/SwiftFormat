@@ -219,13 +219,15 @@ public final class Expression: CustomStringConvertible {
                     arity = requiredArity
                 case .infix("()"):
                     arity = .atLeast(1)
-                case .array, .infix("[]"):
+                case .array,
+                     .infix("[]"):
                     arity = 1
                 case .infix("?:"):
                     arity = 3
                 case .infix:
                     arity = 2
-                case .postfix, .prefix:
+                case .postfix,
+                     .prefix:
                     arity = 1
                 case .variable:
                     arity = 0
@@ -599,7 +601,10 @@ extension Expression {
     // Fallback evaluator for when symbol is not found
     static func errorEvaluator(for symbol: Symbol) -> SymbolEvaluator {
         switch symbol {
-        case .infix(","), .infix("[]"), .function("[]", _), .infix("()"):
+        case .infix(","),
+             .infix("[]"),
+             .function("[]", _),
+             .infix("()"):
             return { _ in throw Error.unexpectedToken(String(symbol.name.prefix(1))) }
         case let .function(called, arity):
             let keys = Set(mathSymbols.keys).union(boolSymbols.keys)
@@ -674,9 +679,16 @@ private extension Expression {
         }
         switch char.value {
         case 0x00A1 ... 0x00A7,
-             0x00A9, 0x00AB, 0x00AC, 0x00AE,
+             0x00A9,
+             0x00AB,
+             0x00AC,
+             0x00AE,
              0x00B0 ... 0x00B1,
-             0x00B6, 0x00BB, 0x00BF, 0x00D7, 0x00F7,
+             0x00B6,
+             0x00BB,
+             0x00BF,
+             0x00D7,
+             0x00F7,
              0x2016 ... 0x2017,
              0x2020 ... 0x2027,
              0x2030 ... 0x203E,
@@ -696,10 +708,16 @@ private extension Expression {
 
     static func isIdentifierHead(_ c: UnicodeScalar) -> Bool {
         switch c.value {
-        case 0x5F, 0x23, 0x24, 0x40, // _ # $ @
+        case 0x5F,
+             0x23,
+             0x24,
+             0x40, // _ # $ @
              0x41 ... 0x5A, // A-Z
              0x61 ... 0x7A, // a-z
-             0x00A8, 0x00AA, 0x00AD, 0x00AF,
+             0x00A8,
+             0x00AA,
+             0x00AD,
+             0x00AF,
              0x00B2 ... 0x00B5,
              0x00B7 ... 0x00BA,
              0x00BC ... 0x00BE,
@@ -795,12 +813,15 @@ private enum Subexpression: CustomStringConvertible {
         switch self {
         case let .symbol(symbol, args, _) where args.isEmpty:
             switch symbol {
-            case .infix, .prefix, .postfix:
+            case .infix,
+                 .prefix,
+                 .postfix:
                 return false
             default:
                 return true
             }
-        case .symbol, .literal:
+        case .symbol,
+             .literal:
             return true
         case .error:
             return false
@@ -845,20 +866,26 @@ private enum Subexpression: CustomStringConvertible {
                 let arg = args[0]
                 let description = "\(arg)"
                 switch arg {
-                case .symbol(.infix, _, _), .symbol(.postfix, _, _), .error,
+                case .symbol(.infix, _, _),
+                     .symbol(.postfix, _, _),
+                     .error,
                      .symbol where needsSeparation(name, description):
                     return "\(symbol.escapedName)(\(description))" // Parens required
-                case .symbol, .literal:
+                case .symbol,
+                     .literal:
                     return "\(symbol.escapedName)\(description)" // No parens needed
                 }
             case let .postfix(name):
                 let arg = args[0]
                 let description = "\(arg)"
                 switch arg {
-                case .symbol(.infix, _, _), .symbol(.postfix, _, _), .error,
+                case .symbol(.infix, _, _),
+                     .symbol(.postfix, _, _),
+                     .error,
                      .symbol where needsSeparation(description, name):
                     return "(\(description))\(symbol.escapedName)" // Parens required
-                case .symbol, .literal:
+                case .symbol,
+                     .literal:
                     return "\(description)\(symbol.escapedName)" // No parens needed
                 }
             case .infix(","):
@@ -903,7 +930,8 @@ private enum Subexpression: CustomStringConvertible {
 
     var symbols: Set<Expression.Symbol> {
         switch self {
-        case .literal, .error:
+        case .literal,
+             .error:
             return []
         case let .symbol(symbol, subexpressions, _):
             var symbols = Set([symbol])
@@ -1056,7 +1084,10 @@ private extension UnicodeScalarView {
     mutating func scanToEndOfToken() -> String? {
         return scanCharacters {
             switch $0 {
-            case " ", "\t", "\n", "\r":
+            case " ",
+                 "\t",
+                 "\n",
+                 "\r":
                 return false
             default:
                 return true
@@ -1067,7 +1098,10 @@ private extension UnicodeScalarView {
     mutating func skipWhitespace() -> Bool {
         if let _ = scanCharacters({
             switch $0 {
-            case " ", "\t", "\n", "\r":
+            case " ",
+                 "\t",
+                 "\n",
+                 "\r":
                 return true
             default:
                 return false
@@ -1106,7 +1140,9 @@ private extension UnicodeScalarView {
         func scanHex() -> String? {
             return scanCharacters {
                 switch $0 {
-                case "0" ... "9", "A" ... "F", "a" ... "f":
+                case "0" ... "9",
+                     "A" ... "F",
+                     "a" ... "f":
                     return true
                 default:
                     return false
@@ -1273,7 +1309,9 @@ private extension UnicodeScalarView {
                 case "u" where scanCharacter("{"):
                     let hex = scanCharacters {
                         switch $0 {
-                        case "0" ... "9", "A" ... "F", "a" ... "f":
+                        case "0" ... "9",
+                             "A" ... "F",
+                             "a" ... "f":
                             return true
                         default:
                             return false
@@ -1329,7 +1367,8 @@ private extension UnicodeScalarView {
                     try collapseStack(from: i)
                 } else if case let .symbol(symbol, _, _) = rhs {
                     switch symbol {
-                    case _ where stack.count <= i + 2, .postfix:
+                    case _ where stack.count <= i + 2,
+                         .postfix:
                         stack[i ... i + 1] = [.symbol(.postfix(symbol.name), [lhs], nil)]
                         try collapseStack(from: 0)
                     default:
@@ -1470,7 +1509,8 @@ private extension UnicodeScalarView {
                     followedByWhitespace = skipWhitespace()
                 default:
                     switch (precededByWhitespace, followedByWhitespace) {
-                    case (true, true), (false, false):
+                    case (true, true),
+                         (false, false):
                         stack.append(expression)
                     case (true, false):
                         stack.append(.symbol(.prefix(name), [], nil))

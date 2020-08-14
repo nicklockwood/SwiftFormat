@@ -238,7 +238,8 @@ extension UITableViewController: LayoutBacked {
 
     open override func shouldInsertChildNode(_ node: LayoutNode, at index: Int) -> Bool {
         switch node.viewClass {
-        case is UITableViewCell.Type, is UITableViewHeaderFooterView.Type:
+        case is UITableViewCell.Type,
+             is UITableViewHeaderFooterView.Type:
             return tableView?.shouldInsertChildNode(node, at: index) ?? false
         default:
             return true

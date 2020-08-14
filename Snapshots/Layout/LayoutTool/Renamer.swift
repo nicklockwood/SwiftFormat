@@ -105,7 +105,8 @@ private func rename(_ old: String, to new: String, in parts: [ParsedExpressionPa
     var changed = false
     let parts: [String] = parts.map {
         switch $0 {
-        case .string, .comment:
+        case .string,
+             .comment:
             return $0.description
         case let .expression(expression):
             if let renamed = rename(old, to: new, in: expression) {

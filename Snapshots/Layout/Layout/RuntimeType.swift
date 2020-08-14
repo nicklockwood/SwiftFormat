@@ -56,7 +56,8 @@ public class RuntimeType: NSObject {
                 return true
             case let (.unavailable(lhs), .unavailable(rhs)):
                 return lhs == rhs
-            case (.available, _), (.unavailable, _):
+            case (.available, _),
+                 (.unavailable, _):
                 return false
             }
         }
@@ -115,9 +116,13 @@ public class RuntimeType: NSObject {
         }
         let type: RuntimeType?
         switch typeName {
-        case "CGColor", "CGImage", "CGPath":
+        case "CGColor",
+             "CGImage",
+             "CGPath":
             type = RuntimeType(.pointer(typeName))
-        case "CGColorRef", "CGImageRef", "CGPathRef":
+        case "CGColorRef",
+             "CGImageRef",
+             "CGPathRef":
             type = RuntimeType(.pointer(String(typeName.dropLast(3))))
         case "NSString":
             type = RuntimeType(.any(String.self))
@@ -188,7 +193,12 @@ public class RuntimeType: NSObject {
         switch kind {
         case let .options(_, values):
             return values
-        case .any, .class, .struct, .pointer, .protocol, .array:
+        case .any,
+             .class,
+             .struct,
+             .pointer,
+             .protocol,
+             .array:
             return [:]
         }
     }
@@ -258,11 +268,20 @@ public class RuntimeType: NSObject {
         }
         let type: Kind
         switch first {
-        case "c" where objCBoolIsChar, "B":
+        case "c" where objCBoolIsChar,
+             "B":
             type = .any(Bool.self)
-        case "c", "i", "s", "l", "q":
+        case "c",
+             "i",
+             "s",
+             "l",
+             "q":
             type = .any(Int.self)
-        case "C", "I", "S", "L", "Q":
+        case "C",
+             "I",
+             "S",
+             "L",
+             "Q":
             type = .any(UInt.self)
         case "f":
             type = .any(Float.self)
@@ -397,7 +416,8 @@ public class RuntimeType: NSObject {
             return kind == object.kind
         case let (.unavailable(lreason), .unavailable(rreason)):
             return lreason == rreason
-        case (.available, _), (.unavailable, _):
+        case (.available, _),
+             (.unavailable, _):
             return false
         }
     }
@@ -469,7 +489,8 @@ public class RuntimeType: NSObject {
             }
         }
         switch kind {
-        case let .any(subtype), let .options(subtype, _):
+        case let .any(subtype),
+             let .options(subtype, _):
             return cast(value, as: subtype)
         case let .class(type):
             if let value = value as? AnyClass, value.isSubclass(of: type) {
@@ -492,7 +513,8 @@ public class RuntimeType: NSObject {
                     return value
                 }
                 fallthrough
-            case "CGColor", "CGImage":
+            case "CGColor",
+                 "CGImage":
                 if "\(value)".hasPrefix("<\(type)") {
                     return value
                 }

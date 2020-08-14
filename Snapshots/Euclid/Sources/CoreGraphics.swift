@@ -98,14 +98,16 @@ public extension CGPath {
             case .addLineToPoint:
                 p2 = nextElement.points[0]
                 isCurved = false
-            case .addQuadCurveToPoint, .addCurveToPoint:
+            case .addQuadCurveToPoint,
+                 .addCurveToPoint:
                 p2 = nextElement.points[0]
                 isCurved = true
             default: // Can be converted to @unknown in Swift 5
                 return
             }
             switch lastElement.type {
-            case .moveToPoint, .closeSubpath:
+            case .moveToPoint,
+                 .closeSubpath:
                 return
             case .addLineToPoint:
                 guard points.count > 1, isCurved else {

@@ -162,7 +162,8 @@ public struct AnyExpression: CustomStringConvertible {
             switch (AnyExpression.unwrap(box.load(lhs)), AnyExpression.unwrap(box.load(rhs))) {
             case (nil, nil):
                 return true
-            case (nil, _), (_, nil):
+            case (nil, _),
+                 (_, nil):
                 return false
             case let (lhs as Double, rhs as Double):
                 return lhs == rhs
@@ -429,7 +430,8 @@ public struct AnyExpression: CustomStringConvertible {
                     return { try box.store(fn($0.map(box.load))) }
                 } else if let fn = pureSymbols(symbol) {
                     switch symbol {
-                    case .variable, .function(_, arity: 0):
+                    case .variable,
+                         .function(_, arity: 0):
                         do {
                             let value = try box.store(fn([]))
                             _pureSymbols[symbol] = { _ in value }
@@ -549,10 +551,14 @@ public struct AnyExpression: CustomStringConvertible {
             switch T.self {
             case _ where AnyExpression.isNil(anyValue):
                 break // Fall through
-            case is _String.Type, is NSString?.Type, is String?.Type, is Substring?.Type:
+            case is _String.Type,
+                 is NSString?.Type,
+                 is String?.Type,
+                 is Substring?.Type:
                 // TODO: should we stringify any type like this?
                 return (AnyExpression.cast(AnyExpression.stringify(anyValue)) as T?)!
-            case is Bool.Type, is Bool?.Type:
+            case is Bool.Type,
+                 is Bool?.Type:
                 // TODO: should we boolify numeric types like this?
                 if let value = AnyExpression.cast(anyValue) as Double? {
                     return (value != 0) as! T
@@ -603,7 +609,8 @@ extension AnyExpression.Error {
             return .message("Attempted to subscript \(symbol.escapedName) with incompatible index type \(types.last!)")
         case .infix("()") where !types.isEmpty:
             switch type(of: args[0]) {
-            case is Expression.SymbolEvaluator.Type, is AnyExpression.SymbolEvaluator.Type:
+            case is Expression.SymbolEvaluator.Type,
+                 is AnyExpression.SymbolEvaluator.Type:
                 return .message("Attempted to call function with incompatible arguments (\(types.dropFirst().joined(separator: ", ")))")
             case _ where types[0].contains("->"):
                 return .message("Attempted to call non SymbolEvaluator function type \(types[0])")
@@ -682,7 +689,8 @@ extension AnyExpression {
         case let number as NSNumber:
             // https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html
             switch UnicodeScalar(UInt8(number.objCType.pointee)) {
-            case "c", "B":
+            case "c",
+                 "B":
                 return number == 0 ? "false" : "true"
             default:
                 break
@@ -782,7 +790,10 @@ private extension AnyExpression {
                 return boolValue ? NanBox.trueValue : NanBox.falseValue
             case let floatValue as Float:
                 return Double(floatValue)
-            case is Int, is UInt, is Int32, is UInt32:
+            case is Int,
+                 is UInt,
+                 is Int32,
+                 is UInt32:
                 return Double(truncating: value as! NSNumber)
             case let uintValue as UInt64:
                 if uintValue <= 9007199254740992 as UInt64 {

@@ -1582,6 +1582,11 @@ Option | Description
 + func quux() -> Void
 ```
 
+```diff
+- callback = { _ in Void() }
++ callback = { _ in () }
+```
+
 </details>
 <br/>
 

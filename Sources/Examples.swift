@@ -953,6 +953,11 @@ private struct Examples {
     - func quux() -> (Void)
     + func quux() -> Void
     ```
+
+    ```diff
+    - callback = { _ in Void() }
+    + callback = { _ in () }
+    ```
     """
 
     let wrapArguments = """

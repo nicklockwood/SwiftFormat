@@ -4876,6 +4876,26 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.void)
     }
 
+    func testVoidLiteralReturnValueConvertedToParens() {
+        let input = """
+        func foo() {
+            return Void()
+        }
+        """
+        let output = """
+        func foo() {
+            return ()
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.void)
+    }
+
+    func testVoidLiteralReturnValueConvertedToParens2() {
+        let input = "{ _ in Void() }"
+        let output = "{ _ in () }"
+        testFormatting(for: input, output, rule: FormatRules.void)
+    }
+
     func testNamespacedVoidLiteralNotConverted() {
         let input = "let foo = Swift.Void()"
         testFormatting(for: input, rule: FormatRules.void)

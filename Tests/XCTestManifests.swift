@@ -1843,6 +1843,8 @@ extension RulesTests {
         ("testVoidClosureReturnValueConvertedToEmptyTuple", testVoidClosureReturnValueConvertedToEmptyTuple),
         ("testVoidLiteralConvertedToParens", testVoidLiteralConvertedToParens),
         ("testVoidLiteralConvertedToParens2", testVoidLiteralConvertedToParens2),
+        ("testVoidLiteralReturnValueConvertedToParens", testVoidLiteralReturnValueConvertedToParens),
+        ("testVoidLiteralReturnValueConvertedToParens2", testVoidLiteralReturnValueConvertedToParens2),
         ("testVoidThrowsIsNotMangled", testVoidThrowsIsNotMangled),
         ("testWhileAndReplaced", testWhileAndReplaced),
         ("testWhileNotAffectedByElseOnSameLineIfNotRepeatWhile", testWhileNotAffectedByElseOnSameLineIfNotRepeatWhile),

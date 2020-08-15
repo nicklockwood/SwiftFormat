@@ -241,14 +241,11 @@ public class Formatter: NSObject {
     }
 
     /// Replaces the tokens in the specified range with new tokens
-    public func replaceTokens(inRange range: Range<Int>, with tokens: [Token]) {
-        if range.count == tokens.count, ArraySlice(tokens) == self.tokens[range] {
-            return
-        }
+    @discardableResult
+    public func replaceTokens(inRange range: Range<Int>, with tokens: [Token]) -> Int {
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
-            trackChange(at: range.lowerBound + i)
-            self.tokens[range.lowerBound + i] = tokens[i]
+            replaceToken(at: range.lowerBound + i, with: tokens[i])
         }
         if range.count > max {
             for _ in max ..< range.count {
@@ -259,11 +256,13 @@ public class Formatter: NSObject {
                 insertToken(tokens[i], at: range.lowerBound + i)
             }
         }
+        return tokens.count - range.count
     }
 
     /// Replaces the tokens in the specified closed range with new tokens
-    public func replaceTokens(inRange range: ClosedRange<Int>, with tokens: [Token]) {
-        replaceTokens(inRange: range.lowerBound ..< range.upperBound + 1, with: tokens)
+    @discardableResult
+    public func replaceTokens(inRange range: ClosedRange<Int>, with tokens: [Token]) -> Int {
+        return replaceTokens(inRange: range.lowerBound ..< range.upperBound + 1, with: tokens)
     }
 
     /// Removes the token at the specified index

@@ -124,7 +124,9 @@ internal extension Plane {
 // An enum of planes along the X, Y and Z axes
 // Used internally for flattening 3D paths and polygons
 enum FlatteningPlane: RawRepresentable {
-    case xy, xz, yz
+    case xy
+    case xz
+    case yz
 
     var rawValue: Plane {
         switch self {

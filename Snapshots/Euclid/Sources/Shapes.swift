@@ -68,7 +68,9 @@ public extension Path {
     /// Create a quadratic bezier spline
     static func curve(_ points: [PathPoint], detail: Int = 4) -> Path {
         enum ArcRange {
-            case lhs, rhs, all
+            case lhs
+            case rhs
+            case all
         }
 
         func arc(_ p0: PathPoint, _ p1: PathPoint, _ p2: PathPoint,

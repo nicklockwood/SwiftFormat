@@ -615,6 +615,23 @@ Option | Description
 
 Writes one enum case per line.
 
+<details>
+<summary>Examples</summary>
+
+```diff
+  enum Foo {
+-   case bar, baz
+  }
+
+  enum Foo {
++   case bar
++   case baz
+  }
+```
+
+</details>
+<br/>
+
 ## numberFormatting
 
 Use consistent grouping for numeric literals. Groups will be separated by `_`

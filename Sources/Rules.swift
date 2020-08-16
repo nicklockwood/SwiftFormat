@@ -1489,27 +1489,21 @@ public struct _FormatRules {
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.identifier("required")) { i, _ in
-            guard
-                let initTokenCandidate = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
-                initTokenCandidate == .keyword("init"),
-                let initIndex = formatter.index(of: initTokenCandidate, after: i) else { return }
+            guard let initIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                  after: i,
+                                                  if: { $0 == .keyword("init") }) else { return }
 
-            guard
-                let questionMarkCandidate = formatter.next(.nonSpaceOrCommentOrLinebreak, after: initIndex),
-                questionMarkCandidate == .operator("?", .postfix),
-                let questionMarkIndex = formatter.index(of: questionMarkCandidate,
-                                                        after: initIndex) else { return }
+            guard let questionMarkIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                          after: initIndex,
+                                                          if: { $0 == .operator("?", .postfix) }) else { return }
 
-            guard
-                let startOfScopeCandidate = formatter.next(.nonSpaceOrCommentOrLinebreak, after: questionMarkIndex),
-                startOfScopeCandidate == .startOfScope("("),
-                let startOfScopeCandidateIndex = formatter.index(of: startOfScopeCandidate,
-                                                                 after: questionMarkIndex) else { return }
+            guard let startOfScopeCandidateIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                                   after: questionMarkIndex,
+                                                                   if: { $0 == .startOfScope("(") }) else { return }
 
-            guard
-                let coderCandidate = formatter.next(.nonSpaceOrCommentOrLinebreak,
-                                                    after: startOfScopeCandidateIndex),
-                coderCandidate == .identifier("coder") else { return }
+            guard formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                  after: startOfScopeCandidateIndex,
+                                  if: { $0 == .identifier("coder") }) != nil else { return }
 
             if let previous = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 previous != .endOfScope(")")

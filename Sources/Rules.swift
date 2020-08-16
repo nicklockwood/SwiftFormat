@@ -1488,11 +1488,11 @@ public struct _FormatRules {
         options: [],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        formatter.forEach(.identifier("required")) { idx, _ in
+        formatter.forEach(.identifier("required")) { i, _ in
             guard
-                let initTokenCandidate = formatter.next(.nonSpaceOrCommentOrLinebreak, after: idx),
+                let initTokenCandidate = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
                 initTokenCandidate == .keyword("init"),
-                let initIndex = formatter.index(of: initTokenCandidate, after: idx) else { return }
+                let initIndex = formatter.index(of: initTokenCandidate, after: i) else { return }
 
             guard
                 let questionMarkCandidate = formatter.next(.nonSpaceOrCommentOrLinebreak, after: initIndex),
@@ -1511,12 +1511,12 @@ public struct _FormatRules {
                                                     after: startOfScopeCandidateIndex),
                 coderCandidate == .identifier("coder") else { return }
 
-            if let previous = formatter.last(.nonSpaceOrCommentOrLinebreak, before: idx),
+            if let previous = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                 previous != .endOfScope(")")
             {
-                formatter.insertTokens(tokenize("@available(*, unavailable)"), at: idx)
-                formatter.insertToken(formatter.linebreakToken(for: idx), at: idx + 7)
-                formatter.insertSpace(formatter.indentForLine(at: idx), at: idx + 8)
+                formatter.insertTokens(tokenize("@available(*, unavailable)"), at: i)
+                formatter.insertToken(formatter.linebreakToken(for: i), at: i + 7)
+                formatter.insertSpace(formatter.indentForLine(at: i), at: i + 8)
             }
         }
     }

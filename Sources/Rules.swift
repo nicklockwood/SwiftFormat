@@ -3475,6 +3475,29 @@ public struct _FormatRules {
         }
     }
 
+    /// Writes one switch case per line
+    public let multilineSwitchCases = FormatRule(
+        help: "Writes one switch case per line.",
+        options: [],
+        sharedOptions: ["linebreaks", "tabwidth", "indent", "smarttabs"]
+    ) { formatter in
+        formatter.forEach(.endOfScope("case")) { idx, _ in
+            guard let colonIndex = formatter.index(of: .startOfScope(":"), after: idx) else { return }
+
+            var startIndex = idx
+            while let delimiterIndex = formatter.index(of: .delimiter(","), after: startIndex),
+                let nextCaseIndex = formatter.index(of: .operator(".", .prefix), after: delimiterIndex)
+            {
+                if formatter.index(of: .linebreak, in: delimiterIndex ..< nextCaseIndex) == nil {
+                    formatter.insertLinebreak(at: delimiterIndex + 1)
+                    formatter.insertSpace(formatter.spaceEquivalentToWidth(5), at: delimiterIndex + 2)
+                }
+
+                startIndex = nextCaseIndex
+            }
+        }
+    }
+
     /// Normalize the use of void in closure arguments and return values
     public let void = FormatRule(
         help: "Use `Void` for type declarations and `()` for values.",
@@ -3575,7 +3598,6 @@ public struct _FormatRules {
             // TODO: other cases
         }
     }
-
     /// Standardize formatting of numeric literals
     public let numberFormatting = FormatRule(
         help: """

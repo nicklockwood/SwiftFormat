@@ -308,6 +308,12 @@ public struct FormatOptions: CustomStringConvertible {
     public var funcAttributes: AttributeMode
     public var typeAttributes: AttributeMode
     public var varAttributes: AttributeMode
+    public var categoryMarkComment: String
+    public var beforeMarks: Set<String>
+    public var lifecycleMethods: Set<String>
+    public var organizeClassThreshold: Int?
+    public var organizeStructThreshold: Int?
+    public var organizeEnumThreshold: Int?
     public var yodaSwap: YodaMode
 
     // Deprecated
@@ -369,6 +375,12 @@ public struct FormatOptions: CustomStringConvertible {
                 funcAttributes: AttributeMode = .preserve,
                 typeAttributes: AttributeMode = .preserve,
                 varAttributes: AttributeMode = .preserve,
+                categoryMarkComment: String = "MARK: %c",
+                beforeMarks: Set<String> = [],
+                lifecycleMethods: Set<String> = [],
+                organizeClassThreshold: Int? = nil,
+                organizeStructThreshold: Int? = nil,
+                organizeEnumThreshold: Int? = nil,
                 yodaSwap: YodaMode = .always,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
@@ -423,6 +435,12 @@ public struct FormatOptions: CustomStringConvertible {
         self.funcAttributes = funcAttributes
         self.typeAttributes = typeAttributes
         self.varAttributes = varAttributes
+        self.categoryMarkComment = categoryMarkComment
+        self.beforeMarks = beforeMarks
+        self.lifecycleMethods = lifecycleMethods
+        self.organizeClassThreshold = organizeClassThreshold
+        self.organizeStructThreshold = organizeStructThreshold
+        self.organizeEnumThreshold = organizeEnumThreshold
         self.yodaSwap = yodaSwap
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment

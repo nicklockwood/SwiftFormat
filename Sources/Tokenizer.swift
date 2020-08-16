@@ -518,6 +518,40 @@ public enum Token: Equatable {
             return false
         }
     }
+
+    /// Whether or not this token "defines" the specific type of declaration
+    ///  - A valid declaration will usually include exactly one of these keywords in its outermost scope.
+    ///  - A notable exception is `class func`, which will include two of these keywords.
+    public var definesDeclarationType: Bool {
+        // All of the keywords that map to individual Declaration grammars
+        // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
+        let declarationKeywords = ["import", "let", "var", "typealias", "func", "enum", "case",
+                                   "struct", "class", "protocol", "init", "deinit",
+                                   "extension", "subscript", "operator", "precedencegroup"]
+
+        return isKeyword && declarationKeywords.contains(string)
+    }
+
+    /// Whether or not this token can preceed the token that `definesDeclarationType`
+    /// in a given declaration. e.g. `public` can preceed `var` in `public var foo = "bar"`.
+    public var canPrecedeDeclarationTypeKeyword: Bool {
+        /// All of the tokens that can typically preceed the main keyword of a declaration
+        if isAttribute || isKeyword || isSpaceOrCommentOrLinebreak {
+            return true
+        }
+
+        // Some tokens are aren't treated as "keywords" by `token.isKeyword`,
+        // but count as keywords in the context of declarations:
+        let contextualKeywords = ["convenience", "dynamic", "final", "indirect", "infix", "lazy",
+                                  "mutating", "nonmutating", "open", "optional", "override", "postfix",
+                                  "precedence", "prefix", "required", "some", "unowned", "weak"]
+
+        if isIdentifier, contextualKeywords.contains(string) {
+            return true
+        }
+
+        return false
+    }
 }
 
 extension UnicodeScalar {

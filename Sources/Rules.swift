@@ -39,6 +39,7 @@ public final class FormatRule: Equatable, Comparable {
     let orderAfter: [String]
     let options: [String]
     let sharedOptions: [String]
+    let rewritesEntireFile: Bool
 
     var deprecationMessage: String? {
         return FormatRule.deprecatedMessage[name]
@@ -52,6 +53,7 @@ public final class FormatRule: Equatable, Comparable {
                      orderAfter: [String] = [],
                      options: [String] = [],
                      sharedOptions: [String] = [],
+                     rewritesEntireFile: Bool = false,
                      _ fn: @escaping (Formatter) -> Void)
     {
         self.fn = fn
@@ -59,6 +61,7 @@ public final class FormatRule: Equatable, Comparable {
         self.orderAfter = orderAfter
         self.options = options
         self.sharedOptions = sharedOptions
+        self.rewritesEntireFile = rewritesEntireFile
     }
 
     public func apply(with formatter: Formatter) {
@@ -124,7 +127,7 @@ private func allRules(except rules: [String]) -> [FormatRule] {
 private let _allRules = allRules(except: [])
 private let _defaultRules = allRules(except: _disabledByDefault)
 private let _deprecatedRules = FormatRule.deprecatedMessage.keys
-private let _disabledByDefault = _deprecatedRules + ["isEmpty"]
+private let _disabledByDefault = _deprecatedRules + ["isEmpty", "organizeDeclarations"]
 
 public extension _FormatRules {
     /// A Dictionary of rules by name
@@ -4841,5 +4844,406 @@ public struct _FormatRules {
             }
             formatter.replaceTokens(inRange: prevIndex + 1 ... endIndex, with: replacementTokens)
         }
+    }
+
+    public let organizeDeclarations = FormatRule(
+        help: "Organizes declarations within class, struct, and enum bodies.",
+        options: ["categorymark", "beforemarks", "lifecycle", "structthreshold", "classthreshold", "enumthreshold"],
+        rewritesEntireFile: true
+    ) { formatter in
+        /// Categories of declarations within an individual type
+        enum Category: String, CaseIterable {
+            case beforeMarks
+            case lifecycle
+            case open
+            case `public`
+            case `internal`
+            case `fileprivate`
+            case `private`
+
+            /// The comment tokens that should preceed all declarations in this category
+            func markComment(from template: String) -> String? {
+                switch self {
+                case .beforeMarks:
+                    return nil
+                default:
+                    return "// \(template.replacingOccurrences(of: "%c", with: rawValue.capitalized))"
+                }
+            }
+        }
+
+        /// Types of declarations that can be present within an individual category
+        enum DeclarationType {
+            case nestedType
+            case staticProperty
+            case staticPropertyWithBody
+            case instanceProperty
+            case instancePropertyWithBody
+            case staticMethod
+            case classMethod
+            case instanceMethod
+        }
+
+        let categoryOrdering: [Category] = [
+            .beforeMarks, .lifecycle, .open, .public, .internal, .fileprivate, .private,
+        ]
+
+        let categorySubordering: [DeclarationType] = [
+            .nestedType, .staticProperty, .staticPropertyWithBody, .instanceProperty,
+            .instancePropertyWithBody, .staticMethod, .classMethod, .instanceMethod,
+        ]
+
+        /// The `Category` of the given `Declaration`
+        func category(of declaration: Formatter.Declaration) -> Category {
+            switch declaration {
+            case let .declaration(keyword, tokens), let .type(keyword, open: tokens, _, _):
+                let parser = Formatter(tokens)
+
+                // Enum cases don't fit into any of the other categories,
+                // so they should go in the intial top section.
+                //  - The user can also provide other declaration types to place in this category
+                if declaration.keyword == "case" || formatter.options.beforeMarks.contains(declaration.keyword) {
+                    return .beforeMarks
+                }
+
+                if categoryOrdering.contains(.lifecycle) {
+                    // `init` and `deinit` always go in Lifecycle if it's present
+                    if tokens.contains(.keyword("init")) || tokens.contains(.keyword("deinit")) {
+                        return .lifecycle
+                    }
+
+                    // The user can also provide specific instance method names to place in Lifecycle
+                    //  - In the function declaration grammar, the function name always
+                    //    immediately follows the `func` keyword:
+                    //    https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_function-name
+                    if keyword == "func",
+                        let funcKeywordIndex = parser.index(
+                            after: -1,
+                            where: { $0.definesDeclarationType && $0.string == keyword }
+                        ),
+                        let methodName = parser.next(.nonSpaceOrCommentOrLinebreak, after: funcKeywordIndex),
+                        formatter.options.lifecycleMethods.contains(methodName.string)
+                    {
+                        return .lifecycle
+                    }
+                }
+
+                // Search for a visibility keyword,
+                // making sure we exclude groups like private(set)
+                var searchIndex = 0
+
+                while searchIndex < parser.tokens.count {
+                    if parser.tokens[searchIndex].isKeyword,
+                        let visibilityCategory = Category(rawValue: parser.tokens[searchIndex].string),
+                        parser.next(.nonSpaceOrComment, after: searchIndex) != .startOfScope("(")
+                    {
+                        return visibilityCategory
+                    }
+
+                    searchIndex += 1
+                }
+
+                // `internal` is the default implied vibilility if no other is specified
+                return .internal
+            }
+        }
+
+        /// The `DeclarationType` of the given `Declaration`
+        func type(of declaration: Formatter.Declaration) -> DeclarationType? {
+            switch declaration {
+            case .type:
+                return .nestedType
+
+            case let .declaration(keyword, tokens):
+                let declarationParser = Formatter(tokens)
+
+                guard let declarationTypeTokenIndex = declarationParser.index(
+                    after: -1,
+                    where: { $0.isKeyword && $0.string == keyword }
+                )
+                else { return nil }
+
+                let declarationTypeToken = declarationParser.tokens[declarationTypeTokenIndex]
+
+                let isStaticDeclaration = declarationParser.lastToken(
+                    before: declarationTypeTokenIndex,
+                    where: { $0 == .keyword("static") }
+                ) != nil
+
+                let isClassDeclaration = declarationParser.lastToken(
+                    before: declarationTypeTokenIndex,
+                    where: { $0 == .keyword("class") }
+                ) != nil
+
+                let hasBody: Bool
+                // If there's an opening bracket and no equals operator,
+                // then this declaration has a body (e.g. a function body or a computed property body)
+                if let openingBraceIndex = declarationParser.index(
+                    after: declarationTypeTokenIndex,
+                    where: { $0 == .startOfScope("{") }
+                ) {
+                    hasBody = declarationParser.index(
+                        of: .operator("=", .infix),
+                        in: CountableRange(declarationTypeTokenIndex ... openingBraceIndex)
+                    ) == nil
+                } else {
+                    hasBody = false
+                }
+
+                switch declarationTypeToken {
+                // Properties and property-like declarations
+                case .keyword("let"), .keyword("var"), .keyword("typealias"),
+                     .keyword("case"), .keyword("operator"), .keyword("precedencegroup"):
+                    if isStaticDeclaration {
+                        if hasBody {
+                            return .staticPropertyWithBody
+                        } else {
+                            return .staticProperty
+                        }
+                    } else {
+                        if hasBody {
+                            return .instancePropertyWithBody
+                        } else {
+                            return .instanceProperty
+                        }
+                    }
+
+                // Functions and function-like declarations
+                case .keyword("func"), .keyword("init"), .keyword("deinit"), .keyword("subscript"):
+                    if isStaticDeclaration {
+                        return .staticMethod
+                    } else if isClassDeclaration {
+                        return .classMethod
+                    } else {
+                        return .instanceMethod
+                    }
+
+                default:
+                    return nil
+                }
+            }
+        }
+
+        /// Updates the given declaration tokens so it ends with at least one blank like
+        /// (e.g. so it ends with at least two newlines)
+        func endingWithBlankLine(_ tokens: [Token]) -> [Token] {
+            let parser = Formatter(tokens)
+
+            // Determine how many trailing linebreaks there are in this declaration
+            var numberOfTrailingLinebreaks = 0
+            var searchIndex = parser.tokens.count - 1
+
+            while searchIndex > 0,
+                let token = parser.token(at: searchIndex),
+                token.isSpaceOrCommentOrLinebreak
+            {
+                if token.isLinebreak {
+                    numberOfTrailingLinebreaks += 1
+                }
+
+                searchIndex -= 1
+            }
+
+            // Make sure there are atleast two newlines,
+            // so we get a blank line between individual declaration types
+            while numberOfTrailingLinebreaks < 2 {
+                parser.insertLinebreak(at: parser.tokens.count)
+                numberOfTrailingLinebreaks += 1
+            }
+
+            return parser.tokens
+        }
+
+        /// Organizes the flat list of declarations based on category and type
+        func organizeType(
+            _ typeDeclaration: (kind: String, open: [Token], body: [Formatter.Declaration], close: [Token]))
+            -> (kind: String, open: [Token], body: [Formatter.Declaration], close: [Token])
+        {
+            // Only organize the body of classes, structs, and enums (not protocols and extensions)
+            guard ["class", "struct", "enum"].contains(typeDeclaration.kind) else {
+                return typeDeclaration
+            }
+
+            // Make sure this type's body is longer than the organization threshold
+            let organizationThreshold: Int?
+            switch typeDeclaration.kind {
+            case "class":
+                organizationThreshold = formatter.options.organizeClassThreshold
+            case "struct":
+                organizationThreshold = formatter.options.organizeStructThreshold
+            case "enum":
+                organizationThreshold = formatter.options.organizeEnumThreshold
+            default:
+                organizationThreshold = nil
+            }
+
+            if let organizationThreshold = organizationThreshold {
+                // Count the number of lines in this declaration
+                let lineCount = typeDeclaration.body
+                    .flatMap { $0.tokens }
+                    .filter { $0.isLinebreak }
+                    .count
+
+                // Don't organize this type's body if it is shorter than the minimum organization threshold
+                if lineCount < organizationThreshold {
+                    return typeDeclaration
+                }
+            }
+
+            var typeOpeningTokens = typeDeclaration.open
+            let typeClosingTokens = typeDeclaration.close
+
+            // Categorize each of the declarations into their primary groups
+            let categorizedDeclarations = typeDeclaration.body.map {
+                (declaration: $0,
+                 category: category(of: $0),
+                 type: type(of: $0))
+            }
+
+            // Sort the declarations based on their category
+            var sortedDeclarations = categorizedDeclarations.enumerated().sorted(by: { lhs, rhs in
+                let (lhsOriginalIndex, lhs) = lhs
+                let (rhsOriginalIndex, rhs) = rhs
+
+                // Sort primarily by category
+                if let lhsCategorySortOrder = categoryOrdering.index(of: lhs.category),
+                    let rhsCategorySortOrder = categoryOrdering.index(of: rhs.category),
+                    lhsCategorySortOrder != rhsCategorySortOrder
+                {
+                    return lhsCategorySortOrder < rhsCategorySortOrder
+                }
+
+                // Within individual categories (excluding .beforeMarks), sort by the declaration type
+                if lhs.category != .beforeMarks,
+                    rhs.category != .beforeMarks,
+                    let lhsType = lhs.type,
+                    let rhsType = rhs.type,
+                    let lhsTypeSortOrder = categorySubordering.index(of: lhsType),
+                    let rhsTypeSortOrder = categorySubordering.index(of: rhsType),
+                    lhsTypeSortOrder != rhsTypeSortOrder
+                {
+                    return lhsTypeSortOrder < rhsTypeSortOrder
+                }
+
+                // Respect the original declaration ordering when the categories and types are the same
+                return lhsOriginalIndex < rhsOriginalIndex
+            }).map { $0.element }
+
+            // Insert comments to separate the categories
+            for category in categoryOrdering {
+                guard let indexOfFirstDeclaration = sortedDeclarations
+                    .firstIndex(where: { $0.category == category })
+                else { continue }
+
+                // Build the MARK declaration
+                if let markComment = category.markComment(from: formatter.options.categoryMarkComment) {
+                    let firstDeclaration = sortedDeclarations[indexOfFirstDeclaration].declaration
+                    let declarationParser = Formatter(firstDeclaration.tokens)
+                    let indentation = declarationParser.indentForLine(at: 0)
+
+                    let markDeclaration = tokenize("\(indentation)\(markComment)\n\n")
+
+                    sortedDeclarations.insert(
+                        (.declaration(kind: "comment", tokens: markDeclaration), category, nil),
+                        at: indexOfFirstDeclaration
+                    )
+
+                    // If this declaration is the first declaration in the type scope,
+                    // make sure the type's opening sequence of tokens ends with
+                    // at least one blank line (so the separator appears balanced)
+                    if indexOfFirstDeclaration == 0 {
+                        typeOpeningTokens = endingWithBlankLine(typeOpeningTokens)
+                    }
+                }
+
+                // Insert newlines to separate declaration types
+                for declarationType in categorySubordering {
+                    guard let indexOfLastDeclarationWithType = sortedDeclarations
+                        .lastIndex(where: { $0.category == category && $0.type == declarationType })
+                    else { continue }
+
+                    switch sortedDeclarations[indexOfLastDeclarationWithType].declaration {
+                    case let .type(kind, open, body, close):
+                        sortedDeclarations[indexOfLastDeclarationWithType].declaration = .type(
+                            kind: kind,
+                            open: open,
+                            body: body,
+                            close: endingWithBlankLine(close)
+                        )
+
+                    case let .declaration(kind, tokens):
+                        sortedDeclarations[indexOfLastDeclarationWithType].declaration
+                            = .declaration(kind: kind, tokens: endingWithBlankLine(tokens))
+                    }
+                }
+            }
+
+            return (
+                kind: typeDeclaration.kind,
+                open: typeOpeningTokens,
+                body: sortedDeclarations.map { $0.declaration },
+                close: typeClosingTokens
+            )
+        }
+
+        /// Recursively organizes the body declarations of this declaration,
+        /// and any nested types.
+        func organize(_ declaration: Formatter.Declaration) -> Formatter.Declaration {
+            switch declaration {
+            case let .type(kind, open, body, close):
+                // Organize the body of this type
+                let (_, organizedOpen, organizedBody, organizedClose) = organizeType((kind, open, body, close))
+
+                // And also organize any of its nested children
+                return .type(
+                    kind: kind,
+                    open: organizedOpen,
+                    body: organizedBody.map { organize($0) },
+                    close: organizedClose
+                )
+
+            // If the declaration doesn't have a body, there isn't any work to do
+            case .declaration:
+                return declaration
+            }
+        }
+
+        // Remove all of the existing category mark comments, so they can be readded
+        // at the correct location after sorting the declarations.
+        formatter.forEach(.startOfScope("//")) { index, _ in
+            // Check if this comment matches an expected category separator mark comment
+            for category in Category.allCases {
+                guard let markComment = category.markComment(from: formatter.options.categoryMarkComment) else {
+                    continue
+                }
+
+                let categorySeparator = tokenize(markComment)
+                let potentialSeparatorRange = index ..< (index + categorySeparator.count)
+
+                if formatter.tokens.indices.contains(potentialSeparatorRange.upperBound),
+                    Array(formatter.tokens[potentialSeparatorRange]) == categorySeparator
+                {
+                    // If we found a matching comment, remove it and all subsequent empty lines
+                    if let nextNonwhitespaceIndex = formatter.index(
+                        of: .nonSpaceOrLinebreak,
+                        after: potentialSeparatorRange.upperBound
+                    ) {
+                        formatter.removeTokens(inRange: index ..< nextNonwhitespaceIndex)
+                    }
+                }
+            }
+        }
+
+        // Parse the file into declarations and organize the body of individual types
+        let organizedDeclarations = formatter
+            .parseDeclarations()
+            .map { organize($0) }
+
+        let updatedTokens = organizedDeclarations.flatMap { $0.tokens }
+
+        formatter.replaceTokens(
+            inRange: 0 ..< formatter.tokens.count,
+            with: updatedTokens
+        )
     }
 }

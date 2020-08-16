@@ -4732,6 +4732,30 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.multilineEnumCases)
     }
 
+    // MARK: multilineSwitchCases
+
+    func testMultilineSwitchCases() {
+        let input = """
+        switch enum1 {
+        case .a(_), .b, .c:
+            print("")
+        case .d:
+            print("")
+        }
+        """
+        let output = """
+        switch enum1 {
+        case .a(_),
+             .b,
+             .c:
+            print("")
+        case .d:
+            print("")
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.multilineSwitchCases)
+    }
+
     // MARK: - void
 
     func testEmptyParensReturnValueConvertedToVoid() {
@@ -8410,7 +8434,8 @@ class RulesTests: XCTestCase {
     func testHoistCommaSeparatedSwitchCaseLets() {
         let input = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let output = "switch foo {\ncase let .foo(bar), let .bar(bar):\n}"
-        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet,
+                       exclude: ["multilineSwitchCases"])
     }
 
     func testHoistCatchLet() {
@@ -8533,7 +8558,11 @@ class RulesTests: XCTestCase {
         let input = "switch foo {\ncase let .foo(bar), let .bar(bar):\n}"
         let output = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
-        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
+        testFormatting(for: input,
+                       output,
+                       rule: FormatRules.hoistPatternLet,
+                       options: options,
+                       exclude: ["multilineSwitchCases"])
     }
 
     func testUnhoistCommaSeparatedSwitchCaseLets2() {

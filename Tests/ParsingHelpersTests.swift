@@ -628,4 +628,254 @@ class ParsingHelpersTests: XCTestCase {
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["bar", "baz", "x", "y"])
     }
+
+    // MARK: parseDeclarations
+
+    func testParseDeclarations() {
+        let input = """
+        import CoreGraphics
+        import Foundation
+
+        let global = 10
+
+        @objc
+        @available(iOS 13.0, *)
+        @propertyWrapper("parameter")
+        weak var multilineGlobal = ["string"]
+            .map(\\.count)
+        let anotherGlobal = "hello"
+
+        /// Doc comment
+        /// (multiple lines)
+        func globalFunction() {
+            print("hi")
+        }
+
+        protocol SomeProtocol {
+            var getter: String { get }
+            func protocolMethod() -> Bool
+        }
+
+        class SomeClass {
+
+            enum NestedEnum {
+                /// Doc comment
+                case bar
+                func test() {}
+            }
+
+            /*
+             * Block comment
+             */
+
+            private(set)
+            var instanceVar = "test"
+
+            @objc
+            private var computed: String {
+                get {
+                    "computed string"
+                }
+            }
+
+        }
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        // Verify we didn't lose any tokens
+        XCTAssertEqual(originalTokens, declarations.flatMap { $0.tokens })
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[0].tokens),
+            """
+            import CoreGraphics
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[1].tokens),
+            """
+            import Foundation
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[2].tokens),
+            """
+            let global = 10
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[3].tokens),
+            """
+            @objc
+            @available(iOS 13.0, *)
+            @propertyWrapper("parameter")
+            weak var multilineGlobal = ["string"]
+                .map(\\.count)
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[4].tokens),
+            """
+            let anotherGlobal = "hello"
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[5].tokens),
+            """
+            /// Doc comment
+            /// (multiple lines)
+            func globalFunction() {
+                print("hi")
+            }
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[6].tokens),
+            """
+            protocol SomeProtocol {
+                var getter: String { get }
+                func protocolMethod() -> Bool
+            }
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[6].body?[0].tokens),
+            """
+                var getter: String { get }
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[6].body?[1].tokens),
+            """
+                func protocolMethod() -> Bool
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[7].tokens),
+            """
+            class SomeClass {
+
+                enum NestedEnum {
+                    /// Doc comment
+                    case bar
+                    func test() {}
+                }
+
+                /*
+                 * Block comment
+                 */
+
+                private(set)
+                var instanceVar = "test"
+
+                @objc
+                private var computed: String {
+                    get {
+                        "computed string"
+                    }
+                }
+
+            }
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[7].body?[0].tokens),
+            """
+                enum NestedEnum {
+                    /// Doc comment
+                    case bar
+                    func test() {}
+                }
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[7].body?[0].body?[0].tokens),
+            """
+                    /// Doc comment
+                    case bar
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[7].body?[0].body?[1].tokens),
+            """
+                    func test() {}
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[7].body?[1].tokens),
+            """
+                /*
+                 * Block comment
+                 */
+
+                private(set)
+                var instanceVar = "test"
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[7].body?[2].tokens),
+            """
+                @objc
+                private var computed: String {
+                    get {
+                        "computed string"
+                    }
+                }
+
+
+            """
+        )
+    }
+
+    func testParseClassFuncDeclarationCorrectly() {
+        // `class func` is one of the few cases (possibly only!)
+        // where a declaration will have more than one token that `definesDeclarationType`
+        let input = """
+        class Foo() {}
+
+        class func foo() {}
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssert(declarations[0].keyword == "class")
+        XCTAssert(declarations[1].keyword == "func")
+    }
 }

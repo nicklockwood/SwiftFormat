@@ -449,10 +449,8 @@ public func parsingError(for tokens: [Token], options: FormatOptions) -> FormatE
 }
 
 /// Convert a token array back into a string
-public func sourceCode(for tokens: [Token]) -> String {
-    var output = ""
-    for token in tokens { output += token.string }
-    return output
+public func sourceCode(for tokens: [Token]?) -> String {
+    return (tokens ?? []).map { $0.string }.joined()
 }
 
 /// Apply specified rules to a token array and optionally capture list of changes

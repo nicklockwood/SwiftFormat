@@ -1514,17 +1514,9 @@ public struct _FormatRules {
             if let previous = formatter.last(.nonSpaceOrCommentOrLinebreak, before: idx),
                 previous != .endOfScope(")")
             {
-                let indent = formatter.indentForLine(at: idx)
-
-                formatter.insertToken(.keyword("@available"), at: idx)
-                formatter.insertToken(.startOfScope("("), at: idx + 1)
-                formatter.insertToken(.operator("*", .none), at: idx + 2)
-                formatter.insertToken(.delimiter(","), at: idx + 3)
-                formatter.insertToken(.space(" "), at: idx + 4)
-                formatter.insertToken(.identifier("unavailable"), at: idx + 5)
-                formatter.insertToken(.endOfScope(")"), at: idx + 6)
+                formatter.insertTokens(tokenize("@available(*, unavailable)"), at: idx)
                 formatter.insertToken(formatter.linebreakToken(for: idx), at: idx + 7)
-                formatter.insertSpace(indent, at: idx + 8)
+                formatter.insertSpace(formatter.indentForLine(at: idx), at: idx + 8)
             }
         }
     }

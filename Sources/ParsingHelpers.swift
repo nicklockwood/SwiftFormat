@@ -928,6 +928,219 @@ extension Formatter {
         return importStack
     }
 
+    public indirect enum Declaration: Equatable {
+        /// A Type of type-like declaration with body of additional declarations (`class`, `struct`, etc)
+        case type(kind: String, open: [Token], body: [Declaration], close: [Token])
+
+        /// A simple declaration (like a property or function)
+        case declaration(kind: String, tokens: [Token])
+
+        /// The tokens in this declaration
+        public var tokens: [Token] {
+            switch self {
+            case let .declaration(_, tokens):
+                return tokens
+            case let .type(_, openTokens, bodyDeclarations, closeTokens):
+                return openTokens + bodyDeclarations.flatMap { $0.tokens } + closeTokens
+            }
+        }
+
+        /// The body of this declaration, if applicable
+        public var body: [Declaration]? {
+            switch self {
+            case .declaration:
+                return nil
+            case let .type(_, _, body, _):
+                return body
+            }
+        }
+
+        /// The keyword that determines the specific type of declaration that this is
+        /// (`class`, `func`, `let`, `var`, etc.)
+        public var keyword: String {
+            switch self {
+            case let .declaration(kind, _),
+                 let .type(kind, _, _, _):
+                return kind
+            }
+        }
+    }
+
+    public func parseDeclarations() -> [Declaration] {
+        let parser = Formatter(tokens)
+        var declarations = [Declaration]()
+
+        while !parser.tokens.isEmpty {
+            let startOfDeclaration = 0
+            var endOfDeclaration: Int?
+
+            // Determine what type of declaration this is
+            let declarationTypeKeywordIndex: Int?
+            let declarationKeyword: String?
+
+            if let firstDeclarationTypeKeywordIndex = parser.index(
+                after: startOfDeclaration - 1,
+                where: { $0.definesDeclarationType }
+            ) {
+                // Most declarations will include exactly one token that `definesDeclarationType` in
+                // their outermost scope, but `class func` methods will have two (and the first one will be incorrect!)
+                if parser.tokens[firstDeclarationTypeKeywordIndex].string != "class" {
+                    declarationTypeKeywordIndex = firstDeclarationTypeKeywordIndex
+                    declarationKeyword = parser.tokens[firstDeclarationTypeKeywordIndex].string
+                }
+
+                // For `class` declarations, we have to look at the _last_ token that
+                // `definesDeclarationType` in the declaration's opening sequence (up until the `{`).
+                //  - This makes sure that we correctly identify `class func` declarations as being functions.
+                else if let endOfDeclarationOpeningSequence = parser.index(after: -1, where: { $0 == .startOfScope("{") }),
+                    let lastDeclarationTypeKeywordIndex = parser.lastIndex(
+                        in: 0 ..< endOfDeclarationOpeningSequence,
+                        where: { $0.definesDeclarationType }
+                    )
+                {
+                    declarationTypeKeywordIndex = lastDeclarationTypeKeywordIndex
+                    declarationKeyword = parser.tokens[lastDeclarationTypeKeywordIndex].string
+                } else {
+                    declarationTypeKeywordIndex = nil
+                    declarationKeyword = nil
+                }
+            } else {
+                declarationTypeKeywordIndex = nil
+                declarationKeyword = nil
+            }
+
+            if let declarationTypeKeywordIndex = declarationTypeKeywordIndex {
+                // Search for the next declaration so we know where this declaration ends.
+                var nextDeclarationKeywordIndex: Int?
+                var searchIndex = declarationTypeKeywordIndex + 1
+
+                while searchIndex < parser.tokens.count, nextDeclarationKeywordIndex == nil {
+                    // If we encounter a `startOfScope`, we have to skip to the end of the scope.
+                    // This accounts for things like function bodies, etc.
+                    if parser.tokens[searchIndex].isStartOfScope,
+                        let endOfScope = parser.endOfScope(at: searchIndex)
+                    {
+                        searchIndex = endOfScope + 1
+                    } else if parser.tokens[searchIndex].definesDeclarationType {
+                        nextDeclarationKeywordIndex = searchIndex
+                    } else {
+                        searchIndex += 1
+                    }
+                }
+
+                if let nextDeclarationKeywordIndex = nextDeclarationKeywordIndex {
+                    // Search backward from the next declaration's type keyword
+                    // to find exactly where that declaration begins.
+                    var startOfNextDeclaration: Int?
+                    searchIndex = nextDeclarationKeywordIndex
+
+                    while searchIndex > declarationTypeKeywordIndex, startOfNextDeclaration == nil {
+                        if parser.tokens[searchIndex - 1].canPrecedeDeclarationTypeKeyword {
+                            searchIndex -= 1
+                        }
+
+                        // If we encounter an `endOfScope`, we have to skip to the beginning of the scope.
+                        // This accounts for things like attribute bodies, etc.
+                        else if parser.tokens[searchIndex - 1].isEndOfScope {
+                            let encounteredEndOfScope = searchIndex - 1
+                            var startOfScope: Int?
+                            searchIndex -= 1
+
+                            while searchIndex > declarationTypeKeywordIndex, startOfScope == nil {
+                                if parser.tokens[searchIndex].isStartOfScope,
+                                    parser.endOfScope(at: searchIndex) == encounteredEndOfScope
+                                {
+                                    startOfScope = searchIndex
+                                    // Confirm whether or not this scope should be grouped with the
+                                    // current or previous declaration:
+                                    if let previousNonwhitespace = parser.index(
+                                        of: .nonSpaceOrCommentOrLinebreak,
+                                        before: searchIndex
+                                    ),
+                                        !parser.tokens[previousNonwhitespace].canPrecedeDeclarationTypeKeyword
+                                    {
+                                        startOfNextDeclaration = encounteredEndOfScope + 1
+                                    }
+
+                                } else {
+                                    searchIndex -= 1
+                                }
+                            }
+
+                        } else {
+                            startOfNextDeclaration = searchIndex
+                        }
+                    }
+
+                    // Now that we know where the next declaration starts,
+                    // we know where this declaration ends.
+                    if let startOfNextDeclaration = startOfNextDeclaration {
+                        endOfDeclaration = startOfNextDeclaration - 1
+                    }
+                }
+            }
+
+            // Prefer keeping linebreaks at the end of a declaration's tokens,
+            // instead of the start of the next delaration's tokens
+            while let linebreakSearchIndex = endOfDeclaration,
+                parser.token(at: linebreakSearchIndex + 1)?.isLinebreak == true
+            {
+                endOfDeclaration = linebreakSearchIndex + 1
+            }
+
+            let declarationRange = startOfDeclaration ... (endOfDeclaration ?? parser.tokens.count - 1)
+            let declaration = Array(parser.tokens[declarationRange])
+            parser.removeTokens(inRange: declarationRange)
+
+            declarations.append(.declaration(kind: declarationKeyword ?? "unknown", tokens: declaration))
+        }
+
+        return declarations.map { declaration in
+            let declarationParser = Formatter(declaration.tokens)
+
+            // If this declaration represents a type, we need to parse its inner declarations as well.
+            let typelikeKeywords = ["class", "struct", "enum", "protocol", "extension"]
+
+            if typelikeKeywords.contains(declaration.keyword),
+                let declarationTypeKeywordIndex = declarationParser.index(
+                    after: -1,
+                    where: { $0.string == declaration.keyword }
+                ),
+                let startOfBody = declarationParser.index(of: .startOfScope("{"), after: declarationTypeKeywordIndex),
+                let endOfBody = declarationParser.endOfScope(at: startOfBody)
+            {
+                var startTokens = Array(declarationParser.tokens[...startOfBody])
+                var bodyTokens = Array(declarationParser.tokens[startOfBody + 1 ..< endOfBody])
+                var endTokens = Array(declarationParser.tokens[endOfBody...])
+
+                // Move the leading newlines from the `body` into the `start` tokens
+                // so the first body token is the start of the first declaration
+                while bodyTokens.first?.isLinebreak == true {
+                    startTokens.append(bodyTokens[0])
+                    bodyTokens = Array(bodyTokens.dropFirst())
+                }
+
+                // Move the closing brace's indentation token from the `body` into the `end` tokens
+                if let lastBodyToken = bodyTokens.last, lastBodyToken.isSpace {
+                    endTokens.insert(lastBodyToken, at: 0)
+                    bodyTokens = Array(bodyTokens.dropLast())
+                }
+
+                // Parse the inner body declarations of the type
+                let bodyDeclarations = Formatter(bodyTokens).parseDeclarations()
+
+                return .type(
+                    kind: declaration.keyword,
+                    open: startTokens,
+                    body: bodyDeclarations,
+                    close: endTokens
+                )
+            } else {
+                return declaration
+            }
+        }
+    }
+
     // Shared wrap implementation
     func wrapCollectionsAndArguments(completePartialWrapping: Bool, wrapSingleArguments: Bool) {
         let maxWidth = options.maxWidth

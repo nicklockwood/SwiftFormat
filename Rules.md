@@ -23,6 +23,7 @@
 * [multilineEnumCases](#multilineEnumCases)
 * [multilineSwitchCases](#multilineSwitchCases)
 * [numberFormatting](#numberFormatting)
+* [organizeDeclarations](#organizeDeclarations)
 * [preferKeyPath](#preferKeyPath)
 * [ranges *(deprecated)*](#ranges)
 * [redundantBackticks](#redundantBackticks)
@@ -685,6 +686,68 @@ Option | Description
 ```diff
 - let big = 123456.123
 + let big = 123_456.123
+```
+
+</details>
+<br/>
+
+## organizeDeclarations
+
+Organizes declarations within class, struct, and enum bodies.
+
+Option | Description
+--- | ---
+`--categorymark` | Template for category mark comments (defaults to `MARK: %c`)
+`--beforemarks` | Declarations placed before first mark (e.g. `typealias,struct`)
+`--lifecycle` | Names of additional Lifecycle methods (e.g. `viewDidLoad`)
+`--structthreshold` | Minimum line count to organize struct body (defaults to `nil`)
+`--classthreshold` | Minimum line count to organize class body (defaults to `nil`)
+`--enumthreshold` | Minimum line count to organize enum body (defaults to `nil`)
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  public class Foo {
+-     public func c() -> String {}
+-
+-     public let a: Int = 1
+-     private let g: Int = 2
+-     let e: Int = 2
+-     public let b: Int = 3
+-
+-     public func d() {}
+-     func f() {}
+-     init() {}
+-     deinit() {}
+ }
+
+  public class Foo {
++
++     // MARK: Lifecycle
++
++     init() {}
++     deinit() {}
++
++     // MARK: Public
++
++     public let a: Int = 1
++     public let b: Int = 3
++
++     public func c() -> String {}
++     public func d() {}
++
++     // MARK: Internal
++
++     let e: Int = 2
++
++     func f() {}
++
++     // MARK: Private
++
++     private let g: Int = 2
++
+ }
 ```
 
 </details>

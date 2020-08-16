@@ -49,7 +49,9 @@ class RulesTests: XCTestCase {
         precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
         precondition(Set(exclude).intersection(rules.map { $0.name }).isEmpty, "Cannot exclude rule under test")
         let output = outputs.first ?? input, output2 = outputs.last ?? input
-        let exclude = exclude + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
+        let exclude = exclude
+            + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
+            + (rules.first?.name == "organizeDeclarations" ? [] : ["organizeDeclarations"])
         XCTAssertEqual(try format(input, rules: rules, options: options), output)
         XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude),
                                   options: options), output2)
@@ -13014,5 +13016,492 @@ class RulesTests: XCTestCase {
         let input = "let foo = bar.map { $0?.foo }"
         let options = FormatOptions(swiftVersion: "5.2")
         testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
+    }
+
+    // MARK: organizeDeclarations
+
+    func testOrganizeClassDeclarationsIntoCategories() {
+        let input = """
+        class Foo {
+
+            private func privateMethod() {}
+
+            private let bar = 1
+            public let baz = 1
+            var quux = 2
+
+            /*
+             * Block comment
+             */
+
+            init() {}
+
+            /// Doc comment
+            public func publicMethod() {}
+
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            /*
+             * Block comment
+             */
+
+            init() {}
+
+            // MARK: Public
+
+            public let baz = 1
+
+            /// Doc comment
+            public func publicMethod() {}
+
+            // MARK: Internal
+
+            var quux = 2
+
+            // MARK: Private
+
+            private let bar = 1
+
+            private func privateMethod() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testClassNestedInClassIsOrganized() {
+        let input = """
+        public class Foo {
+            public class Bar {
+                fileprivate func baaz()
+                public var quux: Int
+                init() {}
+                deinit() {}
+            }
+        }
+        """
+
+        let output = """
+        public class Foo {
+
+            // MARK: Public
+
+            public class Bar {
+
+                // MARK: Lifecycle
+
+                init() {}
+                deinit() {}
+
+                // MARK: Public
+
+                public var quux: Int
+
+                // MARK: Fileprivate
+
+                fileprivate func baaz()
+
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "spaceAroundParens"]
+        )
+    }
+
+    func testStructNestedInExtensionIsOrganized() {
+        let input = """
+        public extension Foo {
+            struct Bar {
+                private var foo: Int
+                private let bar: Int
+
+                public var foobar: (Int, Int) {
+                    (foo, bar)
+                }
+
+                public init(foo: Int, bar: Int) {
+                    self.foo = foo
+                    self.bar = bar
+                }
+            }
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            struct Bar {
+
+                // MARK: Lifecycle
+
+                public init(foo: Int, bar: Int) {
+                    self.foo = foo
+                    self.bar = bar
+                }
+
+                // MARK: Public
+
+                public var foobar: (Int, Int) {
+                    (foo, bar)
+                }
+
+                // MARK: Private
+
+                private var foo: Int
+                private let bar: Int
+
+            }
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testOrganizePrivateSet() {
+        let input = """
+        struct Foo {
+            public private(set) var bar: Int
+            private(set) var baz: Int
+            internal private(set) var baz: Int
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            // MARK: Public
+
+            public private(set) var bar: Int
+
+            // MARK: Internal
+
+            private(set) var baz: Int
+            internal private(set) var baz: Int
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testSortDeclarationTypes() {
+        let input = """
+        struct Foo {
+            static var a1: Int = 1
+            static var a2: Int = 2
+            var d: CGFloat {
+                3.141592653589
+            }
+
+            func g() -> Int {
+                10
+            }
+
+            let c: String = String {
+                "closure body"
+            }()
+
+            static func e() {}
+
+            static var b: String {
+                "computed property"
+            }
+
+            class func f() -> Foo {
+                Foo()
+            }
+
+            enum NestedEnum {}
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            // MARK: Internal
+
+            enum NestedEnum {}
+
+            static var a1: Int = 1
+            static var a2: Int = 2
+
+            static var b: String {
+                "computed property"
+            }
+
+            let c: String = String {
+                "closure body"
+            }()
+
+            var d: CGFloat {
+                3.141592653589
+            }
+
+            static func e() {}
+
+            class func f() -> Foo {
+                Foo()
+            }
+
+            func g() -> Int {
+                10
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testOrganizeEnumCasesFirst() {
+        let input = """
+        enum Foo {
+            init?(rawValue: String) {
+                return nil
+            }
+
+            case bar
+            case baz
+            case quux
+        }
+        """
+
+        let output = """
+        enum Foo {
+            case bar
+            case baz
+            case quux
+
+            // MARK: Lifecycle
+
+            init?(rawValue: String) {
+                return nil
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "unusedArguments"]
+        )
+    }
+
+    func testPlacingCustomDeclarationsBeforeMarks() {
+        let input = """
+        struct Foo {
+
+            public init() {}
+
+            public typealias Bar = Int
+
+            public struct Baz {}
+
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            public typealias Bar = Int
+
+            public struct Baz {}
+
+            // MARK: Lifecycle
+
+            public init() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(beforeMarks: ["typealias", "struct"]),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testCustomLifecycleMethods() {
+        let input = """
+        class ViewController: UIViewController {
+
+            public init() {
+                super.init(nibName: nil, bundle: nil)
+            }
+
+            func viewDidLoad() {
+                super.viewDidLoad()
+            }
+
+            func internalInstanceMethod() {}
+
+            func viewDidAppear(_ animated: Bool) {
+                super.viewDidAppear(animated)
+            }
+
+        }
+        """
+
+        let output = """
+        class ViewController: UIViewController {
+
+            // MARK: Lifecycle
+
+            public init() {
+                super.init(nibName: nil, bundle: nil)
+            }
+
+            func viewDidLoad() {
+                super.viewDidLoad()
+            }
+
+            func viewDidAppear(_ animated: Bool) {
+                super.viewDidAppear(animated)
+            }
+
+            // MARK: Internal
+
+            func internalInstanceMethod() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(lifecycleMethods: ["viewDidLoad", "viewWillAppear", "viewDidAppear"]),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testCustomCategoryMarkTemplate() {
+        let input = """
+        struct Foo {
+            public init() {}
+            public func publicInstanceMethod() {}
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            // - Lifecycle
+
+            public init() {}
+
+            // - Public
+
+            public func publicInstanceMethod() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(categoryMarkComment: "- %c"),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testBelowCustomStructOrganizationThreshold() {
+        let input = """
+        struct StructBelowThreshold {
+            init() {}
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeStructThreshold: 2)
+        )
+    }
+
+    func testAboveCustomStructOrganizationThreshold() {
+        let input = """
+        struct StructAboveThreshold {
+            init() {}
+            public func instanceMethod() {}
+        }
+        """
+
+        let output = """
+        struct StructAboveThreshold {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Public
+
+            public func instanceMethod() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeStructThreshold: 2),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testCustomClassOrganizationThreshold() {
+        let input = """
+        class ClassBelowThreshold {
+            init() {}
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeClassThreshold: 2)
+        )
+    }
+
+    func testCustomEnumOrganizationThreshold() {
+        let input = """
+        enum EnumBelowThreshold {
+            case enumCase
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeEnumThreshold: 2)
+        )
     }
 }

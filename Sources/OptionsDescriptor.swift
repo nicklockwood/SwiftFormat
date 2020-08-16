@@ -295,6 +295,12 @@ extension FormatOptions.Descriptor {
         funcAttributes,
         typeAttributes,
         varAttributes,
+        categoryMark,
+        beforeMarks,
+        lifecycleMethods,
+        organizeClassThreshold,
+        organizeStructThreshold,
+        organizeEnumThreshold,
         yodaSwap,
 
         // Deprecated
@@ -683,6 +689,74 @@ extension FormatOptions.Descriptor {
         help: "Use ? for Optionals \"always\" (default) or \"except-properties\"",
         keyPath: \.shortOptionals,
         options: ["always", "except-properties"]
+    )
+    static let categoryMark = FormatOptions.Descriptor(
+        argumentName: "categorymark",
+        propertyName: "categoryMarkComment",
+        displayName: "Category Mark Comment",
+        help: "Template for category mark comments (defaults to `MARK: %c`)",
+        keyPath: \.categoryMarkComment,
+        fromArgument: { $0 },
+        toArgument: { $0 }
+    )
+    static let beforeMarks = FormatOptions.Descriptor(
+        argumentName: "beforemarks",
+        propertyName: "beforeMarks",
+        displayName: "Before Marks",
+        help: "Declarations placed before first mark (e.g. `typealias,struct`)",
+        keyPath: \.beforeMarks
+    )
+    static let lifecycleMethods = FormatOptions.Descriptor(
+        argumentName: "lifecycle",
+        propertyName: "lifecycleMethods",
+        displayName: "Lifecycle Methods",
+        help: "Names of additional Lifecycle methods (e.g. `viewDidLoad`)",
+        keyPath: \.lifecycleMethods
+    )
+    static let organizeStructThreshold = FormatOptions.Descriptor(
+        argumentName: "structthreshold",
+        propertyName: "organizeStructThreshold",
+        displayName: "Organize Struct Threshold",
+        help: "Minimum line count to organize struct body (defaults to `nil`)",
+        keyPath: \.organizeStructThreshold,
+        fromArgument: { .some(Int($0)) },
+        toArgument: {
+            if let lineCount = $0 {
+                return "\(lineCount)"
+            } else {
+                return ""
+            }
+        }
+    )
+    static let organizeClassThreshold = FormatOptions.Descriptor(
+        argumentName: "classthreshold",
+        propertyName: "organizeClassThreshold",
+        displayName: "Organize Class Threshold",
+        help: "Minimum line count to organize class body (defaults to `nil`)",
+        keyPath: \.organizeClassThreshold,
+        fromArgument: { .some(Int($0)) },
+        toArgument: {
+            if let lineCount = $0 {
+                return "\(lineCount)"
+            } else {
+                return ""
+            }
+        }
+    )
+    static let organizeEnumThreshold = FormatOptions.Descriptor(
+        argumentName: "enumthreshold",
+        propertyName: "organizeEnumThreshold",
+        displayName: "Organize Enum Threshold",
+        help: "Minimum line count to organize enum body (defaults to `nil`)",
+        keyPath: \.organizeEnumThreshold,
+        fromArgument: { .some(Int($0)) },
+        toArgument: {
+            if let lineCount = $0 {
+                return "\(lineCount)"
+            } else {
+                return ""
+            }
+        }
     )
 
     // MARK: - Internal

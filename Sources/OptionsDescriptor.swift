@@ -758,34 +758,6 @@ extension FormatOptions.Descriptor {
             }
         }
     )
-
-    // MARK: - Internal
-
-    static let fragment = FormatOptions.Descriptor(
-        argumentName: "fragment",
-        propertyName: "fragment",
-        displayName: "Fragment",
-        help: "Input is part of a larger file: \"true\" or \"false\" (default)",
-        keyPath: \.fragment,
-        trueValues: ["true", "enabled"],
-        falseValues: ["false", "disabled"]
-    )
-    static let ignoreConflictMarkers = FormatOptions.Descriptor(
-        argumentName: "conflictmarkers",
-        propertyName: "ignoreConflictMarkers",
-        displayName: "Conflict Markers",
-        help: "Merge-conflict markers: \"reject\" (default) or \"ignore\"",
-        keyPath: \.ignoreConflictMarkers,
-        trueValues: ["ignore", "true", "enabled"],
-        falseValues: ["reject", "false", "disabled"]
-    )
-    static let swiftVersion = FormatOptions.Descriptor(
-        argumentName: "swiftversion",
-        propertyName: "swiftVersion",
-        displayName: "Swift Version",
-        help: "The version of Swift used in the files being formatted",
-        keyPath: \.swiftVersion
-    )
     static let funcAttributes = FormatOptions.Descriptor(
         argumentName: "funcattributes",
         propertyName: "funcAttributes",
@@ -813,6 +785,34 @@ extension FormatOptions.Descriptor {
         displayName: "Yoda Swap",
         help: "Swap yoda values: \"always\" (default) or \"literals-only\"",
         keyPath: \.yodaSwap
+    )
+
+    // MARK: - Internal
+
+    static let fragment = FormatOptions.Descriptor(
+        argumentName: "fragment",
+        propertyName: "fragment",
+        displayName: "Fragment",
+        help: "Input is part of a larger file: \"true\" or \"false\" (default)",
+        keyPath: \.fragment,
+        trueValues: ["true", "enabled"],
+        falseValues: ["false", "disabled"]
+    )
+    static let ignoreConflictMarkers = FormatOptions.Descriptor(
+        argumentName: "conflictmarkers",
+        propertyName: "ignoreConflictMarkers",
+        displayName: "Conflict Markers",
+        help: "Merge-conflict markers: \"reject\" (default) or \"ignore\"",
+        keyPath: \.ignoreConflictMarkers,
+        trueValues: ["ignore", "true", "enabled"],
+        falseValues: ["reject", "false", "disabled"]
+    )
+    static let swiftVersion = FormatOptions.Descriptor(
+        argumentName: "swiftversion",
+        propertyName: "swiftVersion",
+        displayName: "Swift Version",
+        help: "The version of Swift used in the files being formatted",
+        keyPath: \.swiftVersion
     )
 
     // MARK: - DEPRECATED

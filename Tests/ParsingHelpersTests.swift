@@ -533,7 +533,7 @@ class ParsingHelpersTests: XCTestCase {
             "weak", "unowned",
             "static", "class",
             "mutating", "nonmutating",
-            "prefix", "postfix",
+            "prefix", "infix", "postfix",
         ])
     }
 
@@ -865,7 +865,7 @@ class ParsingHelpersTests: XCTestCase {
 
     func testParseClassFuncDeclarationCorrectly() {
         // `class func` is one of the few cases (possibly only!)
-        // where a declaration will have more than one token that `definesDeclarationType`
+        // where a declaration will have more than one declaration token
         let input = """
         class Foo() {}
 

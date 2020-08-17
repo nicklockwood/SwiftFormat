@@ -1488,14 +1488,6 @@ public struct _FormatRules {
         options: [],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        let unavailableTokens = tokenize("@available(*, unavailable)")
-
-        func insertMethodUnavailableAt(index: Int) {
-            formatter.insertTokens(unavailableTokens, at: index)
-            formatter.insertToken(formatter.linebreakToken(for: index), at: index + 7)
-            formatter.insertSpace(formatter.indentForLine(at: index), at: index + 8)
-        }
-
         formatter.forEach(.identifier("required")) { i, _ in
             // look for required init?(coder
             guard let initIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
@@ -1538,7 +1530,9 @@ public struct _FormatRules {
             let lastKeyword = formatter.last(.keyword, before: i)
             guard lastKeyword != .keyword("@available") else { return }
 
-            insertMethodUnavailableAt(index: i)
+            formatter.insertTokens(tokenize("@available(*, unavailable)"), at: i)
+            formatter.insertToken(formatter.linebreakToken(for: i), at: i + 7)
+            formatter.insertSpace(formatter.indentForLine(at: i), at: i + 8)
         }
     }
 

@@ -32,9 +32,11 @@
 import Foundation
 
 /// Public interface for the SwiftFormat command-line functions
-public struct CLI {
+public enum CLI {}
+
+public extension CLI {
     /// Output type for printed content
-    public enum OutputType {
+    enum OutputType {
         case info
         case success
         case error
@@ -44,23 +46,23 @@ public struct CLI {
     }
 
     /// Output handler - override this to intercept output from the CLI
-    public static var print: (String, OutputType) -> Void = { _, _ in
+    static var print: (String, OutputType) -> Void = { _, _ in
         fatalError("No print hook set.")
     }
 
     /// Input handler - override this to inject input into the CLI
     /// Injected lines should include the terminating newline character
-    public static var readLine: () -> String? = {
+    static var readLine: () -> String? = {
         Swift.readLine(strippingNewline: false)
     }
 
     /// Run the CLI with the specified input arguments
-    public static func run(in directory: String, with args: [String] = CommandLine.arguments) -> ExitCode {
+    static func run(in directory: String, with args: [String] = CommandLine.arguments) -> ExitCode {
         return processArguments(args, in: directory)
     }
 
     /// Run the CLI with the specified input string (this will be parsed into multiple arguments)
-    public static func run(in directory: String, with argumentString: String) -> ExitCode {
+    static func run(in directory: String, with argumentString: String) -> ExitCode {
         return run(in: directory, with: parseArguments(argumentString))
     }
 }

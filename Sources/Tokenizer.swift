@@ -118,12 +118,6 @@ public enum OperatorType {
     case postfix
 }
 
-// String delimiter info
-private struct StringDelimiterType {
-    var isMultiline: Bool
-    var hashCount: Int
-}
-
 // Original line number for token
 public typealias OriginalLine = Int
 
@@ -141,9 +135,89 @@ public enum Token: Equatable {
     case space(String)
     case commentBody(String)
     case error(String)
+}
 
+private extension Token {
+    enum Match {
+        case none
+        case type
+        case typeAndSubtype
+        case typeAndString
+        case exact
+    }
+
+    func match(with token: Token) -> Match {
+        switch (self, token) {
+        case let (.number(a, c), .number(b, d)):
+            return a == b ?
+                (c == d ? .exact : .typeAndString) :
+                (c == d ? .typeAndSubtype : .type)
+        case let (.operator(a, c), .operator(b, d)):
+            return a == b ?
+                (c == d ? .exact : .typeAndString) :
+                (c == d ? .typeAndSubtype : .type)
+        case let (.linebreak(a, _), .linebreak(b, _)),
+             let (.startOfScope(a), .startOfScope(b)),
+             let (.endOfScope(a), .endOfScope(b)),
+             let (.delimiter(a), .delimiter(b)),
+             let (.keyword(a), .keyword(b)),
+             let (.identifier(a), .identifier(b)),
+             let (.stringBody(a), .stringBody(b)),
+             let (.commentBody(a), .commentBody(b)),
+             let (.space(a), .space(b)),
+             let (.error(a), .error(b)):
+            return a == b ? .exact : .type
+        case (.number, _),
+             (.operator, _),
+             (.linebreak, _),
+             (.startOfScope, _),
+             (.endOfScope, _),
+             (.delimiter, _),
+             (.keyword, _),
+             (.identifier, _),
+             (.stringBody, _),
+             (.commentBody, _),
+             (.space, _),
+             (.error, _):
+            return .none
+        }
+    }
+
+    /// Test if token matchs type of another token
+    func hasType(of token: Token) -> Bool {
+        return match(with: token) != .none
+    }
+
+    struct StringDelimiterType {
+        var isMultiline: Bool
+        var hashCount: Int
+    }
+
+    var stringDelimiterType: StringDelimiterType? {
+        switch self {
+        case let .startOfScope(string), let .endOfScope(string):
+            var quoteCount = 0, hashCount = 0
+            for c in string {
+                switch c {
+                case "#": hashCount += 1
+                case "\"": quoteCount += 1
+                default: break
+                }
+            }
+            guard quoteCount > 0 else {
+                return nil
+            }
+            assert(quoteCount == 1 || quoteCount == 3)
+            return StringDelimiterType(isMultiline: quoteCount == 3, hashCount: hashCount)
+        default:
+            return nil
+        }
+    }
+}
+
+public extension Token {
     /// The original token string
-    public var string: String {
+    var string: String {
         switch self {
         case let .number(string, _),
              let .linebreak(string, _),
@@ -162,7 +236,7 @@ public enum Token: Equatable {
     }
 
     /// Returns the width (in characters) of the token
-    public func columnWidth(tabWidth: Int) -> Int {
+    func columnWidth(tabWidth: Int) -> Int {
         switch self {
         case let .space(string), let .stringBody(string), let .commentBody(string):
             guard tabWidth > 1 else {
@@ -179,7 +253,7 @@ public enum Token: Equatable {
     }
 
     /// Returns the unescaped token string
-    public func unescaped() -> String {
+    func unescaped() -> String {
         switch self {
         case .stringBody:
             var input = UnicodeScalarView(string.unicodeScalars)
@@ -245,7 +319,7 @@ public enum Token: Equatable {
     }
 
     /// Test if token is of the specified type
-    public func `is`(_ type: TokenType) -> Bool {
+    func `is`(_ type: TokenType) -> Bool {
         switch type {
         case .space:
             return isSpace
@@ -294,97 +368,48 @@ public enum Token: Equatable {
         }
     }
 
-    private enum Match {
-        case none
-        case type
-        case typeAndSubtype
-        case typeAndString
-        case exact
-    }
+    var isAttribute: Bool { return isKeyword && string.hasPrefix("@") }
+    var isDelimiter: Bool { return hasType(of: .delimiter("")) }
+    var isOperator: Bool { return hasType(of: .operator("", .none)) }
+    var isUnwrapOperator: Bool { return isOperator("?", .postfix) || isOperator("!", .postfix) }
+    var isRangeOperator: Bool { return isOperator("...") || isOperator("..<") }
+    var isNumber: Bool { return hasType(of: .number("", .integer)) }
+    var isError: Bool { return hasType(of: .error("")) }
+    var isStartOfScope: Bool { return hasType(of: .startOfScope("")) }
+    var isEndOfScope: Bool { return hasType(of: .endOfScope("")) }
+    var isKeyword: Bool { return hasType(of: .keyword("")) }
+    var isIdentifier: Bool { return hasType(of: .identifier("")) }
+    var isIdentifierOrKeyword: Bool { return isIdentifier || isKeyword }
+    var isSpace: Bool { return hasType(of: .space("")) }
+    var isLinebreak: Bool { return hasType(of: .linebreak("", 0)) }
+    var isEndOfStatement: Bool { return self == .delimiter(";") || isLinebreak }
+    var isSpaceOrLinebreak: Bool { return isSpace || isLinebreak }
+    var isSpaceOrComment: Bool { return isSpace || isComment }
+    var isSpaceOrCommentOrLinebreak: Bool { return isSpaceOrComment || isLinebreak }
+    var isCommentOrLinebreak: Bool { return isComment || isLinebreak }
 
-    private func match(with token: Token) -> Match {
-        switch (self, token) {
-        case let (.number(a, c), .number(b, d)):
-            return a == b ?
-                (c == d ? .exact : .typeAndString) :
-                (c == d ? .typeAndSubtype : .type)
-        case let (.operator(a, c), .operator(b, d)):
-            return a == b ?
-                (c == d ? .exact : .typeAndString) :
-                (c == d ? .typeAndSubtype : .type)
-        case let (.linebreak(a, _), .linebreak(b, _)),
-             let (.startOfScope(a), .startOfScope(b)),
-             let (.endOfScope(a), .endOfScope(b)),
-             let (.delimiter(a), .delimiter(b)),
-             let (.keyword(a), .keyword(b)),
-             let (.identifier(a), .identifier(b)),
-             let (.stringBody(a), .stringBody(b)),
-             let (.commentBody(a), .commentBody(b)),
-             let (.space(a), .space(b)),
-             let (.error(a), .error(b)):
-            return a == b ? .exact : .type
-        case (.number, _),
-             (.operator, _),
-             (.linebreak, _),
-             (.startOfScope, _),
-             (.endOfScope, _),
-             (.delimiter, _),
-             (.keyword, _),
-             (.identifier, _),
-             (.stringBody, _),
-             (.commentBody, _),
-             (.space, _),
-             (.error, _):
-            return .none
-        }
-    }
-
-    private func hasType(of token: Token) -> Bool {
-        return match(with: token) != .none
-    }
-
-    public var isAttribute: Bool { return isKeyword && string.hasPrefix("@") }
-    public var isDelimiter: Bool { return hasType(of: .delimiter("")) }
-    public var isOperator: Bool { return hasType(of: .operator("", .none)) }
-    public var isUnwrapOperator: Bool { return isOperator("?", .postfix) || isOperator("!", .postfix) }
-    public var isRangeOperator: Bool { return isOperator("...") || isOperator("..<") }
-    public var isNumber: Bool { return hasType(of: .number("", .integer)) }
-    public var isError: Bool { return hasType(of: .error("")) }
-    public var isStartOfScope: Bool { return hasType(of: .startOfScope("")) }
-    public var isEndOfScope: Bool { return hasType(of: .endOfScope("")) }
-    public var isKeyword: Bool { return hasType(of: .keyword("")) }
-    public var isIdentifier: Bool { return hasType(of: .identifier("")) }
-    public var isIdentifierOrKeyword: Bool { return isIdentifier || isKeyword }
-    public var isSpace: Bool { return hasType(of: .space("")) }
-    public var isLinebreak: Bool { return hasType(of: .linebreak("", 0)) }
-    public var isEndOfStatement: Bool { return self == .delimiter(";") || isLinebreak }
-    public var isSpaceOrLinebreak: Bool { return isSpace || isLinebreak }
-    public var isSpaceOrComment: Bool { return isSpace || isComment }
-    public var isSpaceOrCommentOrLinebreak: Bool { return isSpaceOrComment || isLinebreak }
-    public var isCommentOrLinebreak: Bool { return isComment || isLinebreak }
-
-    public func isOperator(_ string: String) -> Bool {
+    func isOperator(_ string: String) -> Bool {
         if case .operator(string, _) = self {
             return true
         }
         return false
     }
 
-    public func isOperator(ofType type: OperatorType) -> Bool {
+    func isOperator(ofType type: OperatorType) -> Bool {
         if case .operator(_, type) = self {
             return true
         }
         return false
     }
 
-    public func isOperator(_ string: String, _ type: OperatorType) -> Bool {
+    func isOperator(_ string: String, _ type: OperatorType) -> Bool {
         if case .operator(string, type) = self {
             return true
         }
         return false
     }
 
-    public var isComment: Bool {
+    var isComment: Bool {
         switch self {
         case .commentBody,
              .startOfScope("//"),
@@ -396,7 +421,7 @@ public enum Token: Equatable {
         }
     }
 
-    public var isStringBody: Bool {
+    var isStringBody: Bool {
         switch self {
         case .stringBody:
             return true
@@ -405,7 +430,7 @@ public enum Token: Equatable {
         }
     }
 
-    public var isStringDelimiter: Bool {
+    var isStringDelimiter: Bool {
         switch self {
         case let .startOfScope(string), let .endOfScope(string):
             return string.contains("\"")
@@ -414,32 +439,11 @@ public enum Token: Equatable {
         }
     }
 
-    public var isMultilineStringDelimiter: Bool {
+    var isMultilineStringDelimiter: Bool {
         return stringDelimiterType?.isMultiline == true
     }
 
-    fileprivate var stringDelimiterType: StringDelimiterType? {
-        switch self {
-        case let .startOfScope(string), let .endOfScope(string):
-            var quoteCount = 0, hashCount = 0
-            for c in string {
-                switch c {
-                case "#": hashCount += 1
-                case "\"": quoteCount += 1
-                default: break
-                }
-            }
-            guard quoteCount > 0 else {
-                return nil
-            }
-            assert(quoteCount == 1 || quoteCount == 3)
-            return StringDelimiterType(isMultiline: quoteCount == 3, hashCount: hashCount)
-        default:
-            return nil
-        }
-    }
-
-    public func isEndOfScope(_ token: Token) -> Bool {
+    func isEndOfScope(_ token: Token) -> Bool {
         switch self {
         case let .endOfScope(closing):
             guard case let .startOfScope(opening) = token else {
@@ -489,7 +493,9 @@ public enum Token: Equatable {
             return false
         }
     }
+}
 
+extension Token {
     var isLvalue: Bool {
         switch self {
         case .identifier, .number, .operator(_, .postfix),
@@ -517,40 +523,6 @@ public enum Token: Equatable {
         default:
             return false
         }
-    }
-
-    /// Whether or not this token "defines" the specific type of declaration
-    ///  - A valid declaration will usually include exactly one of these keywords in its outermost scope.
-    ///  - A notable exception is `class func`, which will include two of these keywords.
-    public var definesDeclarationType: Bool {
-        // All of the keywords that map to individual Declaration grammars
-        // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
-        let declarationKeywords = ["import", "let", "var", "typealias", "func", "enum", "case",
-                                   "struct", "class", "protocol", "init", "deinit",
-                                   "extension", "subscript", "operator", "precedencegroup"]
-
-        return isKeyword && declarationKeywords.contains(string)
-    }
-
-    /// Whether or not this token can preceed the token that `definesDeclarationType`
-    /// in a given declaration. e.g. `public` can preceed `var` in `public var foo = "bar"`.
-    public var canPrecedeDeclarationTypeKeyword: Bool {
-        /// All of the tokens that can typically preceed the main keyword of a declaration
-        if isAttribute || isKeyword || isSpaceOrCommentOrLinebreak {
-            return true
-        }
-
-        // Some tokens are aren't treated as "keywords" by `token.isKeyword`,
-        // but count as keywords in the context of declarations:
-        let contextualKeywords = ["convenience", "dynamic", "final", "indirect", "infix", "lazy",
-                                  "mutating", "nonmutating", "open", "optional", "override", "postfix",
-                                  "precedence", "prefix", "required", "some", "unowned", "weak"]
-
-        if isIdentifier, contextualKeywords.contains(string) {
-            return true
-        }
-
-        return false
     }
 }
 

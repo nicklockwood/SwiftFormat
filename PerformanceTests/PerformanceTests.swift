@@ -81,7 +81,7 @@ class PerformanceTests: XCTestCase {
 //        }
 //    }
 //
-//    // Not possible to run in dry mode because it won't werite to cache
+//    // Not possible to run in dry mode because it won't write to cache
 //    // TODO: find a better way to test this
 //    func testCachedFormatting() {
 //        CLI.print = { _, _ in }

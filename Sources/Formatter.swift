@@ -178,12 +178,10 @@ public class Formatter: NSObject {
     }
 
     /// Changes made
-    // TODO: make private(set)
-    public var changes = [Change]()
+    public private(set) var changes = [Change]()
 
     /// Should formatter track changes?
-    // TODO: make let/private
-    public var trackChanges = false
+    private let trackChanges: Bool
 
     private func trackChange(at index: Int) {
         guard trackChanges, let rule = currentRule else { return }
@@ -210,30 +208,33 @@ public class Formatter: NSObject {
         errors.append(.parsing(error + " on line \(line)"))
         ruleDisabled = true
     }
+}
 
+public extension Formatter {
     // MARK: access and mutation
 
     /// Returns the token at the specified index, or nil if index is invalid
-    public func token(at index: Int) -> Token? {
-        guard index >= 0, index < tokens.count else { return nil }
-        return tokens[index]
+    func token(at index: Int) -> Token? {
+        return tokens.indices.contains(index) ? tokens[index] : nil
     }
 
     /// Replaces the token at the specified index with one or more new tokens
-    public func replaceToken(at index: Int, with tokens: [Token]) {
+    func replaceToken(at index: Int, with tokens: ArraySlice<Token>) {
         if tokens.isEmpty {
             removeToken(at: index)
-        } else if tokens.count != 1 || tokens[0] != self.tokens[index] {
-            trackChange(at: index)
-            self.tokens[index] = tokens[0]
-            for (i, token) in tokens.dropFirst().enumerated() {
-                insertToken(token, at: index + i + 1)
-            }
+        } else if let token = tokens.first {
+            replaceToken(at: index, with: token)
+            insert(tokens.dropFirst(), at: index + 1)
         }
     }
 
+    /// Replaces the token at the specified index with one or more new tokens
+    func replaceToken(at index: Int, with tokens: [Token]) {
+        replaceToken(at: index, with: ArraySlice(tokens))
+    }
+
     /// Replaces the token at the specified index with a new token
-    public func replaceToken(at index: Int, with token: Token) {
+    func replaceToken(at index: Int, with token: Token) {
         if token != tokens[index] {
             trackChange(at: index)
             tokens[index] = token
@@ -242,31 +243,60 @@ public class Formatter: NSObject {
 
     /// Replaces the tokens in the specified range with new tokens
     @discardableResult
-    public func replaceTokens(inRange range: Range<Int>, with tokens: [Token]) -> Int {
+    func replaceTokens(in range: Range<Int>, with tokens: ArraySlice<Token>) -> Int {
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
-            replaceToken(at: range.lowerBound + i, with: tokens[i])
+            replaceToken(at: range.lowerBound + i, with: tokens[tokens.startIndex + i])
         }
         if range.count > max {
-            for _ in max ..< range.count {
-                removeToken(at: range.lowerBound + max)
-            }
+            removeTokens(in: range.dropFirst(max))
         } else {
-            for i in max ..< tokens.count {
-                insertToken(tokens[i], at: range.lowerBound + i)
-            }
+            insert(tokens.dropFirst(max), at: range.lowerBound + max)
         }
         return tokens.count - range.count
     }
 
+    /// Replaces the tokens in the specified range with new tokens
+    @discardableResult
+    func replaceTokens(in range: Range<Int>, with tokens: [Token]) -> Int {
+        return replaceTokens(in: range, with: ArraySlice(tokens))
+    }
+
+    /// Replaces the tokens in the specified range with a new token
+    @discardableResult
+    func replaceTokens(in range: Range<Int>, with token: Token) -> Int {
+        switch range.count {
+        case 1:
+            replaceToken(at: range.lowerBound, with: token)
+        case 0:
+            insert(token, at: range.lowerBound)
+        default:
+            replaceToken(at: range.lowerBound, with: token)
+            removeTokens(in: range.dropFirst())
+        }
+        return 1 - range.count
+    }
+
+    /// Replaces the tokens in the specified range with new tokens
+    @discardableResult
+    func replaceTokens(in range: ClosedRange<Int>, with tokens: ArraySlice<Token>) -> Int {
+        return replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: tokens)
+    }
+
     /// Replaces the tokens in the specified closed range with new tokens
     @discardableResult
-    public func replaceTokens(inRange range: ClosedRange<Int>, with tokens: [Token]) -> Int {
-        return replaceTokens(inRange: range.lowerBound ..< range.upperBound + 1, with: tokens)
+    func replaceTokens(in range: ClosedRange<Int>, with tokens: [Token]) -> Int {
+        return replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: tokens)
+    }
+
+    /// Replaces the tokens in the specified closed range with a new token
+    @discardableResult
+    func replaceTokens(in range: ClosedRange<Int>, with token: Token) -> Int {
+        return replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: token)
     }
 
     /// Removes the token at the specified index
-    public func removeToken(at index: Int) {
+    func removeToken(at index: Int) {
         trackChange(at: index)
         updateRange(at: index, delta: -1)
         tokens.remove(at: index)
@@ -276,42 +306,53 @@ public class Formatter: NSObject {
     }
 
     /// Removes the tokens in the specified range
-    public func removeTokens(inRange range: Range<Int>) {
-        replaceTokens(inRange: range, with: [])
+    func removeTokens(in range: Range<Int>) {
+        for index in range.reversed() {
+            removeToken(at: index)
+        }
     }
 
     /// Removes the tokens in the specified closed range
-    public func removeTokens(inRange range: ClosedRange<Int>) {
-        replaceTokens(inRange: range, with: [])
+    func removeTokens(in range: ClosedRange<Int>) {
+        removeTokens(in: range.lowerBound ..< range.upperBound + 1)
     }
 
     /// Removes the last token
-    public func removeLastToken() {
+    func removeLastToken() {
         trackChange(at: tokens.endIndex - 1)
         updateRange(at: tokens.endIndex - 1, delta: -1)
         tokens.removeLast()
     }
 
     /// Inserts an array of tokens at the specified index
-    public func insertTokens(_ tokens: [Token], at index: Int) {
+    func insert(_ tokens: ArraySlice<Token>, at index: Int) {
+        if tokens.isEmpty { return }
         trackChange(at: index)
-        for token in tokens.reversed() {
-            updateRange(at: index, delta: 1)
-            self.tokens.insert(token, at: index)
-        }
+        updateRange(at: index, delta: tokens.count)
+        self.tokens.insert(contentsOf: tokens, at: index)
         if enumerationIndex >= index {
             enumerationIndex += tokens.count
         }
     }
 
+    /// Inserts an array of tokens at the specified index
+    func insert(_ tokens: [Token], at index: Int) {
+        insert(ArraySlice(tokens), at: index)
+    }
+
     /// Inserts a single token at the specified index
-    public func insertToken(_ token: Token, at index: Int) {
-        insertTokens([token], at: index)
+    func insert(_ token: Token, at index: Int) {
+        trackChange(at: index)
+        updateRange(at: index, delta: 1)
+        tokens.insert(token, at: index)
+        if enumerationIndex >= index {
+            enumerationIndex += 1
+        }
     }
 
     // MARK: enumeration
 
-    func forEachToken(onlyWhereEnabled: Bool, _ body: (Int, Token) -> Void) {
+    internal func forEachToken(onlyWhereEnabled: Bool, _ body: (Int, Token) -> Void) {
         assert(enumerationIndex == -1, "forEachToken does not support re-entrancy")
         enumerationIndex = 0
         while enumerationIndex < tokens.count {
@@ -335,12 +376,12 @@ public class Formatter: NSObject {
     /// Loops through each token in the array. It is safe to mutate the token
     /// array inside the body block, but note that the index and token arguments
     /// may not reflect the current token any more after a mutation
-    public func forEachToken(_ body: (Int, Token) -> Void) {
+    func forEachToken(_ body: (Int, Token) -> Void) {
         forEachToken(onlyWhereEnabled: true, body)
     }
 
     /// As above, but only loops through tokens that match the specified filter block
-    public func forEachToken(where matching: (Token) -> Bool, _ body: (Int, Token) -> Void) {
+    func forEachToken(where matching: (Token) -> Bool, _ body: (Int, Token) -> Void) {
         forEachToken { index, token in
             if matching(token) {
                 body(index, token)
@@ -349,19 +390,19 @@ public class Formatter: NSObject {
     }
 
     /// As above, but only loops through tokens with the specified type and string
-    public func forEach(_ token: Token, _ body: (Int, Token) -> Void) {
+    func forEach(_ token: Token, _ body: (Int, Token) -> Void) {
         forEachToken(where: { $0 == token }, body)
     }
 
     /// As above, but only loops through tokens with the specified type and string
-    public func forEach(_ type: TokenType, _ body: (Int, Token) -> Void) {
+    func forEach(_ type: TokenType, _ body: (Int, Token) -> Void) {
         forEachToken(where: { $0.is(type) }, body)
     }
 
     // MARK: utilities
 
     /// Returns the index of the next token in the specified range that matches the block
-    public func index(in range: CountableRange<Int>, where matches: (Token) -> Bool) -> Int? {
+    func index(in range: CountableRange<Int>, where matches: (Token) -> Bool) -> Int? {
         let range = range.clamped(to: 0 ..< tokens.count)
         var scopeStack: [Token] = []
         for i in range {
@@ -393,48 +434,48 @@ public class Formatter: NSObject {
     }
 
     /// Returns the index of the next token at the current scope that matches the block
-    public func index(after index: Int, where matches: (Token) -> Bool) -> Int? {
+    func index(after index: Int, where matches: (Token) -> Bool) -> Int? {
         guard index < tokens.count else { return nil }
         return self.index(in: index + 1 ..< tokens.count, where: matches)
     }
 
     /// Returns the index of the next matching token in the specified range
-    public func index(of token: Token, in range: CountableRange<Int>) -> Int? {
+    func index(of token: Token, in range: CountableRange<Int>) -> Int? {
         return index(in: range, where: { $0 == token })
     }
 
     /// Returns the index of the next matching token at the current scope
-    public func index(of token: Token, after index: Int) -> Int? {
+    func index(of token: Token, after index: Int) -> Int? {
         return self.index(after: index, where: { $0 == token })
     }
 
     /// Returns the index of the next token in the specified range of the specified type
-    public func index(of type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+    func index(of type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Int? {
         return index(in: range, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the index of the next token at the current scope of the specified type
-    public func index(of type: TokenType, after index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+    func index(of type: TokenType, after index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
         return self.index(after: index, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the next token at the current scope that matches the block
-    public func nextToken(after index: Int, where matches: (Token) -> Bool = { _ in true }) -> Token? {
+    func nextToken(after index: Int, where matches: (Token) -> Bool = { _ in true }) -> Token? {
         return self.index(after: index, where: matches).map { tokens[$0] }
     }
 
     /// Returns the next token at the current scope of the specified type
-    public func next(_ type: TokenType, after index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+    func next(_ type: TokenType, after index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
         return self.index(of: type, after: index, if: matches).map { tokens[$0] }
     }
 
     /// Returns the next token in the specified range of the specified type
-    public func next(_ type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+    func next(_ type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Token? {
         return index(of: type, in: range, if: matches).map { tokens[$0] }
     }
 
     /// Returns the index of the last token in the specified range that matches the block
-    public func lastIndex(in range: CountableRange<Int>, where matches: (Token) -> Bool) -> Int? {
+    func lastIndex(in range: CountableRange<Int>, where matches: (Token) -> Bool) -> Int? {
         let range = range.clamped(to: 0 ..< tokens.count)
         var linebreakEncountered = false
         var scopeStack: [Token] = []
@@ -464,116 +505,56 @@ public class Formatter: NSObject {
     }
 
     /// Returns the index of the previous token at the current scope that matches the block
-    public func index(before index: Int, where matches: (Token) -> Bool) -> Int? {
+    func index(before index: Int, where matches: (Token) -> Bool) -> Int? {
         guard index > 0 else { return nil }
         return lastIndex(in: 0 ..< index, where: matches)
     }
 
     /// Returns the index of the last matching token in the specified range
-    public func lastIndex(of token: Token, in range: CountableRange<Int>) -> Int? {
+    func lastIndex(of token: Token, in range: CountableRange<Int>) -> Int? {
         return lastIndex(in: range, where: { $0 == token })
     }
 
     /// Returns the index of the previous matching token at the current scope
-    public func index(of token: Token, before index: Int) -> Int? {
+    func index(of token: Token, before index: Int) -> Int? {
         return self.index(before: index, where: { $0 == token })
     }
 
     /// Returns the index of the last token in the specified range of the specified type
-    public func lastIndex(of type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+    func lastIndex(of type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Int? {
         return lastIndex(in: range, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the index of the previous token at the current scope of the specified type
-    public func index(of type: TokenType, before index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+    func index(of type: TokenType, before index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
         return self.index(before: index, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the previous token at the current scope that matches the block
-    public func lastToken(before index: Int, where matches: (Token) -> Bool) -> Token? {
+    func lastToken(before index: Int, where matches: (Token) -> Bool) -> Token? {
         return self.index(before: index, where: matches).map { tokens[$0] }
     }
 
     /// Returns the previous token at the current scope of the specified type
-    public func last(_ type: TokenType, before index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+    func last(_ type: TokenType, before index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
         return self.index(of: type, before: index, if: matches).map { tokens[$0] }
     }
 
     /// Returns the previous token in the specified range of the specified type
-    public func last(_ type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+    func last(_ type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Token? {
         return lastIndex(of: type, in: range, if: matches).map { tokens[$0] }
     }
 
     /// Inserts a linebreak at the specified index
-    public func insertLinebreak(at index: Int) {
-        insertToken(linebreakToken(for: index), at: index)
-    }
-
-    /// Indicates if the given range contains any nontokens other than those allowed.
-    ///
-    /// - Note: The range does not need to include the given tokens to return `true`,
-    ///         it just can't include any unallowed tokens.
-    ///
-    /// - Parameters:
-    ///   - range: The range to check
-    ///   - allowedTokens: The only tokens allowed in the range
-    ///   - allowingWhitespaceAndComments:If spaces, linebreaks, and comments should also be allowed.
-    public func range(_ range: CountableRange<Int>,
-                      doesNotContainsTokensExcept allowedTokens: [Token],
-                      allowingWhitespaceAndComments: Bool) -> Bool
-    {
-        let range = range.clamped(to: 0 ..< tokens.count)
-        for token in tokens[range] {
-            if allowedTokens.contains(token) ||
-                (allowingWhitespaceAndComments && token.isSpaceOrCommentOrLinebreak)
-            {
-                continue
-            }
-            return false
-        }
-        return true
-    }
-
-    /// Returns the starting token for the containing scope at the specified index
-    public func currentScope(at index: Int) -> Token? {
-        return last(.startOfScope, before: index)
-    }
-
-    /// Returns the index of the ending token for the current scope
-    // TODO: should this return the closing `}` for `switch { ...` instead of nested `case`?
-    public func endOfScope(at index: Int) -> Int? {
-        var startIndex: Int
-        guard var startToken = token(at: index) else { return nil }
-        if case .startOfScope = startToken {
-            startIndex = index
-        } else if let index = self.index(of: .startOfScope, before: index) {
-            startToken = tokens[index]
-            startIndex = index
-        } else {
-            return nil
-        }
-        guard startToken == .startOfScope("{") else {
-            return self.index(after: startIndex, where: {
-                $0.isEndOfScope(startToken)
-            })
-        }
-        while let endIndex = self.index(after: startIndex, where: {
-            $0.isEndOfScope(startToken)
-        }), let token = token(at: endIndex) {
-            if token == .endOfScope("}") {
-                return endIndex
-            }
-            startIndex = endIndex
-            startToken = token
-        }
-        return nil
+    func insertLinebreak(at index: Int) {
+        insert(linebreakToken(for: index), at: index)
     }
 
     /// Either modifies or removes the existing space token at the specified
     /// index, or inserts a new one if there is not already a space token present.
     /// Returns the number of tokens inserted or removed
     @discardableResult
-    public func insertSpace(_ space: String, at index: Int) -> Int {
+    func insertSpace(_ space: String, at index: Int) -> Int {
         guard isEnabled else {
             return 0
         }
@@ -584,7 +565,7 @@ public class Formatter: NSObject {
             }
             replaceToken(at: index, with: .space(space))
         } else if !space.isEmpty {
-            insertToken(.space(space), at: index)
+            insert(.space(space), at: index)
             return 1 // Inserted 1 token
         }
         return 0 // Inserted 0 tokens
@@ -592,12 +573,12 @@ public class Formatter: NSObject {
 
     // As above, but only if formatting is enabled
     @discardableResult
-    func insertSpaceIfEnabled(_ space: String, at index: Int) -> Int {
+    internal func insertSpaceIfEnabled(_ space: String, at index: Int) -> Int {
         return isEnabled ? insertSpace(space, at: index) : 0
     }
 
     /// Returns the original line number at the specified index
-    public func originalLine(at index: Int) -> OriginalLine {
+    func originalLine(at index: Int) -> OriginalLine {
         for token in tokens[0 ..< index].reversed() {
             if case let .linebreak(_, line) = token {
                 return line + 1
@@ -607,7 +588,7 @@ public class Formatter: NSObject {
     }
 
     /// Returns a linebreak token suitable for insertion at the specified index
-    public func linebreakToken(for index: Int) -> Token {
+    func linebreakToken(for index: Int) -> Token {
         let lineNumber: Int
         if case let .linebreak(_, index)? = token(at: index) {
             lineNumber = index

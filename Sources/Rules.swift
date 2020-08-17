@@ -1488,7 +1488,16 @@ public struct _FormatRules {
         options: [],
         sharedOptions: ["linebreaks"]
     ) { formatter in
+        let unavailableTokens = tokenize("@available(*, unavailable)")
+
+        func insertMethodUnavailableAt(index: Int) {
+            formatter.insertTokens(unavailableTokens, at: index)
+            formatter.insertToken(formatter.linebreakToken(for: index), at: index + 7)
+            formatter.insertSpace(formatter.indentForLine(at: index), at: index + 8)
+        }
+
         formatter.forEach(.identifier("required")) { i, _ in
+            // look for required init?(coder
             guard let initIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
                                                   after: i,
                                                   if: { $0 == .keyword("init") }) else { return }
@@ -1501,17 +1510,35 @@ public struct _FormatRules {
                                                                    after: questionMarkIndex,
                                                                    if: { $0 == .startOfScope("(") }) else { return }
 
-            guard formatter.index(of: .nonSpaceOrCommentOrLinebreak,
-                                  after: startOfScopeCandidateIndex,
-                                  if: { $0 == .identifier("coder") }) != nil else { return }
+            guard let coderCandidateIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                            after: startOfScopeCandidateIndex,
+                                                            if: { $0 == .identifier("coder") }) else { return }
 
-            if let previous = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-                previous != .endOfScope(")")
-            {
-                formatter.insertTokens(tokenize("@available(*, unavailable)"), at: i)
-                formatter.insertToken(formatter.linebreakToken(for: i), at: i + 7)
-                formatter.insertSpace(formatter.indentForLine(at: i), at: i + 8)
+            guard let endOfScopeIndex = formatter.index(of: .endOfScope(")"),
+                                                        after: coderCandidateIndex) else { return }
+
+            guard let startOfFunctionScope = formatter.index(of: .startOfScope("{"),
+                                                             after: endOfScopeIndex) else { return }
+
+            guard let endOfFunctionScope = formatter.index(of: .endOfScope("}"),
+                                                           after: startOfFunctionScope) else { return }
+
+            // make sure the implementation is empty or fatalErrored
+            var isEmptyScope = false
+            var hasFatalError = false
+
+            for token in formatter.tokens[(startOfFunctionScope + 1) ..< endOfFunctionScope] {
+                hasFatalError = hasFatalError || token == .identifier("fatalError")
+                isEmptyScope = isEmptyScope && token.isSpaceOrCommentOrLinebreak
             }
+
+            guard hasFatalError || isEmptyScope || (endOfFunctionScope - startOfFunctionScope == 1) else { return }
+
+            // avoid adding it if it's already there
+            let lastKeyword = formatter.last(.keyword, before: i)
+            guard lastKeyword != .keyword("@available") else { return }
+
+            insertMethodUnavailableAt(index: i)
         }
     }
 

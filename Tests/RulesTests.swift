@@ -3456,7 +3456,7 @@ class RulesTests: XCTestCase {
 
     // MARK: - initCoderUnavailable
 
-    func testInitCoderUnavailableIgnoringUnusedArguments() {
+    func testInitCoderUnavailableEmptyFunction() {
         let input = """
         struct A: UIView {
             required init?(coder aDecoder: NSCoder) {}
@@ -3473,7 +3473,7 @@ class RulesTests: XCTestCase {
                        exclude: ["unusedArguments"])
     }
 
-    func testInitCoderUnavailable() {
+    func testInitCoderUnavailableFatalError() {
         let input = """
         extension Module {
             final class A: UIView {
@@ -3494,6 +3494,35 @@ class RulesTests: XCTestCase {
         }
         """
         testFormatting(for: input, output,
+                       rule: FormatRules.initCoderUnavailable)
+    }
+
+    func testInitCoderUnavailableAlreadyPresent() {
+        let input = """
+        extension Module {
+            final class A: UIView {
+                @available(*, unavailable)
+                required init?(coder _: NSCoder) {
+                    fatalError()
+                }
+            }
+        }
+        """
+        testFormatting(for: input,
+                       rule: FormatRules.initCoderUnavailable)
+    }
+
+    func testInitCoderUnavailableImplemented() {
+        let input = """
+        extension Module {
+            final class A: UIView {
+                required init?(coder aCoder: NSCoder) {
+                    aCoder.doSomething()
+                }
+            }
+        }
+        """
+        testFormatting(for: input,
                        rule: FormatRules.initCoderUnavailable)
     }
 

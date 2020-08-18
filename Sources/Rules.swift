@@ -1516,7 +1516,7 @@ public struct _FormatRules {
                                                            after: startOfFunctionScope) else { return }
 
             // make sure the implementation is empty or fatalErrored
-            var isEmptyScope = false
+            var isEmptyScope = true
             var hasFatalError = false
 
             for token in formatter.tokens[(startOfFunctionScope + 1) ..< endOfFunctionScope] {

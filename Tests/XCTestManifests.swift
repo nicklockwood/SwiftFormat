@@ -899,6 +899,7 @@ extension RulesTests {
         ("testMultilineDisableNextRemoveSelf", testMultilineDisableNextRemoveSelf),
         ("testMultilineDisableRemoveSelf", testMultilineDisableRemoveSelf),
         ("testMultilineEnumCases", testMultilineEnumCases),
+        ("testMultilineEnumCasesWithNestedEnumsDoesNothing", testMultilineEnumCasesWithNestedEnumsDoesNothing),
         ("testMultilineForLoopBraceOnNextLine", testMultilineForLoopBraceOnNextLine),
         ("testMultilineForLoopBraceOnNextLine2", testMultilineForLoopBraceOnNextLine2),
         ("testMultilineForWhereLoopBraceOnNextLine", testMultilineForWhereLoopBraceOnNextLine),

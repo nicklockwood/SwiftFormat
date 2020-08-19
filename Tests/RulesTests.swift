@@ -4687,6 +4687,23 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.multilineEnumCases)
     }
 
+    func testMultilineEnumCasesWithNestedEnumsDoesNothing() {
+        let input = """
+        public enum SearchTerm: Decodable, Equatable {
+            case term(name: String)
+            case category(category: Category)
+
+            enum CodingKeys: String, CodingKey {
+                case name
+                case type
+                case categoryId = "category_id"
+                case attributes
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.multilineEnumCases)
+    }
+
     // MARK: - void
 
     func testEmptyParensReturnValueConvertedToVoid() {

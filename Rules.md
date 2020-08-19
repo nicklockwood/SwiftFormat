@@ -15,6 +15,7 @@
 * [fileHeader](#fileHeader)
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
+* [initCoderUnavailable](#initCoderUnavailable)
 * [isEmpty](#isEmpty)
 * [leadingDelimiters](#leadingDelimiters)
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
@@ -527,6 +528,10 @@ Option | Description
 
 </details>
 <br/>
+
+## initCoderUnavailable
+
+Mark initWithCoder as unavaiable.
 
 ## isEmpty
 

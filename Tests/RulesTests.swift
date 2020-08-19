@@ -48,19 +48,26 @@ class RulesTests: XCTestCase {
         precondition(input != outputs.first || input != outputs.last, "Redundant output parameter")
         precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
         precondition(Set(exclude).intersection(rules.map { $0.name }).isEmpty, "Cannot exclude rule under test")
+
         let output = outputs.first ?? input, output2 = outputs.last ?? input
-        let exclude = exclude
-            + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
-            + (rules.first?.name == "organizeDeclarations" ? [] : ["organizeDeclarations"])
+        let exclude = exclude + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
+
+        // Make sure `allRules` includes disabled-by-default rules that are being tested in this run
+        var allRules = FormatRules.all(except: exclude)
+        for ruleBeingTested in rules {
+            if !allRules.contains(ruleBeingTested) {
+                allRules.append(ruleBeingTested)
+            }
+        }
+
         XCTAssertEqual(try format(input, rules: rules, options: options), output)
-        XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude),
-                                  options: options), output2)
+        XCTAssertEqual(try format(input, rules: allRules, options: options), output2)
+
         if input != output {
             XCTAssertEqual(try format(output, rules: rules, options: options), output)
         }
         if input != output2, output != output2 {
-            XCTAssertEqual(try format(output2, rules: FormatRules.all(except: exclude),
-                                      options: options), output2)
+            XCTAssertEqual(try format(output2, rules: allRules, options: options), output2)
         }
 
         #if os(macOS)

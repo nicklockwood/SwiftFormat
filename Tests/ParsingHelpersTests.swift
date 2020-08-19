@@ -878,4 +878,32 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(declarations[0].keyword == "class")
         XCTAssert(declarations[1].keyword == "func")
     }
+
+    func testParseMarkCommentsCorrectly() {
+        let input = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init(json: JSONObject) throws {
+                bar = try json.value(for: "bar")
+                baz = try json.value(for: "baz")
+            }
+
+            // MARK: Internal
+
+            let bar: String
+            var baz: Int?
+
+        }
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssert(declarations[0].keyword == "class")
+        XCTAssert(declarations[0].body?[0].keyword == "init")
+        XCTAssert(declarations[0].body?[1].keyword == "let")
+        XCTAssert(declarations[0].body?[2].keyword == "var")
+    }
 }

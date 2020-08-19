@@ -5063,7 +5063,7 @@ public struct _FormatRules {
             }
 
             // Make sure this type's body is longer than the organization threshold
-            let organizationThreshold: Int?
+            let organizationThreshold: Int
             switch typeDeclaration.kind {
             case "class":
                 organizationThreshold = formatter.options.organizeClassThreshold
@@ -5072,20 +5072,18 @@ public struct _FormatRules {
             case "enum":
                 organizationThreshold = formatter.options.organizeEnumThreshold
             default:
-                organizationThreshold = nil
+                organizationThreshold = 0
             }
 
-            if let organizationThreshold = organizationThreshold {
-                // Count the number of lines in this declaration
-                let lineCount = typeDeclaration.body
-                    .flatMap { $0.tokens }
-                    .filter { $0.isLinebreak }
-                    .count
+            // Count the number of lines in this declaration
+            let lineCount = typeDeclaration.body
+                .flatMap { $0.tokens }
+                .filter { $0.isLinebreak }
+                .count
 
-                // Don't organize this type's body if it is shorter than the minimum organization threshold
-                if lineCount < organizationThreshold {
-                    return typeDeclaration
-                }
+            // Don't organize this type's body if it is shorter than the minimum organization threshold
+            if lineCount < organizationThreshold {
+                return typeDeclaration
             }
 
             var typeOpeningTokens = typeDeclaration.open

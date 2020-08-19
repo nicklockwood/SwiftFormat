@@ -38,6 +38,7 @@ extension FormatOptions {
             case binary(true: [String], false: [String])
             case `enum`([String])
             case text
+            case int
             case array
             case set
         }
@@ -159,6 +160,24 @@ extension FormatOptions {
                           return keys[0]
                       })
             type = .enum(keys)
+        }
+
+        init(argumentName: String,
+             propertyName: String,
+             displayName: String,
+             help: String,
+             keyPath: WritableKeyPath<FormatOptions, Int>)
+        {
+            self.init(
+                argumentName: argumentName,
+                propertyName: propertyName,
+                displayName: displayName,
+                help: help,
+                keyPath: keyPath,
+                fromArgument: { Int($0).map { max(0, $0) } },
+                toArgument: { String($0) }
+            )
+            type = .int
         }
 
         init<T: RawRepresentable>(argumentName: String,
@@ -694,7 +713,7 @@ extension FormatOptions.Descriptor {
         argumentName: "categorymark",
         propertyName: "categoryMarkComment",
         displayName: "Category Mark Comment",
-        help: "Template for category mark comments (defaults to `MARK: %c`)",
+        help: "Template for category mark comments. Defaults to \"MARK: %c\"",
         keyPath: \.categoryMarkComment,
         fromArgument: { $0 },
         toArgument: { $0 }
@@ -717,46 +736,22 @@ extension FormatOptions.Descriptor {
         argumentName: "structthreshold",
         propertyName: "organizeStructThreshold",
         displayName: "Organize Struct Threshold",
-        help: "Minimum line count to organize struct body (defaults to `nil`)",
-        keyPath: \.organizeStructThreshold,
-        fromArgument: { .some(Int($0)) },
-        toArgument: {
-            if let lineCount = $0 {
-                return "\(lineCount)"
-            } else {
-                return ""
-            }
-        }
+        help: "Minimum line count to organize struct body. Defaults to 0",
+        keyPath: \.organizeStructThreshold
     )
     static let organizeClassThreshold = FormatOptions.Descriptor(
         argumentName: "classthreshold",
         propertyName: "organizeClassThreshold",
         displayName: "Organize Class Threshold",
-        help: "Minimum line count to organize class body (defaults to `nil`)",
-        keyPath: \.organizeClassThreshold,
-        fromArgument: { .some(Int($0)) },
-        toArgument: {
-            if let lineCount = $0 {
-                return "\(lineCount)"
-            } else {
-                return ""
-            }
-        }
+        help: "Minimum line count to organize class body. Defaults to 0",
+        keyPath: \.organizeClassThreshold
     )
     static let organizeEnumThreshold = FormatOptions.Descriptor(
         argumentName: "enumthreshold",
         propertyName: "organizeEnumThreshold",
         displayName: "Organize Enum Threshold",
-        help: "Minimum line count to organize enum body (defaults to `nil`)",
-        keyPath: \.organizeEnumThreshold,
-        fromArgument: { .some(Int($0)) },
-        toArgument: {
-            if let lineCount = $0 {
-                return "\(lineCount)"
-            } else {
-                return ""
-            }
-        }
+        help: "Minimum line count to organize enum body. Defaults to 0",
+        keyPath: \.organizeEnumThreshold
     )
 
     // MARK: - Internal

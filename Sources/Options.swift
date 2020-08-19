@@ -311,9 +311,9 @@ public struct FormatOptions: CustomStringConvertible {
     public var categoryMarkComment: String
     public var beforeMarks: Set<String>
     public var lifecycleMethods: Set<String>
-    public var organizeClassThreshold: Int?
-    public var organizeStructThreshold: Int?
-    public var organizeEnumThreshold: Int?
+    public var organizeClassThreshold: Int
+    public var organizeStructThreshold: Int
+    public var organizeEnumThreshold: Int
     public var yodaSwap: YodaMode
 
     // Deprecated
@@ -378,9 +378,9 @@ public struct FormatOptions: CustomStringConvertible {
                 categoryMarkComment: String = "MARK: %c",
                 beforeMarks: Set<String> = [],
                 lifecycleMethods: Set<String> = [],
-                organizeClassThreshold: Int? = nil,
-                organizeStructThreshold: Int? = nil,
-                organizeEnumThreshold: Int? = nil,
+                organizeClassThreshold: Int = 0,
+                organizeStructThreshold: Int = 0,
+                organizeEnumThreshold: Int = 0,
                 yodaSwap: YodaMode = .always,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,

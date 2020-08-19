@@ -45,29 +45,28 @@ class RulesTests: XCTestCase {
     func testFormatting(for input: String, _ outputs: [String] = [], rules: [FormatRule],
                         options: FormatOptions = .default, exclude: [String] = [])
     {
+        // The `name` property on individual rules is not populated until the first call into `rulesByName`,
+        // so we have to make sure to trigger this before checking the names of the given rules.
+        if rules.contains(where: { $0.name.isEmpty }) {
+            _ = FormatRules.all
+        }
+
         precondition(input != outputs.first || input != outputs.last, "Redundant output parameter")
         precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
         precondition(Set(exclude).intersection(rules.map { $0.name }).isEmpty, "Cannot exclude rule under test")
-
         let output = outputs.first ?? input, output2 = outputs.last ?? input
-        let exclude = exclude + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
-
-        // Make sure `allRules` includes disabled-by-default rules that are being tested in this run
-        var allRules = FormatRules.all(except: exclude)
-        for ruleBeingTested in rules {
-            if !allRules.contains(ruleBeingTested) {
-                allRules.append(ruleBeingTested)
-            }
-        }
-
+        let exclude = exclude
+            + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
+            + (rules.first?.name == "organizeDeclarations" ? [] : ["organizeDeclarations"])
         XCTAssertEqual(try format(input, rules: rules, options: options), output)
-        XCTAssertEqual(try format(input, rules: allRules, options: options), output2)
-
+        XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude),
+                                  options: options), output2)
         if input != output {
             XCTAssertEqual(try format(output, rules: rules, options: options), output)
         }
         if input != output2, output != output2 {
-            XCTAssertEqual(try format(output2, rules: allRules, options: options), output2)
+            XCTAssertEqual(try format(output2, rules: FormatRules.all(except: exclude),
+                                      options: options), output2)
         }
 
         #if os(macOS)
@@ -13512,21 +13511,8 @@ class RulesTests: XCTestCase {
         )
     }
 
-    // bugs
-
-    func testMarkNotRemovedOnSecondPass() {
+    func testPreservesExistingMarks() {
         let input = """
-        class Foo {
-            let bar: String
-            let baz: Int?
-
-            init(json: JSONObject) throws {
-                bar = try json.value(for: "bar")
-                baz = try json.value(for: "baz")
-            }
-        }
-        """
-        let output = """
         class Foo {
 
             // MARK: Lifecycle
@@ -13543,7 +13529,7 @@ class RulesTests: XCTestCase {
 
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
+        testFormatting(for: input, rule: FormatRules.organizeDeclarations,
                        exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
 }

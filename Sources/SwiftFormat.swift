@@ -518,17 +518,6 @@ private func applyRules(
         }
     }
 
-    // Rules that rewrite the entire file have to be ran first, without change tracking:
-    let sortedRules = rules.sorted()
-    let rulesThatRewriteEntireFile = sortedRules.filter { $0.rewritesEntireFile }
-    let standardRules = sortedRules.filter { !$0.rewritesEntireFile }
-
-    for rule in rulesThatRewriteEntireFile {
-        let formatter = Formatter(tokens, options: options, trackChanges: false, range: range)
-        rule.apply(with: formatter)
-        tokens = formatter.tokens
-    }
-
     // Recursively apply rules until no changes are detected
     let group = DispatchGroup()
     let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
@@ -537,7 +526,7 @@ private func applyRules(
     for _ in 0 ..< maxIterations {
         let formatter = Formatter(tokens, options: options,
                                   trackChanges: trackChanges, range: range)
-        for (i, rule) in standardRules.sorted().enumerated() {
+        for (i, rule) in rules.sorted().enumerated() {
             queue.async(group: group) {
                 rule.apply(with: formatter)
             }

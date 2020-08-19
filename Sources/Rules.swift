@@ -1496,6 +1496,60 @@ public struct _FormatRules {
         }
     }
 
+    // Add @available(*, unavailable) to init?(coder aDecoder: NSCoder)
+    public let initCoderUnavailable = FormatRule(
+        help: "Mark initWithCoder as unavaiable.",
+        options: [],
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        formatter.forEach(.identifier("required")) { i, _ in
+            // look for required init?(coder
+            guard let initIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                  after: i,
+                                                  if: { $0 == .keyword("init") }) else { return }
+
+            guard let questionMarkIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                          after: initIndex,
+                                                          if: { $0 == .operator("?", .postfix) }) else { return }
+
+            guard let startOfScopeCandidateIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                                   after: questionMarkIndex,
+                                                                   if: { $0 == .startOfScope("(") }) else { return }
+
+            guard let coderCandidateIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                            after: startOfScopeCandidateIndex,
+                                                            if: { $0 == .identifier("coder") }) else { return }
+
+            guard let endOfScopeIndex = formatter.index(of: .endOfScope(")"),
+                                                        after: coderCandidateIndex) else { return }
+
+            guard let startOfFunctionScope = formatter.index(of: .startOfScope("{"),
+                                                             after: endOfScopeIndex) else { return }
+
+            guard let endOfFunctionScope = formatter.index(of: .endOfScope("}"),
+                                                           after: startOfFunctionScope) else { return }
+
+            // make sure the implementation is empty or fatalErrored
+            var isEmptyScope = true
+            var hasFatalError = false
+
+            for token in formatter.tokens[(startOfFunctionScope + 1) ..< endOfFunctionScope] {
+                hasFatalError = hasFatalError || token == .identifier("fatalError")
+                isEmptyScope = isEmptyScope && token.isSpaceOrCommentOrLinebreak
+            }
+
+            guard hasFatalError || isEmptyScope || (endOfFunctionScope - startOfFunctionScope == 1) else { return }
+
+            // avoid adding it if it's already there
+            let lastKeyword = formatter.last(.keyword, before: i)
+            guard lastKeyword != .keyword("@available") else { return }
+
+            formatter.insert(tokenize("@available(*, unavailable)"), at: i)
+            formatter.insert(formatter.linebreakToken(for: i), at: i + 7)
+            formatter.insertSpace(formatter.indentForLine(at: i), at: i + 8)
+        }
+    }
+
     // Implement brace-wrapping rules
     public let braces = FormatRule(
         help: "Wrap braces in accordance with selected style (K&R or Allman).",

@@ -3552,6 +3552,74 @@ class RulesTests: XCTestCase {
                        exclude: ["consecutiveBlankLines"])
     }
 
+    // MARK: - initCoderUnavailable
+
+    func testInitCoderUnavailableEmptyFunction() {
+        let input = """
+        struct A: UIView {
+            required init?(coder aDecoder: NSCoder) {}
+        }
+        """
+        let output = """
+        struct A: UIView {
+            @available(*, unavailable)
+            required init?(coder aDecoder: NSCoder) {}
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable,
+                       exclude: ["unusedArguments"])
+    }
+
+    func testInitCoderUnavailableFatalError() {
+        let input = """
+        extension Module {
+            final class A: UIView {
+                required init?(coder _: NSCoder) {
+                    fatalError()
+                }
+            }
+        }
+        """
+        let output = """
+        extension Module {
+            final class A: UIView {
+                @available(*, unavailable)
+                required init?(coder _: NSCoder) {
+                    fatalError()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable)
+    }
+
+    func testInitCoderUnavailableAlreadyPresent() {
+        let input = """
+        extension Module {
+            final class A: UIView {
+                @available(*, unavailable)
+                required init?(coder _: NSCoder) {
+                    fatalError()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.initCoderUnavailable)
+    }
+
+    func testInitCoderUnavailableImplemented() {
+        let input = """
+        extension Module {
+            final class A: UIView {
+                required init?(coder aCoder: NSCoder) {
+                    aCoder.doSomething()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.initCoderUnavailable)
+    }
+
     // MARK: - braces
 
     func testAllmanBracesAreConverted() {

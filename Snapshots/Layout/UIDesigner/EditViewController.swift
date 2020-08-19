@@ -52,6 +52,7 @@ class EditViewController: UIViewController, UITextFieldDelegate {
         preferredContentSize = CGSize(width: 320, height: 400)
     }
 
+    @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

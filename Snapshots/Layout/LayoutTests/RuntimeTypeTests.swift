@@ -255,7 +255,8 @@ class RuntimeTypeTests: XCTestCase {
     }
 
     private enum NonRawRepresentableEnum {
-        case foo, bar
+        case foo
+        case bar
     }
 
     func testCastNonRawRepresentableEnum() {
@@ -269,7 +270,8 @@ class RuntimeTypeTests: XCTestCase {
     }
 
     private enum NonHashableEnum: RawRepresentable {
-        case foo, bar
+        case foo
+        case bar
 
         var rawValue: RuntimeTypeTests.TestStruct {
             return TestStruct(foo: 0)
@@ -296,7 +298,8 @@ class RuntimeTypeTests: XCTestCase {
     }
 
     private enum NonRawRepresentableOrHashableEnum {
-        case foo, bar(Int)
+        case foo
+        case bar(Int)
     }
 
     func testCastNonRawRepresentableOrHashableEnum() {

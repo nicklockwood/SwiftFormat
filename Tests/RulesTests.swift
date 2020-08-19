@@ -1735,7 +1735,8 @@ class RulesTests: XCTestCase {
         let input = "enum Foo {\ncase Bar,\nBaz\n}"
         let output = "enum Foo {\n    case Bar,\n    Baz\n}"
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["multilineEnumCases"])
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options,
+                       exclude: ["multilineEnumCases"])
     }
 
     func testEnumCaseWrappedIfWithXcodeStyle() {
@@ -4704,6 +4705,50 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.multilineEnumCases)
     }
 
+    func testEnumCaseSplitOverMultipleLines() {
+        let input = """
+        enum Foo {
+            case bar(
+                x: String,
+                y: Int
+            ), baz
+        }
+        """
+        let output = """
+        enum Foo {
+            case bar(
+                x: String,
+                y: Int
+            )
+            case baz
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.multilineEnumCases)
+    }
+
+    func testEnumCasesAlreadyWrappedOntoMultipleLines() {
+        let input = """
+        enum Foo {
+            case bar,
+                 baz,
+                 quux
+        }
+        """
+        let output = """
+        enum Foo {
+            case bar
+            case baz
+            case quux
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.multilineEnumCases)
+    }
+
+    func testNoWrapEnumStatementAllOnOneLine() {
+        let input = "enum Foo { bar, baz }"
+        testFormatting(for: input, rule: FormatRules.multilineEnumCases)
+    }
+
     // MARK: - void
 
     func testEmptyParensReturnValueConvertedToVoid() {
@@ -5974,13 +6019,15 @@ class RulesTests: XCTestCase {
     func testRemoveCommaDelimitedCaseRawStringCases() {
         let input = "enum Foo: String { case bar = \"bar\", baz = \"baz\" }"
         let output = "enum Foo: String { case bar, baz }"
-        testFormatting(for: input, output, rule: FormatRules.redundantRawValues)
+        testFormatting(for: input, output, rule: FormatRules.redundantRawValues,
+                       exclude: ["multilineEnumCases"])
     }
 
     func testRemoveBacktickCaseRawStringCases() {
         let input = "enum Foo: String { case `as` = \"as\", `let` = \"let\" }"
         let output = "enum Foo: String { case `as`, `let` }"
-        testFormatting(for: input, output, rule: FormatRules.redundantRawValues)
+        testFormatting(for: input, output, rule: FormatRules.redundantRawValues,
+                       exclude: ["multilineEnumCases"])
     }
 
     func testNoRemoveRawStringIfNameDoesntMatch() {

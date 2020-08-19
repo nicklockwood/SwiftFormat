@@ -905,6 +905,19 @@ private struct Examples {
     ```
     """
 
+    let multilineEnumCases = """
+    ```diff
+      enum Foo {
+    -   case bar, baz
+      }
+
+      enum Foo {
+    +   case bar
+    +   case baz
+      }
+    ```
+    """
+
     let void = """
     ```diff
     - let foo: () -> ()

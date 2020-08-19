@@ -39,7 +39,6 @@ public final class FormatRule: Equatable, Comparable {
     let orderAfter: [String]
     let options: [String]
     let sharedOptions: [String]
-    let rewritesEntireFile: Bool
 
     var deprecationMessage: String? {
         return FormatRule.deprecatedMessage[name]
@@ -53,7 +52,6 @@ public final class FormatRule: Equatable, Comparable {
                      orderAfter: [String] = [],
                      options: [String] = [],
                      sharedOptions: [String] = [],
-                     rewritesEntireFile: Bool = false,
                      _ fn: @escaping (Formatter) -> Void)
     {
         self.fn = fn
@@ -61,7 +59,6 @@ public final class FormatRule: Equatable, Comparable {
         self.orderAfter = orderAfter
         self.options = options
         self.sharedOptions = sharedOptions
-        self.rewritesEntireFile = rewritesEntireFile
     }
 
     public func apply(with formatter: Formatter) {
@@ -4848,8 +4845,7 @@ public struct _FormatRules {
 
     public let organizeDeclarations = FormatRule(
         help: "Organizes declarations within class, struct, and enum bodies.",
-        options: ["categorymark", "beforemarks", "lifecycle", "structthreshold", "classthreshold", "enumthreshold"],
-        rewritesEntireFile: true
+        options: ["categorymark", "beforemarks", "lifecycle", "structthreshold", "classthreshold", "enumthreshold"]
     ) { formatter in
         /// Categories of declarations within an individual type
         enum Category: String, CaseIterable {
@@ -5205,42 +5201,48 @@ public struct _FormatRules {
             }
         }
 
+        // Use a temporary formatter so we can mutate the tokens without
+        // inadvertantly being counted as a formatting change if we don't end up making any changes.
+        var workingFormatter = Formatter(formatter.tokens, options: formatter.options, trackChanges: false, range: nil)
+
         // Remove all of the existing category mark comments, so they can be readded
         // at the correct location after sorting the declarations.
-        formatter.forEach(.startOfScope("//")) { index, _ in
+        workingFormatter.forEach(.startOfScope("//")) { index, _ in
             // Check if this comment matches an expected category separator mark comment
             for category in Category.allCases {
-                guard let markComment = category.markComment(from: formatter.options.categoryMarkComment) else {
+                guard let markComment = category.markComment(from: workingFormatter.options.categoryMarkComment) else {
                     continue
                 }
 
                 let categorySeparator = tokenize(markComment)
                 let potentialSeparatorRange = index ..< (index + categorySeparator.count)
 
-                if formatter.tokens.indices.contains(potentialSeparatorRange.upperBound),
-                    Array(formatter.tokens[potentialSeparatorRange]) == categorySeparator
+                if workingFormatter.tokens.indices.contains(potentialSeparatorRange.upperBound),
+                    Array(workingFormatter.tokens[potentialSeparatorRange]) == categorySeparator
                 {
                     // If we found a matching comment, remove it and all subsequent empty lines
-                    if let nextNonwhitespaceIndex = formatter.index(
+                    if let nextNonwhitespaceIndex = workingFormatter.index(
                         of: .nonSpaceOrLinebreak,
                         after: potentialSeparatorRange.upperBound
                     ) {
-                        formatter.removeTokens(in: index ..< nextNonwhitespaceIndex)
+                        workingFormatter.removeTokens(in: index ..< nextNonwhitespaceIndex)
                     }
                 }
             }
         }
 
         // Parse the file into declarations and organize the body of individual types
-        let organizedDeclarations = formatter
+        let organizedDeclarations = workingFormatter
             .parseDeclarations()
             .map { organize($0) }
 
         let updatedTokens = organizedDeclarations.flatMap { $0.tokens }
 
-        formatter.replaceTokens(
-            in: 0 ..< formatter.tokens.count,
-            with: updatedTokens
-        )
+        if sourceCode(for: formatter.tokens) != sourceCode(for: updatedTokens) {
+            formatter.replaceTokens(
+                in: 0 ..< formatter.tokens.count,
+                with: updatedTokens
+            )
+        }
     }
 }

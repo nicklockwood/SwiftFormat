@@ -1036,7 +1036,10 @@ extension Formatter {
                 while searchIndex < parser.tokens.count, nextDeclarationKeywordIndex == nil {
                     // If we encounter a `startOfScope`, we have to skip to the end of the scope.
                     // This accounts for things like function bodies, etc.
+                    //  - Comment marker tokens (e.g. `//`) are `startOfScope` tokens,
+                    //    but they don't have a corresponding `endOfScope` so we can't skip through them.
                     if parser.tokens[searchIndex].isStartOfScope,
+                        !parser.tokens[searchIndex].isComment,
                         let endOfScope = parser.endOfScope(at: searchIndex)
                     {
                         searchIndex = endOfScope + 1
@@ -1058,9 +1061,9 @@ extension Formatter {
                             searchIndex -= 1
                         }
 
-                        // If we encounter an `endOfScope`, we have to skip to the beginning of the scope.
+                        // If we encounter a closing paren, we have to skip to the beginning of the scope.
                         // This accounts for things like attribute bodies, etc.
-                        else if parser.tokens[searchIndex - 1].isEndOfScope {
+                        else if parser.tokens[searchIndex - 1] == .endOfScope(")") {
                             let encounteredEndOfScope = searchIndex - 1
                             var startOfScope: Int?
                             searchIndex -= 1

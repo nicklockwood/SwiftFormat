@@ -697,12 +697,12 @@ Organizes declarations within class, struct, and enum bodies.
 
 Option | Description
 --- | ---
-`--categorymark` | Template for category mark comments (defaults to `MARK: %c`)
+`--categorymark` | Template for category mark comments. Defaults to "MARK: %c"
 `--beforemarks` | Declarations placed before first mark (e.g. `typealias,struct`)
 `--lifecycle` | Names of additional Lifecycle methods (e.g. `viewDidLoad`)
-`--structthreshold` | Minimum line count to organize struct body (defaults to `nil`)
-`--classthreshold` | Minimum line count to organize class body (defaults to `nil`)
-`--enumthreshold` | Minimum line count to organize enum body (defaults to `nil`)
+`--structthreshold` | Minimum line count to organize struct body. Defaults to 0
+`--classthreshold` | Minimum line count to organize class body. Defaults to 0
+`--enumthreshold` | Minimum line count to organize enum body. Defaults to 0
 
 <details>
 <summary>Examples</summary>

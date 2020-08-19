@@ -13504,4 +13504,39 @@ class RulesTests: XCTestCase {
             options: FormatOptions(organizeEnumThreshold: 2)
         )
     }
+
+    // bugs
+
+    func testMarkNotRemovedOnSecondPass() {
+        let input = """
+        class Foo {
+            let bar: String
+            let baz: Int?
+
+            init(json: JSONObject) throws {
+                bar = try json.value(for: "bar")
+                baz = try json.value(for: "baz")
+            }
+        }
+        """
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init(json: JSONObject) throws {
+                bar = try json.value(for: "bar")
+                baz = try json.value(for: "baz")
+            }
+
+            // MARK: Internal
+
+            let bar: String
+            let baz: Int?
+
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
+                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+    }
 }

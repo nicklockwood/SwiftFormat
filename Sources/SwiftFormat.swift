@@ -478,6 +478,7 @@ private func applyRules(
     callback: ((Int, [Token]) -> Void)? = nil
 ) throws -> (tokens: [Token], changes: [Formatter.Change]) {
     precondition(maxIterations > 1)
+    var rules = rules
     var tokens = originalTokens
 
     // Ensure rule names have been set
@@ -558,7 +559,7 @@ private func applyRules(
             })
         }
         tokens = formatter.tokens
-        options.fileHeader = .ignore // Prevents infinite recursion
+        rules.removeAll(where: { $0.runOnceOnly }) // Prevents infinite recursion
     }
     throw FormatError.writing("Failed to terminate")
 }

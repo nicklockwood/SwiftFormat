@@ -153,7 +153,7 @@ final class RulesViewController: NSViewController {
                             )
                             return UserSelectionType.list(list)
 
-                        case .text, .set, .array:
+                        case .text, .int, .set, .array:
                             let freeText = UserSelectionFreeText(
                                 identifier: descriptor.argumentName,
                                 title: descriptor.displayName,

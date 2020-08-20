@@ -705,9 +705,9 @@ public struct _FormatRules {
         }
     }
 
-    /// Removes explicit type declarations from variables declarations
+    /// Removes explicit type declarations from initialization declarations
     public let redundantType = FormatRule(
-        help: "Removes explicit type declarations from variable declarations."
+        help: "Removes explicit type declarations from initialization declarations."
     ) { formatter in
         formatter.forEachToken(where: { (token) -> Bool in
             token == .keyword("var") || token == .keyword("let")

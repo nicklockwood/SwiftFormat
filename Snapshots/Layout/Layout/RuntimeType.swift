@@ -292,10 +292,10 @@ public class RuntimeType: NSObject {
         case "@":
             if objCType.hasPrefix("@\"") {
                 let range = "@\"".endIndex ..< objCType.index(before: objCType.endIndex)
-                let className: String = String(objCType[range])
+                let className = String(objCType[range])
                 if className.hasPrefix("<") {
                     let range = "<".endIndex ..< className.index(before: className.endIndex)
-                    let protocolName: String = String(className[range])
+                    let protocolName = String(className[range])
                     if let proto = NSProtocolFromString(protocolName) {
                         type = .protocol(proto)
                     } else {
@@ -565,7 +565,7 @@ private func sanitizedStructName(_ objCType: String) -> String {
     else {
         return objCType
     }
-    let name: String = String(objCType[braceRange.upperBound ..< equalRange.lowerBound])
+    let name = String(objCType[braceRange.upperBound ..< equalRange.lowerBound])
     switch name {
     case "_NSRange":
         return "NSRange" // Yay! special cases

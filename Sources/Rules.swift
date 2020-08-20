@@ -671,6 +671,48 @@ public struct _FormatRules {
         }
     }
 
+    /// Removes explicit type declarations from initialization declarations
+    public let redundantType = FormatRule(
+        help: "Remove redundant type from variable declarations."
+    ) { formatter in
+        formatter.forEachToken(where: { (token) -> Bool in
+            token == .keyword("var") || token == .keyword("let")
+        }) { i, _ in
+            func isExactSameType(startTypeIndex: Int, startInitIndex: Int) -> Bool {
+                var i = startTypeIndex
+                var j = startInitIndex
+                var shouldFormat = true
+
+                while let typeTokenIndex = formatter.index(of: .nonSpaceOrComment, after: i),
+                    typeTokenIndex < startInitIndex - 1,
+                    let initTokenIndex = formatter.index(of: .nonSpaceOrComment, after: j)
+                {
+                    shouldFormat = shouldFormat
+                        && formatter.token(at: typeTokenIndex) == formatter.token(at: initTokenIndex)
+                    i += 1
+                    j += 1
+                }
+
+                return shouldFormat && i > startTypeIndex
+            }
+
+            guard
+                let colonIndex = formatter.index(of: .delimiter,
+                                                 after: i,
+                                                 if: { (token) -> Bool in token == .delimiter(":") }),
+                let operatorIndex = formatter.index(of: .operator,
+                                                    after: colonIndex,
+                                                    if: { (token) -> Bool in token == .operator("=", .infix) })
+            else { return }
+
+            guard isExactSameType(startTypeIndex: colonIndex + 1,
+                                  startInitIndex: operatorIndex + 1) else { return }
+
+            formatter.removeTokens(in: colonIndex ... (operatorIndex - 1))
+            formatter.insertSpace(" ", at: colonIndex)
+        }
+    }
+
     /// Collapse all consecutive space characters to a single space, except at
     /// the start of a line or inside a comment or string, as these have no semantic
     /// meaning and lead to noise in commits.

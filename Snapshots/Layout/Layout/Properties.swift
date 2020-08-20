@@ -316,7 +316,7 @@ extension NSObject {
         var prevKey = name
         var prevTarget: NSObject?
         var target = self as NSObject
-        var key: String = String(name[range.upperBound ..< name.endIndex])
+        var key = String(name[range.upperBound ..< name.endIndex])
         for subkey in name[name.startIndex ..< range.lowerBound].components(separatedBy: ".") {
             guard target.responds(to: Selector(subkey)) else {
                 if target is NSValue {
@@ -644,7 +644,7 @@ extension NSObject {
         var prevKey = name
         var prevTarget: NSObject?
         var target = self as NSObject
-        var key: String = String(name[range.upperBound ..< name.endIndex])
+        var key = String(name[range.upperBound ..< name.endIndex])
         for subkey in name[name.startIndex ..< range.lowerBound].components(separatedBy: ".") {
             if target is NSValue {
                 key = "\(subkey).\(key)"

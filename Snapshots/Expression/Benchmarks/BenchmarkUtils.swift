@@ -262,7 +262,7 @@ func evaluateNSExpressions(_ expressions: [String]) -> NSNumber? {
     ]
 
     func makeJSContext(symbols: [String: Any]) -> JSContext {
-        let context: JSContext = JSContext()
+        let context = JSContext()
         for (key, value) in symbols {
             context.globalObject.setValue(value, forProperty: key)
         }

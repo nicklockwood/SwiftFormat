@@ -135,13 +135,19 @@ public extension Formatter {
 }
 
 extension Formatter {
-    func modifiersForType(at index: Int, contains: (Int, Token) -> Bool) -> Bool {
+    func modifiersForType(at index: Int, contains: (Int, String) -> Bool) -> Bool {
         let allModifiers = _FormatRules.allModifiers
         var index = index
         while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
-            switch tokens[prevIndex] {
-            case let token where contains(prevIndex, token):
-                return true
+            let token = tokens[prevIndex]
+            switch token {
+            case let .keyword(name), let .identifier(name):
+                if !allModifiers.contains(name), !name.hasPrefix("@") {
+                    return false
+                }
+                if contains(prevIndex, name) {
+                    return true
+                }
             case .endOfScope(")"):
                 guard let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
                     last(.nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
@@ -151,10 +157,6 @@ extension Formatter {
                     return false
                 }
                 prevIndex = startIndex
-            case let .keyword(name), let .identifier(name):
-                if !allModifiers.contains(name), !name.hasPrefix("@") {
-                    return false
-                }
             default:
                 return false
             }
@@ -164,7 +166,7 @@ extension Formatter {
     }
 
     func modifiersForType(at index: Int, contains: String) -> Bool {
-        return modifiersForType(at: index, contains: { $1.string == contains })
+        return modifiersForType(at: index, contains: { $1 == contains })
     }
 
     // first index of modifier list

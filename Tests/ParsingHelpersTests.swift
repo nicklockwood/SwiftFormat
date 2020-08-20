@@ -537,6 +537,15 @@ class ParsingHelpersTests: XCTestCase {
         ])
     }
 
+    // MARK: startOfModifiers
+
+    func testStartOfModifiers() {
+        let formatter = Formatter(tokenize("""
+        class Foo { public required init() {} }
+        """))
+        XCTAssertEqual(formatter.startOfModifiers(at: 10), 6)
+    }
+
     // MARK: processDeclaredVariables
 
     func testProcessCommaDelimitedDeclaredVariables() {

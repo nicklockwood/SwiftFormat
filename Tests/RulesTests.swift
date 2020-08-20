@@ -3620,6 +3620,45 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.initCoderUnavailable)
     }
 
+    func testPublicInitCoderUnavailable() {
+        let input = """
+        class Foo: UIView {
+            public required init?(coder _: NSCoder) {
+                fatalError()
+            }
+        }
+        """
+        let output = """
+        class Foo: UIView {
+            @available(*, unavailable)
+            public required init?(coder _: NSCoder) {
+                fatalError()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable)
+    }
+
+    func testPublicInitCoderUnavailable2() {
+        let input = """
+        class Foo: UIView {
+            required public init?(coder _: NSCoder) {
+                fatalError()
+            }
+        }
+        """
+        let output = """
+        class Foo: UIView {
+            @available(*, unavailable)
+            required public init?(coder _: NSCoder) {
+                fatalError()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable,
+                       exclude: ["modifierOrder", "specifiers"])
+    }
+
     // MARK: - braces
 
     func testAllmanBracesAreConverted() {

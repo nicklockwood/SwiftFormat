@@ -531,7 +531,21 @@ Option | Description
 
 ## initCoderUnavailable
 
-Mark initWithCoder as unavaiable.
+Add `@available(*, unavailable)` attribute to required `init(coder:)` when
+it hasn't been implemented.
+
+<details>
+<summary>Examples</summary>
+
+```diff
++ @available(*, unavailable)
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+```
+
+</details>
+<br/>
 
 ## isEmpty
 

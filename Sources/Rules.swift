@@ -1498,55 +1498,43 @@ public struct _FormatRules {
 
     // Add @available(*, unavailable) to init?(coder aDecoder: NSCoder)
     public let initCoderUnavailable = FormatRule(
-        help: "Mark initWithCoder as unavaiable.",
+        help: """
+        Add `@available(*, unavailable)` attribute to required `init(coder:)` when
+        it hasn't been implemented.
+        """,
         options: [],
         sharedOptions: ["linebreaks"]
     ) { formatter in
+        let unavailableTokens = tokenize("@available(*, unavailable)")
         formatter.forEach(.identifier("required")) { i, _ in
             // look for required init?(coder
-            guard let initIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
-                                                  after: i,
-                                                  if: { $0 == .keyword("init") }) else { return }
-
-            guard let questionMarkIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
-                                                          after: initIndex,
-                                                          if: { $0 == .operator("?", .postfix) }) else { return }
-
-            guard let startOfScopeCandidateIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
-                                                                   after: questionMarkIndex,
-                                                                   if: { $0 == .startOfScope("(") }) else { return }
-
-            guard let coderCandidateIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
-                                                            after: startOfScopeCandidateIndex,
-                                                            if: { $0 == .identifier("coder") }) else { return }
-
-            guard let endOfScopeIndex = formatter.index(of: .endOfScope(")"),
-                                                        after: coderCandidateIndex) else { return }
-
-            guard let startOfFunctionScope = formatter.index(of: .startOfScope("{"),
-                                                             after: endOfScopeIndex) else { return }
-
-            guard let endOfFunctionScope = formatter.index(of: .endOfScope("}"),
-                                                           after: startOfFunctionScope) else { return }
-
-            // make sure the implementation is empty or fatalErrored
-            var isEmptyScope = true
-            var hasFatalError = false
-
-            for token in formatter.tokens[(startOfFunctionScope + 1) ..< endOfFunctionScope] {
-                hasFatalError = hasFatalError || token == .identifier("fatalError")
-                isEmptyScope = isEmptyScope && token.isSpaceOrCommentOrLinebreak
+            guard var initIndex = formatter.index(of: .keyword("init"), after: i) else { return }
+            if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: initIndex, if: {
+                $0 == .operator("?", .postfix)
+            }) {
+                initIndex = nextIndex
             }
 
-            guard hasFatalError || isEmptyScope || (endOfFunctionScope - startOfFunctionScope == 1) else { return }
+            guard let parenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: initIndex, if: {
+                $0 == .startOfScope("(")
+            }), let coderIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: parenIndex, if: {
+                $0 == .identifier("coder")
+            }), let endParenIndex = formatter.index(of: .endOfScope(")"), after: coderIndex),
+                let braceIndex = formatter.index(of: .startOfScope("{"), after: endParenIndex)
+            else { return }
 
-            // avoid adding it if it's already there
-            let lastKeyword = formatter.last(.keyword, before: i)
-            guard lastKeyword != .keyword("@available") else { return }
+            // make sure the implementation is empty or fatalError
+            guard let firstToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: braceIndex, if: {
+                [.endOfScope("}"), .identifier("fatalError")].contains($0)
+            }) else { return }
 
-            formatter.insert(tokenize("@available(*, unavailable)"), at: i)
-            formatter.insert(formatter.linebreakToken(for: i), at: i + 7)
-            formatter.insertSpace(formatter.indentForLine(at: i), at: i + 8)
+            // avoid adding attribute if it's already there
+            if formatter.modifiersForType(at: i, contains: "@available") { return }
+
+            let startIndex = formatter.startOfModifiers(at: i)
+            formatter.insert(.space(formatter.indentForLine(at: startIndex)), at: startIndex)
+            formatter.insertLinebreak(at: startIndex)
+            formatter.insert(unavailableTokens, at: startIndex)
         }
     }
 
@@ -2238,8 +2226,7 @@ public struct _FormatRules {
         // Check modifiers don't include `lazy`
         formatter.forEach(.keyword("var")) { i, _ in
             if formatter.modifiersForType(at: i, contains: {
-                let string = $1.string
-                return string == "lazy" || (string != "@objc" && string.hasPrefix("@"))
+                $1 == "lazy" || ($1 != "@objc" && $1.hasPrefix("@"))
             }) {
                 return // Can't remove the init
             }
@@ -4388,7 +4375,7 @@ public struct _FormatRules {
         formatter.forEach(.keyword("extension")) { i, _ in
             var acl = ""
             guard formatter.modifiersForType(at: i, contains: {
-                acl = $1.string
+                acl = $1
                 return aclModifiers.contains(acl)
             }), let startIndex = formatter.index(of: .startOfScope("{"), after: i),
                 var endIndex = formatter.index(of: .endOfScope("}"), after: startIndex)

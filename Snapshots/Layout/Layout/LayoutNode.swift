@@ -1469,11 +1469,11 @@ public class LayoutNode: NSObject {
             guard let range = keyPath.range(of: ".") else {
                 return nil
             }
-            let key: String = String(keyPath[keyPath.startIndex ..< range.lowerBound])
+            let key = String(keyPath[keyPath.startIndex ..< range.lowerBound])
             guard let object = dictionary[key] else {
                 return nil
             }
-            let subKeyPath: String = String(keyPath[range.upperBound...])
+            let subKeyPath = String(keyPath[range.upperBound...])
             if let value = try self.value(forKeyPath: subKeyPath, in: object) {
                 return value
             }
@@ -1489,9 +1489,9 @@ public class LayoutNode: NSObject {
         guard let range = keyPath.range(of: ".") else {
             return nil
         }
-        let key: String = String(keyPath[keyPath.startIndex ..< range.lowerBound])
+        let key = String(keyPath[keyPath.startIndex ..< range.lowerBound])
         if let (_, object) = children.first(where: { $0.label == key }) {
-            let subKeyPath: String = String(keyPath[range.upperBound...])
+            let subKeyPath = String(keyPath[range.upperBound...])
             if let value = try self.value(forKeyPath: subKeyPath, in: object) {
                 return value
             }
@@ -1566,7 +1566,7 @@ public class LayoutNode: NSObject {
         }
         assert(_setupComplete)
         if let range = symbol.range(of: ".") {
-            let tail: String = String(symbol[range.upperBound ..< symbol.endIndex])
+            let tail = String(symbol[range.upperBound ..< symbol.endIndex])
             switch symbol[symbol.startIndex ..< range.lowerBound] {
             case "parent":
                 switch tail {
@@ -1931,7 +1931,7 @@ public class LayoutNode: NSObject {
                 }
             }
             if let range = symbol.range(of: ".") {
-                let tail: String = String(symbol[range.upperBound ..< symbol.endIndex])
+                let tail = String(symbol[range.upperBound ..< symbol.endIndex])
                 switch symbol[symbol.startIndex ..< range.lowerBound] {
                 case "parent":
                     switch tail {

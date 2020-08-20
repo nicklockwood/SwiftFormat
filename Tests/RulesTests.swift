@@ -1015,6 +1015,51 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.spaceInsideComments)
     }
 
+    // MARK: - redundantType
+
+    func testVarRedundantTypeRemoval() {
+        let input = "var view: UIView = UIView()"
+        let output = "var view = UIView()"
+        testFormatting(for: input, output, rule: FormatRules.redundantType)
+    }
+
+    func testLetRedundantGenericTypeRemoval() {
+        let input = "let relay: BehaviourRelay<Int?> = BehaviourRelay<Int?>(value: nil)"
+        let output = "let relay = BehaviourRelay<Int?>(value: nil)"
+        testFormatting(for: input, output, rule: FormatRules.redundantType)
+    }
+
+    func testVarNonRedundantTypeDoesNothing() {
+        let input = "var view: UIView = UINavigationBar()"
+        testFormatting(for: input, rule: FormatRules.redundantType)
+    }
+
+    func testLetRedundantTypeRemoval() {
+        let input = "let view: UIView = UIView()"
+        let output = "let view = UIView()"
+        testFormatting(for: input, output, rule: FormatRules.redundantType)
+    }
+
+    func testLetNonRedundantTypeDoesNothing() {
+        let input = "let view: UIView = UINavigationBar()"
+        testFormatting(for: input, rule: FormatRules.redundantType)
+    }
+
+    func testTypeNoRedundancyDoesNothing() {
+        let input = "let foo: Bar = 5"
+        testFormatting(for: input, rule: FormatRules.redundantType)
+    }
+
+    func testClassTwoVariablesNoRedundantTypeDoesNothing() {
+        let input = """
+        final class LGWebSocketClient: WebSocketClient, WebSocketLibraryDelegate {
+            var webSocket: WebSocketLibraryProtocol
+            var timeoutIntervalForRequest: TimeInterval = LGCoreKitConstants.websocketTimeOutTimeInterval
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantType)
+    }
+
     // MARK: - consecutiveSpaces
 
     func testConsecutiveSpaces() {
@@ -13406,7 +13451,7 @@ class RulesTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "redundantType"]
         )
     }
 

@@ -1060,6 +1060,42 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.redundantType)
     }
 
+    func testRedundantTypeRemovedIfValueOnNextLine() {
+        let input = """
+        let view: UIView
+            = UIView()
+        """
+        let output = """
+        let view
+            = UIView()
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantType)
+    }
+
+    func testRedundantTypeRemovedIfValueOnNextLine2() {
+        let input = """
+        let view: UIView =
+            UIView()
+        """
+        let output = """
+        let view =
+            UIView()
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantType)
+    }
+
+    func testRedundantTypeRemovalWithComment() {
+        let input = "var view: UIView /* view */ = UIView()"
+        let output = "var view /* view */ = UIView()"
+        testFormatting(for: input, output, rule: FormatRules.redundantType)
+    }
+
+    func testRedundantTypeRemovalWithComment2() {
+        let input = "var view: UIView = /* view */ UIView()"
+        let output = "var view = /* view */ UIView()"
+        testFormatting(for: input, output, rule: FormatRules.redundantType)
+    }
+
     // MARK: - consecutiveSpaces
 
     func testConsecutiveSpaces() {

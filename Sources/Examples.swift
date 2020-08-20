@@ -787,6 +787,13 @@ private struct Examples {
     ```
     """
 
+    let redundantType = """
+    ```diff
+    - let view: UIView = UIView()
+    + let view = UIView()
+    ```
+    """
+
     let modifierOrder = """
     ```diff
     - lazy public weak private(set) var foo: UIView?

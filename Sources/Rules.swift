@@ -127,7 +127,12 @@ private func allRules(except rules: [String]) -> [FormatRule] {
 private let _allRules = allRules(except: [])
 private let _defaultRules = allRules(except: _disabledByDefault)
 private let _deprecatedRules = FormatRule.deprecatedMessage.keys
-private let _disabledByDefault = _deprecatedRules + ["isEmpty", "organizeDeclarations"]
+private let _disabledByDefault = _deprecatedRules + [
+    "isEmpty",
+    "multilineEnumCases",
+    "multilineSwitchCases",
+    "organizeDeclarations",
+]
 
 public extension _FormatRules {
     /// A Dictionary of rules by name

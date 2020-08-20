@@ -1150,6 +1150,17 @@ by using `--self init-only`:
 
 Remove redundant type from variable declarations.
 
+<details>
+<summary>Examples</summary>
+
+```diff
+- let view: UIView = UIView()
++ let view = UIView()
+```
+
+</details>
+<br/>
+
 ## redundantVoidReturnType
 
 Remove explicit `Void` return type.

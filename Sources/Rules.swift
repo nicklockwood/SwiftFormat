@@ -678,38 +678,33 @@ public struct _FormatRules {
         formatter.forEachToken(where: { (token) -> Bool in
             token == .keyword("var") || token == .keyword("let")
         }) { i, _ in
-            func isExactSameType(startTypeIndex: Int, startInitIndex: Int) -> Bool {
-                var i = startTypeIndex
-                var j = startInitIndex
-                var shouldFormat = true
-
-                while let typeTokenIndex = formatter.index(of: .nonSpaceOrComment, after: i),
-                    typeTokenIndex < startInitIndex - 1,
-                    let initTokenIndex = formatter.index(of: .nonSpaceOrComment, after: j)
-                {
-                    shouldFormat = shouldFormat
-                        && formatter.token(at: typeTokenIndex) == formatter.token(at: initTokenIndex)
-                    i += 1
-                    j += 1
-                }
-
-                return shouldFormat && i > startTypeIndex
-            }
-
-            guard
-                let colonIndex = formatter.index(of: .delimiter,
-                                                 after: i,
-                                                 if: { (token) -> Bool in token == .delimiter(":") }),
-                let operatorIndex = formatter.index(of: .operator,
-                                                    after: colonIndex,
-                                                    if: { (token) -> Bool in token == .operator("=", .infix) })
+            guard let colonIndex = formatter.index(after: i, where: {
+                [.delimiter(":"), .operator("=", .infix)].contains($0)
+            }), formatter.tokens[colonIndex] == .delimiter(":"),
+                let equalsIndex = formatter.index(of: .operator("=", .infix), after: colonIndex),
+                let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
             else { return }
 
-            guard isExactSameType(startTypeIndex: colonIndex + 1,
-                                  startInitIndex: operatorIndex + 1) else { return }
+            // Check types match
+            var i = colonIndex, j = equalsIndex
+            while let typeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                typeIndex <= endIndex,
+                let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: j)
+            {
+                guard formatter.tokens[typeIndex] == formatter.tokens[valueIndex] else {
+                    return
+                }
+                i = typeIndex
+                j = valueIndex
+            }
+            guard i == endIndex else {
+                return
+            }
 
-            formatter.removeTokens(in: colonIndex ... (operatorIndex - 1))
-            formatter.insertSpace(" ", at: colonIndex)
+            formatter.removeTokens(in: colonIndex ... endIndex)
+            if formatter.tokens[colonIndex - 1].isSpace {
+                formatter.removeToken(at: colonIndex - 1)
+            }
         }
     }
 

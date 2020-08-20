@@ -42,6 +42,7 @@
 * [redundantRawValues](#redundantRawValues)
 * [redundantReturn](#redundantReturn)
 * [redundantSelf](#redundantSelf)
+* [redundantType](#redundantType)
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
 * [sortedImports](#sortedImports)
@@ -1130,6 +1131,10 @@ by using `--self init-only`:
 
 </details>
 <br/>
+
+## redundantType
+
+Removes explicit type declarations from variable declarations.
 
 ## redundantVoidReturnType
 

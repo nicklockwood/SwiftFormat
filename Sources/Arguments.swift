@@ -509,12 +509,12 @@ func warningsForArguments(_ args: [String: String]) -> [String] {
     var warnings = [String]()
     for option in FormatOptions.Descriptor.all {
         if args[option.argumentName] != nil, let message = option.deprecationMessage {
-            warnings.append(message)
+            warnings.append("--\(option.argumentName) option is deprecated. \(message)")
         }
     }
     for name in Set(rulesArguments.flatMap { (try? args[$0].map(parseRules) ?? []) ?? [] }) {
         if let message = FormatRules.byName[name]?.deprecationMessage {
-            warnings.append(message)
+            warnings.append("\(name) rule is deprecated. \(message)")
         }
     }
     return warnings

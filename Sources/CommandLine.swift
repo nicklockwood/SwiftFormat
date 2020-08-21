@@ -136,6 +136,12 @@ func printRuleInfo(for name: String, as type: CLI.OutputType) throws {
     print(name, as: type)
     print("", as: type)
     print(stripMarkdown(rule.help), as: type)
+    if let message = rule.deprecationMessage {
+        print("", as: type)
+        print("Note: \(rule.name) rule is deprecated. \(message)")
+        print("")
+        return
+    }
     if !rule.options.isEmpty {
         print("\nOptions:\n", as: type)
         print(rule.options.compactMap {

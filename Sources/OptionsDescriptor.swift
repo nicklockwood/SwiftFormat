@@ -47,20 +47,17 @@ extension FormatOptions {
         let propertyName: String // internal property; ok to change this
         let displayName: String
         let help: String
+        let deprecationMessage: String?
         let toOptions: (String, inout FormatOptions) throws -> Void
         let fromOptions: (FormatOptions) -> String
         private(set) var type: ArgumentType
-
-        var deprecationMessage: String? {
-            return FormatOptions.Descriptor.deprecatedMessage[argumentName]
-        }
 
         var isDeprecated: Bool {
             return deprecationMessage != nil
         }
 
         var isRenamed: Bool {
-            return deprecationMessage != nil && FormatOptions.Descriptor.all.contains(where: {
+            return isDeprecated && FormatOptions.Descriptor.all.contains(where: {
                 $0.propertyName == propertyName && $0.argumentName != argumentName
             })
         }
@@ -85,6 +82,7 @@ extension FormatOptions {
              propertyName: String,
              displayName: String,
              help: String,
+             deprecationMessage: String? = nil,
              keyPath: WritableKeyPath<FormatOptions, Bool>,
              trueValues: [String],
              falseValues: [String])
@@ -94,6 +92,7 @@ extension FormatOptions {
             self.propertyName = propertyName
             self.displayName = displayName
             self.help = help
+            self.deprecationMessage = deprecationMessage
             type = .binary(true: trueValues, false: falseValues)
             toOptions = { value, options in
                 switch value.lowercased() {
@@ -114,6 +113,7 @@ extension FormatOptions {
                 propertyName: String,
                 displayName: String,
                 help: String,
+                deprecationMessage: String? = nil,
                 keyPath: WritableKeyPath<FormatOptions, T>,
                 fromArgument: @escaping (String) -> T?,
                 toArgument: @escaping (T) -> String)
@@ -122,6 +122,7 @@ extension FormatOptions {
             self.propertyName = propertyName
             self.displayName = displayName
             self.help = help
+            self.deprecationMessage = deprecationMessage
             type = .text
             toOptions = { key, options in
                 guard let value = fromArgument(key) else {
@@ -138,6 +139,7 @@ extension FormatOptions {
              propertyName: String,
              displayName: String,
              help: String,
+             deprecationMessage: String? = nil,
              keyPath: WritableKeyPath<FormatOptions, String>,
              options: DictionaryLiteral<String, String>)
         {
@@ -147,6 +149,7 @@ extension FormatOptions {
                       propertyName: propertyName,
                       displayName: displayName,
                       help: help,
+                      deprecationMessage: deprecationMessage,
                       keyPath: keyPath,
                       fromArgument: { map[$0.lowercased()] },
                       toArgument: { value in
@@ -166,6 +169,7 @@ extension FormatOptions {
              propertyName: String,
              displayName: String,
              help: String,
+             deprecationMessage: String? = nil,
              keyPath: WritableKeyPath<FormatOptions, Int>)
         {
             self.init(
@@ -173,6 +177,7 @@ extension FormatOptions {
                 propertyName: propertyName,
                 displayName: displayName,
                 help: help,
+                deprecationMessage: deprecationMessage,
                 keyPath: keyPath,
                 fromArgument: { Int($0).map { max(0, $0) } },
                 toArgument: { String($0) }
@@ -183,13 +188,15 @@ extension FormatOptions {
         init<T: RawRepresentable>(argumentName: String,
                                   propertyName: String,
                                   displayName: String,
-                                  help: String = "",
+                                  help: String,
+                                  deprecationMessage: String? = nil,
                                   keyPath: WritableKeyPath<FormatOptions, T>) where T.RawValue == String
         {
             self.argumentName = argumentName
             self.propertyName = propertyName
             self.displayName = displayName
             self.help = help
+            self.deprecationMessage = deprecationMessage
             type = .text
             toOptions = { value, options in
                 guard let value = T(rawValue: value) ?? T(rawValue: value.lowercased()) else {
@@ -205,7 +212,8 @@ extension FormatOptions {
         init<T: RawRepresentable>(argumentName: String,
                                   propertyName: String,
                                   displayName: String,
-                                  help: String = "",
+                                  help: String,
+                                  deprecationMessage: String? = nil,
                                   keyPath: WritableKeyPath<FormatOptions, T>,
                                   options: [String]) where T.RawValue == String
         {
@@ -214,6 +222,7 @@ extension FormatOptions {
                 propertyName: propertyName,
                 displayName: displayName,
                 help: help,
+                deprecationMessage: deprecationMessage,
                 keyPath: keyPath
             )
             type = .enum(options)
@@ -223,6 +232,7 @@ extension FormatOptions {
              propertyName: String,
              displayName: String,
              help: String,
+             deprecationMessage: String? = nil,
              keyPath: WritableKeyPath<FormatOptions, [String]>,
              validate: @escaping (String) throws -> Void = { _ in })
         {
@@ -230,6 +240,7 @@ extension FormatOptions {
             self.propertyName = propertyName
             self.displayName = displayName
             self.help = help
+            self.deprecationMessage = deprecationMessage
             type = .array
             toOptions = { value, options in
                 let values = parseCommaDelimitedList(value)
@@ -250,6 +261,7 @@ extension FormatOptions {
              propertyName: String,
              displayName: String,
              help: String,
+             deprecationMessage: String? = nil,
              keyPath: WritableKeyPath<FormatOptions, Set<String>>,
              validate: @escaping (String) throws -> Void = { _ in })
         {
@@ -257,6 +269,7 @@ extension FormatOptions {
             self.propertyName = propertyName
             self.displayName = displayName
             self.help = help
+            self.deprecationMessage = deprecationMessage
             type = .set
             toOptions = { value, options in
                 let values = parseCommaDelimitedList(value)
@@ -821,22 +834,12 @@ extension FormatOptions.Descriptor {
 
     // MARK: - DEPRECATED
 
-    static let deprecatedMessage = [
-        empty.argumentName: "--empty option is deprecated. Use --voidtype instead.",
-        indentComments.argumentName: "--comments option is deprecated. Relative indent within multiline comments is now preserved by default.",
-        insertBlankLines.argumentName: "--insertlines option is deprecated. Use '--enable blankLinesBetweenScopes' or '--enable blankLinesAroundMark' or '--disable blankLinesBetweenScopes' or '--disable blankLinesAroundMark' instead.",
-        removeBlankLines.argumentName: "--removelines option is deprecated. Use '--enable blankLinesAtStartOfScope' or '--enable blankLinesAtEndOfScope' or '--disable blankLinesAtStartOfScope' or '--disable blankLinesAtEndOfScope' instead.",
-        hexLiterals.argumentName: "--hexliterals option is deprecated. Use --hexliteralcase instead.",
-        wrapElements.argumentName: "--wrapelements option is deprecated. Use --wrapcollections instead.",
-        experimentalRules.argumentName: "--experimentalRules option is deprecated. Use --enable to opt-in to rules individually.",
-        specifierOrder.argumentName: "--specifierorder option is deprecated. Use --modifierorder instead.",
-    ]
-
     static let empty = FormatOptions.Descriptor(
         argumentName: "empty",
         propertyName: "empty",
         displayName: "Empty",
         help: "deprecated",
+        deprecationMessage: "Use --voidtype instead.",
         keyPath: \.useVoid,
         trueValues: ["void"],
         falseValues: ["tuple", "tuples"]
@@ -846,6 +849,7 @@ extension FormatOptions.Descriptor {
         propertyName: "indentComments",
         displayName: "Comments",
         help: "Indenting of comment bodies: \"indent\" (default) or \"ignore\"",
+        deprecationMessage: "Relative indent within multiline comments is now preserved by default.",
         keyPath: \.indentComments,
         trueValues: ["indent", "indented"],
         falseValues: ["ignore"]
@@ -855,6 +859,7 @@ extension FormatOptions.Descriptor {
         propertyName: "insertBlankLines",
         displayName: "Insert Lines",
         help: "deprecated",
+        deprecationMessage: "Use '--enable blankLinesBetweenScopes' or '--enable blankLinesAroundMark' or '--disable blankLinesBetweenScopes' or '--disable blankLinesAroundMark' instead.",
         keyPath: \.insertBlankLines,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -864,6 +869,7 @@ extension FormatOptions.Descriptor {
         propertyName: "removeBlankLines",
         displayName: "Remove Lines",
         help: "deprecated",
+        deprecationMessage: "Use '--enable blankLinesAtStartOfScope' or '--enable blankLinesAtEndOfScope' or '--disable blankLinesAtStartOfScope' or '--disable blankLinesAtEndOfScope' instead.",
         keyPath: \.removeBlankLines,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -873,6 +879,7 @@ extension FormatOptions.Descriptor {
         propertyName: "uppercaseHex",
         displayName: "hexliterals",
         help: "deprecated",
+        deprecationMessage: "Use --hexliteralcase instead.",
         keyPath: \.uppercaseHex,
         trueValues: ["uppercase", "upper"],
         falseValues: ["lowercase", "lower"]
@@ -882,6 +889,7 @@ extension FormatOptions.Descriptor {
         propertyName: "wrapCollections",
         displayName: "Wrap Elements",
         help: "deprecated",
+        deprecationMessage: "Use --wrapcollections instead.",
         keyPath: \.wrapCollections,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
@@ -890,6 +898,7 @@ extension FormatOptions.Descriptor {
         propertyName: "experimentalRules",
         displayName: "Experimental Rules",
         help: "Experimental rules: \"enabled\" or \"disabled\" (default)",
+        deprecationMessage: "Use --enable to opt-in to rules individually.",
         keyPath: \.experimentalRules,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -899,6 +908,7 @@ extension FormatOptions.Descriptor {
         propertyName: "modifierOrder",
         displayName: "Specifier Order",
         help: "deprecated",
+        deprecationMessage: "Use --modifierorder instead.",
         keyPath: \FormatOptions.modifierOrder,
         validate: {
             guard _FormatRules.allModifiers.contains($0) else {

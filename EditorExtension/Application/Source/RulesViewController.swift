@@ -37,7 +37,7 @@ extension FormatRule {
     }
 }
 
-extension FormatOptions.Descriptor {
+extension OptionDescriptor {
     // If this extension won't compile have a look at
     // https://stackoverflow.com/questions/35673290/extension-of-a-nested-type-in-swift
     // https://bugs.swift.org/browse/SR-631

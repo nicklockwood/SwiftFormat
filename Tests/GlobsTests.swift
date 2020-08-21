@@ -34,42 +34,42 @@ class GlobsTests: XCTestCase {
     }
 
     func testExpandPathWithWildcardAtEnd() {
-        let path = "Options*"
+        let path = "Option*"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
         XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
     }
 
     func testExpandPathWithDoubleWildcardAtEnd() {
-        let path = "Options**"
+        let path = "Option**"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
         XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
     }
 
     func testExpandPathWithCharacterClass() {
-        let path = "Options[DS]*.swift"
+        let path = "Option[sD]*.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
+        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
     }
 
     func testExpandPathWithCharacterClassRange() {
-        let path = "Options[E-T]*.swift"
+        let path = "Option[e-t]*.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("EditorExtension/Shared")
         XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 
     func testExpandPathWithEitherOr() {
-        let path = "Option{s,sDescriptor}.swift"
+        let path = "Option{s,Descriptor}.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
         XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
     }
 
     func testExpandPathsWithEitherOr() {
-        let path = "Option{s,sDescriptor}.swift, SwiftFormat.{h,swift}"
+        let path = "Option{s,Descriptor}.swift, SwiftFormat.{h,swift}"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
         XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 4)

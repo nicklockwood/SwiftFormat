@@ -52,7 +52,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             options = try Options(args, in: url.deletingLastPathComponent().path)
             OptionsStore().inferOptions = Set(args.keys)
                 .intersection(formattingArguments)
-                .subtracting([FormatOptions.Descriptor.swiftVersion.argumentName])
+                .subtracting([Descriptors.swiftVersion.argumentName])
                 .isEmpty
         } catch {
             showError(error)

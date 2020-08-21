@@ -114,7 +114,7 @@ public enum ExitCode: Int32 {
 
 func printOptions(as type: CLI.OutputType) {
     print("")
-    print(FormatOptions.Descriptor.formatting.compactMap {
+    print(Descriptors.formatting.compactMap {
         guard !$0.isDeprecated else { return nil }
         var result = "--\($0.argumentName)"
         for _ in 0 ..< Options.maxArgumentNameLength + 3 - result.count {
@@ -145,7 +145,7 @@ func printRuleInfo(for name: String, as type: CLI.OutputType) throws {
     if !rule.options.isEmpty {
         print("\nOptions:\n", as: type)
         print(rule.options.compactMap {
-            guard let descriptor = FormatOptions.Descriptor.byName[$0], !descriptor.isDeprecated else {
+            guard let descriptor = Descriptors.byName[$0], !descriptor.isDeprecated else {
                 return nil
             }
             var result = "--\(descriptor.argumentName)"
@@ -192,9 +192,9 @@ func printHelp(as type: CLI.OutputType) {
     --unexclude        Paths to not exclude, even if excluded elsewhere in config
     --symlinks         How symlinks are handled: "follow" or "ignore" (default)
     --linerange        Range of lines to process within the input file (first, last)
-    --fragment         \(stripMarkdown(FormatOptions.Descriptor.fragment.help))
-    --conflictmarkers  \(stripMarkdown(FormatOptions.Descriptor.ignoreConflictMarkers.help))
-    --swiftversion     \(stripMarkdown(FormatOptions.Descriptor.swiftVersion.help))
+    --fragment         \(stripMarkdown(Descriptors.fragment.help))
+    --conflictmarkers  \(stripMarkdown(Descriptors.ignoreConflictMarkers.help))
+    --swiftversion     \(stripMarkdown(Descriptors.swiftVersion.help))
     --minversion       The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --dryrun           Run in "dry" mode (without actually changing any files)

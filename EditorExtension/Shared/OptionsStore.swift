@@ -33,7 +33,7 @@ import Foundation
 
 struct SavedOption {
     var argumentValue: String
-    let descriptor: FormatOptions.Descriptor
+    let descriptor: OptionDescriptor
 
     var isDeprecated: Bool {
         return descriptor.isDeprecated
@@ -42,7 +42,7 @@ struct SavedOption {
 
 extension SavedOption {
     fileprivate init(_ rep: OptionsStore.OptionRepresentation) throws {
-        guard let descriptor = FormatOptions.Descriptor.byName[rep.id] else {
+        guard let descriptor = Descriptors.byName[rep.id] else {
             throw FormatError.options("Unknown option \(rep.id)")
         }
         self.descriptor = descriptor
@@ -56,7 +56,7 @@ extension SavedOption {
 extension FormatOptions {
     fileprivate init(_ rep: OptionsStore.OptionStoreRepresentation) throws {
         var formatOptions = FormatOptions.default
-        for descriptor in Descriptor.all.reversed() {
+        for descriptor in Descriptors.all.reversed() {
             // By loading formatting options in reverse, we ensure that
             // non-deprecated/renamed values will overwrite legacy values
             if let value = rep[descriptor.argumentName] {
@@ -113,7 +113,7 @@ struct OptionsStore {
     }
 
     func save(_ options: FormatOptions) {
-        save(FormatOptions.Descriptor.all.map {
+        save(Descriptors.all.map {
             let value = $0.fromOptions(options)
             return SavedOption(argumentValue: value, descriptor: $0)
         } as [SavedOption])
@@ -133,7 +133,7 @@ struct OptionsStore {
 
     func resetOptionsToDefaults() {
         inferOptions = true
-        let options = FormatOptions.Descriptor.all.map {
+        let options = Descriptors.all.map {
             (id: $0.argumentName, arg: $0.defaultArgument)
         }
         clear()
@@ -153,7 +153,7 @@ extension OptionsStore {
     }
 
     private func addNewOptionsIfNeeded() {
-        let allDescriptors = FormatOptions.Descriptor.all
+        let allDescriptors = Descriptors.all
         var options = load()
         var idsToRemove = Set(options.keys)
 

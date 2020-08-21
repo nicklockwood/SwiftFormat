@@ -83,7 +83,7 @@
 		E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5BE2025761D00C1BEDE /* UserSelection.swift */; };
 		E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */; };
 		E41CB5C52027700100C1BEDE /* FreeTextTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */; };
-		E43EF47C202FF47C00E523BD /* OptionsDescriptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E43EF47B202FF47C00E523BD /* OptionsDescriptorTests.swift */; };
+		E43EF47C202FF47C00E523BD /* OptionDescriptorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E43EF47B202FF47C00E523BD /* OptionDescriptorTests.swift */; };
 		E4872111201D3B830014845E /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
 		E4872112201D3B860014845E /* Rules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */; };
 		E4872113201D3B890014845E /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
@@ -99,10 +99,10 @@
 		E4E4D3CB2033F17C000D7CB1 /* EnumAssociable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */; };
 		E4E4D3CC2033F17C000D7CB1 /* EnumAssociable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */; };
 		E4E4D3CE2033F1EF000D7CB1 /* EnumAssociableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3CD2033F1EF000D7CB1 /* EnumAssociableTests.swift */; };
-		E4FABAD5202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
-		E4FABAD6202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
-		E4FABAD7202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
-		E4FABAD8202FEF060065716E /* OptionsDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */; };
+		E4FABAD5202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
+		E4FABAD6202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
+		E4FABAD7202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
+		E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -209,14 +209,14 @@
 		E41CB5BE2025761D00C1BEDE /* UserSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSelection.swift; sourceTree = "<group>"; };
 		E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionTableCellView.swift; sourceTree = "<group>"; };
 		E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeTextTableCellView.swift; sourceTree = "<group>"; };
-		E43EF47B202FF47C00E523BD /* OptionsDescriptorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsDescriptorTests.swift; sourceTree = "<group>"; };
+		E43EF47B202FF47C00E523BD /* OptionDescriptorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionDescriptorTests.swift; sourceTree = "<group>"; };
 		E487211C201D885A0014845E /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
 		E4872124201D980D0014845E /* BinarySelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinarySelectionTableCellView.swift; sourceTree = "<group>"; };
 		E4872128201E3DD50014845E /* RulesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesStore.swift; sourceTree = "<group>"; };
 		E4962DDF203F3CD500A02013 /* OptionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsStore.swift; sourceTree = "<group>"; };
 		E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociable.swift; sourceTree = "<group>"; };
 		E4E4D3CD2033F1EF000D7CB1 /* EnumAssociableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociableTests.swift; sourceTree = "<group>"; };
-		E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsDescriptor.swift; sourceTree = "<group>"; };
+		E4FABAD4202FEF060065716E /* OptionDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionDescriptor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -313,7 +313,7 @@
 				01B3987C1D763493009ADE61 /* Formatter.swift */,
 				01A0EAA91D5DB4CF00A0A8E3 /* Info.plist */,
 				01F3DF8B1DB9FD3F00454944 /* Options.swift */,
-				E4FABAD4202FEF060065716E /* OptionsDescriptor.swift */,
+				E4FABAD4202FEF060065716E /* OptionDescriptor.swift */,
 				01045A982119979400D2BE3D /* Arguments.swift */,
 				01045A90211988F100D2BE3D /* Inference.swift */,
 				01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */,
@@ -338,7 +338,7 @@
 				01426E4D23AA29B100E7D871 /* ParsingHelpersTests.swift */,
 				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
 				E4E4D3CD2033F1EF000D7CB1 /* EnumAssociableTests.swift */,
-				E43EF47B202FF47C00E523BD /* OptionsDescriptorTests.swift */,
+				E43EF47B202FF47C00E523BD /* OptionDescriptorTests.swift */,
 				01F3DF8F1DBA003E00454944 /* InferenceTests.swift */,
 				01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */,
 				0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */,
@@ -788,7 +788,7 @@
 				01045A992119979400D2BE3D /* Arguments.swift in Sources */,
 				01567D2F225B2BFD00B22D41 /* ParsingHelpers.swift in Sources */,
 				01045A91211988F100D2BE3D /* Inference.swift in Sources */,
-				E4FABAD5202FEF060065716E /* OptionsDescriptor.swift in Sources */,
+				E4FABAD5202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				01BBD85921DAA2A000457380 /* Globs.swift in Sources */,
 				01ACAE05220CD90F003F3CCF /* Examples.swift in Sources */,
 				01D3B28624E9C9C700888DE0 /* FormattingHelpers.swift in Sources */,
@@ -816,7 +816,7 @@
 				01B3987B1D763424009ADE61 /* FormatterTests.swift in Sources */,
 				0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */,
 				E4E4D3CE2033F1EF000D7CB1 /* EnumAssociableTests.swift in Sources */,
-				E43EF47C202FF47C00E523BD /* OptionsDescriptorTests.swift in Sources */,
+				E43EF47C202FF47C00E523BD /* OptionDescriptorTests.swift in Sources */,
 				01045A9E2119A37F00D2BE3D /* ArgumentsTests.swift in Sources */,
 				01BEC5772236E1A700D0DD83 /* MetadataTests.swift in Sources */,
 				01F3DF901DBA003E00454944 /* InferenceTests.swift in Sources */,
@@ -836,7 +836,7 @@
 				01BBD85A21DAA2A600457380 /* Globs.swift in Sources */,
 				01045A92211988F100D2BE3D /* Inference.swift in Sources */,
 				01F3DF8D1DB9FD3F00454944 /* Options.swift in Sources */,
-				E4FABAD6202FEF060065716E /* OptionsDescriptor.swift in Sources */,
+				E4FABAD6202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				01A8320724EC7F7600A9D0EB /* FormattingHelpers.swift in Sources */,
 				01F17E831E25870700DCD359 /* CommandLine.swift in Sources */,
 				01ACAE06220CD914003F3CCF /* Examples.swift in Sources */,
@@ -850,7 +850,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E4083191202C049200CAF11D /* SwiftFormat.swift in Sources */,
-				E4FABAD7202FEF060065716E /* OptionsDescriptor.swift in Sources */,
+				E4FABAD7202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				E41CB5C52027700100C1BEDE /* FreeTextTableCellView.swift in Sources */,
 				E4872125201D980D0014845E /* BinarySelectionTableCellView.swift in Sources */,
 				E487211D201D885A0014845E /* RulesViewController.swift in Sources */,
@@ -884,7 +884,7 @@
 				90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */,
 				0142C77023C3FB6D005D5832 /* LintFileCommand.swift in Sources */,
 				E4E4D3CC2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
-				E4FABAD8202FEF060065716E /* OptionsDescriptor.swift in Sources */,
+				E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */,
 				90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */,
 				01A8320924EC7F7800A9D0EB /* FormattingHelpers.swift in Sources */,

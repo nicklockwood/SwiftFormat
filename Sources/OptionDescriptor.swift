@@ -1,5 +1,5 @@
 //
-//  OptionsDescriptor.swift
+//  OptionDescriptor.swift
 //  SwiftFormat
 //
 //  Created by Vincent Bernier on 10-02-18.
@@ -31,345 +31,292 @@
 
 import Foundation
 
-extension FormatOptions {
-    struct Descriptor {
-        enum ArgumentType: EnumAssociable {
-            // index 0 is official value, others are acceptable
-            case binary(true: [String], false: [String])
-            case `enum`([String])
-            case text
-            case int
-            case array
-            case set
+class OptionDescriptor {
+    enum ArgumentType: EnumAssociable {
+        // index 0 is official value, others are acceptable
+        case binary(true: [String], false: [String])
+        case `enum`([String])
+        case text
+        case int
+        case array
+        case set
+    }
+
+    let argumentName: String // command-line argument; must not change
+    fileprivate(set) var propertyName = "" // internal property; ok to change this
+    let displayName: String
+    let help: String
+    let deprecationMessage: String?
+    let toOptions: (String, inout FormatOptions) throws -> Void
+    let fromOptions: (FormatOptions) -> String
+    private(set) var type: ArgumentType
+
+    var isDeprecated: Bool {
+        return deprecationMessage != nil
+    }
+
+    var isRenamed: Bool {
+        return isDeprecated && Descriptors.all.contains(where: {
+            $0.propertyName == propertyName && $0.argumentName != argumentName
+        })
+    }
+
+    var defaultArgument: String {
+        return fromOptions(FormatOptions.default)
+    }
+
+    func validateArgument(_ arg: String) -> Bool {
+        var options = FormatOptions.default
+        return (try? toOptions(arg, &options)) != nil
+    }
+
+    var isSetType: Bool {
+        guard case .set = type else {
+            return false
         }
+        return true
+    }
 
-        let argumentName: String // command-line argument; must not change
-        let propertyName: String // internal property; ok to change this
-        let displayName: String
-        let help: String
-        let deprecationMessage: String?
-        let toOptions: (String, inout FormatOptions) throws -> Void
-        let fromOptions: (FormatOptions) -> String
-        private(set) var type: ArgumentType
-
-        var isDeprecated: Bool {
-            return deprecationMessage != nil
-        }
-
-        var isRenamed: Bool {
-            return isDeprecated && FormatOptions.Descriptor.all.contains(where: {
-                $0.propertyName == propertyName && $0.argumentName != argumentName
-            })
-        }
-
-        var defaultArgument: String {
-            return fromOptions(FormatOptions.default)
-        }
-
-        func validateArgument(_ arg: String) -> Bool {
-            var options = FormatOptions.default
-            return (try? toOptions(arg, &options)) != nil
-        }
-
-        var isSetType: Bool {
-            guard case .set = type else {
-                return false
+    init(argumentName: String,
+         displayName: String,
+         help: String,
+         deprecationMessage: String? = nil,
+         keyPath: WritableKeyPath<FormatOptions, Bool>,
+         trueValues: [String],
+         falseValues: [String])
+    {
+        assert(argumentName.count <= Options.maxArgumentNameLength)
+        self.argumentName = argumentName
+        self.displayName = displayName
+        self.help = help
+        self.deprecationMessage = deprecationMessage
+        type = .binary(true: trueValues, false: falseValues)
+        toOptions = { value, options in
+            switch value.lowercased() {
+            case let value where trueValues.contains(value):
+                options[keyPath: keyPath] = true
+            case let value where falseValues.contains(value):
+                options[keyPath: keyPath] = false
+            default:
+                throw FormatError.options("")
             }
-            return true
         }
+        fromOptions = { options in
+            options[keyPath: keyPath] ? trueValues[0] : falseValues[0]
+        }
+    }
 
-        init(argumentName: String,
-             propertyName: String,
-             displayName: String,
-             help: String,
-             deprecationMessage: String? = nil,
-             keyPath: WritableKeyPath<FormatOptions, Bool>,
-             trueValues: [String],
-             falseValues: [String])
-        {
-            assert(argumentName.count <= Options.maxArgumentNameLength)
-            self.argumentName = argumentName
-            self.propertyName = propertyName
-            self.displayName = displayName
-            self.help = help
-            self.deprecationMessage = deprecationMessage
-            type = .binary(true: trueValues, false: falseValues)
-            toOptions = { value, options in
-                switch value.lowercased() {
-                case let value where trueValues.contains(value):
-                    options[keyPath: keyPath] = true
-                case let value where falseValues.contains(value):
-                    options[keyPath: keyPath] = false
-                default:
-                    throw FormatError.options("")
+    init<T>(argumentName: String,
+            displayName: String,
+            help: String,
+            deprecationMessage: String? = nil,
+            keyPath: WritableKeyPath<FormatOptions, T>,
+            fromArgument: @escaping (String) -> T?,
+            toArgument: @escaping (T) -> String)
+    {
+        self.argumentName = argumentName
+        self.displayName = displayName
+        self.help = help
+        self.deprecationMessage = deprecationMessage
+        type = .text
+        toOptions = { key, options in
+            guard let value = fromArgument(key) else {
+                throw FormatError.options("")
+            }
+            options[keyPath: keyPath] = value
+        }
+        fromOptions = { options in
+            toArgument(options[keyPath: keyPath])
+        }
+    }
+
+    convenience init(argumentName: String,
+                     displayName: String,
+                     help: String,
+                     deprecationMessage: String? = nil,
+                     keyPath: WritableKeyPath<FormatOptions, String>,
+                     options: DictionaryLiteral<String, String>)
+    {
+        let map: [String: String] = Dictionary(options.map { ($0, $1) }, uniquingKeysWith: { $1 })
+        let keys = Array(map.keys)
+        self.init(argumentName: argumentName,
+                  displayName: displayName,
+                  help: help,
+                  deprecationMessage: deprecationMessage,
+                  keyPath: keyPath,
+                  fromArgument: { map[$0.lowercased()] },
+                  toArgument: { value in
+                      if let key = map.first(where: { $0.value == value })?.key {
+                          return key
+                      }
+                      let fallback = FormatOptions.default[keyPath: keyPath]
+                      if let key = map.first(where: { $0.value == fallback })?.key {
+                          return key
+                      }
+                      return keys[0]
+                  })
+        type = .enum(keys)
+    }
+
+    convenience init(argumentName: String,
+                     displayName: String,
+                     help: String,
+                     deprecationMessage: String? = nil,
+                     keyPath: WritableKeyPath<FormatOptions, Int>)
+    {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            deprecationMessage: deprecationMessage,
+            keyPath: keyPath,
+            fromArgument: { Int($0).map { max(0, $0) } },
+            toArgument: { String($0) }
+        )
+        type = .int
+    }
+
+    init<T: RawRepresentable>(argumentName: String,
+                              displayName: String,
+                              help: String,
+                              deprecationMessage: String? = nil,
+                              keyPath: WritableKeyPath<FormatOptions, T>) where T.RawValue == String
+    {
+        self.argumentName = argumentName
+        self.displayName = displayName
+        self.help = help
+        self.deprecationMessage = deprecationMessage
+        type = .text
+        toOptions = { value, options in
+            guard let value = T(rawValue: value) ?? T(rawValue: value.lowercased()) else {
+                throw FormatError.options("")
+            }
+            options[keyPath: keyPath] = value
+        }
+        fromOptions = { options in
+            options[keyPath: keyPath].rawValue
+        }
+    }
+
+    convenience init<T: RawRepresentable>(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, T>,
+        options: [String]
+    ) where T.RawValue == String {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            deprecationMessage: deprecationMessage,
+            keyPath: keyPath
+        )
+        type = .enum(options)
+    }
+
+    init(argumentName: String,
+         displayName: String,
+         help: String,
+         deprecationMessage: String? = nil,
+         keyPath: WritableKeyPath<FormatOptions, [String]>,
+         validate: @escaping (String) throws -> Void = { _ in })
+    {
+        self.argumentName = argumentName
+        self.displayName = displayName
+        self.help = help
+        self.deprecationMessage = deprecationMessage
+        type = .array
+        toOptions = { value, options in
+            let values = parseCommaDelimitedList(value)
+            for (index, value) in values.enumerated() {
+                if values[0 ..< index].contains(value) {
+                    throw FormatError.options("Duplicate value '\(value)'")
                 }
+                try validate(value)
             }
-            fromOptions = { options in
-                options[keyPath: keyPath] ? trueValues[0] : falseValues[0]
-            }
+            options[keyPath: keyPath] = values
         }
-
-        init<T>(argumentName: String,
-                propertyName: String,
-                displayName: String,
-                help: String,
-                deprecationMessage: String? = nil,
-                keyPath: WritableKeyPath<FormatOptions, T>,
-                fromArgument: @escaping (String) -> T?,
-                toArgument: @escaping (T) -> String)
-        {
-            self.argumentName = argumentName
-            self.propertyName = propertyName
-            self.displayName = displayName
-            self.help = help
-            self.deprecationMessage = deprecationMessage
-            type = .text
-            toOptions = { key, options in
-                guard let value = fromArgument(key) else {
-                    throw FormatError.options("")
-                }
-                options[keyPath: keyPath] = value
-            }
-            fromOptions = { options in
-                toArgument(options[keyPath: keyPath])
-            }
+        fromOptions = { options in
+            options[keyPath: keyPath].joined(separator: ",")
         }
+    }
 
-        init(argumentName: String,
-             propertyName: String,
-             displayName: String,
-             help: String,
-             deprecationMessage: String? = nil,
-             keyPath: WritableKeyPath<FormatOptions, String>,
-             options: DictionaryLiteral<String, String>)
-        {
-            let map: [String: String] = Dictionary(options.map { ($0, $1) }, uniquingKeysWith: { $1 })
-            let keys = Array(map.keys)
-            self.init(argumentName: argumentName,
-                      propertyName: propertyName,
-                      displayName: displayName,
-                      help: help,
-                      deprecationMessage: deprecationMessage,
-                      keyPath: keyPath,
-                      fromArgument: { map[$0.lowercased()] },
-                      toArgument: { value in
-                          if let key = map.first(where: { $0.value == value })?.key {
-                              return key
-                          }
-                          let fallback = FormatOptions.default[keyPath: keyPath]
-                          if let key = map.first(where: { $0.value == fallback })?.key {
-                              return key
-                          }
-                          return keys[0]
-                      })
-            type = .enum(keys)
+    init(argumentName: String,
+         displayName: String,
+         help: String,
+         deprecationMessage: String? = nil,
+         keyPath: WritableKeyPath<FormatOptions, Set<String>>,
+         validate: @escaping (String) throws -> Void = { _ in })
+    {
+        self.argumentName = argumentName
+        self.displayName = displayName
+        self.help = help
+        self.deprecationMessage = deprecationMessage
+        type = .set
+        toOptions = { value, options in
+            let values = parseCommaDelimitedList(value)
+            try values.forEach(validate)
+            options[keyPath: keyPath] = Set(values)
         }
-
-        init(argumentName: String,
-             propertyName: String,
-             displayName: String,
-             help: String,
-             deprecationMessage: String? = nil,
-             keyPath: WritableKeyPath<FormatOptions, Int>)
-        {
-            self.init(
-                argumentName: argumentName,
-                propertyName: propertyName,
-                displayName: displayName,
-                help: help,
-                deprecationMessage: deprecationMessage,
-                keyPath: keyPath,
-                fromArgument: { Int($0).map { max(0, $0) } },
-                toArgument: { String($0) }
-            )
-            type = .int
-        }
-
-        init<T: RawRepresentable>(argumentName: String,
-                                  propertyName: String,
-                                  displayName: String,
-                                  help: String,
-                                  deprecationMessage: String? = nil,
-                                  keyPath: WritableKeyPath<FormatOptions, T>) where T.RawValue == String
-        {
-            self.argumentName = argumentName
-            self.propertyName = propertyName
-            self.displayName = displayName
-            self.help = help
-            self.deprecationMessage = deprecationMessage
-            type = .text
-            toOptions = { value, options in
-                guard let value = T(rawValue: value) ?? T(rawValue: value.lowercased()) else {
-                    throw FormatError.options("")
-                }
-                options[keyPath: keyPath] = value
-            }
-            fromOptions = { options in
-                options[keyPath: keyPath].rawValue
-            }
-        }
-
-        init<T: RawRepresentable>(argumentName: String,
-                                  propertyName: String,
-                                  displayName: String,
-                                  help: String,
-                                  deprecationMessage: String? = nil,
-                                  keyPath: WritableKeyPath<FormatOptions, T>,
-                                  options: [String]) where T.RawValue == String
-        {
-            self.init(
-                argumentName: argumentName,
-                propertyName: propertyName,
-                displayName: displayName,
-                help: help,
-                deprecationMessage: deprecationMessage,
-                keyPath: keyPath
-            )
-            type = .enum(options)
-        }
-
-        init(argumentName: String,
-             propertyName: String,
-             displayName: String,
-             help: String,
-             deprecationMessage: String? = nil,
-             keyPath: WritableKeyPath<FormatOptions, [String]>,
-             validate: @escaping (String) throws -> Void = { _ in })
-        {
-            self.argumentName = argumentName
-            self.propertyName = propertyName
-            self.displayName = displayName
-            self.help = help
-            self.deprecationMessage = deprecationMessage
-            type = .array
-            toOptions = { value, options in
-                let values = parseCommaDelimitedList(value)
-                for (index, value) in values.enumerated() {
-                    if values[0 ..< index].contains(value) {
-                        throw FormatError.options("Duplicate value '\(value)'")
-                    }
-                    try validate(value)
-                }
-                options[keyPath: keyPath] = values
-            }
-            fromOptions = { options in
-                options[keyPath: keyPath].joined(separator: ",")
-            }
-        }
-
-        init(argumentName: String,
-             propertyName: String,
-             displayName: String,
-             help: String,
-             deprecationMessage: String? = nil,
-             keyPath: WritableKeyPath<FormatOptions, Set<String>>,
-             validate: @escaping (String) throws -> Void = { _ in })
-        {
-            self.argumentName = argumentName
-            self.propertyName = propertyName
-            self.displayName = displayName
-            self.help = help
-            self.deprecationMessage = deprecationMessage
-            type = .set
-            toOptions = { value, options in
-                let values = parseCommaDelimitedList(value)
-                try values.forEach(validate)
-                options[keyPath: keyPath] = Set(values)
-            }
-            fromOptions = { options in
-                options[keyPath: keyPath].sorted().joined(separator: ",")
-            }
+        fromOptions = { options in
+            options[keyPath: keyPath].sorted().joined(separator: ",")
         }
     }
 }
 
-extension FormatOptions.Descriptor {
-    static let formatting: [FormatOptions.Descriptor] = [
-        indentation,
-        lineBreak,
-        allowInlineSemicolons,
-        spaceAroundOperatorDeclarations,
-        useVoid,
-        indentCase,
-        trailingCommas,
-        truncateBlankLines,
-        allmanBraces,
-        fileHeader,
-        ifdefIndent,
-        wrapArguments,
-        wrapParameters,
-        wrapCollections,
-        closingParen,
-        hexLiteralCase,
-        exponentCase,
-        decimalGrouping,
-        binaryGrouping,
-        octalGrouping,
-        hexGrouping,
-        fractionGrouping,
-        exponentGrouping,
-        letPatternPlacement,
-        stripUnusedArguments,
-        elsePosition,
-        guardElse,
-        explicitSelf,
-        selfRequired,
-        importGrouping,
-        trailingClosures,
-        xcodeIndentation,
-        tabWidth,
-        maxWidth,
-        smartTabs,
-        modifierOrder,
-        noSpaceOperators,
-        noWrapOperators,
-        shortOptionals,
-        funcAttributes,
-        typeAttributes,
-        varAttributes,
-        categoryMark,
-        beforeMarks,
-        lifecycleMethods,
-        organizeClassThreshold,
-        organizeStructThreshold,
-        organizeEnumThreshold,
-        yodaSwap,
+let Descriptors = _Descriptors()
 
-        // Deprecated
-        empty,
-        indentComments,
-        insertBlankLines,
-        removeBlankLines,
-        spaceAroundRangeOperators,
-        specifierOrder,
+private var _allDescriptors: [OptionDescriptor] = {
+    var descriptors = [OptionDescriptor]()
+    for (label, value) in Mirror(reflecting: Descriptors).children {
+        guard let name = label, var descriptor = value as? OptionDescriptor else {
+            continue
+        }
+        if descriptor.propertyName.isEmpty {
+            descriptor.propertyName = name
+        }
+        descriptors.append(descriptor)
+    }
+    return descriptors
+}()
 
-        // Renamed
-        // NOTE: these must go after the non-deprecated versions
-        // to ensure OptionsStore loading works correctly
-        hexLiterals,
-        wrapElements,
-    ]
+private var _descriptorsByName: [String: OptionDescriptor] = {
+    Dictionary(uniqueKeysWithValues: _allDescriptors.map { ($0.argumentName, $0) })
+}()
 
-    static let `internal`: [FormatOptions.Descriptor] = [
-        experimentalRules,
-        fragment,
-        ignoreConflictMarkers,
-        swiftVersion,
-    ]
+private let _formattingDescriptors: [OptionDescriptor] = {
+    let internalDescriptors = Descriptors.internal.map { $0.argumentName }
+    return _allDescriptors.filter { !internalDescriptors.contains($0.argumentName) }
+}()
+
+extension _Descriptors {
+    var formatting: [OptionDescriptor] {
+        return _formattingDescriptors
+    }
+
+    var `internal`: [OptionDescriptor] {
+        return [
+            experimentalRules,
+            fragment,
+            ignoreConflictMarkers,
+            swiftVersion,
+        ]
+    }
 
     /// An Array of all descriptors
-    static let all = formatting + `internal`
+    var all: [OptionDescriptor] { return _allDescriptors }
 
     /// A Dictionary of descriptors by name
-    public static let byName: [String: FormatOptions.Descriptor] = {
-        var allOptions = [String: FormatOptions.Descriptor]()
-        all.forEach { allOptions[$0.argumentName] = $0 }
-        return allOptions
-    }()
+    var byName: [String: OptionDescriptor] {
+        return _descriptorsByName
+    }
+}
 
-    static let indentation = FormatOptions.Descriptor(
+struct _Descriptors {
+    let indent = OptionDescriptor(
         argumentName: "indent",
-        propertyName: "indent",
         displayName: "Indent",
         help: "Number of spaces to indent, or \"tab\" to use tabs",
         keyPath: \.indent,
@@ -383,62 +330,55 @@ extension FormatOptions.Descriptor {
         },
         toArgument: { $0 == "\t" ? "tab" : String($0.count) }
     )
-    static let lineBreak = FormatOptions.Descriptor(
+    let linebreak = OptionDescriptor(
         argumentName: "linebreaks",
-        propertyName: "linebreak",
         displayName: "Linebreak Character",
         help: "Linebreak character to use: \"cr\", \"crlf\" or \"lf\" (default)",
         keyPath: \.linebreak,
         options: ["cr": "\r", "lf": "\n", "crlf": "\r\n"]
     )
-    static let allowInlineSemicolons = FormatOptions.Descriptor(
+    let allowInlineSemicolons = OptionDescriptor(
         argumentName: "semicolons",
-        propertyName: "allowInlineSemicolons",
         displayName: "Semicolons",
         help: "Allow semicolons: \"never\" or \"inline\" (default)",
         keyPath: \.allowInlineSemicolons,
         trueValues: ["inline"],
         falseValues: ["never", "false"]
     )
-    static let spaceAroundOperatorDeclarations = FormatOptions.Descriptor(
+    let spaceAroundOperatorDeclarations = OptionDescriptor(
         argumentName: "operatorfunc",
-        propertyName: "spaceAroundOperatorDeclarations",
         displayName: "Operator Functions",
         help: "Spacing for operator funcs: \"spaced\" (default) or \"no-space\"",
         keyPath: \.spaceAroundOperatorDeclarations,
         trueValues: ["spaced", "space", "spaces"],
         falseValues: ["no-space", "nospace"]
     )
-    static let useVoid = FormatOptions.Descriptor(
+    let useVoid = OptionDescriptor(
         argumentName: "voidtype",
-        propertyName: "useVoid",
         displayName: "Void Type",
         help: "How Void types are represented: \"void\" (default) or \"tuple\"",
         keyPath: \.useVoid,
         trueValues: ["void"],
         falseValues: ["tuple", "tuples", "()"]
     )
-    static let indentCase = FormatOptions.Descriptor(
+    let indentCase = OptionDescriptor(
         argumentName: "indentcase",
-        propertyName: "indentCase",
         displayName: "Indent Case",
         help: "Indent cases inside a switch: \"true\" or \"false\" (default)",
         keyPath: \.indentCase,
         trueValues: ["true"],
         falseValues: ["false"]
     )
-    static let trailingCommas = FormatOptions.Descriptor(
+    let trailingCommas = OptionDescriptor(
         argumentName: "commas",
-        propertyName: "trailingCommas",
         displayName: "Commas",
         help: "Commas in collection literals: \"always\" (default) or \"inline\"",
         keyPath: \.trailingCommas,
         trueValues: ["always", "true"],
         falseValues: ["inline", "false"]
     )
-    static let truncateBlankLines = FormatOptions.Descriptor(
+    let truncateBlankLines = OptionDescriptor(
         argumentName: "trimwhitespace",
-        propertyName: "truncateBlankLines",
         displayName: "Trim White Space",
         help: "Trim trailing space: \"always\" (default) or \"nonblank-lines\"",
         keyPath: \.truncateBlankLines,
@@ -446,229 +386,201 @@ extension FormatOptions.Descriptor {
         falseValues: ["nonblank-lines", "nonblank", "non-blank-lines", "non-blank",
                       "nonempty-lines", "nonempty", "non-empty-lines", "non-empty"]
     )
-    static let allmanBraces = FormatOptions.Descriptor(
+    let allmanBraces = OptionDescriptor(
         argumentName: "allman",
-        propertyName: "allmanBraces",
         displayName: "Allman Braces",
         help: "Use allman indentation style: \"true\" or \"false\" (default)",
         keyPath: \.allmanBraces,
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
     )
-    static let fileHeader = FormatOptions.Descriptor(
+    let fileHeader = OptionDescriptor(
         argumentName: "header",
-        propertyName: "fileHeader",
         displayName: "Header",
         help: "Header comments: \"strip\", \"ignore\", or the text you wish use",
         keyPath: \.fileHeader
     )
-    static let ifdefIndent = FormatOptions.Descriptor(
+    let ifdefIndent = OptionDescriptor(
         argumentName: "ifdef",
-        propertyName: "ifdefIndent",
         displayName: "Ifdef Indent",
         help: "#if indenting: \"indent\" (default), \"no-indent\" or \"outdent\"",
         keyPath: \.ifdefIndent,
         options: ["indent", "no-indent", "outdent"]
     )
-    static let wrapArguments = FormatOptions.Descriptor(
+    let wrapArguments = OptionDescriptor(
         argumentName: "wraparguments",
-        propertyName: "wrapArguments",
         displayName: "Wrap Arguments",
         help: "Wrap all arguments: \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapArguments,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
-    static let wrapParameters = FormatOptions.Descriptor(
+    let wrapParameters = OptionDescriptor(
         argumentName: "wrapparameters",
-        propertyName: "wrapParameters",
         displayName: "Wrap Parameters",
         help: "Wrap func params: \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapParameters,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
-    static let wrapCollections = FormatOptions.Descriptor(
+    let wrapCollections = OptionDescriptor(
         argumentName: "wrapcollections",
-        propertyName: "wrapCollections",
         displayName: "Wrap Collections",
         help: "Wrap array/dict: \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapCollections,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
-    static let closingParen = FormatOptions.Descriptor(
+    let closingParenOnSameLine = OptionDescriptor(
         argumentName: "closingparen",
-        propertyName: "closingParenOnSameLine",
         displayName: "Closing Paren Position",
         help: "Closing paren position: \"balanced\" (default) or \"same-line\"",
         keyPath: \.closingParenOnSameLine,
         trueValues: ["same-line"],
         falseValues: ["balanced"]
     )
-    static let hexLiteralCase = FormatOptions.Descriptor(
+    let uppercaseHex = OptionDescriptor(
         argumentName: "hexliteralcase",
-        propertyName: "uppercaseHex",
         displayName: "Hex Literal Case",
         help: "Casing for hex literals: \"uppercase\" (default) or \"lowercase\"",
         keyPath: \.uppercaseHex,
         trueValues: ["uppercase", "upper"],
         falseValues: ["lowercase", "lower"]
     )
-    static let exponentCase = FormatOptions.Descriptor(
+    let uppercaseExponent = OptionDescriptor(
         argumentName: "exponentcase",
-        propertyName: "uppercaseExponent",
         displayName: "Exponent Case",
         help: "Case of 'e' in numbers: \"lowercase\" or \"uppercase\" (default)",
         keyPath: \.uppercaseExponent,
         trueValues: ["uppercase", "upper"],
         falseValues: ["lowercase", "lower"]
     )
-    static let decimalGrouping = FormatOptions.Descriptor(
+    let decimalGrouping = OptionDescriptor(
         argumentName: "decimalgrouping",
-        propertyName: "decimalGrouping",
         displayName: "Decimal Grouping",
         help: "Decimal grouping,threshold (default: 3,6) or \"none\", \"ignore\"",
         keyPath: \.decimalGrouping
     )
-    static let fractionGrouping = FormatOptions.Descriptor(
+    let fractionGrouping = OptionDescriptor(
         argumentName: "fractiongrouping",
-        propertyName: "fractionGrouping",
         displayName: "Fraction Grouping",
         help: "Group digits after '.': \"enabled\" or \"disabled\" (default)",
         keyPath: \.fractionGrouping,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
     )
-    static let exponentGrouping = FormatOptions.Descriptor(
+    let exponentGrouping = OptionDescriptor(
         argumentName: "exponentgrouping",
-        propertyName: "exponentGrouping",
         displayName: "Exponent Grouping",
         help: "Group exponent digits: \"enabled\" or \"disabled\" (default)",
         keyPath: \.exponentGrouping,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
     )
-    static let binaryGrouping = FormatOptions.Descriptor(
+    let binaryGrouping = OptionDescriptor(
         argumentName: "binarygrouping",
-        propertyName: "binaryGrouping",
         displayName: "Binary Grouping",
         help: "Binary grouping,threshold (default: 4,8) or \"none\", \"ignore\"",
         keyPath: \.binaryGrouping
     )
-    static let octalGrouping = FormatOptions.Descriptor(
+    let octalGrouping = OptionDescriptor(
         argumentName: "octalgrouping",
-        propertyName: "octalGrouping",
         displayName: "Octal Grouping",
         help: "Octal grouping,threshold (default: 4,8) or \"none\", \"ignore\"",
         keyPath: \.octalGrouping
     )
-    static let hexGrouping = FormatOptions.Descriptor(
+    let hexGrouping = OptionDescriptor(
         argumentName: "hexgrouping",
-        propertyName: "hexGrouping",
         displayName: "Hex Grouping",
         help: "Hex grouping,threshold (default: 4,8) or \"none\", \"ignore\"",
         keyPath: \.hexGrouping
     )
-    static let letPatternPlacement = FormatOptions.Descriptor(
+    let hoistPatternLet = OptionDescriptor(
         argumentName: "patternlet",
-        propertyName: "hoistPatternLet",
         displayName: "Pattern Let",
         help: "let/var placement in patterns: \"hoist\" (default) or \"inline\"",
         keyPath: \.hoistPatternLet,
         trueValues: ["hoist"],
         falseValues: ["inline"]
     )
-    static let stripUnusedArguments = FormatOptions.Descriptor(
+    let stripUnusedArguments = OptionDescriptor(
         argumentName: "stripunusedargs",
-        propertyName: "stripUnusedArguments",
         displayName: "Strip Unused Arguments",
         help: "\"closure-only\", \"unnamed-only\" or \"always\" (default)",
         keyPath: \.stripUnusedArguments,
         options: ["unnamed-only", "closure-only", "always"]
     )
-    static let elsePosition = FormatOptions.Descriptor(
+    let elseOnNextLine = OptionDescriptor(
         argumentName: "elseposition",
-        propertyName: "elseOnNextLine",
         displayName: "Else Position",
         help: "Placement of else/catch: \"same-line\" (default) or \"next-line\"",
         keyPath: \.elseOnNextLine,
         trueValues: ["next-line", "nextline"],
         falseValues: ["same-line", "sameline"]
     )
-    static let guardElse = FormatOptions.Descriptor(
+    let guardElsePosition = OptionDescriptor(
         argumentName: "guardelse",
-        propertyName: "guardElsePosition",
         displayName: "Guard Else Position",
         help: "Guard else: \"same-line\", \"next-line\" or \"auto\" (default)",
         keyPath: \.guardElsePosition
     )
-    static let explicitSelf = FormatOptions.Descriptor(
+    let explicitSelf = OptionDescriptor(
         argumentName: "self",
-        propertyName: "explicitSelf",
         displayName: "Self",
         help: "Explicit self: \"insert\", \"remove\" (default) or \"init-only\"",
         keyPath: \.explicitSelf,
         options: ["insert", "remove", "init-only"]
     )
-    static let selfRequired = FormatOptions.Descriptor(
+    let selfRequired = OptionDescriptor(
         argumentName: "selfrequired",
-        propertyName: "selfRequired",
         displayName: "Self Required",
         help: "Comma-delimited list of functions with @autoclosure arguments",
         keyPath: \FormatOptions.selfRequired
     )
-    static let importGrouping = FormatOptions.Descriptor(
+    let importGrouping = OptionDescriptor(
         argumentName: "importgrouping",
-        propertyName: "importGrouping",
         displayName: "Import Grouping",
         help: "\"testable-top\", \"testable-bottom\" or \"alphabetized\" (default)",
         keyPath: \FormatOptions.importGrouping,
         options: ["alphabetized", "testable-top", "testable-bottom"]
     )
-    static let trailingClosures = FormatOptions.Descriptor(
+    let trailingClosures = OptionDescriptor(
         argumentName: "trailingclosures",
-        propertyName: "trailingClosures",
         displayName: "Trailing Closure Functions",
         help: "Comma-delimited list of functions that use trailing closures",
         keyPath: \FormatOptions.trailingClosures
     )
-    static let xcodeIndentation = FormatOptions.Descriptor(
+    let xcodeIndentation = OptionDescriptor(
         argumentName: "xcodeindentation",
-        propertyName: "xcodeIndentation",
         displayName: "Xcode Indentation",
         help: "Xcode indent guard/enum: \"enabled\" or \"disabled\" (default)",
         keyPath: \.xcodeIndentation,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
     )
-    static let tabWidth = FormatOptions.Descriptor(
+    let tabWidth = OptionDescriptor(
         argumentName: "tabwidth",
-        propertyName: "tabWidth",
         displayName: "Tab Width",
         help: "The width of a tab character. Defaults to \"unspecified\"",
         keyPath: \.tabWidth,
         fromArgument: { $0.lowercased() == "unspecified" ? 0 : Int($0).map { max(0, $0) } },
         toArgument: { $0 > 0 ? String($0) : "unspecified" }
     )
-    static let maxWidth = FormatOptions.Descriptor(
+    let maxWidth = OptionDescriptor(
         argumentName: "maxwidth",
-        propertyName: "maxWidth",
         displayName: "Max Width",
         help: "Maximum length of a line before wrapping. defaults to \"none\"",
         keyPath: \.maxWidth,
         fromArgument: { $0.lowercased() == "none" ? 0 : Int($0).map { max(0, $0) } },
         toArgument: { $0 > 0 ? String($0) : "none" }
     )
-    static let smartTabs = FormatOptions.Descriptor(
+    let smartTabs = OptionDescriptor(
         argumentName: "smarttabs",
-        propertyName: "smartTabs",
         displayName: "Smart Tabs",
         help: "Align code independently of tab width. defaults to \"enabled\"",
         keyPath: \.smartTabs,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
     )
-    static let noSpaceOperators = FormatOptions.Descriptor(
+    let noSpaceOperators = OptionDescriptor(
         argumentName: "nospaceoperators",
-        propertyName: "noSpaceOperators",
         displayName: "No-space Operators",
         help: "Comma-delimited list of operators without surrounding space",
         keyPath: \FormatOptions.noSpaceOperators,
@@ -685,18 +597,16 @@ extension FormatOptions.Descriptor {
             }
         }
     )
-    static let spaceAroundRangeOperators = FormatOptions.Descriptor(
+    let spaceAroundRangeOperators = OptionDescriptor(
         argumentName: "ranges",
-        propertyName: "spaceAroundRangeOperators",
         displayName: "Ranges",
         help: "Spacing for ranges: \"spaced\" (default) or \"no-space\"",
         keyPath: \.spaceAroundRangeOperators,
         trueValues: ["spaced", "space", "spaces"],
         falseValues: ["no-space", "nospace"]
     )
-    static let noWrapOperators = FormatOptions.Descriptor(
+    let noWrapOperators = OptionDescriptor(
         argumentName: "nowrapoperators",
-        propertyName: "noWrapOperators",
         displayName: "No-wrap Operators",
         help: "Comma-delimited list of operators that shouldn't be wrapped",
         keyPath: \FormatOptions.noWrapOperators,
@@ -711,9 +621,8 @@ extension FormatOptions.Descriptor {
             }
         }
     )
-    static let modifierOrder = FormatOptions.Descriptor(
+    let modifierOrder = OptionDescriptor(
         argumentName: "modifierorder",
-        propertyName: "modifierOrder",
         displayName: "Modifier Order",
         help: "Comma-delimited list of modifiers in preferred order",
         keyPath: \FormatOptions.modifierOrder,
@@ -723,82 +632,71 @@ extension FormatOptions.Descriptor {
             }
         }
     )
-    static let shortOptionals = FormatOptions.Descriptor(
+    let shortOptionals = OptionDescriptor(
         argumentName: "shortoptionals",
-        propertyName: "shortOptionals",
         displayName: "Short Optional Syntax",
         help: "Use ? for Optionals \"always\" (default) or \"except-properties\"",
         keyPath: \.shortOptionals,
         options: ["always", "except-properties"]
     )
-    static let categoryMark = FormatOptions.Descriptor(
+    let categoryMarkComment = OptionDescriptor(
         argumentName: "categorymark",
-        propertyName: "categoryMarkComment",
         displayName: "Category Mark Comment",
         help: "Template for category mark comments. Defaults to \"MARK: %c\"",
         keyPath: \.categoryMarkComment,
         fromArgument: { $0 },
         toArgument: { $0 }
     )
-    static let beforeMarks = FormatOptions.Descriptor(
+    let beforeMarks = OptionDescriptor(
         argumentName: "beforemarks",
-        propertyName: "beforeMarks",
         displayName: "Before Marks",
         help: "Declarations placed before first mark (e.g. `typealias,struct`)",
         keyPath: \.beforeMarks
     )
-    static let lifecycleMethods = FormatOptions.Descriptor(
+    let lifecycleMethods = OptionDescriptor(
         argumentName: "lifecycle",
-        propertyName: "lifecycleMethods",
         displayName: "Lifecycle Methods",
         help: "Names of additional Lifecycle methods (e.g. `viewDidLoad`)",
         keyPath: \.lifecycleMethods
     )
-    static let organizeStructThreshold = FormatOptions.Descriptor(
+    let organizeStructThreshold = OptionDescriptor(
         argumentName: "structthreshold",
-        propertyName: "organizeStructThreshold",
         displayName: "Organize Struct Threshold",
         help: "Minimum line count to organize struct body. Defaults to 0",
         keyPath: \.organizeStructThreshold
     )
-    static let organizeClassThreshold = FormatOptions.Descriptor(
+    let organizeClassThreshold = OptionDescriptor(
         argumentName: "classthreshold",
-        propertyName: "organizeClassThreshold",
         displayName: "Organize Class Threshold",
         help: "Minimum line count to organize class body. Defaults to 0",
         keyPath: \.organizeClassThreshold
     )
-    static let organizeEnumThreshold = FormatOptions.Descriptor(
+    let organizeEnumThreshold = OptionDescriptor(
         argumentName: "enumthreshold",
-        propertyName: "organizeEnumThreshold",
         displayName: "Organize Enum Threshold",
         help: "Minimum line count to organize enum body. Defaults to 0",
         keyPath: \.organizeEnumThreshold
     )
-    static let funcAttributes = FormatOptions.Descriptor(
+    let funcAttributes = OptionDescriptor(
         argumentName: "funcattributes",
-        propertyName: "funcAttributes",
         displayName: "Function Attributes",
         help: "Function @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.funcAttributes
     )
-    static let typeAttributes = FormatOptions.Descriptor(
+    let typeAttributes = OptionDescriptor(
         argumentName: "typeattributes",
-        propertyName: "typeAttributes",
         displayName: "Type Attributes",
         help: "Type @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.typeAttributes
     )
-    static let varAttributes = FormatOptions.Descriptor(
+    let varAttributes = OptionDescriptor(
         argumentName: "varattributes",
-        propertyName: "varAttributes",
         displayName: "Var Attributes",
         help: "Property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.varAttributes
     )
-    static let yodaSwap = FormatOptions.Descriptor(
+    let yodaSwap = OptionDescriptor(
         argumentName: "yodaswap",
-        propertyName: "yodaSwap",
         displayName: "Yoda Swap",
         help: "Swap yoda values: \"always\" (default) or \"literals-only\"",
         keyPath: \.yodaSwap
@@ -806,27 +704,24 @@ extension FormatOptions.Descriptor {
 
     // MARK: - Internal
 
-    static let fragment = FormatOptions.Descriptor(
+    let fragment = OptionDescriptor(
         argumentName: "fragment",
-        propertyName: "fragment",
         displayName: "Fragment",
         help: "Input is part of a larger file: \"true\" or \"false\" (default)",
         keyPath: \.fragment,
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
     )
-    static let ignoreConflictMarkers = FormatOptions.Descriptor(
+    let ignoreConflictMarkers = OptionDescriptor(
         argumentName: "conflictmarkers",
-        propertyName: "ignoreConflictMarkers",
         displayName: "Conflict Markers",
         help: "Merge-conflict markers: \"reject\" (default) or \"ignore\"",
         keyPath: \.ignoreConflictMarkers,
         trueValues: ["ignore", "true", "enabled"],
         falseValues: ["reject", "false", "disabled"]
     )
-    static let swiftVersion = FormatOptions.Descriptor(
+    let swiftVersion = OptionDescriptor(
         argumentName: "swiftversion",
-        propertyName: "swiftVersion",
         displayName: "Swift Version",
         help: "The version of Swift used in the files being formatted",
         keyPath: \.swiftVersion
@@ -834,19 +729,8 @@ extension FormatOptions.Descriptor {
 
     // MARK: - DEPRECATED
 
-    static let empty = FormatOptions.Descriptor(
-        argumentName: "empty",
-        propertyName: "empty",
-        displayName: "Empty",
-        help: "deprecated",
-        deprecationMessage: "Use --voidtype instead.",
-        keyPath: \.useVoid,
-        trueValues: ["void"],
-        falseValues: ["tuple", "tuples"]
-    )
-    static let indentComments = FormatOptions.Descriptor(
+    let indentComments = OptionDescriptor(
         argumentName: "comments",
-        propertyName: "indentComments",
         displayName: "Comments",
         help: "Indenting of comment bodies: \"indent\" (default) or \"ignore\"",
         deprecationMessage: "Relative indent within multiline comments is now preserved by default.",
@@ -854,9 +738,8 @@ extension FormatOptions.Descriptor {
         trueValues: ["indent", "indented"],
         falseValues: ["ignore"]
     )
-    static let insertBlankLines = FormatOptions.Descriptor(
+    let insertBlankLines = OptionDescriptor(
         argumentName: "insertlines",
-        propertyName: "insertBlankLines",
         displayName: "Insert Lines",
         help: "deprecated",
         deprecationMessage: "Use '--enable blankLinesBetweenScopes' or '--enable blankLinesAroundMark' or '--disable blankLinesBetweenScopes' or '--disable blankLinesAroundMark' instead.",
@@ -864,9 +747,8 @@ extension FormatOptions.Descriptor {
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
     )
-    static let removeBlankLines = FormatOptions.Descriptor(
+    let removeBlankLines = OptionDescriptor(
         argumentName: "removelines",
-        propertyName: "removeBlankLines",
         displayName: "Remove Lines",
         help: "deprecated",
         deprecationMessage: "Use '--enable blankLinesAtStartOfScope' or '--enable blankLinesAtEndOfScope' or '--disable blankLinesAtStartOfScope' or '--disable blankLinesAtEndOfScope' instead.",
@@ -874,28 +756,8 @@ extension FormatOptions.Descriptor {
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
     )
-    static let hexLiterals = FormatOptions.Descriptor(
-        argumentName: "hexliterals",
-        propertyName: "uppercaseHex",
-        displayName: "hexliterals",
-        help: "deprecated",
-        deprecationMessage: "Use --hexliteralcase instead.",
-        keyPath: \.uppercaseHex,
-        trueValues: ["uppercase", "upper"],
-        falseValues: ["lowercase", "lower"]
-    )
-    static let wrapElements = FormatOptions.Descriptor(
-        argumentName: "wrapelements",
-        propertyName: "wrapCollections",
-        displayName: "Wrap Elements",
-        help: "deprecated",
-        deprecationMessage: "Use --wrapcollections instead.",
-        keyPath: \.wrapCollections,
-        options: ["before-first", "after-first", "preserve", "disabled"]
-    )
-    static let experimentalRules = FormatOptions.Descriptor(
+    let experimentalRules = OptionDescriptor(
         argumentName: "experimental",
-        propertyName: "experimentalRules",
         displayName: "Experimental Rules",
         help: "Experimental rules: \"enabled\" or \"disabled\" (default)",
         deprecationMessage: "Use --enable to opt-in to rules individually.",
@@ -903,9 +765,37 @@ extension FormatOptions.Descriptor {
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
     )
-    static let specifierOrder = FormatOptions.Descriptor(
+
+    // MARK: - RENAMED
+
+    let empty = OptionDescriptor(
+        argumentName: "empty",
+        displayName: "Empty",
+        help: "deprecated",
+        deprecationMessage: "Use --voidtype instead.",
+        keyPath: \.useVoid,
+        trueValues: ["void"],
+        falseValues: ["tuple", "tuples"]
+    )
+    let hexLiterals = OptionDescriptor(
+        argumentName: "hexliterals",
+        displayName: "hexliterals",
+        help: "deprecated",
+        deprecationMessage: "Use --hexliteralcase instead.",
+        keyPath: \.uppercaseHex,
+        trueValues: ["uppercase", "upper"],
+        falseValues: ["lowercase", "lower"]
+    )
+    let wrapElements = OptionDescriptor(
+        argumentName: "wrapelements",
+        displayName: "Wrap Elements",
+        help: "deprecated",
+        deprecationMessage: "Use --wrapcollections instead.",
+        keyPath: \.wrapCollections,
+        options: ["before-first", "after-first", "preserve", "disabled"]
+    )
+    let specifierOrder = OptionDescriptor(
         argumentName: "specifierorder",
-        propertyName: "modifierOrder",
         displayName: "Specifier Order",
         help: "deprecated",
         deprecationMessage: "Use --modifierorder instead.",

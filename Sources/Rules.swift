@@ -79,7 +79,6 @@ public final class FormatRule: Equatable, Comparable {
     }
 
     static let deprecatedMessage = [
-        "ranges": "ranges rule is deprecated. Use spaceAroundOperators instead.",
         "specifiers": "specifiers rule is deprecated. Use modifierOrder instead.",
     ]
 }
@@ -448,7 +447,7 @@ public struct _FormatRules {
     ///   preceded by a space, unless it appears at the beginning of a line.
     public let spaceAroundOperators = FormatRule(
         help: "Add or remove space around operators or delimiters.",
-        options: ["operatorfunc", "nospaceoperators"]
+        options: ["operatorfunc", "nospaceoperators", "ranges"]
     ) { formatter in
         formatter.forEachToken { i, token in
             switch token {
@@ -638,38 +637,6 @@ public struct _FormatRules {
             }
             if let i = formatter.index(of: .endOfScope("*/"), after: i), let prevToken = formatter.token(at: i - 1) {
                 if !prevToken.isSpaceOrLinebreak, !prevToken.string.hasSuffix("*") {
-                    formatter.insert(.space(" "), at: i)
-                }
-            }
-        }
-    }
-
-    /// Deprecated
-    public let ranges = FormatRule(
-        help: "Add or remove space around range operators.",
-        options: ["ranges"],
-        sharedOptions: ["nospaceoperators"]
-    ) { formatter in
-        formatter.forEach(.rangeOperator) { i, token in
-            guard case let .operator(name, .infix) = token else { return }
-            if !formatter.options.spaceAroundRangeOperators {
-                if formatter.token(at: i + 1)?.isSpace == true,
-                    formatter.token(at: i - 1)?.isSpace == true,
-                    let nextToken = formatter.next(.nonSpace, after: i),
-                    !nextToken.isCommentOrLinebreak, !nextToken.isOperator(ofType: .prefix),
-                    let prevToken = formatter.last(.nonSpace, before: i),
-                    !prevToken.isCommentOrLinebreak, !prevToken.isOperator(ofType: .postfix)
-                {
-                    formatter.removeToken(at: i + 1)
-                    formatter.removeToken(at: i - 1)
-                }
-            } else if formatter.options.spaceAroundRangeOperators,
-                !formatter.options.noSpaceOperators.contains(name)
-            {
-                if formatter.token(at: i + 1)?.isSpaceOrLinebreak == false {
-                    formatter.insert(.space(" "), at: i + 1)
-                }
-                if formatter.token(at: i - 1)?.isSpaceOrLinebreak == false {
                     formatter.insert(.space(" "), at: i)
                 }
             }

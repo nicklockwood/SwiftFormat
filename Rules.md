@@ -26,7 +26,6 @@
 * [numberFormatting](#numberFormatting)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferKeyPath](#preferKeyPath)
-* [ranges *(deprecated)*](#ranges)
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
 * [redundantExtensionACL](#redundantExtensionACL)
@@ -789,12 +788,6 @@ Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
 </details>
 <br/>
 
-## ranges
-
-Add or remove space around range operators.
-
-*Note: ranges rule is deprecated. Use spaceAroundOperators instead.*
-
 ## redundantBackticks
 
 Remove redundant backticks around identifiers.
@@ -1331,6 +1324,7 @@ Option | Description
 --- | ---
 `--operatorfunc` | Spacing for operator funcs: "spaced" (default) or "no-space"
 `--nospaceoperators` | Comma-delimited list of operators without surrounding space
+`--ranges` | Spacing for ranges: "spaced" (default) or "no-space"
 
 <details>
 <summary>Examples</summary>

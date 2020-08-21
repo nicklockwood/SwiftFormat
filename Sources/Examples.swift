@@ -382,18 +382,6 @@ private struct Examples {
     ```
     """
 
-    let ranges = """
-    ```diff
-    - for i in 0..<5 {}
-    + for i in 0 ..< 5 {}
-    ```
-
-    ```diff
-    - if (0...5).contains(i) {}
-    + if (0 ... 5).contains(i) {}
-    ```
-    """
-
     let redundantBackticks = """
     ```diff
     - let `infix` = bar

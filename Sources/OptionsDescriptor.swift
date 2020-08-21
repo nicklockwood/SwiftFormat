@@ -672,6 +672,15 @@ extension FormatOptions.Descriptor {
             }
         }
     )
+    static let spaceAroundRangeOperators = FormatOptions.Descriptor(
+        argumentName: "ranges",
+        propertyName: "spaceAroundRangeOperators",
+        displayName: "Ranges",
+        help: "Spacing for ranges: \"spaced\" (default) or \"no-space\"",
+        keyPath: \.spaceAroundRangeOperators,
+        trueValues: ["spaced", "space", "spaces"],
+        falseValues: ["no-space", "nospace"]
+    )
     static let noWrapOperators = FormatOptions.Descriptor(
         argumentName: "nowrapoperators",
         propertyName: "noWrapOperators",
@@ -820,7 +829,6 @@ extension FormatOptions.Descriptor {
         hexLiterals.argumentName: "--hexliterals option is deprecated. Use --hexliteralcase instead.",
         wrapElements.argumentName: "--wrapelements option is deprecated. Use --wrapcollections instead.",
         experimentalRules.argumentName: "--experimentalRules option is deprecated. Use --enable to opt-in to rules individually.",
-        spaceAroundRangeOperators.argumentName: "--ranges option is deprecated. Use --nospaceoperators instead.",
         specifierOrder.argumentName: "--specifierorder option is deprecated. Use --modifierorder instead.",
     ]
 
@@ -885,15 +893,6 @@ extension FormatOptions.Descriptor {
         keyPath: \.experimentalRules,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
-    )
-    static let spaceAroundRangeOperators = FormatOptions.Descriptor(
-        argumentName: "ranges",
-        propertyName: "spaceAroundRangeOperators",
-        displayName: "Ranges",
-        help: "Spacing for ranges: \"spaced\" (default) or \"no-space\"",
-        keyPath: \.spaceAroundRangeOperators,
-        trueValues: ["spaced", "space", "spaces"],
-        falseValues: ["no-space", "nospace"]
     )
     static let specifierOrder = FormatOptions.Descriptor(
         argumentName: "specifierorder",

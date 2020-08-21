@@ -495,7 +495,7 @@ private func applyRules(
     var options = options
     let sharedOptions = FormatRules
         .sharedOptionsForRules(rules)
-        .compactMap { FormatOptions.Descriptor.byName[$0] }
+        .compactMap { Descriptors.byName[$0] }
         .filter { $0.defaultArgument == $0.fromOptions(options) }
         .map { $0.propertyName }
 

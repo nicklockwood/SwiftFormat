@@ -1,5 +1,5 @@
 //
-//  OptionsDescriptorTest.swift
+//  OptionDescriptorTest.swift
 //  SwiftFormatTests
 //
 //  Created by Vincent Bernier on 10-02-18.
@@ -9,10 +9,10 @@
 import XCTest
 @testable import SwiftFormat
 
-class OptionsDescriptorTests: XCTestCase {
+class OptionDescriptorTests: XCTestCase {
     private typealias OptionArgumentMapping<T> = (optionValue: T, argumentValue: String)
 
-    private func validateDescriptorThrowsOptionsError(_ descriptor: FormatOptions.Descriptor,
+    private func validateDescriptorThrowsOptionsError(_ descriptor: OptionDescriptor,
                                                       invalidArguments: String = "invalid",
                                                       testName: String = #function)
     {
@@ -26,7 +26,7 @@ class OptionsDescriptorTests: XCTestCase {
         }
     }
 
-    private func validateFromArguments<T: Equatable>(_ descriptor: FormatOptions.Descriptor,
+    private func validateFromArguments<T: Equatable>(_ descriptor: OptionDescriptor,
                                                      keyPath: WritableKeyPath<FormatOptions, T>,
                                                      expectations: [OptionArgumentMapping<T>],
                                                      testName: String = #function)
@@ -46,7 +46,7 @@ class OptionsDescriptorTests: XCTestCase {
         }
     }
 
-    private func validateFromOptionalArguments<T: Equatable>(_ descriptor: FormatOptions.Descriptor,
+    private func validateFromOptionalArguments<T: Equatable>(_ descriptor: OptionDescriptor,
                                                              keyPath: WritableKeyPath<FormatOptions, T>,
                                                              expectations: [OptionArgumentMapping<T>],
                                                              testCaseVariation: Bool = true,
@@ -76,12 +76,12 @@ class OptionsDescriptorTests: XCTestCase {
     /// Validate From FormatOptions to Argument String
     ///
     /// - Parameters:
-    ///   - descriptor: FormatOptions.Descriptor being tested
+    ///   - descriptor: OptionDescriptor being tested
     ///   - keyPath: to the FormatOptions property that is beeing validated
     ///   - expectations: Array of expectations for different inputs
     ///   - invalid: Invalid FormatOptions value, which should yield the defaultArgument value
     ///   - testName: for assertion clarity
-    private func validateFromOptions<T>(_ descriptor: FormatOptions.Descriptor,
+    private func validateFromOptions<T>(_ descriptor: OptionDescriptor,
                                         keyPath: WritableKeyPath<FormatOptions, T>,
                                         expectations: [OptionArgumentMapping<T>],
                                         invalid: T? = nil,
@@ -101,7 +101,7 @@ class OptionsDescriptorTests: XCTestCase {
 
     private typealias FreeTextValidationExpectation = (input: String, isValid: Bool)
 
-    private func validateArgumentsFreeTextType(_ descriptor: FormatOptions.Descriptor,
+    private func validateArgumentsFreeTextType(_ descriptor: OptionDescriptor,
                                                expectations: [FreeTextValidationExpectation],
                                                testName: String = #function)
     {
@@ -115,20 +115,20 @@ class OptionsDescriptorTests: XCTestCase {
 
     func testAllDescriptorsHaveProperty() {
         let allProperties = Set(FormatOptions.default.allOptions.keys)
-        for descriptor in FormatOptions.Descriptor.all where !descriptor.isDeprecated {
+        for descriptor in Descriptors.all where !descriptor.isDeprecated {
             XCTAssert(allProperties.contains(descriptor.propertyName))
         }
     }
 
     func testAllPropertiesHaveDescriptor() {
-        let allDescriptors = Set(FormatOptions.Descriptor.all.map { $0.propertyName })
+        let allDescriptors = Set(Descriptors.all.map { $0.propertyName })
         for property in FormatOptions.default.allOptions.keys {
             XCTAssert(allDescriptors.contains(property))
         }
     }
 
     func testIndentation() {
-        let descriptor = FormatOptions.Descriptor.indentation
+        let descriptor = Descriptors.indent
         let validations: [FreeTextValidationExpectation] = [
             (input: "tab", isValid: true),
             (input: "tabbed", isValid: true),
@@ -164,7 +164,7 @@ class OptionsDescriptorTests: XCTestCase {
     }
 
     func testFileHeader() {
-        let descriptor = FormatOptions.Descriptor.fileHeader
+        let descriptor = Descriptors.fileHeader
         let validations: [FreeTextValidationExpectation] = [
             (input: "tab", isValid: true),
             (input: "", isValid: true),
@@ -197,7 +197,7 @@ class OptionsDescriptorTests: XCTestCase {
     }
 
     func testNoSpaceOperators() {
-        let descriptor = FormatOptions.Descriptor.noSpaceOperators
+        let descriptor = Descriptors.noSpaceOperators
         let validations: [FreeTextValidationExpectation] = [
             (input: "+", isValid: true),
             (input: "", isValid: true),
@@ -217,7 +217,7 @@ class OptionsDescriptorTests: XCTestCase {
     }
 
     func testNoWrapOperators() {
-        let descriptor = FormatOptions.Descriptor.noWrapOperators
+        let descriptor = Descriptors.noWrapOperators
         let validations: [FreeTextValidationExpectation] = [
             (input: "+", isValid: true),
             (input: "", isValid: true),

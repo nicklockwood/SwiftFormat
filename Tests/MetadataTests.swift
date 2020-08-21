@@ -40,7 +40,7 @@ class MetadataTests: XCTestCase {
             if !rule.options.isEmpty {
                 result += "\n\nOption | Description\n--- | ---"
                 for option in rule.options {
-                    let help = FormatOptions.Descriptor.byName[option]!.help
+                    let help = Descriptors.byName[option]!.help
                     result += "\n`--\(option)` | \(help)"
                 }
             }
@@ -90,8 +90,8 @@ class MetadataTests: XCTestCase {
     // MARK: options
 
     func testRulesOptions() throws {
-        var optionsByProperty = [String: FormatOptions.Descriptor]()
-        for descriptor in FormatOptions.Descriptor.formatting.reversed() {
+        var optionsByProperty = [String: OptionDescriptor]()
+        for descriptor in Descriptors.formatting.reversed() {
             optionsByProperty[descriptor.propertyName] = descriptor
         }
         let rulesFile = projectDirectory.appendingPathComponent("Sources/Rules.swift")
@@ -115,7 +115,7 @@ class MetadataTests: XCTestCase {
                 rulesByOption[option] = name
             }
             let allOptions = rule.options + rule.sharedOptions
-            var referencedOptions = [FormatOptions.Descriptor]()
+            var referencedOptions = [OptionDescriptor]()
             for index in scopeStart + 1 ..< scopeEnd {
                 guard formatter.token(at: index - 1) == .operator(".", .infix),
                     formatter.token(at: index - 2) == .identifier("formatter")
@@ -125,23 +125,26 @@ class MetadataTests: XCTestCase {
                 switch formatter.tokens[index] {
                 case .identifier("spaceEquivalentToWidth"),
                      .identifier("spaceEquivalentToTokens"):
-                    referencedOptions += [.indentation, .tabWidth, .smartTabs]
+                    referencedOptions += [
+                        Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs,
+                    ]
                 case .identifier("tokenLength"), .identifier("lineLength"):
-                    referencedOptions += [.indentation, .tabWidth]
+                    referencedOptions += [Descriptors.indent, Descriptors.tabWidth]
                 case .identifier("isCommentedCode"):
-                    referencedOptions.append(.indentation)
+                    referencedOptions.append(Descriptors.indent)
                 case .identifier("insertLinebreak"), .identifier("linebreakToken"):
-                    referencedOptions.append(.lineBreak)
+                    referencedOptions.append(Descriptors.linebreak)
                 case .identifier("wrapCollectionsAndArguments"):
                     referencedOptions += [
-                        .wrapArguments, .wrapParameters, .wrapCollections,
-                        .closingParen, .lineBreak, .truncateBlankLines,
-                        .indentation, .tabWidth, .maxWidth, .smartTabs,
+                        Descriptors.wrapArguments, Descriptors.wrapParameters, Descriptors.wrapCollections,
+                        Descriptors.closingParenOnSameLine, Descriptors.linebreak, Descriptors.truncateBlankLines,
+                        Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs,
+                        Descriptors.maxWidth,
                     ]
                 case .identifier("indexWhereLineShouldWrapInLine"):
-                    referencedOptions.append(.noWrapOperators)
+                    referencedOptions.append(Descriptors.noWrapOperators)
                 case .identifier("modifierOrder"):
-                    referencedOptions.append(.modifierOrder)
+                    referencedOptions.append(Descriptors.modifierOrder)
                 case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
                     if case let .identifier(property)? = formatter.token(at: index + 2),
                         let option = optionsByProperty[property]

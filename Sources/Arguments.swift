@@ -129,7 +129,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
         if let existing = namedArgs[name], !existing.isEmpty,
             // TODO: find a more general way to represent merge-able options
             ["exclude", "unexclude", "disable", "enable", "rules"].contains(name) ||
-            FormatOptions.Descriptor.all.contains(where: {
+            Descriptors.all.contains(where: {
                 $0.argumentName == name && $0.isSetType
             })
         {
@@ -159,7 +159,7 @@ func parseRules(_ rules: String) throws -> [String] {
         }) {
             return name
         }
-        if FormatOptions.Descriptor.all.contains(where: {
+        if Descriptors.all.contains(where: {
             $0.argumentName == proposedName
         }) {
             for rule in FormatRules.all where rule.options.contains(proposedName) {
@@ -250,7 +250,7 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
             output[key] = inValue
             continue
         }
-        if FormatOptions.Descriptor.all.contains(where: { $0.argumentName == key && $0.isSetType }) {
+        if Descriptors.all.contains(where: { $0.argumentName == key && $0.isSetType }) {
             let inOptions = parseCommaDelimitedList(inValue)
             let outOptions = parseCommaDelimitedList(outValue)
             output[key] = Set(inOptions).union(outOptions).sorted().joined(separator: ",")
@@ -305,7 +305,7 @@ func serialize(options: Options,
             excludingDefaults: excludingDefaults
         ))
     } else if swiftVersion != .undefined {
-        let descriptor = FormatOptions.Descriptor.swiftVersion
+        let descriptor = Descriptors.swiftVersion
         arguments.append([descriptor.argumentName: swiftVersion.rawValue])
     }
     if let rules = options.rules {
@@ -367,7 +367,7 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
         assert(arguments.isEmpty)
     }
     if let formatOptions = options.formatOptions {
-        for descriptor in FormatOptions.Descriptor.all where !descriptor.isRenamed {
+        for descriptor in Descriptors.all where !descriptor.isRenamed {
             let value = descriptor.fromOptions(formatOptions)
             guard value != descriptor.fromOptions(.default) ||
                 (!excludingDefaults && !descriptor.isDeprecated)
@@ -376,7 +376,7 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             }
             // Special case for swiftVersion
             // TODO: find a better solution for this
-            if descriptor.argumentName == FormatOptions.Descriptor.swiftVersion.argumentName,
+            if descriptor.argumentName == Descriptors.swiftVersion.argumentName,
                 value == Version.undefined.rawValue
             {
                 continue
@@ -384,9 +384,9 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             args[descriptor.argumentName] = value
         }
         // Special case for wrapParameters
-        let argumentName = FormatOptions.Descriptor.wrapParameters.argumentName
+        let argumentName = Descriptors.wrapParameters.argumentName
         if args[argumentName] == WrapMode.default.rawValue {
-            args[argumentName] = args[FormatOptions.Descriptor.wrapArguments.argumentName]
+            args[argumentName] = args[Descriptors.wrapArguments.argumentName]
         }
     }
     if let rules = options.rules {
@@ -494,7 +494,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
     var arguments = Set(formattingArguments)
 
     var containsFormatOption = false
-    for option in FormatOptions.Descriptor.all {
+    for option in Descriptors.all {
         try processOption(option.argumentName, in: args, from: &arguments) {
             containsFormatOption = true
             try option.toOptions($0, &options)
@@ -507,7 +507,7 @@ func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
 // Get deprecation warnings from a set of arguments
 func warningsForArguments(_ args: [String: String]) -> [String] {
     var warnings = [String]()
-    for option in FormatOptions.Descriptor.all {
+    for option in Descriptors.all {
         if args[option.argumentName] != nil, let message = option.deprecationMessage {
             warnings.append("--\(option.argumentName) option is deprecated. \(message)")
         }
@@ -533,8 +533,8 @@ let rulesArguments = [
     "rules",
 ]
 
-let formattingArguments = FormatOptions.Descriptor.formatting.map { $0.argumentName }
-let internalArguments = FormatOptions.Descriptor.internal.map { $0.argumentName }
+let formattingArguments = Descriptors.formatting.map { $0.argumentName }
+let internalArguments = Descriptors.internal.map { $0.argumentName }
 let optionsArguments = fileArguments + rulesArguments + formattingArguments + internalArguments
 
 let commandLineArguments = [
@@ -558,6 +558,6 @@ let commandLineArguments = [
     "ruleinfo",
 ] + optionsArguments
 
-let deprecatedArguments = FormatOptions.Descriptor.all.compactMap {
+let deprecatedArguments = Descriptors.all.compactMap {
     $0.isDeprecated ? $0.argumentName : nil
 }

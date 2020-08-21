@@ -34,7 +34,7 @@ class MetadataTests: XCTestCase {
         for rule in FormatRules.all {
             result += "\n\n## \(rule.name)\n\n\(rule.help)"
             if let message = rule.deprecationMessage {
-                result += "\n\n*Note: \(message)*"
+                result += "\n\n*Note: \(rule.name) rule is deprecated. \(message)*"
                 continue
             }
             if !rule.options.isEmpty {

@@ -37,20 +37,20 @@ public final class FormatRule: Equatable, Comparable {
     fileprivate(set) var index = 0
     let help: String
     let runOnceOnly: Bool
+    let disabledByDefault: Bool
     let orderAfter: [String]
     let options: [String]
     let sharedOptions: [String]
-
-    var deprecationMessage: String? {
-        return FormatRule.deprecatedMessage[name]
-    }
+    let deprecationMessage: String?
 
     var isDeprecated: Bool {
         return deprecationMessage != nil
     }
 
     fileprivate init(help: String,
+                     deprecationMessage: String? = nil,
                      runOnceOnly: Bool = false,
+                     disabledByDefault: Bool = false,
                      orderAfter: [String] = [],
                      options: [String] = [],
                      sharedOptions: [String] = [],
@@ -59,9 +59,11 @@ public final class FormatRule: Equatable, Comparable {
         self.fn = fn
         self.help = help
         self.runOnceOnly = runOnceOnly
+        self.disabledByDefault = disabledByDefault || deprecationMessage != nil
         self.orderAfter = orderAfter
         self.options = options
         self.sharedOptions = sharedOptions
+        self.deprecationMessage = deprecationMessage
     }
 
     public func apply(with formatter: Formatter) {
@@ -77,10 +79,6 @@ public final class FormatRule: Equatable, Comparable {
     public static func < (lhs: FormatRule, rhs: FormatRule) -> Bool {
         return lhs.index < rhs.index
     }
-
-    static let deprecatedMessage = [
-        "specifiers": "specifiers rule is deprecated. Use modifierOrder instead.",
-    ]
 }
 
 public let FormatRules = _FormatRules()
@@ -124,14 +122,8 @@ private func allRules(except rules: [String]) -> [FormatRule] {
 }
 
 private let _allRules = allRules(except: [])
+private let _disabledByDefault = _allRules.filter { $0.disabledByDefault }.map { $0.name }
 private let _defaultRules = allRules(except: _disabledByDefault)
-private let _deprecatedRules = FormatRule.deprecatedMessage.keys
-private let _disabledByDefault = _deprecatedRules + [
-    "isEmpty",
-    "multilineEnumCases",
-    "multilineSwitchCases",
-    "organizeDeclarations",
-]
 
 public extension _FormatRules {
     /// A Dictionary of rules by name
@@ -1888,6 +1880,7 @@ public struct _FormatRules {
     /// Deprecated
     public let specifiers = FormatRule(
         help: "Use consistent ordering for member modifiers.",
+        deprecationMessage: "Use modifierOrder instead.",
         options: ["modifierorder"]
     ) { formatter in
         _ = formatter.options.modifierOrder
@@ -3503,7 +3496,7 @@ public struct _FormatRules {
     /// Formats enum cases declaration into one case per line
     public let multilineEnumCases = FormatRule(
         help: "Writes one enum case per line.",
-        options: [],
+        disabledByDefault: true,
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.keyword("case")) { i, _ in
@@ -3531,7 +3524,7 @@ public struct _FormatRules {
     /// Writes one switch case per line
     public let multilineSwitchCases = FormatRule(
         help: "Writes one switch case per line.",
-        options: [],
+        disabledByDefault: true,
         sharedOptions: ["linebreaks", "tabwidth", "indent", "smarttabs"]
     ) { formatter in
         formatter.forEach(.endOfScope("case")) { i, _ in
@@ -4066,7 +4059,8 @@ public struct _FormatRules {
 
     /// Replace count == 0 with isEmpty
     public let isEmpty = FormatRule(
-        help: "Prefer `isEmpty` over comparing `count` against zero."
+        help: "Prefer `isEmpty` over comparing `count` against zero.",
+        disabledByDefault: true
     ) { formatter in
         formatter.forEach(.identifier("count")) { i, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {
@@ -4900,7 +4894,9 @@ public struct _FormatRules {
     public let organizeDeclarations = FormatRule(
         help: "Organizes declarations within class, struct, and enum bodies.",
         runOnceOnly: true,
-        options: ["categorymark", "beforemarks", "lifecycle", "structthreshold", "classthreshold", "enumthreshold"]
+        disabledByDefault: true,
+        options: ["categorymark", "beforemarks", "lifecycle", "structthreshold",
+                  "classthreshold", "enumthreshold"]
     ) { formatter in
         /// Categories of declarations within an individual type
         enum Category: String, CaseIterable {

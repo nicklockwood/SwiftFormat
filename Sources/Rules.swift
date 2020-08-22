@@ -5172,13 +5172,19 @@ public struct _FormatRules {
                 .map { $0.element }
 
             // Insert comments to separate the categories
+            let numberOfCategories = categoryOrdering.filter { category in
+                sortedDeclarations.contains(where: { $0.category == category })
+            }.count
+
             for category in categoryOrdering {
                 guard let indexOfFirstDeclaration = sortedDeclarations
                     .firstIndex(where: { $0.category == category })
                 else { continue }
 
-                // Build the MARK declaration
-                if let markComment = category.markComment(from: formatter.options.categoryMarkComment) {
+                // Build the MARK declaration, but only when there is more than one category present.
+                if numberOfCategories > 1,
+                    let markComment = category.markComment(from: formatter.options.categoryMarkComment)
+                {
                     let firstDeclaration = sortedDeclarations[indexOfFirstDeclaration].declaration
                     let declarationParser = Formatter(firstDeclaration.tokens)
                     let indentation = declarationParser.indentForLine(at: 0)
@@ -5189,13 +5195,13 @@ public struct _FormatRules {
                         (.declaration(kind: "comment", tokens: markDeclaration), category, nil),
                         at: indexOfFirstDeclaration
                     )
+                }
 
-                    // If this declaration is the first declaration in the type scope,
-                    // make sure the type's opening sequence of tokens ends with
-                    // at least one blank line (so the separator appears balanced)
-                    if indexOfFirstDeclaration == 0 {
-                        typeOpeningTokens = endingWithBlankLine(typeOpeningTokens)
-                    }
+                // If this declaration is the first declaration in the type scope,
+                // make sure the type's opening sequence of tokens ends with
+                // at least one blank line (so it appears balanced)
+                if indexOfFirstDeclaration == 0 {
+                    typeOpeningTokens = endingWithBlankLine(typeOpeningTokens)
                 }
 
                 // Insert newlines to separate declaration types

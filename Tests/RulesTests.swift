@@ -13250,8 +13250,6 @@ class RulesTests: XCTestCase {
         let output = """
         public class Foo {
 
-            // MARK: Public
-
             public class Bar {
 
                 // MARK: Lifecycle
@@ -13395,8 +13393,6 @@ class RulesTests: XCTestCase {
 
         let output = """
         struct Foo {
-
-            // MARK: Internal
 
             enum NestedEnum {}
 
@@ -13737,6 +13733,30 @@ class RulesTests: XCTestCase {
 
             var bar = "bar"
             var quux = "quux"
+
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
+                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+    }
+
+    func testDoesntInsertMarkWhenOnlyOneCategory() {
+        let input = """
+        struct Foo {
+            var bar: Int
+            var baaz: Int
+            func instanceMethod() {}
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            var bar: Int
+            var baaz: Int
+
+            func instanceMethod() {}
 
         }
         """

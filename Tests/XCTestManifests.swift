@@ -633,6 +633,7 @@ extension RulesTests {
         ("testDispatchAsyncGroupClosureArgumentMadeTrailing", testDispatchAsyncGroupClosureArgumentMadeTrailing),
         ("testDispatchSyncClosureArgumentMadeTrailing", testDispatchSyncClosureArgumentMadeTrailing),
         ("testDispatchSyncFlagsClosureArgumentMadeTrailing", testDispatchSyncFlagsClosureArgumentMadeTrailing),
+        ("testDoesntInsertMarkWhenOnlyOneCategory", testDoesntInsertMarkWhenOnlyOneCategory),
         ("testDontCorruptPartialFragment", testDontCorruptPartialFragment),
         ("testDontCorruptPartialFragment2", testDontCorruptPartialFragment2),
         ("testDontIndentCaseAfterReturn", testDontIndentCaseAfterReturn),

@@ -13714,4 +13714,34 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
                        exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
+
+    func testHandlesTrailingCommentCorrectly() {
+        let input = """
+        struct Foo {
+            var bar = "bar"
+            /// Leading comment
+            public var baaz = "baaz" // Trailing comment
+            var quux = "quux"
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            // MARK: Public
+
+            /// Leading comment
+            public var baaz = "baaz" // Trailing comment
+
+            // MARK: Internal
+
+            var bar = "bar"
+            var quux = "quux"
+
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
+                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+    }
 }

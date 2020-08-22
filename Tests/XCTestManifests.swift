@@ -1856,6 +1856,7 @@ extension RulesTests {
         ("testUnusedUntypedClosureArguments", testUnusedUntypedClosureArguments),
         ("testUnwrapFuncAttribute", testUnwrapFuncAttribute),
         ("testUnwrapTypeAttribute", testUnwrapTypeAttribute),
+        ("testUpdatesMalformedMarks", testUpdatesMalformedMarks),
         ("testUppercaseExponent", testUppercaseExponent),
         ("testUppercaseGroupedHexExponent", testUppercaseGroupedHexExponent),
         ("testUppercaseHexExponent", testUppercaseHexExponent),

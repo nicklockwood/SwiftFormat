@@ -962,4 +962,47 @@ class ParsingHelpersTests: XCTestCase {
             """
         )
     }
+
+    func testParseDeclarationsWithSituationalKeywords() {
+        let input = """
+        let `static` = NavigationBarType.static(nil, .none)
+        let foo = bar
+        let `static` = NavigationBarType.static
+        let bar = foo
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[0].tokens),
+            """
+            let `static` = NavigationBarType.static(nil, .none)
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[1].tokens),
+            """
+            let foo = bar
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[2].tokens),
+            """
+            let `static` = NavigationBarType.static
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[3].tokens),
+            """
+            let bar = foo
+            """
+        )
+    }
 }

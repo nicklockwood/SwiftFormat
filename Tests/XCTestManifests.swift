@@ -368,6 +368,7 @@ extension ParsingHelpersTests {
         ("testOptionalReturningFunctionBracesNotTreatedAsClosure", testOptionalReturningFunctionBracesNotTreatedAsClosure),
         ("testParseClassFuncDeclarationCorrectly", testParseClassFuncDeclarationCorrectly),
         ("testParseDeclarations", testParseDeclarations),
+        ("testParseDeclarationsWithSituationalKeywords", testParseDeclarationsWithSituationalKeywords),
         ("testParseMarkCommentsCorrectly", testParseMarkCommentsCorrectly),
         ("testParseTrailingCommentsCorrectly", testParseTrailingCommentsCorrectly),
         ("testProcessCaseDeclaredVariablesInIf", testProcessCaseDeclaredVariablesInIf),

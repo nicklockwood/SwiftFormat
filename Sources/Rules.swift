@@ -5259,22 +5259,25 @@ public struct _FormatRules {
         workingFormatter.forEach(.startOfScope("//")) { index, _ in
             // Check if this comment matches an expected category separator mark comment
             for category in Category.allCases {
-                guard let markComment = category.markComment(from: workingFormatter.options.categoryMarkComment) else {
-                    continue
-                }
+                guard let unformattedMarkComment = category.markComment(from: "%c"),
+                    let formattedMarkComment = category.markComment(from: workingFormatter.options.categoryMarkComment)
+                else { continue }
 
-                let categorySeparator = tokenize(markComment)
-                let potentialSeparatorRange = index ..< (index + categorySeparator.count)
+                for potentialMarkComment in [unformattedMarkComment, formattedMarkComment] {
+                    let potentialCategorySeparator = tokenize(potentialMarkComment)
+                    let potentialSeparatorRange = index ..< (index + potentialCategorySeparator.count)
 
-                if workingFormatter.tokens.indices.contains(potentialSeparatorRange.upperBound),
-                    Array(workingFormatter.tokens[potentialSeparatorRange]) == categorySeparator
-                {
-                    // If we found a matching comment, remove it and all subsequent empty lines
-                    if let nextNonwhitespaceIndex = workingFormatter.index(
-                        of: .nonSpaceOrLinebreak,
-                        after: potentialSeparatorRange.upperBound
-                    ) {
-                        workingFormatter.removeTokens(in: index ..< nextNonwhitespaceIndex)
+                    if workingFormatter.tokens.indices.contains(potentialSeparatorRange.upperBound),
+                        sourceCode(for: Array(workingFormatter.tokens[potentialSeparatorRange]))
+                        .caseInsensitiveCompare(potentialMarkComment) == .orderedSame
+                    {
+                        // If we found a matching comment, remove it and all subsequent empty lines
+                        if let nextNonwhitespaceIndex = workingFormatter.index(
+                            of: .nonSpaceOrLinebreak,
+                            after: potentialSeparatorRange.upperBound
+                        ) {
+                            workingFormatter.removeTokens(in: index ..< nextNonwhitespaceIndex)
+                        }
                     }
                 }
             }

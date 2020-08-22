@@ -13681,4 +13681,37 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.organizeDeclarations,
                        exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
+
+    func testUpdatesMalformedMarks() {
+        let input = """
+        struct Foo {
+
+            // MARK: lifecycle
+
+            init() {}
+
+            // Public
+
+            public func instanceMethod() {}
+
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Public
+
+            public func instanceMethod() {}
+
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
+                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+    }
 }

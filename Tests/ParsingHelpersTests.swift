@@ -678,7 +678,7 @@ class ParsingHelpersTests: XCTestCase {
              */
 
             private(set)
-            var instanceVar = "test"
+            var instanceVar = "test" // trailing comment
 
             @objc
             private var computed: String {
@@ -800,7 +800,7 @@ class ParsingHelpersTests: XCTestCase {
                  */
 
                 private(set)
-                var instanceVar = "test"
+                var instanceVar = "test" // trailing comment
 
                 @objc
                 private var computed: String {
@@ -851,7 +851,7 @@ class ParsingHelpersTests: XCTestCase {
                  */
 
                 private(set)
-                var instanceVar = "test"
+                var instanceVar = "test" // trailing comment
 
 
             """
@@ -914,5 +914,52 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(declarations[0].body?[0].keyword == "init")
         XCTAssert(declarations[0].body?[1].keyword == "let")
         XCTAssert(declarations[0].body?[2].keyword == "var")
+    }
+
+    func testParseTrailingCommentsCorrectly() {
+        let input = """
+        struct Foo {
+            var bar = "bar"
+            /// Leading comment
+            public var baaz = "baaz" // Trailing comment
+            var quux = "quux"
+        }
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[0].body?[0].tokens),
+            """
+                var bar = "bar"
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[0].body?[0].tokens),
+            """
+                var bar = "bar"
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[0].body?[1].tokens),
+            """
+                /// Leading comment
+                public var baaz = "baaz" // Trailing comment
+
+            """
+        )
+
+        XCTAssertEqual(
+            sourceCode(for: declarations[0].body?[2].tokens),
+            """
+                var quux = "quux"
+
+            """
+        )
     }
 }

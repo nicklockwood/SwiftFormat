@@ -1102,6 +1102,11 @@ extension Formatter {
                 }
             }
 
+            // Only separate declarations by line (never break up individual lines)
+            endOfDeclaration = endOfDeclaration.flatMap {
+                parser.endOfLine(at: $0)
+            }
+
             // Prefer keeping linebreaks at the end of a declaration's tokens,
             // instead of the start of the next delaration's tokens
             while let linebreakSearchIndex = endOfDeclaration,

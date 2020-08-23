@@ -124,7 +124,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 #if os(macOS)
                     if fileOptions.followSymlinks {
                         let resolvedURL = try URL(resolvingAliasFileAt: inputURL)
-                        return (resolvedURL, try getResourceValues(for: resolvedURL, keys: keys), baseOptions)
+                        return (resolvedURL, try getResourceValues(for: resolvedURL, keys: keys), options)
                     } else if let handler = skipped {
                         onComplete(try handler(inputURL, inputURL, options))
                         return nil
@@ -133,7 +133,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
             } else if resourceValues.isSymbolicLink == true {
                 if fileOptions.followSymlinks {
                     let resolvedURL = inputURL.resolvingSymlinksInPath()
-                    return (resolvedURL, try getResourceValues(for: resolvedURL, keys: keys), baseOptions)
+                    return (resolvedURL, try getResourceValues(for: resolvedURL, keys: keys), options)
                 } else if let handler = skipped {
                     onComplete(try handler(inputURL, inputURL, options))
                     return nil
@@ -184,9 +184,11 @@ public func enumerateFiles(withInputURL inputURL: URL,
                    outputURL: URL?,
                    options: Options)
     {
+        assert(options.formatOptions != nil)
         guard let (inputURL, resourceValues, options) = resolveInputURL(inputURL, options: options) else {
             return
         }
+        assert(options.formatOptions != nil)
         let fileOptions = options.fileOptions ?? .default
         if resourceValues.isRegularFile == true {
             if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {

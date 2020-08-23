@@ -13916,4 +13916,50 @@ class RulesTests: XCTestCase {
                        options: FormatOptions(ifdefIndent: .noIndent),
                        exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
+
+    func testOrganizesTypeBelowSymbolImport() {
+        let input = """
+        import protocol SomeModule.SomeProtocol
+        import class SomeModule.SomeClass
+        import enum SomeModule.SomeEnum
+        import struct SomeModule.SomeStruct
+        import typealias SomeModule.SomeTypealias
+        import let SomeModule.SomeGlobalConstant
+        import var SomeModule.SomeGlobalVariable
+        import func SomeModule.SomeFunc
+
+        struct Foo {
+            init() {}
+            public func instanceMethod() {}
+        }
+        """
+
+        let output = """
+        import protocol SomeModule.SomeProtocol
+        import class SomeModule.SomeClass
+        import enum SomeModule.SomeEnum
+        import struct SomeModule.SomeStruct
+        import typealias SomeModule.SomeTypealias
+        import let SomeModule.SomeGlobalConstant
+        import var SomeModule.SomeGlobalVariable
+        import func SomeModule.SomeFunc
+
+        struct Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Public
+
+            public func instanceMethod() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "sortedImports"]
+        )
+    }
 }

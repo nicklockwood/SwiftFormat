@@ -1054,4 +1054,37 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(declarations[1].body?[2].keyword, "struct")
         XCTAssertEqual(declarations[2].keyword, "let")
     }
+
+    func testParseSymbolImportCorrectly() {
+        let input = """
+        import protocol SomeModule.SomeProtocol
+        import class SomeModule.SomeClass
+        import enum SomeModule.SomeEnum
+        import struct SomeModule.SomeStruct
+        import typealias SomeModule.SomeTypealias
+        import let SomeModule.SomeGlobalConstant
+        import var SomeModule.SomeGlobalVariable
+        import func SomeModule.SomeFunc
+
+        struct Foo {
+            init() {}
+            public func instanceMethod() {}
+        }
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssertEqual(declarations[0].keyword, "import")
+        XCTAssertEqual(declarations[1].keyword, "import")
+        XCTAssertEqual(declarations[2].keyword, "import")
+        XCTAssertEqual(declarations[3].keyword, "import")
+        XCTAssertEqual(declarations[4].keyword, "import")
+        XCTAssertEqual(declarations[5].keyword, "import")
+        XCTAssertEqual(declarations[6].keyword, "import")
+        XCTAssertEqual(declarations[7].keyword, "import")
+        XCTAssertEqual(declarations[8].keyword, "struct")
+        XCTAssertEqual(declarations[8].body?[0].keyword, "init")
+        XCTAssertEqual(declarations[8].body?[1].keyword, "func")
+    }
 }

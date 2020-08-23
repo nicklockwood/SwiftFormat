@@ -1011,7 +1011,9 @@ extension Formatter {
                 where: { $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if") }
             ) {
                 // Most declarations will include exactly one token that `isDeclarationTypeKeyword` in
-                // their outermost scope, but `class func` methods will have two (and the first one will be incorrect!)
+                //  - `class func` methods will have two (and the first one will be incorrect!)
+                //  - Symbol imports (like `import class Module.Type`) will have two,
+                //    but the first one will be correct, so we don't make any corrections right here.
                 if parser.tokens[firstDeclarationTypeKeywordIndex].string != "class" {
                     declarationTypeKeywordIndex = firstDeclarationTypeKeywordIndex
                     declarationKeyword = parser.tokens[firstDeclarationTypeKeywordIndex].string
@@ -1048,6 +1050,15 @@ extension Formatter {
                     let endOfConditionalCompilationScope = parser.endOfScope(at: searchIndex)
                 {
                     searchIndex = endOfConditionalCompilationScope
+                }
+
+                // Symbol imports (like `import class Module.Type`) will have an extra `isDeclarationTypeKeyword`
+                // immediately following their `declarationKeyword`, so we need to skip them.
+                if declarationKeyword == "import",
+                    let symbolTypeKeywordIndex = parser.index(of: .nonSpaceOrComment, after: declarationTypeKeywordIndex),
+                    parser.tokens[symbolTypeKeywordIndex].isDeclarationTypeKeyword
+                {
+                    searchIndex = symbolTypeKeywordIndex + 1
                 }
 
                 while searchIndex < parser.tokens.count, nextDeclarationKeywordIndex == nil {
@@ -1391,7 +1402,8 @@ extension _FormatRules {
 extension Token {
     /// Whether or not this token "defines" the specific type of declaration
     ///  - A valid declaration will usually include exactly one of these keywords in its outermost scope.
-    ///  - A notable exception is `class func`, which will include two of these keywords.
+    ///  - Notable exceptions are `class func` and symbol imports (like `import class Module.Type`)
+    ///    which will include two of these keywords.
     var isDeclarationTypeKeyword: Bool {
         guard case let .keyword(keyword) = self else {
             return false

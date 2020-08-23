@@ -1005,4 +1005,53 @@ class ParsingHelpersTests: XCTestCase {
             """
         )
     }
+
+    func testParseSimpleCompilationBlockCorrectly() {
+        let input = """
+        #if DEBUG
+        struct DebugFoo {
+            let bar = "debug"
+        }
+        #endif
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssertNotNil(declarations[0].keyword, "#if")
+        XCTAssertEqual(declarations[0].body?[0].keyword, "struct")
+        XCTAssertEqual(declarations[0].body?[0].body?[0].keyword, "let")
+    }
+
+    func testParseComplexConditionalCompilationBlockCorrectly() {
+        let input = """
+        let beforeBlock = "baaz"
+
+        #if DEBUG
+        struct DebugFoo {
+            let bar = "debug"
+        }
+        #elseif BETA
+        struct BetaFoo {
+            let bar = "beta"
+        }
+        #else
+        struct ProductionFoo {
+            let bar = "production"
+        }
+        #endif
+
+        let afterBlock = "quux"
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssertEqual(declarations[0].keyword, "let")
+        XCTAssertEqual(declarations[1].keyword, "#if")
+        XCTAssertEqual(declarations[1].body?[0].keyword, "struct")
+        XCTAssertEqual(declarations[1].body?[1].keyword, "struct")
+        XCTAssertEqual(declarations[1].body?[2].keyword, "struct")
+        XCTAssertEqual(declarations[2].keyword, "let")
+    }
 }

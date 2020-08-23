@@ -913,18 +913,22 @@ extension Formatter {
     }
 
     enum Declaration: Equatable {
-        /// A Type of type-like declaration with body of additional declarations (`class`, `struct`, etc)
+        /// A type-like declaration with body of additional declarations (`class`, `struct`, etc)
         indirect case type(kind: String, open: [Token], body: [Declaration], close: [Token])
 
         /// A simple declaration (like a property or function)
         case declaration(kind: String, tokens: [Token])
+
+        /// A #if ... #endif conditional compilation block with a body of additional declarations
+        indirect case conditionalCompilation(open: [Token], body: [Declaration], close: [Token])
 
         /// The tokens in this declaration
         var tokens: [Token] {
             switch self {
             case let .declaration(_, tokens):
                 return tokens
-            case let .type(_, openTokens, bodyDeclarations, closeTokens):
+            case let .type(_, openTokens, bodyDeclarations, closeTokens),
+                 let .conditionalCompilation(openTokens, bodyDeclarations, closeTokens):
                 return openTokens + bodyDeclarations.flatMap { $0.tokens } + closeTokens
             }
         }
@@ -934,7 +938,8 @@ extension Formatter {
             switch self {
             case .declaration:
                 return nil
-            case let .type(_, _, body, _):
+            case let .type(_, _, body, _),
+                 let .conditionalCompilation(_, body, _):
                 return body
             }
         }
@@ -946,6 +951,8 @@ extension Formatter {
             case let .declaration(kind, _),
                  let .type(kind, _, _, _):
                 return kind
+            case .conditionalCompilation:
+                return "#if"
             }
         }
     }
@@ -1001,7 +1008,7 @@ extension Formatter {
 
             if let firstDeclarationTypeKeywordIndex = parser.index(
                 after: startOfDeclaration - 1,
-                where: { $0.isDeclarationTypeKeyword }
+                where: { $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if") }
             ) {
                 // Most declarations will include exactly one token that `isDeclarationTypeKeyword` in
                 // their outermost scope, but `class func` methods will have two (and the first one will be incorrect!)
@@ -1035,17 +1042,30 @@ extension Formatter {
                 var nextDeclarationKeywordIndex: Int?
                 var searchIndex = declarationTypeKeywordIndex + 1
 
+                // For conditional compilation blocks, the `declarationKeyword` _is_ the `startOfScope`
+                // so we can immediately skip to the corresponding #endif
+                if declarationKeyword == "#if",
+                    let endOfConditionalCompilationScope = parser.endOfScope(at: searchIndex)
+                {
+                    searchIndex = endOfConditionalCompilationScope
+                }
+
                 while searchIndex < parser.tokens.count, nextDeclarationKeywordIndex == nil {
                     // If we encounter a `startOfScope`, we have to skip to the end of the scope.
                     // This accounts for things like function bodies, etc.
                     //  - Comment marker tokens (e.g. `//`) are `startOfScope` tokens,
                     //    but they don't have a corresponding `endOfScope` so we can't skip through them.
+                    //  - `#if` tokens are `startOfScope`, but immediately represent the start of a new
+                    //    conditional compilation declaration so we can't skip through them.
                     if parser.tokens[searchIndex].isStartOfScope,
                         !parser.tokens[searchIndex].isComment,
+                        parser.tokens[searchIndex].string != "#if",
                         let endOfScope = parser.endOfScope(at: searchIndex)
                     {
                         searchIndex = endOfScope + 1
-                    } else if parser.tokens[searchIndex].isDeclarationTypeKeyword {
+                    } else if parser.tokens[searchIndex].isDeclarationTypeKeyword
+                        || parser.tokens[searchIndex].string == "#if"
+                    {
                         nextDeclarationKeywordIndex = searchIndex
                     } else {
                         searchIndex += 1
@@ -1125,43 +1145,67 @@ extension Formatter {
         return declarations.map { declaration in
             let declarationParser = Formatter(declaration.tokens)
 
+            /// Parses this declaration into a body of declarations separate from the start and end tokens
+            func parseBody(in bodyRange: ClosedRange<Int>) -> (start: [Token], body: [Declaration], end: [Token]) {
+                var startTokens = declarationParser.tokens[...bodyRange.lowerBound]
+                var bodyTokens = declarationParser.tokens[bodyRange.lowerBound + 1 ..< bodyRange.upperBound]
+                var endTokens = declarationParser.tokens[bodyRange.upperBound...]
+
+                // Move the leading newlines from the `body` into the `start` tokens
+                // so the first body token is the start of the first declaration
+                while bodyTokens.first?.isLinebreak == true {
+                    startTokens.append(bodyTokens.removeFirst())
+                }
+
+                // Move the closing brace's indentation token from the `body` into the `end` tokens
+                if bodyTokens.last?.isSpace == true {
+                    endTokens.insert(bodyTokens.removeLast(), at: endTokens.startIndex)
+                }
+
+                // Parse the inner body declarations of the type
+                let bodyDeclarations = Formatter(Array(bodyTokens)).parseDeclarations()
+
+                return (Array(startTokens), bodyDeclarations, Array(endTokens))
+            }
+
             // If this declaration represents a type, we need to parse its inner declarations as well.
             let typelikeKeywords = ["class", "struct", "enum", "protocol", "extension"]
 
-            guard typelikeKeywords.contains(declaration.keyword),
+            if typelikeKeywords.contains(declaration.keyword),
                 let declarationTypeKeywordIndex = declarationParser
                 .index(after: -1, where: { $0.string == declaration.keyword }),
                 let startOfBody = declarationParser
                 .index(of: .startOfScope("{"), after: declarationTypeKeywordIndex),
                 let endOfBody = declarationParser.endOfScope(at: startOfBody)
-            else {
+            {
+                let (startTokens, bodyDeclarations, endTokens) = parseBody(in: startOfBody ... endOfBody)
+
+                return .type(
+                    kind: declaration.keyword,
+                    open: startTokens,
+                    body: bodyDeclarations,
+                    close: endTokens
+                )
+            }
+
+            // If this declaration represents a conditional compilation block,
+            // we also have to parse its inner declarations.
+            else if declaration.keyword == "#if",
+                let declarationTypeKeywordIndex = declarationParser
+                .index(after: -1, where: { $0.string == declaration.keyword }),
+                let endOfBody = declarationParser.endOfScope(at: declarationTypeKeywordIndex)
+            {
+                let startOfBody = declarationParser.endOfLine(at: declarationTypeKeywordIndex)
+                let (startTokens, bodyDeclarations, endTokens) = parseBody(in: startOfBody ... endOfBody)
+
+                return .conditionalCompilation(
+                    open: startTokens,
+                    body: bodyDeclarations,
+                    close: endTokens
+                )
+            } else {
                 return declaration
             }
-
-            var startTokens = declarationParser.tokens[...startOfBody]
-            var bodyTokens = declarationParser.tokens[startOfBody + 1 ..< endOfBody]
-            var endTokens = declarationParser.tokens[endOfBody...]
-
-            // Move the leading newlines from the `body` into the `start` tokens
-            // so the first body token is the start of the first declaration
-            while bodyTokens.first?.isLinebreak == true {
-                startTokens.append(bodyTokens.removeFirst())
-            }
-
-            // Move the closing brace's indentation token from the `body` into the `end` tokens
-            if bodyTokens.last?.isSpace == true {
-                endTokens.insert(bodyTokens.removeLast(), at: endTokens.startIndex)
-            }
-
-            // Parse the inner body declarations of the type
-            let bodyDeclarations = Formatter(Array(bodyTokens)).parseDeclarations()
-
-            return .type(
-                kind: declaration.keyword,
-                open: Array(startTokens),
-                body: bodyDeclarations,
-                close: Array(endTokens)
-            )
         }
     }
 

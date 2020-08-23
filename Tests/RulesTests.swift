@@ -13446,6 +13446,7 @@ class RulesTests: XCTestCase {
 
         let output = """
         enum Foo {
+
             case bar
             case baz
             case quux

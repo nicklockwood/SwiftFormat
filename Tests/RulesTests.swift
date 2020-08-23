@@ -13765,4 +13765,155 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
                        exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
+
+    func testOrganizesTypesWithinConditionalCompilationBlock() {
+        let input = """
+        #if DEBUG
+        struct DebugFoo {
+            init() {}
+            public func instanceMethod() {}
+        }
+        #else
+        struct ProductionFoo {
+            init() {}
+            public func instanceMethod() {}
+        }
+        #endif
+        """
+
+        let output = """
+        #if DEBUG
+        struct DebugFoo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Public
+
+            public func instanceMethod() {}
+
+        }
+        #else
+        struct ProductionFoo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Public
+
+            public func instanceMethod() {}
+
+        }
+        #endif
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
+                       options: FormatOptions(ifdefIndent: .noIndent),
+                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+    }
+
+    func testOrganizesTypesBelowConditionalCompilationBlock() {
+        let input = """
+        #if canImport(UIKit)
+        import UIKit
+        #endif
+
+        struct Foo {
+            init() {}
+            public func instanceMethod() {}
+        }
+        """
+
+        let output = """
+        #if canImport(UIKit)
+        import UIKit
+        #endif
+
+        struct Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Public
+
+            public func instanceMethod() {}
+
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
+                       options: FormatOptions(ifdefIndent: .noIndent),
+                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+    }
+
+    func testOrganizesNestedTypesWithinConditionalCompilationBlock() {
+        let input = """
+        public struct Foo {
+
+            public var bar = "bar"
+            var baaz = "baaz"
+
+            #if DEBUG
+            public struct DebugFoo {
+                init() {}
+                var debugBar = "debug"
+            }
+
+            static let debugFoo = DebugFoo()
+
+            private let other = "other"
+            #endif
+
+            init() {}
+
+            var quuz = "quux"
+
+        }
+        """
+
+        let output = """
+        public struct Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Public
+
+            public var bar = "bar"
+
+            #if DEBUG
+            public struct DebugFoo {
+
+                // MARK: Lifecycle
+
+                init() {}
+
+                // MARK: Internal
+
+                var debugBar = "debug"
+
+            }
+
+            static let debugFoo = DebugFoo()
+
+            private let other = "other"
+            #endif
+
+            // MARK: Internal
+
+            var baaz = "baaz"
+
+            var quuz = "quux"
+
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
+                       options: FormatOptions(ifdefIndent: .noIndent),
+                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+    }
 }

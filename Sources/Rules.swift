@@ -4989,6 +4989,17 @@ public struct _FormatRules {
 
                 // `internal` is the default implied vibilility if no other is specified
                 return .internal
+
+            case let .conditionalCompilation(_, body, _):
+                // Conditional compilation blocks themselves don't have a category or visbility-level,
+                // but we still have to assign them a category for the sorting algorithm to function.
+                // A reasonable heuristic here is to simply use the category of the first declaration
+                // inside the conditional compilation block.
+                if let firstDeclarationInBlock = body.first {
+                    return category(of: firstDeclarationInBlock)
+                } else {
+                    return .beforeMarks
+                }
             }
         }
 
@@ -5065,6 +5076,9 @@ public struct _FormatRules {
                 default:
                     return nil
                 }
+
+            case .conditionalCompilation:
+                return nil
             }
         }
 
@@ -5222,6 +5236,9 @@ public struct _FormatRules {
                     case let .declaration(kind, tokens):
                         sortedDeclarations[indexOfLastDeclarationWithType].declaration
                             = .declaration(kind: kind, tokens: endingWithBlankLine(tokens))
+
+                    case .conditionalCompilation:
+                        break
                     }
                 }
             }
@@ -5248,6 +5265,16 @@ public struct _FormatRules {
                     open: organizedOpen,
                     body: organizedBody.map { organize($0) },
                     close: organizedClose
+                )
+
+            // We don't organize declarations within conditional compilation blocks
+            // since they represent their own scope, but we still need to organize
+            // the body of any _types_ inside this block.
+            case let .conditionalCompilation(open, body, close):
+                return .conditionalCompilation(
+                    open: open,
+                    body: body.map { organize($0) },
+                    close: close
                 )
 
             // If the declaration doesn't have a body, there isn't any work to do

@@ -5163,40 +5163,53 @@ public struct _FormatRules {
             let typeClosingTokens = typeDeclaration.close
 
             // Categorize each of the declarations into their primary groups
+            typealias CategorizedDeclarations = [(declaration: Formatter.Declaration, category: Category, type: DeclarationType?)]
+
             let categorizedDeclarations = typeDeclaration.body.map {
                 (declaration: $0, category: category(of: $0), type: type(of: $0))
             }
 
-            // Sort the declarations based on their category
-            var sortedDeclarations = categorizedDeclarations.enumerated()
-                .sorted(by: { lhs, rhs in
-                    let (lhsOriginalIndex, lhs) = lhs
-                    let (rhsOriginalIndex, rhs) = rhs
+            /// Sorts the given categoried declarations based on their derived metadata
+            func sortDeclarations(
+                _ declarations: CategorizedDeclarations,
+                byCategory sortByCategory: Bool,
+                byType sortByType: Bool
+            ) -> CategorizedDeclarations {
+                return declarations.enumerated()
+                    .sorted(by: { lhs, rhs in
+                        let (lhsOriginalIndex, lhs) = lhs
+                        let (rhsOriginalIndex, rhs) = rhs
 
-                    // Sort primarily by category
-                    if let lhsCategorySortOrder = categoryOrdering.index(of: lhs.category),
-                        let rhsCategorySortOrder = categoryOrdering.index(of: rhs.category),
-                        lhsCategorySortOrder != rhsCategorySortOrder
-                    {
-                        return lhsCategorySortOrder < rhsCategorySortOrder
-                    }
+                        // Sort primarily by category
+                        if sortByCategory,
+                            let lhsCategorySortOrder = categoryOrdering.index(of: lhs.category),
+                            let rhsCategorySortOrder = categoryOrdering.index(of: rhs.category),
+                            lhsCategorySortOrder != rhsCategorySortOrder
+                        {
+                            return lhsCategorySortOrder < rhsCategorySortOrder
+                        }
 
-                    // Within individual categories (excluding .beforeMarks), sort by the declaration type
-                    if lhs.category != .beforeMarks,
-                        rhs.category != .beforeMarks,
-                        let lhsType = lhs.type,
-                        let rhsType = rhs.type,
-                        let lhsTypeSortOrder = categorySubordering.index(of: lhsType),
-                        let rhsTypeSortOrder = categorySubordering.index(of: rhsType),
-                        lhsTypeSortOrder != rhsTypeSortOrder
-                    {
-                        return lhsTypeSortOrder < rhsTypeSortOrder
-                    }
+                        // Within individual categories (excluding .beforeMarks), sort by the declaration type
+                        if sortByType,
+                            lhs.category != .beforeMarks,
+                            rhs.category != .beforeMarks,
+                            let lhsType = lhs.type,
+                            let rhsType = rhs.type,
+                            let lhsTypeSortOrder = categorySubordering.index(of: lhsType),
+                            let rhsTypeSortOrder = categorySubordering.index(of: rhsType),
+                            lhsTypeSortOrder != rhsTypeSortOrder
+                        {
+                            return lhsTypeSortOrder < rhsTypeSortOrder
+                        }
 
-                    // Respect the original declaration ordering when the categories and types are the same
-                    return lhsOriginalIndex < rhsOriginalIndex
-                })
-                .map { $0.element }
+                        // Respect the original declaration ordering when the categories and types are the same
+                        return lhsOriginalIndex < rhsOriginalIndex
+                    })
+                    .map { $0.element }
+            }
+
+            // Sort the declarations based on their category and type
+            var sortedDeclarations = sortDeclarations(categorizedDeclarations, byCategory: true, byType: true)
 
             // The compiler will synthesize a memberwise init for `struct`
             // declarations that don't have an `init` declaration.
@@ -5204,18 +5217,34 @@ public struct _FormatRules {
             if typeDeclaration.kind == "struct",
                 !typeDeclaration.body.contains(where: { $0.keyword == "init" })
             {
-                let originalPropertiesOrder = categorizedDeclarations
-                    .filter { $0.type?.canAffectStructMemberwiseInitializer == true }
-                    .map { $0.declaration }
+                // Whether or not the two given declaration orderings preserve
+                // the same synthesized memberwise initializer
+                func preservesSynthesizedMemberwiseInitiaizer(
+                    _ lhs: CategorizedDeclarations,
+                    _ rhs: CategorizedDeclarations
+                ) -> Bool {
+                    let lhsPropertiesOrder = lhs
+                        .filter { $0.type?.canAffectStructMemberwiseInitializer == true }
+                        .map { $0.declaration }
 
-                let sortedPropertiesOrder = sortedDeclarations
-                    .filter { $0.type?.canAffectStructMemberwiseInitializer == true }
-                    .map { $0.declaration }
+                    let rhsPropertiesOrder = rhs
+                        .filter { $0.type?.canAffectStructMemberwiseInitializer == true }
+                        .map { $0.declaration }
 
-                // We shouldn't sort the declarations if it would cause us to reorder properties
-                // that affect the synthesized memberwise initializer (this can cause compilation failures).
-                if originalPropertiesOrder != sortedPropertiesOrder {
-                    return typeDeclaration
+                    return lhsPropertiesOrder == rhsPropertiesOrder
+                }
+
+                if !preservesSynthesizedMemberwiseInitiaizer(categorizedDeclarations, sortedDeclarations) {
+                    // If sorting by category and by type could cause compilation failures
+                    // by not correctly preserving the synthesized memberwise initializer,
+                    // try to sort _only_ by category (so we can try to preserve the correct category separators)
+                    sortedDeclarations = sortDeclarations(categorizedDeclarations, byCategory: true, byType: false)
+
+                    // If sorting _only_ by category still changes the synthesized memberwise initializer,
+                    // then there's nothing we can do to organize this struct.
+                    if !preservesSynthesizedMemberwiseInitiaizer(categorizedDeclarations, sortedDeclarations) {
+                        return typeDeclaration
+                    }
                 }
             }
 

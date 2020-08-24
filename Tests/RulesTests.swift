@@ -13331,7 +13331,7 @@ class RulesTests: XCTestCase {
 
     func testOrganizePrivateSet() {
         let input = """
-        struct Foo {
+        class Foo {
             public private(set) var bar: Int
             private(set) var baz: Int
             internal private(set) var baz: Int
@@ -13339,7 +13339,7 @@ class RulesTests: XCTestCase {
         """
 
         let output = """
-        struct Foo {
+        class Foo {
 
             // MARK: Public
 
@@ -13362,7 +13362,7 @@ class RulesTests: XCTestCase {
 
     func testSortDeclarationTypes() {
         let input = """
-        struct Foo {
+        class Foo {
             static var a1: Int = 1
             static var a2: Int = 2
             var d: CGFloat {
@@ -13392,7 +13392,7 @@ class RulesTests: XCTestCase {
         """
 
         let output = """
-        struct Foo {
+        class Foo {
 
             enum NestedEnum {}
 
@@ -13714,7 +13714,7 @@ class RulesTests: XCTestCase {
 
     func testHandlesTrailingCommentCorrectly() {
         let input = """
-        struct Foo {
+        class Foo {
             var bar = "bar"
             /// Leading comment
             public var baaz = "baaz" // Trailing comment
@@ -13723,7 +13723,7 @@ class RulesTests: XCTestCase {
         """
 
         let output = """
-        struct Foo {
+        class Foo {
 
             // MARK: Public
 
@@ -13744,7 +13744,7 @@ class RulesTests: XCTestCase {
 
     func testDoesntInsertMarkWhenOnlyOneCategory() {
         let input = """
-        struct Foo {
+        class Foo {
             var bar: Int
             var baaz: Int
             func instanceMethod() {}
@@ -13752,7 +13752,7 @@ class RulesTests: XCTestCase {
         """
 
         let output = """
-        struct Foo {
+        class Foo {
 
             var bar: Int
             var baaz: Int
@@ -13955,6 +13955,67 @@ class RulesTests: XCTestCase {
             public func instanceMethod() {}
 
         }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "sortedImports"]
+        )
+    }
+
+    func testDoesntBreakStructSynthesizedMemberwiseInitializer() {
+        let input = """
+        struct Foo {
+            var bar: Int {
+                didSet {}
+            }
+
+            var baaz: Int
+            public let quux: Int
+        }
+
+        Foo(bar: 1, baaz: 2, quux: 3)
+        """
+
+        testFormatting(for: input, rule: FormatRules.organizeDeclarations)
+    }
+
+    func testOrganizesStructPropertiesThatDoesntBreakMemberwiseInitializer() {
+        let input = """
+        struct Foo {
+            private func instanceMethod() {}
+            public let quux: Int
+            var baaz: Int
+            var bar: Int {
+                didSet {}
+            }
+        }
+
+        Foo(bar: 1, baaz: 2, quux: 3)
+        """
+
+        let output = """
+        struct Foo {
+
+            // MARK: Public
+
+            public let quux: Int
+
+            // MARK: Internal
+
+            var baaz: Int
+
+            var bar: Int {
+                didSet {}
+            }
+
+            // MARK: Private
+
+            private func instanceMethod() {}
+
+        }
+
+        Foo(bar: 1, baaz: 2, quux: 3)
         """
 
         testFormatting(

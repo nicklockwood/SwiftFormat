@@ -235,10 +235,10 @@ public extension Formatter {
 
     /// Replaces the token at the specified index with a new token
     func replaceToken(at index: Int, with token: Token) {
-        if token != tokens[index] {
+        if trackChanges, token.string != tokens[index].string {
             trackChange(at: index)
-            tokens[index] = token
         }
+        tokens[index] = token
     }
 
     /// Replaces the tokens in the specified range with new tokens
@@ -250,7 +250,7 @@ public extension Formatter {
         }
         if range.count > max {
             removeTokens(in: range.dropFirst(max))
-        } else {
+        } else if tokens.count > max {
             insert(tokens.dropFirst(max), at: range.lowerBound + max)
         }
         return tokens.count - range.count

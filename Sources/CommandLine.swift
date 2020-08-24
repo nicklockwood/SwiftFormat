@@ -782,8 +782,7 @@ func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?
                 verbose: Bool, lint: Bool) throws -> String
 {
     // Parse source
-    let originalTokens = tokenize(source)
-    var tokens = originalTokens
+    var tokens = tokenize(source)
 
     // Get rules
     let rulesByName = FormatRules.byName
@@ -802,14 +801,15 @@ func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?
                                        trackChanges: lint || verbose, range: range)
 
     // Display info
-    if lint, tokens != originalTokens {
+    let updatedSource = sourceCode(for: tokens)
+    if lint, updatedSource != source {
         changes.forEach { print($0.description, as: .warning) }
     }
     if verbose {
         let rulesApplied = changes.reduce(into: Set<String>()) {
             $0.insert($1.rule.name)
         }
-        if rulesApplied.isEmpty || tokens == originalTokens {
+        if rulesApplied.isEmpty || updatedSource == source {
             print("-- no changes", as: .success)
         } else {
             let sortedNames = Array(rulesApplied).sorted().joined(separator: ", ")
@@ -818,7 +818,7 @@ func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?
     }
 
     // Output
-    return sourceCode(for: tokens)
+    return updatedSource
 }
 
 func processInput(_ inputURLs: [URL],

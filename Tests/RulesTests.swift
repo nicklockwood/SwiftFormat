@@ -13239,10 +13239,10 @@ class RulesTests: XCTestCase {
         let input = """
         public class Foo {
             public class Bar {
-                fileprivate func baaz()
+                fileprivate func baaz() {}
                 public var quux: Int
                 init() {}
-                deinit() {}
+                deinit {}
             }
         }
         """
@@ -13255,7 +13255,7 @@ class RulesTests: XCTestCase {
                 // MARK: Lifecycle
 
                 init() {}
-                deinit() {}
+                deinit {}
 
                 // MARK: Public
 
@@ -13263,7 +13263,7 @@ class RulesTests: XCTestCase {
 
                 // MARK: Fileprivate
 
-                fileprivate func baaz()
+                fileprivate func baaz() {}
 
             }
 
@@ -13273,7 +13273,7 @@ class RulesTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "spaceAroundParens"]
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }
 

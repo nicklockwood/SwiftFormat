@@ -154,6 +154,7 @@ extension FormatterTests {
         ("testRemoveNextTokenWhileEnumerating", testRemoveNextTokenWhileEnumerating),
         ("testRemovePreviousTokenWhileEnumerating", testRemovePreviousTokenWhileEnumerating),
         ("testSwiftVersionNext", testSwiftVersionNext),
+        ("testTrackChangesIgnoresLinebreakIndex", testTrackChangesIgnoresLinebreakIndex),
     ]
 }
 

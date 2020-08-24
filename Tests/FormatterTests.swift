@@ -441,4 +441,15 @@ class FormatterTests: XCTestCase {
         """))
         XCTAssertEqual(formatter.endOfScope(at: 4), 13)
     }
+
+    // MARK: change tracking
+
+    func testTrackChangesIgnoresLinebreakIndex() {
+        let formatter = Formatter(tokenize("\n\n"), trackChanges: true)
+        var tokens = formatter.tokens
+        tokens.insert(tokens.removeLast(), at: 0)
+        XCTAssertNotEqual(formatter.tokens, tokens)
+        formatter.replaceTokens(in: 0 ..< 2, with: tokens)
+        XCTAssert(formatter.changes.isEmpty)
+    }
 }

@@ -752,7 +752,8 @@ public struct _FormatRules {
 
     /// Remove blank lines immediately after an opening brace, bracket, paren or chevron
     public let blankLinesAtStartOfScope = FormatRule(
-        help: "Remove leading blank line at the start of a scope."
+        help: "Remove leading blank line at the start of a scope.",
+        orderAfter: ["organizeDeclarations"]
     ) { formatter in
         formatter.forEach(.startOfScope) { i, token in
             guard ["{", "(", "[", "<"].contains(token.string),
@@ -784,7 +785,8 @@ public struct _FormatRules {
     /// Remove blank lines immediately before a closing brace, bracket, paren or chevron
     /// unless it's followed by more code on the same line (e.g. } else { )
     public let blankLinesAtEndOfScope = FormatRule(
-        help: "Remove trailing blank line at the end of a scope."
+        help: "Remove trailing blank line at the end of a scope.",
+        orderAfter: ["organizeDeclarations"]
     ) { formatter in
         formatter.forEach(.endOfScope) { i, token in
             guard ["}", ")", "]", ">"].contains(token.string),
@@ -5322,12 +5324,6 @@ public struct _FormatRules {
             .map { organize($0) }
 
         let updatedTokens = organizedDeclarations.flatMap { $0.tokens }
-
-        if sourceCode(for: formatter.tokens) != sourceCode(for: updatedTokens) {
-            formatter.replaceTokens(
-                in: 0 ..< formatter.tokens.count,
-                with: updatedTokens
-            )
-        }
+        formatter.replaceTokens(in: 0 ..< formatter.tokens.count, with: updatedTokens)
     }
 }

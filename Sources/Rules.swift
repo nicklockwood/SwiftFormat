@@ -4931,6 +4931,17 @@ public struct _FormatRules {
             case staticMethod
             case classMethod
             case instanceMethod
+
+            /// Whether or not this declaration potentially affects the
+            /// synthesized memberwise initializer of a `struct`
+            var canAffectStructMemberwiseInitializer: Bool {
+                switch self {
+                case .instanceProperty, .instancePropertyWithBody:
+                    return true
+                default:
+                    return false
+                }
+            }
         }
 
         let categoryOrdering: [Category] = [
@@ -5186,6 +5197,27 @@ public struct _FormatRules {
                     return lhsOriginalIndex < rhsOriginalIndex
                 })
                 .map { $0.element }
+
+            // The compiler will synthesize a memberwise init for `struct`
+            // declarations that don't have an `init` declaration.
+            // We have to take care to not reorder any properties (but reordering functions etc is ok!)
+            if typeDeclaration.kind == "struct",
+                !typeDeclaration.body.contains(where: { $0.keyword == "init" })
+            {
+                let originalPropertiesOrder = categorizedDeclarations
+                    .filter { $0.type?.canAffectStructMemberwiseInitializer == true }
+                    .map { $0.declaration }
+
+                let sortedPropertiesOrder = sortedDeclarations
+                    .filter { $0.type?.canAffectStructMemberwiseInitializer == true }
+                    .map { $0.declaration }
+
+                // We shouldn't sort the declarations if it would cause us to reorder properties
+                // that affect the synthesized memberwise initializer (this can cause compilation failures).
+                if originalPropertiesOrder != sortedPropertiesOrder {
+                    return typeDeclaration
+                }
+            }
 
             // Insert comments to separate the categories
             let numberOfCategories = categoryOrdering.filter { category in

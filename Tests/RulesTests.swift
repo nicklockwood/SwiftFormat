@@ -14020,7 +14020,34 @@ class RulesTests: XCTestCase {
 
         testFormatting(
             for: input, output, rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "sortedImports"]
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testPreservesCategoryMarksInStructWithIncorrectSubcategoryOrdering() {
+        let input = """
+        struct Foo {
+
+            // MARK: Public
+
+            public let quux: Int
+
+            // MARK: Internal
+
+            var bar: Int {
+                didSet {}
+            }
+
+            var baaz: Int
+
+        }
+
+        Foo(bar: 1, baaz: 2, quux: 3)
+        """
+
+        testFormatting(
+            for: input, rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }
 }

@@ -55,6 +55,7 @@ final class RulesViewController: NSViewController {
     @IBOutlet var tableView: NSTableView!
     @IBOutlet var inferOptionsButton: NSButton!
     @IBOutlet var swiftVersionDropDown: NSPopUpButton!
+    @IBOutlet var searchField: NSSearchField!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -102,13 +103,15 @@ final class RulesViewController: NSViewController {
         let optionsByName = Dictionary(uniqueKeysWithValues: optionStore
             .options
             .map { ($0.descriptor.argumentName, $0) })
+        let filterText = searchField.stringValue.trimmingCharacters(in: CharacterSet.alphanumerics.inverted).lowercased()
 
         var results = [UserSelectionType]()
         ruleStore
             .rules
+            .filter { filterText.isEmpty || $0.name.lowercased().contains(filterText) }
             .sorted()
             .forEach { rule in
-                let formatRule = FormatRules.byName[rule.name]!
+                guard let formatRule = FormatRules.byName[rule.name] else { return }
 
                 let associatedOptions = formatRule
                     .options
@@ -191,6 +194,17 @@ final class RulesViewController: NSViewController {
 
     func model(forRow row: Int) -> UserSelectionType {
         return viewModels[row]
+    }
+}
+
+// MARK: - Search Field Delegate
+
+extension RulesViewController: NSSearchFieldDelegate {
+    override func controlTextDidChange(_ obj: Notification) {
+        if obj.object as? NSTextField == searchField {
+            viewModels = buildRules()
+            tableView?.reloadData()
+        }
     }
 }
 

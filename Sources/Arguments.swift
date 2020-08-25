@@ -126,6 +126,11 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             name = String(anonymousArgs)
             anonymousArgs += 1
         }
+        var arg = arg
+        let hasTrailingComma = arg.hasSuffix(",") && arg != ","
+        if hasTrailingComma {
+            arg = String(arg.dropLast())
+        }
         if let existing = namedArgs[name], !existing.isEmpty,
             // TODO: find a more general way to represent merge-able options
             ["exclude", "unexclude", "disable", "enable", "rules"].contains(name) ||
@@ -137,7 +142,9 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
         } else {
             namedArgs[name] = arg
         }
-        name = ""
+        if !hasTrailingComma {
+            name = ""
+        }
     }
     return namedArgs
 }

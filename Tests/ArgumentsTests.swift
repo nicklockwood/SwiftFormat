@@ -199,6 +199,25 @@ class ArgumentsTests: XCTestCase {
         ]), output)
     }
 
+    // comma-delimited values
+
+    func testSpacesIgnoredInCommaDelimitedArguments() {
+        let input = ["", "--rules", "foo,", "bar"]
+        let output = ["0": "", "rules": "foo,bar"]
+        XCTAssertEqual(try preprocessArguments(input, [
+            "rules",
+        ]), output)
+    }
+
+    func testNextArgumentNotIgnoredAfterCommaInArguments() {
+        let input = ["", "--enable", "foo,", "--disable", "bar"]
+        let output = ["0": "", "enable": "foo", "disable": "bar"]
+        XCTAssertEqual(try preprocessArguments(input, [
+            "enable",
+            "disable",
+        ]), output)
+    }
+
     // MARK: format options to arguments
 
     func testCommandLineArgumentsHaveValidNames() {

@@ -101,7 +101,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
         if arg.hasPrefix("--") {
             // Long argument names
             let key = String(arg.unicodeScalars.dropFirst(2))
-            if !names.contains(key) {
+            guard names.contains(key) else {
                 throw FormatError.options("Unknown option --\(key)")
             }
             name = key
@@ -110,15 +110,11 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
         } else if arg.hasPrefix("-") {
             // Short argument names
             let flag = String(arg.unicodeScalars.dropFirst())
-            let matches = names.filter { $0.hasPrefix(flag) }
-            if matches.count > 1 {
-                throw FormatError.options("Ambiguous flag -\(flag)")
-            } else if matches.isEmpty {
+            guard let match = names.first(where: { $0.hasPrefix(flag) }) else {
                 throw FormatError.options("Unknown flag -\(flag)")
-            } else {
-                name = matches[0]
-                namedArgs[name] = namedArgs[name] ?? ""
             }
+            name = match
+            namedArgs[name] = namedArgs[name] ?? ""
             continue
         }
         if name == "" {

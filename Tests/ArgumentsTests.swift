@@ -218,6 +218,33 @@ class ArgumentsTests: XCTestCase {
         ]), output)
     }
 
+    // flags
+
+    func testVMatchesVerbose() {
+        let input = ["", "-v"]
+        let output = ["0": "", "verbose": ""]
+        XCTAssertEqual(try preprocessArguments(input, commandLineArguments), output)
+    }
+
+    func testHMatchesHelp() {
+        let input = ["", "-h"]
+        let output = ["0": "", "help": ""]
+        XCTAssertEqual(try preprocessArguments(input, commandLineArguments), output)
+    }
+
+    func testOMatchesOutput() {
+        let input = ["", "-o"]
+        let output = ["0": "", "output": ""]
+        XCTAssertEqual(try preprocessArguments(input, commandLineArguments), output)
+    }
+
+    func testNoMatchFlagThrows() {
+        let input = ["", "-v"]
+        XCTAssertThrowsError(try preprocessArguments(input, [
+            "help", "file",
+        ]))
+    }
+
     // MARK: format options to arguments
 
     func testCommandLineArgumentsHaveValidNames() {

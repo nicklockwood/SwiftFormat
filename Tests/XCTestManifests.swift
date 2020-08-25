@@ -30,6 +30,7 @@ extension ArgumentsTests {
         ("testEscapedComment", testEscapedComment),
         ("testFileHeaderOptionToArguments", testFileHeaderOptionToArguments),
         ("testFormattingArgumentsAreAllImplemented", testFormattingArgumentsAreAllImplemented),
+        ("testHMatchesHelp", testHMatchesHelp),
         ("testMergeDisableRules", testMergeDisableRules),
         ("testMergeEmptyRules", testMergeEmptyRules),
         ("testMergeEnableRules", testMergeEnableRules),
@@ -39,6 +40,8 @@ extension ArgumentsTests {
         ("testMergeSelfRequiredOptions", testMergeSelfRequiredOptions),
         ("testMergeUnexcludedURLs", testMergeUnexcludedURLs),
         ("testNextArgumentNotIgnoredAfterCommaInArguments", testNextArgumentNotIgnoredAfterCommaInArguments),
+        ("testNoMatchFlagThrows", testNoMatchFlagThrows),
+        ("testOMatchesOutput", testOMatchesOutput),
         ("testParseArgumentsContainingAnonymousValues", testParseArgumentsContainingAnonymousValues),
         ("testParseArgumentsContainingBlankLines", testParseArgumentsContainingBlankLines),
         ("testParseArgumentsContainingEscapedCharacters", testParseArgumentsContainingEscapedCharacters),
@@ -81,6 +84,7 @@ extension ArgumentsTests {
         ("testSerializeOptionsEnabledSomeRulesDisabledNoTerminatingSeparator", testSerializeOptionsEnabledSomeRulesDisabledNoTerminatingSeparator),
         ("testSerializeSwiftVersion", testSerializeSwiftVersion),
         ("testSpacesIgnoredInCommaDelimitedArguments", testSpacesIgnoredInCommaDelimitedArguments),
+        ("testVMatchesVerbose", testVMatchesVerbose),
     ]
 }
 

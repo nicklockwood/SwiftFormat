@@ -13991,13 +13991,19 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.organizeDeclarations)
     }
 
-    func testOrganizesStructPropertiesThatDoesntBreakMemberwiseInitializer() {
+    func testOrganizesStructPropertiesThatDontBreakMemberwiseInitializer() {
         let input = """
         struct Foo {
+            var computed: String {
+                let didSet = "didSet"
+                let willSet = "willSet"
+                return didSet + willSet
+            }
+
             private func instanceMethod() {}
-            public let quux: Int
+            public let bar: Int
             var baaz: Int
-            var bar: Int {
+            var quux: Int {
                 didSet {}
             }
         }
@@ -14010,13 +14016,19 @@ class RulesTests: XCTestCase {
 
             // MARK: Public
 
-            public let quux: Int
+            public let bar: Int
 
             // MARK: Internal
 
             var baaz: Int
 
-            var bar: Int {
+            var computed: String {
+                let didSet = "didSet"
+                let willSet = "willSet"
+                return didSet + willSet
+            }
+
+            var quux: Int {
                 didSet {}
             }
 

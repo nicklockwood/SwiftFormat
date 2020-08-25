@@ -1332,7 +1332,7 @@ extension RulesTests {
         ("testOrganizeEnumCasesFirst", testOrganizeEnumCasesFirst),
         ("testOrganizePrivateSet", testOrganizePrivateSet),
         ("testOrganizesNestedTypesWithinConditionalCompilationBlock", testOrganizesNestedTypesWithinConditionalCompilationBlock),
-        ("testOrganizesStructPropertiesThatDoesntBreakMemberwiseInitializer", testOrganizesStructPropertiesThatDoesntBreakMemberwiseInitializer),
+        ("testOrganizesStructPropertiesThatDontBreakMemberwiseInitializer", testOrganizesStructPropertiesThatDontBreakMemberwiseInitializer),
         ("testOrganizesTypeBelowSymbolImport", testOrganizesTypeBelowSymbolImport),
         ("testOrganizesTypesBelowConditionalCompilationBlock", testOrganizesTypesBelowConditionalCompilationBlock),
         ("testOrganizesTypesWithinConditionalCompilationBlock", testOrganizesTypesWithinConditionalCompilationBlock),

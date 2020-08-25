@@ -4931,17 +4931,6 @@ public struct _FormatRules {
             case staticMethod
             case classMethod
             case instanceMethod
-
-            /// Whether or not this declaration potentially affects the
-            /// synthesized memberwise initializer of a `struct`
-            var canAffectStructMemberwiseInitializer: Bool {
-                switch self {
-                case .instanceProperty, .instancePropertyWithBody:
-                    return true
-                default:
-                    return false
-                }
-            }
         }
 
         let categoryOrdering: [Category] = [
@@ -5217,6 +5206,42 @@ public struct _FormatRules {
             if typeDeclaration.kind == "struct",
                 !typeDeclaration.body.contains(where: { $0.keyword == "init" })
             {
+                /// Whether or not this declaration is an instance property that can affect
+                /// the parameters struct's synthesized memberwise initializer
+                func affectsSynthesizedMemberwiseInitializer(
+                    _ declaration: Formatter.Declaration,
+                    _ type: DeclarationType?
+                ) -> Bool {
+                    switch type {
+                    case .instanceProperty?:
+                        return true
+
+                    case .instancePropertyWithBody?:
+                        // `instancePropertyWithBody` represents some stored properties,
+                        // but also computed properties. Only stored properties,
+                        // not computed properties, affect the synthesized init.
+                        //
+                        // This is a stored property if and only if
+                        // the declaration body has a `didSet` or `willSet` keyword,
+                        // based on the grammar for a variable declaration:
+                        // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_variable-declaration
+                        let parser = Formatter(declaration.tokens)
+                        var hasWillSetOrDidSetBlock = false
+
+                        if let bodyOpenBrace = parser.index(of: .startOfScope("{"), after: -1),
+                            let firstBodyToken = parser.next(.nonSpaceOrCommentOrLinebreak, after: bodyOpenBrace),
+                            firstBodyToken.string == "willSet" || firstBodyToken.string == "didSet"
+                        {
+                            hasWillSetOrDidSetBlock = true
+                        }
+
+                        return hasWillSetOrDidSetBlock
+
+                    default:
+                        return false
+                    }
+                }
+
                 // Whether or not the two given declaration orderings preserve
                 // the same synthesized memberwise initializer
                 func preservesSynthesizedMemberwiseInitiaizer(
@@ -5224,11 +5249,11 @@ public struct _FormatRules {
                     _ rhs: CategorizedDeclarations
                 ) -> Bool {
                     let lhsPropertiesOrder = lhs
-                        .filter { $0.type?.canAffectStructMemberwiseInitializer == true }
+                        .filter { affectsSynthesizedMemberwiseInitializer($0.declaration, $0.type) }
                         .map { $0.declaration }
 
                     let rhsPropertiesOrder = rhs
-                        .filter { $0.type?.canAffectStructMemberwiseInitializer == true }
+                        .filter { affectsSynthesizedMemberwiseInitializer($0.declaration, $0.type) }
                         .map { $0.declaration }
 
                     return lhsPropertiesOrder == rhsPropertiesOrder

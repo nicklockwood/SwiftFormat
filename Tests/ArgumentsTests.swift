@@ -653,7 +653,7 @@ class ArgumentsTests: XCTestCase {
 
     func testParseInvalidRuleThrows() {
         XCTAssertThrowsError(try parseRules("strongOutlet")) { error in
-            XCTAssertEqual("\(error)", "Unknown rule 'strongOutlet'")
+            XCTAssertEqual("\(error)", "Unknown rule 'strongOutlet'. Did you mean 'strongOutlets'?")
         }
     }
 

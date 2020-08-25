@@ -102,7 +102,10 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             // Long argument names
             let key = String(arg.unicodeScalars.dropFirst(2))
             guard names.contains(key) else {
-                throw FormatError.options("Unknown option --\(key)")
+                guard let match = bestMatches(for: key, in: names).first else {
+                    throw FormatError.options("Unknown option --\(key)")
+                }
+                throw FormatError.options("Unknown option --\(key). Did you mean --\(match)?")
             }
             name = key
             namedArgs[name] = namedArgs[name] ?? ""
@@ -145,6 +148,45 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     return namedArgs
 }
 
+// Find best match for a given string in a list of options
+func bestMatches(for query: String, in options: [String]) -> [String] {
+    func levenshtein(_ lhs: String, _ rhs: String) -> Int {
+        var dist = [[Int]]()
+        for i in 0 ... lhs.count {
+            dist.append([i])
+        }
+        for j in 1 ... rhs.count {
+            dist[0].append(j)
+        }
+        for i in 1 ... lhs.count {
+            let lhs = lhs[lhs.index(lhs.startIndex, offsetBy: i - 1)]
+            for j in 1 ... rhs.count {
+                if lhs == rhs[rhs.index(rhs.startIndex, offsetBy: j - 1)] {
+                    dist[i].append(dist[i - 1][j - 1])
+                } else {
+                    dist[i].append(min(min(dist[i - 1][j] + 1, dist[i][j - 1] + 1), dist[i - 1][j - 1] + 1))
+                }
+            }
+        }
+        return dist[lhs.count][rhs.count]
+    }
+    let lowercaseQuery = query.lowercased()
+    // Sort matches by Levenshtein distance
+    return options
+        .compactMap { option -> (String, Int)? in
+            let lowercaseOption = option.lowercased()
+            let distance = levenshtein(lowercaseOption, lowercaseQuery)
+            guard distance <= lowercaseQuery.count / 2 ||
+                !lowercaseOption.commonPrefix(with: lowercaseQuery).isEmpty
+            else {
+                return nil
+            }
+            return (option, distance)
+        }
+        .sorted { $0.1 < $1.1 }
+        .map { $0.0 }
+}
+
 // Parse a comma-delimited list of items
 func parseCommaDelimitedList(_ string: String) -> [String] {
     return string.components(separatedBy: ",").compactMap {
@@ -172,7 +214,10 @@ func parseRules(_ rules: String) throws -> [String] {
             }
             throw FormatError.options("'\(proposedName)' is not a formatting rule")
         }
-        throw FormatError.options("Unknown rule '\(proposedName)'")
+        guard let match = bestMatches(for: proposedName, in: Array(allRules)).first else {
+            throw FormatError.options("Unknown rule '\(proposedName)'")
+        }
+        throw FormatError.options("Unknown rule '\(proposedName)'. Did you mean '\(match)'?")
     }
 }
 

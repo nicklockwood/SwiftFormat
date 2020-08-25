@@ -854,6 +854,7 @@ extension RulesTests {
         ("testIndentWrappedClosureAfterSwitch", testIndentWrappedClosureAfterSwitch),
         ("testIndentWrappedFunctionArgument", testIndentWrappedFunctionArgument),
         ("testIndentWrappedFunctionClosureArgument", testIndentWrappedFunctionClosureArgument),
+        ("testIndentWrappedFunctionWithClosureArgument", testIndentWrappedFunctionWithClosureArgument),
         ("testIndentWrappedTrailingComment", testIndentWrappedTrailingComment),
         ("testInitCoderUnavailableAlreadyPresent", testInitCoderUnavailableAlreadyPresent),
         ("testInitCoderUnavailableEmptyFunction", testInitCoderUnavailableEmptyFunction),

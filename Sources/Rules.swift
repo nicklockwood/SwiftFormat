@@ -1115,23 +1115,6 @@ public struct _FormatRules {
                     case .outdent:
                         i += formatter.insertSpaceIfEnabled("", at: formatter.startOfLine(at: i))
                     }
-                case "{" where formatter.options.closingParenOnSameLine && formatter.isStartOfClosure(at: i):
-                    // When a trailing closure starts on the same line as the end of
-                    // a multi-line method call, and `closingParenOnSameLine` is enabled,
-                    // the trailing closure body should be double-indented.
-                    //  - Check that the trailing closure starts on the same line as the end of a parameter list
-                    //    But _not_ on the same line as the start of the parameter list
-                    let startOfLine = formatter.startOfLine(at: i)
-                    if let previousTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i),
-                        formatter.tokens[previousTokenIndex] == .endOfScope(")"),
-                        startOfLine < previousTokenIndex,
-                        let startOfParameterList = formatter.index(of: .startOfScope("("), before: previousTokenIndex),
-                        startOfParameterList < startOfLine
-                    {
-                        indent += formatter.options.indent + formatter.options.indent
-                    } else {
-                        indent += formatter.options.indent
-                    }
                 case "{" where isFirstStackedClosureArgument(at: i):
                     guard var prevIndex = formatter.index(of: .nonSpace, before: i) else {
                         assertionFailure()
@@ -1155,6 +1138,23 @@ public struct _FormatRules {
                     indentStack[indentStack.count - 1] = indent
                     indent += formatter.options.indent
                     indentCount -= 1
+                case "{" where formatter.options.closingParenOnSameLine && formatter.isStartOfClosure(at: i):
+                    // When a trailing closure starts on the same line as the end of
+                    // a multi-line method call, and `closingParenOnSameLine` is enabled,
+                    // the trailing closure body should be double-indented.
+                    //  - Check that the trailing closure starts on the same line as the end of a parameter list
+                    //    But _not_ on the same line as the start of the parameter list
+                    let startOfLine = formatter.startOfLine(at: i)
+                    if let previousTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i),
+                        formatter.tokens[previousTokenIndex] == .endOfScope(")"),
+                        startOfLine < previousTokenIndex,
+                        let startOfParameterList = formatter.index(of: .startOfScope("("), before: previousTokenIndex),
+                        startOfParameterList < startOfLine
+                    {
+                        indent += formatter.options.indent + formatter.options.indent
+                    } else {
+                        indent += formatter.options.indent
+                    }
                 case _ where token.isStringDelimiter, "//":
                     break
                 case "[", "(":

@@ -2644,6 +2644,17 @@ class RulesTests: XCTestCase {
                        exclude: ["trailingClosures", "braces"])
     }
 
+    func testIndentWrappedFunctionWithClosureArgument() {
+        let input = """
+        foo(bar: { bar in
+                bar()
+            },
+            baz: baz)
+        """
+        let options = FormatOptions(closingParenOnSameLine: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testIndentClassDeclarationContainingComment() {
         let input = "class Foo: Bar,\n    // Comment\n    Baz {}"
         testFormatting(for: input, rule: FormatRules.indent)

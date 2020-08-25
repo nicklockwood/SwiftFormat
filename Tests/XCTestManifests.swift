@@ -38,6 +38,7 @@ extension ArgumentsTests {
         ("testMergeRules", testMergeRules),
         ("testMergeSelfRequiredOptions", testMergeSelfRequiredOptions),
         ("testMergeUnexcludedURLs", testMergeUnexcludedURLs),
+        ("testNextArgumentNotIgnoredAfterCommaInArguments", testNextArgumentNotIgnoredAfterCommaInArguments),
         ("testParseArgumentsContainingAnonymousValues", testParseArgumentsContainingAnonymousValues),
         ("testParseArgumentsContainingBlankLines", testParseArgumentsContainingBlankLines),
         ("testParseArgumentsContainingEscapedCharacters", testParseArgumentsContainingEscapedCharacters),
@@ -79,6 +80,7 @@ extension ArgumentsTests {
         ("testSerializeOptionsEnabledDefaultRulesEnabledNoTerminatingSeparator", testSerializeOptionsEnabledDefaultRulesEnabledNoTerminatingSeparator),
         ("testSerializeOptionsEnabledSomeRulesDisabledNoTerminatingSeparator", testSerializeOptionsEnabledSomeRulesDisabledNoTerminatingSeparator),
         ("testSerializeSwiftVersion", testSerializeSwiftVersion),
+        ("testSpacesIgnoredInCommaDelimitedArguments", testSpacesIgnoredInCommaDelimitedArguments),
     ]
 }
 

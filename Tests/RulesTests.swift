@@ -14116,4 +14116,76 @@ class RulesTests: XCTestCase {
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }
+
+    func testPreservesCommentsAtBottomOfCategory() {
+        let input = """
+        struct Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // Important comment at end of section!
+
+            // MARK: Public
+
+            public let bar = 1
+
+        }
+        """
+
+        testFormatting(
+            for: input, rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testPreservesCommentsAtBottomOfCategoryWhenReorganizing() {
+        let input = """
+        struct Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // Important comment at end of section!
+
+            // MARK: Internal
+
+            // Important comment at start of section!
+
+            var baaz = 1
+
+            public let bar = 1
+
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // Important comment at end of section!
+
+            // MARK: Public
+
+            public let bar = 1
+
+            // MARK: Internal
+
+            // Important comment at start of section!
+
+            var baaz = 1
+
+        }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
 }

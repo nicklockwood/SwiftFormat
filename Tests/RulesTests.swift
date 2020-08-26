@@ -2764,6 +2764,17 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent, exclude: ["trailingClosures"])
     }
 
+    func testIndentChainedPropertiesAfterFunctionCall() {
+        let input = """
+        let foo = Foo(
+            bar: baz
+        )
+        .bar
+        .baz
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent xcodeindentation
 
     func testChainedFunctionsInPropertySetterOnNewLineWithXcodeIndentation() {
@@ -2931,6 +2942,30 @@ class RulesTests: XCTestCase {
             Bar(
                 baz: quux
         ))
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentChainedPropertiesAfterFunctionCallLikeXcode() {
+        let input = """
+        let foo = Foo(
+            bar: baz
+        )
+            .bar
+            .baz
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentChainedPropertiesAfterMultilineStringXcode() {
+        let input = """
+        let foo = \"""
+        bar
+        \"""
+            .bar
+            .baz
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options)

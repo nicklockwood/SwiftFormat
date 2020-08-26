@@ -5345,13 +5345,120 @@ public struct _FormatRules {
             )
         }
 
+        /// Removes any existing category separators from the given declarations
+        func removeExistingCategorySeparators(from typeBody: [Formatter.Declaration]) -> [Formatter.Declaration] {
+            var typeBody = typeBody
+
+            for (declarationIndex, declaration) in typeBody.enumerated() {
+                let tokensToInspect: [Token]
+                switch declaration {
+                case let .declaration(_, tokens):
+                    tokensToInspect = tokens
+                case let .type(_, open, _, _), let .conditionalCompilation(open, _, _):
+                    // Only inspect the opening tokens of declarations with a body
+                    tokensToInspect = open
+                }
+
+                let potentialCategorySeparators = Category.allCases.flatMap {
+                    [
+                        $0.markComment(from: "%c"),
+                        $0.markComment(from: formatter.options.categoryMarkComment),
+                    ]
+                }.compactMap { $0 }
+
+                let parser = Formatter(tokensToInspect)
+
+                parser.forEach(.startOfScope("//")) { commentStartIndex, _ in
+                    // Check if this comment matches an expected category separator comment
+                    for potentialSeparatorComment in potentialCategorySeparators {
+                        let potentialCategorySeparator = tokenize(potentialSeparatorComment)
+                        let potentialSeparatorRange = commentStartIndex ..< (commentStartIndex + potentialCategorySeparator.count)
+
+                        guard parser.tokens.indices.contains(potentialSeparatorRange.upperBound),
+                            sourceCode(for: Array(parser.tokens[potentialSeparatorRange]))
+                            .caseInsensitiveCompare(potentialSeparatorComment) == .orderedSame,
+                            let nextNonwhitespaceIndex = parser.index(of: .nonSpaceOrLinebreak, after: potentialSeparatorRange.upperBound)
+                        else { continue }
+
+                        // If we found a matching comment, remove it and all subsequent empty lines
+                        let startOfCommentLine = parser.startOfLine(at: commentStartIndex)
+                        let startOfNextDeclaration = parser.startOfLine(at: nextNonwhitespaceIndex)
+                        parser.removeTokens(in: startOfCommentLine ..< startOfNextDeclaration)
+
+                        // Move any tokens from before the category separator into the previous declaration.
+                        // This makes sure that things like comments stay grouped in the same category.
+                        if declarationIndex != 0, startOfCommentLine != 0 {
+                            // Remove the tokens before the category separator from this declaration...
+                            let rangeBeforeComment = 0 ..< startOfCommentLine
+                            let tokensBeforeComment = Array(parser.tokens[rangeBeforeComment])
+                            parser.removeTokens(in: rangeBeforeComment)
+
+                            // ... and append them to the end of the previous declaration
+                            switch typeBody[declarationIndex - 1] {
+                            case let .declaration(kind, tokens):
+                                typeBody[declarationIndex - 1] = .declaration(
+                                    kind: kind,
+                                    tokens: tokens + tokensBeforeComment
+                                )
+
+                            case let .type(kind, open, body, close):
+                                typeBody[declarationIndex - 1] = .type(
+                                    kind: kind,
+                                    open: open,
+                                    body: body,
+                                    close: close + tokensBeforeComment
+                                )
+
+                            case let .conditionalCompilation(open, body, close):
+                                typeBody[declarationIndex - 1] = .conditionalCompilation(
+                                    open: open,
+                                    body: body,
+                                    close: close + tokensBeforeComment
+                                )
+                            }
+                        }
+
+                        // Apply the updated tokens back to this declaration
+                        switch typeBody[declarationIndex] {
+                        case let .declaration(kind, _):
+                            typeBody[declarationIndex] = .declaration(
+                                kind: kind,
+                                tokens: parser.tokens
+                            )
+
+                        case let .type(kind, _, body, close):
+                            typeBody[declarationIndex] = .type(
+                                kind: kind,
+                                open: parser.tokens,
+                                body: body,
+                                close: close
+                            )
+
+                        case let .conditionalCompilation(_, body, close):
+                            typeBody[declarationIndex] = .conditionalCompilation(
+                                open: parser.tokens,
+                                body: body,
+                                close: close
+                            )
+                        }
+                    }
+                }
+            }
+
+            return typeBody
+        }
+
         /// Recursively organizes the body declarations of this declaration,
         /// and any nested types.
         func organize(_ declaration: Formatter.Declaration) -> Formatter.Declaration {
             switch declaration {
             case let .type(kind, open, body, close):
+                // Remove all of the existing category separators, so they can be readded
+                // at the correct location after sorting the declarations.
+                let bodyWithoutCategorySeparators = removeExistingCategorySeparators(from: body)
+
                 // Organize the body of this type
-                let (_, organizedOpen, organizedBody, organizedClose) = organizeType((kind, open, body, close))
+                let (_, organizedOpen, organizedBody, organizedClose) = organizeType((kind, open, bodyWithoutCategorySeparators, close))
 
                 // And also organize any of its nested children
                 return .type(
@@ -5377,41 +5484,8 @@ public struct _FormatRules {
             }
         }
 
-        // Use a temporary formatter so we can mutate the tokens without
-        // inadvertantly being counted as a formatting change if we don't end up making any changes.
-        var workingFormatter = Formatter(formatter.tokens, options: formatter.options, trackChanges: false, range: nil)
-
-        // Remove all of the existing category mark comments, so they can be readded
-        // at the correct location after sorting the declarations.
-        workingFormatter.forEach(.startOfScope("//")) { index, _ in
-            // Check if this comment matches an expected category separator mark comment
-            for category in Category.allCases {
-                guard let unformattedMarkComment = category.markComment(from: "%c"),
-                    let formattedMarkComment = category.markComment(from: workingFormatter.options.categoryMarkComment)
-                else { continue }
-
-                for potentialMarkComment in [unformattedMarkComment, formattedMarkComment] {
-                    let potentialCategorySeparator = tokenize(potentialMarkComment)
-                    let potentialSeparatorRange = index ..< (index + potentialCategorySeparator.count)
-
-                    if workingFormatter.tokens.indices.contains(potentialSeparatorRange.upperBound),
-                        sourceCode(for: Array(workingFormatter.tokens[potentialSeparatorRange]))
-                        .caseInsensitiveCompare(potentialMarkComment) == .orderedSame
-                    {
-                        // If we found a matching comment, remove it and all subsequent empty lines
-                        if let nextNonwhitespaceIndex = workingFormatter.index(
-                            of: .nonSpaceOrLinebreak,
-                            after: potentialSeparatorRange.upperBound
-                        ) {
-                            workingFormatter.removeTokens(in: index ..< nextNonwhitespaceIndex)
-                        }
-                    }
-                }
-            }
-        }
-
         // Parse the file into declarations and organize the body of individual types
-        let organizedDeclarations = workingFormatter
+        let organizedDeclarations = formatter
             .parseDeclarations()
             .map { organize($0) }
 

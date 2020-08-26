@@ -14188,4 +14188,38 @@ class RulesTests: XCTestCase {
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }
+
+    func testDoesntRemoveCategorySeparatorsFromBodyNotBeingOrganized() {
+        let input = """
+        struct Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Public
+
+            public var bar = 10
+
+        }
+
+        extension Foo {
+
+            // MARK: Public
+
+            public var baz: Int { 20 }
+
+            // MARK: Internal
+
+            var quux: Int { 30 }
+
+        }
+        """
+
+        testFormatting(
+            for: input, rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeStructThreshold: 20),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
 }

@@ -4926,6 +4926,7 @@ public struct _FormatRules {
             case nestedType
             case staticProperty
             case staticPropertyWithBody
+            case classPropertyWithBody
             case instanceProperty
             case instancePropertyWithBody
             case staticMethod
@@ -4938,8 +4939,8 @@ public struct _FormatRules {
         ]
 
         let categorySubordering: [DeclarationType] = [
-            .nestedType, .staticProperty, .staticPropertyWithBody, .instanceProperty,
-            .instancePropertyWithBody, .staticMethod, .classMethod, .instanceMethod,
+            .nestedType, .staticProperty, .staticPropertyWithBody, .classPropertyWithBody,
+            .instanceProperty, .instancePropertyWithBody, .staticMethod, .classMethod, .instanceMethod,
         ]
 
         /// The `Category` of the given `Declaration`
@@ -5057,6 +5058,11 @@ public struct _FormatRules {
                         } else {
                             return .staticProperty
                         }
+                    } else if isClassDeclaration {
+                        // Interestingly, Swift does not support stored class properties
+                        // so there's no such thing as a class property without a body.
+                        // https://forums.swift.org/t/class-properties/16539/11
+                        return .classPropertyWithBody
                     } else {
                         if hasBody {
                             return .instancePropertyWithBody

@@ -13380,6 +13380,10 @@ class RulesTests: XCTestCase {
                 3.141592653589
             }
 
+            class var b2: String {
+                "class computed property"
+            }
+
             func g() -> Int {
                 10
             }
@@ -13390,8 +13394,8 @@ class RulesTests: XCTestCase {
 
             static func e() {}
 
-            static var b: String {
-                "computed property"
+            static var b1: String {
+                "static computed property"
             }
 
             class func f() -> Foo {
@@ -13410,8 +13414,12 @@ class RulesTests: XCTestCase {
             static var a1: Int = 1
             static var a2: Int = 2
 
-            static var b: String {
-                "computed property"
+            static var b1: String {
+                "static computed property"
+            }
+
+            class var b2: String {
+                "class computed property"
             }
 
             let c: String = String {

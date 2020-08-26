@@ -802,6 +802,8 @@ extension RulesTests {
         ("testIndentAllmanTrailingClosureArguments", testIndentAllmanTrailingClosureArguments),
         ("testIndentAllmanTrailingClosureArguments2", testIndentAllmanTrailingClosureArguments2),
         ("testIndentAllmanTrailingClosureArgumentsAfterFunction", testIndentAllmanTrailingClosureArgumentsAfterFunction),
+        ("testIndentChainedPropertiesAfterFunctionCallLikeXcode", testIndentChainedPropertiesAfterFunctionCallLikeXcode),
+        ("testIndentChainedPropertiesAfterMultilineStringXcode", testIndentChainedPropertiesAfterMultilineStringXcode),
         ("testIndentClassDeclarationContainingComment", testIndentClassDeclarationContainingComment),
         ("testIndentClosureArguments", testIndentClosureArguments),
         ("testIndentClosureArguments2", testIndentClosureArguments2),

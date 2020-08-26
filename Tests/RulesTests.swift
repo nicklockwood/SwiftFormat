@@ -2936,6 +2936,30 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testIndentChainedPropertiesAfterFunctionCallLikeXcode() {
+        let input = """
+        let foo = Foo(
+            bar: baz
+        )
+            .bar
+            .baz
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentChainedPropertiesAfterMultilineStringXcode() {
+        let input = """
+        let foo = \"""
+        bar
+        \"""
+            .bar
+            .baz
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     // indent comments
 
     func testCommentIndenting() {

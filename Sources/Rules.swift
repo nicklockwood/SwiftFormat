@@ -1412,8 +1412,8 @@ public struct _FormatRules {
                     }
 
                     // Don't indent enum cases if Xcode indentation is set
-                    // Don't indent line starting with dot if previous line was just a closing scope
-                    let lastToken = formatter.token(at: lastNonSpaceOrLinebreakIndex)
+                    // Don't indent line starting with dot if previous line was just a closing brace
+                    let lastToken = formatter.tokens[lastNonSpaceOrLinebreakIndex]
                     if formatter.options.xcodeIndentation || formatter.options.allmanBraces,
                         nextToken == .startOfScope("{"), formatter.isStartOfClosure(at: nextNonSpaceIndex)
                     {
@@ -1421,7 +1421,7 @@ public struct _FormatRules {
                     } else if !formatter.options.xcodeIndentation ||
                         !(isWrappedCaseDeclaration() || isWrappedTypeDeclaration()),
                         formatter.token(at: nextTokenIndex ?? -1) != .operator(".", .infix) ||
-                        !(lastToken?.isEndOfScope == true && lastToken != .endOfScope("case") &&
+                        !(lastToken == .endOfScope("}") &&
                             formatter.last(.nonSpace, before: lastNonSpaceOrLinebreakIndex)?.isLinebreak == true)
                     {
                         indent += formatter.options.indent

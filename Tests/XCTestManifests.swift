@@ -1429,6 +1429,8 @@ extension RulesTests {
         ("testPreformattedSingleLineComment", testPreformattedSingleLineComment),
         ("testPreprocessorSortedImports", testPreprocessorSortedImports),
         ("testPreservesCategoryMarksInStructWithIncorrectSubcategoryOrdering", testPreservesCategoryMarksInStructWithIncorrectSubcategoryOrdering),
+        ("testPreservesCommentsAtBottomOfCategory", testPreservesCommentsAtBottomOfCategory),
+        ("testPreservesCommentsAtBottomOfCategoryWhenReorganizing", testPreservesCommentsAtBottomOfCategoryWhenReorganizing),
         ("testPreserveSelfInsideClassInit", testPreserveSelfInsideClassInit),
         ("testPreservesExistingMarks", testPreservesExistingMarks),
         ("testPreserveUnwrappedFuncAttributeByDefault", testPreserveUnwrappedFuncAttributeByDefault),

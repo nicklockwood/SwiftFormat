@@ -646,6 +646,7 @@ extension RulesTests {
         ("testDispatchSyncFlagsClosureArgumentMadeTrailing", testDispatchSyncFlagsClosureArgumentMadeTrailing),
         ("testDoesntBreakStructSynthesizedMemberwiseInitializer", testDoesntBreakStructSynthesizedMemberwiseInitializer),
         ("testDoesntInsertMarkWhenOnlyOneCategory", testDoesntInsertMarkWhenOnlyOneCategory),
+        ("testDoesntRemoveCategorySeparatorsFromBodyNotBeingFormatted", testDoesntRemoveCategorySeparatorsFromBodyNotBeingFormatted),
         ("testDontCorruptPartialFragment", testDontCorruptPartialFragment),
         ("testDontCorruptPartialFragment2", testDontCorruptPartialFragment2),
         ("testDontIndentCaseAfterReturn", testDontIndentCaseAfterReturn),

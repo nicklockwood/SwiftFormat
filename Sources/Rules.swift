@@ -1412,17 +1412,24 @@ public struct _FormatRules {
                     }
 
                     // Don't indent enum cases if Xcode indentation is set
-                    // Don't indent line starting with dot if previous line was just a closing scope
-                    let lastToken = formatter.token(at: lastNonSpaceOrLinebreakIndex)
+                    // Don't indent line starting with dot if previous line was just a closing brace
+                    let lastToken = formatter.tokens[lastNonSpaceOrLinebreakIndex]
                     if formatter.options.xcodeIndentation || formatter.options.allmanBraces,
                         nextToken == .startOfScope("{"), formatter.isStartOfClosure(at: nextNonSpaceIndex)
                     {
                         // Don't indent further
+                    } else if formatter.token(at: nextTokenIndex ?? -1) == .operator(".", .infix),
+                        formatter.last(.nonSpace, before: lastNonSpaceOrLinebreakIndex)?.isLinebreak == true
+                    {
+                        if formatter.options.xcodeIndentation, lastToken != .endOfScope("}") {
+                            indent += formatter.options.indent
+                        } else if !formatter.options.xcodeIndentation,
+                            !lastToken.isEndOfScope || lastToken == .endOfScope("case")
+                        {
+                            indent += formatter.options.indent
+                        }
                     } else if !formatter.options.xcodeIndentation ||
-                        !(isWrappedCaseDeclaration() || isWrappedTypeDeclaration()),
-                        formatter.token(at: nextTokenIndex ?? -1) != .operator(".", .infix) ||
-                        !(lastToken?.isEndOfScope == true && lastToken != .endOfScope("case") &&
-                            formatter.last(.nonSpace, before: lastNonSpaceOrLinebreakIndex)?.isLinebreak == true)
+                        (!isWrappedCaseDeclaration() && !isWrappedTypeDeclaration())
                     {
                         indent += formatter.options.indent
                     }

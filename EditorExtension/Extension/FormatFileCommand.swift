@@ -64,7 +64,7 @@ class FormatFileCommand: NSObject, XCSourceEditorCommand {
         }
 
         // Remove all selections to avoid a crash when changing the contents of the buffer.
-        let selections = invocation.buffer.selections.copy() as? [XCSourceTextRange] ?? []
+        let selections = invocation.buffer.selections.compactMap { $0 as? XCSourceTextRange }
         invocation.buffer.selections.removeAllObjects()
 
         // Update buffer

@@ -2022,17 +2022,55 @@ class RulesTests: XCTestCase {
     func testIndentUnknownDefault() {
         let input = """
         switch foo {
+            case .bar:
+                break
+            @unknown default:
+                break
+        }
+        """
+        let output = """
+        switch foo {
         case .bar:
             break
         @unknown default:
             break
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentUnknownDefaultOnOwnLine() {
+        let input = """
+        switch foo {
+            case .bar:
+                break
+            @unknown
+            default:
+                break
+        }
+        """
+        let output = """
+        switch foo {
+        case .bar:
+            break
+        @unknown
+        default:
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
     func testIndentUnknownCase() {
         let input = """
+        switch foo {
+            case .bar:
+                break
+            @unknown case _:
+                break
+        }
+        """
+        let output = """
         switch foo {
         case .bar:
             break
@@ -2040,7 +2078,29 @@ class RulesTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentUnknownCaseOnOwnLine() {
+        let input = """
+        switch foo {
+            case .bar:
+                break
+            @unknown
+            case _:
+                break
+        }
+        """
+        let output = """
+        switch foo {
+        case .bar:
+            break
+        @unknown
+        case _:
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
     func testWrappedClassDeclaration() {
@@ -2154,6 +2214,14 @@ class RulesTests: XCTestCase {
     func testIndentUnknownDefaultCorrectlyWhenIndentCaseTrue() {
         let input = """
         switch foo {
+        case .bar:
+            break
+        @unknown default:
+            break
+        }
+        """
+        let output = """
+        switch foo {
             case .bar:
                 break
             @unknown default:
@@ -2161,11 +2229,19 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(indentCase: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
     func testIndentUnknownCaseCorrectlyWhenIndentCaseTrue() {
         let input = """
+        switch foo {
+        case .bar:
+            break
+        @unknown case _:
+            break
+        }
+        """
+        let output = """
         switch foo {
             case .bar:
                 break
@@ -2174,7 +2250,7 @@ class RulesTests: XCTestCase {
         }
         """
         let options = FormatOptions(indentCase: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
     // indent wrapped lines

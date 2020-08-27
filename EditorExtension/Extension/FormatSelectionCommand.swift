@@ -38,7 +38,8 @@ class FormatSelectionCommand: NSObject, XCSourceEditorCommand {
             return completionHandler(FormatCommandError.notSwiftLanguage)
         }
 
-        guard let selections = invocation.buffer.selections.copy() as? [XCSourceTextRange] else {
+        let selections = invocation.buffer.selections.compactMap { $0 as? XCSourceTextRange }
+        if selections.isEmpty {
             return completionHandler(FormatCommandError.noSelection)
         }
 

@@ -491,7 +491,7 @@ public struct _FormatRules {
                 case let token:
                     spaceRequired = !token.isAttribute && !token.isLvalue
                 }
-                if formatter.token(at: i - 1)?.isSpace == true {
+                if formatter.token(at: i - 1)?.isSpaceOrLinebreak == true {
                     if !spaceRequired {
                         formatter.removeToken(at: i - 1)
                     }

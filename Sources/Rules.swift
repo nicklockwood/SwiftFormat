@@ -1217,6 +1217,14 @@ public struct _FormatRules {
                 case .outdent:
                     i += formatter.insertSpaceIfEnabled("", at: start)
                 }
+            case .keyword("@unknown") where scopeStack.last != .startOfScope("#if"):
+                var indent = indentStack[indentStack.count - 2]
+                if formatter.options.indentCase {
+                    indent += formatter.options.indent
+                }
+                let start = formatter.startOfLine(at: i)
+                let stringIndent = stringBodyIndentStack.last!
+                i += formatter.insertSpaceIfEnabled(stringIndent + indent, at: start)
             default:
                 // Handle end of scope
                 if let scope = scopeStack.last, token.isEndOfScope(scope) {
@@ -1267,6 +1275,9 @@ public struct _FormatRules {
                             formatter.options.indentCase, scopeStack.last != .startOfScope("#if")
                         {
                             indent += formatter.options.indent
+                        }
+                        if case let .space(s) = formatter.tokens[start], s != indent {
+                            print("")
                         }
                         let stringIndent = stringBodyIndentStack.last!
                         i += formatter.insertSpaceIfEnabled(stringIndent + indent, at: start)

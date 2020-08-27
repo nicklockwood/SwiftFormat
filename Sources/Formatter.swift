@@ -555,9 +555,6 @@ public extension Formatter {
     /// Returns the number of tokens inserted or removed
     @discardableResult
     func insertSpace(_ space: String, at index: Int) -> Int {
-        guard isEnabled else {
-            return 0
-        }
         if token(at: index)?.isSpace == true {
             if space.isEmpty {
                 removeToken(at: index)

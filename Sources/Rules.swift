@@ -4967,6 +4967,11 @@ public struct _FormatRules {
             case let .declaration(keyword, tokens), let .type(keyword, open: tokens, _, _):
                 let parser = Formatter(tokens)
 
+                guard let keywordIndex = parser.index(after: -1, where: { $0.string == keyword }) else {
+                    // This should never happen (the declaration's `keyword` will always be present in the tokens)
+                    return .internal
+                }
+
                 // Enum cases don't fit into any of the other categories,
                 // so they should go in the intial top section.
                 //  - The user can also provide other declaration types to place in this category
@@ -4985,21 +4990,19 @@ public struct _FormatRules {
                     //    immediately follows the `func` keyword:
                     //    https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_function-name
                     if keyword == "func",
-                        let funcKeywordIndex = parser.index(after: -1, where: { $0 == .keyword("func") }),
-                        let methodName = parser.next(.nonSpaceOrCommentOrLinebreak, after: funcKeywordIndex),
+                        let methodName = parser.next(.nonSpaceOrCommentOrLinebreak, after: keywordIndex),
                         formatter.options.lifecycleMethods.contains(methodName.string)
                     {
                         return .lifecycle
                     }
                 }
 
-                // Search for a visibility keyword,
-                // making sure we exclude groups like private(set)
+                // Search for a visibility keyword in the tokens before the primary keyword,
+                // making sure we exclude groups like private(set).
                 var searchIndex = 0
 
-                while searchIndex < parser.tokens.count {
-                    if parser.tokens[searchIndex].isKeyword,
-                        let visibilityCategory = Category(rawValue: parser.tokens[searchIndex].string),
+                while searchIndex < keywordIndex {
+                    if let visibilityCategory = Category(rawValue: parser.tokens[searchIndex].string),
                         parser.next(.nonSpaceOrComment, after: searchIndex) != .startOfScope("(")
                     {
                         return visibilityCategory

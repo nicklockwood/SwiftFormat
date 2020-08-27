@@ -13305,7 +13305,12 @@ class RulesTests: XCTestCase {
 
             private let bar = 1
             public let baz = 1
+            open var quack = 2
             var quux = 2
+
+            // `open` is the only visibility keyword that
+            // can also be used as an identifier.
+            var open = 10
 
             /*
              * Block comment
@@ -13330,6 +13335,10 @@ class RulesTests: XCTestCase {
 
             init() {}
 
+            // MARK: Open
+
+            open var quack = 2
+
             // MARK: Public
 
             public let baz = 1
@@ -13340,6 +13349,10 @@ class RulesTests: XCTestCase {
             // MARK: Internal
 
             var quux = 2
+
+            // `open` is the only visibility keyword that
+            // can also be used as an identifier.
+            var open = 10
 
             // MARK: Private
 

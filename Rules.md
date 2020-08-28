@@ -21,8 +21,6 @@
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
 * [modifierOrder](#modifierOrder)
-* [multilineEnumCases](#multilineEnumCases)
-* [multilineSwitchCases](#multilineSwitchCases)
 * [numberFormatting](#numberFormatting)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferKeyPath](#preferKeyPath)
@@ -69,7 +67,9 @@
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
 * [wrapAttributes](#wrapAttributes)
+* [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
+* [wrapSwitchCases](#wrapSwitchCases)
 * [yodaConditions](#yodaConditions)
 
 ----------
@@ -627,50 +627,6 @@ Option | Description
 ```diff
 - convenience private init()
 + private convenience init()
-```
-
-</details>
-<br/>
-
-## multilineEnumCases
-
-Writes one enum case per line.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  enum Foo {
--   case bar, baz
-  }
-
-  enum Foo {
-+   case bar
-+   case baz
-  }
-```
-
-</details>
-<br/>
-
-## multilineSwitchCases
-
-Writes one switch case per line.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  switch foo {
--   case .bar, .baz:
-      break
-  }
-
-  switch foo {
-+   case .foo,
-+        .bar:
-      break
-  }
 ```
 
 </details>
@@ -1815,6 +1771,27 @@ Option | Description
 </details>
 <br/>
 
+## wrapEnumCases
+
+Writes one enum case per line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  enum Foo {
+-   case bar, baz
+  }
+
+  enum Foo {
++   case bar
++   case baz
+  }
+```
+
+</details>
+<br/>
+
 ## wrapMultilineStatementBraces
 
 Wrap the opening brace of multiline statements.
@@ -1873,6 +1850,29 @@ Wrap the opening brace of multiline statements.
 +   BarProtocol
 + {
     // ...
+  }
+```
+
+</details>
+<br/>
+
+## wrapSwitchCases
+
+Writes one switch case per line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  switch foo {
+-   case .bar, .baz:
+      break
+  }
+
+  switch foo {
++   case .foo,
++        .bar:
+      break
   }
 ```
 

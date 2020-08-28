@@ -909,7 +909,7 @@ private struct Examples {
     ```
     """
 
-    let multilineEnumCases = """
+    let wrapEnumCases = """
     ```diff
       enum Foo {
     -   case bar, baz
@@ -922,7 +922,7 @@ private struct Examples {
     ```
     """
 
-    let multilineSwitchCases = """
+    let wrapSwitchCases = """
     ```diff
       switch foo {
     -   case .bar, .baz:

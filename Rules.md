@@ -21,7 +21,6 @@
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
 * [modifierOrder](#modifierOrder)
-* [multilineEnumCases](#multilineEnumCases)
 * [multilineSwitchCases](#multilineSwitchCases)
 * [numberFormatting](#numberFormatting)
 * [organizeDeclarations](#organizeDeclarations)
@@ -69,6 +68,7 @@
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
 * [wrapAttributes](#wrapAttributes)
+* [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
 * [yodaConditions](#yodaConditions)
 
@@ -627,27 +627,6 @@ Option | Description
 ```diff
 - convenience private init()
 + private convenience init()
-```
-
-</details>
-<br/>
-
-## multilineEnumCases
-
-Writes one enum case per line.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  enum Foo {
--   case bar, baz
-  }
-
-  enum Foo {
-+   case bar
-+   case baz
-  }
 ```
 
 </details>
@@ -1810,6 +1789,27 @@ Option | Description
 - enum Foo { }
 
 + @objc enum Foo {}
+```
+
+</details>
+<br/>
+
+## wrapEnumCases
+
+Writes one enum case per line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  enum Foo {
+-   case bar, baz
+  }
+
+  enum Foo {
++   case bar
++   case baz
+  }
 ```
 
 </details>

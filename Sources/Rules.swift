@@ -3514,7 +3514,7 @@ public struct _FormatRules {
     }
 
     /// Formats enum cases declaration into one case per line
-    public let multilineEnumCases = FormatRule(
+    public let wrapEnumCases = FormatRule(
         help: "Writes one enum case per line.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]

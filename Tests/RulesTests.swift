@@ -1903,7 +1903,7 @@ class RulesTests: XCTestCase {
     func testEnumCaseIndentingCommas() {
         let input = "enum Foo {\ncase Bar,\nBaz\n}"
         let output = "enum Foo {\n    case Bar,\n        Baz\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["multilineEnumCases"])
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["wrapEnumCases"])
     }
 
     func testEnumCaseIndentingCommasWithXcodeStyle() {
@@ -1911,7 +1911,7 @@ class RulesTests: XCTestCase {
         let output = "enum Foo {\n    case Bar,\n    Baz\n}"
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options,
-                       exclude: ["multilineEnumCases"])
+                       exclude: ["wrapEnumCases"])
     }
 
     func testEnumCaseWrappedIfWithXcodeStyle() {
@@ -4926,7 +4926,7 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.modifierOrder)
     }
 
-    // MARK: multilineEnumCases
+    // MARK: wrapEnumCases
 
     func testMultilineEnumCases() {
         let input = """
@@ -4947,7 +4947,7 @@ class RulesTests: XCTestCase {
             case m(String, String)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.multilineEnumCases)
+        testFormatting(for: input, output, rule: FormatRules.wrapEnumCases)
     }
 
     func testMultilineEnumCasesWithNestedEnumsDoesNothing() {
@@ -4964,7 +4964,7 @@ class RulesTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.multilineEnumCases)
+        testFormatting(for: input, rule: FormatRules.wrapEnumCases)
     }
 
     func testEnumCaseSplitOverMultipleLines() {
@@ -4985,7 +4985,7 @@ class RulesTests: XCTestCase {
             case baz
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.multilineEnumCases)
+        testFormatting(for: input, output, rule: FormatRules.wrapEnumCases)
     }
 
     func testEnumCasesAlreadyWrappedOntoMultipleLines() {
@@ -5003,12 +5003,12 @@ class RulesTests: XCTestCase {
             case quux
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.multilineEnumCases)
+        testFormatting(for: input, output, rule: FormatRules.wrapEnumCases)
     }
 
     func testNoWrapEnumStatementAllOnOneLine() {
         let input = "enum Foo { bar, baz }"
-        testFormatting(for: input, rule: FormatRules.multilineEnumCases)
+        testFormatting(for: input, rule: FormatRules.wrapEnumCases)
     }
 
     // MARK: multilineSwitchCases
@@ -6345,14 +6345,14 @@ class RulesTests: XCTestCase {
         let input = "enum Foo: String { case bar = \"bar\", baz = \"baz\" }"
         let output = "enum Foo: String { case bar, baz }"
         testFormatting(for: input, output, rule: FormatRules.redundantRawValues,
-                       exclude: ["multilineEnumCases"])
+                       exclude: ["wrapEnumCases"])
     }
 
     func testRemoveBacktickCaseRawStringCases() {
         let input = "enum Foo: String { case `as` = \"as\", `let` = \"let\" }"
         let output = "enum Foo: String { case `as`, `let` }"
         testFormatting(for: input, output, rule: FormatRules.redundantRawValues,
-                       exclude: ["multilineEnumCases"])
+                       exclude: ["wrapEnumCases"])
     }
 
     func testNoRemoveRawStringIfNameDoesntMatch() {
@@ -12394,7 +12394,7 @@ class RulesTests: XCTestCase {
         testFormatting(for: input,
                        rule: FormatRules.redundantFileprivate,
                        options: options,
-                       exclude: ["multilineEnumCases"])
+                       exclude: ["wrapEnumCases"])
     }
 
     func testFileprivateClassTypeMemberNotChangedToPrivate() {

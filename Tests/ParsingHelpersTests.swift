@@ -426,6 +426,46 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isStartOfClosure(at: 16))
     }
 
+    func testParameterBodyAfterStringIsNotClosure() {
+        let formatter = Formatter(tokenize("""
+        var withBody4: String = "bar" {
+            didSet { print("didSet") }
+        }
+        """))
+
+        XCTAssertFalse(formatter.isStartOfClosure(at: 13))
+    }
+
+    func testParameterBodyAfterNumberIsNotClosure() {
+        let formatter = Formatter(tokenize("""
+        var withBody4: Int = 10 {
+            didSet { print("didSet") }
+        }
+        """))
+
+        XCTAssertFalse(formatter.isStartOfClosure(at: 11))
+    }
+
+    func testParameterBodyAfterClosureIsNotClosure() {
+        let formatter = Formatter(tokenize("""
+        var withBody5: () -> String = { "bar" } {
+            didSet { print("didSet") }
+        }
+        """))
+
+        XCTAssertFalse(formatter.isStartOfClosure(at: 22))
+    }
+
+    func testParameterBodyAfterExecutedClosureIsNotClosure() {
+        let formatter = Formatter(tokenize("""
+        var withBody6: String = { "bar" }() {
+            didSet { print("didSet") }
+        }
+        """))
+
+        XCTAssertFalse(formatter.isStartOfClosure(at: 19))
+    }
+
     // MARK: isAccessorKeyword
 
     func testDidSet() {

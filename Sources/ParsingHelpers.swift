@@ -335,10 +335,16 @@ extension Formatter {
                  .keyword("subscript"), .endOfScope(">"):
                 return false
             default:
-                return !isConditionalStatement(at: startOfScope)
+                if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                    isAccessorKeyword(at: nextIndex) || isAccessorKeyword(at: prevIndex)
+                {
+                    return false
+                } else {
+                    return !isConditionalStatement(at: startOfScope)
+                }
             }
             fallthrough
-        case .identifier:
+        case .identifier, .endOfScope("\""), .number:
             if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
                 isAccessorKeyword(at: nextIndex) || isAccessorKeyword(at: prevIndex)
             {

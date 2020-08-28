@@ -5054,25 +5054,25 @@ public struct _FormatRules {
                     where: { $0 == .keyword("class") }
                 ) != nil
 
-                let hasBody: Bool
-                // If there's an opening bracket and no equals operator,
-                // then this declaration has a body (e.g. a function body or a computed property body)
-                if let openingBraceIndex = declarationParser.index(
-                    after: declarationTypeTokenIndex,
-                    where: { $0 == .startOfScope("{") }
-                ) {
-                    hasBody = declarationParser.index(
-                        of: .operator("=", .infix),
-                        in: CountableRange(declarationTypeTokenIndex ... openingBraceIndex)
-                    ) == nil
-                } else {
-                    hasBody = false
-                }
-
                 switch declarationTypeToken {
                 // Properties and property-like declarations
                 case .keyword("let"), .keyword("var"), .keyword("typealias"),
                      .keyword("case"), .keyword("operator"), .keyword("precedencegroup"):
+
+                    var hasBody: Bool
+                    // If there is a code block at the end of the declaration that is _not_ a closure,
+                    // then this declaration has a body.
+                    if let lastClosingBraceIndex = declarationParser.index(of: .endOfScope("}"), before: declarationParser.tokens.count),
+                        let lastOpeningBraceIndex = declarationParser.index(of: .startOfScope("{"), before: lastClosingBraceIndex),
+                        declarationTypeTokenIndex < lastOpeningBraceIndex,
+                        declarationTypeTokenIndex < lastClosingBraceIndex,
+                        !declarationParser.isStartOfClosure(at: lastOpeningBraceIndex)
+                    {
+                        hasBody = true
+                    } else {
+                        hasBody = false
+                    }
+
                     if isStaticDeclaration {
                         if hasBody {
                             return .staticPropertyWithBody
@@ -5156,10 +5156,14 @@ public struct _FormatRules {
                 }
 
                 let potentialCategorySeparators = Category.allCases.flatMap {
-                    [
-                        $0.markComment(from: "%c"),
+                    Array(Set([
+                        // The user's specific category separator template
                         $0.markComment(from: formatter.options.categoryMarkComment),
-                    ]
+                        // Other common variants that we would want to replace with the correct variant
+                        $0.markComment(from: "%c"),
+                        $0.markComment(from: "// MARK: %c"),
+                        $0.markComment(from: "// MARK: - %c"),
+                    ]))
                 }.compactMap { $0 }
 
                 let parser = Formatter(tokensToInspect)

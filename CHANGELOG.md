@@ -1,5 +1,23 @@
 # Change Log
 
+## [0.46.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.46.0) (2020-08-28)
+
+- Added `organizeDeclarations` rule for grouping and organizing type members
+- Added `wrapEnumCases` rule for wrapping enum cases onto separate lines
+- Added `wrapSwitchCases` rule for wrapping switch cases onto separate lines
+- Added `initCoderUnavailable` rule for marking stub `init(coder:)` implementations as unavailable
+- Added `redundantType` rule for removing redundant type annotations from variable declarations
+- Added search filter bar for rules in SwiftFormat for Xcode extension
+- Selection is now preserved correctly in Xcode 12 when using SwiftFormat extension
+- Fixed indenting of wrapped closure arguments when using `--closingparen same-line`
+- Fixed spurious space insertion with `spaceAroundOperators` rule in some circumstances
+- Switch cases marked with `@unknown` are now indented automatically instead of being ignored
+- Wrapped method chains now behave more consistently when using `--xcodeindentation` option
+- Removed deprecated `ranges` rule, but un-deprecated the `ranges` option for convenience
+- Single-letter command-line flags now behave more usefully (e.g. -o maps to --output)
+- Spaces are now permitted in comma-delimited command-line arguments
+- Added more helpful feedback for mistyped arguments
+
 ## [0.45.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.6) (2020-08-12)
 
 - Added `--yodaswap` option for more fine-grained control of `yodaConditions` rule

@@ -1833,7 +1833,7 @@ public struct _FormatRules {
             guard let tag = ["TODO", "MARK", "FIXME"].first(where: { string.hasPrefix($0) }) else {
                 return
             }
-            var suffix: String = String(string[tag.endIndex ..< string.endIndex])
+            var suffix = String(string[tag.endIndex ..< string.endIndex])
             if let first = suffix.unicodeScalars.first, !" :".unicodeScalars.contains(first) {
                 // If not followed by a space or :, don't mess with it as it may be a custom format
                 return

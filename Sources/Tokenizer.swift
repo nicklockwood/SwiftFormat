@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.45.6
+//  Version 0.46.0
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -1125,7 +1125,7 @@ public func tokenize(_ source: String) -> [Token] {
                         tokens[index] = .error(indent) // Mismatched whitespace
                         break
                     }
-                    let remainder: String = String(indent[offset.endIndex ..< indent.endIndex])
+                    let remainder = String(indent[offset.endIndex ..< indent.endIndex])
                     if case let .stringBody(body) = nextToken {
                         tokens[index + 1] = .stringBody(remainder + body)
                     } else if !remainder.isEmpty {

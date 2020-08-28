@@ -10,31 +10,31 @@
 		</data>
 		<key>Resources/Assets.car</key>
 		<data>
-		qW3wFntmm4MSWnU/oirRU06qLvk=
+		kdxptoRRM3LYBgHbjf8GO6pfvvY=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/9ZR-Qg-hHT-view-iDF-FY-6tf.nib</key>
 		<data>
-		Be6VnylSbBqb75WX8JXT668pgNg=
+		VsMDRmB09HxIyfES/JS+bwhkMno=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/Info.plist</key>
 		<data>
-		NlbGVxngx33ffSLwx3xXD4RHK8s=
+		BMAQLGhYUh1Bz7FD6bZqVDfBVCQ=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/MainMenu.nib</key>
 		<data>
-		hFJfMbNOkYCI+j5764EGwWfzr2Q=
+		FJFFjsIWvk3EpHxZMbfmqKwhp/0=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/MainWindowTabViewController.nib</key>
 		<data>
-		fBoTvHLv87vmb1Fy2Li/43eukh8=
+		ZEbejjxA0pzB0hRQWO1XsqH1gxU=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/NSWindowController-B8D-0N-5wS.nib</key>
 		<data>
-		aHKUKuof64bRqNNPoj3FITL/Pnc=
+		qqv0ZNRN5S8AwgtISYmdUU5AkGk=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/RulesViewController.nib</key>
 		<data>
-		+eEt4CXweyhyrS46s68QGLX3H14=
+		ZWR8iJ6Y5vgPdS9T6Is5azWxoe4=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/XfG-lQ-9wD-view-m2S-Jp-Qdl.nib</key>
 		<data>
@@ -119,7 +119,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			9VySy0GVbsivojpOUXpy81c2Kp8=
+			bEvABrKB+DaVxBR3HXXbdDUfgxE=
 			</data>
 			<key>requirement</key>
 			<string>anchor apple generic and identifier "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension" and (certificate leaf[field.1.2.840.113635.100.6.1.9] /* exists */ or certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "8VQKF583ED")</string>
@@ -139,77 +139,77 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			qW3wFntmm4MSWnU/oirRU06qLvk=
+			kdxptoRRM3LYBgHbjf8GO6pfvvY=
 			</data>
 			<key>hash2</key>
 			<data>
-			jx+G5jd2HJ03/2bMqKnBbA/TZEaQ/3iOe5n4obvlRn4=
+			cN8So14QDBEDCXxAmzZI5cwbu3aNwMa/40w2ktqodhc=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/9ZR-Qg-hHT-view-iDF-FY-6tf.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			Be6VnylSbBqb75WX8JXT668pgNg=
+			VsMDRmB09HxIyfES/JS+bwhkMno=
 			</data>
 			<key>hash2</key>
 			<data>
-			CWrF2qfXqOeO+hzs3tv9FtZAfPpg2Q3ToyZIcBzaSn8=
+			IQPQM8p9p+004a28W8A/F3QA8YtFOzv8bfClWw1wgnE=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/Info.plist</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			NlbGVxngx33ffSLwx3xXD4RHK8s=
+			BMAQLGhYUh1Bz7FD6bZqVDfBVCQ=
 			</data>
 			<key>hash2</key>
 			<data>
-			seA3drxtIdmSg4ES+K1u6+gXdXHsPxk9jQ2tL4hOSCY=
+			on1TRdAs/Oc4EdnFbO8/SWAnORgilk35CIXia82+z5c=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/MainMenu.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			hFJfMbNOkYCI+j5764EGwWfzr2Q=
+			FJFFjsIWvk3EpHxZMbfmqKwhp/0=
 			</data>
 			<key>hash2</key>
 			<data>
-			ssWgFuvVcTYGmsgutZctgp1KNP6vsZyYrWgQx7H2fio=
+			lMWt8hh/JhdggvHRBdjbQr9yepmiPDY3z0sbzbVNdm8=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/MainWindowTabViewController.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			fBoTvHLv87vmb1Fy2Li/43eukh8=
+			ZEbejjxA0pzB0hRQWO1XsqH1gxU=
 			</data>
 			<key>hash2</key>
 			<data>
-			pBB5lqzvOIk+pU5yTJo8LtlbHHSAmkuOMGI082xfLXY=
+			VXrKo5uXhpeS5tOOZBN4UH1IqgqZVBC3vns/uEHarV4=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/NSWindowController-B8D-0N-5wS.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			aHKUKuof64bRqNNPoj3FITL/Pnc=
+			qqv0ZNRN5S8AwgtISYmdUU5AkGk=
 			</data>
 			<key>hash2</key>
 			<data>
-			cv1J+MSCLe6hnDWLvz3eIVGzdw1X+63x3mhInpudabs=
+			mXSKPCN4TTGzegiWbGxFj/VC+Ya4D7MkM3hiVpDG9Pk=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/RulesViewController.nib</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			+eEt4CXweyhyrS46s68QGLX3H14=
+			ZWR8iJ6Y5vgPdS9T6Is5azWxoe4=
 			</data>
 			<key>hash2</key>
 			<data>
-			eootIDckv5GKPStNIQVTMpXypuTQHiTAbFHqww8xlaA=
+			T4sJktGYUwkqz3SOdIk3q35osv4RZ7ITFCXUOUSGEXc=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/XfG-lQ-9wD-view-m2S-Jp-Qdl.nib</key>

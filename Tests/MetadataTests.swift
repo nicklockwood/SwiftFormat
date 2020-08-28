@@ -64,7 +64,9 @@ class MetadataTests: XCTestCase {
 
     func testAllRulesInRulesFile() {
         for ruleName in FormatRules.byName.keys {
-            XCTAssertTrue(rulesFile.contains("## \(ruleName)"), "Rules.md does not contain \(ruleName) rule")
+            XCTAssertTrue(rulesFile.contains("## \(ruleName)"), """
+            Rules.md does not contain \(ruleName) rule (run MetadataTests again to fix)
+            """)
         }
     }
 
@@ -74,7 +76,7 @@ class MetadataTests: XCTestCase {
         while let match = rulesFile.range(of: "\\*[a-zA-Z]+\\* - ", options: .regularExpression, range: range, locale: nil) {
             let lower = rulesFile.index(after: match.lowerBound)
             let upper = rulesFile.index(match.upperBound, offsetBy: -4)
-            let ruleName: String = String(rulesFile[lower ..< upper])
+            let ruleName = String(rulesFile[lower ..< upper])
             XCTAssertTrue(ruleNames.contains(ruleName), ruleName)
             range = match.upperBound ..< range.upperBound
         }
@@ -181,7 +183,7 @@ class MetadataTests: XCTestCase {
         while let match = rulesFile.range(of: "`--[a-zA-Z]+[` ]", options: .regularExpression, range: range, locale: nil) {
             let lower = rulesFile.index(match.lowerBound, offsetBy: 3)
             let upper = rulesFile.index(before: match.upperBound)
-            let argument: String = String(rulesFile[lower ..< upper])
+            let argument = String(rulesFile[lower ..< upper])
             XCTAssertTrue(arguments.contains(argument), argument)
             range = match.upperBound ..< range.upperBound
         }

@@ -151,6 +151,15 @@ class MetadataTests: XCTestCase {
                     {
                         referencedOptions.append(option)
                     }
+                case .identifier("organizeDeclarations"):
+                    referencedOptions += [
+                        Descriptors.categoryMarkComment,
+                        Descriptors.beforeMarks,
+                        Descriptors.lifecycleMethods,
+                        Descriptors.organizeStructThreshold,
+                        Descriptors.organizeClassThreshold,
+                        Descriptors.organizeEnumThreshold,
+                    ]
                 default:
                     continue
                 }

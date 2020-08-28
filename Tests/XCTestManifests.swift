@@ -71,6 +71,7 @@ extension ArgumentsTests {
         ("testParseUppercaseIgnoreFileHeader", testParseUppercaseIgnoreFileHeader),
         ("testPreprocessArguments", testPreprocessArguments),
         ("testQuotedComment", testQuotedComment),
+        ("testRenamedArgument", testRenamedArgument),
         ("testRulesArgumentOverridesAllConfigRules", testRulesArgumentOverridesAllConfigRules),
         ("testSerializeFileHeaderContainingEscapedSpace", testSerializeFileHeaderContainingEscapedSpace),
         ("testSerializeFileHeaderContainingLinebreak", testSerializeFileHeaderContainingLinebreak),

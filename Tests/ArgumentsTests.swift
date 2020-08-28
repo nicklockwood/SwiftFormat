@@ -276,6 +276,11 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(args["header"], "//  Hello World\\n//  Goodbye World")
     }
 
+    // TODO: should this go in OptionDescriptorTests instead?
+    func testRenamedArgument() throws {
+        XCTAssert(Descriptors.specifierOrder.isRenamed)
+    }
+
     // MARK: config file parsing
 
     func testParseArgumentsContainingBlankLines() {

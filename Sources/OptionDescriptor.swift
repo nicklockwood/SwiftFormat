@@ -70,6 +70,11 @@ class OptionDescriptor {
         return (try? toOptions(arg, &options)) != nil
     }
 
+    fileprivate func renamed(to newPropertyName: String) -> OptionDescriptor {
+        propertyName = newPropertyName
+        return self
+    }
+
     var isSetType: Bool {
         guard case .set = type else {
             return false
@@ -776,7 +781,8 @@ struct _Descriptors {
         keyPath: \.useVoid,
         trueValues: ["void"],
         falseValues: ["tuple", "tuples"]
-    )
+    ).renamed(to: "useVoid")
+
     let hexLiterals = OptionDescriptor(
         argumentName: "hexliterals",
         displayName: "hexliterals",
@@ -785,7 +791,8 @@ struct _Descriptors {
         keyPath: \.uppercaseHex,
         trueValues: ["uppercase", "upper"],
         falseValues: ["lowercase", "lower"]
-    )
+    ).renamed(to: "uppercaseHex")
+
     let wrapElements = OptionDescriptor(
         argumentName: "wrapelements",
         displayName: "Wrap Elements",
@@ -793,7 +800,8 @@ struct _Descriptors {
         deprecationMessage: "Use --wrapcollections instead.",
         keyPath: \.wrapCollections,
         options: ["before-first", "after-first", "preserve", "disabled"]
-    )
+    ).renamed(to: "wrapCollections")
+
     let specifierOrder = OptionDescriptor(
         argumentName: "specifierorder",
         displayName: "Specifier Order",
@@ -805,5 +813,5 @@ struct _Descriptors {
                 throw FormatError.options("'\($0)' is not a valid specifier")
             }
         }
-    )
+    ).renamed(to: "modifierOrder")
 }

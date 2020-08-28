@@ -13500,7 +13500,7 @@ class RulesTests: XCTestCase {
         class Foo {
             static var a1: Int = 1
             static var a2: Int = 2
-            var d: CGFloat {
+            var d1: CGFloat {
                 3.141592653589
             }
 
@@ -13527,6 +13527,10 @@ class RulesTests: XCTestCase {
             }
 
             enum NestedEnum {}
+
+            var d2: CGFloat = 3.141592653589 {
+                didSet {}
+            }
         }
         """
 
@@ -13550,8 +13554,12 @@ class RulesTests: XCTestCase {
                 "closure body"
             }()
 
-            var d: CGFloat {
+            var d1: CGFloat {
                 3.141592653589
+            }
+
+            var d2: CGFloat = 3.141592653589 {
+                didSet {}
             }
 
             static func e() {}
@@ -14308,6 +14316,57 @@ class RulesTests: XCTestCase {
         testFormatting(
             for: input, rule: FormatRules.organizeDeclarations,
             options: FormatOptions(organizeStructThreshold: 20),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testParsesPropertiesWithBodies() {
+        let input = """
+        class Foo {
+
+            // Intstance properties without bodies:
+
+            let propertyWithoutBody1 = 10
+
+            let propertyWithoutBody2: String = {
+                "bar"
+            }()
+
+            let propertyWithoutBody3: () -> String = {
+                "bar"
+            }
+
+            // Intstance properties with bodies:
+
+            var withBody1: String {
+                "bar"
+            }
+
+            var withBody2: String {
+                didSet { print("didSet") }
+            }
+
+            var withBody3: String = "bar" {
+                didSet { print("didSet") }
+            }
+
+            var withBody4: String = "bar" {
+                didSet { print("didSet") }
+            }
+
+            var withBody5: () -> String = { "bar" } {
+                didSet { print("didSet") }
+            }
+
+            var withBody6: String = { "bar" }() {
+                didSet { print("didSet") }
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, rule: FormatRules.organizeDeclarations,
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }

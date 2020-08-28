@@ -922,7 +922,7 @@ private struct Examples {
     ```
     """
 
-    let multilineSwitchCases = """
+    let wrapSwitchCases = """
     ```diff
       switch foo {
     -   case .bar, .baz:

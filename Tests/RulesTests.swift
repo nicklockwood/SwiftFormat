@@ -5011,7 +5011,7 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.wrapEnumCases)
     }
 
-    // MARK: multilineSwitchCases
+    // MARK: wrapSwitchCases
 
     func testMultilineSwitchCases() {
         let input = """
@@ -5036,7 +5036,7 @@ class RulesTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.multilineSwitchCases)
+        testFormatting(for: input, output, rule: FormatRules.wrapSwitchCases)
     }
 
     func testIfAfterSwitchCaseNotWrapped() {
@@ -5051,7 +5051,7 @@ class RulesTests: XCTestCase {
             throw error
         }
         """
-        testFormatting(for: input, rule: FormatRules.multilineSwitchCases)
+        testFormatting(for: input, rule: FormatRules.wrapSwitchCases)
     }
 
     // MARK: - void
@@ -8753,7 +8753,7 @@ class RulesTests: XCTestCase {
         let input = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let output = "switch foo {\ncase let .foo(bar), let .bar(bar):\n}"
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet,
-                       exclude: ["multilineSwitchCases"])
+                       exclude: ["wrapSwitchCases"])
     }
 
     func testHoistCatchLet() {
@@ -8877,7 +8877,7 @@ class RulesTests: XCTestCase {
         let output = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options,
-                       exclude: ["multilineSwitchCases"])
+                       exclude: ["wrapSwitchCases"])
     }
 
     func testUnhoistCommaSeparatedSwitchCaseLets2() {
@@ -8885,7 +8885,7 @@ class RulesTests: XCTestCase {
         let output = "switch foo {\ncase Foo.foo(let bar), Foo.bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options,
-                       exclude: ["multilineSwitchCases"])
+                       exclude: ["wrapSwitchCases"])
     }
 
     func testUnhoistCatchLet() {

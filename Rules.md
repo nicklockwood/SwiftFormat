@@ -21,7 +21,6 @@
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
 * [modifierOrder](#modifierOrder)
-* [multilineSwitchCases](#multilineSwitchCases)
 * [numberFormatting](#numberFormatting)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferKeyPath](#preferKeyPath)
@@ -70,6 +69,7 @@
 * [wrapAttributes](#wrapAttributes)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
+* [wrapSwitchCases](#wrapSwitchCases)
 * [yodaConditions](#yodaConditions)
 
 ----------
@@ -627,29 +627,6 @@ Option | Description
 ```diff
 - convenience private init()
 + private convenience init()
-```
-
-</details>
-<br/>
-
-## multilineSwitchCases
-
-Writes one switch case per line.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  switch foo {
--   case .bar, .baz:
-      break
-  }
-
-  switch foo {
-+   case .foo,
-+        .bar:
-      break
-  }
 ```
 
 </details>
@@ -1873,6 +1850,29 @@ Wrap the opening brace of multiline statements.
 +   BarProtocol
 + {
     // ...
+  }
+```
+
+</details>
+<br/>
+
+## wrapSwitchCases
+
+Writes one switch case per line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  switch foo {
+-   case .bar, .baz:
+      break
+  }
+
+  switch foo {
++   case .foo,
++        .bar:
+      break
   }
 ```
 

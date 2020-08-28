@@ -3542,7 +3542,7 @@ public struct _FormatRules {
     }
 
     /// Writes one switch case per line
-    public let multilineSwitchCases = FormatRule(
+    public let wrapSwitchCases = FormatRule(
         help: "Writes one switch case per line.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks", "tabwidth", "indent", "smarttabs"]

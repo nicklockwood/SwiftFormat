@@ -14358,10 +14358,6 @@ class RulesTests: XCTestCase {
                 didSet { print("didSet") }
             }
 
-            var withBody6: String = { "bar" }() {
-                didSet { print("didSet") }
-            }
-
         }
         """
 

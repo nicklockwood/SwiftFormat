@@ -13518,6 +13518,8 @@ class RulesTests: XCTestCase {
 
             static func e() {}
 
+            typealias Bar = Int
+
             static var b1: String {
                 "static computed property"
             }
@@ -13536,6 +13538,8 @@ class RulesTests: XCTestCase {
 
         let output = """
         class Foo {
+
+            typealias Bar = Int
 
             enum NestedEnum {}
 

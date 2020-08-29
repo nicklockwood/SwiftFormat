@@ -312,7 +312,7 @@ func parseConfigFile(_ data: Data) throws -> [String: String] {
     guard let input = String(data: data, encoding: .utf8) else {
         throw FormatError.reading("Unable to read data for configuration file")
     }
-    let lines = input.components(separatedBy: .newlines)
+    let lines = try cumulate(successiveLines: input.components(separatedBy: .newlines))
     let arguments = try lines.flatMap { line -> [String] in
         // TODO: parseArguments isn't a perfect fit here - should we use a different approach?
         let line = line.replacingOccurrences(of: "\\n", with: "\n")
@@ -332,6 +332,22 @@ func parseConfigFile(_ data: Data) throws -> [String: String] {
     } catch let FormatError.options(message) {
         throw FormatError.options("\(message) in configuration file")
     }
+}
+
+private func cumulate(successiveLines: [String]) throws -> [String] {
+    var cumulatedLines = [String]()
+    var iterator = successiveLines.makeIterator()
+    while let currentLine = iterator.next() {
+        var cumulatedLine = currentLine.trimmingCharacters(in: .whitespaces)
+        while cumulatedLine.hasSuffix("\\") {
+            guard let nextLine = iterator.next() else {
+                throw FormatError.reading("Configuration file ends with an illegal line continuation character '\'")
+            }
+            cumulatedLine = cumulatedLine.dropLast() + nextLine
+        }
+        cumulatedLines.append(cumulatedLine)
+    }
+    return cumulatedLines
 }
 
 // Serialize a set of options into either an arguments string or a file

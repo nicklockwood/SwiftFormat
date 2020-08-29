@@ -321,6 +321,34 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(args["rules"], "braces, fileHeader, consecutiveSpaces")
     }
 
+    func testParseArgumentsOnMultipleLines() throws {
+        let config = """
+        --rules braces, \\
+                fileHeader, \\
+                andOperator, typeSugar
+        --allman true
+        --hexgrouping   \\
+                4,      \\
+                8
+        """
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        XCTAssertEqual(args["rules"], "braces, fileHeader, andOperator, typeSugar")
+        XCTAssertEqual(args["allman"], "true")
+        XCTAssertEqual(args["hexgrouping"], "4, 8")
+    }
+
+    func testLineContinuationCharacterOnLastLine() throws {
+        let config = """
+        --rules braces,\\
+                fileHeader\\
+        """
+        let data = Data(config.utf8)
+        XCTAssertThrowsError(try parseConfigFile(data)) {
+            XCTAssert($0.localizedDescription.contains("line continuation character"))
+        }
+    }
+
     func testParseArgumentsContainingEscapedCharacters() throws {
         let config = "--header hello\\ world\\ngoodbye\\ world"
         let data = Data(config.utf8)

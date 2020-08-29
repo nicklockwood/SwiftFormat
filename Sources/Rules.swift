@@ -1276,9 +1276,6 @@ public struct _FormatRules {
                         {
                             indent += formatter.options.indent
                         }
-                        if case let .space(s) = formatter.tokens[start], s != indent {
-                            print("")
-                        }
                         let stringIndent = stringBodyIndentStack.last!
                         i += formatter.insertSpaceIfEnabled(stringIndent + indent, at: start)
                     }

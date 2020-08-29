@@ -5454,19 +5454,20 @@ private extension Formatter {
                     (.declaration(kind: "comment", tokens: markDeclaration), category, nil),
                     at: indexOfFirstDeclaration
                 )
-            }
 
-            // If this declaration is the first declaration in the type scope,
-            // make sure the type's opening sequence of tokens ends with
-            // at least one blank line (so it appears balanced)
-            if indexOfFirstDeclaration == 0 {
-                typeOpeningTokens = endingWithBlankLine(typeOpeningTokens)
+                // If this declaration is the first declaration in the type scope,
+                // make sure the type's opening sequence of tokens ends with
+                // at least one blank line so the category separator appears balanced
+                if indexOfFirstDeclaration == 0 {
+                    typeOpeningTokens = endingWithBlankLine(typeOpeningTokens)
+                }
             }
 
             // Insert newlines to separate declaration types
             for declarationType in Formatter.categorySubordering {
                 guard let indexOfLastDeclarationWithType = sortedDeclarations
-                    .lastIndex(where: { $0.category == category && $0.type == declarationType })
+                    .lastIndex(where: { $0.category == category && $0.type == declarationType }),
+                    indexOfLastDeclarationWithType != sortedDeclarations.indices.last
                 else { continue }
 
                 switch sortedDeclarations[indexOfLastDeclarationWithType].declaration {

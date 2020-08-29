@@ -5066,7 +5066,7 @@ private extension Formatter {
 
             switch declarationTypeToken {
             // Properties and property-like declarations
-            case .keyword("let"), .keyword("var"), .keyword("typealias"),
+            case .keyword("let"), .keyword("var"),
                  .keyword("case"), .keyword("operator"), .keyword("precedencegroup"):
 
                 var hasBody: Bool
@@ -5111,6 +5111,10 @@ private extension Formatter {
                 } else {
                     return .instanceMethod
                 }
+
+            // Type-like declarations
+            case .keyword("typealias"):
+                return .nestedType
 
             default:
                 return nil

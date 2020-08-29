@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.46.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.46.1) (2020-08-30)
+
+- Fixed bug where computed property bodies were sometimes wrongly identified as closures
+- Fixed spurious blank lines in output when formatting
+- The `organizeDeclarations` rule no longer inserts blank lines at start/end of scopes
+- The `organizeDeclarations` rule now groups typealiases with types instead of properties
+- Improved heuristic for matching `// MARK:` comments in `organizeDeclarations`
+- Configuration file now allows line continuations using `\` delimiter
+
 ## [0.46.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.46.0) (2020-08-28)
 
 - Added `organizeDeclarations` rule for grouping and organizing type members

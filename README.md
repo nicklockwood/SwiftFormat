@@ -418,7 +418,7 @@ You can disable rules individually using `--disable` followed by a list of one o
 --enable isEmpty
 ```
 
-If you prefer, you can place your enabled/disabled rules on separate lines instead of using commas
+If you prefer, you can use multiple `--enable`/`--disable` arguments instead of using commas:
 
 ```bash
 --disable indent
@@ -426,7 +426,7 @@ If you prefer, you can place your enabled/disabled rules on separate lines inste
 --disable redundantSelf
 ```
 
-or use the line continuation character `\` to omit the `--disable` for each rule:
+Alternatively, you can use the line continuation character `\` to wrap a single argument over multiple line:
 
 ```bash         
 --disable          \
@@ -435,15 +435,16 @@ or use the line continuation character `\` to omit the `--disable` for each rule
     redundantSelf
 ```
 
-To avoid automatically opting-in to new rules when SwiftFormat is updated, you can use the`--rules` argument to *only* enable the rules you specify:
+To avoid automatically opting-in to new rules when SwiftFormat is updated, use the`--rules` argument to *only* enable the rules you specify:
 
 ```bash
 --rules indent,linebreaks
 ```
 
-Like before, you may use the line continuation character `\` to list the rules on separate lines:
+As above, you may include multiple `--rules` arguments, or use the line continuation character `\` to wrap the rules onto separate lines:
 
 ```bash
+--rules redundantSelf
 --rules         \
     indent,     \
     linebreaks

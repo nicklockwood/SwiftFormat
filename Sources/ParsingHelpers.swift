@@ -509,12 +509,14 @@ extension Formatter {
         case "in", "as", "is", "try":
             return indexOfLastSignificantKeyword(at: index - 1, excluding: excluding)
         default:
-            guard let braceIndex = self.index(of: .startOfScope("{"), in: index ..< i) else {
+            guard let braceIndex = self.index(of: .startOfScope("{"), in: index ..< i),
+                let endIndex = endOfScope(at: braceIndex),
+                next(.nonSpaceOrComment, after: endIndex) != .startOfScope("(")
+            else {
                 return index
             }
             if keyword == "if" || ["var", "let"].contains(keyword) &&
                 last(.nonSpaceOrCommentOrLinebreak, before: index) == .keyword("if"),
-                let endIndex = endOfScope(at: braceIndex),
                 self.index(of: .startOfScope("{"), in: endIndex ..< i) == nil
             {
                 return index

@@ -456,16 +456,15 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 22))
     }
 
-    // TODO: fix in next release
-//    func testParameterBodyAfterExecutedClosureIsNotClosure() {
-//        let formatter = Formatter(tokenize("""
-//        var withBody6: String = { "bar" }() {
-//            didSet { print("didSet") }
-//        }
-//        """))
-//
-//        XCTAssertFalse(formatter.isStartOfClosure(at: 19))
-//    }
+    func testParameterBodyAfterExecutedClosureIsNotClosure() {
+        let formatter = Formatter(tokenize("""
+        var withBody6: String = { "bar" }() {
+            didSet { print("didSet") }
+        }
+        """))
+
+        XCTAssertFalse(formatter.isStartOfClosure(at: 19))
+    }
 
     // MARK: isAccessorKeyword
 

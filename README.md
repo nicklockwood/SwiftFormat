@@ -418,7 +418,7 @@ You can disable rules individually using `--disable` followed by a list of one o
 --enable isEmpty
 ```
 
-If you prefer, you can place your enabled/disabled rules on separate lines instead of using commas:
+If you prefer, you can place your enabled/disabled rules on separate lines instead of using commas
 
 ```bash
 --disable indent
@@ -426,10 +426,27 @@ If you prefer, you can place your enabled/disabled rules on separate lines inste
 --disable redundantSelf
 ```
 
+or use the line continuation character `\` to omit the `--disable` for each rule:
+
+```bash         
+--disable          \
+    indent,        \
+    linebreaks,    \
+    redundantSelf
+```
+
 To avoid automatically opting-in to new rules when SwiftFormat is updated, you can use the`--rules` argument to *only* enable the rules you specify:
 
 ```bash
 --rules indent,linebreaks
+```
+
+Like before, you may use the line continuation character `\` to list the rules on separate lines:
+
+```bash
+--rules         \
+    indent,     \
+    linebreaks
 ```
 
 To see exactly which rules were applied to a given file, you can use the `--verbose` command-line option to force SwiftFormat to print a more detailed log as it applies the formatting. **NOTE:** running in verbose mode is slower than the default mode.

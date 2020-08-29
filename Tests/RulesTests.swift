@@ -13300,7 +13300,6 @@ class RulesTests: XCTestCase {
     func testOrganizeClassDeclarationsIntoCategories() {
         let input = """
         class Foo {
-
             private func privateMethod() {}
 
             private let bar = 1
@@ -13320,7 +13319,6 @@ class RulesTests: XCTestCase {
 
             /// Doc comment
             public func publicMethod() {}
-
         }
         """
 
@@ -13384,7 +13382,6 @@ class RulesTests: XCTestCase {
 
         let output = """
         public class Foo {
-
             public class Bar {
 
                 // MARK: Lifecycle
@@ -13399,16 +13396,14 @@ class RulesTests: XCTestCase {
                 // MARK: Fileprivate
 
                 fileprivate func baaz() {}
-
             }
-
         }
         """
 
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: ["blankLinesAtStartOfScope"]
         )
     }
 
@@ -13484,14 +13479,13 @@ class RulesTests: XCTestCase {
 
             private(set) var baz: Int
             internal private(set) var baz: Int
-
         }
         """
 
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: ["blankLinesAtStartOfScope"]
         )
     }
 
@@ -13538,7 +13532,6 @@ class RulesTests: XCTestCase {
 
         let output = """
         class Foo {
-
             typealias Bar = Int
 
             enum NestedEnum {}
@@ -13582,7 +13575,7 @@ class RulesTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "redundantType"]
+            exclude: ["blankLinesAtEndOfScope", "redundantType"]
         )
     }
 
@@ -13601,7 +13594,6 @@ class RulesTests: XCTestCase {
 
         let output = """
         enum Foo {
-
             case bar
             case baz
             case quux
@@ -13618,7 +13610,7 @@ class RulesTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "unusedArguments"]
+            exclude: ["blankLinesAtEndOfScope", "unusedArguments"]
         )
     }
 
@@ -13728,7 +13720,6 @@ class RulesTests: XCTestCase {
             // - Public
 
             public func publicInstanceMethod() {}
-
         }
         """
 
@@ -13736,7 +13727,7 @@ class RulesTests: XCTestCase {
             for: input, output,
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "- %c"),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: ["blankLinesAtStartOfScope"]
         )
     }
 
@@ -13772,7 +13763,6 @@ class RulesTests: XCTestCase {
             // MARK: Public
 
             public func instanceMethod() {}
-
         }
         """
 
@@ -13780,7 +13770,7 @@ class RulesTests: XCTestCase {
             for: input, output,
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(organizeStructThreshold: 2),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: ["blankLinesAtStartOfScope"]
         )
     }
 
@@ -13827,11 +13817,10 @@ class RulesTests: XCTestCase {
 
             let bar: String
             let baz: Int?
-
         }
         """
         testFormatting(for: input, rule: FormatRules.organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+                       exclude: ["blankLinesAtStartOfScope"])
     }
 
     func testUpdatesMalformedMarks() {
@@ -13853,7 +13842,6 @@ class RulesTests: XCTestCase {
             // mrak: privat
 
             private func quux() {}
-
         }
         """
 
@@ -13875,12 +13863,11 @@ class RulesTests: XCTestCase {
             // MARK: Private
 
             private func quux() {}
-
         }
         """
 
         testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+                       exclude: ["blankLinesAtStartOfScope"])
     }
 
     func testHandlesTrailingCommentCorrectly() {
@@ -13905,12 +13892,11 @@ class RulesTests: XCTestCase {
 
             var bar = "bar"
             var quux = "quux"
-
         }
         """
 
         testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+                       exclude: ["blankLinesAtStartOfScope"])
     }
 
     func testDoesntInsertMarkWhenOnlyOneCategory() {
@@ -13924,17 +13910,14 @@ class RulesTests: XCTestCase {
 
         let output = """
         class Foo {
-
             var bar: Int
             var baaz: Int
 
             func instanceMethod() {}
-
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations)
     }
 
     func testOrganizesTypesWithinConditionalCompilationBlock() {
@@ -13963,7 +13946,6 @@ class RulesTests: XCTestCase {
             // MARK: Public
 
             public func instanceMethod() {}
-
         }
         #else
         struct ProductionFoo {
@@ -13975,14 +13957,13 @@ class RulesTests: XCTestCase {
             // MARK: Public
 
             public func instanceMethod() {}
-
         }
         #endif
         """
 
         testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
                        options: FormatOptions(ifdefIndent: .noIndent),
-                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+                       exclude: ["blankLinesAtStartOfScope"])
     }
 
     func testOrganizesTypesBelowConditionalCompilationBlock() {
@@ -14011,13 +13992,12 @@ class RulesTests: XCTestCase {
             // MARK: Public
 
             public func instanceMethod() {}
-
         }
         """
 
         testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
                        options: FormatOptions(ifdefIndent: .noIndent),
-                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+                       exclude: ["blankLinesAtStartOfScope"])
     }
 
     func testOrganizesNestedTypesWithinConditionalCompilationBlock() {
@@ -14041,7 +14021,6 @@ class RulesTests: XCTestCase {
             init() {}
 
             var quuz = "quux"
-
         }
         """
 
@@ -14066,7 +14045,6 @@ class RulesTests: XCTestCase {
                 // MARK: Internal
 
                 var debugBar = "debug"
-
             }
 
             static let debugFoo = DebugFoo()
@@ -14079,13 +14057,12 @@ class RulesTests: XCTestCase {
             var baaz = "baaz"
 
             var quuz = "quux"
-
         }
         """
 
         testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
                        options: FormatOptions(ifdefIndent: .noIndent),
-                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+                       exclude: ["blankLinesAtStartOfScope"])
     }
 
     func testOrganizesTypeBelowSymbolImport() {
@@ -14124,13 +14101,12 @@ class RulesTests: XCTestCase {
             // MARK: Public
 
             public func instanceMethod() {}
-
         }
         """
 
         testFormatting(
             for: input, output, rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "sortedImports"]
+            exclude: ["blankLinesAtStartOfScope", "sortedImports"]
         )
     }
 
@@ -14195,7 +14171,6 @@ class RulesTests: XCTestCase {
             // MARK: Private
 
             private func instanceMethod() {}
-
         }
 
         Foo(bar: 1, baaz: 2, quux: 3)
@@ -14203,7 +14178,7 @@ class RulesTests: XCTestCase {
 
         testFormatting(
             for: input, output, rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: ["blankLinesAtStartOfScope"]
         )
     }
 
@@ -14222,7 +14197,6 @@ class RulesTests: XCTestCase {
             }
 
             var baaz: Int
-
         }
 
         Foo(bar: 1, baaz: 2, quux: 3)
@@ -14230,7 +14204,7 @@ class RulesTests: XCTestCase {
 
         testFormatting(
             for: input, rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: ["blankLinesAtStartOfScope"]
         )
     }
 
@@ -14247,13 +14221,12 @@ class RulesTests: XCTestCase {
             // MARK: Public
 
             public let bar = 1
-
         }
         """
 
         testFormatting(
             for: input, rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: ["blankLinesAtStartOfScope"]
         )
     }
 
@@ -14274,7 +14247,6 @@ class RulesTests: XCTestCase {
             var baaz = 1
 
             public let bar = 1
-
         }
         """
 
@@ -14317,7 +14289,6 @@ class RulesTests: XCTestCase {
             // MARK: Public
 
             public var bar = 10
-
         }
 
         extension Foo {
@@ -14329,21 +14300,19 @@ class RulesTests: XCTestCase {
             // MARK: Internal
 
             var quux: Int { 30 }
-
         }
         """
 
         testFormatting(
             for: input, rule: FormatRules.organizeDeclarations,
             options: FormatOptions(organizeStructThreshold: 20),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: ["blankLinesAtStartOfScope"]
         )
     }
 
     func testParsesPropertiesWithBodies() {
         let input = """
         class Foo {
-
             // Instance properties without bodies:
 
             let propertyWithoutBody1 = 10
@@ -14381,13 +14350,9 @@ class RulesTests: XCTestCase {
             var withBody6: String = { "bar" }() {
                 didSet { print("didSet") }
             }
-
         }
         """
 
-        testFormatting(
-            for: input, rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
-        )
+        testFormatting(for: input, rule: FormatRules.organizeDeclarations)
     }
 }

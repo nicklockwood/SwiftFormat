@@ -5172,7 +5172,6 @@ private extension Formatter {
                     // Other common variants that we would want to replace with the correct variant
                     $0.markComment(from: "%c"),
                     $0.markComment(from: "// MARK: %c"),
-                    $0.markComment(from: "// MARK: - %c"),
                 ]))
             }.compactMap { $0 }
 
@@ -5185,10 +5184,17 @@ private extension Formatter {
                     let potentialSeparatorRange = commentStartIndex ..< (commentStartIndex + potentialCategorySeparator.count)
 
                     guard parser.tokens.indices.contains(potentialSeparatorRange.upperBound),
-                        sourceCode(for: Array(parser.tokens[potentialSeparatorRange]))
-                        .caseInsensitiveCompare(potentialSeparatorComment) == .orderedSame,
                         let nextNonwhitespaceIndex = parser.index(of: .nonSpaceOrLinebreak, after: potentialSeparatorRange.upperBound)
                     else { continue }
+
+                    // Check the edit distance of this existing comment with the potential
+                    // valid category separators for this category. If they are similar or identical,
+                    // we'll want to replace the existing comment with the correct comment.
+                    let existingComment = sourceCode(for: Array(parser.tokens[potentialSeparatorRange]))
+
+                    guard editDistance(existingComment.lowercased(), potentialSeparatorComment.lowercased()) <= 3 else {
+                        continue
+                    }
 
                     // If we found a matching comment, remove it and all subsequent empty lines
                     let startOfCommentLine = parser.startOfLine(at: commentStartIndex)

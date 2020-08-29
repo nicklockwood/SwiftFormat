@@ -13840,7 +13840,15 @@ class RulesTests: XCTestCase {
 
             // Public
 
-            public func instanceMethod() {}
+            public func bar() {}
+
+            // MARK: - Internal
+
+            func baaz() {}
+
+            // mrak: privat
+
+            private func quux() {}
 
         }
         """
@@ -13854,7 +13862,15 @@ class RulesTests: XCTestCase {
 
             // MARK: Public
 
-            public func instanceMethod() {}
+            public func bar() {}
+
+            // MARK: Internal
+
+            func baaz() {}
+
+            // MARK: Private
+
+            private func quux() {}
 
         }
         """

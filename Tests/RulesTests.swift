@@ -13878,6 +13878,37 @@ class RulesTests: XCTestCase {
                        exclude: ["blankLinesAtStartOfScope"])
     }
 
+    func testDoesntAttemptToUpdateMarksNotAtTopLevel() {
+        let input = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            public init() {
+                foo = ["foo"]
+            }
+
+            // Comment at bottom of lifecycle category
+
+            // MARK: Private
+
+            @annotation // Private
+            // Private
+            private var foo: [String] = []
+
+            private func bar() {
+                // Private
+                guard let baz = bar else {
+                    return
+                }
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.organizeDeclarations,
+                       exclude: ["blankLinesAtStartOfScope"])
+    }
+
     func testHandlesTrailingCommentCorrectly() {
         let input = """
         class Foo {

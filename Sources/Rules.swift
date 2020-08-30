@@ -5182,6 +5182,11 @@ private extension Formatter {
             let parser = Formatter(tokensToInspect)
 
             parser.forEach(.startOfScope("//")) { commentStartIndex, _ in
+                // Only look at top-level comments inside of the type body
+                guard parser.currentScope(at: commentStartIndex) == nil else {
+                    return
+                }
+
                 // Check if this comment matches an expected category separator comment
                 for potentialSeparatorComment in potentialCategorySeparators {
                     let potentialCategorySeparator = tokenize(potentialSeparatorComment)
@@ -5201,6 +5206,13 @@ private extension Formatter {
                         <= minimumEditDistance
                     else { continue }
 
+                    // Makes sure there are only whitespace or other comments before this comment.
+                    // Otherwise, we don't want to remove it.
+                    let tokensBeforeComment = parser.tokens[0 ..< commentStartIndex]
+                    guard !tokensBeforeComment.contains(where: { !$0.isSpaceOrCommentOrLinebreak }) else {
+                        continue
+                    }
+
                     // If we found a matching comment, remove it and all subsequent empty lines
                     let startOfCommentLine = parser.startOfLine(at: commentStartIndex)
                     let startOfNextDeclaration = parser.startOfLine(at: nextNonwhitespaceIndex)
@@ -5211,7 +5223,7 @@ private extension Formatter {
                     if declarationIndex != 0, startOfCommentLine != 0 {
                         // Remove the tokens before the category separator from this declaration...
                         let rangeBeforeComment = 0 ..< startOfCommentLine
-                        let tokensBeforeComment = Array(parser.tokens[rangeBeforeComment])
+                        let tokensBeforeCommentLine = Array(parser.tokens[rangeBeforeComment])
                         parser.removeTokens(in: rangeBeforeComment)
 
                         // ... and append them to the end of the previous declaration
@@ -5219,7 +5231,7 @@ private extension Formatter {
                         case let .declaration(kind, tokens):
                             typeBody[declarationIndex - 1] = .declaration(
                                 kind: kind,
-                                tokens: tokens + tokensBeforeComment
+                                tokens: tokens + tokensBeforeCommentLine
                             )
 
                         case let .type(kind, open, body, close):
@@ -5227,14 +5239,14 @@ private extension Formatter {
                                 kind: kind,
                                 open: open,
                                 body: body,
-                                close: close + tokensBeforeComment
+                                close: close + tokensBeforeCommentLine
                             )
 
                         case let .conditionalCompilation(open, body, close):
                             typeBody[declarationIndex - 1] = .conditionalCompilation(
                                 open: open,
                                 body: body,
-                                close: close + tokensBeforeComment
+                                close: close + tokensBeforeCommentLine
                             )
                         }
                     }

@@ -651,6 +651,7 @@ extension RulesTests {
         ("testDispatchAsyncGroupClosureArgumentMadeTrailing", testDispatchAsyncGroupClosureArgumentMadeTrailing),
         ("testDispatchSyncClosureArgumentMadeTrailing", testDispatchSyncClosureArgumentMadeTrailing),
         ("testDispatchSyncFlagsClosureArgumentMadeTrailing", testDispatchSyncFlagsClosureArgumentMadeTrailing),
+        ("testDoesntAttemptToUpdateMarksNotAtTopLevel", testDoesntAttemptToUpdateMarksNotAtTopLevel),
         ("testDoesntBreakStructSynthesizedMemberwiseInitializer", testDoesntBreakStructSynthesizedMemberwiseInitializer),
         ("testDoesntInsertMarkWhenOnlyOneCategory", testDoesntInsertMarkWhenOnlyOneCategory),
         ("testDoesntRemoveCategorySeparatorsFromBodyNotBeingOrganized", testDoesntRemoveCategorySeparatorsFromBodyNotBeingOrganized),

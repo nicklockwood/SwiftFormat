@@ -5195,10 +5195,11 @@ private extension Formatter {
                     // valid category separators for this category. If they are similar or identical,
                     // we'll want to replace the existing comment with the correct comment.
                     let existingComment = sourceCode(for: Array(parser.tokens[potentialSeparatorRange]))
+                    let minimumEditDistance = Int(0.2 * Float(existingComment.count))
 
-                    guard editDistance(existingComment.lowercased(), potentialSeparatorComment.lowercased()) <= 3 else {
-                        continue
-                    }
+                    guard editDistance(existingComment.lowercased(), potentialSeparatorComment.lowercased())
+                        <= minimumEditDistance
+                    else { continue }
 
                     // If we found a matching comment, remove it and all subsequent empty lines
                     let startOfCommentLine = parser.startOfLine(at: commentStartIndex)

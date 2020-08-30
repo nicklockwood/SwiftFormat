@@ -13829,9 +13829,13 @@ class RulesTests: XCTestCase {
 
             // MARK: lifecycle
 
+            // MARK: Lifeycle
+
             init() {}
 
             // Public
+
+            // - Public
 
             public func bar() {}
 
@@ -13840,6 +13844,8 @@ class RulesTests: XCTestCase {
             func baaz() {}
 
             // mrak: privat
+
+            // Pulse
 
             private func quux() {}
         }
@@ -13861,6 +13867,8 @@ class RulesTests: XCTestCase {
             func baaz() {}
 
             // MARK: Private
+
+            // Pulse
 
             private func quux() {}
         }

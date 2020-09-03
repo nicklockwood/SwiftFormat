@@ -343,7 +343,7 @@ Git pre-commit hook
 
     ```bash
     #!/bin/bash
-    git-format-staged --formatter "swiftformat stdin --stdinpath {}" "*.swift"
+    git-format-staged --formatter "swiftformat stdin --stdinpath '{}'" "*.swift"
     ```
     
     (Note that this example uses your locally installed version of SwiftFormat, not a separate copy in your project repository. You can replace `swiftformat` with the path to a copy inside your project if you prefer.)

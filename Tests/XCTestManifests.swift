@@ -1236,6 +1236,7 @@ extension RulesTests {
         ("testNoRemoveSelfInTrailingClosureInVarAssignment", testNoRemoveSelfInTrailingClosureInVarAssignment),
         ("testNoRemoveSelfInWhilePreceededByVarDeclaration", testNoRemoveSelfInWhilePreceededByVarDeclaration),
         ("testNoRemoveSpaceAfterOperatorEqualsWhenSpaceAroundOperatorDeclarationsFalse", testNoRemoveSpaceAfterOperatorEqualsWhenSpaceAroundOperatorDeclarationsFalse),
+        ("testNoRemoveSpaceAroundEnumInBrackets", testNoRemoveSpaceAroundEnumInBrackets),
         ("testNoRemoveSpaceAroundNoSpaceRangeBeforePrefixOperator", testNoRemoveSpaceAroundNoSpaceRangeBeforePrefixOperator),
         ("testNoRemoveSpaceAroundNoSpaceStarAfterPostfixOperator", testNoRemoveSpaceAroundNoSpaceStarAfterPostfixOperator),
         ("testNoRemoveSpaceAroundNoSpaceStarBeforePrefixOperator", testNoRemoveSpaceAroundNoSpaceStarBeforePrefixOperator),

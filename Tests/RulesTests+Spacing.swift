@@ -407,6 +407,12 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
     }
 
+    func testNoRemoveSpaceAroundEnumInBrackets() {
+        let input = "[ .red ]"
+        testFormatting(for: input, rule: FormatRules.spaceAroundOperators,
+                       exclude: ["spaceInsideBrackets"])
+    }
+
     func testSpaceBetweenSemicolonAndEnumValue() {
         let input = "statement;.Bar"
         let output = "statement; .Bar"

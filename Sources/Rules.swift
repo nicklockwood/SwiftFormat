@@ -476,7 +476,7 @@ public struct _FormatRules {
                 }
                 let spaceRequired: Bool
                 switch formatter.tokens[prevIndex] {
-                case .operator(_, .infix), .startOfScope("{"):
+                case .operator(_, .infix), .startOfScope:
                     return
                 case let token where token.isUnwrapOperator:
                     if let prevToken = formatter.last(.nonSpace, before: prevIndex),
@@ -486,7 +486,7 @@ public struct _FormatRules {
                     } else {
                         spaceRequired = false
                     }
-                case .startOfScope, .operator(_, .prefix):
+                case .operator(_, .prefix):
                     spaceRequired = false
                 case let token:
                     spaceRequired = !token.isAttribute && !token.isLvalue

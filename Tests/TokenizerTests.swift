@@ -2687,6 +2687,29 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testLessThanGreaterThanEnumCase() {
+        let input = "if foo < .bar, baz > .quux"
+        let output: [Token] = [
+            .keyword("if"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("<", .infix),
+            .space(" "),
+            .operator(".", .prefix),
+            .identifier("bar"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("baz"),
+            .space(" "),
+            .operator(">", .infix),
+            .space(" "),
+            .operator(".", .prefix),
+            .identifier("quux"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: optionals
 
     func testAssignOptional() {

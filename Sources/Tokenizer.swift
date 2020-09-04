@@ -110,7 +110,7 @@ public enum NumberType {
     case hex
 }
 
-/// Symbol/operator types
+/// Operator/operator types
 public enum OperatorType {
     case none
     case infix
@@ -1292,7 +1292,7 @@ public func tokenize(_ source: String) -> [Token] {
         flushCommentBodyTokens()
     }
 
-    func convertOpeningChevronToSymbol(at index: Int) {
+    func convertOpeningChevronToOperator(at index: Int) {
         assert(tokens[index] == .startOfScope("<"))
         if scopeIndexStack.last == index {
             scopeIndexStack.removeLast()
@@ -1301,18 +1301,18 @@ public func tokenize(_ source: String) -> [Token] {
         stitchOperators(at: index)
     }
 
-    func convertClosingChevronToSymbol(at i: Int, andOpeningChevron: Bool) {
+    func convertClosingChevronToOperator(at i: Int, andOpeningChevron: Bool) {
         assert(tokens[i] == .endOfScope(">"))
         tokens[i] = .operator(">", .none)
         stitchOperators(at: i)
         if let previousIndex = index(of: .nonSpaceOrComment, before: i),
             tokens[previousIndex] == .endOfScope(">")
         {
-            convertClosingChevronToSymbol(at: previousIndex, andOpeningChevron: true)
+            convertClosingChevronToOperator(at: previousIndex, andOpeningChevron: true)
         }
         if andOpeningChevron, let scopeIndex = closedGenericScopeIndexes.last {
             closedGenericScopeIndexes.removeLast()
-            convertOpeningChevronToSymbol(at: scopeIndex)
+            convertOpeningChevronToOperator(at: scopeIndex)
         }
     }
 
@@ -1533,16 +1533,16 @@ public func tokenize(_ source: String) -> [Token] {
                         fallthrough
                     }
                 case .operator, .identifier, .number, .startOfScope("\""), .startOfScope("\"\"\""):
-                    convertClosingChevronToSymbol(at: prevIndex, andOpeningChevron: true)
+                    convertClosingChevronToOperator(at: prevIndex, andOpeningChevron: true)
                     processToken()
                     return
                 default:
                     break
                 }
             }
-            if let lastSymbolIndex = index(of: .operator, before: count - 1) {
+            if let lastOperatorIndex = index(of: .operator, before: count - 1) {
                 // Set operator type
-                setOperatorType(at: lastSymbolIndex)
+                setOperatorType(at: lastOperatorIndex)
             }
         }
         // Handle scope
@@ -1573,7 +1573,7 @@ public func tokenize(_ source: String) -> [Token] {
                     }
                 case .endOfScope(">"):
                     if scope == .startOfScope("<"), scopeIndex == count - 2 {
-                        convertOpeningChevronToSymbol(at: count - 2)
+                        convertOpeningChevronToOperator(at: count - 2)
                         processToken()
                         return
                     }
@@ -1592,18 +1592,18 @@ public func tokenize(_ source: String) -> [Token] {
                 case let .operator(string, _):
                     switch string {
                     case ".", "==", "?", "!", "&", "->":
-                        if scopeIndex == count - 2 {
+                        if index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1) == scopeIndex {
                             // These are allowed in a generic, but not as the first character
                             fallthrough
                         }
                     default:
                         // Not a generic scope
-                        convertOpeningChevronToSymbol(at: scopeIndex)
+                        convertOpeningChevronToOperator(at: scopeIndex)
                     }
                 case .delimiter(":") where scopeIndexStack.count > 1 &&
                     tokens[scopeIndexStack[scopeIndexStack.count - 2]] == .endOfScope("case"):
                     // Not a generic scope
-                    convertOpeningChevronToSymbol(at: scopeIndex)
+                    convertOpeningChevronToOperator(at: scopeIndex)
                     processToken()
                     return
                 case .keyword("where"):
@@ -1611,7 +1611,7 @@ public func tokenize(_ source: String) -> [Token] {
                 case .endOfScope, .keyword:
                     // If we encountered a keyword, or closing scope token that wasn't >
                     // then the opening < must have been an operator after all
-                    convertOpeningChevronToSymbol(at: scopeIndex)
+                    convertOpeningChevronToOperator(at: scopeIndex)
                     processToken()
                     return
                 default:
@@ -1707,7 +1707,7 @@ public func tokenize(_ source: String) -> [Token] {
             }
         case .endOfScope(">"):
             // Misidentified > as closing generic scope
-            convertClosingChevronToSymbol(at: count - 1, andOpeningChevron: false)
+            convertClosingChevronToOperator(at: count - 1, andOpeningChevron: false)
             return
         case let .endOfScope(string):
             if ["case", "default"].contains(string), let scopeIndex = scopeIndexStack.last,
@@ -1742,7 +1742,7 @@ public func tokenize(_ source: String) -> [Token] {
         case .startOfScope("<"):
             // If we encountered an end-of-file while a generic scope was
             // still open, the opening < must have been an operator
-            convertOpeningChevronToSymbol(at: scopeIndex)
+            convertOpeningChevronToOperator(at: scopeIndex)
         case .startOfScope("//"):
             scopeIndexStack.removeLast()
         default:
@@ -1755,8 +1755,8 @@ public func tokenize(_ source: String) -> [Token] {
     }
 
     // Set final operator type
-    if let lastSymbolIndex = index(of: .operator, before: tokens.count) {
-        setOperatorType(at: lastSymbolIndex)
+    if let lastOperatorIndex = index(of: .operator, before: tokens.count) {
+        setOperatorType(at: lastOperatorIndex)
     }
 
     return tokens

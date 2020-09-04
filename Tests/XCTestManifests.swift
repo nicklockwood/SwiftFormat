@@ -2207,6 +2207,7 @@ extension TokenizerTests {
         ("testLeftShiftInsideTernary", testLeftShiftInsideTernary),
         ("testLessThanEnumCase", testLessThanEnumCase),
         ("testLessThanGreaterThan", testLessThanGreaterThan),
+        ("testLessThanGreaterThanEnumCase", testLessThanGreaterThanEnumCase),
         ("testLessThanGreaterThanFollowedByOperator", testLessThanGreaterThanFollowedByOperator),
         ("testLessThanGreaterThanOperator", testLessThanGreaterThanOperator),
         ("testLF", testLF),

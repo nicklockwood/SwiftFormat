@@ -1109,4 +1109,28 @@ extension RulesTests {
 
         testFormatting(for: input, rule: FormatRules.organizeDeclarations)
     }
+
+    func testFuncWithNestedInitNotTreatedAsLifecycle() {
+        let input = """
+        struct Foo {
+
+            // MARK: Public
+
+            public func baz() {}
+
+            // MARK: Internal
+
+            func bar() {
+                class NestedClass {
+                    init() {}
+                }
+
+                // ...
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.organizeDeclarations,
+                       exclude: ["blankLinesAtStartOfScope"])
+    }
 }

@@ -502,7 +502,7 @@ private extension Formatter {
 
             if Formatter.categoryOrdering.contains(.lifecycle) {
                 // `init` and `deinit` always go in Lifecycle if it's present
-                if tokens.contains(.keyword("init")) || tokens.contains(.keyword("deinit")) {
+                if ["init", "deinit"].contains(keyword) {
                     return .lifecycle
                 }
 

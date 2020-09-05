@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.46.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.46.2) (2020-09-05)
+
+- Fixed space being unexpectedly removed before prefix `.` operator by `spaceAroundOperators`
+- Fixed bug where a pair of less-than, greater-than operators could be interpreted as generics
+- Fixed `organizeDeclarations` rule mistaking function with nested class for a lifecycle method
+
 ## [0.46.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.46.1) (2020-08-30)
 
 - Fixed bug where computed property bodies were sometimes wrongly identified as closures

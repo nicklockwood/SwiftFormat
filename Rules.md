@@ -9,6 +9,7 @@
 * [braces](#braces)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
+* [convenienceType](#convenienceType)
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
@@ -329,6 +330,10 @@ Replace consecutive spaces with a single space.
 
 </details>
 <br/>
+
+## convenienceType
+
+Converts types used for hosting only static members into enums.
 
 ## duplicateImports
 

@@ -57,7 +57,7 @@ extension RulesTests {
             // foo
         }
         """
-        testFormatting(for: input, rule: FormatRules.braces)
+        testFormatting(for: input, rule: FormatRules.braces, exclude: ["convenienceType"])
     }
 
     func testKnRExtraSpaceNotAddedBeforeBrace() {
@@ -187,7 +187,7 @@ extension RulesTests {
             // foo
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: FormatRules.braces, exclude: ["convenienceType"])
     }
 
     func testBracesForInit() {
@@ -336,7 +336,12 @@ extension RulesTests {
         }
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.braces,
+            options: options,
+            exclude: ["convenienceType"]
+        )
     }
 
     func testAllmanBracesForInit() {

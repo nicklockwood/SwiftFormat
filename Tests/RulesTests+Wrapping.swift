@@ -2229,7 +2229,13 @@ extension RulesTests {
         class Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(
+            for: input,
+            output,
+            rule: FormatRules.wrapAttributes,
+            options: options,
+            exclude: ["convenienceType"]
+        )
     }
 
     func testTypeAttributeStaysWrapped() {
@@ -2238,7 +2244,7 @@ extension RulesTests {
         struct Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options, exclude: ["convenienceType"])
     }
 
     func testUnwrapTypeAttribute() {
@@ -2258,7 +2264,7 @@ extension RulesTests {
         @objc class Foo {}
         """
         let options = FormatOptions(typeAttributes: .sameLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options, exclude: ["convenienceType"])
     }
 
     func testTestableImportIsNotWrapped() {
@@ -2269,7 +2275,7 @@ extension RulesTests {
         class Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options, exclude: ["convenienceType"])
     }
 
     func testModifiersDontAffectAttributeWrapping() {

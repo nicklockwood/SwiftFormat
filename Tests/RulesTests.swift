@@ -1201,6 +1201,120 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
     }
 
+    // MARK: - convenienceType
+
+    func testConvenienceTypeConformingOtherType() {
+        let input = "private final class CustomUITableViewCell: UITableViewCell {}"
+        testFormatting(for: input, rule: FormatRules.convenienceType)
+    }
+
+    func testConvenienceTypeImportClass() {
+        let input = "import class MyUIKit.AutoHeightTableView"
+        testFormatting(for: input, rule: FormatRules.convenienceType)
+    }
+
+    func testConvenienceTypeImportStruct() {
+        let input = "import struct Core.CurrencyFormatter"
+        testFormatting(for: input, rule: FormatRules.convenienceType)
+    }
+
+    func testConvenienceTypeClassFunction() {
+        let input = """
+        class Container {
+            class func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.convenienceType)
+    }
+
+    func testConvenienceTypeRemovingExtraKeywords() {
+        let input = "final class MyNamespace {}"
+        let output = "enum MyNamespace {}"
+        testFormatting(for: input, output, rule: FormatRules.convenienceType)
+    }
+
+    func testConvenienceTypeNestedTypes() {
+        let input = """
+        enum Namespace {}
+        extension Namespace {
+            struct Constants {
+                static let us = "us"
+            }
+        }
+        """
+        let output = """
+        enum Namespace {}
+        extension Namespace {
+            enum Constants {
+                static let us = "us"
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.convenienceType)
+    }
+
+    func testConvenienceTypeStaticVariable() {
+        let input = """
+        struct Constants {
+            static let β = 0, 5
+        }
+        """
+        let output = """
+        enum Constants {
+            static let β = 0, 5
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.convenienceType)
+    }
+
+    func testConvenienceTypeStaticAndInstanceVariable() {
+        let input = """
+        struct Constants {
+            static let β = 0, 5
+            let Ɣ = 0, 3
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.convenienceType)
+    }
+
+    func testConvenienceTypeStaticFunction() {
+        let input = """
+        struct Constants {
+            static func remoteConfig() -> Int {
+                return 10
+            }
+        }
+        """
+        let output = """
+        enum Constants {
+            static func remoteConfig() -> Int {
+                return 10
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.convenienceType)
+    }
+
+    func testConvenienceTypeStaticAndInstanceFunction() {
+        let input = """
+        struct Constants {
+            static func remoteConfig() -> Int {
+                return 10
+            }
+
+            func instanceConfig(offset: Int) -> Int {
+                return offset + 10
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.convenienceType)
+    }
+
+    // MARK: - trailingSpace
+
+    // truncateBlankLines = true
+
     func testUnhoistSingleCaseLet() {
         let input = "if case let .foo(bar) = quux {}"
         let output = "if case .foo(let bar) = quux {}"
@@ -1582,14 +1696,14 @@ class RulesTests: XCTestCase {
     func testNoStripHeaderDocWithNewlineBeforeCode() {
         let input = "/// Header doc\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options, exclude: ["convenienceType"])
     }
 
     func testNoDuplicateHeaderIfMissingTrailingBlankLine() {
         let input = "// Header comment\nclass Foo {}"
         let output = "// Header comment\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "Header comment")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options, exclude: ["convenienceType"])
     }
 
     func testFileHeaderYearReplacement() {
@@ -2256,7 +2370,7 @@ class RulesTests: XCTestCase {
     func testClassNotReplacedByAnyObjectIfSwiftVersionLessThan4_1() {
         let input = "protocol Foo: class {}"
         let options = FormatOptions(swiftVersion: "4.0")
-        testFormatting(for: input, rule: FormatRules.anyObjectProtocol, options: options)
+        testFormatting(for: input, rule: FormatRules.anyObjectProtocol, options: options, exclude: ["convenienceType"])
     }
 
     // MARK: - strongifiedSelf

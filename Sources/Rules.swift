@@ -709,6 +709,55 @@ public struct _FormatRules {
         }
     }
 
+    // Converts types used for hosting only static members into enums to avoid instantiation.
+    public let convenienceType = FormatRule(
+        help: "Converts types used for hosting only static members into enums.",
+        options: []
+    ) { formatter in
+
+        func rangeHostsOnlyStaticMembers(start startIndex: Int, end endIndex: Int) -> Bool {
+            var j = startIndex
+            while j < endIndex, let token = formatter.token(at: j) {
+                // exit if there's a explicit init
+                if token == .keyword("init") {
+                    return false
+                } else if [.keyword("let"),
+                           .keyword("var"),
+                           .keyword("func")].contains(token),
+                    !formatter.modifiersForType(at: j, contains: "static")
+                {
+                    return false
+                }
+                j += 1
+            }
+            return true
+        }
+
+        formatter.forEachToken(where: { $0 == .keyword("class") || $0 == .keyword("struct") }) { i, _ in
+            guard formatter.last(.keyword, before: i) != .keyword("import") else { return }
+            // exit if class is a type modifier
+            guard let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i), !next.isKeyword else { return }
+
+            guard let braceIndex = formatter.index(after: i, where: { $0 == .startOfScope("{") }) else { return }
+
+            // exit if type is conforming any types
+            guard !formatter.tokens[i ... braceIndex].contains(.delimiter(":")) else { return }
+
+            guard let endIndex = formatter.index(after: braceIndex, where: { $0 == .endOfScope("}") }) else { return }
+
+            if rangeHostsOnlyStaticMembers(start: braceIndex + 1, end: endIndex) {
+                formatter.replaceToken(at: i, with: [.keyword("enum")])
+
+                let start = formatter.startOfModifiers(at: i)
+                if formatter.modifiersForType(at: i, contains: "final"),
+                    let finalIndex = formatter.lastIndex(in: start ..< i, where: { $0 == .identifier("final") })
+                {
+                    formatter.removeTokens(in: finalIndex ... finalIndex + 1)
+                }
+            }
+        }
+    }
+
     /// Remove trailing space from the end of lines, as it has no semantic
     /// meaning and leads to noise in commits.
     public let trailingSpace = FormatRule(

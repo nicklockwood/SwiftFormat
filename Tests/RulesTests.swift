@@ -36,14 +36,16 @@ class RulesTests: XCTestCase {
     // MARK: - shared test infra
 
     func testFormatting(for input: String, _ output: String? = nil, rule: FormatRule,
-                        options: FormatOptions = .default, exclude: [String] = [])
+                        options: FormatOptions = .default, exclude: [String] = [],
+                        file: StaticString = #file, line: UInt = #line)
     {
         testFormatting(for: input, output.map { [$0] } ?? [], rules: [rule],
-                       options: options, exclude: exclude)
+                       options: options, exclude: exclude, file: file, line: line)
     }
 
     func testFormatting(for input: String, _ outputs: [String] = [], rules: [FormatRule],
-                        options: FormatOptions = .default, exclude: [String] = [])
+                        options: FormatOptions = .default, exclude: [String] = [],
+                        file: StaticString = #file, line: UInt = #line)
     {
         // The `name` property on individual rules is not populated until the first call into `rulesByName`,
         // so we have to make sure to trigger this before checking the names of the given rules.
@@ -58,22 +60,23 @@ class RulesTests: XCTestCase {
         let exclude = exclude
             + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
             + (rules.first?.name == "organizeDeclarations" ? [] : ["organizeDeclarations"])
-        XCTAssertEqual(try format(input, rules: rules, options: options), output)
-        XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude),
-                                  options: options), output2)
+        XCTAssertEqual(try format(input, rules: rules, options: options), output, file: file, line: line)
+        XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude), options: options),
+                       output2, file: file, line: line)
         if input != output {
-            XCTAssertEqual(try format(output, rules: rules, options: options), output)
+            XCTAssertEqual(try format(output, rules: rules, options: options),
+                           output, file: file, line: line)
         }
         if input != output2, output != output2 {
-            XCTAssertEqual(try format(output2, rules: FormatRules.all(except: exclude),
-                                      options: options), output2)
+            XCTAssertEqual(try format(output2, rules: FormatRules.all(except: exclude), options: options),
+                           output2, file: file, line: line)
         }
 
         #if os(macOS)
             // These tests are flakey on Linux, and it's hard to debug
-            XCTAssertEqual(try lint(output, rules: rules, options: options), [])
-            XCTAssertEqual(try lint(output2, rules: FormatRules.all(except: exclude),
-                                    options: options), [])
+            XCTAssertEqual(try lint(output, rules: rules, options: options), [], file: file, line: line)
+            XCTAssertEqual(try lint(output2, rules: FormatRules.all(except: exclude), options: options),
+                           [], file: file, line: line)
         #endif
     }
 

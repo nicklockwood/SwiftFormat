@@ -665,6 +665,13 @@ public struct _FormatRules {
                 return
             }
 
+            // Check for ternary
+            if let endOfExpression = formatter.endOfExpression(at: j, upTo: [.operator("?", .infix)]),
+                formatter.next(.nonSpaceOrCommentOrLinebreak, after: endOfExpression) == .operator("?", .infix)
+            {
+                return
+            }
+
             formatter.removeTokens(in: colonIndex ... endIndex)
             if formatter.tokens[colonIndex - 1].isSpace {
                 formatter.removeToken(at: colonIndex - 1)
@@ -4587,9 +4594,6 @@ public struct _FormatRules {
         help: "Prefer constant values to be on the right-hand-side of expressions.",
         options: ["yodaswap"]
     ) { formatter in
-        let comparisonOperators = ["==", "!=", "<", "<=", ">", ">="].map {
-            Token.operator($0, .infix)
-        }
         func valuesInRangeAreConstant(_ range: CountableRange<Int>) -> Bool {
             var index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: range)
             while var i = index {
@@ -4688,73 +4692,27 @@ public struct _FormatRules {
             }
             return index
         }
-        func endOfExpression(at index: Int) -> Int? {
-            var lastIndex = index
-            var index: Int? = index
-            var wasOperator = true
-            while var i = index {
-                let token = formatter.tokens[i]
-                switch token {
-                case .operator("&&", .infix), .operator("||", .infix),
-                     .operator("?", .infix), .operator(":", .infix):
-                    return lastIndex
-                case .operator(_, .infix):
-                    wasOperator = true
-                case .operator(_, .prefix) where wasOperator, .operator(_, .postfix):
-                    break
-                case .keyword("as"):
-                    wasOperator = true
-                    if case let .operator(name, .postfix)? = formatter.token(at: i + 1),
-                        ["?", "!"].contains(name)
-                    {
-                        i += 1
-                    }
-                case .number, .identifier:
-                    guard wasOperator else {
-                        return lastIndex
-                    }
-                    wasOperator = false
-                case .startOfScope where wasOperator,
-                     .startOfScope("{") where formatter.isStartOfClosure(at: i),
-                     .startOfScope("(") where formatter.isSubscriptOrFunctionCall(at: i),
-                     .startOfScope("[") where formatter.isSubscriptOrFunctionCall(at: i):
-                    wasOperator = false
-                    guard let endIndex = formatter.endOfScope(at: i) else {
-                        return nil
-                    }
-                    i = endIndex
-                default:
-                    return lastIndex
-                }
-                lastIndex = i
-                index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
-            }
-            return lastIndex
-        }
-        formatter.forEachToken(where: { comparisonOperators.contains($0) }) { i, token in
-            guard let prevIndex = formatter.index(of: .nonSpace, before: i),
+
+        formatter.forEachToken { i, token in
+            guard case let .operator(op, .infix) = token,
+                let opIndex = ["==", "!=", "<", "<=", ">", ">="].index(of: op),
+                let prevIndex = formatter.index(of: .nonSpace, before: i),
                 isConstant(at: prevIndex), let startIndex = startOfValue(at: prevIndex),
                 !isOperator(at: formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex)),
                 let nextIndex = formatter.index(of: .nonSpace, after: i), !isConstant(at: nextIndex) ||
-                isOperator(at: formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex))
+                isOperator(at: formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex)),
+                let endIndex = formatter.endOfExpression(at: nextIndex, upTo: [
+                    .operator("&&", .infix), .operator("||", .infix),
+                    .operator("?", .infix), .operator(":", .infix),
+                ])
             else {
                 return
             }
-            let op: String
-            switch token.string {
-            case ">": op = "<"
-            case ">=": op = "<="
-            case "<": op = ">"
-            case "<=": op = ">="
-            case let _op: op = _op
-            }
-            guard let endIndex = endOfExpression(at: nextIndex) else {
-                return
-            }
+            let inverseOp = ["==", "!=", ">", ">=", "<", "<="][opIndex]
             let expression = Array(formatter.tokens[nextIndex ... endIndex])
             let constant = Array(formatter.tokens[startIndex ... prevIndex])
             formatter.replaceTokens(in: nextIndex ... endIndex, with: constant)
-            formatter.replaceToken(at: i, with: .operator(op, .infix))
+            formatter.replaceToken(at: i, with: .operator(inverseOp, .infix))
             formatter.replaceTokens(in: startIndex ... prevIndex, with: expression)
         }
     }

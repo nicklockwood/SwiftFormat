@@ -845,6 +845,23 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantType)
     }
 
+    func testNonRedundantTernaryConditionTypeNotRemoved() {
+        let input = "let foo: Bar = Bar.baz() ? .bar1 : .bar2"
+        testFormatting(for: input, rule: FormatRules.redundantType)
+    }
+
+    func testTernaryConditionAfterLetNotTreatedAsPartOfExpression() {
+        let input = """
+        let foo: Bar = Bar.baz()
+        baz ? bar2() : bar2()
+        """
+        let output = """
+        let foo = Bar.baz()
+        baz ? bar2() : bar2()
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantType)
+    }
+
     // MARK: - redundantNilInit
 
     func testRemoveRedundantNilInit() {

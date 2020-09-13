@@ -360,7 +360,7 @@ extension RulesTests {
             for: input, output,
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(beforeMarks: ["typealias", "struct"]),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "enumNamespaces"]
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }
 

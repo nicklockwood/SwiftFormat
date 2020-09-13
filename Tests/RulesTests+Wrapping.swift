@@ -2233,8 +2233,7 @@ extension RulesTests {
             for: input,
             output,
             rule: FormatRules.wrapAttributes,
-            options: options,
-            exclude: ["enumNamespaces"]
+            options: options
         )
     }
 
@@ -2244,7 +2243,7 @@ extension RulesTests {
         struct Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options, exclude: ["enumNamespaces"])
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testUnwrapTypeAttribute() {
@@ -2264,7 +2263,7 @@ extension RulesTests {
         @objc class Foo {}
         """
         let options = FormatOptions(typeAttributes: .sameLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options, exclude: ["enumNamespaces"])
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testTestableImportIsNotWrapped() {
@@ -2275,7 +2274,7 @@ extension RulesTests {
         class Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options, exclude: ["enumNamespaces"])
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testModifiersDontAffectAttributeWrapping() {

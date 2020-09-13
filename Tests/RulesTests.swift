@@ -1228,8 +1228,16 @@ class RulesTests: XCTestCase {
     }
 
     func testEnumNamespacesRemovingExtraKeywords() {
-        let input = "final class MyNamespace {}"
-        let output = "enum MyNamespace {}"
+        let input = """
+        final class MyNamespace {
+            static let bar = "bar"
+        }
+        """
+        let output = """
+        enum MyNamespace {
+            static let bar = "bar"
+        }
+        """
         testFormatting(for: input, output, rule: FormatRules.enumNamespaces)
     }
 
@@ -1238,7 +1246,7 @@ class RulesTests: XCTestCase {
         enum Namespace {}
         extension Namespace {
             struct Constants {
-                static let us = "us"
+                static let bar = "bar"
             }
         }
         """
@@ -1796,14 +1804,14 @@ class RulesTests: XCTestCase {
     func testNoStripHeaderDocWithNewlineBeforeCode() {
         let input = "/// Header doc\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options, exclude: ["enumNamespaces"])
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
     }
 
     func testNoDuplicateHeaderIfMissingTrailingBlankLine() {
         let input = "// Header comment\nclass Foo {}"
         let output = "// Header comment\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "Header comment")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options, exclude: ["enumNamespaces"])
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
     func testFileHeaderYearReplacement() {
@@ -2470,7 +2478,7 @@ class RulesTests: XCTestCase {
     func testClassNotReplacedByAnyObjectIfSwiftVersionLessThan4_1() {
         let input = "protocol Foo: class {}"
         let options = FormatOptions(swiftVersion: "4.0")
-        testFormatting(for: input, rule: FormatRules.anyObjectProtocol, options: options, exclude: ["enumNamespaces"])
+        testFormatting(for: input, rule: FormatRules.anyObjectProtocol, options: options)
     }
 
     // MARK: - strongifiedSelf

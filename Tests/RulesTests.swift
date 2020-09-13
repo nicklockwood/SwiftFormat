@@ -1203,6 +1203,15 @@ class RulesTests: XCTestCase {
 
     // MARK: - enumNamespaces
 
+    func testEnumNamespacesClassAsProtocolRestriction() {
+        let input = """
+        @objc protocol Foo: class {
+            @objc static var expressionTypes: [String: RuntimeType] { get }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
     func testEnumNamespacesConformingOtherType() {
         let input = "private final class CustomUITableViewCell: UITableViewCell {}"
         testFormatting(for: input, rule: FormatRules.enumNamespaces)

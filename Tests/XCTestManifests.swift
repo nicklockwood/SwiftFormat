@@ -703,6 +703,7 @@ extension RulesTests {
         ("testEnumIfCaseEndifIndenting", testEnumIfCaseEndifIndenting),
         ("testEnumNamespaceDoesNothing", testEnumNamespaceDoesNothing),
         ("testEnumNamespaceDoesNothingEmptyDeclaration", testEnumNamespaceDoesNothingEmptyDeclaration),
+        ("testEnumNamespacesClassAsProtocolRestriction", testEnumNamespacesClassAsProtocolRestriction),
         ("testEnumNamespacesClassFunction", testEnumNamespacesClassFunction),
         ("testEnumNamespacesConformingOtherType", testEnumNamespacesConformingOtherType),
         ("testEnumNamespacesImportClass", testEnumNamespacesImportClass),

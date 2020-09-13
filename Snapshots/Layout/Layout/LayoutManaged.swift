@@ -3,7 +3,7 @@
 import Foundation
 
 /// A protocol for view-type classes that can be configured using Layout
-@objc protocol LayoutConfigurable: class {
+@objc protocol LayoutConfigurable: enum {
     /// Expression names and types
     @objc static var expressionTypes: [String: RuntimeType] { get }
 }

@@ -747,6 +747,9 @@ public struct _FormatRules {
             // exit if class is a type modifier
             guard let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i), !next.isKeyword else { return }
 
+            // exit for class as protocol conformance
+            guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":") else { return }
+
             guard let braceIndex = formatter.index(after: i, where: { $0 == .startOfScope("{") }) else { return }
 
             // exit if type is conforming any types

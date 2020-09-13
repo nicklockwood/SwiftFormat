@@ -715,6 +715,9 @@ public struct _FormatRules {
         options: []
     ) { formatter in
         func rangeHostsOnlyStaticMembersAtTopLevel(start startIndex: Int, end endIndex: Int) -> Bool {
+            // exit for empty declarations
+            guard formatter.next(.nonSpaceOrCommentOrLinebreak, in: startIndex ..< endIndex) != nil else { return false }
+
             var j = startIndex
             while j < endIndex, let token = formatter.token(at: j) {
                 if token == .startOfScope("{"), let skip = formatter.index(of: .endOfScope,

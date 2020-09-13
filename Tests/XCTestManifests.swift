@@ -702,6 +702,7 @@ extension RulesTests {
         ("testEnumCaseWrappedIfWithXcodeStyle", testEnumCaseWrappedIfWithXcodeStyle),
         ("testEnumIfCaseEndifIndenting", testEnumIfCaseEndifIndenting),
         ("testEnumNamespaceDoesNothing", testEnumNamespaceDoesNothing),
+        ("testEnumNamespaceDoesNothingEmptyDeclaration", testEnumNamespaceDoesNothingEmptyDeclaration),
         ("testEnumNamespacesClassFunction", testEnumNamespacesClassFunction),
         ("testEnumNamespacesConformingOtherType", testEnumNamespacesConformingOtherType),
         ("testEnumNamespacesImportClass", testEnumNamespacesImportClass),

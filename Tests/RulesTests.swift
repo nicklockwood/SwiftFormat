@@ -1404,6 +1404,13 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
+    func testEnumNamespaceDoesNothingEmptyDeclaration() {
+        let input = """
+        class Foo {}
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
     // MARK: - trailingSpace
 
     // truncateBlankLines = true

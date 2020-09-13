@@ -710,14 +710,20 @@ public struct _FormatRules {
     }
 
     // Converts types used for hosting only static members into enums to avoid instantiation.
-    public let convenienceType = FormatRule(
+    public let enumNamespaces = FormatRule(
         help: "Converts types used for hosting only static members into enums.",
         options: []
     ) { formatter in
-
-        func rangeHostsOnlyStaticMembers(start startIndex: Int, end endIndex: Int) -> Bool {
+        func rangeHostsOnlyStaticMembersAtTopLevel(start startIndex: Int, end endIndex: Int) -> Bool {
             var j = startIndex
             while j < endIndex, let token = formatter.token(at: j) {
+                if token == .startOfScope("{"), let skip = formatter.index(of: .endOfScope,
+                                                                           after: j,
+                                                                           if: { $0 == .endOfScope("}") })
+                {
+                    j = skip
+                    continue
+                }
                 // exit if there's a explicit init
                 if token == .keyword("init") {
                     return false
@@ -745,7 +751,7 @@ public struct _FormatRules {
 
             guard let endIndex = formatter.index(after: braceIndex, where: { $0 == .endOfScope("}") }) else { return }
 
-            if rangeHostsOnlyStaticMembers(start: braceIndex + 1, end: endIndex) {
+            if rangeHostsOnlyStaticMembersAtTopLevel(start: braceIndex + 1, end: endIndex) {
                 formatter.replaceToken(at: i, with: [.keyword("enum")])
 
                 let start = formatter.startOfModifiers(at: i)

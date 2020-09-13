@@ -118,7 +118,7 @@ extension RulesTests {
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: ["blankLinesAtStartOfScope", "enumNamespaces"]
         )
     }
 
@@ -360,7 +360,7 @@ extension RulesTests {
             for: input, output,
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(beforeMarks: ["typealias", "struct"]),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "convenienceType"]
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "enumNamespaces"]
         )
     }
 

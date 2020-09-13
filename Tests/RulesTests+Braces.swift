@@ -57,7 +57,7 @@ extension RulesTests {
             // foo
         }
         """
-        testFormatting(for: input, rule: FormatRules.braces, exclude: ["convenienceType"])
+        testFormatting(for: input, rule: FormatRules.braces, exclude: ["enumNamespaces"])
     }
 
     func testKnRExtraSpaceNotAddedBeforeBrace() {
@@ -187,7 +187,7 @@ extension RulesTests {
             // foo
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces, exclude: ["convenienceType"])
+        testFormatting(for: input, output, rule: FormatRules.braces, exclude: ["enumNamespaces"])
     }
 
     func testBracesForInit() {
@@ -340,7 +340,7 @@ extension RulesTests {
             for: input, output,
             rule: FormatRules.braces,
             options: options,
-            exclude: ["convenienceType"]
+            exclude: ["enumNamespaces"]
         )
     }
 

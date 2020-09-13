@@ -1408,7 +1408,7 @@ extension RulesTests {
 
     func testNoRemoveBackticksAroundTypeInsideType() {
         let input = "struct Foo {\n    enum `Type` {}\n}"
-        testFormatting(for: input, rule: FormatRules.redundantBackticks, exclude: ["convenienceType"])
+        testFormatting(for: input, rule: FormatRules.redundantBackticks, exclude: ["enumNamespaces"])
     }
 
     func testNoRemoveBackticksAroundLetArgument() {
@@ -1435,7 +1435,7 @@ extension RulesTests {
 
     func testNoRemoveBackticksAroundTypePropertyInsideType() {
         let input = "struct Foo {\n    enum `Type` {}\n}"
-        testFormatting(for: input, rule: FormatRules.redundantBackticks, exclude: ["convenienceType"])
+        testFormatting(for: input, rule: FormatRules.redundantBackticks, exclude: ["enumNamespaces"])
     }
 
     func testNoRemoveBackticksAroundTrueProperty() {
@@ -1838,7 +1838,7 @@ extension RulesTests {
     func testRemoveSelfInStaticFunction() {
         let input = "struct Foo {\n    static func foo() {\n        func bar() { self.foo() }\n    }\n}"
         let output = "struct Foo {\n    static func foo() {\n        func bar() { foo() }\n    }\n}"
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, exclude: ["enumNamespaces"])
     }
 
     func testRemoveSelfInClassFunctionWithModifiers() {

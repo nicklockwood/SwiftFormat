@@ -1201,39 +1201,39 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
     }
 
-    // MARK: - convenienceType
+    // MARK: - enumNamespaces
 
-    func testConvenienceTypeConformingOtherType() {
+    func testEnumNamespacesConformingOtherType() {
         let input = "private final class CustomUITableViewCell: UITableViewCell {}"
-        testFormatting(for: input, rule: FormatRules.convenienceType)
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
-    func testConvenienceTypeImportClass() {
+    func testEnumNamespacesImportClass() {
         let input = "import class MyUIKit.AutoHeightTableView"
-        testFormatting(for: input, rule: FormatRules.convenienceType)
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
-    func testConvenienceTypeImportStruct() {
+    func testEnumNamespacesImportStruct() {
         let input = "import struct Core.CurrencyFormatter"
-        testFormatting(for: input, rule: FormatRules.convenienceType)
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
-    func testConvenienceTypeClassFunction() {
+    func testEnumNamespacesClassFunction() {
         let input = """
         class Container {
             class func bar() {}
         }
         """
-        testFormatting(for: input, rule: FormatRules.convenienceType)
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
-    func testConvenienceTypeRemovingExtraKeywords() {
+    func testEnumNamespacesRemovingExtraKeywords() {
         let input = "final class MyNamespace {}"
         let output = "enum MyNamespace {}"
-        testFormatting(for: input, output, rule: FormatRules.convenienceType)
+        testFormatting(for: input, output, rule: FormatRules.enumNamespaces)
     }
 
-    func testConvenienceTypeNestedTypes() {
+    func testEnumNamespacesNestedTypes() {
         let input = """
         enum Namespace {}
         extension Namespace {
@@ -1246,14 +1246,94 @@ class RulesTests: XCTestCase {
         enum Namespace {}
         extension Namespace {
             enum Constants {
-                static let us = "us"
+                static let bar = "bar"
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.convenienceType)
+        testFormatting(for: input, output, rule: FormatRules.enumNamespaces)
     }
 
-    func testConvenienceTypeStaticVariable() {
+    func testEnumNamespacesNestedTypes2() {
+        let input = """
+        struct Namespace {
+            struct NestedNamespace {
+                static let foo: Int
+                static let bar: Int
+            }
+        }
+        """
+        let output = """
+        enum Namespace {
+            enum NestedNamespace {
+                static let foo: Int
+                static let bar: Int
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesNestedTypes3() {
+        let input = """
+        struct Namespace {
+            struct TypeNestedInNamespace {
+                let foo: Int
+                let bar: Int
+            }
+        }
+        """
+        let output = """
+        enum Namespace {
+            struct TypeNestedInNamespace {
+                let foo: Int
+                let bar: Int
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesNestedTypes4() {
+        let input = """
+        struct Namespace {
+            static func staticFunction() {
+                struct NestedType {
+                    init() {}
+                }
+            }
+        }
+        """
+        let output = """
+        enum Namespace {
+            static func staticFunction() {
+                struct NestedType {
+                    init() {}
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesNestedTypes5() {
+        let input = """
+        struct Namespace {
+            static func staticFunction() {
+                func nestedFunction() { /* ... */ }
+            }
+        }
+        """
+        let output = """
+        enum Namespace {
+            static func staticFunction() {
+                func nestedFunction() { /* ... */ }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesStaticVariable() {
         let input = """
         struct Constants {
             static let β = 0, 5
@@ -1264,20 +1344,20 @@ class RulesTests: XCTestCase {
             static let β = 0, 5
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.convenienceType)
+        testFormatting(for: input, output, rule: FormatRules.enumNamespaces)
     }
 
-    func testConvenienceTypeStaticAndInstanceVariable() {
+    func testEnumNamespacesStaticAndInstanceVariable() {
         let input = """
         struct Constants {
             static let β = 0, 5
             let Ɣ = 0, 3
         }
         """
-        testFormatting(for: input, rule: FormatRules.convenienceType)
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
-    func testConvenienceTypeStaticFunction() {
+    func testEnumNamespacesStaticFunction() {
         let input = """
         struct Constants {
             static func remoteConfig() -> Int {
@@ -1292,10 +1372,10 @@ class RulesTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.convenienceType)
+        testFormatting(for: input, output, rule: FormatRules.enumNamespaces)
     }
 
-    func testConvenienceTypeStaticAndInstanceFunction() {
+    func testEnumNamespacesStaticAndInstanceFunction() {
         let input = """
         struct Constants {
             static func remoteConfig() -> Int {
@@ -1308,7 +1388,20 @@ class RulesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.convenienceType)
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespaceDoesNothing() {
+        let input = """
+        struct Foo {
+            #if BAR
+                func something() {}
+            #else
+                func something() {}
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
     // MARK: - trailingSpace
@@ -1696,14 +1789,14 @@ class RulesTests: XCTestCase {
     func testNoStripHeaderDocWithNewlineBeforeCode() {
         let input = "/// Header doc\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options, exclude: ["convenienceType"])
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options, exclude: ["enumNamespaces"])
     }
 
     func testNoDuplicateHeaderIfMissingTrailingBlankLine() {
         let input = "// Header comment\nclass Foo {}"
         let output = "// Header comment\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "Header comment")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options, exclude: ["convenienceType"])
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options, exclude: ["enumNamespaces"])
     }
 
     func testFileHeaderYearReplacement() {
@@ -2370,7 +2463,7 @@ class RulesTests: XCTestCase {
     func testClassNotReplacedByAnyObjectIfSwiftVersionLessThan4_1() {
         let input = "protocol Foo: class {}"
         let options = FormatOptions(swiftVersion: "4.0")
-        testFormatting(for: input, rule: FormatRules.anyObjectProtocol, options: options, exclude: ["convenienceType"])
+        testFormatting(for: input, rule: FormatRules.anyObjectProtocol, options: options, exclude: ["enumNamespaces"])
     }
 
     // MARK: - strongifiedSelf

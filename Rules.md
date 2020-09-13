@@ -9,10 +9,10 @@
 * [braces](#braces)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
-* [convenienceType](#convenienceType)
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
+* [enumNamespaces](#enumNamespaces)
 * [fileHeader](#fileHeader)
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
@@ -331,10 +331,6 @@ Replace consecutive spaces with a single space.
 </details>
 <br/>
 
-## convenienceType
-
-Converts types used for hosting only static members into enums.
-
 ## duplicateImports
 
 Remove duplicate import statements.
@@ -437,6 +433,10 @@ Remove whitespace inside empty braces.
 
 </details>
 <br/>
+
+## enumNamespaces
+
+Converts types used for hosting only static members into enums.
 
 ## fileHeader
 

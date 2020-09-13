@@ -192,7 +192,7 @@ extension RulesTests {
         let input = "protocol Foo {\n}\n@available(iOS 8.0, OSX 10.10, *)\nclass Bar {\n}"
         let output = "protocol Foo {\n}\n\n@available(iOS 8.0, OSX 10.10, *)\nclass Bar {\n}"
         testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenScopes,
-                       exclude: ["emptyBraces", "convenienceType"])
+                       exclude: ["emptyBraces", "enumNamespaces"])
     }
 
     func testNoExtraBlankLineBetweenFunctions() {

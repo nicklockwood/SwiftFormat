@@ -1136,7 +1136,7 @@ class RulesTests: XCTestCase {
         let input = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let output = "switch foo {\ncase let .foo(bar), let .bar(bar):\n}"
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: ["wrapSwitchCases", "sortedSwitchCases"])
     }
 
     func testHoistCatchLet() {
@@ -1260,7 +1260,7 @@ class RulesTests: XCTestCase {
         let output = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: ["wrapSwitchCases", "sortedSwitchCases"])
     }
 
     func testUnhoistCommaSeparatedSwitchCaseLets2() {
@@ -1652,9 +1652,9 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(fileHeader: "// {file}.", fileInfo: FileInfo())
         XCTAssertThrowsError(try format(input, rules: [FormatRules.fileHeader], options: options))
     }
-    
+
     // MARK: - sortedSwitchCases
-    
+
     func testSortedSwitchCaseMultilineWithCommens() {
         let input = """
         switch self {
@@ -1678,7 +1678,7 @@ class RulesTests: XCTestCase {
             exclude: ["indent"]
         )
     }
-    
+
     func testSortedSwitchCaseMultiline() {
         let input = """
         switch self {
@@ -1702,7 +1702,7 @@ class RulesTests: XCTestCase {
             exclude: ["indent"]
         )
     }
-    
+
     func testSortedSwitchCaseMultipleAssociatedValues() {
         let input = """
         switch self {
@@ -1724,7 +1724,7 @@ class RulesTests: XCTestCase {
             exclude: ["wrapSwitchCases", "indent"]
         )
     }
-    
+
     func testSortedSwitchCaseLet() {
         let input = """
         switch self {
@@ -1746,7 +1746,7 @@ class RulesTests: XCTestCase {
             exclude: ["wrapSwitchCases", "indent"]
         )
     }
-    
+
     func testSortedSwitchCaseOneCaseDoesNothing() {
         let input = """
         switch self {
@@ -1761,7 +1761,7 @@ class RulesTests: XCTestCase {
             exclude: ["indent"]
         )
     }
-    
+
     func testSortedSwitchStrings() {
         let input = """
         switch self {
@@ -1783,7 +1783,7 @@ class RulesTests: XCTestCase {
             exclude: ["wrapSwitchCases", "indent"]
         )
     }
-    
+
     func testSortedSwitchWhereCondition() {
         let input = """
         switch self {

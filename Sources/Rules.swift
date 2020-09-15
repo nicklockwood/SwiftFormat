@@ -3908,6 +3908,72 @@ public struct _FormatRules {
             formatter.removeTokens(in: dotIndex ... i)
         }
     }
+    
+    /// Sorts switch cases alphabetically
+    public let sortedSwitchCases = FormatRule(
+        help: "Sorts switch cases alphabetically.",
+        options: [],
+        sharedOptions: []
+    ) { formatter in
+        
+        struct SwitchCase: Equatable {
+            let start: Int
+            let end: Int
+            
+            var range: Range<Int> { return Range(start ... end) }
+        }
+        
+        formatter.forEach(.endOfScope("case")) { i, _ in
+            guard let endIndex = formatter.index(
+                after: i,
+                where: { $0 == .startOfScope(":") }
+                )
+                else { return }
+            
+            var nextDelimiterIndex = formatter.index(in: i + 1 ..< endIndex, where: { $0 == .delimiter(",") })
+            var nextStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+            
+            var enums: [SwitchCase] = []
+            
+            while let startIndex = nextStartIndex,
+                let delimiterIndex = nextDelimiterIndex,
+                delimiterIndex < endIndex,
+                startIndex < endIndex,
+                let end = formatter.lastIndex(of: .nonSpaceOrCommentOrLinebreak,
+                                              in: Range(uncheckedBounds: (lower: startIndex, upper: delimiterIndex)))
+            {
+                enums.append(SwitchCase(start: startIndex, end: end))
+                nextStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                 after: delimiterIndex) ?? endIndex
+                nextDelimiterIndex = formatter.index(after: delimiterIndex, where: { $0 == .delimiter(",") })
+            }
+            
+            // last one from the cases list
+            if let nextStart = nextStartIndex,
+                let nextEnd = formatter.lastIndex(of: .nonSpaceOrCommentOrLinebreak, in: nextStart ..< endIndex),
+                nextStart < nextEnd
+            {
+                enums.append(SwitchCase(start: nextStart, end: nextEnd))
+            }
+            
+            guard enums.count > 1 else { return }
+            
+            let sorted: [SwitchCase] = enums.sorted { (case1, case2) -> Bool in
+                let lhs = formatter.tokens[case1.range]
+                    .first(where: { $0.isIdentifier || $0.isStringBody || $0.isNumber })?.string ?? ""
+                let rhs = formatter.tokens[case2.range]
+                    .first(where: { $0.isIdentifier || $0.isStringBody || $0.isNumber })?.string ?? ""
+                
+                return lhs < rhs
+            }
+            
+            let sortedTokens = sorted.map { formatter.tokens[$0.range] }
+            for switchCase in enums.enumerated().reversed() {
+                let newTokens = Array(sortedTokens[switchCase.offset])
+                formatter.replaceTokens(in: enums[switchCase.offset].range, with: newTokens)
+            }
+        }
+    }
 
     /// Sort import statements
     public let sortedImports = FormatRule(

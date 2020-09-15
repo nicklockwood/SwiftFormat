@@ -1652,6 +1652,159 @@ class RulesTests: XCTestCase {
         let options = FormatOptions(fileHeader: "// {file}.", fileInfo: FileInfo())
         XCTAssertThrowsError(try format(input, rules: [FormatRules.fileHeader], options: options))
     }
+    
+    // MARK: - sortedSwitchCases
+    
+    func testSortedSwitchCaseMultilineWithCommens() {
+        let input = """
+        switch self {
+        case let .type, // something
+            let .conditionalCompilation:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case let .conditionalCompilation, // something
+            let .type:
+            break
+        }
+        """
+        testFormatting(
+            for:
+            input,
+            output,
+            rule: FormatRules.sortedSwitchCases,
+            exclude: ["indent"]
+        )
+    }
+    
+    func testSortedSwitchCaseMultiline() {
+        let input = """
+        switch self {
+        case let .type,
+            let .conditionalCompilation:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case let .conditionalCompilation,
+            let .type:
+            break
+        }
+        """
+        testFormatting(
+            for:
+            input,
+            output,
+            rule: FormatRules.sortedSwitchCases,
+            exclude: ["indent"]
+        )
+    }
+    
+    func testSortedSwitchCaseMultipleAssociatedValues() {
+        let input = """
+        switch self {
+            case let .b(whatever, whatever2), .a(whatever):
+                break
+        }
+        """
+        let output = """
+        switch self {
+            case .a(whatever), let .b(whatever, whatever2):
+                break
+        }
+        """
+        testFormatting(
+            for:
+            input,
+            output,
+            rule: FormatRules.sortedSwitchCases,
+            exclude: ["wrapSwitchCases", "indent"]
+        )
+    }
+    
+    func testSortedSwitchCaseLet() {
+        let input = """
+        switch self {
+            case let .b(whatever), .a(whatever):
+                break
+        }
+        """
+        let output = """
+        switch self {
+            case .a(whatever), let .b(whatever):
+                break
+        }
+        """
+        testFormatting(
+            for:
+            input,
+            output,
+            rule: FormatRules.sortedSwitchCases,
+            exclude: ["wrapSwitchCases", "indent"]
+        )
+    }
+    
+    func testSortedSwitchCaseOneCaseDoesNothing() {
+        let input = """
+        switch self {
+            case "a":
+                break
+        }
+        """
+        testFormatting(
+            for:
+            input,
+            rule: FormatRules.sortedSwitchCases,
+            exclude: ["indent"]
+        )
+    }
+    
+    func testSortedSwitchStrings() {
+        let input = """
+        switch self {
+            case "GET", "POST", "PUT", "DELETE":
+                break
+        }
+        """
+        let output = """
+        switch self {
+            case "DELETE", "GET", "POST", "PUT":
+                break
+        }
+        """
+        testFormatting(
+            for:
+            input,
+            output,
+            rule: FormatRules.sortedSwitchCases,
+            exclude: ["wrapSwitchCases", "indent"]
+        )
+    }
+    
+    func testSortedSwitchWhereCondition() {
+        let input = """
+        switch self {
+            case .b, .c, .a where isTrue:
+                break
+        }
+        """
+        let output = """
+        switch self {
+            case .a where isTrue, .b, .c:
+                break
+        }
+        """
+        testFormatting(
+            for:
+            input,
+            output,
+            rule: FormatRules.sortedSwitchCases,
+            exclude: ["wrapSwitchCases", "indent", "spaceAroundOperators"]
+        )
+    }
 
     // MARK: - sortedImports
 

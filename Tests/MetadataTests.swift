@@ -158,9 +158,11 @@ class MetadataTests: XCTestCase {
                         Descriptors.categoryMarkComment,
                         Descriptors.beforeMarks,
                         Descriptors.lifecycleMethods,
+                        Descriptors.organizeTypes,
                         Descriptors.organizeStructThreshold,
                         Descriptors.organizeClassThreshold,
                         Descriptors.organizeEnumThreshold,
+                        Descriptors.organizeExtensionThreshold,
                     ]
                 default:
                     continue

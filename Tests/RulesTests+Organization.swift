@@ -1159,10 +1159,7 @@ extension RulesTests {
         }
         """
 
-        testFormatting(
-            for: input, output, rule: FormatRules.extensionDeclarationVisibility,
-            exclude: ["redundantSelf"]
-        )
+        testFormatting(for: input, output, rule: FormatRules.extensionDeclarationVisibility)
     }
 
     func testUpdatesVisibilityOfExtensionInConditionalCompilationBlock() {
@@ -1182,10 +1179,7 @@ extension RulesTests {
         #endif
         """
 
-        testFormatting(
-            for: input, output, rule: FormatRules.extensionDeclarationVisibility,
-            exclude: ["redundantSelf"]
-        )
+        testFormatting(for: input, output, rule: FormatRules.extensionDeclarationVisibility)
     }
 
     func testUpdatesVisibilityOfExtensionMembersInConditionalCompilationBlock() {
@@ -1205,10 +1199,7 @@ extension RulesTests {
         }
         """
 
-        testFormatting(
-            for: input, output, rule: FormatRules.extensionDeclarationVisibility,
-            exclude: ["redundantSelf"]
-        )
+        testFormatting(for: input, output, rule: FormatRules.extensionDeclarationVisibility)
     }
 
     func testDoesntUpdateDeclarationsInsideTypeInsideExtension() {
@@ -1230,9 +1221,18 @@ extension RulesTests {
         }
         """
 
-        testFormatting(
-            for: input, output, rule: FormatRules.extensionDeclarationVisibility,
-            exclude: ["redundantSelf"]
-        )
+        testFormatting(for: input, output, rule: FormatRules.extensionDeclarationVisibility)
+    }
+
+    func testDoesNothingForInternalExtension() {
+        let input = """
+        extension Foo {
+            func bar() {}
+            func baaz() {}
+            public func quux() {}
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionDeclarationVisibility)
     }
 }

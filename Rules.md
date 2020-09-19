@@ -436,7 +436,27 @@ Remove whitespace inside empty braces.
 
 ## extensionDeclarationVisibility
 
-Prefer specifying the visibility of individual declarations in an extension
+Explicitly specify the visibility of individual declarations in an extension.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- public extension Foo {
+-     func bar() {}
+-     internal var baaz: Int { 10 }
+-     private func quux()
+  }
+
++ extension Foo {
++     public func bar() {}
++     var baaz: Int { 10 }
++     private func quux()
+  }
+```
+
+</details>
+<br/>
 
 ## fileHeader
 

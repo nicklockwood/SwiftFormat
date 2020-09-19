@@ -4935,7 +4935,7 @@ public struct _FormatRules {
     }
 
     public let extensionDeclarationVisibility = FormatRule(
-        help: "Prefer specifying the visibility of individual declarations in an extension",
+        help: "Explicitly specify the visibility of individual declarations in an extension.",
         disabledByDefault: true
     ) { formatter in
         formatter.mapRecursiveDeclarations { declaration in

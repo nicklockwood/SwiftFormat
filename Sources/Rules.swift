@@ -4916,13 +4916,22 @@ public struct _FormatRules {
         options: ["categorymark", "beforemarks", "lifecycle", "structthreshold",
                   "classthreshold", "enumthreshold"]
     ) { formatter in
-        // Parse the file into declarations and organize the body of individual types
-        let organizedDeclarations = formatter
-            .parseDeclarations()
-            .map { formatter.organizeDeclarations($0) }
+        formatter.mapRecursiveDeclarations { declaration in
+            switch declaration {
+            // Organize the body of type declarations
+            case let .type(kind, open, body, close):
+                let organizedType = formatter.organizeType((kind, open, body, close))
+                return .type(
+                    kind: organizedType.kind,
+                    open: organizedType.open,
+                    body: organizedType.body,
+                    close: organizedType.close
+                )
 
-        let updatedTokens = organizedDeclarations.flatMap { $0.tokens }
-        formatter.replaceTokens(in: 0 ..< formatter.tokens.count, with: updatedTokens)
+            case .conditionalCompilation, .declaration:
+                return declaration
+            }
+        }
     }
 
     public let extensionDeclarationVisibility = FormatRule(

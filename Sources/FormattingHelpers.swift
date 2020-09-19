@@ -403,37 +403,6 @@ extension Formatter {
         }
         removeToken(at: index)
     }
-
-    /// Recursively organizes the body declarations of this declaration and any nested types.
-    func organizeDeclarations(_ declaration: Declaration) -> Formatter.Declaration {
-        switch declaration {
-        case let .type(kind, open, body, close):
-            // Organize the body of this type
-            let (_, organizedOpen, organizedBody, organizedClose) = organizeType((kind, open, body, close))
-
-            // And also organize any of its nested children
-            return .type(
-                kind: kind,
-                open: organizedOpen,
-                body: organizedBody.map { organizeDeclarations($0) },
-                close: organizedClose
-            )
-
-        // We don't organize declarations within conditional compilation blocks
-        // since they represent their own scope, but we still need to organize
-        // the body of any _types_ inside this block.
-        case let .conditionalCompilation(open, body, close):
-            return .conditionalCompilation(
-                open: open,
-                body: body.map { organizeDeclarations($0) },
-                close: close
-            )
-
-        // If the declaration doesn't have a body, there isn't any work to do
-        case .declaration:
-            return declaration
-        }
-    }
 }
 
 /// Helpers for recursively traversing the declaration hierarchy
@@ -938,52 +907,14 @@ extension Formatter {
                         parser.removeTokens(in: rangeBeforeComment)
 
                         // ... and append them to the end of the previous declaration
-                        switch typeBody[declarationIndex - 1] {
-                        case let .declaration(kind, tokens):
-                            typeBody[declarationIndex - 1] = .declaration(
-                                kind: kind,
-                                tokens: tokens + tokensBeforeCommentLine
-                            )
-
-                        case let .type(kind, open, body, close):
-                            typeBody[declarationIndex - 1] = .type(
-                                kind: kind,
-                                open: open,
-                                body: body,
-                                close: close + tokensBeforeCommentLine
-                            )
-
-                        case let .conditionalCompilation(open, body, close):
-                            typeBody[declarationIndex - 1] = .conditionalCompilation(
-                                open: open,
-                                body: body,
-                                close: close + tokensBeforeCommentLine
-                            )
+                        typeBody[declarationIndex - 1] = mapClosingTokens(in: typeBody[declarationIndex - 1]) {
+                            $0 + tokensBeforeCommentLine
                         }
                     }
 
                     // Apply the updated tokens back to this declaration
-                    switch typeBody[declarationIndex] {
-                    case let .declaration(kind, _):
-                        typeBody[declarationIndex] = .declaration(
-                            kind: kind,
-                            tokens: parser.tokens
-                        )
-
-                    case let .type(kind, _, body, close):
-                        typeBody[declarationIndex] = .type(
-                            kind: kind,
-                            open: parser.tokens,
-                            body: body,
-                            close: close
-                        )
-
-                    case let .conditionalCompilation(_, body, close):
-                        typeBody[declarationIndex] = .conditionalCompilation(
-                            open: parser.tokens,
-                            body: body,
-                            close: close
-                        )
+                    typeBody[declarationIndex] = mapOpeningTokens(in: typeBody[declarationIndex]) { _ in
+                        parser.tokens
                     }
                 }
             }
@@ -1194,22 +1125,9 @@ extension Formatter {
                     indexOfLastDeclarationWithType != sortedDeclarations.indices.last
                 else { continue }
 
-                switch sortedDeclarations[indexOfLastDeclarationWithType].declaration {
-                case let .type(kind, open, body, close):
-                    sortedDeclarations[indexOfLastDeclarationWithType].declaration = .type(
-                        kind: kind,
-                        open: open,
-                        body: body,
-                        close: endingWithBlankLine(close)
-                    )
-
-                case let .declaration(kind, tokens):
-                    sortedDeclarations[indexOfLastDeclarationWithType].declaration
-                        = .declaration(kind: kind, tokens: endingWithBlankLine(tokens))
-
-                case .conditionalCompilation:
-                    break
-                }
+                sortedDeclarations[indexOfLastDeclarationWithType].declaration = mapClosingTokens(
+                    in: sortedDeclarations[indexOfLastDeclarationWithType].declaration)
+                { endingWithBlankLine($0) }
             }
         }
 

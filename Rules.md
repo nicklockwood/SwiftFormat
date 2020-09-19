@@ -12,6 +12,7 @@
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
+* [extensionDeclarationVisibility](#extensionDeclarationVisibility)
 * [fileHeader](#fileHeader)
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
@@ -432,6 +433,10 @@ Remove whitespace inside empty braces.
 
 </details>
 <br/>
+
+## extensionDeclarationVisibility
+
+Prefer specifying the visibility of individual declarations in an extension
 
 ## fileHeader
 

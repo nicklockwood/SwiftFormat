@@ -4902,20 +4902,29 @@ public struct _FormatRules {
                 return declaration
             }
 
+            let extensionVisibility = formatter.visibility(of: declaration) ?? .internal
+
             switch formatter.options.extensionACLPlacement {
             // If all declarations in the extension have the same visibility,
             // remove the keyword from the individual declarations and
             // place it on the extension itself.
             case .onExtension:
                 let visibilityOfBodyDeclarations = formatter
-                    .mapDeclarations(body) { formatter.visibility(of: $0, explicit: true) }
+                    .mapDeclarations(body) {
+                        formatter.visibility(of: $0, explicit: true) ?? extensionVisibility
+                    }
                     .compactMap { $0 }
 
                 guard Set(visibilityOfBodyDeclarations).count == 1,
                     let visibilityKeyword = visibilityOfBodyDeclarations.first
                 else { return declaration }
 
-                let extensionWithUpdatedVisibility = formatter.add(visibilityKeyword, to: declaration)
+                let extensionWithUpdatedVisibility: Formatter.Declaration
+                if visibilityKeyword == .internal {
+                    extensionWithUpdatedVisibility = formatter.remove(.internal, from: declaration)
+                } else {
+                    extensionWithUpdatedVisibility = formatter.add(visibilityKeyword, to: declaration)
+                }
 
                 return formatter.mapBodyDeclarations(in: extensionWithUpdatedVisibility) { bodyDeclaration in
                     formatter.remove(visibilityKeyword, from: bodyDeclaration)
@@ -4923,8 +4932,6 @@ public struct _FormatRules {
 
             // Move the extension's visibility keyword to each individual declaration
             case .onDeclarations:
-                let extensionVisibility = formatter.visibility(of: declaration) ?? .internal
-
                 // If the extension is already `internal` then there isn't any work do to
                 if extensionVisibility == .internal {
                     return declaration

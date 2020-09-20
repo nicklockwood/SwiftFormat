@@ -1158,7 +1158,7 @@ extension Formatter {
 
     /// Removes the given visibility keyword from the given declaration
     func remove(_ visibilityKeyword: Visibility, from declaration: Declaration) -> Declaration {
-        mapOpeningTokens(in: declaration) { openTokens in
+        return mapOpeningTokens(in: declaration) { openTokens in
             let openTokensFormatter = Formatter(openTokens)
 
             guard let visibilityKeywordIndex = openTokensFormatter.index(after: -1, where: {

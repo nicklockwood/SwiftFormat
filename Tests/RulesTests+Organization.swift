@@ -1300,4 +1300,73 @@ extension RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
     }
+
+    func testDoesntUpdateExtensionVisibilityWithMultipleBodyVisibilities() {
+        let input = """
+        extension Foo {
+            public func bar() {}
+            var baaz: Int { 10 }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntUpdateExtensionVisibilityWithInternalDeclarations() {
+        let input = """
+        extension Foo {
+            func bar() {}
+            var baaz: Int { 10 }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntUpdateExtensionThatAlreadyHasCorrectVisibilityKeyword() {
+        let input = """
+        public extension Foo {
+            func bar() {}
+            func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testUpdatesExtensionThatHasDifferentACLFromBodyDeclarations() {
+        let input = """
+        private extension Foo {
+            public func bar() {}
+            public func baaz() {}
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            func bar() {}
+            func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testUpdatesExtensionThatHasRedundantACLOnBodyDeclarations() {
+        let input = """
+        public extension Foo {
+            func bar() {}
+            public func baaz() {}
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            func bar() {}
+            func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
 }

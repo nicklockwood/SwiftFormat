@@ -12,6 +12,7 @@
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
+* [enumNamespaces](#enumNamespaces)
 * [extensionAccessControl](#extensionAccessControl)
 * [fileHeader](#fileHeader)
 * [hoistPatternLet](#hoistPatternLet)
@@ -433,6 +434,10 @@ Remove whitespace inside empty braces.
 
 </details>
 <br/>
+
+## enumNamespaces
+
+Converts types used for hosting only static members into enums.
 
 ## extensionAccessControl
 

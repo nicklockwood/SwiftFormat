@@ -4,7 +4,7 @@ import Foundation
 import UIKit
 
 /// Singleton for managing the Layout debug console interface
-public struct LayoutConsole {
+public enum LayoutConsole {
     private static var errorView = LayoutErrorView()
     private static var warningView = LayoutWarningView()
 

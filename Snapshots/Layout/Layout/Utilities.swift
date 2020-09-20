@@ -140,11 +140,11 @@ struct UIntOptionSet: OptionSet {
 #if !swift(>=4)
 
     extension NSAttributedString {
-        struct DocumentType {
+        enum DocumentType {
             static let html = NSHTMLTextDocumentType
         }
 
-        struct DocumentReadingOptionKey {
+        enum DocumentReadingOptionKey {
             static let documentType = NSDocumentTypeDocumentAttribute
             static let characterEncoding = NSCharacterEncodingDocumentAttribute
         }
@@ -169,7 +169,7 @@ struct UIntOptionSet: OptionSet {
     }
 
     extension UIFontDescriptor {
-        struct AttributeName {
+        enum AttributeName {
             static let traits = UIFontDescriptorTraitsAttribute
         }
 

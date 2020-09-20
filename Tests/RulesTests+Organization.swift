@@ -118,7 +118,7 @@ extension RulesTests {
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: ["blankLinesAtStartOfScope", "enumNamespaces"]
         )
     }
 

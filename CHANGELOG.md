@@ -3,6 +3,7 @@
 ## [0.46.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.46.3) (2020-09-20)
 
 - Fixed bug where `redundantType` rule corrupted assignments involving ternary expressions
+- SwiftFormat for Xcode Extension now works in Xcode 12 out of the box
 
 ## [0.46.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.46.2) (2020-09-05)
 

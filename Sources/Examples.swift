@@ -1209,4 +1209,16 @@ private struct Examples {
       }
     ```
     """
+
+    let markTypes = """
+    ```diff
+    + // MARK: - FooViewController
+    +
+     final class FooViewController: UIViewController { }
+
+    + // MARK: UITableViewDelegate
+    +
+     extension FooViewController: UITableViewDelegate { }
+    ```
+    """
 }

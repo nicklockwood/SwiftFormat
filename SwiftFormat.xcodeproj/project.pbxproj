@@ -1220,7 +1220,7 @@
 				INFOPLIST_FILE = EditorExtension/Application/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 0.46.2;
+				MARKETING_VERSION = 0.46.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
 				PRODUCT_NAME = "SwiftFormat for Xcode";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1247,7 +1247,7 @@
 				INFOPLIST_FILE = EditorExtension/Application/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 0.46.2;
+				MARKETING_VERSION = 0.46.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
 				PRODUCT_NAME = "SwiftFormat for Xcode";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1270,7 +1270,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = EditorExtension/Extension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
-				MARKETING_VERSION = 0.46.2;
+				MARKETING_VERSION = 0.46.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
 				PRODUCT_NAME = SwiftFormat;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1295,7 +1295,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = EditorExtension/Extension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
-				MARKETING_VERSION = 0.46.2;
+				MARKETING_VERSION = 0.46.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
 				PRODUCT_NAME = SwiftFormat;
 				PROVISIONING_PROFILE_SPECIFIER = "";

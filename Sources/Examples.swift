@@ -1198,14 +1198,14 @@ private struct Examples {
     ```diff
     - public extension Foo {
     -     func bar() {}
-    -     internal var baaz: Int { 10 }
-    -     private func quux() {}
+    -     func baaz() {}
+    -     internal func quux() {}
       }
 
     + extension Foo {
     +     public func bar() {}
-    +     var baaz: Int { 10 }
-    +     private func quux()
+    +     public func baaz() {}
+    +     func quux() {}
       }
     ```
     """

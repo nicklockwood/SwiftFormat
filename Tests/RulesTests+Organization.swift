@@ -1134,7 +1134,7 @@ extension RulesTests {
                        exclude: ["blankLinesAtStartOfScope"])
     }
 
-    // MARK: extensionDeclarationVisibility
+    // MARK: extensionAccessControl .onDeclarations
 
     func testUpdatesVisibilityOfExtensionMembers() {
         let input = """
@@ -1159,7 +1159,10 @@ extension RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.extensionDeclarationVisibility)
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
     }
 
     func testUpdatesVisibilityOfExtensionInConditionalCompilationBlock() {
@@ -1179,7 +1182,10 @@ extension RulesTests {
         #endif
         """
 
-        testFormatting(for: input, output, rule: FormatRules.extensionDeclarationVisibility)
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
     }
 
     func testUpdatesVisibilityOfExtensionMembersInConditionalCompilationBlock() {
@@ -1199,7 +1205,10 @@ extension RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.extensionDeclarationVisibility)
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
     }
 
     func testDoesntUpdateDeclarationsInsideTypeInsideExtension() {
@@ -1221,7 +1230,10 @@ extension RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.extensionDeclarationVisibility)
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
     }
 
     func testDoesNothingForInternalExtension() {
@@ -1233,6 +1245,59 @@ extension RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.extensionDeclarationVisibility)
+        testFormatting(
+            for: input, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    // MARK: extensionAccessControl .onExtension
+
+    func testUpdatedVisibilityOfExtension() {
+        let input = """
+        extension Foo {
+            public func bar() {}
+            public var baaz: Int { 10 }
+
+            public struct Foo2 {
+                var quux: Int
+            }
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            func bar() {}
+            var baaz: Int { 10 }
+
+            struct Foo2 {
+                var quux: Int
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testUpdatedVisibilityOfExtensionWithDeclarationsInConditionalCompilation() {
+        let input = """
+        extension Foo {
+            #if DEBUG
+                public func bar() {}
+                public var baaz: Int { 10 }
+            #endif
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            #if DEBUG
+                func bar() {}
+                var baaz: Int { 10 }
+            #endif
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
     }
 }

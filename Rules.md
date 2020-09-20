@@ -12,7 +12,7 @@
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
-* [extensionDeclarationVisibility](#extensionDeclarationVisibility)
+* [extensionAccessControl](#extensionAccessControl)
 * [fileHeader](#fileHeader)
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
@@ -434,18 +434,38 @@ Remove whitespace inside empty braces.
 </details>
 <br/>
 
-## extensionDeclarationVisibility
+## extensionAccessControl
 
-Explicitly specify the visibility of individual declarations in an extension.
+Configure the placement of an extension's access control keyword.
+
+Option | Description
+--- | ---
+`--extensionacl` | Place ACL "on-extension" (default) or "on-declarations"
 
 <details>
 <summary>Examples</summary>
+
+`--extensionacl on-extension` (default)
+
+```diff
+- extension Foo {
+-     public func bar() {}
+-     public func baaz() {}
+  }
+
++ public extension Foo {
++     func bar() {}
++     func baaz() {}
+  }
+```
+
+`--extensionacl on-declarations`
 
 ```diff
 - public extension Foo {
 -     func bar() {}
 -     internal var baaz: Int { 10 }
--     private func quux()
+-     private func quux() {}
   }
 
 + extension Foo {

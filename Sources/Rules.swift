@@ -4912,7 +4912,7 @@ public struct _FormatRules {
         help: "Organizes declarations within class, struct, and enum bodies.",
         runOnceOnly: true,
         disabledByDefault: true,
-        orderAfter: ["extensionDeclarationVisibility"],
+        orderAfter: ["extensionAccessControl"],
         options: ["categorymark", "beforemarks", "lifecycle", "structthreshold",
                   "classthreshold", "enumthreshold"]
     ) { formatter in
@@ -4934,59 +4934,66 @@ public struct _FormatRules {
         }
     }
 
-    public let extensionDeclarationVisibility = FormatRule(
-        help: "Explicitly specify the visibility of individual declarations in an extension.",
-        disabledByDefault: true
+    public let extensionAccessControl = FormatRule(
+        help: "Configure the placement of an extension's access control keyword.",
+        disabledByDefault: true,
+        options: ["extensionacl"]
     ) { formatter in
-        formatter.mapRecursiveDeclarations { declaration in
+        formatter.mapRecursiveDeclarations { declaration -> Formatter.Declaration in
             guard case let .type("extension", open, body, close) = declaration else {
                 return declaration
             }
 
-            let extensionVisibility = formatter.visibility(of: declaration) ?? .internal
+            switch formatter.options.extensionACLPlacement {
+            // If all declarations in the extension have the same visibility,
+            // remove the keyword from the individual declarations and
+            // place it on the extension itself.
+            case .onExtension:
+                let visibilityOfBodyDeclarations = formatter
+                    .mapDeclarations(body) { formatter.visibility(of: $0, explicit: true) }
+                    .compactMap { $0 }
 
-            // If the extension is already `internal` then there isn't any work do to
-            if extensionVisibility == .internal {
-                return declaration
-            }
+                guard Set(visibilityOfBodyDeclarations).count == 1,
+                    let visibilityKeyword = visibilityOfBodyDeclarations.first
+                else { return declaration }
 
-            // Remove the visibility keyword from the extension declaration itself
-            let extensionWithUpdatedVisibility = formatter.remove(extensionVisibility, from: declaration)
+                let extensionWithUpdatedVisibility = formatter.add(visibilityKeyword, to: declaration)
 
-            // And apply the extension's visibility to each of its child declarations
-            // that don't have an explicit visibility keyword
-            return formatter.mapBodyDeclarations(in: extensionWithUpdatedVisibility) { bodyDeclaration in
-                let explicitVisibility = formatter.visibility(of: bodyDeclaration, explicit: true)
+                return formatter.mapBodyDeclarations(in: extensionWithUpdatedVisibility) { bodyDeclaration in
+                    formatter.remove(visibilityKeyword, from: bodyDeclaration)
+                }
 
-                switch explicitVisibility {
-                // If there is an explicit `internal` keyword, we can remove it
-                // because its redundant (now that the `extension` itself is `internal`)
-                case .internal:
-                    return formatter.remove(.internal, from: bodyDeclaration)
+            // Move the extension's visibility keyword to each individual declaration
+            case .onDeclarations:
+                let extensionVisibility = formatter.visibility(of: declaration) ?? .internal
 
-                // If there was no explicit visibility keyword, then this declaration
-                // was using the visibility of the extension itself.
-                case .none:
-                    return formatter.mapOpeningTokens(in: bodyDeclaration) { openTokens in
-                        let openTokensFormatter = Formatter(openTokens)
+                // If the extension is already `internal` then there isn't any work do to
+                if extensionVisibility == .internal {
+                    return declaration
+                }
 
-                        guard let indexOfKeyword = openTokensFormatter.index(after: -1, where: {
-                            $0.string == bodyDeclaration.keyword
-                        }) else { return openTokens }
+                // Remove the visibility keyword from the extension declaration itself
+                let extensionWithUpdatedVisibility = formatter.remove(extensionVisibility, from: declaration)
 
-                        let startOfModifiers = openTokensFormatter.startOfModifiers(at: indexOfKeyword)
+                // And apply the extension's visibility to each of its child declarations
+                // that don't have an explicit visibility keyword
+                return formatter.mapBodyDeclarations(in: extensionWithUpdatedVisibility) { bodyDeclaration -> Formatter.Declaration in
+                    if let explicitVisibility = formatter.visibility(of: bodyDeclaration, explicit: true) {
+                        switch explicitVisibility {
+                        // If there is an explicit `internal` keyword, we can remove it
+                        // because its redundant (now that the `extension` itself is `internal`)
+                        case .internal:
+                            return formatter.remove(.internal, from: bodyDeclaration)
 
-                        openTokensFormatter.insert(
-                            tokenize("\(extensionVisibility.rawValue) "),
-                            at: startOfModifiers
-                        )
-
-                        return openTokensFormatter.tokens
+                        // Otherwise we can just keep the existing visibility keyword
+                        case .open, .public, .private, .fileprivate:
+                            return bodyDeclaration
+                        }
+                    } else {
+                        // If there was no explicit visibility keyword, then this declaration
+                        // was using the visibility of the extension itself.
+                        return formatter.add(extensionVisibility, to: bodyDeclaration)
                     }
-
-                // Otherwise we can just keep the existing visibility keyword
-                case .open, .public, .private, .fileprivate:
-                    return bodyDeclaration
                 }
             }
         }

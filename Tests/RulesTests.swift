@@ -58,7 +58,7 @@ class RulesTests: XCTestCase {
         let exclude = exclude
             + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
             + (rules.first?.name == "organizeDeclarations" ? [] : ["organizeDeclarations"])
-            + (rules.first?.name == "extensionDeclarationVisibility" ? [] : ["extensionDeclarationVisibility"])
+            + (rules.first?.name == "extensionAccessControl" ? [] : ["extensionAccessControl"])
         XCTAssertEqual(try format(input, rules: rules, options: options), output)
         XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude),
                                   options: options), output2)

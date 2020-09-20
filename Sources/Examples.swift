@@ -1178,12 +1178,28 @@ private struct Examples {
     ```
     """
 
-    let extensionDeclarationVisibility = """
+    let extensionAccessControl = """
+    `--extensionacl on-extension` (default)
+
+    ```diff
+    - extension Foo {
+    -     public func bar() {}
+    -     public func baaz() {}
+      }
+
+    + public extension Foo {
+    +     func bar() {}
+    +     func baaz() {}
+      }
+    ```
+
+    `--extensionacl on-declarations`
+
     ```diff
     - public extension Foo {
     -     func bar() {}
     -     internal var baaz: Int { 10 }
-    -     private func quux()
+    -     private func quux() {}
       }
 
     + extension Foo {

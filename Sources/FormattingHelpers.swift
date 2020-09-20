@@ -423,7 +423,7 @@ extension Formatter {
         of declarations: [Declaration],
         mapDeclaration: (Declaration) -> Declaration
     ) -> [Declaration] {
-        declarations.map { declaration in
+        return declarations.map { declaration in
             switch mapDeclaration(declaration) {
             case let .type(kind, open, body, close):
                 return .type(
@@ -446,7 +446,7 @@ extension Formatter {
         }
     }
 
-    /// Performs some mapping for each body declaration in this declaration
+    /// Performs some declaration mapping for each body declaration in this declaration
     /// (including any declarations nested in conditional compilation blocks,
     ///  but not including declarations dested within child types).
     func mapBodyDeclarations(
@@ -479,7 +479,7 @@ extension Formatter {
         in body: [Declaration],
         mapBodyDeclaration: (Declaration) -> Declaration
     ) -> [Declaration] {
-        body.map { bodyDeclaration in
+        return body.map { bodyDeclaration in
             // Apply `mapBodyDeclaration` to each declaration in the body
             switch bodyDeclaration {
             case .declaration, .type:
@@ -489,6 +489,23 @@ extension Formatter {
             // since their body tokens are effectively body tokens of the parent type
             case .conditionalCompilation:
                 return mapBodyDeclarations(in: bodyDeclaration, mapBodyDeclaration: mapBodyDeclaration)
+            }
+        }
+    }
+
+    /// Performs some generic mapping for each declaration in the given array,
+    /// stepping through conditional compilation blocks (but not into the body
+    /// of other nested types)
+    func mapDeclarations<T>(
+        _ declarations: [Declaration],
+        mapDeclaration: (Declaration) -> T
+    ) -> [T] {
+        return declarations.flatMap { declaration -> [T] in
+            switch declaration {
+            case .declaration, .type:
+                return [mapDeclaration(declaration)]
+            case let .conditionalCompilation(_, body, _):
+                return mapDeclarations(body, mapDeclaration: mapDeclaration)
             }
         }
     }
@@ -1153,6 +1170,33 @@ extension Formatter {
             while openTokensFormatter.token(at: visibilityKeywordIndex)?.isSpace == true {
                 openTokensFormatter.removeToken(at: visibilityKeywordIndex)
             }
+
+            return openTokensFormatter.tokens
+        }
+    }
+
+    /// Adds the given visibility keyword to the given declaration,
+    /// replacing any existing visibility keyword.
+    func add(_ visibilityKeyword: Visibility, to declaration: Declaration) -> Declaration {
+        var declaration = declaration
+
+        if let existingVisibilityKeyword = visibility(of: declaration, explicit: true) {
+            declaration = remove(existingVisibilityKeyword, from: declaration)
+        }
+
+        return mapOpeningTokens(in: declaration) { openTokens in
+            let openTokensFormatter = Formatter(openTokens)
+
+            guard let indexOfKeyword = openTokensFormatter.index(after: -1, where: {
+                $0.string == declaration.keyword
+            }) else { return openTokens }
+
+            let startOfModifiers = openTokensFormatter.startOfModifiers(at: indexOfKeyword)
+
+            openTokensFormatter.insert(
+                tokenize("\(visibilityKeyword.rawValue) "),
+                at: startOfModifiers
+            )
 
             return openTokensFormatter.tokens
         }

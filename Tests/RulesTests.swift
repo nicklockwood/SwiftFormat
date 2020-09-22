@@ -1136,7 +1136,7 @@ class RulesTests: XCTestCase {
         let input = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let output = "switch foo {\ncase let .foo(bar), let .bar(bar):\n}"
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: ["wrapSwitchCases", "sortedSwitchCases"])
     }
 
     func testHoistCatchLet() {
@@ -1491,7 +1491,7 @@ class RulesTests: XCTestCase {
         let output = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: ["wrapSwitchCases", "sortedSwitchCases"])
     }
 
     func testUnhoistCommaSeparatedSwitchCaseLets2() {
@@ -1882,6 +1882,122 @@ class RulesTests: XCTestCase {
         let input = "let foo = bar"
         let options = FormatOptions(fileHeader: "// {file}.", fileInfo: FileInfo())
         XCTAssertThrowsError(try format(input, rules: [FormatRules.fileHeader], options: options))
+    }
+
+    // MARK: - sortedSwitchCases
+
+    func testSortedSwitchCaseMultilineWithComments() {
+        let input = """
+        switch self {
+        case let .type, // something
+             let .conditionalCompilation:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case let .conditionalCompilation, // something
+             let .type:
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+    }
+
+    func testSortedSwitchCaseMultiline() {
+        let input = """
+        switch self {
+        case let .type,
+             let .conditionalCompilation:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case let .conditionalCompilation,
+             let .type:
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+    }
+
+    func testSortedSwitchCaseMultipleAssociatedValues() {
+        let input = """
+        switch self {
+        case let .b(whatever, whatever2), .a(whatever):
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case .a(whatever), let .b(whatever, whatever2):
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
+    func testSortedSwitchCaseLet() {
+        let input = """
+        switch self {
+        case let .b(whatever), .a(whatever):
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case .a(whatever), let .b(whatever):
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
+    func testSortedSwitchCaseOneCaseDoesNothing() {
+        let input = """
+        switch self {
+        case "a":
+            break
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.sortedSwitchCases)
+    }
+
+    func testSortedSwitchStrings() {
+        let input = """
+        switch self {
+        case "GET", "POST", "PUT", "DELETE":
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case "DELETE", "GET", "POST", "PUT":
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
+    func testSortedSwitchWhereCondition() {
+        let input = """
+        switch self {
+        case .b, .c, .a where isTrue:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case .a where isTrue, .b, .c:
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
     }
 
     // MARK: - sortedImports

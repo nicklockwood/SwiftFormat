@@ -44,6 +44,7 @@
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
 * [sortedImports](#sortedImports)
+* [sortedSwitchCases](#sortedSwitchCases)
 * [spaceAroundBraces](#spaceAroundBraces)
 * [spaceAroundBrackets](#spaceAroundBrackets)
 * [spaceAroundComments](#spaceAroundComments)
@@ -1201,6 +1202,10 @@ Option | Description
 
 </details>
 <br/>
+
+## sortedSwitchCases
+
+Sorts switch cases alphabetically.
 
 ## spaceAroundBraces
 

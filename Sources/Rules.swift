@@ -4977,7 +4977,8 @@ public struct _FormatRules {
                     .compactMap { $0 }
 
                 guard Set(visibilityOfBodyDeclarations).count == 1,
-                    let visibilityKeyword = visibilityOfBodyDeclarations.first
+                    let visibilityKeyword = visibilityOfBodyDeclarations.first,
+                    visibilityKeyword != .open // `open` visibility cannot be applied to extensions
                 else { return declaration }
 
                 let extensionWithUpdatedVisibility: Formatter.Declaration

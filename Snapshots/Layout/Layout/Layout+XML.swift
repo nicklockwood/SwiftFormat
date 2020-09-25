@@ -2,8 +2,8 @@
 
 import Foundation
 
-extension Layout {
-    public init(xmlData: Data, url: URL? = nil, relativeTo: String? = #file) throws {
+public extension Layout {
+    init(xmlData: Data, url: URL? = nil, relativeTo: String? = #file) throws {
         let xml: [XMLNode]
         do {
             xml = try XMLParser.parse(data: xmlData, options: .skipComments)

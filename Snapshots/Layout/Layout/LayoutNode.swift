@@ -3129,8 +3129,8 @@ extension NSObject {
 
 private var viewSwizzled = false
 
-extension UIView {
-    fileprivate static func _swizzle() {
+private extension UIView {
+    static func _swizzle() {
         guard !viewSwizzled else { return }
         replace(#selector(layoutSubviews), of: self, with: #selector(layout_layoutSubviews))
         viewSwizzled = true

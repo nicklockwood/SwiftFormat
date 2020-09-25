@@ -4955,7 +4955,6 @@ public struct _FormatRules {
 
     public let extensionAccessControl = FormatRule(
         help: "Configure the placement of an extension's access control keyword.",
-        disabledByDefault: true,
         options: ["extensionacl"]
     ) { formatter in
         formatter.mapRecursiveDeclarations { declaration -> Formatter.Declaration in

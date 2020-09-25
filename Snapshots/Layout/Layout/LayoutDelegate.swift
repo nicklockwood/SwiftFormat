@@ -14,10 +14,10 @@ public protocol LayoutDelegate: class {
     func layoutValue(forKey key: String) throws -> Any?
 }
 
-extension LayoutDelegate {
+public extension LayoutDelegate {
     /// Default error handler implementation - bubbles error up to the first responder
     /// that will handle it, or displays LayoutConsole if no handler is found
-    public func layoutError(_ error: LayoutError) {
+    func layoutError(_ error: LayoutError) {
         DispatchQueue.main.async {
             var responder = (self as? UIResponder)?.next
             while responder != nil {
@@ -32,7 +32,7 @@ extension LayoutDelegate {
     }
 
     /// Default implementation - returns nothing
-    public func layoutValue(forKey _: String) throws -> Any? {
+    func layoutValue(forKey _: String) throws -> Any? {
         return nil
     }
 }

@@ -281,7 +281,7 @@ private var cellDataKey = 0
 private var headerDataKey = 0
 private var nodesKey = 0
 
-extension UITableView {
+public extension UITableView {
     private enum LayoutData {
         case success(Layout, Any, [String: Any])
         case failure(Error)
@@ -316,7 +316,7 @@ extension UITableView {
 
     // MARK: UITableViewHeaderFooterView recycling
 
-    public func registerLayout(
+    func registerLayout(
         named: String,
         bundle: Bundle = Bundle.main,
         relativeTo: String = #file,
@@ -343,7 +343,7 @@ extension UITableView {
         }
     }
 
-    public func dequeueReusableHeaderFooterNode(withIdentifier identifier: String) -> LayoutNode? {
+    func dequeueReusableHeaderFooterNode(withIdentifier identifier: String) -> LayoutNode? {
         if let view = dequeueReusableHeaderFooterView(withIdentifier: identifier) {
             guard let node = view.layoutNode else {
                 preconditionFailure("\(type(of: view)) is not a Layout-managed view")
@@ -389,7 +389,7 @@ extension UITableView {
 
     // MARK: UITableViewCell recycling
 
-    public func registerLayout(
+    func registerLayout(
         named: String,
         bundle: Bundle = Bundle.main,
         relativeTo: String = #file,
@@ -416,7 +416,7 @@ extension UITableView {
         }
     }
 
-    public func dequeueReusableCellNode(withIdentifier identifier: String) -> LayoutNode? {
+    func dequeueReusableCellNode(withIdentifier identifier: String) -> LayoutNode? {
         if let cell = dequeueReusableCell(withIdentifier: identifier) {
             guard let node = cell.layoutNode else {
                 preconditionFailure("\(type(of: cell)) is not a Layout-managed view")
@@ -456,7 +456,7 @@ extension UITableView {
         }
     }
 
-    public func dequeueReusableCellNode(withIdentifier identifier: String, for _: IndexPath) -> LayoutNode {
+    func dequeueReusableCellNode(withIdentifier identifier: String, for _: IndexPath) -> LayoutNode {
         guard let node = dequeueReusableCellNode(withIdentifier: identifier) else {
             let layoutsData = objc_getAssociatedObject(self, &cellDataKey) as? NSMutableDictionary
             if layoutsData?[identifier] == nil {

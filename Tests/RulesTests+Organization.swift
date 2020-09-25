@@ -1412,4 +1412,22 @@ extension RulesTests {
         """
         testFormatting(for: input, rule: FormatRules.extensionAccessControl)
     }
+
+    func testDontChangePrivateExtensionToFileprivate() {
+        let input = """
+        private extension Foo {
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDontRemoveInternalKeywordFromExtension() {
+        let input = """
+        internal extension Foo {
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
 }

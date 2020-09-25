@@ -613,12 +613,16 @@ extension Formatter {
     }
 
     /// The visibility of a declaration
-    enum Visibility: String {
+    enum Visibility: String, CaseIterable, Comparable {
         case open
         case `public`
         case `internal`
         case `fileprivate`
         case `private`
+
+        static func < (lhs: Visibility, rhs: Visibility) -> Bool {
+            return allCases.index(of: lhs)! > allCases.index(of: rhs)!
+        }
     }
 
     /// Types of declarations that can be present within an individual category
@@ -696,10 +700,7 @@ extension Formatter {
     }
 
     /// The access control `Visibility` of the given `Declaration`
-    func visibility(
-        of declaration: Formatter.Declaration,
-        explicit: Bool = false
-    ) -> Visibility? {
+    func visibility(of declaration: Formatter.Declaration) -> Visibility? {
         switch declaration {
         case let .declaration(keyword, tokens), let .type(keyword, open: tokens, _, _):
             let parser = Formatter(tokens)
@@ -722,13 +723,7 @@ extension Formatter {
                 searchIndex += 1
             }
 
-            if explicit {
-                return nil
-            } else {
-                // `internal` is the default implied vibilility if no other is specified
-                return .internal
-            }
-
+            return nil
         case .conditionalCompilation:
             return nil
         }
@@ -1180,7 +1175,7 @@ extension Formatter {
     func add(_ visibilityKeyword: Visibility, to declaration: Declaration) -> Declaration {
         var declaration = declaration
 
-        if let existingVisibilityKeyword = visibility(of: declaration, explicit: true) {
+        if let existingVisibilityKeyword = visibility(of: declaration) {
             declaration = remove(existingVisibilityKeyword, from: declaration)
         }
 

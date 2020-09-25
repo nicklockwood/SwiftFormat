@@ -1466,4 +1466,27 @@ extension RulesTests {
         """
         testFormatting(for: input, rule: FormatRules.extensionAccessControl)
     }
+
+    func testNoHoistAccessModifierForExtensionThatAddsProtocolConformance() {
+        let input = """
+        extension Foo: Bar {
+            public func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testProtocolConformanceCheckNotFooledByWhereClause() {
+        let input = """
+        extension Foo where Self: Bar {
+            public func bar() {}
+        }
+        """
+        let output = """
+        public extension Foo where Self: Bar {
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
 }

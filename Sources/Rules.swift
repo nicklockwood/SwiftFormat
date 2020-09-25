@@ -4973,6 +4973,14 @@ public struct _FormatRules {
             // remove the keyword from the individual declarations and
             // place it on the extension itself.
             case .onExtension:
+                if extensionVisibility == nil,
+                    let delimiterIndex = declaration.openTokens.index(of: .delimiter(":")),
+                    declaration.openTokens.index(of: .keyword("where")).map({ $0 > delimiterIndex }) ?? true
+                {
+                    // Extension adds protocol conformance so can't have visibility modifier
+                    return declaration
+                }
+
                 let visibilityOfBodyDeclarations = formatter
                     .mapDeclarations(body) {
                         formatter.visibility(of: $0) ?? extensionVisibility ?? .internal

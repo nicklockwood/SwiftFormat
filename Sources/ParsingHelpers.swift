@@ -1014,6 +1014,17 @@ extension Formatter {
             }
         }
 
+        /// The opening tokens of the declaration (before the body)
+        var openTokens: [Token] {
+            switch self {
+            case .declaration:
+                return []
+            case let .type(_, open, _, _),
+                 let .conditionalCompilation(open, _, _):
+                return open
+            }
+        }
+
         /// The body of this declaration, if applicable
         var body: [Declaration]? {
             switch self {

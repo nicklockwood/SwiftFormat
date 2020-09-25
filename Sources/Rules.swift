@@ -3973,8 +3973,7 @@ public struct _FormatRules {
     /// Sorts switch cases alphabetically
     public let sortedSwitchCases = FormatRule(
         help: "Sorts switch cases alphabetically.",
-        options: [],
-        sharedOptions: []
+        disabledByDefault: true // TODO: fix bugs with comments and where clauses, then this can be enabled by default
     ) { formatter in
 
         formatter.forEach(.endOfScope("case")) { i, _ in

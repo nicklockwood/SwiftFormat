@@ -1177,4 +1177,36 @@ private struct Examples {
      }
     ```
     """
+
+    let extensionAccessControl = """
+    `--extensionacl on-extension` (default)
+
+    ```diff
+    - extension Foo {
+    -     public func bar() {}
+    -     public func baaz() {}
+      }
+
+    + public extension Foo {
+    +     func bar() {}
+    +     func baaz() {}
+      }
+    ```
+
+    `--extensionacl on-declarations`
+
+    ```diff
+    - public extension Foo {
+    -     func bar() {}
+    -     func baaz() {}
+    -     internal func quux() {}
+      }
+
+    + extension Foo {
+    +     public func bar() {}
+    +     public func baaz() {}
+    +     func quux() {}
+      }
+    ```
+    """
 }

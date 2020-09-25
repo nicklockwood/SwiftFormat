@@ -13,6 +13,7 @@
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
 * [enumNamespaces](#enumNamespaces)
+* [extensionAccessControl](#extensionAccessControl)
 * [fileHeader](#fileHeader)
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
@@ -437,6 +438,50 @@ Remove whitespace inside empty braces.
 ## enumNamespaces
 
 Converts types used for hosting only static members into enums.
+
+## extensionAccessControl
+
+Configure the placement of an extension's access control keyword.
+
+Option | Description
+--- | ---
+`--extensionacl` | Place ACL "on-extension" (default) or "on-declarations"
+
+<details>
+<summary>Examples</summary>
+
+`--extensionacl on-extension` (default)
+
+```diff
+- extension Foo {
+-     public func bar() {}
+-     public func baaz() {}
+  }
+
++ public extension Foo {
++     func bar() {}
++     func baaz() {}
+  }
+```
+
+`--extensionacl on-declarations`
+
+```diff
+- public extension Foo {
+-     func bar() {}
+-     func baaz() {}
+-     internal func quux() {}
+  }
+
++ extension Foo {
++     public func bar() {}
++     public func baaz() {}
++     func quux() {}
+  }
+```
+
+</details>
+<br/>
 
 ## fileHeader
 

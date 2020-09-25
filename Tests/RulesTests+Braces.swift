@@ -336,7 +336,11 @@ extension RulesTests {
         }
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.braces,
+            options: options
+        )
     }
 
     func testAllmanBracesForInit() {

@@ -712,6 +712,12 @@ struct _Descriptors {
         help: "Swap yoda values: \"always\" (default) or \"literals-only\"",
         keyPath: \.yodaSwap
     )
+    let extensionACLPlacement = OptionDescriptor(
+        argumentName: "extensionacl",
+        displayName: "Extension Access Control Level Placement",
+        help: "Place ACL \"on-extension\" (default) or \"on-declarations\"",
+        keyPath: \.extensionACLPlacement
+    )
 
     // MARK: - Internal
 

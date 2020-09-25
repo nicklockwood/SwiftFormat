@@ -1133,4 +1133,240 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.organizeDeclarations,
                        exclude: ["blankLinesAtStartOfScope"])
     }
+
+    // MARK: extensionAccessControl .onDeclarations
+
+    func testUpdatesVisibilityOfExtensionMembers() {
+        let input = """
+        public extension Foo {
+            var publicProperty: Int { 10 }
+            public func publicFunction1() {}
+            func publicFunction2() {}
+            internal func internalFunction() {}
+            private func privateFunction() {}
+            fileprivate var privateProperty: Int { 10 }
+        }
+        """
+
+        let output = """
+        extension Foo {
+            public var publicProperty: Int { 10 }
+            public func publicFunction1() {}
+            public func publicFunction2() {}
+            func internalFunction() {}
+            private func privateFunction() {}
+            fileprivate var privateProperty: Int { 10 }
+        }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    func testUpdatesVisibilityOfExtensionInConditionalCompilationBlock() {
+        let input = """
+        #if DEBUG
+            public extension Foo {
+                var publicProperty: Int { 10 }
+            }
+        #endif
+        """
+
+        let output = """
+        #if DEBUG
+            extension Foo {
+                public var publicProperty: Int { 10 }
+            }
+        #endif
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    func testUpdatesVisibilityOfExtensionMembersInConditionalCompilationBlock() {
+        let input = """
+        public extension Foo {
+            #if DEBUG
+                var publicProperty: Int { 10 }
+            #endif
+        }
+        """
+
+        let output = """
+        extension Foo {
+            #if DEBUG
+                public var publicProperty: Int { 10 }
+            #endif
+        }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    func testDoesntUpdateDeclarationsInsideTypeInsideExtension() {
+        let input = """
+        public extension Foo {
+            struct Bar {
+                var baaz: Int
+                var quux: Int
+            }
+        }
+        """
+
+        let output = """
+        extension Foo {
+            public struct Bar {
+                var baaz: Int
+                var quux: Int
+            }
+        }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    func testDoesNothingForInternalExtension() {
+        let input = """
+        extension Foo {
+            func bar() {}
+            func baaz() {}
+            public func quux() {}
+        }
+        """
+
+        testFormatting(
+            for: input, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    // MARK: extensionAccessControl .onExtension
+
+    func testUpdatedVisibilityOfExtension() {
+        let input = """
+        extension Foo {
+            public func bar() {}
+            public var baaz: Int { 10 }
+
+            public struct Foo2 {
+                var quux: Int
+            }
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            func bar() {}
+            var baaz: Int { 10 }
+
+            struct Foo2 {
+                var quux: Int
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testUpdatedVisibilityOfExtensionWithDeclarationsInConditionalCompilation() {
+        let input = """
+        extension Foo {
+            #if DEBUG
+                public func bar() {}
+                public var baaz: Int { 10 }
+            #endif
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            #if DEBUG
+                func bar() {}
+                var baaz: Int { 10 }
+            #endif
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntUpdateExtensionVisibilityWithMultipleBodyVisibilities() {
+        let input = """
+        extension Foo {
+            public func bar() {}
+            var baaz: Int { 10 }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntUpdateExtensionVisibilityWithInternalDeclarations() {
+        let input = """
+        extension Foo {
+            func bar() {}
+            var baaz: Int { 10 }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntUpdateExtensionThatAlreadyHasCorrectVisibilityKeyword() {
+        let input = """
+        public extension Foo {
+            func bar() {}
+            func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testUpdatesExtensionThatHasDifferentACLFromBodyDeclarations() {
+        let input = """
+        private extension Foo {
+            public func bar() {}
+            public func baaz() {}
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            func bar() {}
+            func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testUpdatesExtensionThatHasRedundantACLOnBodyDeclarations() {
+        let input = """
+        public extension Foo {
+            func bar() {}
+            public func baaz() {}
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            func bar() {}
+            func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
 }

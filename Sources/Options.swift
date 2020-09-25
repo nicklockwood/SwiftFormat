@@ -98,6 +98,12 @@ public enum ElsePosition: String {
     case auto
 }
 
+/// Where to place the access control keyword of an extension
+public enum ExtensionACLPlacement: String {
+    case onExtension = "on-extension"
+    case onDeclarations = "on-declarations"
+}
+
 /// Version number wrapper
 public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral, CustomStringConvertible {
     public let rawValue: String
@@ -323,6 +329,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var organizeStructThreshold: Int
     public var organizeEnumThreshold: Int
     public var yodaSwap: YodaMode
+    public var extensionACLPlacement: ExtensionACLPlacement
 
     // Deprecated
     public var indentComments: Bool
@@ -390,6 +397,7 @@ public struct FormatOptions: CustomStringConvertible {
                 organizeStructThreshold: Int = 0,
                 organizeEnumThreshold: Int = 0,
                 yodaSwap: YodaMode = .always,
+                extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -451,6 +459,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.organizeStructThreshold = organizeStructThreshold
         self.organizeEnumThreshold = organizeEnumThreshold
         self.yodaSwap = yodaSwap
+        self.extensionACLPlacement = extensionACLPlacement
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

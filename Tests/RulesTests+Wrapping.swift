@@ -2243,7 +2243,12 @@ extension RulesTests {
         class Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(
+            for: input,
+            output,
+            rule: FormatRules.wrapAttributes,
+            options: options
+        )
     }
 
     func testTypeAttributeStaysWrapped() {

@@ -1067,6 +1067,7 @@ extension RulesTests {
         ("testNoExtraSpaceInsideMultilineHeaderdocCommentType2", testNoExtraSpaceInsideMultilineHeaderdocCommentType2),
         ("testNoExtraSpaceInsideMultilineSwiftPlaygroundDocComment", testNoExtraSpaceInsideMultilineSwiftPlaygroundDocComment),
         ("testNoFractionGrouping", testNoFractionGrouping),
+        ("testNoHoistAccessModifierForOpenMethod", testNoHoistAccessModifierForOpenMethod),
         ("testNoHoistClosureVariables", testNoHoistClosureVariables),
         ("testNoHoistIfFirstArgSpecified", testNoHoistIfFirstArgSpecified),
         ("testNoHoistIfLastArgSpecified", testNoHoistIfLastArgSpecified),

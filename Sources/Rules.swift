@@ -4988,8 +4988,10 @@ public struct _FormatRules {
                 else { return declaration }
 
                 let extensionWithUpdatedVisibility: Formatter.Declaration
-                if memberVisibility == .internal {
-                    extensionWithUpdatedVisibility = formatter.remove(.internal, from: declaration)
+                if memberVisibility == extensionVisibility ||
+                    (memberVisibility == .internal && visibilityKeyword == nil)
+                {
+                    extensionWithUpdatedVisibility = declaration
                 } else {
                     extensionWithUpdatedVisibility = formatter.add(memberVisibility, to: declaration)
                 }

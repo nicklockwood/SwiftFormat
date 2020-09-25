@@ -1301,11 +1301,47 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
     }
 
-    func testDoesntUpdateExtensionVisibilityWithMultipleBodyVisibilities() {
+    func testDoesntUpdateExtensionVisibilityWithoutMajorityBodyVisibility() {
         let input = """
         extension Foo {
+            public func foo() {}
             public func bar() {}
-            var baaz: Int { 10 }
+            var baz: Int { 10 }
+            var quux: Int { 5 }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testUpdateExtensionVisibilityWithMajorityBodyVisibility() {
+        let input = """
+        extension Foo {
+            public func foo() {}
+            public func bar() {}
+            public var baz: Int { 10 }
+            var quux: Int { 5 }
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            func foo() {}
+            func bar() {}
+            var baz: Int { 10 }
+            internal var quux: Int { 5 }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntUpdateExtensionVisibilityWhenMajorityBodyVisibilityIsntMostVisible() {
+        let input = """
+        extension Foo {
+            func foo() {}
+            func bar() {}
+            public var baz: Int { 10 }
         }
         """
 

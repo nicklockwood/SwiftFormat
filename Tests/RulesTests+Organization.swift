@@ -1406,4 +1406,13 @@ extension RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
     }
+
+    func testNoHoistAccessModifierForOpenMethod() {
+        let input = """
+        extension Foo {
+            open func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
 }

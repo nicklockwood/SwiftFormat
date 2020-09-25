@@ -4979,9 +4979,14 @@ public struct _FormatRules {
                     }
                     .compactMap { $0 }
 
-                guard Set(visibilityOfBodyDeclarations).count == 1,
-                    let memberVisibility = visibilityOfBodyDeclarations.first,
+                let counts = Set(visibilityOfBodyDeclarations).sorted().map { visibility in
+                    (visibility, count: visibilityOfBodyDeclarations.filter { $0 == visibility }.count)
+                }
+
+                guard let memberVisibility = counts.max(by: { $0.count < $1.count })?.0,
                     memberVisibility <= extensionVisibility ?? .public,
+                    // Check that most common level is also most visible
+                    memberVisibility == visibilityOfBodyDeclarations.max(),
                     // `private` can't be hoisted without changing code behavior
                     // (private applied at extension level is equivalent to `fileprivate`)
                     memberVisibility > .private
@@ -4997,7 +5002,14 @@ public struct _FormatRules {
                 }
 
                 return formatter.mapBodyDeclarations(in: extensionWithUpdatedVisibility) { bodyDeclaration in
-                    formatter.remove(memberVisibility, from: bodyDeclaration)
+                    let visibility = formatter.visibility(of: bodyDeclaration)
+                    if memberVisibility > visibility ?? extensionVisibility ?? .internal {
+                        if visibility == nil {
+                            return formatter.add(.internal, to: bodyDeclaration)
+                        }
+                        return bodyDeclaration
+                    }
+                    return formatter.remove(memberVisibility, from: bodyDeclaration)
                 }
 
             // Move the extension's visibility keyword to each individual declaration

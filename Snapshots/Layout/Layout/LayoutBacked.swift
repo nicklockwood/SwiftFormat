@@ -8,9 +8,9 @@ public protocol LayoutBacked: class {
     /* weak */ var layoutNode: LayoutNode? { get }
 }
 
-extension LayoutBacked where Self: NSObject {
+public extension LayoutBacked where Self: NSObject {
     /// Default implementation of the layoutNode property
-    public internal(set) weak var layoutNode: LayoutNode? {
+    internal(set) weak var layoutNode: LayoutNode? {
         get { return _layoutNode }
         set { _setLayoutNode(layoutNode, retained: false) }
     }

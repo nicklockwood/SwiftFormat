@@ -19,8 +19,8 @@
 import FirebaseFirestore
 import Foundation
 
-extension Firestore {
-  public struct Decoder {
+public extension Firestore {
+  struct Decoder {
     fileprivate static let documentRefUserInfoKey =
       CodingUserInfoKey(rawValue: "DocumentRefUserInfoKey")
 

@@ -11,8 +11,8 @@ private class Box {
     }
 }
 
-extension UICollectionViewLayout {
-    fileprivate static func defaultLayout(for node: LayoutNode) -> UICollectionViewFlowLayout {
+private extension UICollectionViewLayout {
+    static func defaultLayout(for node: LayoutNode) -> UICollectionViewFlowLayout {
         let flowLayout = UICollectionViewFlowLayout()
         if node.expressions["collectionViewLayout.itemSize"] ??
             node.expressions["collectionViewLayout.itemSize.width"] ??
@@ -274,7 +274,7 @@ extension UICollectionViewController: LayoutBacked {
 private var cellDataKey = 0
 private var nodesKey = 0
 
-extension UICollectionView {
+public extension UICollectionView {
     private enum LayoutData {
         case success(Layout, Any, [String: Any])
         case failure(Error)
@@ -322,7 +322,7 @@ extension UICollectionView {
         }
     }
 
-    public func registerLayout(
+    func registerLayout(
         named: String,
         bundle: Bundle = Bundle.main,
         relativeTo: String = #file,
@@ -347,7 +347,7 @@ extension UICollectionView {
         }
     }
 
-    public func dequeueReusableCellNode(withIdentifier identifier: String, for indexPath: IndexPath) -> LayoutNode {
+    func dequeueReusableCellNode(withIdentifier identifier: String, for indexPath: IndexPath) -> LayoutNode {
         do {
             guard let layoutsData = objc_getAssociatedObject(self, &cellDataKey) as? NSMutableDictionary,
                 let layoutData = layoutsData[identifier] as? LayoutData

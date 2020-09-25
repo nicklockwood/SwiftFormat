@@ -2,8 +2,8 @@
 
 import Foundation
 
-extension XMLNode {
-    var isLayout: Bool {
+public extension XMLNode {
+    internal var isLayout: Bool {
         switch self {
         case let .node(name, attributes, children):
             guard name.isCapitalized else {
@@ -23,32 +23,32 @@ extension XMLNode {
         }
     }
 
-    public var isParameter: Bool {
+    var isParameter: Bool {
         guard case .node("param", _, _) = self else {
             return false
         }
         return true
     }
 
-    public var isMacro: Bool {
+    var isMacro: Bool {
         guard case .node("macro", _, _) = self else {
             return false
         }
         return true
     }
 
-    public var isChildren: Bool {
+    var isChildren: Bool {
         guard case .node("children", _, _) = self else {
             return false
         }
         return true
     }
 
-    public var isParameterOrMacro: Bool {
+    var isParameterOrMacro: Bool {
         return isParameter || isMacro
     }
 
-    public var parameters: [String: String] {
+    var parameters: [String: String] {
         var params = [String: String]()
         for child in children where child.isParameter {
             let attributes = child.attributes

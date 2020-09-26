@@ -517,6 +517,59 @@ extension RulesTests {
         )
     }
 
+    func testBelowCustomExtensionOrganizationThreshold() {
+        let input = """
+        extension FooBelowThreshold {
+            func bar() {}
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizeTypes: ["class", "struct", "enum", "extension"],
+                organizeExtensionThreshold: 2
+            )
+        )
+    }
+
+    func testAboveCustomExtensionOrganizationThreshold() {
+        let input = """
+        extension FooBelowThreshold {
+            public func bar() {}
+            func baaz() {}
+            private func quux() {}
+        }
+        """
+
+        let output = """
+        extension FooBelowThreshold {
+
+            // MARK: Public
+
+            public func bar() {}
+
+            // MARK: Internal
+
+            func baaz() {}
+
+            // MARK: Private
+
+            private func quux() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizeTypes: ["class", "struct", "enum", "extension"],
+                organizeExtensionThreshold: 2
+            ), exclude: ["blankLinesAtStartOfScope"]
+        )
+    }
+
     func testPreservesExistingMarks() {
         let input = """
         class Foo {

@@ -1,0 +1,5 @@
+--hexgrouping ignore
+--decimalgrouping ignore
+--ifdef no-indent
+
+--exclude Tests/XCTestManifests.swift,Examples/JSON/compiled.swift

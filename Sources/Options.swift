@@ -325,9 +325,11 @@ public struct FormatOptions: CustomStringConvertible {
     public var categoryMarkComment: String
     public var beforeMarks: Set<String>
     public var lifecycleMethods: Set<String>
+    public var organizeTypes: Set<String>
     public var organizeClassThreshold: Int
     public var organizeStructThreshold: Int
     public var organizeEnumThreshold: Int
+    public var organizeExtensionThreshold: Int
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
 
@@ -393,9 +395,11 @@ public struct FormatOptions: CustomStringConvertible {
                 categoryMarkComment: String = "MARK: %c",
                 beforeMarks: Set<String> = [],
                 lifecycleMethods: Set<String> = [],
+                organizeTypes: Set<String> = ["class", "struct", "enum"],
                 organizeClassThreshold: Int = 0,
                 organizeStructThreshold: Int = 0,
                 organizeEnumThreshold: Int = 0,
+                organizeExtensionThreshold: Int = 0,
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 // Doesn't really belong here, but hard to put elsewhere
@@ -455,9 +459,11 @@ public struct FormatOptions: CustomStringConvertible {
         self.categoryMarkComment = categoryMarkComment
         self.beforeMarks = beforeMarks
         self.lifecycleMethods = lifecycleMethods
+        self.organizeTypes = organizeTypes
         self.organizeClassThreshold = organizeClassThreshold
         self.organizeStructThreshold = organizeStructThreshold
         self.organizeEnumThreshold = organizeEnumThreshold
+        self.organizeExtensionThreshold = organizeExtensionThreshold
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
         // Doesn't really belong here, but hard to put elsewhere

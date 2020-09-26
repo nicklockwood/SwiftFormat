@@ -4933,8 +4933,8 @@ public struct _FormatRules {
         runOnceOnly: true,
         disabledByDefault: true,
         orderAfter: ["extensionAccessControl"],
-        options: ["categorymark", "beforemarks", "lifecycle", "structthreshold",
-                  "classthreshold", "enumthreshold"]
+        options: ["categorymark", "beforemarks", "lifecycle", "organizetypes",
+                  "structthreshold", "classthreshold", "enumthreshold", "extensionlength"]
     ) { formatter in
         formatter.mapRecursiveDeclarations { declaration in
             switch declaration {

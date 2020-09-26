@@ -438,6 +438,7 @@ extension RulesTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__RulesTests = [
+        ("testAboveCustomExtensionOrganizationThreshold", testAboveCustomExtensionOrganizationThreshold),
         ("testAboveCustomStructOrganizationThreshold", testAboveCustomStructOrganizationThreshold),
         ("testAddSpaceAfterFuncEquals", testAddSpaceAfterFuncEquals),
         ("testAddSpaceAfterOperatorEquals", testAddSpaceAfterOperatorEquals),
@@ -499,6 +500,7 @@ extension RulesTests {
         ("testBeforeFirstPreservedAndTrailingCommaAddedInSingleLineNestedDictionaryWithOneNestedItem", testBeforeFirstPreservedAndTrailingCommaAddedInSingleLineNestedDictionaryWithOneNestedItem),
         ("testBeforeFirstPreservedIndentFixed", testBeforeFirstPreservedIndentFixed),
         ("testBeforeFirstPreservedNewlineAdded", testBeforeFirstPreservedNewlineAdded),
+        ("testBelowCustomExtensionOrganizationThreshold", testBelowCustomExtensionOrganizationThreshold),
         ("testBelowCustomStructOrganizationThreshold", testBelowCustomStructOrganizationThreshold),
         ("testBinaryGroupingCustom", testBinaryGroupingCustom),
         ("testBlankCodeCommentBlockLinesNotIndented", testBlankCodeCommentBlockLinesNotIndented),

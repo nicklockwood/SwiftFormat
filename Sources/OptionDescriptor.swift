@@ -670,6 +670,12 @@ struct _Descriptors {
         help: "Names of additional Lifecycle methods (e.g. `viewDidLoad`)",
         keyPath: \.lifecycleMethods
     )
+    let organizeTypes = OptionDescriptor(
+        argumentName: "organizetypes",
+        displayName: "Declaration Types to Organize",
+        help: "Declarations to organize (defaults to `struct,class,enum`)",
+        keyPath: \.organizeTypes
+    )
     let organizeStructThreshold = OptionDescriptor(
         argumentName: "structthreshold",
         displayName: "Organize Struct Threshold",
@@ -687,6 +693,12 @@ struct _Descriptors {
         displayName: "Organize Enum Threshold",
         help: "Minimum line count to organize enum body. Defaults to 0",
         keyPath: \.organizeEnumThreshold
+    )
+    let organizeExtensionThreshold = OptionDescriptor(
+        argumentName: "extensionlength",
+        displayName: "Organize Extension Threshold",
+        help: "Minimum line count to organize extension body. Defaults to 0",
+        keyPath: \.organizeExtensionThreshold
     )
     let funcAttributes = OptionDescriptor(
         argumentName: "funcattributes",

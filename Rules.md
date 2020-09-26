@@ -672,9 +672,13 @@ Option | Description
 +
  final class FooViewController: UIViewController { }
 
-+ // MARK: UITableViewDelegate
++ // MARK: UICollectionViewDelegate
 +
- extension FooViewController: UITableViewDelegate { }
+ extension FooViewController: UICollectionViewDelegate { }
+
++ // MARK: String + FooProtocol
++
+extension String: FooProtocol { }
 ```
 
 </details>

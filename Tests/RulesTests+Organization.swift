@@ -1638,13 +1638,13 @@ extension RulesTests {
 
     func testAddsMarkCommentForExtensionWithConformance() {
         let input = """
-        extension Foo: FooProtocol {}
+        extension Foo: BarProtocol {}
         """
 
         let output = """
-        // MARK: FooProtocol
+        // MARK: Foo + BarProtocol
 
-        extension Foo: FooProtocol {}
+        extension Foo: BarProtocol {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1652,15 +1652,15 @@ extension RulesTests {
 
     func testUpdatesExtensionMarkToCorrectMark() {
         let input = """
-        // MARK: - FooProtocol
+        // MARK: - BarProtocol
 
-        extension Foo: FooProtocol {}
+        extension Foo: BarProtocol {}
         """
 
         let output = """
-        // MARK: FooProtocol
+        // MARK: Foo + BarProtocol
 
-        extension Foo: FooProtocol {}
+        extension Foo: BarProtocol {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1668,13 +1668,13 @@ extension RulesTests {
 
     func testAddsMarkCommentForExtensionWithMultipleConformances() {
         let input = """
-        extension Foo: FooProtocol, BarProtocol, BaazProtocol {}
+        extension Foo: BarProtocol, BaazProtocol {}
         """
 
         let output = """
-        // MARK: FooProtocol, BarProtocol, BaazProtocol
+        // MARK: Foo + BarProtocol, BaazProtocol
 
-        extension Foo: FooProtocol, BarProtocol, BaazProtocol {}
+        extension Foo: BarProtocol, BaazProtocol {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1682,15 +1682,15 @@ extension RulesTests {
 
     func testUpdatesMarkCommentWithCorrectConformances() {
         let input = """
-        // MARK: FooProtocol
+        // MARK: Foo + BarProtocol
 
-        extension Foo: FooProtocol, BarProtocol, BaazProtocol {}
+        extension Foo: BarProtocol, BaazProtocol {}
         """
 
         let output = """
-        // MARK: FooProtocol, BarProtocol, BaazProtocol
+        // MARK: Foo + BarProtocol, BaazProtocol
 
-        extension Foo: FooProtocol, BarProtocol, BaazProtocol {}
+        extension Foo: BarProtocol, BaazProtocol {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1698,15 +1698,15 @@ extension RulesTests {
 
     func testCustomExtensionMarkComment() {
         let input = """
-        // EXTENSION: FooProtocol
+        // EXTENSION: Foo + BarProtocol
 
-        extension Foo: FooProtocol, BarProtocol, BaazProtocol {}
+        extension Foo: BarProtocol, BaazProtocol {}
         """
 
         let output = """
-        // EXTENSION: FooProtocol, BarProtocol, BaazProtocol
+        // EXTENSION: Foo + BarProtocol, BaazProtocol
 
-        extension Foo: FooProtocol, BarProtocol, BaazProtocol {}
+        extension Foo: BarProtocol, BaazProtocol {}
         """
 
         testFormatting(
@@ -1719,7 +1719,7 @@ extension RulesTests {
         let input = """
         struct Foo {}
         extension Foo: Bar {}
-        extension Foo: Baaz, Quux {}
+        extension String: Bar {}
         """
 
         let output1 = """
@@ -1729,9 +1729,9 @@ extension RulesTests {
         // MARK: Bar
 
         extension Foo: Bar {}
-        // MARK: Baaz, Quux
+        // MARK: String + Bar
 
-        extension Foo: Baaz, Quux {}
+        extension String: Bar {}
         """
 
         let output2 = """
@@ -1743,9 +1743,9 @@ extension RulesTests {
 
         extension Foo: Bar {}
 
-        // MARK: Baaz, Quux
+        // MARK: String + Bar
 
-        extension Foo: Baaz, Quux {}
+        extension String: Bar {}
         """
 
         testFormatting(for: input, output1, rule: FormatRules.markTypes, exclude: ["blankLinesAroundMark"])

@@ -5107,8 +5107,10 @@ public struct _FormatRules {
         disabledByDefault: true,
         options: ["typemark", "extensionmark"]
     ) { formatter in
-        formatter.mapTopLevelDeclarations { declaration -> Formatter.Declaration in
-            guard case let .type(kind, open, body, close) = declaration else { return declaration }
+        var declarations = formatter.parseDeclarations()
+
+        for (index, declaration) in declarations.enumerated() {
+            guard case let .type(kind, open, body, close) = declaration else { continue }
 
             let commentTemplate: String
             switch declaration.keyword {
@@ -5118,7 +5120,7 @@ public struct _FormatRules {
                 commentTemplate = "// \(formatter.options.typeMarkComment)"
             }
 
-            return formatter.mapOpeningTokens(in: declaration) { openingTokens -> [Token] in
+            declarations[index] = formatter.mapOpeningTokens(in: declarations[index]) { openingTokens -> [Token] in
                 var openingFormatter = Formatter(openingTokens)
 
                 guard let keywordIndex = openingFormatter.index(after: -1, where: {
@@ -5127,7 +5129,12 @@ public struct _FormatRules {
 
                 // Determine the name of this declaration that we want
                 // to subsititute into the comment templates
-                let typeName: String
+                let scopeName: String
+
+                guard let typeName = declaration.name else {
+                    return openingTokens
+                }
+
                 switch declaration.keyword {
                 case "extension":
                     // Extensions dont have a "name" in general, but we can
@@ -5154,23 +5161,25 @@ public struct _FormatRules {
                         return openingFormatter.tokens
                     }
 
-                    typeName = conformances.joined(separator: ", ")
+                    // If the type being extended was defined further up in this same file,
+                    // it would be repetitive to include the type name in the scope name for this extension.
+                    if declarations[..<index].contains(where: { $0.name == typeName }) {
+                        scopeName = "\(conformances.joined(separator: ", "))"
+                    } else {
+                        scopeName = "\(typeName) + \(conformances.joined(separator: ", "))"
+                    }
 
                 default:
                     // For all other typelike declarations (classes, structs, etc),
                     // we can simply use the name of the type
-                    guard let name = openingFormatter.next(.identifier, after: keywordIndex)?.string else {
-                        return openingTokens
-                    }
-
-                    typeName = name
+                    scopeName = typeName
                 }
 
                 // Remove any lines that have the same prefix as the comment template
                 //  - We can't really do exact matches here like we do for `organizeDeclaration`
                 //    category separators, because there's a much wider variety of options
                 //    that a user could use the the type name (orphaned renames, etc.)
-                let expectedComment = commentTemplate.replacingOccurrences(of: "%t", with: typeName)
+                let expectedComment = commentTemplate.replacingOccurrences(of: "%t", with: scopeName)
                 var commentPrefixes = Set(["// MARK: ", "// MARK: - "])
 
                 if let typeNameSymbolIndex = commentTemplate.index(of: "%") {
@@ -5202,5 +5211,8 @@ public struct _FormatRules {
                 return openingFormatter.tokens
             }
         }
+
+        let updatedTokens = declarations.flatMap { $0.tokens }
+        formatter.replaceTokens(in: 0 ..< formatter.tokens.count, with: updatedTokens)
     }
 }

@@ -407,13 +407,6 @@ extension Formatter {
 
 /// Helpers for recursively traversing the declaration hierarchy
 extension Formatter {
-    /// Applies `mapDeclaration` to every top level declaration from this formatter's tokens
-    func mapTopLevelDeclarations(mapDeclaration: (Declaration) -> Declaration) {
-        let updatedDeclarations = parseDeclarations().map(mapDeclaration)
-        let updatedTokens = updatedDeclarations.flatMap { $0.tokens }
-        replaceTokens(in: 0 ..< tokens.count, with: updatedTokens)
-    }
-
     /// Applies `mapDeclaration` to every recursive declaration from this formatter's tokens
     func mapRecursiveDeclarations(mapDeclaration: (Declaration) -> Declaration) {
         let updatedDeclarations = mapRecursiveDeclarations(

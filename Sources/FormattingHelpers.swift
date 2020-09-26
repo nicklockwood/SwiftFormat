@@ -939,7 +939,6 @@ extension Formatter {
     func organizeType(
         _ typeDeclaration: (kind: String, open: [Token], body: [Formatter.Declaration], close: [Token])
     ) -> (kind: String, open: [Token], body: [Formatter.Declaration], close: [Token]) {
-        // Only organize the body of classes, structs, and enums (not protocols and extensions)
         guard options.organizeTypes.contains(typeDeclaration.kind) else {
             return typeDeclaration
         }

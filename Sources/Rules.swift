@@ -5043,4 +5043,119 @@ public struct _FormatRules {
             }
         }
     }
+
+    public let markTypes = FormatRule(
+        help: "Adds a mark comment before top-level types and extensions.",
+        runOnceOnly: true,
+        disabledByDefault: true,
+        options: ["typemark", "extensionmark"]
+    ) { formatter in
+        var declarations = formatter.parseDeclarations()
+
+        for (index, declaration) in declarations.enumerated() {
+            guard case let .type(kind, open, body, close) = declaration else { continue }
+
+            let commentTemplate: String
+            switch declaration.keyword {
+            case "extension":
+                commentTemplate = "// \(formatter.options.extensionMarkComment)"
+            default:
+                commentTemplate = "// \(formatter.options.typeMarkComment)"
+            }
+
+            declarations[index] = formatter.mapOpeningTokens(in: declarations[index]) { openingTokens -> [Token] in
+                var openingFormatter = Formatter(openingTokens)
+
+                guard let keywordIndex = openingFormatter.index(after: -1, where: {
+                    $0.string == declaration.keyword
+                }) else { return openingTokens }
+
+                // Determine the name of this declaration that we want
+                // to subsititute into the comment templates
+                let scopeName: String
+
+                guard let typeName = declaration.name else {
+                    return openingTokens
+                }
+
+                switch declaration.keyword {
+                case "extension":
+                    // Extensions dont have a "name" in general, but we can
+                    // use the set of conformances as its name
+                    var conformances = [String]()
+
+                    guard var conformanceSearchIndex = openingFormatter.index(
+                        of: .delimiter(":"),
+                        after: keywordIndex
+                    ) else { return openingFormatter.tokens }
+
+                    while let token = openingFormatter.token(at: conformanceSearchIndex),
+                        token != .keyword("where"),
+                        token != .startOfScope("{")
+                    {
+                        if token.isIdentifier {
+                            conformances.append(token.string)
+                        }
+
+                        conformanceSearchIndex += 1
+                    }
+
+                    guard !conformances.isEmpty else {
+                        return openingFormatter.tokens
+                    }
+
+                    // If the type being extended was defined further up in this same file,
+                    // it would be repetitive to include the type name in the scope name for this extension.
+                    if declarations[..<index].contains(where: { $0.name == typeName }) {
+                        scopeName = "\(conformances.joined(separator: ", "))"
+                    } else {
+                        scopeName = "\(typeName) + \(conformances.joined(separator: ", "))"
+                    }
+
+                default:
+                    // For all other typelike declarations (classes, structs, etc),
+                    // we can simply use the name of the type
+                    scopeName = typeName
+                }
+
+                // Remove any lines that have the same prefix as the comment template
+                //  - We can't really do exact matches here like we do for `organizeDeclaration`
+                //    category separators, because there's a much wider variety of options
+                //    that a user could use the the type name (orphaned renames, etc.)
+                let expectedComment = commentTemplate.replacingOccurrences(of: "%t", with: scopeName)
+                var commentPrefixes = Set(["// MARK: ", "// MARK: - "])
+
+                if let typeNameSymbolIndex = commentTemplate.index(of: "%") {
+                    commentPrefixes.insert(String(commentTemplate.prefix(upTo: typeNameSymbolIndex)))
+                }
+
+                openingFormatter.forEach(.startOfScope("//")) { index, _ in
+                    let startOfLine = openingFormatter.startOfLine(at: index)
+                    let endOfLine = openingFormatter.endOfLine(at: index)
+
+                    let commentLine = sourceCode(for: Array(openingFormatter.tokens[index ... endOfLine]))
+
+                    for commentPrefix in commentPrefixes {
+                        if commentLine.lowercased().hasPrefix(commentPrefix.lowercased()) {
+                            // If we found a line that matched the comment prefix,
+                            // remove it and any linebreak immediately after it.
+                            if openingFormatter.token(at: endOfLine + 1)?.isLinebreak == true {
+                                openingFormatter.removeToken(at: endOfLine + 1)
+                            }
+
+                            openingFormatter.removeTokens(in: startOfLine ... endOfLine)
+                            break
+                        }
+                    }
+                }
+
+                // Insert the expected comment at the start of the declaration
+                openingFormatter.insert(tokenize("\(expectedComment)\n\n"), at: 0)
+                return openingFormatter.tokens
+            }
+        }
+
+        let updatedTokens = declarations.flatMap { $0.tokens }
+        formatter.replaceTokens(in: 0 ..< formatter.tokens.count, with: updatedTokens)
+    }
 }

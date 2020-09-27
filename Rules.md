@@ -22,6 +22,7 @@
 * [leadingDelimiters](#leadingDelimiters)
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
+* [markTypes](#markTypes)
 * [modifierOrder](#modifierOrder)
 * [numberFormatting](#numberFormatting)
 * [organizeDeclarations](#organizeDeclarations)
@@ -653,6 +654,35 @@ Use specified linebreak character for all linebreaks (CR, LF or CRLF).
 Option | Description
 --- | ---
 `--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
+
+## markTypes
+
+Adds a mark comment before top-level types and extensions.
+
+Option | Description
+--- | ---
+`--typemark` | Template for type mark comments. Defaults to "MARK: - %t"
+`--extensionmark` | Template for extension mark comments. Defaults to "MARK: %t"
+
+<details>
+<summary>Examples</summary>
+
+```diff
++ // MARK: - FooViewController
++
+ final class FooViewController: UIViewController { }
+
++ // MARK: UICollectionViewDelegate
++
+ extension FooViewController: UICollectionViewDelegate { }
+
++ // MARK: String + FooProtocol
++
+extension String: FooProtocol { }
+```
+
+</details>
+<br/>
 
 ## modifierOrder
 

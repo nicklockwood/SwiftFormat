@@ -1542,4 +1542,266 @@ extension RulesTests {
         """
         testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
     }
+
+    // MARK: markTypes
+
+    func testAddsMarkBeforeTypes() {
+        let input = """
+        struct Foo {}
+        class Bar {}
+        enum Baaz {}
+        protocol Quux {}
+        """
+
+        let output1 = """
+        // MARK: - Foo
+
+        struct Foo {}
+        // MARK: - Bar
+
+        class Bar {}
+        // MARK: - Baaz
+
+        enum Baaz {}
+        // MARK: - Quux
+
+        protocol Quux {}
+        """
+
+        let output2 = """
+        // MARK: - Foo
+
+        struct Foo {}
+
+        // MARK: - Bar
+
+        class Bar {}
+
+        // MARK: - Baaz
+
+        enum Baaz {}
+
+        // MARK: - Quux
+
+        protocol Quux {}
+        """
+
+        testFormatting(for: input, output1, rule: FormatRules.markTypes, exclude: ["blankLinesAroundMark"])
+        testFormatting(for: output1, output2, rule: FormatRules.blankLinesAroundMark)
+    }
+
+    func testDoesntAddMarkBeforeStructWithExistingMark() {
+        let input = """
+        // MARK: - Foo
+
+        struct Foo {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func testCorrectsTypoInTypeMark() {
+        let input = """
+        // mark: foo
+
+        struct Foo {}
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        struct Foo {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testUpdatesMarkAfterTypeIsRenamed() {
+        let input = """
+        // MARK: - FooBarControllerFactory
+
+        struct FooBarControllerBuilder {}
+        """
+
+        let output = """
+        // MARK: - FooBarControllerBuilder
+
+        struct FooBarControllerBuilder {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testAddsMarkBeforeTypeWithDocComment() {
+        let input = """
+        /// This is a doc comment with several
+        /// lines of prose at the start
+        ///  - And then, after the prose,
+        ///  - a few bullet points just for fun
+        struct Foo {}
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        /// This is a doc comment with several
+        /// lines of prose at the start
+        ///  - And then, after the prose,
+        ///  - a few bullet points just for fun
+        struct Foo {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testCustomTypeMark() {
+        let input = """
+        struct Foo {}
+        """
+
+        let output = """
+        // TYPE DEFINITION: Foo
+
+        struct Foo {}
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.markTypes,
+            options: FormatOptions(typeMarkComment: "TYPE DEFINITION: %t")
+        )
+    }
+
+    func testDoesNothingForExtensionWithoutProtocolConformance() {
+        let input = """
+        extension Foo {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func preservesExistingCommentForExtensionWithNoConformances() {
+        let input = """
+        // MARK: Description of extension
+
+        extension Foo {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func testAddsMarkCommentForExtensionWithConformance() {
+        let input = """
+        extension Foo: BarProtocol {}
+        """
+
+        let output = """
+        // MARK: Foo + BarProtocol
+
+        extension Foo: BarProtocol {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testUpdatesExtensionMarkToCorrectMark() {
+        let input = """
+        // MARK: - BarProtocol
+
+        extension Foo: BarProtocol {}
+        """
+
+        let output = """
+        // MARK: Foo + BarProtocol
+
+        extension Foo: BarProtocol {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testAddsMarkCommentForExtensionWithMultipleConformances() {
+        let input = """
+        extension Foo: BarProtocol, BaazProtocol {}
+        """
+
+        let output = """
+        // MARK: Foo + BarProtocol, BaazProtocol
+
+        extension Foo: BarProtocol, BaazProtocol {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testUpdatesMarkCommentWithCorrectConformances() {
+        let input = """
+        // MARK: Foo + BarProtocol
+
+        extension Foo: BarProtocol, BaazProtocol {}
+        """
+
+        let output = """
+        // MARK: Foo + BarProtocol, BaazProtocol
+
+        extension Foo: BarProtocol, BaazProtocol {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testCustomExtensionMarkComment() {
+        let input = """
+        // EXTENSION: Foo + BarProtocol
+
+        extension Foo: BarProtocol, BaazProtocol {}
+        """
+
+        let output = """
+        // EXTENSION: Foo + BarProtocol, BaazProtocol
+
+        extension Foo: BarProtocol, BaazProtocol {}
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.markTypes,
+            options: FormatOptions(extensionMarkComment: "EXTENSION: %t")
+        )
+    }
+
+    func testTypeAndExtensionMarksTogether() {
+        let input = """
+        struct Foo {}
+        extension Foo: Bar {}
+        extension String: Bar {}
+        """
+
+        let output1 = """
+        // MARK: - Foo
+
+        struct Foo {}
+        // MARK: Bar
+
+        extension Foo: Bar {}
+        // MARK: String + Bar
+
+        extension String: Bar {}
+        """
+
+        let output2 = """
+        // MARK: - Foo
+
+        struct Foo {}
+
+        // MARK: Bar
+
+        extension Foo: Bar {}
+
+        // MARK: String + Bar
+
+        extension String: Bar {}
+        """
+
+        testFormatting(for: input, output1, rule: FormatRules.markTypes, exclude: ["blankLinesAroundMark"])
+        testFormatting(for: output1, output2, rule: FormatRules.blankLinesAroundMark)
+    }
 }

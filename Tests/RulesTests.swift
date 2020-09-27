@@ -61,6 +61,7 @@ class RulesTests: XCTestCase {
             + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
             + (rules.first?.name == "organizeDeclarations" ? [] : ["organizeDeclarations"])
             + (rules.first?.name == "extensionAccessControl" ? [] : ["extensionAccessControl"])
+            + (rules.first?.name == "markTypes" ? [] : ["markTypes"])
         XCTAssertEqual(try format(input, rules: rules, options: options), output, file: file, line: line)
         XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude), options: options),
                        output2, file: file, line: line)

@@ -1047,6 +1047,17 @@ extension Formatter {
                 return "#if"
             }
         }
+
+        /// The name of this type or variable
+        var name: String? {
+            let openingFormatter = Formatter(openTokens)
+
+            guard let keywordIndex = openingFormatter.index(after: -1, where: {
+                $0.string == keyword
+            }) else { return nil }
+
+            return openingFormatter.next(.identifier, after: keywordIndex)?.string
+        }
     }
 
     // get type of declaration starting at index of declaration keyword

@@ -1191,7 +1191,22 @@ extension Formatter {
                 $0.string == declaration.keyword
             }) else { return openTokens }
 
-            let startOfModifiers = openTokensFormatter.startOfModifiers(at: indexOfKeyword)
+            var startOfModifiers = openTokensFormatter.startOfModifiers(at: indexOfKeyword)
+
+            // If there are any annotations, skip past them
+            while startOfModifiers < indexOfKeyword,
+                openTokensFormatter.tokens[startOfModifiers].string.hasPrefix("@")
+                || openTokensFormatter.tokens[startOfModifiers].isSpaceOrCommentOrLinebreak
+            {
+                startOfModifiers += 1
+
+                // Also skip through annotation bodies, like in `@available(iOS 14.0, *)`
+                if openTokensFormatter.tokens[startOfModifiers] == .startOfScope("("),
+                    let endOfScope = openTokensFormatter.endOfScope(at: startOfModifiers)
+                {
+                    startOfModifiers = endOfScope + 1
+                }
+            }
 
             openTokensFormatter.insert(
                 tokenize("\(visibilityKeyword.rawValue) "),

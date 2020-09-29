@@ -51,27 +51,40 @@ public extension Formatter {
 
     /// Returns the length (in characters) of the line at the specified index
     func lineLength(at index: Int) -> Int {
-        var length = 0
-        for token in tokens[startOfLine(at: index) ..< endOfLine(at: index)] {
-            length += tokenLength(token)
-        }
-        return length
+        return lineLength(upTo: endOfLine(at: index))
     }
 
     /// Returns the length (in characters) up to (but not including) the specified token index
     func lineLength(upTo index: Int) -> Int {
-        var length = 0
-        for token in tokens[startOfLine(at: index) ..< index] {
-            length += tokenLength(token)
-        }
-        return length
+        return lineLength(from: startOfLine(at: index), upTo: index)
     }
 
     /// Returns the length (in characters) of the specified token range
     func lineLength(from start: Int, upTo end: Int) -> Int {
-        return tokens[start ..< end].reduce(0) { total, token in
-            total + tokenLength(token)
+        if options.assetLiteralWidth == .actualWidth {
+            return tokens[start ..< end].reduce(0) { total, token in
+                total + tokenLength(token)
+            }
         }
+        var length = 0
+        var index = start
+        while index < end {
+            let token = tokens[index]
+            switch token {
+            case .keyword("#colorLiteral"), .keyword("#imageLiteral"):
+                guard let startIndex = self.index(of: .startOfScope("("), after: index),
+                    let endIndex = endOfScope(at: startIndex)
+                else {
+                    fallthrough
+                }
+                length += 2 // visible length of asset literal in Xcode
+                index = endIndex + 1
+            default:
+                length += tokenLength(token)
+                index += 1
+            }
+        }
+        return length
     }
 
     /// Returns white space made up of indent characters equivalent to the specified width
@@ -89,13 +102,28 @@ public extension Formatter {
         if !options.smartTabs, options.useTabs, options.tabWidth > 0 {
             return spaceEquivalentToWidth(lineLength(from: start, upTo: end))
         }
-        return tokens[start ..< end].reduce(into: "") { result, token in
-            if case let .space(string) = token {
+        var result = ""
+        var index = start
+        while index < end {
+            let token = tokens[index]
+            switch token {
+            case let .space(string):
                 result += string
-            } else {
+            case .keyword("#colorLiteral"), .keyword("#imageLiteral"):
+                guard let startIndex = self.index(of: .startOfScope("("), after: index),
+                    let endIndex = endOfScope(at: startIndex)
+                else {
+                    fallthrough
+                }
+                let length = lineLength(from: index, upTo: endIndex + 1)
+                result += String(repeating: " ", count: length)
+                index = endIndex
+            default:
                 result += String(repeating: " ", count: tokenLength(token))
             }
+            index += 1
         }
+        return result
     }
 
     /// Returns the starting token for the containing scope at the specified index
@@ -1356,11 +1384,21 @@ extension Formatter {
             lastBreakPointPriority = currentPriority + relativePriority
         }
 
-        let tokens = self.tokens[index ..< endOfLine(at: index)]
-        for (i, token) in zip(tokens.indices, tokens) {
+        var i = index
+        let endIndex = endOfLine(at: index)
+        while i < endIndex {
+            var token = tokens[i]
             switch token {
             case .linebreak:
                 return nil
+            case .keyword("#colorLiteral"), .keyword("#imageLiteral"):
+                guard let startIndex = self.index(of: .startOfScope("("), after: i),
+                    let endIndex = endOfScope(at: startIndex)
+                else {
+                    return nil // error
+                }
+                token = .space(spaceEquivalentToTokens(from: i, upTo: endIndex + 1)) // hack to get correct length
+                i = endIndex
             case let .delimiter(string) where options.noWrapOperators.contains(string),
                  let .operator(string, .infix) where options.noWrapOperators.contains(string):
                 // TODO: handle as/is
@@ -1425,6 +1463,7 @@ extension Formatter {
             if lineLength > maxWidth, let breakPoint = lastBreakPoint, breakPoint < i {
                 return breakPoint
             }
+            i += 1
         }
         return nil
     }

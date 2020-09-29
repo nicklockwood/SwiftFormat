@@ -584,6 +584,12 @@ struct _Descriptors {
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
     )
+    let assetLiteralWidth = OptionDescriptor(
+        argumentName: "assetliterals",
+        displayName: "Asset Literals",
+        help: "Color/image literal width. \"actual-width\" or \"visual-width\"",
+        keyPath: \.assetLiteralWidth
+    )
     let noSpaceOperators = OptionDescriptor(
         argumentName: "nospaceoperators",
         displayName: "No-space Operators",

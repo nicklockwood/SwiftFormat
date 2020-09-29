@@ -1628,7 +1628,7 @@ public struct _FormatRules {
     public let braces = FormatRule(
         help: "Wrap braces in accordance with selected style (K&R or Allman).",
         options: ["allman"],
-        sharedOptions: ["linebreaks", "maxwidth", "indent", "tabwidth"]
+        sharedOptions: ["linebreaks", "maxwidth", "indent", "tabwidth", "assetliterals"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard let closingBraceIndex = formatter.endOfScope(at: i),
@@ -3469,7 +3469,7 @@ public struct _FormatRules {
 
     public let wrap = FormatRule(
         help: "Wrap lines that exceed the specified maximum width.",
-        options: ["maxwidth", "nowrapoperators"],
+        options: ["maxwidth", "nowrapoperators", "assetliterals"],
         sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "indent",
                         "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs"]
     ) { formatter in
@@ -3528,7 +3528,8 @@ public struct _FormatRules {
         help: "Align wrapped function arguments or collection elements.",
         orderAfter: ["wrap"],
         options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen"],
-        sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs"]
+        sharedOptions: ["indent", "trimwhitespace", "linebreaks",
+                        "tabwidth", "maxwidth", "smarttabs", "assetliterals"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
                                               wrapSingleArguments: false)

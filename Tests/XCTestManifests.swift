@@ -1472,6 +1472,7 @@ extension RulesTests {
         ("testPerformBatchUpdatesNotMadeTrailing", testPerformBatchUpdatesNotMadeTrailing),
         ("testPInExponentialNotConvertedToLower", testPInExponentialNotConvertedToLower),
         ("testPInExponentialNotConvertedToUpper", testPInExponentialNotConvertedToUpper),
+        ("testPlacesVisibilityKeywordAfterAnnotations", testPlacesVisibilityKeywordAfterAnnotations),
         ("testPlacingCustomDeclarationsBeforeMarks", testPlacingCustomDeclarationsBeforeMarks),
         ("testPostfixExpressionNonYodaCondition", testPostfixExpressionNonYodaCondition),
         ("testPostfixExpressionNonYodaCondition2", testPostfixExpressionNonYodaCondition2),

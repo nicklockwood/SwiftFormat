@@ -1304,6 +1304,43 @@ extension RulesTests {
         )
     }
 
+    func testPlacesVisibilityKeywordAfterAnnotations() {
+        let input = """
+        public extension Foo {
+            @discardableResult
+            func bar() -> Int { 10 }
+
+            /// Doc comment
+            @discardableResult
+            @available(iOS 10.0, *)
+            func baaz() -> Int { 10 }
+
+            @objc func quux() {}
+            @available(iOS 10.0, *) func quixotic() {}
+        }
+        """
+
+        let output = """
+        extension Foo {
+            @discardableResult
+            public func bar() -> Int { 10 }
+
+            /// Doc comment
+            @discardableResult
+            @available(iOS 10.0, *)
+            public func baaz() -> Int { 10 }
+
+            @objc public func quux() {}
+            @available(iOS 10.0, *) public func quixotic() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
     // MARK: extensionAccessControl .onExtension
 
     func testUpdatedVisibilityOfExtension() {

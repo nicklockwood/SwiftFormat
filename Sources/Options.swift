@@ -260,6 +260,12 @@ public enum YodaMode: String {
     case always
 }
 
+/// Argument type for asset literals
+public enum AssetLiteralWidth: String {
+    case actualWidth = "actual-width"
+    case visualWidth = "visual-width"
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -302,6 +308,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var tabWidth: Int
     public var maxWidth: Int
     public var smartTabs: Bool
+    public var assetLiteralWidth: AssetLiteralWidth
     public var noSpaceOperators: Set<String>
     public var noWrapOperators: Set<String>
     public var modifierOrder: [String]
@@ -368,6 +375,7 @@ public struct FormatOptions: CustomStringConvertible {
                 tabWidth: Int = 0,
                 maxWidth: Int = 0,
                 smartTabs: Bool = true,
+                assetLiteralWidth: AssetLiteralWidth = .visualWidth,
                 noSpaceOperators: Set<String> = [],
                 noWrapOperators: Set<String> = [],
                 modifierOrder: [String] = [],
@@ -428,6 +436,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.tabWidth = tabWidth
         self.maxWidth = maxWidth
         self.smartTabs = smartTabs
+        self.assetLiteralWidth = assetLiteralWidth
         self.noSpaceOperators = noSpaceOperators
         self.noWrapOperators = noWrapOperators
         self.modifierOrder = modifierOrder

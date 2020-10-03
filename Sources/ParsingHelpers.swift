@@ -1067,7 +1067,20 @@ extension Formatter {
                 $0.string == keyword
             }) else { return nil }
 
-            return openingFormatter.next(.identifier, after: keywordIndex)?.string
+            guard var typeNameIndex = openingFormatter.index(of: .identifier, after: keywordIndex) else {
+                return nil
+            }
+
+            // If the identifier is followed by a dot, it's actually the first
+            // part of the fully-qualified name and we should skip through
+            // to the last component of the name.
+            while openingFormatter.token(at: typeNameIndex + 1)?.string == ".",
+                openingFormatter.token(at: typeNameIndex + 2)?.is(.identifier) == true
+            {
+                typeNameIndex += 2
+            }
+
+            return openingFormatter.token(at: typeNameIndex)?.string
         }
     }
 

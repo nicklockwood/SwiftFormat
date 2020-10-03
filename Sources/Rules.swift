@@ -5094,7 +5094,11 @@ public struct _FormatRules {
                         token != .keyword("where"),
                         token != .startOfScope("{")
                     {
-                        if token.isIdentifier {
+                        if token.isIdentifier,
+                            // Ignore identifiers followed by dots, which are components
+                            // of a fully-qualified name but not the protocol name itself.
+                            openingFormatter.token(at: conformanceSearchIndex + 1)?.string != "."
+                        {
                             conformances.append(token.string)
                         }
 

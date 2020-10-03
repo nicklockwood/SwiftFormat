@@ -5090,9 +5090,12 @@ public struct _FormatRules {
                         after: keywordIndex
                     ) else { return openingFormatter.tokens }
 
+                    let endOfConformances = openingFormatter.index(of: .keyword("where"), after: keywordIndex)
+                        ?? openingFormatter.index(of: .startOfScope("{"), after: keywordIndex)
+                        ?? openingFormatter.tokens.count
+
                     while let token = openingFormatter.token(at: conformanceSearchIndex),
-                        token != .keyword("where"),
-                        token != .startOfScope("{")
+                        conformanceSearchIndex < endOfConformances
                     {
                         if token.isIdentifier,
                             // Ignore identifiers followed by dots, which are components

@@ -1831,4 +1831,50 @@ extension RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
     }
+
+    func testWhereClauseConformanceWithExactConstraint() {
+        let input = """
+        extension Array: BarProtocol where Element == String {}
+        """
+
+        let output = """
+        // MARK: Array + BarProtocol
+
+        extension Array: BarProtocol where Element == String {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testWhereClauseConformanceWithConformanceConstraint() {
+        let input = """
+        extension Array: BarProtocol where Element: BarProtocol {}
+        """
+
+        let output = """
+        // MARK: Array + BarProtocol
+
+        extension Array: BarProtocol where Element: BarProtocol {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testWhereClauseWithExactConstraint() {
+        let input = """
+        extension Array where Element == String {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func testWhereClauseWithConformanceConstraint() {
+        let input = """
+        // MARK: [BarProtocol] helpers
+
+        extension Array where Element: BarProtocol {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
 }

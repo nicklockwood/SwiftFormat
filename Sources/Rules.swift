@@ -5214,8 +5214,28 @@ public struct _FormatRules {
                     }
                 }
 
+                // When inserting a mark before the first declaration,
+                // we should make sure we place it _after_ the file header.
+                var markInsertIndex = 0
+                if index == 0 {
+                    // Search for the end of the file header, which ends when we hit a
+                    // blank line or any non-space/comment/lintbreak
+                    var endOfFileHeader = 0
+
+                    while openingFormatter.token(at: endOfFileHeader)?.isSpaceOrCommentOrLinebreak == true {
+                        endOfFileHeader += 1
+
+                        if openingFormatter.token(at: endOfFileHeader)?.isLinebreak == true,
+                            openingFormatter.next(.nonSpace, after: endOfFileHeader)?.isLinebreak == true
+                        {
+                            markInsertIndex = endOfFileHeader + 2
+                            break
+                        }
+                    }
+                }
+
                 // Insert the expected comment at the start of the declaration
-                openingFormatter.insert(tokenize("\(expectedComment)\n\n"), at: 0)
+                openingFormatter.insert(tokenize("\(expectedComment)\n\n"), at: markInsertIndex)
 
                 // If the previous declaration doesn't end in a blank line,
                 // add an additional linebreak to balance the mark.

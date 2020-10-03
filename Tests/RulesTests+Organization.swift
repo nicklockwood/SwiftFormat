@@ -1590,22 +1590,7 @@ extension RulesTests {
         protocol Quux {}
         """
 
-        let output1 = """
-        // MARK: - Foo
-
-        struct Foo {}
-        // MARK: - Bar
-
-        class Bar {}
-        // MARK: - Baaz
-
-        enum Baaz {}
-        // MARK: - Quux
-
-        protocol Quux {}
-        """
-
-        let output2 = """
+        let output = """
         // MARK: - Foo
 
         struct Foo {}
@@ -1623,8 +1608,7 @@ extension RulesTests {
         protocol Quux {}
         """
 
-        testFormatting(for: input, output1, rule: FormatRules.markTypes, exclude: ["blankLinesAroundMark"])
-        testFormatting(for: output1, output2, rule: FormatRules.blankLinesAroundMark)
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
     }
 
     func testDoesntAddMarkBeforeStructWithExistingMark() {
@@ -1812,19 +1796,7 @@ extension RulesTests {
         extension String: Bar {}
         """
 
-        let output1 = """
-        // MARK: - Foo
-
-        struct Foo {}
-        // MARK: Bar
-
-        extension Foo: Bar {}
-        // MARK: String + Bar
-
-        extension String: Bar {}
-        """
-
-        let output2 = """
+        let output = """
         // MARK: - Foo
 
         struct Foo {}
@@ -1838,7 +1810,6 @@ extension RulesTests {
         extension String: Bar {}
         """
 
-        testFormatting(for: input, output1, rule: FormatRules.markTypes, exclude: ["blankLinesAroundMark"])
-        testFormatting(for: output1, output2, rule: FormatRules.blankLinesAroundMark)
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
     }
 }

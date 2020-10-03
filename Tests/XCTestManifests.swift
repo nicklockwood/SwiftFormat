@@ -780,6 +780,7 @@ extension RulesTests {
         ("testForWhereVarNotTreatedAsMember", testForWhereVarNotTreatedAsMember),
         ("testFractionGroupingThousands", testFractionGroupingThousands),
         ("testFragmentWithTrailingLinebreaks", testFragmentWithTrailingLinebreaks),
+        ("testFullyQualifiedTypeNames", testFullyQualifiedTypeNames),
         ("testFuncAttributeStaysUnwrapped", testFuncAttributeStaysUnwrapped),
         ("testFuncAttributeStaysWrapped", testFuncAttributeStaysWrapped),
         ("testFunctionArgumentsWrappedAfterFirst", testFunctionArgumentsWrappedAfterFirst),

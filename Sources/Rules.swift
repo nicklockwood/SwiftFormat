@@ -5151,6 +5151,15 @@ public struct _FormatRules {
 
                 // Insert the expected comment at the start of the declaration
                 openingFormatter.insert(tokenize("\(expectedComment)\n\n"), at: 0)
+
+                // If the previous declaration doesn't end in a blank line,
+                // add an additional linebreak to balance the mark.
+                if index != 0 {
+                    declarations[index - 1] = formatter.mapClosingTokens(in: declarations[index - 1]) {
+                        formatter.endingWithBlankLine($0)
+                    }
+                }
+
                 return openingFormatter.tokens
             }
         }

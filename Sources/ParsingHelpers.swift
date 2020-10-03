@@ -1008,6 +1008,17 @@ extension Formatter {
             }
         }
 
+        /// The closing tokens of the declaration (after the body)
+        var closeTokens: [Token] {
+            switch self {
+            case .declaration:
+                return []
+            case let .type(_, _, _, close),
+                 let .conditionalCompilation(_, _, close):
+                return close
+            }
+        }
+
         /// The keyword that determines the specific type of declaration that this is
         /// (`class`, `func`, `let`, `var`, etc.)
         var keyword: String {

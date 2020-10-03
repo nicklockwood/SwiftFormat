@@ -1616,6 +1616,7 @@ extension RulesTests {
         // MARK: - Foo
 
         struct Foo {}
+        extension Foo {}
         """
 
         testFormatting(for: input, rule: FormatRules.markTypes)
@@ -1626,12 +1627,14 @@ extension RulesTests {
         // mark: foo
 
         struct Foo {}
+        extension Foo {}
         """
 
         let output = """
         // MARK: - Foo
 
         struct Foo {}
+        extension Foo {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1642,12 +1645,14 @@ extension RulesTests {
         // MARK: - FooBarControllerFactory
 
         struct FooBarControllerBuilder {}
+        extension FooBarControllerBuilder {}
         """
 
         let output = """
         // MARK: - FooBarControllerBuilder
 
         struct FooBarControllerBuilder {}
+        extension FooBarControllerBuilder {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1660,6 +1665,7 @@ extension RulesTests {
         ///  - And then, after the prose,
         ///  - a few bullet points just for fun
         struct Foo {}
+        extension Foo {}
         """
 
         let output = """
@@ -1670,6 +1676,7 @@ extension RulesTests {
         ///  - And then, after the prose,
         ///  - a few bullet points just for fun
         struct Foo {}
+        extension Foo {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1678,12 +1685,14 @@ extension RulesTests {
     func testCustomTypeMark() {
         let input = """
         struct Foo {}
+        extension Foo {}
         """
 
         let output = """
         // TYPE DEFINITION: Foo
 
         struct Foo {}
+        extension Foo {}
         """
 
         testFormatting(
@@ -1695,6 +1704,7 @@ extension RulesTests {
     func testDoesNothingForExtensionWithoutProtocolConformance() {
         let input = """
         extension Foo {}
+        extension Foo {}
         """
 
         testFormatting(for: input, rule: FormatRules.markTypes)
@@ -1705,6 +1715,7 @@ extension RulesTests {
         // MARK: Description of extension
 
         extension Foo {}
+        extension Foo {}
         """
 
         testFormatting(for: input, rule: FormatRules.markTypes)
@@ -1713,12 +1724,14 @@ extension RulesTests {
     func testAddsMarkCommentForExtensionWithConformance() {
         let input = """
         extension Foo: BarProtocol {}
+        extension Foo {}
         """
 
         let output = """
         // MARK: Foo + BarProtocol
 
         extension Foo: BarProtocol {}
+        extension Foo {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1729,12 +1742,14 @@ extension RulesTests {
         // MARK: - BarProtocol
 
         extension Foo: BarProtocol {}
+        extension Foo {}
         """
 
         let output = """
         // MARK: Foo + BarProtocol
 
         extension Foo: BarProtocol {}
+        extension Foo {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1743,12 +1758,14 @@ extension RulesTests {
     func testAddsMarkCommentForExtensionWithMultipleConformances() {
         let input = """
         extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
         """
 
         let output = """
         // MARK: Foo + BarProtocol, BaazProtocol
 
         extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1759,12 +1776,14 @@ extension RulesTests {
         // MARK: Foo + BarProtocol
 
         extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
         """
 
         let output = """
         // MARK: Foo + BarProtocol, BaazProtocol
 
         extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1775,12 +1794,14 @@ extension RulesTests {
         // EXTENSION: Foo + BarProtocol
 
         extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
         """
 
         let output = """
         // EXTENSION: Foo + BarProtocol, BaazProtocol
 
         extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
         """
 
         testFormatting(
@@ -1835,12 +1856,14 @@ extension RulesTests {
     func testWhereClauseConformanceWithExactConstraint() {
         let input = """
         extension Array: BarProtocol where Element == String {}
+        extension Array {}
         """
 
         let output = """
         // MARK: Array + BarProtocol
 
         extension Array: BarProtocol where Element == String {}
+        extension Array {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1849,12 +1872,14 @@ extension RulesTests {
     func testWhereClauseConformanceWithConformanceConstraint() {
         let input = """
         extension Array: BarProtocol where Element: BarProtocol {}
+        extension Array {}
         """
 
         let output = """
         // MARK: Array + BarProtocol
 
         extension Array: BarProtocol where Element: BarProtocol {}
+        extension Array {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1863,6 +1888,7 @@ extension RulesTests {
     func testWhereClauseWithExactConstraint() {
         let input = """
         extension Array where Element == String {}
+        extension Array {}
         """
 
         testFormatting(for: input, rule: FormatRules.markTypes)
@@ -1873,6 +1899,7 @@ extension RulesTests {
         // MARK: [BarProtocol] helpers
 
         extension Array where Element: BarProtocol {}
+        extension Rules {}
         """
 
         testFormatting(for: input, rule: FormatRules.markTypes)
@@ -1885,6 +1912,7 @@ extension RulesTests {
 
         /// All of SwiftFormat's Rule implementation
         class Rules {}
+        extension Rules {}
         """
 
         let output = """
@@ -1895,6 +1923,7 @@ extension RulesTests {
 
         /// All of SwiftFormat's Rule implementation
         class Rules {}
+        extension Rules {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1907,6 +1936,7 @@ extension RulesTests {
 
         /// All of SwiftFormat's Rule implementation
         class Rules {}
+        extension Rules {}
         """
 
         let output = """
@@ -1917,6 +1947,7 @@ extension RulesTests {
 
         /// All of SwiftFormat's Rule implementation
         class Rules {}
+        extension Rules {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
@@ -1932,6 +1963,7 @@ extension RulesTests {
 
         /// All of SwiftFormat's Rule implementation
         class Rules {}
+        extension Rules {}
         """
 
         let output = """
@@ -1945,8 +1977,24 @@ extension RulesTests {
 
         /// All of SwiftFormat's Rule implementation
         class Rules {}
+        extension Rules {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testDoesNothingIfOnlyOneDeclaration() {
+        let input = """
+        //  Created by Nick Lockwood on 12/08/2016.
+        //  Copyright 2016 Nick Lockwood
+
+        import Foundation
+        import os
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
     }
 }

@@ -5052,6 +5052,12 @@ public struct _FormatRules {
     ) { formatter in
         var declarations = formatter.parseDeclarations()
 
+        // Do nothing if there is only one top-level declaration in the file (excluding imports)
+        let declarationsWithoutImports = declarations.filter { $0.keyword != "import" }
+        guard declarationsWithoutImports.count > 1 else {
+            return
+        }
+
         for (index, declaration) in declarations.enumerated() {
             guard case let .type(kind, open, body, close) = declaration else { continue }
 

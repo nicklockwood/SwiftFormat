@@ -1812,4 +1812,23 @@ extension RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
     }
+
+    func testFullyQualifiedTypeNames() {
+        let input = """
+        struct Foo {}
+        extension MyModule.Foo: MyModule.MyNamespace.BarProtocol {}
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        struct Foo {}
+
+        // MARK: BarProtocol
+
+        extension MyModule.Foo: MyModule.MyNamespace.BarProtocol {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
 }

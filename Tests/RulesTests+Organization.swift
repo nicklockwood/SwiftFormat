@@ -1877,4 +1877,76 @@ extension RulesTests {
 
         testFormatting(for: input, rule: FormatRules.markTypes)
     }
+
+    func testPlacesMarkAfterImports() {
+        let input = """
+        import Foundation
+        import os
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        """
+
+        let output = """
+        import Foundation
+        import os
+
+        // MARK: - Rules
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testPlacesMarkAfterFileHeader() {
+        let input = """
+        //  Created by Nick Lockwood on 12/08/2016.
+        //  Copyright 2016 Nick Lockwood
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        """
+
+        let output = """
+        //  Created by Nick Lockwood on 12/08/2016.
+        //  Copyright 2016 Nick Lockwood
+
+        // MARK: - Rules
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testPlacesMarkAfterFileHeaderAndImports() {
+        let input = """
+        //  Created by Nick Lockwood on 12/08/2016.
+        //  Copyright 2016 Nick Lockwood
+
+        import Foundation
+        import os
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        """
+
+        let output = """
+        //  Created by Nick Lockwood on 12/08/2016.
+        //  Copyright 2016 Nick Lockwood
+
+        import Foundation
+        import os
+
+        // MARK: - Rules
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
 }

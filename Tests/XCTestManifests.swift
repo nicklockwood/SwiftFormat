@@ -666,6 +666,7 @@ extension RulesTests {
         ("testDispatchSyncFlagsClosureArgumentMadeTrailing", testDispatchSyncFlagsClosureArgumentMadeTrailing),
         ("testDoesNothingForExtensionWithoutProtocolConformance", testDoesNothingForExtensionWithoutProtocolConformance),
         ("testDoesNothingForInternalExtension", testDoesNothingForInternalExtension),
+        ("testDoesNothingIfOnlyOneDeclaration", testDoesNothingIfOnlyOneDeclaration),
         ("testDoesntAddMarkBeforeStructWithExistingMark", testDoesntAddMarkBeforeStructWithExistingMark),
         ("testDoesntAttemptToUpdateMarksNotAtTopLevel", testDoesntAttemptToUpdateMarksNotAtTopLevel),
         ("testDoesntBreakStructSynthesizedMemberwiseInitializer", testDoesntBreakStructSynthesizedMemberwiseInitializer),

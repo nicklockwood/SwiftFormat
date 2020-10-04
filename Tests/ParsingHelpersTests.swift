@@ -1127,4 +1127,33 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(declarations[8].body?[0].keyword, "init")
         XCTAssertEqual(declarations[8].body?[1].keyword, "func")
     }
+
+    // MARK: spaceEquivalentToWidth
+
+    func testSpaceEquivalentToWidth() {
+        let formatter = Formatter([])
+        XCTAssertEqual(formatter.spaceEquivalentToWidth(10), "          ")
+    }
+
+    func testSpaceEquivalentToWidthWithTabs() {
+        let options = FormatOptions(indent: "\t", tabWidth: 4, smartTabs: false)
+        let formatter = Formatter([], options: options)
+        XCTAssertEqual(formatter.spaceEquivalentToWidth(10), "\t\t  ")
+    }
+
+    // MARK: spaceEquivalentToTokens
+
+    func testSpaceEquivalentToCode() {
+        let tokens = tokenize("let a = b + c")
+        let formatter = Formatter(tokens)
+        XCTAssertEqual(formatter.spaceEquivalentToTokens(from: 0, upTo: tokens.count),
+                       "             ")
+    }
+
+    func testSpaceEquivalentToImageLiteral() {
+        let tokens = tokenize("let a = #imageLiteral(resourceName: \"abc.png\")")
+        let formatter = Formatter(tokens)
+        XCTAssertEqual(formatter.spaceEquivalentToTokens(from: 0, upTo: tokens.count),
+                       "          ")
+    }
 }

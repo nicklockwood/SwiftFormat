@@ -60,6 +60,8 @@ class RulesTests: XCTestCase {
         let exclude = exclude
             + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
             + (rules.first?.name == "organizeDeclarations" ? [] : ["organizeDeclarations"])
+            + (rules.first?.name == "extensionAccessControl" ? [] : ["extensionAccessControl"])
+            + (rules.first?.name == "markTypes" ? [] : ["markTypes"])
         XCTAssertEqual(try format(input, rules: rules, options: options), output, file: file, line: line)
         XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude), options: options),
                        output2, file: file, line: line)
@@ -1990,7 +1992,8 @@ class RulesTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, rule: FormatRules.sortedSwitchCases,
+        testFormatting(for: input, 
+                       rule: FormatRules.sortedSwitchCases,
                        exclude: ["wrapSwitchCases"])
     }
 
@@ -2000,7 +2003,6 @@ class RulesTests: XCTestCase {
         case .b, .c where isTrue, .a:
             break
         }
-        """
         let output = """
         switch self {
         case .a, .b, .c where isTrue:

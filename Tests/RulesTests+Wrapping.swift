@@ -680,6 +680,20 @@ extension RulesTests {
         XCTAssertNoThrow(try format(input, rules: rules, options: options))
     }
 
+    func testWrapColorLiteral() throws {
+        let input = """
+        button.setTitleColor(#colorLiteral(red: 0.2392156863, green: 0.6470588235, blue: 0.3647058824, alpha: 1), for: .normal)
+        """
+        let options = FormatOptions(maxWidth: 80, assetLiteralWidth: .visualWidth)
+        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapImageLiteral() {
+        let input = "if let image = #imageLiteral(resourceName: \"abc.png\") {}"
+        let options = FormatOptions(maxWidth: 40, assetLiteralWidth: .visualWidth)
+        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+    }
+
     // MARK: - wrapArguments
 
     // MARK: wrapArguments
@@ -2229,7 +2243,12 @@ extension RulesTests {
         class Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(
+            for: input,
+            output,
+            rule: FormatRules.wrapAttributes,
+            options: options
+        )
     }
 
     func testTypeAttributeStaysWrapped() {

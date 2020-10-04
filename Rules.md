@@ -13,6 +13,7 @@
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
 * [enumNamespaces](#enumNamespaces)
+* [extensionAccessControl](#extensionAccessControl)
 * [fileHeader](#fileHeader)
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
@@ -21,6 +22,7 @@
 * [leadingDelimiters](#leadingDelimiters)
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
+* [markTypes](#markTypes)
 * [modifierOrder](#modifierOrder)
 * [numberFormatting](#numberFormatting)
 * [organizeDeclarations](#organizeDeclarations)
@@ -439,6 +441,50 @@ Remove whitespace inside empty braces.
 
 Converts types used for hosting only static members into enums.
 
+## extensionAccessControl
+
+Configure the placement of an extension's access control keyword.
+
+Option | Description
+--- | ---
+`--extensionacl` | Place ACL "on-extension" (default) or "on-declarations"
+
+<details>
+<summary>Examples</summary>
+
+`--extensionacl on-extension` (default)
+
+```diff
+- extension Foo {
+-     public func bar() {}
+-     public func baaz() {}
+  }
+
++ public extension Foo {
++     func bar() {}
++     func baaz() {}
+  }
+```
+
+`--extensionacl on-declarations`
+
+```diff
+- public extension Foo {
+-     func bar() {}
+-     func baaz() {}
+-     internal func quux() {}
+  }
+
++ extension Foo {
++     public func bar() {}
++     public func baaz() {}
++     func quux() {}
+  }
+```
+
+</details>
+<br/>
+
 ## fileHeader
 
 Use specified source file header template for all files.
@@ -609,6 +655,35 @@ Option | Description
 --- | ---
 `--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
+## markTypes
+
+Adds a mark comment before top-level types and extensions.
+
+Option | Description
+--- | ---
+`--typemark` | Template for type mark comments. Defaults to "MARK: - %t"
+`--extensionmark` | Template for extension mark comments. Defaults to "MARK: %t"
+
+<details>
+<summary>Examples</summary>
+
+```diff
++ // MARK: - FooViewController
++
+ final class FooViewController: UIViewController { }
+
++ // MARK: UICollectionViewDelegate
++
+ extension FooViewController: UICollectionViewDelegate { }
+
++ // MARK: String + FooProtocol
++
+extension String: FooProtocol { }
+```
+
+</details>
+<br/>
+
 ## modifierOrder
 
 Use consistent ordering for member modifiers.
@@ -681,9 +756,11 @@ Option | Description
 `--categorymark` | Template for category mark comments. Defaults to "MARK: %c"
 `--beforemarks` | Declarations placed before first mark (e.g. `typealias,struct`)
 `--lifecycle` | Names of additional Lifecycle methods (e.g. `viewDidLoad`)
+`--organizetypes` | Declarations to organize (defaults to `struct,class,enum`)
 `--structthreshold` | Minimum line count to organize struct body. Defaults to 0
 `--classthreshold` | Minimum line count to organize class body. Defaults to 0
 `--enumthreshold` | Minimum line count to organize enum body. Defaults to 0
+`--extensionlength` | Minimum line count to organize extension body. Defaults to 0
 
 <details>
 <summary>Examples</summary>
@@ -1656,6 +1733,7 @@ Option | Description
 --- | ---
 `--maxwidth` | Maximum length of a line before wrapping. defaults to "none"
 `--nowrapoperators` | Comma-delimited list of operators that shouldn't be wrapped
+`--assetliterals` | Color/image literal width. "actual-width" or "visual-width"
 
 ## wrapArguments
 

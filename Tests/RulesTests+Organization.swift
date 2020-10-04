@@ -517,6 +517,59 @@ extension RulesTests {
         )
     }
 
+    func testBelowCustomExtensionOrganizationThreshold() {
+        let input = """
+        extension FooBelowThreshold {
+            func bar() {}
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizeTypes: ["class", "struct", "enum", "extension"],
+                organizeExtensionThreshold: 2
+            )
+        )
+    }
+
+    func testAboveCustomExtensionOrganizationThreshold() {
+        let input = """
+        extension FooBelowThreshold {
+            public func bar() {}
+            func baaz() {}
+            private func quux() {}
+        }
+        """
+
+        let output = """
+        extension FooBelowThreshold {
+
+            // MARK: Public
+
+            public func bar() {}
+
+            // MARK: Internal
+
+            func baaz() {}
+
+            // MARK: Private
+
+            private func quux() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizeTypes: ["class", "struct", "enum", "extension"],
+                organizeExtensionThreshold: 2
+            ), exclude: ["blankLinesAtStartOfScope"]
+        )
+    }
+
     func testPreservesExistingMarks() {
         let input = """
         class Foo {
@@ -1132,5 +1185,816 @@ extension RulesTests {
 
         testFormatting(for: input, rule: FormatRules.organizeDeclarations,
                        exclude: ["blankLinesAtStartOfScope"])
+    }
+
+    // MARK: extensionAccessControl .onDeclarations
+
+    func testUpdatesVisibilityOfExtensionMembers() {
+        let input = """
+        private extension Foo {
+            var publicProperty: Int { 10 }
+            public func publicFunction1() {}
+            func publicFunction2() {}
+            internal func internalFunction() {}
+            private func privateFunction() {}
+            fileprivate var privateProperty: Int { 10 }
+        }
+        """
+
+        let output = """
+        extension Foo {
+            fileprivate var publicProperty: Int { 10 }
+            public func publicFunction1() {}
+            fileprivate func publicFunction2() {}
+            internal func internalFunction() {}
+            private func privateFunction() {}
+            fileprivate var privateProperty: Int { 10 }
+        }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    func testUpdatesVisibilityOfExtensionInConditionalCompilationBlock() {
+        let input = """
+        #if DEBUG
+            public extension Foo {
+                var publicProperty: Int { 10 }
+            }
+        #endif
+        """
+
+        let output = """
+        #if DEBUG
+            extension Foo {
+                public var publicProperty: Int { 10 }
+            }
+        #endif
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    func testUpdatesVisibilityOfExtensionMembersInConditionalCompilationBlock() {
+        let input = """
+        public extension Foo {
+            #if DEBUG
+                var publicProperty: Int { 10 }
+            #endif
+        }
+        """
+
+        let output = """
+        extension Foo {
+            #if DEBUG
+                public var publicProperty: Int { 10 }
+            #endif
+        }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    func testDoesntUpdateDeclarationsInsideTypeInsideExtension() {
+        let input = """
+        public extension Foo {
+            struct Bar {
+                var baaz: Int
+                var quux: Int
+            }
+        }
+        """
+
+        let output = """
+        extension Foo {
+            public struct Bar {
+                var baaz: Int
+                var quux: Int
+            }
+        }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    func testDoesNothingForInternalExtension() {
+        let input = """
+        extension Foo {
+            func bar() {}
+            func baaz() {}
+            public func quux() {}
+        }
+        """
+
+        testFormatting(
+            for: input, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    func testPlacesVisibilityKeywordAfterAnnotations() {
+        let input = """
+        public extension Foo {
+            @discardableResult
+            func bar() -> Int { 10 }
+
+            /// Doc comment
+            @discardableResult
+            @available(iOS 10.0, *)
+            func baaz() -> Int { 10 }
+
+            @objc func quux() {}
+            @available(iOS 10.0, *) func quixotic() {}
+        }
+        """
+
+        let output = """
+        extension Foo {
+            @discardableResult
+            public func bar() -> Int { 10 }
+
+            /// Doc comment
+            @discardableResult
+            @available(iOS 10.0, *)
+            public func baaz() -> Int { 10 }
+
+            @objc public func quux() {}
+            @available(iOS 10.0, *) public func quixotic() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+        )
+    }
+
+    // MARK: extensionAccessControl .onExtension
+
+    func testUpdatedVisibilityOfExtension() {
+        let input = """
+        extension Foo {
+            public func bar() {}
+            public var baaz: Int { 10 }
+
+            public struct Foo2 {
+                var quux: Int
+            }
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            func bar() {}
+            var baaz: Int { 10 }
+
+            struct Foo2 {
+                var quux: Int
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testUpdatedVisibilityOfExtensionWithDeclarationsInConditionalCompilation() {
+        let input = """
+        extension Foo {
+            #if DEBUG
+                public func bar() {}
+                public var baaz: Int { 10 }
+            #endif
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            #if DEBUG
+                func bar() {}
+                var baaz: Int { 10 }
+            #endif
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntUpdateExtensionVisibilityWithoutMajorityBodyVisibility() {
+        let input = """
+        extension Foo {
+            public func foo() {}
+            public func bar() {}
+            var baz: Int { 10 }
+            var quux: Int { 5 }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testUpdateExtensionVisibilityWithMajorityBodyVisibility() {
+        let input = """
+        extension Foo {
+            public func foo() {}
+            public func bar() {}
+            public var baz: Int { 10 }
+            var quux: Int { 5 }
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            func foo() {}
+            func bar() {}
+            var baz: Int { 10 }
+            internal var quux: Int { 5 }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntUpdateExtensionVisibilityWhenMajorityBodyVisibilityIsntMostVisible() {
+        let input = """
+        extension Foo {
+            func foo() {}
+            func bar() {}
+            public var baz: Int { 10 }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntUpdateExtensionVisibilityWithInternalDeclarations() {
+        let input = """
+        extension Foo {
+            func bar() {}
+            var baaz: Int { 10 }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntUpdateExtensionThatAlreadyHasCorrectVisibilityKeyword() {
+        let input = """
+        public extension Foo {
+            func bar() {}
+            func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testUpdatesExtensionThatHasHigherACLThanBodyDeclarations() {
+        let input = """
+        public extension Foo {
+            fileprivate func bar() {}
+            fileprivate func baaz() {}
+        }
+        """
+
+        let output = """
+        fileprivate extension Foo {
+            func bar() {}
+            func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl,
+                       exclude: ["redundantFileprivate"])
+    }
+
+    func testDoesntHoistPrivateVisibilityFromExtensionBodyDeclarations() {
+        let input = """
+        extension Foo {
+            private var bar() {}
+            private func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntUpdatesExtensionThatHasLowerACLThanBodyDeclarations() {
+        let input = """
+        private extension Foo {
+            public var bar() {}
+            public func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDoesntReduceVisibilityOfImplicitInternalDeclaration() {
+        let input = """
+        extension Foo {
+            fileprivate var bar() {}
+            func baz() {}
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testUpdatesExtensionThatHasRedundantACLOnBodyDeclarations() {
+        let input = """
+        public extension Foo {
+            func bar() {}
+            public func baaz() {}
+        }
+        """
+
+        let output = """
+        public extension Foo {
+            func bar() {}
+            func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testNoHoistAccessModifierForOpenMethod() {
+        let input = """
+        extension Foo {
+            open func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDontChangePrivateExtensionToFileprivate() {
+        let input = """
+        private extension Foo {
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testDontRemoveInternalKeywordFromExtension() {
+        let input = """
+        internal extension Foo {
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testNoHoistAccessModifierForExtensionThatAddsProtocolConformance() {
+        let input = """
+        extension Foo: Bar {
+            public func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testProtocolConformanceCheckNotFooledByWhereClause() {
+        let input = """
+        extension Foo where Self: Bar {
+            public func bar() {}
+        }
+        """
+        let output = """
+        public extension Foo where Self: Bar {
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
+    }
+
+    // MARK: markTypes
+
+    func testAddsMarkBeforeTypes() {
+        let input = """
+        struct Foo {}
+        class Bar {}
+        enum Baaz {}
+        protocol Quux {}
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        struct Foo {}
+
+        // MARK: - Bar
+
+        class Bar {}
+
+        // MARK: - Baaz
+
+        enum Baaz {}
+
+        // MARK: - Quux
+
+        protocol Quux {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testDoesntAddMarkBeforeStructWithExistingMark() {
+        let input = """
+        // MARK: - Foo
+
+        struct Foo {}
+        extension Foo {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func testCorrectsTypoInTypeMark() {
+        let input = """
+        // mark: foo
+
+        struct Foo {}
+        extension Foo {}
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        struct Foo {}
+        extension Foo {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testUpdatesMarkAfterTypeIsRenamed() {
+        let input = """
+        // MARK: - FooBarControllerFactory
+
+        struct FooBarControllerBuilder {}
+        extension FooBarControllerBuilder {}
+        """
+
+        let output = """
+        // MARK: - FooBarControllerBuilder
+
+        struct FooBarControllerBuilder {}
+        extension FooBarControllerBuilder {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testAddsMarkBeforeTypeWithDocComment() {
+        let input = """
+        /// This is a doc comment with several
+        /// lines of prose at the start
+        ///  - And then, after the prose,
+        ///  - a few bullet points just for fun
+        struct Foo {}
+        extension Foo {}
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        /// This is a doc comment with several
+        /// lines of prose at the start
+        ///  - And then, after the prose,
+        ///  - a few bullet points just for fun
+        struct Foo {}
+        extension Foo {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testCustomTypeMark() {
+        let input = """
+        struct Foo {}
+        extension Foo {}
+        """
+
+        let output = """
+        // TYPE DEFINITION: Foo
+
+        struct Foo {}
+        extension Foo {}
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.markTypes,
+            options: FormatOptions(typeMarkComment: "TYPE DEFINITION: %t")
+        )
+    }
+
+    func testDoesNothingForExtensionWithoutProtocolConformance() {
+        let input = """
+        extension Foo {}
+        extension Foo {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func preservesExistingCommentForExtensionWithNoConformances() {
+        let input = """
+        // MARK: Description of extension
+
+        extension Foo {}
+        extension Foo {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func testAddsMarkCommentForExtensionWithConformance() {
+        let input = """
+        extension Foo: BarProtocol {}
+        extension Foo {}
+        """
+
+        let output = """
+        // MARK: Foo + BarProtocol
+
+        extension Foo: BarProtocol {}
+        extension Foo {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testUpdatesExtensionMarkToCorrectMark() {
+        let input = """
+        // MARK: - BarProtocol
+
+        extension Foo: BarProtocol {}
+        extension Foo {}
+        """
+
+        let output = """
+        // MARK: Foo + BarProtocol
+
+        extension Foo: BarProtocol {}
+        extension Foo {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testAddsMarkCommentForExtensionWithMultipleConformances() {
+        let input = """
+        extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
+        """
+
+        let output = """
+        // MARK: Foo + BarProtocol, BaazProtocol
+
+        extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testUpdatesMarkCommentWithCorrectConformances() {
+        let input = """
+        // MARK: Foo + BarProtocol
+
+        extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
+        """
+
+        let output = """
+        // MARK: Foo + BarProtocol, BaazProtocol
+
+        extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testCustomExtensionMarkComment() {
+        let input = """
+        // EXTENSION: Foo + BarProtocol
+
+        extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
+        """
+
+        let output = """
+        // EXTENSION: Foo + BarProtocol, BaazProtocol
+
+        extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo {}
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.markTypes,
+            options: FormatOptions(extensionMarkComment: "EXTENSION: %t")
+        )
+    }
+
+    func testTypeAndExtensionMarksTogether() {
+        let input = """
+        struct Foo {}
+        extension Foo: Bar {}
+        extension String: Bar {}
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        struct Foo {}
+
+        // MARK: Bar
+
+        extension Foo: Bar {}
+
+        // MARK: String + Bar
+
+        extension String: Bar {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testFullyQualifiedTypeNames() {
+        let input = """
+        struct Foo {}
+        extension MyModule.Foo: MyModule.MyNamespace.BarProtocol {}
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        struct Foo {}
+
+        // MARK: BarProtocol
+
+        extension MyModule.Foo: MyModule.MyNamespace.BarProtocol {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testWhereClauseConformanceWithExactConstraint() {
+        let input = """
+        extension Array: BarProtocol where Element == String {}
+        extension Array {}
+        """
+
+        let output = """
+        // MARK: Array + BarProtocol
+
+        extension Array: BarProtocol where Element == String {}
+        extension Array {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testWhereClauseConformanceWithConformanceConstraint() {
+        let input = """
+        extension Array: BarProtocol where Element: BarProtocol {}
+        extension Array {}
+        """
+
+        let output = """
+        // MARK: Array + BarProtocol
+
+        extension Array: BarProtocol where Element: BarProtocol {}
+        extension Array {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testWhereClauseWithExactConstraint() {
+        let input = """
+        extension Array where Element == String {}
+        extension Array {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func testWhereClauseWithConformanceConstraint() {
+        let input = """
+        // MARK: [BarProtocol] helpers
+
+        extension Array where Element: BarProtocol {}
+        extension Rules {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func testPlacesMarkAfterImports() {
+        let input = """
+        import Foundation
+        import os
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        extension Rules {}
+        """
+
+        let output = """
+        import Foundation
+        import os
+
+        // MARK: - Rules
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        extension Rules {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testPlacesMarkAfterFileHeader() {
+        let input = """
+        //  Created by Nick Lockwood on 12/08/2016.
+        //  Copyright 2016 Nick Lockwood
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        extension Rules {}
+        """
+
+        let output = """
+        //  Created by Nick Lockwood on 12/08/2016.
+        //  Copyright 2016 Nick Lockwood
+
+        // MARK: - Rules
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        extension Rules {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testPlacesMarkAfterFileHeaderAndImports() {
+        let input = """
+        //  Created by Nick Lockwood on 12/08/2016.
+        //  Copyright 2016 Nick Lockwood
+
+        import Foundation
+        import os
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        extension Rules {}
+        """
+
+        let output = """
+        //  Created by Nick Lockwood on 12/08/2016.
+        //  Copyright 2016 Nick Lockwood
+
+        import Foundation
+        import os
+
+        // MARK: - Rules
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        extension Rules {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testDoesNothingIfOnlyOneDeclaration() {
+        let input = """
+        //  Created by Nick Lockwood on 12/08/2016.
+        //  Copyright 2016 Nick Lockwood
+
+        import Foundation
+        import os
+
+        /// All of SwiftFormat's Rule implementation
+        class Rules {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
     }
 }

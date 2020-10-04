@@ -403,42 +403,179 @@ extension Formatter {
         }
         removeToken(at: index)
     }
+}
 
-    /// Recursively organizes the body declarations of this declaration and any nested types.
-    func organizeDeclarations(_ declaration: Declaration) -> Formatter.Declaration {
+/// Helpers for recursively traversing the declaration hierarchy
+extension Formatter {
+    /// Applies `mapDeclaration` to every recursive declaration from this formatter's tokens
+    func mapRecursiveDeclarations(mapDeclaration: (Declaration) -> Declaration) {
+        let updatedDeclarations = mapRecursiveDeclarations(
+            of: parseDeclarations(),
+            mapDeclaration: mapDeclaration
+        )
+
+        let updatedTokens = updatedDeclarations.flatMap { $0.tokens }
+        replaceTokens(in: 0 ..< tokens.count, with: updatedTokens)
+    }
+
+    /// Applies `mapDeclaration` to every recursive declaration of the given declarations
+    func mapRecursiveDeclarations(
+        of declarations: [Declaration],
+        mapDeclaration: (Declaration) -> Declaration
+    ) -> [Declaration] {
+        return declarations.map { declaration in
+            switch mapDeclaration(declaration) {
+            case let .type(kind, open, body, close):
+                return .type(
+                    kind: kind,
+                    open: open,
+                    body: mapRecursiveDeclarations(of: body, mapDeclaration: mapDeclaration),
+                    close: close
+                )
+
+            case let .conditionalCompilation(open, body, close):
+                return .conditionalCompilation(
+                    open: open,
+                    body: mapRecursiveDeclarations(of: body, mapDeclaration: mapDeclaration),
+                    close: close
+                )
+
+            case .declaration:
+                return declaration
+            }
+        }
+    }
+
+    /// Performs some declaration mapping for each body declaration in this declaration
+    /// (including any declarations nested in conditional compilation blocks,
+    ///  but not including declarations dested within child types).
+    func mapBodyDeclarations(
+        in declaration: Declaration,
+        mapBodyDeclaration: (Declaration) -> Declaration
+    ) -> Declaration {
         switch declaration {
         case let .type(kind, open, body, close):
-            // Organize the body of this type
-            let (_, organizedOpen, organizedBody, organizedClose) = organizeType((kind, open, body, close))
-
-            // And also organize any of its nested children
             return .type(
                 kind: kind,
-                open: organizedOpen,
-                body: organizedBody.map { organizeDeclarations($0) },
-                close: organizedClose
-            )
-
-        // We don't organize declarations within conditional compilation blocks
-        // since they represent their own scope, but we still need to organize
-        // the body of any _types_ inside this block.
-        case let .conditionalCompilation(open, body, close):
-            return .conditionalCompilation(
                 open: open,
-                body: body.map { organizeDeclarations($0) },
+                body: mapBodyDeclarations(in: body, mapBodyDeclaration: mapBodyDeclaration),
                 close: close
             )
 
-        // If the declaration doesn't have a body, there isn't any work to do
+        case let .conditionalCompilation(open, body, close):
+            return .conditionalCompilation(
+                open: open,
+                body: mapBodyDeclarations(in: body, mapBodyDeclaration: mapBodyDeclaration),
+                close: close
+            )
+
         case .declaration:
+            // No work to do, because plain declarations don't have bodies
             return declaration
+        }
+    }
+
+    private func mapBodyDeclarations(
+        in body: [Declaration],
+        mapBodyDeclaration: (Declaration) -> Declaration
+    ) -> [Declaration] {
+        return body.map { bodyDeclaration in
+            // Apply `mapBodyDeclaration` to each declaration in the body
+            switch bodyDeclaration {
+            case .declaration, .type:
+                return mapBodyDeclaration(bodyDeclaration)
+
+            // Recursively step through conditional compilation blocks
+            // since their body tokens are effectively body tokens of the parent type
+            case .conditionalCompilation:
+                return mapBodyDeclarations(in: bodyDeclaration, mapBodyDeclaration: mapBodyDeclaration)
+            }
+        }
+    }
+
+    /// Performs some generic mapping for each declaration in the given array,
+    /// stepping through conditional compilation blocks (but not into the body
+    /// of other nested types)
+    func mapDeclarations<T>(
+        _ declarations: [Declaration],
+        mapDeclaration: (Declaration) -> T
+    ) -> [T] {
+        return declarations.flatMap { declaration -> [T] in
+            switch declaration {
+            case .declaration, .type:
+                return [mapDeclaration(declaration)]
+            case let .conditionalCompilation(_, body, _):
+                return mapDeclarations(body, mapDeclaration: mapDeclaration)
+            }
+        }
+    }
+
+    /// Maps the first group of tokens in this declaration
+    ///  - For declarations with a body, this maps the `open` tokens
+    ///  - For declarations without a body, this maps the entire declaration's tokens
+    func mapOpeningTokens(
+        in declaration: Declaration,
+        mapOpeningTokens: ([Token]) -> [Token]
+    ) -> Declaration {
+        switch declaration {
+        case let .type(kind, open, body, close):
+            return .type(
+                kind: kind,
+                open: mapOpeningTokens(open),
+                body: body,
+                close: close
+            )
+
+        case let .conditionalCompilation(open, body, close):
+            return .conditionalCompilation(
+                open: mapOpeningTokens(open),
+                body: body,
+                close: close
+            )
+
+        case let .declaration(kind, tokens):
+            return .declaration(
+                kind: kind,
+                tokens: mapOpeningTokens(tokens)
+            )
+        }
+    }
+
+    /// Maps the last group of tokens in this declaration
+    ///  - For declarations with a body, this maps the `close` tokens
+    ///  - For declarations without a body, this maps the entire declaration's tokens
+    func mapClosingTokens(
+        in declaration: Declaration,
+        mapClosingTokens: ([Token]) -> [Token]
+    ) -> Declaration {
+        switch declaration {
+        case let .type(kind, open, body, close):
+            return .type(
+                kind: kind,
+                open: open,
+                body: body,
+                close: mapClosingTokens(close)
+            )
+
+        case let .conditionalCompilation(open, body, close):
+            return .conditionalCompilation(
+                open: open,
+                body: body,
+                close: mapClosingTokens(close)
+            )
+
+        case let .declaration(kind, tokens):
+            return .declaration(
+                kind: kind,
+                tokens: mapClosingTokens(tokens)
+            )
         }
     }
 }
 
 // Utility functions used by organizeDeclarations rule
 // TODO: find a better place to put this
-private extension Formatter {
+extension Formatter {
     /// Categories of declarations within an individual type
     enum Category: String, CaseIterable {
         case beforeMarks
@@ -449,6 +586,21 @@ private extension Formatter {
         case `fileprivate`
         case `private`
 
+        init(from visibility: Visibility) {
+            switch visibility {
+            case .open:
+                self = .open
+            case .public:
+                self = .public
+            case .internal:
+                self = .internal
+            case .fileprivate:
+                self = .fileprivate
+            case .private:
+                self = .private
+            }
+        }
+
         /// The comment tokens that should precede all declarations in this category
         func markComment(from template: String) -> String? {
             switch self {
@@ -457,6 +609,19 @@ private extension Formatter {
             default:
                 return "// \(template.replacingOccurrences(of: "%c", with: rawValue.capitalized))"
             }
+        }
+    }
+
+    /// The visibility of a declaration
+    enum Visibility: String, CaseIterable, Comparable {
+        case open
+        case `public`
+        case `internal`
+        case `fileprivate`
+        case `private`
+
+        static func < (lhs: Visibility, rhs: Visibility) -> Bool {
+            return allCases.index(of: lhs)! > allCases.index(of: rhs)!
         }
     }
 
@@ -518,22 +683,8 @@ private extension Formatter {
                 }
             }
 
-            // Search for a visibility keyword in the tokens before the primary keyword,
-            // making sure we exclude groups like private(set).
-            var searchIndex = 0
-
-            while searchIndex < keywordIndex {
-                if let visibilityCategory = Category(rawValue: parser.tokens[searchIndex].string),
-                    parser.next(.nonSpaceOrComment, after: searchIndex) != .startOfScope("(")
-                {
-                    return visibilityCategory
-                }
-
-                searchIndex += 1
-            }
-
-            // `internal` is the default implied vibilility if no other is specified
-            return .internal
+            // Other than `beforeMarks` and `lifecycle`, the category is just the visibility level
+            return Category(from: visibility(of: declaration) ?? .internal)
 
         case let .conditionalCompilation(_, body, _):
             // Conditional compilation blocks themselves don't have a category or visbility-level,
@@ -545,6 +696,36 @@ private extension Formatter {
             } else {
                 return .beforeMarks
             }
+        }
+    }
+
+    /// The access control `Visibility` of the given `Declaration`
+    func visibility(of declaration: Formatter.Declaration) -> Visibility? {
+        switch declaration {
+        case let .declaration(keyword, tokens), let .type(keyword, open: tokens, _, _):
+            let parser = Formatter(tokens)
+
+            guard let keywordIndex = parser.index(after: -1, where: { $0.string == keyword }) else {
+                return nil
+            }
+
+            // Search for a visibility keyword in the tokens before the primary keyword,
+            // making sure we exclude groups like private(set).
+            var searchIndex = 0
+
+            while searchIndex < keywordIndex {
+                if let visibility = Visibility(rawValue: parser.tokens[searchIndex].string),
+                    parser.next(.nonSpaceOrComment, after: searchIndex) != .startOfScope("(")
+                {
+                    return visibility
+                }
+
+                searchIndex += 1
+            }
+
+            return nil
+        case .conditionalCompilation:
+            return nil
         }
     }
 
@@ -738,52 +919,14 @@ private extension Formatter {
                         parser.removeTokens(in: rangeBeforeComment)
 
                         // ... and append them to the end of the previous declaration
-                        switch typeBody[declarationIndex - 1] {
-                        case let .declaration(kind, tokens):
-                            typeBody[declarationIndex - 1] = .declaration(
-                                kind: kind,
-                                tokens: tokens + tokensBeforeCommentLine
-                            )
-
-                        case let .type(kind, open, body, close):
-                            typeBody[declarationIndex - 1] = .type(
-                                kind: kind,
-                                open: open,
-                                body: body,
-                                close: close + tokensBeforeCommentLine
-                            )
-
-                        case let .conditionalCompilation(open, body, close):
-                            typeBody[declarationIndex - 1] = .conditionalCompilation(
-                                open: open,
-                                body: body,
-                                close: close + tokensBeforeCommentLine
-                            )
+                        typeBody[declarationIndex - 1] = mapClosingTokens(in: typeBody[declarationIndex - 1]) {
+                            $0 + tokensBeforeCommentLine
                         }
                     }
 
                     // Apply the updated tokens back to this declaration
-                    switch typeBody[declarationIndex] {
-                    case let .declaration(kind, _):
-                        typeBody[declarationIndex] = .declaration(
-                            kind: kind,
-                            tokens: parser.tokens
-                        )
-
-                    case let .type(kind, _, body, close):
-                        typeBody[declarationIndex] = .type(
-                            kind: kind,
-                            open: parser.tokens,
-                            body: body,
-                            close: close
-                        )
-
-                    case let .conditionalCompilation(_, body, close):
-                        typeBody[declarationIndex] = .conditionalCompilation(
-                            open: parser.tokens,
-                            body: body,
-                            close: close
-                        )
+                    typeBody[declarationIndex] = mapOpeningTokens(in: typeBody[declarationIndex]) { _ in
+                        parser.tokens
                     }
                 }
             }
@@ -796,8 +939,7 @@ private extension Formatter {
     func organizeType(
         _ typeDeclaration: (kind: String, open: [Token], body: [Formatter.Declaration], close: [Token])
     ) -> (kind: String, open: [Token], body: [Formatter.Declaration], close: [Token]) {
-        // Only organize the body of classes, structs, and enums (not protocols and extensions)
-        guard ["class", "struct", "enum"].contains(typeDeclaration.kind) else {
+        guard options.organizeTypes.contains(typeDeclaration.kind) else {
             return typeDeclaration
         }
 
@@ -810,6 +952,8 @@ private extension Formatter {
             organizationThreshold = options.organizeStructThreshold
         case "enum":
             organizationThreshold = options.organizeEnumThreshold
+        case "extension":
+            organizationThreshold = options.organizeExtensionThreshold
         default:
             organizationThreshold = 0
         }
@@ -994,22 +1138,9 @@ private extension Formatter {
                     indexOfLastDeclarationWithType != sortedDeclarations.indices.last
                 else { continue }
 
-                switch sortedDeclarations[indexOfLastDeclarationWithType].declaration {
-                case let .type(kind, open, body, close):
-                    sortedDeclarations[indexOfLastDeclarationWithType].declaration = .type(
-                        kind: kind,
-                        open: open,
-                        body: body,
-                        close: endingWithBlankLine(close)
-                    )
-
-                case let .declaration(kind, tokens):
-                    sortedDeclarations[indexOfLastDeclarationWithType].declaration
-                        = .declaration(kind: kind, tokens: endingWithBlankLine(tokens))
-
-                case .conditionalCompilation:
-                    break
-                }
+                sortedDeclarations[indexOfLastDeclarationWithType].declaration = mapClosingTokens(
+                    in: sortedDeclarations[indexOfLastDeclarationWithType].declaration)
+                { endingWithBlankLine($0) }
             }
         }
 
@@ -1019,5 +1150,66 @@ private extension Formatter {
             body: sortedDeclarations.map { $0.declaration },
             close: typeClosingTokens
         )
+    }
+
+    /// Removes the given visibility keyword from the given declaration
+    func remove(_ visibilityKeyword: Visibility, from declaration: Declaration) -> Declaration {
+        return mapOpeningTokens(in: declaration) { openTokens in
+            let openTokensFormatter = Formatter(openTokens)
+
+            guard let visibilityKeywordIndex = openTokensFormatter.index(after: -1, where: {
+                $0.string == visibilityKeyword.rawValue
+            }) else { return openTokens }
+
+            openTokensFormatter.removeToken(at: visibilityKeywordIndex)
+
+            while openTokensFormatter.token(at: visibilityKeywordIndex)?.isSpace == true {
+                openTokensFormatter.removeToken(at: visibilityKeywordIndex)
+            }
+
+            return openTokensFormatter.tokens
+        }
+    }
+
+    /// Adds the given visibility keyword to the given declaration,
+    /// replacing any existing visibility keyword.
+    func add(_ visibilityKeyword: Visibility, to declaration: Declaration) -> Declaration {
+        var declaration = declaration
+
+        if let existingVisibilityKeyword = visibility(of: declaration) {
+            declaration = remove(existingVisibilityKeyword, from: declaration)
+        }
+
+        return mapOpeningTokens(in: declaration) { openTokens in
+            let openTokensFormatter = Formatter(openTokens)
+
+            guard let indexOfKeyword = openTokensFormatter.index(after: -1, where: {
+                $0.string == declaration.keyword
+            }) else { return openTokens }
+
+            var startOfModifiers = openTokensFormatter.startOfModifiers(at: indexOfKeyword)
+
+            // If there are any annotations, skip past them
+            while startOfModifiers < indexOfKeyword,
+                openTokensFormatter.tokens[startOfModifiers].string.hasPrefix("@")
+                || openTokensFormatter.tokens[startOfModifiers].isSpaceOrCommentOrLinebreak
+            {
+                startOfModifiers += 1
+
+                // Also skip through annotation bodies, like in `@available(iOS 14.0, *)`
+                if openTokensFormatter.tokens[startOfModifiers] == .startOfScope("("),
+                    let endOfScope = openTokensFormatter.endOfScope(at: startOfModifiers)
+                {
+                    startOfModifiers = endOfScope + 1
+                }
+            }
+
+            openTokensFormatter.insert(
+                tokenize("\(visibilityKeyword.rawValue) "),
+                at: startOfModifiers
+            )
+
+            return openTokensFormatter.tokens
+        }
     }
 }

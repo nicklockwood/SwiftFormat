@@ -98,6 +98,12 @@ public enum ElsePosition: String {
     case auto
 }
 
+/// Where to place the access control keyword of an extension
+public enum ExtensionACLPlacement: String {
+    case onExtension = "on-extension"
+    case onDeclarations = "on-declarations"
+}
+
 /// Version number wrapper
 public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral, CustomStringConvertible {
     public let rawValue: String
@@ -260,6 +266,12 @@ public enum YodaMode: String {
     case always
 }
 
+/// Argument type for asset literals
+public enum AssetLiteralWidth: String {
+    case actualWidth = "actual-width"
+    case visualWidth = "visual-width"
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -302,6 +314,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var tabWidth: Int
     public var maxWidth: Int
     public var smartTabs: Bool
+    public var assetLiteralWidth: AssetLiteralWidth
     public var noSpaceOperators: Set<String>
     public var noWrapOperators: Set<String>
     public var modifierOrder: [String]
@@ -309,13 +322,18 @@ public struct FormatOptions: CustomStringConvertible {
     public var funcAttributes: AttributeMode
     public var typeAttributes: AttributeMode
     public var varAttributes: AttributeMode
+    public var typeMarkComment: String
+    public var extensionMarkComment: String
     public var categoryMarkComment: String
     public var beforeMarks: Set<String>
     public var lifecycleMethods: Set<String>
+    public var organizeTypes: Set<String>
     public var organizeClassThreshold: Int
     public var organizeStructThreshold: Int
     public var organizeEnumThreshold: Int
+    public var organizeExtensionThreshold: Int
     public var yodaSwap: YodaMode
+    public var extensionACLPlacement: ExtensionACLPlacement
 
     // Deprecated
     public var indentComments: Bool
@@ -368,6 +386,7 @@ public struct FormatOptions: CustomStringConvertible {
                 tabWidth: Int = 0,
                 maxWidth: Int = 0,
                 smartTabs: Bool = true,
+                assetLiteralWidth: AssetLiteralWidth = .visualWidth,
                 noSpaceOperators: Set<String> = [],
                 noWrapOperators: Set<String> = [],
                 modifierOrder: [String] = [],
@@ -375,13 +394,18 @@ public struct FormatOptions: CustomStringConvertible {
                 funcAttributes: AttributeMode = .preserve,
                 typeAttributes: AttributeMode = .preserve,
                 varAttributes: AttributeMode = .preserve,
+                typeMarkComment: String = "MARK: - %t",
+                extensionMarkComment: String = "MARK: %t",
                 categoryMarkComment: String = "MARK: %c",
                 beforeMarks: Set<String> = [],
                 lifecycleMethods: Set<String> = [],
+                organizeTypes: Set<String> = ["class", "struct", "enum"],
                 organizeClassThreshold: Int = 0,
                 organizeStructThreshold: Int = 0,
                 organizeEnumThreshold: Int = 0,
+                organizeExtensionThreshold: Int = 0,
                 yodaSwap: YodaMode = .always,
+                extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -428,6 +452,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.tabWidth = tabWidth
         self.maxWidth = maxWidth
         self.smartTabs = smartTabs
+        self.assetLiteralWidth = assetLiteralWidth
         self.noSpaceOperators = noSpaceOperators
         self.noWrapOperators = noWrapOperators
         self.modifierOrder = modifierOrder
@@ -435,13 +460,18 @@ public struct FormatOptions: CustomStringConvertible {
         self.funcAttributes = funcAttributes
         self.typeAttributes = typeAttributes
         self.varAttributes = varAttributes
+        self.typeMarkComment = typeMarkComment
+        self.extensionMarkComment = extensionMarkComment
         self.categoryMarkComment = categoryMarkComment
         self.beforeMarks = beforeMarks
         self.lifecycleMethods = lifecycleMethods
+        self.organizeTypes = organizeTypes
         self.organizeClassThreshold = organizeClassThreshold
         self.organizeStructThreshold = organizeStructThreshold
         self.organizeEnumThreshold = organizeEnumThreshold
+        self.organizeExtensionThreshold = organizeExtensionThreshold
         self.yodaSwap = yodaSwap
+        self.extensionACLPlacement = extensionACLPlacement
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

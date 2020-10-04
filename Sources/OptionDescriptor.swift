@@ -584,6 +584,12 @@ struct _Descriptors {
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
     )
+    let assetLiteralWidth = OptionDescriptor(
+        argumentName: "assetliterals",
+        displayName: "Asset Literals",
+        help: "Color/image literal width. \"actual-width\" or \"visual-width\"",
+        keyPath: \.assetLiteralWidth
+    )
     let noSpaceOperators = OptionDescriptor(
         argumentName: "nospaceoperators",
         displayName: "No-space Operators",
@@ -644,6 +650,22 @@ struct _Descriptors {
         keyPath: \.shortOptionals,
         options: ["always", "except-properties"]
     )
+    let typeMarkComment = OptionDescriptor(
+        argumentName: "typemark",
+        displayName: "Type Mark Comment",
+        help: "Template for type mark comments. Defaults to \"MARK: - %t\"",
+        keyPath: \.typeMarkComment,
+        fromArgument: { $0 },
+        toArgument: { $0 }
+    )
+    let extensionMarkComment = OptionDescriptor(
+        argumentName: "extensionmark",
+        displayName: "Extension Mark Comment",
+        help: "Template for extension mark comments. Defaults to \"MARK: %t\"",
+        keyPath: \.extensionMarkComment,
+        fromArgument: { $0 },
+        toArgument: { $0 }
+    )
     let categoryMarkComment = OptionDescriptor(
         argumentName: "categorymark",
         displayName: "Category Mark Comment",
@@ -664,6 +686,12 @@ struct _Descriptors {
         help: "Names of additional Lifecycle methods (e.g. `viewDidLoad`)",
         keyPath: \.lifecycleMethods
     )
+    let organizeTypes = OptionDescriptor(
+        argumentName: "organizetypes",
+        displayName: "Declaration Types to Organize",
+        help: "Declarations to organize (defaults to `struct,class,enum`)",
+        keyPath: \.organizeTypes
+    )
     let organizeStructThreshold = OptionDescriptor(
         argumentName: "structthreshold",
         displayName: "Organize Struct Threshold",
@@ -681,6 +709,12 @@ struct _Descriptors {
         displayName: "Organize Enum Threshold",
         help: "Minimum line count to organize enum body. Defaults to 0",
         keyPath: \.organizeEnumThreshold
+    )
+    let organizeExtensionThreshold = OptionDescriptor(
+        argumentName: "extensionlength",
+        displayName: "Organize Extension Threshold",
+        help: "Minimum line count to organize extension body. Defaults to 0",
+        keyPath: \.organizeExtensionThreshold
     )
     let funcAttributes = OptionDescriptor(
         argumentName: "funcattributes",
@@ -705,6 +739,12 @@ struct _Descriptors {
         displayName: "Yoda Swap",
         help: "Swap yoda values: \"always\" (default) or \"literals-only\"",
         keyPath: \.yodaSwap
+    )
+    let extensionACLPlacement = OptionDescriptor(
+        argumentName: "extensionacl",
+        displayName: "Extension Access Control Level Placement",
+        help: "Place ACL \"on-extension\" (default) or \"on-declarations\"",
+        keyPath: \.extensionACLPlacement
     )
 
     // MARK: - Internal

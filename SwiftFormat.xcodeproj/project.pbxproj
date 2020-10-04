@@ -792,7 +792,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "swift test --generate-linuxmain\n";
+			shellScript = "if [[ \"$OSTYPE\" != \"darwin17\" ]]; then\n    swift test --generate-linuxmain\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

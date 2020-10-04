@@ -130,8 +130,12 @@ class MetadataTests: XCTestCase {
                     referencedOptions += [
                         Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs,
                     ]
-                case .identifier("tokenLength"), .identifier("lineLength"):
+                case .identifier("tokenLength"):
                     referencedOptions += [Descriptors.indent, Descriptors.tabWidth]
+                case .identifier("lineLength"):
+                    referencedOptions += [
+                        Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
+                    ]
                 case .identifier("isCommentedCode"):
                     referencedOptions.append(Descriptors.indent)
                 case .identifier("insertLinebreak"), .identifier("linebreakToken"):
@@ -141,10 +145,13 @@ class MetadataTests: XCTestCase {
                         Descriptors.wrapArguments, Descriptors.wrapParameters, Descriptors.wrapCollections,
                         Descriptors.closingParenOnSameLine, Descriptors.linebreak, Descriptors.truncateBlankLines,
                         Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs,
-                        Descriptors.maxWidth,
+                        Descriptors.maxWidth, Descriptors.assetLiteralWidth,
                     ]
-                case .identifier("indexWhereLineShouldWrapInLine"):
-                    referencedOptions.append(Descriptors.noWrapOperators)
+                case .identifier("indexWhereLineShouldWrapInLine"), .identifier("indexWhereLineShouldWrap"):
+                    referencedOptions += [
+                        Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
+                        Descriptors.noWrapOperators,
+                    ]
                 case .identifier("modifierOrder"):
                     referencedOptions.append(Descriptors.modifierOrder)
                 case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
@@ -153,14 +160,16 @@ class MetadataTests: XCTestCase {
                     {
                         referencedOptions.append(option)
                     }
-                case .identifier("organizeDeclarations"):
+                case .identifier("organizeType"):
                     referencedOptions += [
                         Descriptors.categoryMarkComment,
                         Descriptors.beforeMarks,
                         Descriptors.lifecycleMethods,
+                        Descriptors.organizeTypes,
                         Descriptors.organizeStructThreshold,
                         Descriptors.organizeClassThreshold,
                         Descriptors.organizeEnumThreshold,
+                        Descriptors.organizeExtensionThreshold,
                     ]
                 default:
                     continue

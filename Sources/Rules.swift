@@ -1628,7 +1628,7 @@ public struct _FormatRules {
     public let braces = FormatRule(
         help: "Wrap braces in accordance with selected style (K&R or Allman).",
         options: ["allman"],
-        sharedOptions: ["linebreaks", "maxwidth", "indent", "tabwidth"]
+        sharedOptions: ["linebreaks", "maxwidth", "indent", "tabwidth", "assetliterals"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard let closingBraceIndex = formatter.endOfScope(at: i),
@@ -3469,7 +3469,7 @@ public struct _FormatRules {
 
     public let wrap = FormatRule(
         help: "Wrap lines that exceed the specified maximum width.",
-        options: ["maxwidth", "nowrapoperators"],
+        options: ["maxwidth", "nowrapoperators", "assetliterals"],
         sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "indent",
                         "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs"]
     ) { formatter in
@@ -3528,7 +3528,8 @@ public struct _FormatRules {
         help: "Align wrapped function arguments or collection elements.",
         orderAfter: ["wrap"],
         options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen"],
-        sharedOptions: ["indent", "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs"]
+        sharedOptions: ["indent", "trimwhitespace", "linebreaks",
+                        "tabwidth", "maxwidth", "smarttabs", "assetliterals"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
                                               wrapSingleArguments: false)
@@ -3973,8 +3974,7 @@ public struct _FormatRules {
     /// Sorts switch cases alphabetically
     public let sortedSwitchCases = FormatRule(
         help: "Sorts switch cases alphabetically.",
-        options: [],
-        sharedOptions: []
+        disabledByDefault: true // TODO: fix bugs with comments, then this can be enabled by default
     ) { formatter in
 
         formatter.forEach(.endOfScope("case")) { i, _ in
@@ -4022,6 +4022,7 @@ public struct _FormatRules {
 
             let sortedTokens = sorted.map { formatter.tokens[$0] }
 
+            // ignore if there's a where keyword and it is not in the last place.
             let firstWhereIndex = sortedTokens.firstIndex(where: { slice in slice.contains(.keyword("where")) })
             guard firstWhereIndex == nil || firstWhereIndex == sortedTokens.count - 1 else { return }
 
@@ -4993,15 +4994,273 @@ public struct _FormatRules {
         help: "Organizes declarations within class, struct, and enum bodies.",
         runOnceOnly: true,
         disabledByDefault: true,
-        options: ["categorymark", "beforemarks", "lifecycle", "structthreshold",
-                  "classthreshold", "enumthreshold"]
+        orderAfter: ["extensionAccessControl"],
+        options: ["categorymark", "beforemarks", "lifecycle", "organizetypes",
+                  "structthreshold", "classthreshold", "enumthreshold", "extensionlength"]
     ) { formatter in
-        // Parse the file into declarations and organize the body of individual types
-        let organizedDeclarations = formatter
-            .parseDeclarations()
-            .map { formatter.organizeDeclarations($0) }
+        formatter.mapRecursiveDeclarations { declaration in
+            switch declaration {
+            // Organize the body of type declarations
+            case let .type(kind, open, body, close):
+                let organizedType = formatter.organizeType((kind, open, body, close))
+                return .type(
+                    kind: organizedType.kind,
+                    open: organizedType.open,
+                    body: organizedType.body,
+                    close: organizedType.close
+                )
 
-        let updatedTokens = organizedDeclarations.flatMap { $0.tokens }
+            case .conditionalCompilation, .declaration:
+                return declaration
+            }
+        }
+    }
+
+    public let extensionAccessControl = FormatRule(
+        help: "Configure the placement of an extension's access control keyword.",
+        options: ["extensionacl"]
+    ) { formatter in
+        formatter.mapRecursiveDeclarations { declaration -> Formatter.Declaration in
+            guard case let .type("extension", open, body, close) = declaration else {
+                return declaration
+            }
+
+            let visibilityKeyword = formatter.visibility(of: declaration)
+            // `private` visibility at top level of file is equivalent to `fileprivate`
+            let extensionVisibility = (visibilityKeyword == .private) ? .fileprivate : visibilityKeyword
+
+            switch formatter.options.extensionACLPlacement {
+            // If all declarations in the extension have the same visibility,
+            // remove the keyword from the individual declarations and
+            // place it on the extension itself.
+            case .onExtension:
+                if extensionVisibility == nil,
+                    let delimiterIndex = declaration.openTokens.index(of: .delimiter(":")),
+                    declaration.openTokens.index(of: .keyword("where")).map({ $0 > delimiterIndex }) ?? true
+                {
+                    // Extension adds protocol conformance so can't have visibility modifier
+                    return declaration
+                }
+
+                let visibilityOfBodyDeclarations = formatter
+                    .mapDeclarations(body) {
+                        formatter.visibility(of: $0) ?? extensionVisibility ?? .internal
+                    }
+                    .compactMap { $0 }
+
+                let counts = Set(visibilityOfBodyDeclarations).sorted().map { visibility in
+                    (visibility, count: visibilityOfBodyDeclarations.filter { $0 == visibility }.count)
+                }
+
+                guard let memberVisibility = counts.max(by: { $0.count < $1.count })?.0,
+                    memberVisibility <= extensionVisibility ?? .public,
+                    // Check that most common level is also most visible
+                    memberVisibility == visibilityOfBodyDeclarations.max(),
+                    // `private` can't be hoisted without changing code behavior
+                    // (private applied at extension level is equivalent to `fileprivate`)
+                    memberVisibility > .private
+                else { return declaration }
+
+                let extensionWithUpdatedVisibility: Formatter.Declaration
+                if memberVisibility == extensionVisibility ||
+                    (memberVisibility == .internal && visibilityKeyword == nil)
+                {
+                    extensionWithUpdatedVisibility = declaration
+                } else {
+                    extensionWithUpdatedVisibility = formatter.add(memberVisibility, to: declaration)
+                }
+
+                return formatter.mapBodyDeclarations(in: extensionWithUpdatedVisibility) { bodyDeclaration in
+                    let visibility = formatter.visibility(of: bodyDeclaration)
+                    if memberVisibility > visibility ?? extensionVisibility ?? .internal {
+                        if visibility == nil {
+                            return formatter.add(.internal, to: bodyDeclaration)
+                        }
+                        return bodyDeclaration
+                    }
+                    return formatter.remove(memberVisibility, from: bodyDeclaration)
+                }
+
+            // Move the extension's visibility keyword to each individual declaration
+            case .onDeclarations:
+                // If the extension visibility is unspecified then there isn't any work to do
+                guard let extensionVisibility = extensionVisibility else {
+                    return declaration
+                }
+
+                // Remove the visibility keyword from the extension declaration itself
+                let extensionWithUpdatedVisibility = formatter.remove(visibilityKeyword!, from: declaration)
+
+                // And apply the extension's visibility to each of its child declarations
+                // that don't have an explicit visibility keyword
+                return formatter.mapBodyDeclarations(in: extensionWithUpdatedVisibility) { bodyDeclaration -> Formatter.Declaration in
+                    if formatter.visibility(of: bodyDeclaration) == nil {
+                        // If there was no explicit visibility keyword, then this declaration
+                        // was using the visibility of the extension itself.
+                        return formatter.add(extensionVisibility, to: bodyDeclaration)
+                    } else {
+                        // Keep the existing visibility
+                        return bodyDeclaration
+                    }
+                }
+            }
+        }
+    }
+
+    public let markTypes = FormatRule(
+        help: "Adds a mark comment before top-level types and extensions.",
+        runOnceOnly: true,
+        disabledByDefault: true,
+        options: ["typemark", "extensionmark"]
+    ) { formatter in
+        var declarations = formatter.parseDeclarations()
+
+        // Do nothing if there is only one top-level declaration in the file (excluding imports)
+        let declarationsWithoutImports = declarations.filter { $0.keyword != "import" }
+        guard declarationsWithoutImports.count > 1 else {
+            return
+        }
+
+        for (index, declaration) in declarations.enumerated() {
+            guard case let .type(kind, open, body, close) = declaration else { continue }
+
+            let commentTemplate: String
+            switch declaration.keyword {
+            case "extension":
+                commentTemplate = "// \(formatter.options.extensionMarkComment)"
+            default:
+                commentTemplate = "// \(formatter.options.typeMarkComment)"
+            }
+
+            declarations[index] = formatter.mapOpeningTokens(in: declarations[index]) { openingTokens -> [Token] in
+                var openingFormatter = Formatter(openingTokens)
+
+                guard let keywordIndex = openingFormatter.index(after: -1, where: {
+                    $0.string == declaration.keyword
+                }) else { return openingTokens }
+
+                // Determine the name of this declaration that we want
+                // to subsititute into the comment templates
+                let scopeName: String
+
+                guard let typeName = declaration.name else {
+                    return openingTokens
+                }
+
+                switch declaration.keyword {
+                case "extension":
+                    // Extensions dont have a "name" in general, but we can
+                    // use the set of conformances as its name
+                    var conformances = [String]()
+
+                    guard var conformanceSearchIndex = openingFormatter.index(
+                        of: .delimiter(":"),
+                        after: keywordIndex
+                    ) else { return openingFormatter.tokens }
+
+                    let endOfConformances = openingFormatter.index(of: .keyword("where"), after: keywordIndex)
+                        ?? openingFormatter.index(of: .startOfScope("{"), after: keywordIndex)
+                        ?? openingFormatter.tokens.count
+
+                    while let token = openingFormatter.token(at: conformanceSearchIndex),
+                        conformanceSearchIndex < endOfConformances
+                    {
+                        if token.isIdentifier,
+                            // Ignore identifiers followed by dots, which are components
+                            // of a fully-qualified name but not the protocol name itself.
+                            openingFormatter.token(at: conformanceSearchIndex + 1)?.string != "."
+                        {
+                            conformances.append(token.string)
+                        }
+
+                        conformanceSearchIndex += 1
+                    }
+
+                    guard !conformances.isEmpty else {
+                        return openingFormatter.tokens
+                    }
+
+                    // If the type being extended was defined further up in this same file,
+                    // it would be repetitive to include the type name in the scope name for this extension.
+                    if declarations[..<index].contains(where: { $0.name == typeName }) {
+                        scopeName = "\(conformances.joined(separator: ", "))"
+                    } else {
+                        scopeName = "\(typeName) + \(conformances.joined(separator: ", "))"
+                    }
+
+                default:
+                    // For all other typelike declarations (classes, structs, etc),
+                    // we can simply use the name of the type
+                    scopeName = typeName
+                }
+
+                // Remove any lines that have the same prefix as the comment template
+                //  - We can't really do exact matches here like we do for `organizeDeclaration`
+                //    category separators, because there's a much wider variety of options
+                //    that a user could use the the type name (orphaned renames, etc.)
+                let expectedComment = commentTemplate.replacingOccurrences(of: "%t", with: scopeName)
+                var commentPrefixes = Set(["// MARK: ", "// MARK: - "])
+
+                if let typeNameSymbolIndex = commentTemplate.index(of: "%") {
+                    commentPrefixes.insert(String(commentTemplate.prefix(upTo: typeNameSymbolIndex)))
+                }
+
+                openingFormatter.forEach(.startOfScope("//")) { index, _ in
+                    let startOfLine = openingFormatter.startOfLine(at: index)
+                    let endOfLine = openingFormatter.endOfLine(at: index)
+
+                    let commentLine = sourceCode(for: Array(openingFormatter.tokens[index ... endOfLine]))
+
+                    for commentPrefix in commentPrefixes {
+                        if commentLine.lowercased().hasPrefix(commentPrefix.lowercased()) {
+                            // If we found a line that matched the comment prefix,
+                            // remove it and any linebreak immediately after it.
+                            if openingFormatter.token(at: endOfLine + 1)?.isLinebreak == true {
+                                openingFormatter.removeToken(at: endOfLine + 1)
+                            }
+
+                            openingFormatter.removeTokens(in: startOfLine ... endOfLine)
+                            break
+                        }
+                    }
+                }
+
+                // When inserting a mark before the first declaration,
+                // we should make sure we place it _after_ the file header.
+                var markInsertIndex = 0
+                if index == 0 {
+                    // Search for the end of the file header, which ends when we hit a
+                    // blank line or any non-space/comment/lintbreak
+                    var endOfFileHeader = 0
+
+                    while openingFormatter.token(at: endOfFileHeader)?.isSpaceOrCommentOrLinebreak == true {
+                        endOfFileHeader += 1
+
+                        if openingFormatter.token(at: endOfFileHeader)?.isLinebreak == true,
+                            openingFormatter.next(.nonSpace, after: endOfFileHeader)?.isLinebreak == true
+                        {
+                            markInsertIndex = endOfFileHeader + 2
+                            break
+                        }
+                    }
+                }
+
+                // Insert the expected comment at the start of the declaration
+                openingFormatter.insert(tokenize("\(expectedComment)\n\n"), at: markInsertIndex)
+
+                // If the previous declaration doesn't end in a blank line,
+                // add an additional linebreak to balance the mark.
+                if index != 0 {
+                    declarations[index - 1] = formatter.mapClosingTokens(in: declarations[index - 1]) {
+                        formatter.endingWithBlankLine($0)
+                    }
+                }
+
+                return openingFormatter.tokens
+            }
+        }
+
+        let updatedTokens = declarations.flatMap { $0.tokens }
         formatter.replaceTokens(in: 0 ..< formatter.tokens.count, with: updatedTokens)
     }
 }

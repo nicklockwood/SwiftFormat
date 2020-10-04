@@ -81,10 +81,10 @@ extension Formatter {
         }
 
         func wrapReturnIfNecessary(endOfFunctionScope: Int) {
-            switch options.returnPosition {
+            switch options.wrapReturnType {
             case .preserve:
                 break
-            case .wrapIfMultiline:
+            case .ifMultiline:
                 guard let openBracket = index(of: .startOfScope("{"), after: endOfFunctionScope),
                     let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
                     returnArrowIndex < openBracket

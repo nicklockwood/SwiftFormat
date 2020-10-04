@@ -145,7 +145,7 @@ class MetadataTests: XCTestCase {
                         Descriptors.wrapArguments, Descriptors.wrapParameters, Descriptors.wrapCollections,
                         Descriptors.closingParenOnSameLine, Descriptors.linebreak, Descriptors.truncateBlankLines,
                         Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs,
-                        Descriptors.maxWidth, Descriptors.assetLiteralWidth, Descriptors.returnPosition,
+                        Descriptors.maxWidth, Descriptors.assetLiteralWidth, Descriptors.wrapReturnType,
                     ]
                 case .identifier("indexWhereLineShouldWrapInLine"), .identifier("indexWhereLineShouldWrap"):
                     referencedOptions += [

@@ -433,12 +433,12 @@ struct _Descriptors {
         keyPath: \.wrapCollections,
         options: ["before-first", "after-first", "preserve", "disabled"]
     )
-    let returnPosition = OptionDescriptor(
-        argumentName: "returnposition",
-        displayName: "Wrap Return",
-        help: "Return position: \"wrap-if-multiline\", \"preserve\" (default)",
-        keyPath: \.returnPosition,
-        options: ["wrap-if-multiline", "preserve"]
+    let wrapReturnType = OptionDescriptor(
+        argumentName: "wrapreturntype",
+        displayName: "Wrap Return Type",
+        help: "Wrap return type: \"if-multiline\", \"preserve\" (default)",
+        keyPath: \.wrapReturnType,
+        options: ["if-multiline", "preserve"]
     )
     let closingParenOnSameLine = OptionDescriptor(
         argumentName: "closingparen",

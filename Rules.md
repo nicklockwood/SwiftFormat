@@ -1745,7 +1745,7 @@ Option | Description
 `--wrapparameters` | Wrap func params: "before-first", "after-first", "preserve"
 `--wrapcollections` | Wrap array/dict: "before-first", "after-first", "preserve"
 `--closingparen` | Closing paren position: "balanced" (default) or "same-line"
-`--returnposition` | Return position: "wrap-if-multiline", "preserve" (default)
+`--wrapreturntype` | Wrap return type: "if-multiline", "preserve" (default)
 
 <details>
 <summary>Examples</summary>

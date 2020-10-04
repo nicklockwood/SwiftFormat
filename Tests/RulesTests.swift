@@ -1992,7 +1992,7 @@ class RulesTests: XCTestCase {
             break
         }
         """
-        testFormatting(for: input, 
+        testFormatting(for: input,
                        rule: FormatRules.sortedSwitchCases,
                        exclude: ["wrapSwitchCases"])
     }

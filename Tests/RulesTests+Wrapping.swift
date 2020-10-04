@@ -1922,7 +1922,7 @@ extension RulesTests {
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
             closingParenOnSameLine: true,
-            returnPosition: .wrapIfMultiline
+            wrapReturnType: .ifMultiline
         )
 
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
@@ -1943,7 +1943,7 @@ extension RulesTests {
         let options = FormatOptions(
             wrapArguments: .afterFirst,
             closingParenOnSameLine: true,
-            returnPosition: .wrapIfMultiline
+            wrapReturnType: .ifMultiline
         )
 
         testFormatting(
@@ -1960,7 +1960,7 @@ extension RulesTests {
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
             closingParenOnSameLine: true,
-            returnPosition: .wrapIfMultiline
+            wrapReturnType: .ifMultiline
         )
 
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)

@@ -104,6 +104,12 @@ public enum ExtensionACLPlacement: String {
     case onDeclarations = "on-declarations"
 }
 
+/// Wrapping behavior for the return type of a function declaration
+public enum WrapReturnType: String {
+    case ifMultiline = "if-multiline"
+    case preserve
+}
+
 /// Version number wrapper
 public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral, CustomStringConvertible {
     public let rawValue: String
@@ -300,6 +306,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapParameters: WrapMode
     public var wrapCollections: WrapMode
     public var closingParenOnSameLine: Bool
+    public var wrapReturnType: WrapReturnType
     public var uppercaseHex: Bool
     public var uppercaseExponent: Bool
     public var decimalGrouping: Grouping
@@ -375,6 +382,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapParameters: WrapMode = .default,
                 wrapCollections: WrapMode = .preserve,
                 closingParenOnSameLine: Bool = false,
+                wrapReturnType: WrapReturnType = .preserve,
                 uppercaseHex: Bool = true,
                 uppercaseExponent: Bool = false,
                 decimalGrouping: Grouping = .group(3, 6),
@@ -444,6 +452,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapParameters = wrapParameters
         self.wrapCollections = wrapCollections
         self.closingParenOnSameLine = closingParenOnSameLine
+        self.wrapReturnType = wrapReturnType
         self.uppercaseHex = uppercaseHex
         self.uppercaseExponent = uppercaseExponent
         self.decimalGrouping = decimalGrouping

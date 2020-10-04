@@ -80,6 +80,31 @@ extension Formatter {
             }
         }
 
+        func wrapReturnIfNecessary(endOfFunctionScope: Int) {
+            switch options.returnPosition {
+            case .preserve:
+                break
+            case .wrapIfMultiline:
+                guard let openBracket = index(of: .startOfScope("{"), after: endOfFunctionScope),
+                    let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
+                    returnArrowIndex < openBracket
+                else { return }
+
+                // If the return arrow isnt on its own line, wrap it
+                if let previousNonSpaceOrComment = index(of: .nonSpaceOrComment, before: returnArrowIndex),
+                    startOfLine(at: returnArrowIndex) < previousNonSpaceOrComment
+                {
+                    insertSpace(indentForLine(at: returnArrowIndex), at: returnArrowIndex)
+                    insertLinebreak(at: returnArrowIndex)
+
+                    // Remove any trailing whitespace that is now orphaned on the previous line
+                    if tokens[returnArrowIndex - 1].is(.space) {
+                        removeToken(at: returnArrowIndex - 1)
+                    }
+                }
+            }
+        }
+
         func wrapArgumentsBeforeFirst(startOfScope i: Int,
                                       endOfScope: Int,
                                       allowGrouping: Bool,
@@ -144,6 +169,8 @@ extension Formatter {
                     insertSpace(indent, at: nextIndex + 1)
                 }
             }
+
+            wrapReturnIfNecessary(endOfFunctionScope: endOfScope)
         }
         func wrapArgumentsAfterFirst(startOfScope i: Int, endOfScope: Int, allowGrouping: Bool) {
             guard var firstArgumentIndex = self.index(of: .nonSpaceOrLinebreak, in: i + 1 ..< endOfScope) else {
@@ -194,6 +221,8 @@ extension Formatter {
                 insertSpace(indent, at: breakIndex)
                 insertLinebreak(at: breakIndex)
             }
+
+            wrapReturnIfNecessary(endOfFunctionScope: endOfScope)
         }
 
         var lastIndex = -1

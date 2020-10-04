@@ -2003,6 +2003,7 @@ class RulesTests: XCTestCase {
         case .b, .c where isTrue, .a:
             break
         }
+        """
         let output = """
         switch self {
         case .a, .b, .c where isTrue:

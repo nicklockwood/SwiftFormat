@@ -4021,6 +4021,10 @@ public struct _FormatRules {
             }
 
             let sortedTokens = sorted.map { formatter.tokens[$0] }
+
+            let firstWhereIndex = sortedTokens.firstIndex(where: { slice in slice.contains(.keyword("where")) })
+            guard firstWhereIndex == nil || firstWhereIndex == sortedTokens.count - 1 else { return }
+
             for switchCase in enums.enumerated().reversed() {
                 let newTokens = Array(sortedTokens[switchCase.offset])
                 formatter.replaceTokens(in: enums[switchCase.offset], with: newTokens)

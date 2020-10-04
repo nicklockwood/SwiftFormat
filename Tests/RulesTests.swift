@@ -1983,16 +1983,27 @@ class RulesTests: XCTestCase {
                        exclude: ["wrapSwitchCases"])
     }
 
-    func testSortedSwitchWhereCondition() {
+    func testSortedSwitchWhereConditionNotLastCase() {
         let input = """
         switch self {
         case .b, .c, .a where isTrue:
             break
         }
         """
+        testFormatting(for: input, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
+    func testSortedSwitchWhereConditionLastCase() {
+        let input = """
+        switch self {
+        case .b, .c where isTrue, .a:
+            break
+        }
+        """
         let output = """
         switch self {
-        case .a where isTrue, .b, .c:
+        case .a, .b, .c where isTrue:
             break
         }
         """

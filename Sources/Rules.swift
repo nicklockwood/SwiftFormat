@@ -3974,7 +3974,7 @@ public struct _FormatRules {
     /// Sorts switch cases alphabetically
     public let sortedSwitchCases = FormatRule(
         help: "Sorts switch cases alphabetically.",
-        disabledByDefault: true // TODO: fix bugs with comments and where clauses, then this can be enabled by default
+        disabledByDefault: true // TODO: fix bugs with comments, then this can be enabled by default
     ) { formatter in
 
         formatter.forEach(.endOfScope("case")) { i, _ in
@@ -4021,6 +4021,11 @@ public struct _FormatRules {
             }
 
             let sortedTokens = sorted.map { formatter.tokens[$0] }
+
+            // ignore if there's a where keyword and it is not in the last place.
+            let firstWhereIndex = sortedTokens.firstIndex(where: { slice in slice.contains(.keyword("where")) })
+            guard firstWhereIndex == nil || firstWhereIndex == sortedTokens.count - 1 else { return }
+
             for switchCase in enums.enumerated().reversed() {
                 let newTokens = Array(sortedTokens[switchCase.offset])
                 formatter.replaceTokens(in: enums[switchCase.offset], with: newTokens)

@@ -2428,6 +2428,21 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testGenericTypeFollowedByAndOperator() {
+        let input = "Foo<Bar> && baz"
+        let output: [Token] = [
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .identifier("Bar"),
+            .endOfScope(">"),
+            .space(" "),
+            .operator("&&", .infix),
+            .space(" "),
+            .identifier("baz"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testCustomOperatorStartingWithOpenChevron() {
         let input = "foo<--bar"
         let output: [Token] = [

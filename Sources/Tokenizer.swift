@@ -1373,14 +1373,13 @@ public func tokenize(_ source: String) -> [Token] {
             assertionFailure()
             return
         }
-        guard let prevNonSpaceToken =
-            index(of: .nonSpaceOrCommentOrLinebreak, before: i).map({ tokens[$0] })
-        else {
+        guard let prevNonSpaceIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
             if tokens.count > i + 1 {
                 tokens[i] = .operator(string, .prefix)
             }
             return
         }
+        let prevNonSpaceToken = tokens[prevNonSpaceIndex]
         switch prevNonSpaceToken {
         case .keyword("func"), .keyword("operator"):
             tokens[i] = .operator(string, .none)
@@ -1433,6 +1432,9 @@ public func tokenize(_ source: String) -> [Token] {
                 // TODO: should we add an `identifier` type?
                 return
             }
+        }
+        if type == .prefix, prevNonSpaceToken == .endOfScope(">") {
+            convertClosingChevronToOperator(at: prevNonSpaceIndex, andOpeningChevron: true)
         }
         tokens[i] = .operator(string, type)
     }
@@ -1518,10 +1520,6 @@ public func tokenize(_ source: String) -> [Token] {
             {
                 // Fix up misidentified generic that is actually a pair of operators
                 switch token {
-                case .operator("?", _), .operator("!", _), .operator("&", _),
-                     .operator(".", _), .operator("...", _), .operator("->", _),
-                     .operator("=", _) where prevIndex != count - 2:
-                    break
                 case .operator("=", _) where prevIndex == count - 2:
                     guard let startIndex = index(of: .startOfScope, before: count - 1),
                         tokens[startIndex] == .startOfScope("<"),
@@ -1532,7 +1530,7 @@ public func tokenize(_ source: String) -> [Token] {
                     else {
                         fallthrough
                     }
-                case .operator, .identifier, .number, .startOfScope("\""), .startOfScope("\"\"\""):
+                case .identifier, .number, .startOfScope("\""), .startOfScope("\"\"\""):
                     convertClosingChevronToOperator(at: prevIndex, andOpeningChevron: true)
                     processToken()
                     return

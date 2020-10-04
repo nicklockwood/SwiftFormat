@@ -328,6 +328,11 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundGenerics)
     }
 
+    func testSpaceAroundGenericsFollowedByAndOperator() {
+        let input = "if foo is Foo<Bar> && baz {}"
+        testFormatting(for: input, rule: FormatRules.spaceAroundGenerics, exclude: ["andOperator"])
+    }
+
     // MARK: - spaceInsideGenerics
 
     func testSpaceInsideGenerics() {

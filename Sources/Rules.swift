@@ -5102,12 +5102,10 @@ public struct _FormatRules {
                     while let token = openingFormatter.token(at: conformanceSearchIndex),
                         conformanceSearchIndex < endOfConformances
                     {
-                        if token.isIdentifier,
-                            // Ignore identifiers followed by dots, which are components
-                            // of a fully-qualified name but not the protocol name itself.
-                            openingFormatter.token(at: conformanceSearchIndex + 1)?.string != "."
-                        {
-                            conformances.append(token.string)
+                        if token.isIdentifier {
+                            let (fullyQualifiedName, next) = openingFormatter.fullyQualifiedName(startingAt: conformanceSearchIndex)
+                            conformances.append(fullyQualifiedName)
+                            conformanceSearchIndex = next
                         }
 
                         conformanceSearchIndex += 1

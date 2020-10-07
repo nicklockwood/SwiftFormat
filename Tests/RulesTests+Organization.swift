@@ -1994,4 +1994,23 @@ extension RulesTests {
 
         testFormatting(for: input, rule: FormatRules.markTypes)
     }
+
+    func testMultipleExtensionsOfSameType() {
+        let input = """
+        extension Foo: BarProtocol {}
+        extension Foo: QuuxProtocol {}
+        """
+
+        let output = """
+        // MARK: Foo + BarProtocol
+
+        extension Foo: BarProtocol {}
+
+        // MARK: Foo + QuuxProtocol
+
+        extension Foo: QuuxProtocol {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
 }

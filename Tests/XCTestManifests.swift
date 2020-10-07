@@ -1021,6 +1021,7 @@ extension RulesTests {
         ("testMultilineSwitchCases", testMultilineSwitchCases),
         ("testMultipleAttributesNotSeparated", testMultipleAttributesNotSeparated),
         ("testMultipleClosureArgumentUnwrapped", testMultipleClosureArgumentUnwrapped),
+        ("testMultipleExtensionsOfSameType", testMultipleExtensionsOfSameType),
         ("testMultipleNestedClosures", testMultipleNestedClosures),
         ("testNamedClosureArgumentNotMadeTrailing", testNamedClosureArgumentNotMadeTrailing),
         ("testNamespacedVoidLiteralNotConverted", testNamespacedVoidLiteralNotConverted),

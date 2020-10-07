@@ -5180,7 +5180,7 @@ public struct _FormatRules {
 
                     // If the type being extended was defined further up in this same file,
                     // it would be repetitive to include the type name in the scope name for this extension.
-                    if declarations[..<index].contains(where: { $0.name == typeName }) {
+                    if declarations[..<index].contains(where: { $0.name == typeName && $0.keyword != "extension" }) {
                         scopeName = "\(conformances.joined(separator: ", "))"
                     } else {
                         scopeName = "\(typeName) + \(conformances.joined(separator: ", "))"

@@ -1067,21 +1067,31 @@ extension Formatter {
                 $0.string == keyword
             }) else { return nil }
 
-            guard var typeNameIndex = openingFormatter.index(of: .identifier, after: keywordIndex) else {
+            guard let typeNameIndex = openingFormatter.index(of: .identifier, after: keywordIndex) else {
                 return nil
             }
 
-            // If the identifier is followed by a dot, it's actually the first
-            // part of the fully-qualified name and we should skip through
-            // to the last component of the name.
-            while openingFormatter.token(at: typeNameIndex + 1)?.string == ".",
-                openingFormatter.token(at: typeNameIndex + 2)?.is(.identifier) == true
-            {
-                typeNameIndex += 2
-            }
-
-            return openingFormatter.token(at: typeNameIndex)?.string
+            return openingFormatter.fullyQualifiedName(startingAt: typeNameIndex).name
         }
+    }
+
+    /// The fully qualified name starting at the given index
+    func fullyQualifiedName(startingAt index: Int) -> (name: String, endIndex: Int) {
+        // If the identifier is followed by a dot, it's actually the first
+        // part of the fully-qualified name and we should skip through
+        // to the last component of the name.
+        var name = tokens[index].string
+        var index = index
+
+        while token(at: index + 1)?.string == ".",
+            let nextIdentifier = token(at: index + 2),
+            nextIdentifier.is(.identifier) == true
+        {
+            name = "\(name).\(nextIdentifier.string)"
+            index += 2
+        }
+
+        return (name, index)
     }
 
     // get type of declaration starting at index of declaration keyword

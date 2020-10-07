@@ -1836,18 +1836,15 @@ extension RulesTests {
 
     func testFullyQualifiedTypeNames() {
         let input = """
-        struct Foo {}
-        extension MyModule.Foo: MyModule.MyNamespace.BarProtocol {}
+        extension MyModule.Foo: MyModule.MyNamespace.BarProtocol, QuuxProtocol {}
+        extension MyModule.Foo {}
         """
 
         let output = """
-        // MARK: - Foo
+        // MARK: MyModule.Foo + MyModule.MyNamespace.BarProtocol, QuuxProtocol
 
-        struct Foo {}
-
-        // MARK: BarProtocol
-
-        extension MyModule.Foo: MyModule.MyNamespace.BarProtocol {}
+        extension MyModule.Foo: MyModule.MyNamespace.BarProtocol, QuuxProtocol {}
+        extension MyModule.Foo {}
         """
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)

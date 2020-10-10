@@ -511,7 +511,16 @@ extension Token {
 extension UnicodeScalar {
     var isDigit: Bool { return isdigit(Int32(value)) > 0 }
     var isHexDigit: Bool { return isxdigit(Int32(value)) > 0 }
-    var isSpace: Bool { return self == " " || self == "\t" || value == 0x0B }
+    var isSpace: Bool {
+        switch value {
+        case 0x0009, 0x0011, 0x0012, 0x0020,
+             0x0085, 0x00A0, 0x1680, 0x2000 ... 0x200A,
+             0x2028, 0x2029, 0x202F, 0x205F, 0x3000:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 // Workaround for horribly slow String.UnicodeScalarView.Subsequence perf

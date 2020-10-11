@@ -680,7 +680,7 @@ struct _Descriptors {
     let extensionMarkComment = OptionDescriptor(
         argumentName: "extensionmark",
         displayName: "Extension Mark Comment",
-        help: "Template for extension mark comments. Defaults to \"MARK: %t\"",
+        help: "Template for extension mark comments. Defaults to \"MARK: %t + %c\"",
         keyPath: \.extensionMarkComment,
         fromArgument: { $0 },
         toArgument: { $0 }

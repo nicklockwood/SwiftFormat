@@ -5153,18 +5153,12 @@ public struct _FormatRules {
                     $0.string == declaration.keyword
                 }) else { return openingTokens }
 
-                // Determine the name of this declaration that we want
-                // to subsititute into the comment templates
-                let scopeName: String
-
                 guard let typeName = declaration.name else {
                     return openingTokens
                 }
 
-                switch declaration.keyword {
-                case "extension":
-                    // Extensions dont have a "name" in general, but we can
-                    // use the set of conformances as its name
+                let conformanceNames: String?
+                if declaration.keyword == "extension" {
                     var conformances = [String]()
 
                     guard var conformanceSearchIndex = openingFormatter.index(
@@ -5192,25 +5186,29 @@ public struct _FormatRules {
                         return openingFormatter.tokens
                     }
 
+                    conformanceNames = conformances.joined(separator: ", ")
+
                     // If the type being extended was defined further up in this same file,
                     // it would be repetitive to include the type name in the scope name for this extension.
-                    if declarations[..<index].contains(where: { $0.name == typeName && $0.keyword != "extension" }) {
-                        scopeName = "\(conformances.joined(separator: ", "))"
-                    } else {
-                        scopeName = "\(typeName) + \(conformances.joined(separator: ", "))"
-                    }
 
-                default:
-                    // For all other typelike declarations (classes, structs, etc),
-                    // we can simply use the name of the type
-                    scopeName = typeName
+                    // TODO: Rework this to use different templates
+//                    if declarations[..<index].contains(where: { $0.name == typeName && $0.keyword != "extension" }) {
+//                        scopeName = "\(conformances.joined(separator: ", "))"
+//                    } else {
+//                        scopeName = "\(typeName) + \(conformances.joined(separator: ", "))"
+//                    }
+                } else {
+                    conformanceNames = nil
                 }
+
+                let expectedComment = commentTemplate
+                    .replacingOccurrences(of: "%t", with: typeName)
+                    .replacingOccurrences(of: "%c", with: conformanceNames ?? "")
 
                 // Remove any lines that have the same prefix as the comment template
                 //  - We can't really do exact matches here like we do for `organizeDeclaration`
                 //    category separators, because there's a much wider variety of options
                 //    that a user could use the the type name (orphaned renames, etc.)
-                let expectedComment = commentTemplate.replacingOccurrences(of: "%t", with: scopeName)
                 var commentPrefixes = Set(["// MARK: ", "// MARK: - "])
 
                 if let typeNameSymbolIndex = commentTemplate.index(of: "%") {

@@ -663,7 +663,8 @@ Option | Description
 `--marktypes` | Mark types "always" (default), "never", "if-not-empty"
 `--typemark` | Template for type mark comments. Defaults to "MARK: - %t"
 `--markextensions` | Mark extensions "always" (default), "never", "if-not-empty"
-`--extensionmark` | Template for extension mark comments. Defaults to "MARK: %t"
+`--extensionmark` | Mark for standalone extensions. Defaults to "MARK: - %t + %c"
+`--groupedextension` | Mark for extension grouped with extended type. ("MARK: %c")
 
 <details>
 <summary>Examples</summary>
@@ -677,9 +678,9 @@ Option | Description
 +
  extension FooViewController: UICollectionViewDelegate { }
 
-+ // MARK: String + FooProtocol
++ // MARK: - String + FooProtocol
 +
-extension String: FooProtocol { }
+ extension String: FooProtocol { }
 ```
 
 </details>

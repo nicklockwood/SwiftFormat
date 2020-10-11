@@ -1220,9 +1220,9 @@ private struct Examples {
     +
      extension FooViewController: UICollectionViewDelegate { }
 
-    + // MARK: String + FooProtocol
+    + // MARK: - String + FooProtocol
     +
-    extension String: FooProtocol { }
+     extension String: FooProtocol { }
     ```
     """
 }

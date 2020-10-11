@@ -1728,7 +1728,7 @@ extension RulesTests {
         """
 
         let output = """
-        // MARK: Foo + BarProtocol
+        // MARK: - Foo + BarProtocol
 
         extension Foo: BarProtocol {}
         extension Foo {}
@@ -1746,7 +1746,7 @@ extension RulesTests {
         """
 
         let output = """
-        // MARK: Foo + BarProtocol
+        // MARK: - Foo + BarProtocol
 
         extension Foo: BarProtocol {}
         extension Foo {}
@@ -1762,7 +1762,7 @@ extension RulesTests {
         """
 
         let output = """
-        // MARK: Foo + BarProtocol, BaazProtocol
+        // MARK: - Foo + BarProtocol, BaazProtocol
 
         extension Foo: BarProtocol, BaazProtocol {}
         extension Foo {}
@@ -1773,14 +1773,14 @@ extension RulesTests {
 
     func testUpdatesMarkCommentWithCorrectConformances() {
         let input = """
-        // MARK: Foo + BarProtocol
+        // MARK: - Foo + BarProtocol
 
         extension Foo: BarProtocol, BaazProtocol {}
         extension Foo {}
         """
 
         let output = """
-        // MARK: Foo + BarProtocol, BaazProtocol
+        // MARK: - Foo + BarProtocol, BaazProtocol
 
         extension Foo: BarProtocol, BaazProtocol {}
         extension Foo {}
@@ -1791,22 +1791,31 @@ extension RulesTests {
 
     func testCustomExtensionMarkComment() {
         let input = """
-        // EXTENSION: Foo: BarProtocol
-
-        extension Foo: BarProtocol, BaazProtocol {}
-        extension Foo {}
+        struct Foo {}
+        extension Foo: BarProtocol {}
+        extension String: BarProtocol {}
         """
 
         let output = """
-        // EXTENSION: Foo: BarProtocol, BaazProtocol
+        // MARK: - Foo
 
-        extension Foo: BarProtocol, BaazProtocol {}
-        extension Foo {}
+        struct Foo {}
+
+        // EXTENSION: - BarProtocol
+
+        extension Foo: BarProtocol {}
+
+        // EXTENSION: - String: BarProtocol
+
+        extension String: BarProtocol {}
         """
 
         testFormatting(
             for: input, output, rule: FormatRules.markTypes,
-            options: FormatOptions(extensionMarkComment: "EXTENSION: %t: %c")
+            options: FormatOptions(
+                extensionMarkComment: "EXTENSION: - %t: %c",
+                groupedExtensionMarkComment: "EXTENSION: - %c"
+            )
         )
     }
 
@@ -1826,7 +1835,7 @@ extension RulesTests {
 
         extension Foo: Bar {}
 
-        // MARK: String + Bar
+        // MARK: - String + Bar
 
         extension String: Bar {}
         """
@@ -1841,7 +1850,7 @@ extension RulesTests {
         """
 
         let output = """
-        // MARK: MyModule.Foo + MyModule.MyNamespace.BarProtocol, QuuxProtocol
+        // MARK: - MyModule.Foo + MyModule.MyNamespace.BarProtocol, QuuxProtocol
 
         extension MyModule.Foo: MyModule.MyNamespace.BarProtocol, QuuxProtocol {}
         extension MyModule.Foo {}
@@ -1857,7 +1866,7 @@ extension RulesTests {
         """
 
         let output = """
-        // MARK: Array + BarProtocol
+        // MARK: - Array + BarProtocol
 
         extension Array: BarProtocol where Element == String {}
         extension Array {}
@@ -1873,7 +1882,7 @@ extension RulesTests {
         """
 
         let output = """
-        // MARK: Array + BarProtocol
+        // MARK: - Array + BarProtocol
 
         extension Array: BarProtocol where Element: BarProtocol {}
         extension Array {}
@@ -2002,11 +2011,11 @@ extension RulesTests {
         """
 
         let output = """
-        // MARK: Foo + BarProtocol
+        // MARK: - Foo + BarProtocol
 
         extension Foo: BarProtocol {}
 
-        // MARK: Foo + QuuxProtocol
+        // MARK: - Foo + QuuxProtocol
 
         extension Foo: QuuxProtocol {}
         """
@@ -2104,7 +2113,7 @@ extension RulesTests {
 
         }
 
-        // MARK: Quux + QuuxProtocol
+        // MARK: - Quux + QuuxProtocol
 
         extension Quux: QuuxProtocol {
             let foo = 1

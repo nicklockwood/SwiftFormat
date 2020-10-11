@@ -661,7 +661,9 @@ Adds a mark comment before top-level types and extensions.
 
 Option | Description
 --- | ---
+`--marktypes` | Mark types "always" (default), "never", "if-not-empty"
 `--typemark` | Template for type mark comments. Defaults to "MARK: - %t"
+`--markextensions` | Mark extensions "always" (default), "never", "if-not-empty"
 `--extensionmark` | Template for extension mark comments. Defaults to "MARK: %t"
 
 <details>

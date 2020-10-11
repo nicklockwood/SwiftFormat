@@ -657,6 +657,12 @@ struct _Descriptors {
         keyPath: \.shortOptionals,
         options: ["always", "except-properties"]
     )
+    let markTypes = OptionDescriptor(
+        argumentName: "marktypes",
+        displayName: "Mark Types",
+        help: "Mark types \"always\" (default), \"never\", \"if-not-empty\"",
+        keyPath: \.markTypes
+    )
     let typeMarkComment = OptionDescriptor(
         argumentName: "typemark",
         displayName: "Type Mark Comment",
@@ -664,6 +670,12 @@ struct _Descriptors {
         keyPath: \.typeMarkComment,
         fromArgument: { $0 },
         toArgument: { $0 }
+    )
+    let markExtensions = OptionDescriptor(
+        argumentName: "markextensions",
+        displayName: "Mark Extensions",
+        help: "Mark extensions \"always\" (default), \"never\", \"if-not-empty\"",
+        keyPath: \.markExtensions
     )
     let extensionMarkComment = OptionDescriptor(
         argumentName: "extensionmark",

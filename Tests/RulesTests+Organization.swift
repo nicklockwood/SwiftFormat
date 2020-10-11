@@ -2013,4 +2013,108 @@ extension RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
     }
+
+    func testNeverMarkTypes() {
+        let input = """
+        struct EmptyFoo {}
+        struct EmptyBar { }
+        struct EmptyBaaz {
+
+        }
+        struct Quux {
+            let foo = 1
+        }
+        """
+
+        let options = FormatOptions(markTypes: .never)
+        testFormatting(
+            for: input, rule: FormatRules.markTypes, options: options,
+            exclude: ["emptyBraces", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "blankLinesBetweenScopes"]
+        )
+    }
+
+    func testMarkTypesIfNotEmpty() {
+        let input = """
+        struct EmptyFoo {}
+        struct EmptyBar { }
+        struct EmptyBaaz {
+
+        }
+        struct Quux {
+            let foo = 1
+        }
+        """
+
+        let output = """
+        struct EmptyFoo {}
+        struct EmptyBar { }
+        struct EmptyBaaz {
+
+        }
+
+        // MARK: - Quux
+
+        struct Quux {
+            let foo = 1
+        }
+        """
+
+        let options = FormatOptions(markTypes: .ifNotEmpty)
+        testFormatting(
+            for: input, output, rule: FormatRules.markTypes, options: options,
+            exclude: ["emptyBraces", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "blankLinesBetweenScopes"]
+        )
+    }
+
+    func testNeverMarkExtensions() {
+        let input = """
+        extension EmptyFoo: FooProtocol {}
+        extension EmptyBar: BarProtocol { }
+        extension EmptyBaaz: BaazProtocol {
+
+        }
+        extension Quux: QuuxProtocol {
+            let foo = 1
+        }
+        """
+
+        let options = FormatOptions(markExtensions: .never)
+        testFormatting(
+            for: input, rule: FormatRules.markTypes, options: options,
+            exclude: ["emptyBraces", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "blankLinesBetweenScopes"]
+        )
+    }
+
+    func testMarkExtensionsIfNotEmpty() {
+        let input = """
+        extension EmptyFoo: FooProtocol {}
+        extension EmptyBar: BarProtocol { }
+        extension EmptyBaaz: BaazProtocol {
+
+        }
+        extension Quux: QuuxProtocol {
+            let foo = 1
+        }
+        """
+
+        let output = """
+        extension EmptyFoo: FooProtocol {}
+        extension EmptyBar: BarProtocol { }
+        extension EmptyBaaz: BaazProtocol {
+
+        }
+
+        // MARK: Quux + QuuxProtocol
+
+        extension Quux: QuuxProtocol {
+            let foo = 1
+        }
+        """
+
+        let options = FormatOptions(markExtensions: .ifNotEmpty)
+        testFormatting(
+            for: input, output, rule: FormatRules.markTypes, options: options,
+            exclude: ["emptyBraces", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "blankLinesBetweenScopes"]
+        )
+    }
 }

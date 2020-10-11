@@ -5111,7 +5111,7 @@ public struct _FormatRules {
         help: "Adds a mark comment before top-level types and extensions.",
         runOnceOnly: true,
         disabledByDefault: true,
-        options: ["typemark", "extensionmark"]
+        options: ["marktypes", "typemark", "markextensions", "extensionmark"]
     ) { formatter in
         var declarations = formatter.parseDeclarations()
 
@@ -5124,12 +5124,26 @@ public struct _FormatRules {
         for (index, declaration) in declarations.enumerated() {
             guard case let .type(kind, open, body, close) = declaration else { continue }
 
+            let markMode: MarkMode
             let commentTemplate: String
             switch declaration.keyword {
             case "extension":
+                markMode = formatter.options.markExtensions
                 commentTemplate = "// \(formatter.options.extensionMarkComment)"
             default:
+                markMode = formatter.options.markTypes
                 commentTemplate = "// \(formatter.options.typeMarkComment)"
+            }
+
+            switch markMode {
+            case .always:
+                break
+            case .never:
+                continue
+            case .ifNotEmpty:
+                guard !body.isEmpty else {
+                    continue
+                }
             }
 
             declarations[index] = formatter.mapOpeningTokens(in: declarations[index]) { openingTokens -> [Token] in

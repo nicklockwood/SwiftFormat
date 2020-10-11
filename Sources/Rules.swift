@@ -5111,7 +5111,7 @@ public struct _FormatRules {
         help: "Adds a mark comment before top-level types and extensions.",
         runOnceOnly: true,
         disabledByDefault: true,
-        options: ["marktypes", "typemark", "markextensions", "extensionmark"]
+        options: ["marktypes", "typemark", "markextensions", "extensionmark", "groupedextension"]
     ) { formatter in
         var declarations = formatter.parseDeclarations()
 
@@ -5124,12 +5124,33 @@ public struct _FormatRules {
         for (index, declaration) in declarations.enumerated() {
             guard case let .type(kind, open, body, close) = declaration else { continue }
 
+            guard let typeName = declaration.name else {
+                continue
+            }
+
             let markMode: MarkMode
             let commentTemplate: String
             switch declaration.keyword {
             case "extension":
                 markMode = formatter.options.markExtensions
-                commentTemplate = "// \(formatter.options.extensionMarkComment)"
+
+                // We provide separate mark comment customization points for
+                // extensions that are "grouped" with (e.g. following) their extending type,
+                // vs extensions that are completely separate.
+                //
+                //  struct Foo { }
+                //  extension Foo { } // This extension is "grouped" with its extending type
+                //  extension String { } // This extension is standalone (not grouped with any type)
+                //
+                let isGroupedWithExtendingType = declarations[..<index].contains(where: {
+                    $0.name == typeName && $0.keyword != "extension"
+                })
+
+                if isGroupedWithExtendingType {
+                    commentTemplate = "// \(formatter.options.groupedExtensionMarkComment)"
+                } else {
+                    commentTemplate = "// \(formatter.options.extensionMarkComment)"
+                }
             default:
                 markMode = formatter.options.markTypes
                 commentTemplate = "// \(formatter.options.typeMarkComment)"
@@ -5152,10 +5173,6 @@ public struct _FormatRules {
                 guard let keywordIndex = openingFormatter.index(after: -1, where: {
                     $0.string == declaration.keyword
                 }) else { return openingTokens }
-
-                guard let typeName = declaration.name else {
-                    return openingTokens
-                }
 
                 let conformanceNames: String?
                 if declaration.keyword == "extension" {
@@ -5187,16 +5204,6 @@ public struct _FormatRules {
                     }
 
                     conformanceNames = conformances.joined(separator: ", ")
-
-                    // If the type being extended was defined further up in this same file,
-                    // it would be repetitive to include the type name in the scope name for this extension.
-
-                    // TODO: Rework this to use different templates
-//                    if declarations[..<index].contains(where: { $0.name == typeName && $0.keyword != "extension" }) {
-//                        scopeName = "\(conformances.joined(separator: ", "))"
-//                    } else {
-//                        scopeName = "\(typeName) + \(conformances.joined(separator: ", "))"
-//                    }
                 } else {
                     conformanceNames = nil
                 }

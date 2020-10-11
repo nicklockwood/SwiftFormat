@@ -680,8 +680,16 @@ struct _Descriptors {
     let extensionMarkComment = OptionDescriptor(
         argumentName: "extensionmark",
         displayName: "Extension Mark Comment",
-        help: "Template for extension mark comments. Defaults to \"MARK: %t + %c\"",
+        help: "Mark for standalone extensions. Defaults to \"MARK: - %t + %c\"",
         keyPath: \.extensionMarkComment,
+        fromArgument: { $0 },
+        toArgument: { $0 }
+    )
+    let groupedExtensionMarkComment = OptionDescriptor(
+        argumentName: "groupedextension",
+        displayName: "Grouped Extension Mark Comment",
+        help: "Mark for extension grouped with extended type. (\"MARK: %c\")",
+        keyPath: \.groupedExtensionMarkComment,
         fromArgument: { $0 },
         toArgument: { $0 }
     )

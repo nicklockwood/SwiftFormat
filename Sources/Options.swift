@@ -272,6 +272,13 @@ public enum AssetLiteralWidth: String {
     case visualWidth = "visual-width"
 }
 
+/// Whether or not to mark types / extensions
+public enum MarkMode: String {
+    case always
+    case never
+    case ifNotEmpty = "if-not-empty"
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -322,7 +329,9 @@ public struct FormatOptions: CustomStringConvertible {
     public var funcAttributes: AttributeMode
     public var typeAttributes: AttributeMode
     public var varAttributes: AttributeMode
+    public var markTypes: MarkMode
     public var typeMarkComment: String
+    public var markExtensions: MarkMode
     public var extensionMarkComment: String
     public var categoryMarkComment: String
     public var beforeMarks: Set<String>
@@ -394,7 +403,9 @@ public struct FormatOptions: CustomStringConvertible {
                 funcAttributes: AttributeMode = .preserve,
                 typeAttributes: AttributeMode = .preserve,
                 varAttributes: AttributeMode = .preserve,
+                markTypes: MarkMode = .always,
                 typeMarkComment: String = "MARK: - %t",
+                markExtensions: MarkMode = .always,
                 extensionMarkComment: String = "MARK: %t",
                 categoryMarkComment: String = "MARK: %c",
                 beforeMarks: Set<String> = [],
@@ -460,7 +471,9 @@ public struct FormatOptions: CustomStringConvertible {
         self.funcAttributes = funcAttributes
         self.typeAttributes = typeAttributes
         self.varAttributes = varAttributes
+        self.markTypes = markTypes
         self.typeMarkComment = typeMarkComment
+        self.markExtensions = markExtensions
         self.extensionMarkComment = extensionMarkComment
         self.categoryMarkComment = categoryMarkComment
         self.beforeMarks = beforeMarks

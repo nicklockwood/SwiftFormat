@@ -1791,14 +1791,14 @@ extension RulesTests {
 
     func testCustomExtensionMarkComment() {
         let input = """
-        // EXTENSION: Foo + BarProtocol
+        // EXTENSION: Foo: BarProtocol
 
         extension Foo: BarProtocol, BaazProtocol {}
         extension Foo {}
         """
 
         let output = """
-        // EXTENSION: Foo + BarProtocol, BaazProtocol
+        // EXTENSION: Foo: BarProtocol, BaazProtocol
 
         extension Foo: BarProtocol, BaazProtocol {}
         extension Foo {}
@@ -1806,7 +1806,7 @@ extension RulesTests {
 
         testFormatting(
             for: input, output, rule: FormatRules.markTypes,
-            options: FormatOptions(extensionMarkComment: "EXTENSION: %t")
+            options: FormatOptions(extensionMarkComment: "EXTENSION: %t: %c")
         )
     }
 

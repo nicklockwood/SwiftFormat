@@ -533,7 +533,7 @@ Option | Description
 `--smarttabs` | Align code independently of tab width. defaults to "enabled"
 `--indentcase` | Indent cases inside a switch: "true" or "false" (default)
 `--ifdef` | #if indenting: "indent" (default), "no-indent" or "outdent"
-`--xcodeindentation` | Xcode indent guard/enum: "enabled" or "disabled" (default)
+`--xcodeindentation` | Match Xcode indenting: "enabled" or "disabled" (default)
 
 <details>
 <summary>Examples</summary>

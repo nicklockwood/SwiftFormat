@@ -1025,33 +1025,6 @@ public struct _FormatRules {
         var linewrapStack = [false]
         var lineIndex = 0
 
-        func isGuardElseClause(at index: Int, token: Token) -> Bool {
-            func hasKeyword(_ string: String) -> Bool {
-                return formatter.index(of: .keyword(string), after: formatter.startOfLine(at: index) - 1) ?? index < index
-            }
-            let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)
-
-            // Handle `{ return }` on its own line
-            guard nextToken != .startOfScope("{") else { return false }
-
-            // Make sure `else` on the line following a single-clause `guard` gets indented extra
-            // example: `guard true\nelse { return }`
-            if hasKeyword("guard"), hasKeyword("else") || nextToken == .keyword("else") {
-                // Avoid over-indenting the line following a single-line guard, like `guard true else { return }`
-                return (formatter.index(of: .endOfScope("}"), before: index) ?? -1) < formatter.startOfLine(at: index)
-            }
-
-            let startIndex = token.isStartOfScope ||
-                nextToken == .keyword("else") ? index :
-                formatter.index(of: formatter.currentScope(at: index) ?? token, before: index) ?? index
-            guard let lastGuardIndex = formatter.index(of: .keyword("guard"), before: startIndex) else {
-                return false
-            }
-            let lastStartIndex = formatter.index(of: .startOfScope("{"), before: startIndex - 1) ?? -1
-            let lastEndIndex = formatter.index(of: .endOfScope("}"), before: startIndex) ?? -1
-            return lastGuardIndex > lastStartIndex && linewrapStack.last == true && lastEndIndex < lastGuardIndex
-        }
-
         func inFunctionDeclarationWhereReturnTypeIsWrappedToStartOfLine(at i: Int) -> Bool {
             guard let returnOperatorIndex = formatter.startOfReturnType(at: i) else {
                 return false
@@ -1119,8 +1092,7 @@ public struct _FormatRules {
                 case ":" where scopeStack.last == .endOfScope("case"):
                     popScope()
                 case "{" where !formatter.isStartOfClosure(at: i, in: scopeStack.last) &&
-                    linewrapStack.last == true &&
-                    (!formatter.options.xcodeIndentation || !isGuardElseClause(at: i, token: token)):
+                    linewrapStack.last == true:
                     indentStack.removeLast()
                     linewrapStack[linewrapStack.count - 1] = false
                 default:
@@ -1315,24 +1287,7 @@ public struct _FormatRules {
                     guard let firstIndex = formatter.index(of: .nonSpaceOrComment, after: start - 1) else {
                         break
                     }
-                    // Reduce indent for closing scope of guard else back to normal
-                    if formatter.options.xcodeIndentation, linewrapStack.last == true,
-                        isGuardElseClause(at: i, token: token)
-                    {
-                        indentStack.removeLast()
-                        linewrapStack[linewrapStack.count - 1] = false
-                    }
-                    // Xcode indenting
-                    if formatter.options.xcodeIndentation, token == .endOfScope(")") {
-                        guard firstIndex == i || formatter.tokens[firstIndex] == token else {
-                            break
-                        }
-                        // Only indent if this is the last scope terminator in the line
-                        let range = i + 1 ..< formatter.endOfLine(at: i)
-                        guard formatter.next(.endOfScope, in: range) == nil else {
-                            break
-                        }
-                    } else if firstIndex != i {
+                    if firstIndex != i {
                         break
                     }
                     if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {
@@ -1422,8 +1377,7 @@ public struct _FormatRules {
                 let linewrapped =
                     !formatter.isEndOfStatement(at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last) ||
                     !(nextTokenIndex == nil ||
-                        formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last)) ||
-                    (formatter.options.xcodeIndentation && isGuardElseClause(at: i, token: token))
+                        formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last))
 
                 // Determine current indent
                 var indent = indentStack.last ?? ""
@@ -1442,7 +1396,9 @@ public struct _FormatRules {
                         let endOfNextLine = formatter.endOfLine(at: endOfLine + 1)
                         switch formatter.last(.nonSpaceOrCommentOrLinebreak, before: endOfNextLine) {
                         case .operator(_, .infix)?, .delimiter(",")?:
-                            return formatter.options.xcodeIndentation
+                            return false
+                        case .endOfScope(")")?:
+                            return !formatter.options.xcodeIndentation
                         default:
                             return formatter.lastIndex(of: .startOfScope,
                                                        in: i ..< endOfNextLine) == nil
@@ -1466,14 +1422,6 @@ public struct _FormatRules {
                         indent = indentStack.last!
                     }
                 } else if linewrapped {
-                    func isWrappedCaseDeclaration() -> Bool {
-                        guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .delimiter(","),
-                            let caseIndex = formatter.index(of: .keyword, before: i, if: { $0 == .keyword("case") }),
-                            formatter.isEnumCase(at: caseIndex) else { return false }
-
-                        return true
-                    }
-
                     func isWrappedTypeDeclaration() -> Bool {
                         guard let keywordIndex = formatter.indexOfLastSignificantKeyword(at: i, excluding: ["where"]),
                             !formatter.tokens[keywordIndex ..< i].contains(.endOfScope("}")),
@@ -1487,26 +1435,21 @@ public struct _FormatRules {
                         return true
                     }
 
-                    // Don't indent enum cases if Xcode indentation is set
                     // Don't indent line starting with dot if previous line was just a closing brace
                     let lastToken = formatter.tokens[lastNonSpaceOrLinebreakIndex]
-                    if formatter.options.xcodeIndentation || formatter.options.allmanBraces,
-                        nextToken == .startOfScope("{"), formatter.isStartOfClosure(at: nextNonSpaceIndex)
+                    if formatter.options.allmanBraces, nextToken == .startOfScope("{"),
+                        formatter.isStartOfClosure(at: nextNonSpaceIndex)
                     {
                         // Don't indent further
                     } else if formatter.token(at: nextTokenIndex ?? -1) == .operator(".", .infix),
                         formatter.last(.nonSpace, before: lastNonSpaceOrLinebreakIndex)?.isLinebreak == true
                     {
-                        if formatter.options.xcodeIndentation, lastToken != .endOfScope("}") {
-                            indent += formatter.options.indent
-                        } else if !formatter.options.xcodeIndentation,
-                            !lastToken.isEndOfScope || lastToken == .endOfScope("case")
+                        if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
+                            (formatter.options.xcodeIndentation && lastToken.isMultilineStringDelimiter)
                         {
                             indent += formatter.options.indent
                         }
-                    } else if !formatter.options.xcodeIndentation ||
-                        (!isWrappedCaseDeclaration() && !isWrappedTypeDeclaration())
-                    {
+                    } else if !formatter.options.xcodeIndentation || !isWrappedTypeDeclaration() {
                         indent += formatter.options.indent
                     }
                     linewrapStack[linewrapStack.count - 1] = true

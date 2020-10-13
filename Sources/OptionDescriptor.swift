@@ -562,7 +562,7 @@ struct _Descriptors {
     let xcodeIndentation = OptionDescriptor(
         argumentName: "xcodeindentation",
         displayName: "Xcode Indentation",
-        help: "Xcode indent guard/enum: \"enabled\" or \"disabled\" (default)",
+        help: "Match Xcode indenting: \"enabled\" or \"disabled\" (default)",
         keyPath: \.xcodeIndentation,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]

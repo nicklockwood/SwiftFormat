@@ -2165,19 +2165,6 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }
 
-    func testGuardElseOnOwnLineBraceNotWrappedWithXcodeIndentation() {
-        let input = """
-        guard let foo = bar,
-            bar == baz
-            else {
-                print("statement body")
-        }
-        """
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
-                       options: options)
-    }
-
     func testMultilineGuardClosingBraceOnSameLine() {
         let input = """
         guard let foo = bar,

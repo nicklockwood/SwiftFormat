@@ -304,22 +304,6 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["wrapEnumCases"])
     }
 
-    func testEnumCaseIndentingCommasWithXcodeStyle() {
-        let input = "enum Foo {\ncase Bar,\nBaz\n}"
-        let output = "enum Foo {\n    case Bar,\n    Baz\n}"
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options,
-                       exclude: ["wrapEnumCases"])
-    }
-
-    func testEnumCaseWrappedIfWithXcodeStyle() {
-        let input = "if case .foo = foo,\ntrue {\nreturn false\n}"
-        let output = "if case .foo = foo,\n    true {\n    return false\n}"
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent,
-                       options: options, exclude: ["wrapMultilineStatementBraces"])
-    }
-
     func testGenericEnumCaseIndenting() {
         let input = "enum Foo<T> {\ncase Bar\ncase Baz\n}"
         let output = "enum Foo<T> {\n    case Bar\n    case Baz\n}"
@@ -400,15 +384,6 @@ extension RulesTests {
         let input = "{\nif case let .foo(msg) = error {}\n}"
         let output = "{\n    if case let .foo(msg) = error {}\n}"
         testFormatting(for: input, output, rule: FormatRules.indent)
-    }
-
-    func testIndentIfCaseCommaCase() {
-        let input = "{\nif case let .foo(msg) = a,\ncase let .bar(msg) = b {}\n}"
-        let output = "{\n    if case let .foo(msg) = a,\n        case let .bar(msg) = b {}\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent)
-        let options = FormatOptions(xcodeIndentation: true)
-        XCTAssertEqual(try format(input, rules: [FormatRules.indent]),
-                       try format(input, rules: [FormatRules.indent], options: options))
     }
 
     func testIndentGuardCase() {
@@ -800,77 +775,6 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
-    func testSingleLineGuardFollowingLine() {
-        let input = "guard let foo = bar else { return }\nreturn"
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
-    }
-
-    func testWrappedLineBeforeGuardElseWithXcodeStyle() {
-        let input = "guard let foo = bar\nelse { return }"
-        let output = "guard let foo = bar\n    else { return }"
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineStatementBraces"])
-    }
-
-    func testWrappedLineAfterGuardElseWithXcodeStyleNotIndented() {
-        let input = "guard let foo = bar else\n{ return }"
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["elseOnSameLine"])
-    }
-
-    func testWrappedLineBeforeGuardElseAndReturnWithXcodeStyle() {
-        let input = "guard let foo = foo\nelse {\nreturn\n}"
-        let output = "guard let foo = foo\n    else {\n        return\n}"
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineStatementBraces"])
-    }
-
-    func testWrappedLineAfterGuardCommaIndented() {
-        let input = "guard let foo = foo,\nlet bar = bar else {}"
-        let output = "guard let foo = foo,\n    let bar = bar else {}"
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
-    }
-
-    func testXcodeIndentationGuardClosure() {
-        let input = "guard let foo = bar(baz, completion: {\nfalse\n}) else { return }"
-        let output = "guard let foo = bar(baz, completion: {\n    false\n}) else { return }"
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["wrapMultilineStatementBraces"])
-    }
-
-    func testNestedScopesForXcodeGuardIndentation() {
-        let input = """
-        enum Foo {
-        case bar
-
-        var foo: String {
-        guard self == .bar
-        else {
-        return ""
-        }
-        return "bar"
-        }
-        }
-        """
-        let output = """
-        enum Foo {
-            case bar
-
-            var foo: String {
-                guard self == .bar
-                    else {
-                        return ""
-                }
-                return "bar"
-            }
-        }
-        """
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
-    }
-
     func testWrappedLineAfterGuardElse() {
         // Don't indent because this case is handled by braces rule
         let input = "guard let foo = bar else\n{ return }"
@@ -1249,7 +1153,20 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
-    // indent xcodeindentation
+    func testChainedFunctionOnNewLineWithXcodeIndentation() {
+        let input = """
+        bar(a: "A", b: "B")
+        .baz()!
+        .quux
+        """
+        let output = """
+        bar(a: "A", b: "B")
+            .baz()!
+            .quux
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
 
     func testChainedFunctionsInPropertySetterOnNewLineWithXcodeIndentation() {
         let input = """
@@ -1261,8 +1178,8 @@ extension RulesTests {
         let output = """
         private let foo =
             bar(a: "A", b: "B")
-                .baz()!
-                .quux
+            .baz()!
+            .quux
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
@@ -1281,15 +1198,15 @@ extension RulesTests {
         func foo() -> Bool {
             return
                 bar(a: "A", b: "B")
-                    .baz()!
-                    .quux
+                .baz()!
+                .quux
         }
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
-    func testChainedOrOperatorsInFunctionWithReturnOnNewLineWithXcodeIndentation() {
+    func testChainedOrOperatorsInFunctionWithReturnOnNewLine() {
         let input = """
         func foo(lhs: Bool, rhs: Bool) -> Bool {
         return
@@ -1302,12 +1219,11 @@ extension RulesTests {
         func foo(lhs: Bool, rhs: Bool) -> Bool {
             return
                 lhs == rhs &&
-                    lhs == rhs &&
-                    lhs == rhs
+                lhs == rhs &&
+                lhs == rhs
         }
         """
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
     func testWrappedSingleLineClosureOnNewLine() {
@@ -1318,18 +1234,6 @@ extension RulesTests {
         }
         """
         testFormatting(for: input, rule: FormatRules.indent, exclude: ["braces"])
-    }
-
-    func testWrappedSingleLineClosureOnNewLineWithXcodeIndentation() {
-        let input = """
-        func foo() {
-            let bar =
-            { print("foo") }
-        }
-        """
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options,
-                       exclude: ["braces"])
     }
 
     func testWrappedMultilineClosureOnNewLine() {
@@ -1344,20 +1248,6 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, exclude: ["braces"])
     }
 
-    func testWrappedMultilineClosureOnNewLineWithXcodeIndentation() {
-        let input = """
-        func foo() {
-            let bar =
-            {
-                print("foo")
-            }
-        }
-        """
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options,
-                       exclude: ["braces"])
-    }
-
     func testWrappedMultilineClosureOnNewLineWithAllmanBraces() {
         let input = """
         func foo() {
@@ -1370,67 +1260,6 @@ extension RulesTests {
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["braces"])
-    }
-
-    func testWrappedMultilineStringOnNewLineWithXcodeIndentation() {
-        let input = """
-        func foo() {
-            let bar =
-            \"""
-            foo
-            \"""
-        }
-        """
-        let output = """
-        func foo() {
-            let bar =
-                \"""
-                foo
-                \"""
-        }
-        """
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
-    }
-
-    func testChainedFunctionEndingInOpenParenNotDoubleIndented() {
-        let input = """
-        private let foo =
-        bar.baz(
-            quux
-        )
-        """
-        let output = """
-        private let foo =
-            bar.baz(
-                quux
-            )
-        """
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
-    }
-
-    func testIndentImbalancedNestedClosingParensLikeXcode() {
-        let input = """
-        Foo(bar:
-            Bar(
-                baz: quux
-        ))
-        """
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
-    }
-
-    func testIndentChainedPropertiesAfterFunctionCallLikeXcode() {
-        let input = """
-        let foo = Foo(
-            bar: baz
-        )
-            .bar
-            .baz
-        """
-        let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
     func testIndentChainedPropertiesAfterMultilineStringXcode() {

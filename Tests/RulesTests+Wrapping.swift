@@ -391,9 +391,9 @@ extension RulesTests {
         """
         let output2 = """
         func testFunc()
-            -> ReturnType {
-                doSomething()
-                doSomething()
+        -> ReturnType {
+            doSomething()
+            doSomething()
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 25)
@@ -418,20 +418,20 @@ extension RulesTests {
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth2WithXcodeIndentation() {
         let input = """
-        func testFunc() -> (ReturnType, ReturnType2) {
+        func testFunc() throws -> (ReturnType, ReturnType2) {
             doSomething()
         }
         """
         let output = """
-        func testFunc()
+        func testFunc() throws
             -> (ReturnType, ReturnType2) {
             doSomething()
         }
         """
         let output2 = """
-        func testFunc()
-            -> (ReturnType, ReturnType2) {
-                doSomething()
+        func testFunc() throws
+        -> (ReturnType, ReturnType2) {
+            doSomething()
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
@@ -468,8 +468,8 @@ extension RulesTests {
         """
         let output2 = """
         func testFunc()
-            -> (Bool, String) -> String? {
-                doSomething()
+        -> (Bool, String) -> String? {
+            doSomething()
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
@@ -506,8 +506,8 @@ extension RulesTests {
         """
         let output2 = """
         func testFunc(_: () -> Void)
-            -> (Bool, String) -> String? {
-                doSomething()
+        -> (Bool, String) -> String? {
+            doSomething()
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)

@@ -1113,15 +1113,6 @@ public struct _FormatRules {
                 }
                 var indent = indentStack[indentStack.count - indentCount]
 
-                // If using xcodeindentation, increase indent if '->' for function return value
-                // is wrapped to start of a line in the current scope.
-                if formatter.options.xcodeIndentation,
-                    string == "{",
-                    inFunctionDeclarationWhereReturnTypeIsWrappedToStartOfLine(at: i - 1)
-                {
-                    indent += formatter.options.indent
-                }
-
                 switch string {
                 case "/*":
                     if scopeStack.count < 2 || scopeStack[scopeStack.count - 2] != .startOfScope("/*") {
@@ -1422,11 +1413,15 @@ public struct _FormatRules {
                         indent = indentStack.last!
                     }
                 } else if linewrapped {
-                    func isWrappedTypeDeclaration() -> Bool {
-                        guard let keywordIndex = formatter.indexOfLastSignificantKeyword(at: i, excluding: ["where"]),
+                    func isWrappedDeclaration() -> Bool {
+                        guard let keywordIndex = formatter
+                            .indexOfLastSignificantKeyword(at: i, excluding: ["where", "throws", "rethrows"]),
                             !formatter.tokens[keywordIndex ..< i].contains(.endOfScope("}")),
                             case let .keyword(keyword) = formatter.tokens[keywordIndex],
-                            ["class", "struct", "enum", "protocol"].contains(keyword) else { return false }
+                            ["class", "struct", "enum", "protocol", "func"].contains(keyword)
+                        else {
+                            return false
+                        }
 
                         let end = formatter.endOfLine(at: i + 1)
                         guard let lastToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: end + 1),
@@ -1449,7 +1444,7 @@ public struct _FormatRules {
                         {
                             indent += formatter.options.indent
                         }
-                    } else if !formatter.options.xcodeIndentation || !isWrappedTypeDeclaration() {
+                    } else if !formatter.options.xcodeIndentation || !isWrappedDeclaration() {
                         indent += formatter.options.indent
                     }
                     linewrapStack[linewrapStack.count - 1] = true

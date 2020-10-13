@@ -55,7 +55,7 @@ func jsonTransform(_ name: JSONLabel, _ values: [Any]) throws -> Any? {
     case .unichar:
         let value = values[0] as! String
         guard let hex = UInt32(value, radix: 16),
-            let char = UnicodeScalar(hex)
+              let char = UnicodeScalar(hex)
         else {
             throw JSONError.invalidCodePoint(value)
         }

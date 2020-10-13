@@ -2398,13 +2398,13 @@ class RulesTests: XCTestCase {
     func testHandleAndAtStartOfLine() {
         let input = "if a == b\n    && b == c {}"
         let output = "if a == b,\n    b == c {}"
-        testFormatting(for: input, output, rule: FormatRules.andOperator)
+        testFormatting(for: input, output, rule: FormatRules.andOperator, exclude: ["indent"])
     }
 
     func testHandleAndAtStartOfLineAfterComment() {
         let input = "if a == b // foo\n    && b == c {}"
         let output = "if a == b, // foo\n    b == c {}"
-        testFormatting(for: input, output, rule: FormatRules.andOperator)
+        testFormatting(for: input, output, rule: FormatRules.andOperator, exclude: ["indent"])
     }
 
     func testNoReplaceAndInViewBuilder() {

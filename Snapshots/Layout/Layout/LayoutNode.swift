@@ -282,8 +282,8 @@ public class LayoutNode: NSObject {
         context _: UnsafeMutableRawPointer?
     ) {
         guard _setupComplete, _updateLock == 0, _evaluating.isEmpty,
-            root._setupComplete, root._updateLock == 0, root._evaluating.isEmpty,
-            let view = _view, !view.bounds.size.isNearlyEqual(to: _previousBounds.size)
+              root._setupComplete, root._updateLock == 0, root._evaluating.isEmpty,
+              let view = _view, !view.bounds.size.isNearlyEqual(to: _previousBounds.size)
         else {
             return
         }
@@ -310,7 +310,7 @@ public class LayoutNode: NSObject {
         children: [LayoutNode] = []
     ) throws {
         guard let _class = `class` as? LayoutManaged.Type,
-            _class is UIView.Type || _class is UIViewController.Type
+              _class is UIView.Type || _class is UIViewController.Type
         else {
             throw LayoutError.message("\(`class`) is not a subclass of UIView or UIViewController")
         }
@@ -536,29 +536,29 @@ public class LayoutNode: NSObject {
     private func redundantExpressionErrors() -> Set<LayoutError> {
         var errors = Set<LayoutError>()
         if hasExpression("leading"),
-            !value(forSymbol: "width", dependsOn: "leading"),
-            !value(forSymbol: "left", dependsOn: "leading")
+           !value(forSymbol: "width", dependsOn: "leading"),
+           !value(forSymbol: "left", dependsOn: "leading")
         {
             errors.insert(LayoutError(SymbolError("Expression for leading is redundant",
                                                   for: "leading"), for: self))
         }
         if hasExpression("trailing"),
-            !value(forSymbol: "width", dependsOn: "trailing"),
-            !value(forSymbol: "left", dependsOn: "trailing")
+           !value(forSymbol: "width", dependsOn: "trailing"),
+           !value(forSymbol: "left", dependsOn: "trailing")
         {
             errors.insert(LayoutError(SymbolError("Expression for trailing is redundant",
                                                   for: "trailing"), for: self))
         }
         if hasExpression("right"),
-            !value(forSymbol: "width", dependsOn: "right"),
-            !value(forSymbol: "left", dependsOn: "right")
+           !value(forSymbol: "width", dependsOn: "right"),
+           !value(forSymbol: "left", dependsOn: "right")
         {
             errors.insert(LayoutError(SymbolError("Expression for right is redundant",
                                                   for: "right"), for: self))
         }
         if hasExpression("bottom"),
-            !value(forSymbol: "height", dependsOn: "bottom"),
-            !value(forSymbol: "top", dependsOn: "bottom")
+           !value(forSymbol: "height", dependsOn: "bottom"),
+           !value(forSymbol: "top", dependsOn: "bottom")
         {
             errors.insert(LayoutError(SymbolError("Expression for bottom is redundant",
                                                   for: "bottom"), for: self))
@@ -766,7 +766,7 @@ public class LayoutNode: NSObject {
     /// Returns nil if this is a root node, or is the last child of its parent
     var next: LayoutNode? {
         if let siblings = parent?.children, let index = siblings.index(where: { $0 === self }),
-            index < siblings.count - 1
+           index < siblings.count - 1
         {
             return siblings[index + 1]
         }
@@ -1238,14 +1238,14 @@ public class LayoutNode: NSObject {
                         }
                     }
                     if let viewControllerClass = self.viewControllerClass,
-                        let viewController = try? viewControllerClass.create(with: self),
-                        let _ = try? viewController.value(forSymbol: symbol)
+                       let viewController = try? viewControllerClass.create(with: self),
+                       let _ = try? viewController.value(forSymbol: symbol)
                     {
                         throw SymbolError(fatal: "\(_class).\(symbol) is private or read-only", for: symbol)
                     }
                     // TODO: disallow setting view properties directly if type is a UIViewController
                     if let view = try? viewClass.create(with: self),
-                        let _ = try? view.value(forSymbol: symbol)
+                       let _ = try? view.value(forSymbol: symbol)
                     {
                         throw SymbolError(fatal: "\(_class).\(symbol) is private or read-only", for: symbol)
                     }
@@ -1909,7 +1909,7 @@ public class LayoutNode: NSObject {
                     // TODO: disallow setting view properties directly if type is a UIViewController
                     fallback = { [unowned self] in
                         if let viewController = self._viewController,
-                            let value = try? viewController.value(forSymbol: symbol)
+                           let value = try? viewController.value(forSymbol: symbol)
                         { // TODO: find a non-throwing solution for this
                             return value
                         }
@@ -2337,8 +2337,8 @@ public class LayoutNode: NSObject {
             return true
         }
         if value(forSymbol: "width", dependsOn: "inferredSize.width"),
-            !hasExpression("contentSize"), !hasExpression("contentSize.width"),
-            !_usesAutoLayout, _view?.intrinsicContentSize.width == UIView.noIntrinsicMetric, children.isEmpty
+           !hasExpression("contentSize"), !hasExpression("contentSize.width"),
+           !_usesAutoLayout, _view?.intrinsicContentSize.width == UIView.noIntrinsicMetric, children.isEmpty
         {
             _widthDependsOnParent = true
             return true
@@ -2360,8 +2360,8 @@ public class LayoutNode: NSObject {
             return true
         }
         if value(forSymbol: "height", dependsOn: "inferredSize.height"),
-            !hasExpression("contentSize"), !hasExpression("contentSize.height"),
-            !_usesAutoLayout, _view?.intrinsicContentSize.height == UIView.noIntrinsicMetric, children.isEmpty
+           !hasExpression("contentSize"), !hasExpression("contentSize.height"),
+           !_usesAutoLayout, _view?.intrinsicContentSize.height == UIView.noIntrinsicMetric, children.isEmpty
         {
             _heightDependsOnParent = true
             return true
@@ -2456,7 +2456,7 @@ public class LayoutNode: NSObject {
             if !child.widthDependsOnParent {
                 var left: CGFloat = 0
                 if !child.value(forSymbol: "left", dependsOn: "parent.width"),
-                    !child.value(forSymbol: "top", dependsOn: "parent.containerSize.width")
+                   !child.value(forSymbol: "top", dependsOn: "parent.containerSize.width")
                 {
                     left = try child.cgFloatValue(forSymbol: "left")
                 }
@@ -2465,7 +2465,7 @@ public class LayoutNode: NSObject {
             if !child.heightDependsOnParent {
                 var top: CGFloat = 0
                 if !child.value(forSymbol: "top", dependsOn: "parent.height"),
-                    !child.value(forSymbol: "top", dependsOn: "parent.containerSize.height")
+                   !child.value(forSymbol: "top", dependsOn: "parent.containerSize.height")
                 {
                     top = try child.cgFloatValue(forSymbol: "top")
                 }
@@ -2592,7 +2592,7 @@ public class LayoutNode: NSObject {
 
     private func computeExplicitWidth() throws -> CGFloat? {
         if !_evaluating.contains("width"),
-            !_evaluating.contains("height") || !value(forSymbol: "width", dependsOn: "height")
+           !_evaluating.contains("height") || !value(forSymbol: "width", dependsOn: "height")
         {
             return try cgFloatValue(forSymbol: "width")
         }
@@ -2630,7 +2630,7 @@ public class LayoutNode: NSObject {
 
     private func computeExplicitHeight() throws -> CGFloat? {
         if !_evaluating.contains("height"),
-            !_evaluating.contains("width") || !value(forSymbol: "height", dependsOn: "width")
+           !_evaluating.contains("width") || !value(forSymbol: "height", dependsOn: "width")
         {
             return try cgFloatValue(forSymbol: "height")
         }
@@ -2802,7 +2802,7 @@ public class LayoutNode: NSObject {
             }
         }
         if viewClass == UIScrollView.self, // Skip this behavior for subclasses like UITableView
-            let scrollView = _view as? UIScrollView
+           let scrollView = _view as? UIScrollView
         {
             let oldContentSize = scrollView.contentSize
             var contentSize = try value(forSymbol: "contentSize") as! CGSize
@@ -3041,8 +3041,8 @@ public class LayoutNode: NSObject {
         try LayoutError.wrap({
             for (name, type) in viewExpressionTypes where expressions[name] == nil {
                 if case let .protocol(proto) = type.kind, owner.conforms(to: proto),
-                    name == "delegate" || name == "dataSource" ||
-                    name.hasSuffix("Delegate") || name.hasSuffix("DataSource")
+                   name == "delegate" || name == "dataSource" ||
+                   name.hasSuffix("Delegate") || name.hasSuffix("DataSource")
                 {
                     try self._view?.setValue(owner, forExpression: name)
                 }

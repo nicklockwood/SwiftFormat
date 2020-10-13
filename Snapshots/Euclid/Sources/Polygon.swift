@@ -50,7 +50,7 @@ public extension Polygon {
     /// Vertices are assumed to be in anticlockwise order for the purpose of deriving the plane
     init?(_ vertices: [Vertex], material: Material = nil) {
         guard vertices.count > 2, !verticesAreDegenerate(vertices),
-            let plane = Plane(points: vertices.map { $0.position })
+              let plane = Plane(points: vertices.map { $0.position })
         else {
             return nil
         }
@@ -71,8 +71,8 @@ public extension Polygon {
         var j = count - 1
         for i in 0 ..< count {
             if (points[i].y > p.y) != (points[j].y > p.y),
-                p.x < (points[j].x - points[i].x) * (p.y - points[i].y) /
-                (points[j].y - points[i].y) + points[i].x
+               p.x < (points[j].x - points[i].x) * (p.y - points[i].y) /
+               (points[j].y - points[i].y) + points[i].x
             {
                 c = !c
             }

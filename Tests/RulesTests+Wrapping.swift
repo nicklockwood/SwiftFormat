@@ -91,7 +91,7 @@ extension RulesTests {
     func testMultilineGuardElseNotWrappedByDefault() {
         let input = """
         guard let foo = bar,
-            bar > 5 else {
+              bar > 5 else {
             return
         }
         """
@@ -102,14 +102,14 @@ extension RulesTests {
     func testMultilineGuardElseWrappedByDefaultIfBracesOnNextLine() {
         let input = """
         guard let foo = bar,
-            bar > 5 else
+              bar > 5 else
         {
             return
         }
         """
         let output = """
         guard let foo = bar,
-            bar > 5
+              bar > 5
         else {
             return
         }
@@ -121,7 +121,7 @@ extension RulesTests {
         let input = """
         func foo() {
             guard let foo = bar,
-                bar > 5 else
+                  bar > 5 else
             {
                 return
             }
@@ -130,7 +130,7 @@ extension RulesTests {
         let output = """
         func foo() {
             guard let foo = bar,
-                bar > 5
+                  bar > 5
             else {
                 return
             }
@@ -163,13 +163,13 @@ extension RulesTests {
     func testMultilineGuardElseWrapped() {
         let input = """
         guard let foo = bar,
-            bar > 5 else {
+              bar > 5 else {
             return
         }
         """
         let output = """
         guard let foo = bar,
-            bar > 5
+              bar > 5
         else {
             return
         }
@@ -182,14 +182,14 @@ extension RulesTests {
     func testMultilineGuardElseEndingInParen() {
         let input = """
         guard let foo = bar,
-            let baz = quux() else
+              let baz = quux() else
         {
             return
         }
         """
         let output = """
         guard let foo = bar,
-            let baz = quux()
+              let baz = quux()
         else {
             return
         }
@@ -204,14 +204,14 @@ extension RulesTests {
     func testMultilineGuardElseUnwrapped() {
         let input = """
         guard let foo = bar,
-            bar > 5
+              bar > 5
         else {
             return
         }
         """
         let output = """
         guard let foo = bar,
-            bar > 5 else {
+              bar > 5 else {
             return
         }
         """
@@ -236,8 +236,8 @@ extension RulesTests {
         """
         let output = """
         if let foo = foo,
-            let bar = bar,
-            let baz = baz {}
+           let bar = bar,
+           let baz = baz {}
         """
         let options = FormatOptions(maxWidth: 20)
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
@@ -269,14 +269,14 @@ extension RulesTests {
         """
         let output = """
         guard let foo = foo,
-            let bar = bar
-            else {
+              let bar = bar
+              else {
             break
         }
         """
         let output2 = """
         guard let foo = foo,
-            let bar = bar
+              let bar = bar
         else {
             break
         }
@@ -1987,13 +1987,13 @@ extension RulesTests {
     func testMultilineIfBraceOnNextLine() {
         let input = """
         if firstConditional,
-            array.contains(where: { secondConditional }) {
+           array.contains(where: { secondConditional }) {
             print("statement body")
         }
         """
         let output = """
         if firstConditional,
-            array.contains(where: { secondConditional })
+           array.contains(where: { secondConditional })
         {
             print("statement body")
         }
@@ -2088,13 +2088,13 @@ extension RulesTests {
     func testMultilineGuardBraceOnNextLine() {
         let input = """
         guard firstConditional,
-            array.contains(where: { secondConditional }) else {
+              array.contains(where: { secondConditional }) else {
             print("statement body")
         }
         """
         let output = """
         guard firstConditional,
-            array.contains(where: { secondConditional }) else
+              array.contains(where: { secondConditional }) else
         {
             print("statement body")
         }
@@ -2107,7 +2107,7 @@ extension RulesTests {
         let input = """
         if outerConditional {
             if firstConditional,
-                array.contains(where: { secondConditional }) {
+               array.contains(where: { secondConditional }) {
                 print("statement body")
             }
         }
@@ -2115,7 +2115,7 @@ extension RulesTests {
         let output = """
         if outerConditional {
             if firstConditional,
-                array.contains(where: { secondConditional })
+               array.contains(where: { secondConditional })
             {
                 print("statement body")
             }
@@ -2157,7 +2157,7 @@ extension RulesTests {
     func testGuardElseOnOwnLineBraceNotWrapped() {
         let input = """
         guard let foo = bar,
-            bar == baz
+              bar == baz
         else {
             print("statement body")
         }
@@ -2168,7 +2168,7 @@ extension RulesTests {
     func testMultilineGuardClosingBraceOnSameLine() {
         let input = """
         guard let foo = bar,
-            let baz = quux else { return }
+              let baz = quux else { return }
         """
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
     }
@@ -2176,7 +2176,7 @@ extension RulesTests {
     func testMultilineGuardBraceOnSameLineAsElse() {
         let input = """
         guard let foo = bar,
-            let baz = quux
+              let baz = quux
         else {
             return
         }

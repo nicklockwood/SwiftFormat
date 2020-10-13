@@ -300,7 +300,12 @@ extension RulesTests {
 
     func testEnumCaseIndentingCommas() {
         let input = "enum Foo {\ncase Bar,\nBaz\n}"
-        let output = "enum Foo {\n    case Bar,\n        Baz\n}"
+        let output = """
+        enum Foo {
+            case Bar,
+                 Baz
+        }
+        """
         testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["wrapEnumCases"])
     }
 
@@ -797,7 +802,7 @@ extension RulesTests {
         let input = """
         forEach { foo in
             guard let foo = foo,
-                let bar = bar else { break }
+                  let bar = bar else { break }
         }
         """
         testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapMultilineStatementBraces"])
@@ -868,7 +873,15 @@ extension RulesTests {
 
     func testNestedWrappedIfIndents() {
         let input = "if foo {\nif bar &&\n(baz ||\nquux) {\nfoo()\n}\n}"
-        let output = "if foo {\n    if bar &&\n        (baz ||\n            quux) {\n        foo()\n    }\n}"
+        let output = """
+        if foo {
+            if bar &&
+                (baz ||
+                    quux) {
+                foo()
+            }
+        }
+        """
         testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["andOperator", "wrapMultilineStatementBraces"])
     }
 

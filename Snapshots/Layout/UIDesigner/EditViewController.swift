@@ -10,8 +10,8 @@ private let validClasses: [String] = {
     var names = [String]()
     for cls in UnsafeBufferPointer(start: classes, count: Int(classCount)) {
         if class_getSuperclass(cls) != nil,
-            class_conformsToProtocol(cls, NSObjectProtocol.self),
-            cls.isSubclass(of: UIView.self) || cls.isSubclass(of: UIViewController.self)
+           class_conformsToProtocol(cls, NSObjectProtocol.self),
+           cls.isSubclass(of: UIView.self) || cls.isSubclass(of: UIViewController.self)
         {
             let name = "\(cls)"
             if !name.hasPrefix("_") {
@@ -207,15 +207,15 @@ class EditViewController: UIViewController, UITextFieldDelegate {
     @objc func didUpdateText() {
         classField?.backgroundColor = .white
         guard let classField = classField,
-            let textRange = classField.textRange(from: classField.beginningOfDocument, to: classField.selectedTextRange?.start ?? classField.endOfDocument),
-            let text = classField.text(in: textRange)
+              let textRange = classField.textRange(from: classField.beginningOfDocument, to: classField.selectedTextRange?.start ?? classField.endOfDocument),
+              let text = classField.text(in: textRange)
         else {
             return
         }
         var match = ""
         for name in validClasses {
             if match.isEmpty || name.count < match.count,
-                name.lowercased().hasPrefix(text.lowercased())
+               name.lowercased().hasPrefix(text.lowercased())
             {
                 match = name
             }
@@ -243,7 +243,7 @@ class EditViewController: UIViewController, UITextFieldDelegate {
         }
         classField?.attributedText = NSAttributedString(string: text, attributes: [NSAttributedStringKey.foregroundColor: UIColor.black])
         guard let cls = NSClassFromString(text) as? NSObject.Type,
-            cls is UIView.Type || cls is UIViewController.Type
+              cls is UIView.Type || cls is UIViewController.Type
         else {
             classField?.backgroundColor = UIColor(red: 1, green: 0.5, blue: 0.5, alpha: 1)
             return

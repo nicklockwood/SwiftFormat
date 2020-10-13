@@ -145,7 +145,7 @@ public func parseJSON2(_ input: String) throws -> Any {
                 case "t": string.append("\t")
                 case "u":
                     guard let a = readHex(), let b = readHex(),
-                        let c = readHex(), let d = readHex()
+                          let c = readHex(), let d = readHex()
                     else {
                         if index > bestIndex {
                             bestIndex = index
@@ -155,7 +155,7 @@ public func parseJSON2(_ input: String) throws -> Any {
                     }
                     let value = a + b + c + d
                     guard let hex = UInt32(value, radix: 16),
-                        let char = UnicodeScalar(hex)
+                          let char = UnicodeScalar(hex)
                     else {
                         throw Error(string: "Invalid code point \(value)")
                     }
@@ -253,7 +253,7 @@ public func parseJSON2(_ input: String) throws -> Any {
             token = String(first)
         } else {
             while let char = remaining.popFirst(),
-                !whitespace.contains(char)
+                  !whitespace.contains(char)
             {
                 token.append(Character(char))
             }

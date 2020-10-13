@@ -341,7 +341,7 @@ public final class Expression: CustomStringConvertible {
                 if let array = arrays[name] {
                     return { args in
                         guard let index = Int(exactly: floor(args[0])),
-                            array.indices.contains(index)
+                              array.indices.contains(index)
                         else {
                             throw Error.arrayBounds(symbol, args[0])
                         }
@@ -435,7 +435,7 @@ public final class Expression: CustomStringConvertible {
     public static func isValidOperator(_ string: String) -> Bool {
         var characters = UnicodeScalarView(string)
         guard case let .symbol(symbol, _, _)? = characters.parseOperator(),
-            case let .infix(name) = symbol, name != "(", name != "["
+              case let .infix(name) = symbol, name != "(", name != "["
         else {
             return false
         }
@@ -1290,7 +1290,7 @@ private extension UnicodeScalarView {
 
     mutating func parseEscapedIdentifier() -> Subexpression? {
         guard let delimiter = first,
-            var string = scanCharacter({ "`'\"".unicodeScalars.contains($0) })
+              var string = scanCharacter({ "`'\"".unicodeScalars.contains($0) })
         else {
             return nil
         }
@@ -1327,7 +1327,7 @@ private extension UnicodeScalarView {
                         return .error(.unexpectedToken("}"), string)
                     }
                     guard let codepoint = Int(hex, radix: 16),
-                        let c = UnicodeScalar(codepoint)
+                          let c = UnicodeScalar(codepoint)
                     else {
                         // TODO: better error for invalid codepoint?
                         return .error(.unexpectedToken(hex), string)

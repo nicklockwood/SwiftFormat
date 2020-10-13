@@ -277,7 +277,7 @@ class LayoutLoader {
             let bundlePath = Bundle.main.bundleURL.absoluteString
             if xmlURL.absoluteString.hasPrefix(bundlePath) {
                 if _projectDirectory == nil, let relativeTo = relativeTo,
-                    let projectDirectory = findProjectDirectory(at: relativeTo)
+                   let projectDirectory = findProjectDirectory(at: relativeTo)
                 {
                     _projectDirectory = projectDirectory
                 }
@@ -435,7 +435,7 @@ class LayoutLoader {
     private func _findProjectDirectory(at path: String) -> URL? {
         var url = URL(fileURLWithPath: path).standardizedFileURL
         if let projectDirectory = _projectDirectory,
-            url.absoluteString.hasPrefix(projectDirectory.absoluteString)
+           url.absoluteString.hasPrefix(projectDirectory.absoluteString)
         {
             return projectDirectory
         }

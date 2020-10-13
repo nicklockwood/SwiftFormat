@@ -40,7 +40,7 @@ public func evaluate(_ input: String, state: State) throws -> Any? {
             }
             let op = values[1] as! String
             guard let lhs = values[0] as? Double,
-                let rhs = values[2] as? Double
+                  let rhs = values[2] as? Double
             else {
                 if op == "+", values[0] is String || values[2] is String {
                     return "\(values[0])\(values[2])"

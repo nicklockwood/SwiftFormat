@@ -1501,6 +1501,29 @@ extension Formatter {
         }
         return nil
     }
+
+    /// Indent level to use for wrapped lines at the specified position (based on statement type)
+    func linewrapIndent(at index: Int) -> String {
+        guard let commaIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index + 1, if: {
+            $0 == .delimiter(",")
+        }), case let lineStart = startOfLine(at: commaIndex),
+            case let .keyword(keyword)? = next(.nonSpaceOrComment, in: lineStart ..< commaIndex)
+        else {
+            return options.indent
+        }
+        switch keyword {
+        case "if":
+            return spaceEquivalentToWidth(3)
+        case "let", "var":
+            return spaceEquivalentToWidth(4)
+        case "case":
+            return spaceEquivalentToWidth(5)
+        case "guard", "while":
+            return spaceEquivalentToWidth(6)
+        default:
+            return options.indent
+        }
+    }
 }
 
 extension _FormatRules {

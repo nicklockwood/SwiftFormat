@@ -25,7 +25,7 @@ private let colorSymbols: [AnyExpression.Symbol: AnyExpression.SymbolEvaluator] 
     },
     .function("rgba", arity: 4): { args in
         guard let r = args[0] as? Double, let g = args[1] as? Double,
-            let b = args[2] as? Double, let a = args[3] as? Double
+              let b = args[2] as? Double, let a = args[3] as? Double
         else {
             throw Expression.Error.message("Type mismatch")
         }
@@ -138,9 +138,9 @@ private func stringToAsset(_ string: String) throws -> (name: String, bundle: Bu
         // Check for a resource bundle with the same name/identifier as the framework
         // This is a common structure for bundled resources when using Cocoapods modules
         if let name = name,
-            let bundle = framework.url(forResource: name, withExtension: "bundle").flatMap({
-                Bundle(url: $0)
-            })
+           let bundle = framework.url(forResource: name, withExtension: "bundle").flatMap({
+               Bundle(url: $0)
+           })
         {
             _bundle = bundle
         }
@@ -757,7 +757,7 @@ struct LayoutExpression {
                     }
                 }
                 if symbols.contains("textColor"),
-                    let color = try node.value(forSymbol: "textColor") as? UIColor
+                   let color = try node.value(forSymbol: "textColor") as? UIColor
                 {
                     result.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
                 } else if symbols.contains("titleColor"),
@@ -810,12 +810,12 @@ struct LayoutExpression {
                 return font
             }
             if let font = UIFont(name: name, size: UIFont.defaultSize),
-                font.fontName.lowercased() == name.lowercased()
+               font.fontName.lowercased() == name.lowercased()
             {
                 return font
             }
             if let fontName = UIFont.fontNames(forFamilyName: name).first,
-                let font = UIFont(name: fontName, size: UIFont.defaultSize)
+               let font = UIFont(name: fontName, size: UIFont.defaultSize)
             {
                 let descriptor = UIFontDescriptor().withFamily(font.familyName)
                 return UIFont(descriptor: descriptor, size: UIFont.defaultSize)
@@ -854,7 +854,7 @@ struct LayoutExpression {
                     return size
                 }
                 if string.hasSuffix("%"),
-                    let size = Double(String(string.unicodeScalars.dropLast()))
+                   let size = Double(String(string.unicodeScalars.dropLast()))
                 {
                     return UIFont.RelativeSize(factor: CGFloat(size / 100))
                 }
@@ -1080,7 +1080,7 @@ struct LayoutExpression {
                         } catch let error as SymbolError {
                             // TODO: find a less stringly-typed solution for this
                             if imageExpression.description == error.symbol,
-                                "\(error)".contains("Unknown property")
+                               "\(error)".contains("Unknown property")
                             {
                                 throw Expression.Error.message("Image named '\(error.symbol)' not found in main bundle")
                             }
@@ -1230,8 +1230,8 @@ struct LayoutExpression {
                     switch part {
                     case let .expression(expression):
                         guard expression.symbols.count == 1,
-                            case let .variable(name) = expression.symbols.first!,
-                            let first = name.first, !"'\"".contains(first)
+                              case let .variable(name) = expression.symbols.first!,
+                              let first = name.first, !"'\"".contains(first)
                         else {
                             continue
                         }

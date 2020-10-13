@@ -780,8 +780,8 @@ private extension Consumer.Match {
             return location
         case let .node(_, matches):
             guard let source = matches.first?.location?.source,
-                let startIndex = matches.first?.location?.range.lowerBound,
-                let endIndex = matches.last?.location?.range.upperBound
+                  let startIndex = matches.first?.location?.range.lowerBound,
+                  let endIndex = matches.last?.location?.range.upperBound
             else {
                 return nil
             }
@@ -821,7 +821,7 @@ extension Consumer.Error: CustomStringConvertible {
                 token = String(first)
             } else {
                 while let char = remaining.popFirst(),
-                    !whitespace.contains(char)
+                      !whitespace.contains(char)
                 {
                     token.append(Character(char))
                 }

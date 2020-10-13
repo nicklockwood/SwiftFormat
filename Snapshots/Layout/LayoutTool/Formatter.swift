@@ -11,7 +11,7 @@ func format(_ files: [String]) -> (filesChecked: Int, filesUpdated: Int, errors:
             do {
                 let data = try Data(contentsOf: inputURL)
                 if let input = String(data: data, encoding: .utf8),
-                    let xml = try parseLayoutXML(data, for: inputURL)
+                   let xml = try parseLayoutXML(data, for: inputURL)
                 {
                     checked = true
                     let output = try format(xml)

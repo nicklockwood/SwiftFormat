@@ -492,8 +492,8 @@ public extension Mesh {
             // seal loose ends
             // TODO: improve this by not adding backfaces inside closed subsectors
             if let first = vertices.first?.position,
-                let last = vertices.last?.position,
-                first != last, first.x != 0 || last.x != 0
+               let last = vertices.last?.position,
+               first != last, first.x != 0 || last.x != 0
             {
                 polygons += polygons.map { $0.inverted() }
             }
@@ -572,7 +572,7 @@ public extension Mesh {
             // TODO: better handling of case where e0 and e1 counts don't match
             let invert: Bool
             if let n = prev.plane?.normal,
-                let p0p1 = directionBetweenShapes(prev, path), p0p1.dot(n) > 0
+               let p0p1 = directionBetweenShapes(prev, path), p0p1.dot(n) > 0
             {
                 invert = false
             } else {
@@ -613,7 +613,7 @@ public extension Mesh {
         }
         if !isClosed, var polygon = Polygon(shape: prev, material: material) {
             if let p0p1 = directionBetweenShapes(shapes[shapes.count - 2], prev),
-                p0p1.dot(polygon.plane.normal) < 0
+               p0p1.dot(polygon.plane.normal) < 0
             {
                 polygon = polygon.inverted()
             }

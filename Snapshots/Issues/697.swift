@@ -839,7 +839,7 @@ extension _FirestoreDecoder {
     guard !(value is NSNull) else { return nil }
 
     guard let number = value as? NSNumber, number !== kCFBooleanTrue,
-      number !== kCFBooleanFalse else {
+          number !== kCFBooleanFalse else {
       throw DecodingError._typeMismatch(at: codingPath, expectation: type, reality: value)
     }
 
@@ -858,7 +858,7 @@ extension _FirestoreDecoder {
     guard !(value is NSNull) else { return nil }
 
     guard let number = value as? NSNumber, number !== kCFBooleanTrue,
-      number !== kCFBooleanFalse else {
+          number !== kCFBooleanFalse else {
       throw DecodingError._typeMismatch(at: codingPath, expectation: type, reality: value)
     }
 
@@ -877,7 +877,7 @@ extension _FirestoreDecoder {
     guard !(value is NSNull) else { return nil }
 
     guard let number = value as? NSNumber, number !== kCFBooleanTrue,
-      number !== kCFBooleanFalse else {
+          number !== kCFBooleanFalse else {
       throw DecodingError._typeMismatch(at: codingPath, expectation: type, reality: value)
     }
 
@@ -896,7 +896,7 @@ extension _FirestoreDecoder {
     guard !(value is NSNull) else { return nil }
 
     guard let number = value as? NSNumber, number !== kCFBooleanTrue,
-      number !== kCFBooleanFalse else {
+          number !== kCFBooleanFalse else {
       throw DecodingError._typeMismatch(at: codingPath, expectation: type, reality: value)
     }
 
@@ -915,7 +915,7 @@ extension _FirestoreDecoder {
     guard !(value is NSNull) else { return nil }
 
     guard let number = value as? NSNumber, number !== kCFBooleanTrue,
-      number !== kCFBooleanFalse else {
+          number !== kCFBooleanFalse else {
       throw DecodingError._typeMismatch(at: codingPath, expectation: type, reality: value)
     }
 
@@ -934,7 +934,7 @@ extension _FirestoreDecoder {
     guard !(value is NSNull) else { return nil }
 
     guard let number = value as? NSNumber, number !== kCFBooleanTrue,
-      number !== kCFBooleanFalse else {
+          number !== kCFBooleanFalse else {
       throw DecodingError._typeMismatch(at: codingPath, expectation: type, reality: value)
     }
 
@@ -953,7 +953,7 @@ extension _FirestoreDecoder {
     guard !(value is NSNull) else { return nil }
 
     guard let number = value as? NSNumber, number !== kCFBooleanTrue,
-      number !== kCFBooleanFalse else {
+          number !== kCFBooleanFalse else {
       throw DecodingError._typeMismatch(at: codingPath, expectation: type, reality: value)
     }
 
@@ -972,7 +972,7 @@ extension _FirestoreDecoder {
     guard !(value is NSNull) else { return nil }
 
     guard let number = value as? NSNumber, number !== kCFBooleanTrue,
-      number !== kCFBooleanFalse else {
+          number !== kCFBooleanFalse else {
       throw DecodingError._typeMismatch(at: codingPath, expectation: type, reality: value)
     }
 
@@ -991,7 +991,7 @@ extension _FirestoreDecoder {
     guard !(value is NSNull) else { return nil }
 
     guard let number = value as? NSNumber, number !== kCFBooleanTrue,
-      number !== kCFBooleanFalse else {
+          number !== kCFBooleanFalse else {
       throw DecodingError._typeMismatch(at: codingPath, expectation: type, reality: value)
     }
 
@@ -1010,7 +1010,7 @@ extension _FirestoreDecoder {
     guard !(value is NSNull) else { return nil }
 
     guard let number = value as? NSNumber, number !== kCFBooleanTrue,
-      number !== kCFBooleanFalse else {
+          number !== kCFBooleanFalse else {
       throw DecodingError._typeMismatch(at: codingPath, expectation: type, reality: value)
     }
 

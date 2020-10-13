@@ -72,9 +72,9 @@ private extension ArraySlice where Element == Token {
     mutating func readDeclaration() -> Statement? {
         let start = self
         guard self.popFirst() == .let,
-            case Token.identifier(let name)? = self.popFirst(),
-            self.popFirst() == .assign,
-            let value = self.readExpression()
+              case Token.identifier(let name)? = self.popFirst(),
+              self.popFirst() == .assign,
+              let value = self.readExpression()
         else {
             self = start
             return nil

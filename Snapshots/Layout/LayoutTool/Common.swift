@@ -332,7 +332,7 @@ func attributeIsString(_ key: String, inNode node: XMLNode) -> Bool? {
     case "UIColor",
          "CGColor":
         if let expression = node.attributes[key], !expression.contains("{"),
-            expression.contains("rgb(") || expression.contains("rgba(")
+           expression.contains("rgb(") || expression.contains("rgba(")
         {
             return false
         }

@@ -88,7 +88,7 @@ extension NSObject {
                 if let cattribs = property_getAttributes(cprop) {
                     var name = String(cString: cname)
                     guard !name.contains("_"), // We don't want to mess with private stuff
-                        allProperties[name] == nil
+                          allProperties[name] == nil
                     else {
                         continue
                     }
@@ -103,7 +103,7 @@ extension NSObject {
                         continue
                     }
                     if case let .any(type) = type.kind, type is Bool.Type,
-                        let attrib = attribs.first(where: { $0.hasPrefix("Gis") })
+                       let attrib = attribs.first(where: { $0.hasPrefix("Gis") })
                     {
                         name = String(attrib.unicodeScalars.dropFirst())
                     }
@@ -125,7 +125,7 @@ extension NSObject {
                 let selector: Selector = method_getName(method)
                 var name = "\(selector)"
                 guard name.hasPrefix("set"), let colonRange = name.range(of: ":"),
-                    colonRange.upperBound == name.endIndex, !name.hasPrefix("set_")
+                      colonRange.upperBound == name.endIndex, !name.hasPrefix("set_")
                 else {
                     continue
                 }
@@ -148,7 +148,7 @@ extension NSObject {
                     continue
                 }
                 if case let .any(type) = type.kind, type is Bool.Type,
-                    instancesRespond(to: Selector(isName))
+                   instancesRespond(to: Selector(isName))
                 {
                     name = isName
                 }

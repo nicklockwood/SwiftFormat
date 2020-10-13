@@ -356,7 +356,7 @@ public extension UITableView {
             // permanently hidden, which breaks layout. figure out why that is
         }
         guard let layoutsData = objc_getAssociatedObject(self, &headerDataKey) as? NSMutableDictionary,
-            let layoutData = layoutsData[identifier] as? LayoutData
+              let layoutData = layoutsData[identifier] as? LayoutData
         else {
             return nil
         }
@@ -424,7 +424,7 @@ public extension UITableView {
             return node
         }
         guard let layoutsData = objc_getAssociatedObject(self, &cellDataKey) as? NSMutableDictionary,
-            let layoutData = layoutsData[identifier] as? LayoutData
+              let layoutData = layoutsData[identifier] as? LayoutData
         else {
             return nil
         }
@@ -511,7 +511,7 @@ extension UITableViewHeaderFooterView: LayoutBacked {
             }
         }()
         if node.expressions.keys.contains(where: { $0.hasPrefix("backgroundView.") }),
-            !node.expressions.keys.contains("backgroundView")
+           !node.expressions.keys.contains("backgroundView")
         {
             // Add a background view if required
             view.backgroundView = UIView(frame: view.bounds)
@@ -622,13 +622,13 @@ extension UITableViewCell: LayoutBacked {
             }
         }()
         if node.expressions.keys.contains(where: { $0.hasPrefix("backgroundView.") }),
-            !node.expressions.keys.contains("backgroundView")
+           !node.expressions.keys.contains("backgroundView")
         {
             // Add a backgroundView view if required
             cell.backgroundView = UIView(frame: cell.bounds)
         }
         if node.expressions.keys.contains(where: { $0.hasPrefix("selectedBackgroundView.") }),
-            !node.expressions.keys.contains("selectedBackgroundView")
+           !node.expressions.keys.contains("selectedBackgroundView")
         {
             // Add a selectedBackground view if required
             cell.selectedBackgroundView = UIView(frame: cell.bounds)

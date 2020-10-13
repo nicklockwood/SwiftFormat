@@ -97,7 +97,7 @@ private extension Consumer {
         func _character(for charset: Charset) -> UnicodeScalar? {
             let ranges = _ranges(for: charset)
             if !ranges.contains(","), let range = charset.ranges.first,
-                range.lowerBound == range.upperBound
+               range.lowerBound == range.upperBound
             {
                 return UnicodeScalar(range.lowerBound)
             }
@@ -1205,7 +1205,7 @@ private extension Consumer {
         for name in functions.keys {
             let body = functions[name]!
             guard !body.contains("\n"),
-                let firstRange = rangeOf(name, in: result, after: result.startIndex)
+                  let firstRange = rangeOf(name, in: result, after: result.startIndex)
             else {
                 continue // Not inlinable
             }

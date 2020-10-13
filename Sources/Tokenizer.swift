@@ -483,7 +483,7 @@ extension Token {
         case .identifier, .number, .operator(_, .postfix),
              .endOfScope(")"), .endOfScope("]"),
              .endOfScope("}"), .endOfScope(">"),
-             .endOfScope("\""), .endOfScope("\"\"\""):
+             .endOfScope where isStringDelimiter:
             return true
         case let .keyword(name) where name.hasPrefix("#"):
             return true
@@ -498,7 +498,7 @@ extension Token {
             return false
         case .identifier, .number, .operator,
              .startOfScope("("), .startOfScope("["), .startOfScope("{"),
-             .startOfScope("\""), .startOfScope("\"\"\""):
+             .startOfScope where isStringDelimiter:
             return true
         case let .keyword(name) where name.hasPrefix("#"):
             return true
@@ -1539,7 +1539,7 @@ public func tokenize(_ source: String) -> [Token] {
                     else {
                         fallthrough
                     }
-                case .identifier, .number, .startOfScope("\""), .startOfScope("\"\"\""):
+                case .startOfScope where token.isStringDelimiter, .identifier, .number:
                     convertClosingChevronToOperator(at: prevIndex, andOpeningChevron: true)
                     processToken()
                     return

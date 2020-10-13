@@ -417,7 +417,7 @@ extension Formatter {
                 }
             }
             fallthrough
-        case .identifier, .endOfScope("\""), .number:
+        case .endOfScope where tokens[prevIndex].isStringDelimiter, .identifier, .number:
             if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
                 isAccessorKeyword(at: nextIndex) || isAccessorKeyword(at: prevIndex)
             {

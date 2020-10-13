@@ -428,41 +428,48 @@ class ParsingHelpersTests: XCTestCase {
 
     func testParameterBodyAfterStringIsNotClosure() {
         let formatter = Formatter(tokenize("""
-        var withBody4: String = "bar" {
+        var foo: String = "bar" {
             didSet { print("didSet") }
         }
         """))
-
         XCTAssertFalse(formatter.isStartOfClosure(at: 13))
+    }
+
+    func testParameterBodyAfterMultilineStringIsNotClosure() {
+        let formatter = Formatter(tokenize("""
+        var foo: String = \"""
+        bar
+        \""" {
+            didSet { print("didSet") }
+        }
+        """))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 15))
     }
 
     func testParameterBodyAfterNumberIsNotClosure() {
         let formatter = Formatter(tokenize("""
-        var withBody4: Int = 10 {
+        var foo: Int = 10 {
             didSet { print("didSet") }
         }
         """))
-
         XCTAssertFalse(formatter.isStartOfClosure(at: 11))
     }
 
     func testParameterBodyAfterClosureIsNotClosure() {
         let formatter = Formatter(tokenize("""
-        var withBody5: () -> String = { "bar" } {
+        var foo: () -> String = { "bar" } {
             didSet { print("didSet") }
         }
         """))
-
         XCTAssertFalse(formatter.isStartOfClosure(at: 22))
     }
 
     func testParameterBodyAfterExecutedClosureIsNotClosure() {
         let formatter = Formatter(tokenize("""
-        var withBody6: String = { "bar" }() {
+        var foo: String = { "bar" }() {
             didSet { print("didSet") }
         }
         """))
-
         XCTAssertFalse(formatter.isStartOfClosure(at: 19))
     }
 

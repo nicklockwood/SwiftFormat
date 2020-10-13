@@ -378,6 +378,7 @@ extension ParsingHelpersTests {
         ("testOptionalReturningFunctionBracesNotTreatedAsClosure", testOptionalReturningFunctionBracesNotTreatedAsClosure),
         ("testParameterBodyAfterClosureIsNotClosure", testParameterBodyAfterClosureIsNotClosure),
         ("testParameterBodyAfterExecutedClosureIsNotClosure", testParameterBodyAfterExecutedClosureIsNotClosure),
+        ("testParameterBodyAfterMultilineStringIsNotClosure", testParameterBodyAfterMultilineStringIsNotClosure),
         ("testParameterBodyAfterNumberIsNotClosure", testParameterBodyAfterNumberIsNotClosure),
         ("testParameterBodyAfterStringIsNotClosure", testParameterBodyAfterStringIsNotClosure),
         ("testParseClassFuncDeclarationCorrectly", testParseClassFuncDeclarationCorrectly),

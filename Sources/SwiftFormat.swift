@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-let swiftFormatVersion = "0.46.3"
+let swiftFormatVersion = "0.47.0"
 public let version = swiftFormatVersion
 
 /// The standard SwiftFormat config file name
@@ -150,7 +150,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
     do {
         let resourceValues = try getResourceValues(for: inputURL.standardizedFileURL, keys: keys)
         if !fileOptions.followSymlinks,
-            resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true
+           resourceValues.isAliasFile == true || resourceValues.isSymbolicLink == true
         {
             return [FormatError.options("Symbolic link or alias was skipped: \(inputURL.path)")]
         }
@@ -161,7 +161,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
         return []
     }
     if resourceValues.isDirectory == false,
-        !fileOptions.supportedFileExtensions.contains(inputURL.pathExtension)
+       !fileOptions.supportedFileExtensions.contains(inputURL.pathExtension)
     {
         return [FormatError.options("Unsupported file type: \(inputURL.path)")]
     }
@@ -298,7 +298,7 @@ private func shouldSkipFile(_ inputURL: URL, with options: Options) -> Bool {
             continue
         }
         if let unexcluded = options.fileOptions?.unexcludedGlobs,
-            unexcluded.contains(where: { $0.matches(path) })
+           unexcluded.contains(where: { $0.matches(path) })
         {
             return false
         }
@@ -506,14 +506,14 @@ private func applyRules(
     // Check if required FileInfo is available
     if rules.contains(FormatRules.fileHeader) {
         if options.fileHeader.rawValue.contains("{created"),
-            options.fileInfo.creationDate == nil
+           options.fileInfo.creationDate == nil
         {
             throw FormatError.options(
                 "Failed to apply {created} template in file header as file info is unavailable"
             )
         }
         if options.fileHeader.rawValue.contains("{file"),
-            options.fileInfo.fileName == nil
+           options.fileInfo.fileName == nil
         {
             throw FormatError.options(
                 "Failed to apply {file} template in file header as file name was not provided"

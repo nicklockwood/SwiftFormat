@@ -60,8 +60,8 @@ extension Rule: Comparable {
     }
 }
 
-extension Rule {
-    fileprivate init(_ ruleRep: (String, Bool)) {
+private extension Rule {
+    init(_ ruleRep: (String, Bool)) {
         self.init(name: ruleRep.0, isEnabled: ruleRep.1)
     }
 }

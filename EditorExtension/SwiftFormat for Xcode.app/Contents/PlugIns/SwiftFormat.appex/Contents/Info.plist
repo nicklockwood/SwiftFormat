@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BuildMachineOSBuild</key>
-	<string>19G2021</string>
+	<string>19H2</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
@@ -41,7 +41,7 @@
 	<key>DTXcodeBuild</key>
 	<string>12A7209</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.11</string>
+	<string>10.14</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionAttributes</key>

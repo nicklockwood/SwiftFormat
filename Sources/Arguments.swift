@@ -131,11 +131,11 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             arg = String(arg.dropLast())
         }
         if let existing = namedArgs[name], !existing.isEmpty,
-            // TODO: find a more general way to represent merge-able options
-            ["exclude", "unexclude", "disable", "enable", "rules"].contains(name) ||
-            Descriptors.all.contains(where: {
-                $0.argumentName == name && $0.isSetType
-            })
+           // TODO: find a more general way to represent merge-able options
+           ["exclude", "unexclude", "disable", "enable", "rules"].contains(name) ||
+           Descriptors.all.contains(where: {
+               $0.argumentName == name && $0.isSetType
+           })
         {
             namedArgs[name] = existing + "," + arg
         } else {
@@ -250,14 +250,14 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
     var output = args
     // Merge excluded urls
     if let exclude = output["exclude"].map(parseCommaDelimitedList),
-        var excluded = input["exclude"].map({ Set(parseCommaDelimitedList($0)) })
+       var excluded = input["exclude"].map({ Set(parseCommaDelimitedList($0)) })
     {
         excluded.formUnion(exclude)
         output["exclude"] = Array(excluded).sorted().joined(separator: ",")
     }
     // Merge unexcluded urls
     if let unexclude = output["unexclude"].map(parseCommaDelimitedList),
-        var unexcluded = input["unexclude"].map({ Set(parseCommaDelimitedList($0)) })
+       var unexcluded = input["unexclude"].map({ Set(parseCommaDelimitedList($0)) })
     {
         unexcluded.formUnion(unexclude)
         output["unexclude"] = Array(unexcluded).sorted().joined(separator: ",")
@@ -443,7 +443,7 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             // Special case for swiftVersion
             // TODO: find a better solution for this
             if descriptor.argumentName == Descriptors.swiftVersion.argumentName,
-                value == Version.undefined.rawValue
+               value == Version.undefined.rawValue
             {
                 continue
             }

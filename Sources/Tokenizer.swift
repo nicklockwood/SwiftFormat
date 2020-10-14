@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.46.3
+//  Version 0.47.0
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -261,10 +261,10 @@ public extension Token {
                             output.append("\'")
                         case "u":
                             guard input.read("{"),
-                                let hex = input.readCharacters(where: { $0.isHexDigit }),
-                                input.read("}"),
-                                let codepoint = Int(hex, radix: 16),
-                                let c = UnicodeScalar(codepoint)
+                                  let hex = input.readCharacters(where: { $0.isHexDigit }),
+                                  input.read("}"),
+                                  let codepoint = Int(hex, radix: 16),
+                                  let c = UnicodeScalar(codepoint)
                             else {
                                 // Invalid. Recover and continue
                                 continue
@@ -1118,8 +1118,8 @@ public func tokenize(_ source: String) -> [Token] {
                 for index in (scopeIndexStack.last! ..< tokens.count - 1).reversed() {
                     let nextToken = tokens[index + 1]
                     guard case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak,
-                        (nextToken.isMultilineStringDelimiter && nextToken.isEndOfScope) ||
-                        nextToken.isStringBody
+                          (nextToken.isMultilineStringDelimiter && nextToken.isEndOfScope) ||
+                          nextToken.isStringBody
                     else {
                         if nextToken.isMultilineStringDelimiter, nextToken.isStartOfScope {
                             offsetStack.removeLast()
@@ -1246,7 +1246,7 @@ public func tokenize(_ source: String) -> [Token] {
                 }
                 for index in range.reversed() {
                     guard case let .space(indent) = tokens[index], tokens[index - 1].isLinebreak,
-                        indent.hasPrefix(baseIndent)
+                          indent.hasPrefix(baseIndent)
                     else {
                         continue
                     }
@@ -1315,7 +1315,7 @@ public func tokenize(_ source: String) -> [Token] {
         tokens[i] = .operator(">", .none)
         stitchOperators(at: i)
         if let previousIndex = index(of: .nonSpaceOrComment, before: i),
-            tokens[previousIndex] == .endOfScope(">")
+           tokens[previousIndex] == .endOfScope(">")
         {
             convertClosingChevronToOperator(at: previousIndex, andOpeningChevron: true)
         }
@@ -1340,8 +1340,8 @@ public func tokenize(_ source: String) -> [Token] {
             return
         }
         while let nextToken: Token = index + 1 < tokens.count ? tokens[index + 1] : nil,
-            case let .operator(nextString, _) = nextToken,
-            string.hasPrefix(".") || !nextString.contains(".")
+              case let .operator(nextString, _) = nextToken,
+              string.hasPrefix(".") || !nextString.contains(".")
         {
             if scopeIndexStack.last == index {
                 // In case of a ? previously interpreted as a ternary
@@ -1353,8 +1353,8 @@ public func tokenize(_ source: String) -> [Token] {
         }
         var index = index
         while let prevToken: Token = index > 0 ? tokens[index - 1] : nil,
-            case let .operator(prevString, _) = prevToken, !isUnwrapOperator(at: index - 1),
-            prevString.hasPrefix(".") || !string.contains(".")
+              case let .operator(prevString, _) = prevToken, !isUnwrapOperator(at: index - 1),
+              prevString.hasPrefix(".") || !string.contains(".")
         {
             if scopeIndexStack.last == index - 1 {
                 // In case of a ? previously interpreted as a ternary
@@ -1477,7 +1477,7 @@ public func tokenize(_ source: String) -> [Token] {
         case let .keyword(string):
             // Track switch/case statements
             if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
-                case .operator(".", _) = tokens[prevIndex]
+               case .operator(".", _) = tokens[prevIndex]
             {
                 tokens[tokens.count - 1] = .identifier(string)
                 processToken()
@@ -1501,9 +1501,9 @@ public func tokenize(_ source: String) -> [Token] {
             stitchOperators(at: count - 1)
         case .startOfScope("<") where count >= 2:
             if tokens[count - 2].isOperator,
-                index(of: .nonSpaceOrCommentOrLinebreak, before: count - 2).map({
-                    ![.keyword("func"), .keyword("init")].contains(tokens[$0])
-                }) ?? true
+               index(of: .nonSpaceOrCommentOrLinebreak, before: count - 2).map({
+                   ![.keyword("func"), .keyword("init")].contains(tokens[$0])
+               }) ?? true
             {
                 tokens[tokens.count - 1] = .operator("<", .none)
                 stitchOperators(at: count - 1)
@@ -1525,17 +1525,17 @@ public func tokenize(_ source: String) -> [Token] {
         }
         if !token.isSpaceOrCommentOrLinebreak {
             if let prevIndex = index(of: .nonSpaceOrComment, before: count - 1),
-                case .endOfScope(">") = tokens[prevIndex]
+               case .endOfScope(">") = tokens[prevIndex]
             {
                 // Fix up misidentified generic that is actually a pair of operators
                 switch token {
                 case .operator("=", _) where prevIndex == count - 2:
                     guard let startIndex = index(of: .startOfScope, before: count - 1),
-                        tokens[startIndex] == .startOfScope("<"),
-                        let prevIndex = index(of: .nonSpaceOrComment, before: startIndex),
-                        case .identifier = tokens[prevIndex],
-                        let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
-                        tokens[prevPrevIndex] == .delimiter(":")
+                          tokens[startIndex] == .startOfScope("<"),
+                          let prevIndex = index(of: .nonSpaceOrComment, before: startIndex),
+                          case .identifier = tokens[prevIndex],
+                          let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                          tokens[prevPrevIndex] == .delimiter(":")
                     else {
                         fallthrough
                     }
@@ -1655,7 +1655,7 @@ public func tokenize(_ source: String) -> [Token] {
                         if let keywordIndex = index(of: .keyword, before: scopeIndex) {
                             var keyword = tokens[keywordIndex]
                             if case .keyword("where") = keyword,
-                                let keywordIndex = index(of: .keyword, before: keywordIndex)
+                               let keywordIndex = index(of: .keyword, before: keywordIndex)
                             {
                                 keyword = tokens[keywordIndex]
                             }
@@ -1718,7 +1718,7 @@ public func tokenize(_ source: String) -> [Token] {
             return
         case let .endOfScope(string):
             if ["case", "default"].contains(string), let scopeIndex = scopeIndexStack.last,
-                tokens[scopeIndex] == .startOfScope("#if")
+               tokens[scopeIndex] == .startOfScope("#if")
             {
                 scopeIndexStack.append(tokens.count - 1)
                 return

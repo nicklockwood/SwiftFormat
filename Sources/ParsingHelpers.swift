@@ -73,7 +73,7 @@ public extension Formatter {
             switch token {
             case .keyword("#colorLiteral"), .keyword("#imageLiteral"):
                 guard let startIndex = self.index(of: .startOfScope("("), after: index),
-                    let endIndex = endOfScope(at: startIndex)
+                      let endIndex = endOfScope(at: startIndex)
                 else {
                     fallthrough
                 }
@@ -111,7 +111,7 @@ public extension Formatter {
                 result += string
             case .keyword("#colorLiteral"), .keyword("#imageLiteral"):
                 guard let startIndex = self.index(of: .startOfScope("("), after: index),
-                    let endIndex = endOfScope(at: startIndex)
+                      let endIndex = endOfScope(at: startIndex)
                 else {
                     fallthrough
                 }
@@ -179,7 +179,7 @@ public extension Formatter {
             case .keyword("as"):
                 wasOperator = true
                 if case let .operator(name, .postfix)? = self.token(at: i + 1),
-                    ["?", "!"].contains(name)
+                   ["?", "!"].contains(name)
                 {
                     i += 1
                 }
@@ -223,9 +223,9 @@ extension Formatter {
                 }
             case .endOfScope(")"):
                 guard let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
-                    last(.nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
-                        $0.isAttribute || _FormatRules.aclModifiers.contains($0.string)
-                    }) != nil
+                      last(.nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
+                          $0.isAttribute || _FormatRules.aclModifiers.contains($0.string)
+                      }) != nil
                 else {
                     return false
                 }
@@ -358,8 +358,8 @@ extension Formatter {
 
         if isConditionalStatement(at: i) {
             if let endIndex = endOfScope(at: i),
-                next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") ||
-                next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{")
+               next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") ||
+               next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{")
             {
                 return true
             }
@@ -384,7 +384,7 @@ extension Formatter {
             return !isStartOfClosure(at: startOfScope)
         case .endOfScope(")"), .endOfScope(">"):
             guard var startOfScope = index(of: .startOfScope, before: prevIndex),
-                var prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope)
+                  var prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope)
             else {
                 return true
             }
@@ -409,7 +409,7 @@ extension Formatter {
                 return false
             default:
                 if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                    isAccessorKeyword(at: nextIndex) || isAccessorKeyword(at: prevIndex)
+                   isAccessorKeyword(at: nextIndex) || isAccessorKeyword(at: prevIndex)
                 {
                     return false
                 } else {
@@ -419,7 +419,7 @@ extension Formatter {
             fallthrough
         case .endOfScope where tokens[prevIndex].isStringDelimiter, .identifier, .number:
             if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                isAccessorKeyword(at: nextIndex) || isAccessorKeyword(at: prevIndex)
+               isAccessorKeyword(at: nextIndex) || isAccessorKeyword(at: prevIndex)
             {
                 return false
             }
@@ -433,7 +433,7 @@ extension Formatter {
                 }
                 var index = prevKeywordIndex
                 while let nextIndex = self.index(of: .nonSpaceOrComment, after: index),
-                    nextIndex < i
+                      nextIndex < i
                 {
                     switch tokens[nextIndex] {
                     case .operator("=", .infix):
@@ -445,7 +445,7 @@ extension Formatter {
                             return true
                         }
                         if tokens[nextIndex] != .startOfScope("{"),
-                            isEndOfStatement(at: index), isStartOfStatement(at: nextIndex)
+                           isEndOfStatement(at: index), isStartOfStatement(at: nextIndex)
                         {
                             return true
                         }
@@ -498,13 +498,13 @@ extension Formatter {
             return false
         }
         if tokens[prevIndex] == .endOfScope("}"),
-            let startIndex = index(of: .startOfScope("{"), before: prevIndex),
-            let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex)
+           let startIndex = index(of: .startOfScope("{"), before: prevIndex),
+           let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex)
         {
             prevIndex = prev
             if tokens[prevIndex] == .endOfScope(")"),
-                let startIndex = index(of: .startOfScope("("), before: prevIndex),
-                let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex)
+               let startIndex = index(of: .startOfScope("("), before: prevIndex),
+               let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex)
             {
                 prevIndex = prev
             }
@@ -561,7 +561,7 @@ extension Formatter {
 
     func lastSignificantKeyword(at i: Int, excluding: [String] = []) -> String? {
         guard let index = indexOfLastSignificantKeyword(at: i, excluding: excluding),
-            case let .keyword(keyword) = tokens[index]
+              case let .keyword(keyword) = tokens[index]
         else {
             return nil
         }
@@ -570,8 +570,8 @@ extension Formatter {
 
     func indexOfLastSignificantKeyword(at i: Int, excluding: [String] = []) -> Int? {
         guard let token = token(at: i),
-            let index = token.isKeyword ? i : index(of: .keyword, before: i),
-            case let .keyword(keyword) = tokens[index]
+              let index = token.isKeyword ? i : index(of: .keyword, before: i),
+              case let .keyword(keyword) = tokens[index]
         else {
             return nil
         }
@@ -583,8 +583,8 @@ extension Formatter {
             return indexOfLastSignificantKeyword(at: index - 1, excluding: excluding)
         default:
             guard let braceIndex = self.index(of: .startOfScope("{"), in: index ..< i),
-                let endIndex = endOfScope(at: braceIndex),
-                next(.nonSpaceOrComment, after: endIndex) != .startOfScope("(")
+                  let endIndex = endOfScope(at: braceIndex),
+                  next(.nonSpaceOrComment, after: endIndex) != .startOfScope("(")
             else {
                 return index
             }
@@ -608,8 +608,8 @@ extension Formatter {
             return i
         case .endOfScope(")"):
             guard let openParenIndex = index(of: .startOfScope("("), before: i),
-                let prevTokenIndex = index(of: .nonSpaceOrComment, before: openParenIndex),
-                tokens[prevTokenIndex].isAttribute
+                  let prevTokenIndex = index(of: .nonSpaceOrComment, before: openParenIndex),
+                  tokens[prevTokenIndex].isAttribute
             else {
                 return nil
             }
@@ -673,7 +673,7 @@ extension Formatter {
             }
         default:
             if let attributeIndex = startOfAttribute(at: i),
-                let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: attributeIndex)
+               let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: attributeIndex)
             {
                 return isEndOfStatement(at: prevIndex, in: scope)
             }
@@ -711,8 +711,8 @@ extension Formatter {
             return false
         case .startOfScope("{") where isStartOfClosure(at: i):
             guard last(.nonSpaceOrComment, before: i)?.isLinebreak == true,
-                let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i),
-                let prevToken = self.token(at: prevIndex)
+                  let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                  let prevToken = self.token(at: prevIndex)
             else {
                 return false
             }
@@ -720,9 +720,9 @@ extension Formatter {
                 return false
             }
             if [.endOfScope(")"), .endOfScope("]")].contains(prevToken),
-                let startIndex = index(of: .startOfScope, before: prevIndex),
-                !tokens[startIndex ..< prevIndex].contains(where: { $0.isLinebreak })
-                || indentForLine(at: startIndex) == indentForLine(at: prevIndex)
+               let startIndex = index(of: .startOfScope, before: prevIndex),
+               !tokens[startIndex ..< prevIndex].contains(where: { $0.isLinebreak })
+               || indentForLine(at: startIndex) == indentForLine(at: prevIndex)
             {
                 return false
             }
@@ -734,7 +734,7 @@ extension Formatter {
 
     func isSubscriptOrFunctionCall(at i: Int) -> Bool {
         guard case let .startOfScope(string)? = token(at: i), ["[", "("].contains(string),
-            let prevToken = last(.nonSpaceOrComment, before: i)
+              let prevToken = last(.nonSpaceOrComment, before: i)
         else {
             return false
         }
@@ -771,8 +771,8 @@ extension Formatter {
                 return false
             }
             if tokens[prevIndex] == .identifier("View"),
-                let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
-                [.delimiter(":"), .identifier("some")].contains(prevToken)
+               let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
+               [.delimiter(":"), .identifier("some")].contains(prevToken)
             {
                 return true
             }
@@ -795,7 +795,7 @@ extension Formatter {
                 }
             case "Self", "Any":
                 if let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i),
-                    [.delimiter(":"), .operator("->", .infix)].contains(prevToken)
+                   [.delimiter(":"), .operator("->", .infix)].contains(prevToken)
                 {
                     // TODO: check for other cases where it's safe to use unescaped
                     return false
@@ -865,8 +865,8 @@ extension Formatter {
     func isParameterList(at i: Int) -> Bool {
         assert([.startOfScope("("), .startOfScope("<")].contains(tokens[i]))
         if let endIndex = endOfScope(at: i),
-            let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
-            [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken)
+           let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
+           [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken)
         {
             return true
         }
@@ -930,8 +930,8 @@ extension Formatter {
             // Gather comments
             var prevIndex = index(of: .linebreak, before: startIndex) ?? 0
             while startIndex > 0,
-                next(.nonSpace, after: prevIndex)?.isComment == true,
-                next(.nonSpaceOrComment, after: prevIndex)?.isLinebreak == true
+                  next(.nonSpace, after: prevIndex)?.isComment == true,
+                  next(.nonSpaceOrComment, after: prevIndex)?.isLinebreak == true
             {
                 if prevIndex == 0, index(of: .startOfScope("#if"), before: startIndex) != nil {
                     break
@@ -1084,8 +1084,8 @@ extension Formatter {
         var index = index
 
         while token(at: index + 1)?.string == ".",
-            let nextIdentifier = token(at: index + 2),
-            nextIdentifier.is(.identifier) == true
+              let nextIdentifier = token(at: index + 2),
+              nextIdentifier.is(.identifier) == true
         {
             name = "\(name).\(nextIdentifier.string)"
             index += 2
@@ -1097,13 +1097,13 @@ extension Formatter {
     // get type of declaration starting at index of declaration keyword
     func declarationType(at index: Int) -> String? {
         guard let token = self.token(at: index), token.isDeclarationTypeKeyword,
-            case let .keyword(keyword) = token
+              case let .keyword(keyword) = token
         else {
             return nil
         }
         if keyword == "class",
-            let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: index),
-            nextToken.isDeclarationTypeKeyword, case let .keyword(keyword) = nextToken
+           let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: index),
+           nextToken.isDeclarationTypeKeyword, case let .keyword(keyword) = nextToken
         {
             return keyword
         }
@@ -1184,7 +1184,7 @@ extension Formatter {
                 // For conditional compilation blocks, the `declarationKeyword` _is_ the `startOfScope`
                 // so we can immediately skip to the corresponding #endif
                 if declarationKeyword == "#if",
-                    let endOfConditionalCompilationScope = parser.endOfScope(at: searchIndex)
+                   let endOfConditionalCompilationScope = parser.endOfScope(at: searchIndex)
                 {
                     searchIndex = endOfConditionalCompilationScope
                 }
@@ -1192,8 +1192,8 @@ extension Formatter {
                 // Symbol imports (like `import class Module.Type`) will have an extra `isDeclarationTypeKeyword`
                 // immediately following their `declarationKeyword`, so we need to skip them.
                 if declarationKeyword == "import",
-                    let symbolTypeKeywordIndex = parser.index(of: .nonSpaceOrComment, after: declarationTypeKeywordIndex),
-                    parser.tokens[symbolTypeKeywordIndex].isDeclarationTypeKeyword
+                   let symbolTypeKeywordIndex = parser.index(of: .nonSpaceOrComment, after: declarationTypeKeywordIndex),
+                   parser.tokens[symbolTypeKeywordIndex].isDeclarationTypeKeyword
                 {
                     searchIndex = symbolTypeKeywordIndex + 1
                 }
@@ -1206,9 +1206,9 @@ extension Formatter {
                     //  - `#if` tokens are `startOfScope`, but immediately represent the start of a new
                     //    conditional compilation declaration so we can't skip through them.
                     if parser.tokens[searchIndex].isStartOfScope,
-                        !parser.tokens[searchIndex].isComment,
-                        parser.tokens[searchIndex].string != "#if",
-                        let endOfScope = parser.endOfScope(at: searchIndex)
+                       !parser.tokens[searchIndex].isComment,
+                       parser.tokens[searchIndex].string != "#if",
+                       let endOfScope = parser.endOfScope(at: searchIndex)
                     {
                         searchIndex = endOfScope + 1
                     } else if parser.tokens[searchIndex].isDeclarationTypeKeyword
@@ -1240,7 +1240,7 @@ extension Formatter {
 
                             while searchIndex > declarationTypeKeywordIndex, startOfScope == nil {
                                 if parser.tokens[searchIndex].isStartOfScope,
-                                    parser.endOfScope(at: searchIndex) == encounteredEndOfScope
+                                   parser.endOfScope(at: searchIndex) == encounteredEndOfScope
                                 {
                                     startOfScope = searchIndex
                                     // Confirm whether or not this scope should be grouped with the
@@ -1278,7 +1278,7 @@ extension Formatter {
             // Prefer keeping linebreaks at the end of a declaration's tokens,
             // instead of the start of the next delaration's tokens
             while let linebreakSearchIndex = endOfDeclaration,
-                parser.token(at: linebreakSearchIndex + 1)?.isLinebreak == true
+                  parser.token(at: linebreakSearchIndex + 1)?.isLinebreak == true
             {
                 endOfDeclaration = linebreakSearchIndex + 1
             }
@@ -1320,11 +1320,11 @@ extension Formatter {
             let typelikeKeywords = ["class", "struct", "enum", "protocol", "extension"]
 
             if typelikeKeywords.contains(declaration.keyword),
-                let declarationTypeKeywordIndex = declarationParser
-                .index(after: -1, where: { $0.string == declaration.keyword }),
-                let startOfBody = declarationParser
-                .index(of: .startOfScope("{"), after: declarationTypeKeywordIndex),
-                let endOfBody = declarationParser.endOfScope(at: startOfBody)
+               let declarationTypeKeywordIndex = declarationParser
+               .index(after: -1, where: { $0.string == declaration.keyword }),
+               let startOfBody = declarationParser
+               .index(of: .startOfScope("{"), after: declarationTypeKeywordIndex),
+               let endOfBody = declarationParser.endOfScope(at: startOfBody)
             {
                 let (startTokens, bodyDeclarations, endTokens) = parseBody(in: startOfBody ... endOfBody)
 
@@ -1406,7 +1406,7 @@ extension Formatter {
 
         func addBreakPoint(at i: Int, relativePriority: Int) {
             guard stringLiteralDepth == 0, currentPriority + relativePriority >= lastBreakPointPriority,
-                !isInClosureArguments(at: i + 1)
+                  !isInClosureArguments(at: i + 1)
             else {
                 return
             }
@@ -1427,7 +1427,7 @@ extension Formatter {
                 return nil
             case .keyword("#colorLiteral"), .keyword("#imageLiteral"):
                 guard let startIndex = self.index(of: .startOfScope("("), after: i),
-                    let endIndex = endOfScope(at: startIndex)
+                      let endIndex = endOfScope(at: startIndex)
                 else {
                     return nil // error
                 }

@@ -86,13 +86,13 @@ extension Formatter {
                 break
             case .ifMultiline:
                 guard let openBracket = index(of: .startOfScope("{"), after: endOfFunctionScope),
-                    let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
-                    returnArrowIndex < openBracket
+                      let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
+                      returnArrowIndex < openBracket
                 else { return }
 
                 // If the return arrow isnt on its own line, wrap it
                 if let previousNonSpaceOrComment = index(of: .nonSpaceOrComment, before: returnArrowIndex),
-                    startOfLine(at: returnArrowIndex) < previousNonSpaceOrComment
+                   startOfLine(at: returnArrowIndex) < previousNonSpaceOrComment
                 {
                     insertSpace(indentForLine(at: returnArrowIndex), at: returnArrowIndex)
                     insertLinebreak(at: returnArrowIndex)
@@ -136,7 +136,7 @@ extension Formatter {
                 index += 1
             }
             while let commaIndex = self.lastIndex(of: .delimiter(","), in: i + 1 ..< index),
-                var linebreakIndex = self.index(of: .nonSpaceOrComment, after: commaIndex)
+                  var linebreakIndex = self.index(of: .nonSpaceOrComment, after: commaIndex)
             {
                 if let index = self.index(of: .nonSpace, before: linebreakIndex) {
                     linebreakIndex = index + 1
@@ -193,7 +193,7 @@ extension Formatter {
             var lastBreakIndex: Int?
             var index = firstArgumentIndex
             while let commaIndex = self.index(of: .delimiter(","), in: index ..< endOfScope),
-                var linebreakIndex = self.index(of: .nonSpaceOrComment, after: commaIndex)
+                  var linebreakIndex = self.index(of: .nonSpaceOrComment, after: commaIndex)
             {
                 if let index = self.index(of: .nonSpace, before: linebreakIndex) {
                     linebreakIndex = index + 1
@@ -253,8 +253,8 @@ extension Formatter {
             case "(":
                 /// Don't wrap color/image literals due to Xcode bug
                 guard let prevToken = self.token(at: i - 1),
-                    prevToken != .keyword("#colorLiteral"),
-                    prevToken != .keyword("#imageLiteral")
+                      prevToken != .keyword("#colorLiteral"),
+                      prevToken != .keyword("#imageLiteral")
                 else {
                     return
                 }
@@ -294,7 +294,7 @@ extension Formatter {
             }
 
             if completePartialWrapping,
-                let firstLinebreakIndex = index(of: .linebreak, in: i + 1 ..< endOfScope)
+               let firstLinebreakIndex = index(of: .linebreak, in: i + 1 ..< endOfScope)
             {
                 switch mode {
                 case .beforeFirst:
@@ -375,8 +375,8 @@ extension Formatter {
                 if currentRule == FormatRules.wrap {
                     let nextWrapIndex = indexOfNextWrap() ?? endOfLine(at: i)
                     if nextWrapIndex > lastIndex,
-                        maxWidth < lineLength(from: max(lastIndex, 0), upTo: nextWrapIndex),
-                        !willWrapAtStartOfReturnType(maxWidth: maxWidth)
+                       maxWidth < lineLength(from: max(lastIndex, 0), upTo: nextWrapIndex),
+                       !willWrapAtStartOfReturnType(maxWidth: maxWidth)
                     {
                         wrapArgumentsWithoutPartialWrapping()
                         lastIndex = nextWrapIndex
@@ -413,13 +413,13 @@ extension Formatter {
         }
 
         if token(at: index - 1)?.isSpace == true,
-            token(at: index + 1)?.isSpace == true
+           token(at: index + 1)?.isSpace == true
         {
             // Need to remove one
             removeToken(at: index + 1)
         } else if case .startOfScope = tokens[index] {
             if tokenOutsideParenRequiresSpacing(at: index - 1),
-                tokenInsideParenRequiresSpacing(at: index + 1)
+               tokenInsideParenRequiresSpacing(at: index + 1)
             {
                 // Need to insert one
                 insert(.space(" "), at: index + 1)
@@ -705,8 +705,8 @@ extension Formatter {
                 //    immediately follows the `func` keyword:
                 //    https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_function-name
                 if keyword == "func",
-                    let methodName = parser.next(.nonSpaceOrCommentOrLinebreak, after: keywordIndex),
-                    options.lifecycleMethods.contains(methodName.string)
+                   let methodName = parser.next(.nonSpaceOrCommentOrLinebreak, after: keywordIndex),
+                   options.lifecycleMethods.contains(methodName.string)
                 {
                     return .lifecycle
                 }
@@ -744,7 +744,7 @@ extension Formatter {
 
             while searchIndex < keywordIndex {
                 if let visibility = Visibility(rawValue: parser.tokens[searchIndex].string),
-                    parser.next(.nonSpaceOrComment, after: searchIndex) != .startOfScope("(")
+                   parser.next(.nonSpaceOrComment, after: searchIndex) != .startOfScope("(")
                 {
                     return visibility
                 }
@@ -794,10 +794,10 @@ extension Formatter {
                 // If there is a code block at the end of the declaration that is _not_ a closure,
                 // then this declaration has a body.
                 if let lastClosingBraceIndex = declarationParser.index(of: .endOfScope("}"), before: declarationParser.tokens.count),
-                    let lastOpeningBraceIndex = declarationParser.index(of: .startOfScope("{"), before: lastClosingBraceIndex),
-                    declarationTypeTokenIndex < lastOpeningBraceIndex,
-                    declarationTypeTokenIndex < lastClosingBraceIndex,
-                    !declarationParser.isStartOfClosure(at: lastOpeningBraceIndex)
+                   let lastOpeningBraceIndex = declarationParser.index(of: .startOfScope("{"), before: lastClosingBraceIndex),
+                   declarationTypeTokenIndex < lastOpeningBraceIndex,
+                   declarationTypeTokenIndex < lastClosingBraceIndex,
+                   !declarationParser.isStartOfClosure(at: lastOpeningBraceIndex)
                 {
                     hasBody = true
                 } else {
@@ -856,8 +856,8 @@ extension Formatter {
         var searchIndex = parser.tokens.count - 1
 
         while searchIndex > 0,
-            let token = parser.token(at: searchIndex),
-            token.isSpaceOrCommentOrLinebreak
+              let token = parser.token(at: searchIndex),
+              token.isSpaceOrCommentOrLinebreak
         {
             if token.isLinebreak {
                 numberOfTrailingLinebreaks += 1
@@ -914,7 +914,7 @@ extension Formatter {
                     let potentialSeparatorRange = commentStartIndex ..< (commentStartIndex + potentialCategorySeparator.count)
 
                     guard parser.tokens.indices.contains(potentialSeparatorRange.upperBound),
-                        let nextNonwhitespaceIndex = parser.index(of: .nonSpaceOrLinebreak, after: potentialSeparatorRange.upperBound)
+                          let nextNonwhitespaceIndex = parser.index(of: .nonSpaceOrLinebreak, after: potentialSeparatorRange.upperBound)
                     else { continue }
 
                     // Check the edit distance of this existing comment with the potential
@@ -1025,22 +1025,22 @@ extension Formatter {
 
                     // Sort primarily by category
                     if sortByCategory,
-                        let lhsCategorySortOrder = Formatter.categoryOrdering.index(of: lhs.category),
-                        let rhsCategorySortOrder = Formatter.categoryOrdering.index(of: rhs.category),
-                        lhsCategorySortOrder != rhsCategorySortOrder
+                       let lhsCategorySortOrder = Formatter.categoryOrdering.index(of: lhs.category),
+                       let rhsCategorySortOrder = Formatter.categoryOrdering.index(of: rhs.category),
+                       lhsCategorySortOrder != rhsCategorySortOrder
                     {
                         return lhsCategorySortOrder < rhsCategorySortOrder
                     }
 
                     // Within individual categories (excluding .beforeMarks), sort by the declaration type
                     if sortByType,
-                        lhs.category != .beforeMarks,
-                        rhs.category != .beforeMarks,
-                        let lhsType = lhs.type,
-                        let rhsType = rhs.type,
-                        let lhsTypeSortOrder = Formatter.categorySubordering.index(of: lhsType),
-                        let rhsTypeSortOrder = Formatter.categorySubordering.index(of: rhsType),
-                        lhsTypeSortOrder != rhsTypeSortOrder
+                       lhs.category != .beforeMarks,
+                       rhs.category != .beforeMarks,
+                       let lhsType = lhs.type,
+                       let rhsType = rhs.type,
+                       let lhsTypeSortOrder = Formatter.categorySubordering.index(of: lhsType),
+                       let rhsTypeSortOrder = Formatter.categorySubordering.index(of: rhsType),
+                       lhsTypeSortOrder != rhsTypeSortOrder
                     {
                         return lhsTypeSortOrder < rhsTypeSortOrder
                     }
@@ -1058,7 +1058,7 @@ extension Formatter {
         // declarations that don't have an `init` declaration.
         // We have to take care to not reorder any properties (but reordering functions etc is ok!)
         if typeDeclaration.kind == "struct",
-            !typeDeclaration.body.contains(where: { $0.keyword == "init" })
+           !typeDeclaration.body.contains(where: { $0.keyword == "init" })
         {
             /// Whether or not this declaration is an instance property that can affect
             /// the parameters struct's synthesized memberwise initializer
@@ -1083,8 +1083,8 @@ extension Formatter {
                     var hasWillSetOrDidSetBlock = false
 
                     if let bodyOpenBrace = parser.index(of: .startOfScope("{"), after: -1),
-                        let firstBodyToken = parser.next(.nonSpaceOrCommentOrLinebreak, after: bodyOpenBrace),
-                        firstBodyToken.string == "willSet" || firstBodyToken.string == "didSet"
+                       let firstBodyToken = parser.next(.nonSpaceOrCommentOrLinebreak, after: bodyOpenBrace),
+                       firstBodyToken.string == "willSet" || firstBodyToken.string == "didSet"
                     {
                         hasWillSetOrDidSetBlock = true
                     }
@@ -1139,7 +1139,7 @@ extension Formatter {
 
             // Build the MARK declaration, but only when there is more than one category present.
             if numberOfCategories > 1,
-                let markComment = category.markComment(from: options.categoryMarkComment)
+               let markComment = category.markComment(from: options.categoryMarkComment)
             {
                 let firstDeclaration = sortedDeclarations[indexOfFirstDeclaration].declaration
                 let declarationParser = Formatter(firstDeclaration.tokens)
@@ -1220,14 +1220,14 @@ extension Formatter {
 
             // If there are any annotations, skip past them
             while startOfModifiers < indexOfKeyword,
-                openTokensFormatter.tokens[startOfModifiers].string.hasPrefix("@")
-                || openTokensFormatter.tokens[startOfModifiers].isSpaceOrCommentOrLinebreak
+                  openTokensFormatter.tokens[startOfModifiers].string.hasPrefix("@")
+                  || openTokensFormatter.tokens[startOfModifiers].isSpaceOrCommentOrLinebreak
             {
                 startOfModifiers += 1
 
                 // Also skip through annotation bodies, like in `@available(iOS 14.0, *)`
                 if openTokensFormatter.tokens[startOfModifiers] == .startOfScope("("),
-                    let endOfScope = openTokensFormatter.endOfScope(at: startOfModifiers)
+                   let endOfScope = openTokensFormatter.endOfScope(at: startOfModifiers)
                 {
                     startOfModifiers = endOfScope + 1
                 }

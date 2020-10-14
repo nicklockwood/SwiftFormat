@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.47.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.0) (2020-10-14)
+ 
+- Indenting of wrapped `if`, `guard`, `while`, etc. now matches Xcode 12 behavior
+- Added `--assetliterals` option for managing how image/color literal length is handled
+- Added `enumNamespaces` rule to replace classes/structs that only have static members with an enum
+- Added `extensionAccessControl` rule to hoist/unhoist access control modifiers inside extensions
+- Added `markTypes` rule for automatically inserting `MARK:` comments between type declarations
+- Added `sortedSwitchCases` rule to automatically sort grouped switch cases alphabetically
+- Added ``--wrapreturntype` option to control how return type is wrapped in function declarations
+- The `organizeDeclarations` rule is now also applied to extensions
+- Updated `--xcodeindentation` behavior for Xcode 12
+
 ## [0.46.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.46.3) (2020-09-20)
 
 - Fixed bug where `redundantType` rule corrupted assignments involving ternary expressions

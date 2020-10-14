@@ -485,8 +485,8 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 $0.trimmingCharacters(in: .whitespacesAndNewlines)
             }
             guard (1 ... 2).contains(parts.count),
-                let start = parts.first.flatMap(Int.init),
-                let end = parts.last.flatMap(Int.init)
+                  let start = parts.first.flatMap(Int.init),
+                  let end = parts.last.flatMap(Int.init)
             else {
                 throw FormatError.options("Unsupported --linerange value '\(arg)'")
             }
@@ -1013,7 +1013,7 @@ func processInput(_ inputURLs: [URL],
     }
     // Save cache
     if outputFlags.filesChecked > 0, let cache = cache, let cacheURL = cacheURL,
-        let cacheDirectory = cacheDirectory
+       let cacheDirectory = cacheDirectory
     {
         do {
             let data = try JSONEncoder().encode(cache)

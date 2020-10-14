@@ -40,8 +40,8 @@ struct SavedOption {
     }
 }
 
-extension SavedOption {
-    fileprivate init(_ rep: OptionsStore.OptionRepresentation) throws {
+private extension SavedOption {
+    init(_ rep: OptionsStore.OptionRepresentation) throws {
         guard let descriptor = Descriptors.byName[rep.id] else {
             throw FormatError.options("Unknown option \(rep.id)")
         }
@@ -53,8 +53,8 @@ extension SavedOption {
     }
 }
 
-extension FormatOptions {
-    fileprivate init(_ rep: OptionsStore.OptionStoreRepresentation) throws {
+private extension FormatOptions {
+    init(_ rep: OptionsStore.OptionStoreRepresentation) throws {
         var formatOptions = FormatOptions.default
         for descriptor in Descriptors.all.reversed() {
             // By loading formatting options in reverse, we ensure that

@@ -8,7 +8,7 @@
 - Added `extensionAccessControl` rule to hoist/unhoist access control modifiers inside extensions
 - Added `markTypes` rule for automatically inserting `MARK:` comments between type declarations
 - Added `sortedSwitchCases` rule to automatically sort grouped switch cases alphabetically
-- Added ``--wrapreturntype` option to control how return type is wrapped in function declarations
+- Added `--wrapreturntype` option to control how return type is wrapped in function declarations
 - The `organizeDeclarations` rule is now also applied to extensions
 - Updated `--xcodeindentation` behavior for Xcode 12
 

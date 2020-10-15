@@ -32,7 +32,7 @@
 import Foundation
 
 /// The indenting mode to use for #if/#endif statements
-public enum IndentMode: String {
+public enum IndentMode: String, CaseIterable {
     case indent
     case noIndent = "no-indent"
     case outdent
@@ -52,7 +52,7 @@ public enum IndentMode: String {
 }
 
 /// Wrap mode for arguments
-public enum WrapMode: String {
+public enum WrapMode: String, CaseIterable {
     case beforeFirst = "before-first"
     case afterFirst = "after-first"
     case preserve
@@ -78,34 +78,34 @@ public enum WrapMode: String {
 }
 
 /// Argument type for stripping
-public enum ArgumentStrippingMode: String {
+public enum ArgumentStrippingMode: String, CaseIterable {
     case unnamedOnly = "unnamed-only"
     case closureOnly = "closure-only"
     case all = "always"
 }
 
 // Wrap mode for @ attributes
-public enum AttributeMode: String {
+public enum AttributeMode: String, CaseIterable {
     case prevLine = "prev-line"
     case sameLine = "same-line"
     case preserve
 }
 
 /// Argument type for else position
-public enum ElsePosition: String {
+public enum ElsePosition: String, CaseIterable {
     case sameLine = "same-line"
     case nextLine = "next-line"
     case auto
 }
 
 /// Where to place the access control keyword of an extension
-public enum ExtensionACLPlacement: String {
+public enum ExtensionACLPlacement: String, CaseIterable {
     case onExtension = "on-extension"
     case onDeclarations = "on-declarations"
 }
 
 /// Wrapping behavior for the return type of a function declaration
-public enum WrapReturnType: String {
+public enum WrapReturnType: String, CaseIterable {
     case ifMultiline = "if-multiline"
     case preserve
 }
@@ -247,39 +247,39 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
 }
 
 /// Grouping for sorting imports
-public enum ImportGrouping: String {
+public enum ImportGrouping: String, CaseIterable {
     case alphabetized
     case testableTop = "testable-top"
     case testableBottom = "testable-bottom"
 }
 
 /// Self insertion mode
-public enum SelfMode: String {
+public enum SelfMode: String, CaseIterable {
     case insert
     case remove
     case initOnly = "init-only"
 }
 
 /// Optionals mode
-public enum OptionalsMode: String {
+public enum OptionalsMode: String, CaseIterable {
     case exceptProperties = "except-properties"
     case always
 }
 
 /// Argument type for yoda conditions
-public enum YodaMode: String {
+public enum YodaMode: String, CaseIterable {
     case literalsOnly = "literals-only"
     case always
 }
 
 /// Argument type for asset literals
-public enum AssetLiteralWidth: String {
+public enum AssetLiteralWidth: String, CaseIterable {
     case actualWidth = "actual-width"
     case visualWidth = "visual-width"
 }
 
 /// Whether or not to mark types / extensions
-public enum MarkMode: String {
+public enum MarkMode: String, CaseIterable {
     case always
     case never
     case ifNotEmpty = "if-not-empty"

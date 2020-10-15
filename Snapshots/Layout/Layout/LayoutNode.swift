@@ -920,7 +920,7 @@ public class LayoutNode: NSObject {
                     oldViewController?.removeFromParent()
                     parent.insertChild(self, at: index)
                 } else if let superview = oldView?.superview,
-                    let index = superview.subviews.index(of: oldView!)
+                          let index = superview.subviews.index(of: oldView!)
                 {
                     if let parentViewController = oldViewController?.parent {
                         oldViewController?.removeFromParent()
@@ -1625,8 +1625,8 @@ public class LayoutNode: NSObject {
             if let _alternative = deprecatedSymbols[symbol] {
                 alternative = _alternative
             } else if _class is UIViewController.Type,
-                // TODO: disallow setting view properties directly if type is a UIViewController
-                _viewExpressions[symbol] != nil, _viewControllerExpressions[symbol] == nil
+                      // TODO: disallow setting view properties directly if type is a UIViewController
+                      _viewExpressions[symbol] != nil, _viewControllerExpressions[symbol] == nil
             {
                 alternative = "view.\(symbol)"
             } else {
@@ -2383,7 +2383,7 @@ public class LayoutNode: NSObject {
             }
             return size
         } else if hasExpression("contentSize.width"), !_evaluating.contains("contentSize.width"),
-            hasExpression("contentSize.height"), !_evaluating.contains("contentSize.height")
+                  hasExpression("contentSize.height"), !_evaluating.contains("contentSize.height")
         {
             return CGSize(
                 width: try cgFloatValue(forSymbol: "contentSize.width"),
@@ -2663,7 +2663,7 @@ public class LayoutNode: NSObject {
                 _widthConstraint?.constant = width
                 _widthConstraint?.isActive = true
             } else if intrinsicSize.width != UIView.noIntrinsicMetric,
-                _view.constraints.contains(where: { $0.firstAttribute == .width })
+                      _view.constraints.contains(where: { $0.firstAttribute == .width })
             {
                 _widthConstraint?.constant = intrinsicSize.width
                 _widthConstraint?.isActive = true
@@ -2674,7 +2674,7 @@ public class LayoutNode: NSObject {
                 _heightConstraint?.constant = height
                 _heightConstraint?.isActive = true
             } else if intrinsicSize.height != UIView.noIntrinsicMetric,
-                _view.constraints.contains(where: { $0.firstAttribute == .height })
+                      _view.constraints.contains(where: { $0.firstAttribute == .height })
             {
                 _widthConstraint?.constant = intrinsicSize.height
                 _widthConstraint?.isActive = true

@@ -292,7 +292,7 @@ extension UIViewController: LayoutManaged {
                 navigationItem.leftBarButtonItem =
                     UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
             } else if name.hasPrefix("navigationItem.rightBarButtonItem."),
-                navigationItem.rightBarButtonItem == nil
+                      navigationItem.rightBarButtonItem == nil
             {
                 navigationItem.rightBarButtonItem =
                     UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)

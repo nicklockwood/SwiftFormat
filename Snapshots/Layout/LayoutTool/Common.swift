@@ -152,7 +152,7 @@ func enumerateFiles(withInputURL inputURL: URL,
                 }
             }
         } else if options.followSymlinks,
-            resourceValues.isSymbolicLink == true || resourceValues.isAliasFile == true
+                  resourceValues.isSymbolicLink == true || resourceValues.isAliasFile == true
         {
             let resolvedURL = inputURL.resolvingSymlinksInPath()
             enumerate(inputURL: resolvedURL,

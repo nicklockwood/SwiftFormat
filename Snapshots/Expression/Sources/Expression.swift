@@ -324,7 +324,7 @@ public final class Expression: CustomStringConvertible {
             if let fn = symbols[symbol] {
                 return fn
             } else if boolSymbols.isEmpty, case .infix("?:") = symbol,
-                let lhs = symbols[.infix("?")], let rhs = symbols[.infix(":")]
+                      let lhs = symbols[.infix("?")], let rhs = symbols[.infix(":")]
             {
                 // TODO: get rid of this special case? - it's unlikely that it's used by anyone
                 return { args in try rhs([lhs([args[0], args[1]]), args[2]]) }

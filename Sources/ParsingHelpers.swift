@@ -1507,22 +1507,19 @@ extension Formatter {
         guard let commaIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index + 1, if: {
             $0 == .delimiter(",")
         }), case let lineStart = startOfLine(at: commaIndex),
-            case let .keyword(keyword)? = next(.nonSpaceOrComment, in: lineStart ..< commaIndex)
+            let firstToken = self.index(of: .nonSpace, after: lineStart - 1),
+            let keywordIndex = lastIndex(in: firstToken ..< commaIndex, where: {
+                [.keyword("if"), .keyword("guard"), .keyword("while")].contains($0)
+            }) ?? lastIndex(in: firstToken ..< commaIndex, where: {
+                [.keyword("let"), .keyword("var"), .keyword("case")].contains($0)
+            })
         else {
             return options.indent
         }
-        switch keyword {
-        case "if":
-            return spaceEquivalentToWidth(3)
-        case "let", "var":
-            return spaceEquivalentToWidth(4)
-        case "case":
-            return spaceEquivalentToWidth(5)
-        case "guard", "while":
-            return spaceEquivalentToWidth(6)
-        default:
+        guard let nextTokenIndex = self.index(of: .nonSpace, after: keywordIndex) else {
             return options.indent
         }
+        return spaceEquivalentToTokens(from: firstToken, upTo: nextTokenIndex)
     }
 }
 

@@ -738,7 +738,7 @@ struct LayoutExpression {
                 if symbols.contains("font"), let font = try node.value(forSymbol: "font") as? UIFont {
                     correctFont = font
                 } else if symbols.contains("titleLabel.font"),
-                    let font = try node.value(forSymbol: "titleLabel.font") as? UIFont
+                          let font = try node.value(forSymbol: "titleLabel.font") as? UIFont
                 {
                     // TODO: find a less hacky solution for this
                     correctFont = font
@@ -761,8 +761,8 @@ struct LayoutExpression {
                 {
                     result.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
                 } else if symbols.contains("titleColor"),
-                    // TODO: support UIButton states (like selectedTitleColor, etc.) correctly
-                    let color = try node.value(forSymbol: "titleColor") as? UIColor
+                          // TODO: support UIButton states (like selectedTitleColor, etc.) correctly
+                          let color = try node.value(forSymbol: "titleColor") as? UIColor
                 {
                     result.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
                 }

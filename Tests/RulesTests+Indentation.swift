@@ -397,6 +397,44 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
+    func testIndentIfElse() {
+        let input = """
+        if foo {
+        } else if let bar = baz,
+                  let baz = quux {}
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testNestedIndentIfElse() {
+        let input = """
+        if bar {} else if baz,
+                          quux
+        {
+            if foo {
+            } else if let bar = baz,
+                      let baz = quux {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentIfCaseLet() {
+        let input = """
+        if case let foo = foo,
+           let bar = bar {}
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentMultipleIfLet() {
+        let input = """
+        if let foo = foo, let bar = bar,
+           let baz = baz {}
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     func testIndentUnknownDefault() {
         let input = """
         switch foo {

@@ -452,6 +452,12 @@ struct _Descriptors {
         help: "Wrap return type: \"if-multiline\", \"preserve\" (default)",
         keyPath: \.wrapReturnType
     )
+    let wrapConditions = OptionDescriptor(
+        argumentName: "wrapconditions",
+        displayName: "Wrap Conditions",
+        help: "Wrap conditions: \"before-first\", \"after-first\", \"preserve\"",
+        keyPath: \.wrapCollections
+    )
     let closingParenOnSameLine = OptionDescriptor(
         argumentName: "closingparen",
         displayName: "Closing Paren Position",

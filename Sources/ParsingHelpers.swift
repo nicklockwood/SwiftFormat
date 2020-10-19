@@ -37,7 +37,7 @@ public extension Formatter {
 
     /// Whether or not the two indicies represent tokens on the same line
     func onSameLine(_ lhs: Int, _ rhs: Int) -> Bool {
-        startOfLine(at: lhs) == startOfLine(at: rhs)
+        return startOfLine(at: lhs) == startOfLine(at: rhs)
     }
 
     /// Returns the space at the start of the line containing the specified index

@@ -156,12 +156,13 @@ extension Formatter {
                 }
                 index = commaIndex
             }
+
             // Insert linebreak and indent after opening paren
             if let nextIndex = self.index(of: .nonSpaceOrComment, after: i) {
                 if !tokens[nextIndex].isLinebreak {
                     insertLinebreak(at: nextIndex)
                 }
-                if nextIndex + 1 < endOfScope {
+                if nextIndex + 1 < endOfScope, next(.nonSpace, after: nextIndex)?.isLinebreak == false {
                     var indent = indent
                     if (self.index(of: .nonSpace, after: nextIndex) ?? 0) < endOfScope {
                         indent += options.indent

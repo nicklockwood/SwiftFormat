@@ -1886,6 +1886,13 @@ class RulesTests: XCTestCase {
         XCTAssertThrowsError(try format(input, rules: [FormatRules.fileHeader], options: options))
     }
 
+    func testEdgeCaseHeaderEndIndexPlusNewHeaderTokensCountEqualsFileTokensEndIndex() {
+        let input = "// Header comment\n\nclass Foo {}"
+        let output = "// Header line1\n// Header line2\n\nclass Foo {}"
+        let options = FormatOptions(fileHeader: "// Header line1\n// Header line2")
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
     // MARK: - sortedSwitchCases
 
     func testSortedSwitchCaseMultilineWithComments() {

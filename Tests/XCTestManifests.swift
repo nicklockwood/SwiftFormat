@@ -2021,6 +2021,7 @@ extension RulesTests {
         ("testWrapArgumentsDoesNotAffectSubscript", testWrapArgumentsDoesNotAffectSubscript),
         ("testWrapArgumentsDoesntIndentClosingBracket", testWrapArgumentsDoesntIndentClosingBracket),
         ("testWrapArgumentsDoesntIndentTrailingComment", testWrapArgumentsDoesntIndentTrailingComment),
+        ("testWrapArgumentsNoIndentBlankLines", testWrapArgumentsNoIndentBlankLines),
         ("testWrapBeforeFirstIfMaxLengthExceeded", testWrapBeforeFirstIfMaxLengthExceeded),
         ("testWrapChainedFunctionAfterSubscriptCollection", testWrapChainedFunctionAfterSubscriptCollection),
         ("testWrapChainedFunctionInSubscriptCollection", testWrapChainedFunctionInSubscriptCollection),

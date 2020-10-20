@@ -781,6 +781,7 @@ public struct _FormatRules {
     /// meaning and leads to noise in commits.
     public let trailingSpace = FormatRule(
         help: "Remove trailing space at end of a line.",
+        orderAfter: ["wrap", "wrapArguments"],
         options: ["trimwhitespace"]
     ) { formatter in
         formatter.forEach(.space) { i, _ in

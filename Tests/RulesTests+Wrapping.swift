@@ -1381,6 +1381,19 @@ extension RulesTests {
                        exclude: ["wrap"])
     }
 
+    func testWrapArgumentsNoIndentBlankLines() {
+        let input = """
+        let foo = [
+
+            bar,
+
+        ]
+        """
+        let options = FormatOptions(wrapCollections: .beforeFirst)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+                       exclude: ["wrap", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+    }
+
     // MARK: closingParenOnSameLine = true
 
     func testParenOnSameLineWhenWrapAfterFirstConvertedToWrapBefore() {

@@ -389,6 +389,57 @@ extension Formatter {
 
             lastIndex = i
         }
+
+        // -- wrapconditions
+        forEach(.keyword) { index, token in
+            guard ["if", "guard", "while"].contains(token.string) else {
+                return
+            }
+
+            let endOfConditionsToken: Token
+            if token.string == "guard" {
+                endOfConditionsToken = .keyword("else")
+            } else {
+                endOfConditionsToken = .startOfScope("{")
+            }
+
+            // Only wrap when this is a control flow condition that spans multiple lines
+            guard
+                let endOfConditionsTokenIndex = self.index(of: endOfConditionsToken, after: index),
+                let nextTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                !(onSameLine(index, endOfConditionsTokenIndex)
+                    || self.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfLine(at: index)) == endOfConditionsTokenIndex)
+            else { return }
+
+            switch options.wrapConditions {
+            case .preserve, .disabled, .default:
+                break
+
+            case .beforeFirst:
+                // Wrap if the next non-whitespace-or-comment
+                // is on the same line as the control flow keyword
+                if onSameLine(index, nextTokenIndex) {
+                    insertLinebreak(at: index + 1)
+                }
+
+            case .afterFirst:
+                // Unwrap if the next non-whitespace-or-comment
+                // is not on the same line as the control flow keyword
+                if !onSameLine(index, nextTokenIndex),
+                   let linebreakIndex = self.index(of: .linebreak, in: index ..< nextTokenIndex)
+                {
+                    removeToken(at: linebreakIndex)
+                }
+
+                // Make sure there is still exactly one space after the control flow keyword
+                if let space = self.token(at: index + 1),
+                   space.isSpace,
+                   space.string.count != 1
+                {
+                    self.replaceToken(at: index + 1, with: .space(" "))
+                }
+            }
+        }
     }
 
     func removeParen(at index: Int) {

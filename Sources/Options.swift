@@ -307,6 +307,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapCollections: WrapMode
     public var closingParenOnSameLine: Bool
     public var wrapReturnType: WrapReturnType
+    public var wrapConditions: WrapMode
     public var uppercaseHex: Bool
     public var uppercaseExponent: Bool
     public var decimalGrouping: Grouping
@@ -383,6 +384,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapCollections: WrapMode = .preserve,
                 closingParenOnSameLine: Bool = false,
                 wrapReturnType: WrapReturnType = .preserve,
+                wrapConditions: WrapMode = .preserve,
                 uppercaseHex: Bool = true,
                 uppercaseExponent: Bool = false,
                 decimalGrouping: Grouping = .group(3, 6),
@@ -453,6 +455,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapCollections = wrapCollections
         self.closingParenOnSameLine = closingParenOnSameLine
         self.wrapReturnType = wrapReturnType
+        self.wrapConditions = wrapConditions
         self.uppercaseHex = uppercaseHex
         self.uppercaseExponent = uppercaseExponent
         self.decimalGrouping = decimalGrouping

@@ -2031,6 +2031,8 @@ extension RulesTests {
         ("testWrapCollectionsConsecutiveCodeCommentsNotIndented", testWrapCollectionsConsecutiveCodeCommentsNotIndented),
         ("testWrapCollectionsConsecutiveCodeCommentsNotIndentedInWrapBeforeFirst", testWrapCollectionsConsecutiveCodeCommentsNotIndentedInWrapBeforeFirst),
         ("testWrapColorLiteral", testWrapColorLiteral),
+        ("testWrapConditionsAfterFirst", testWrapConditionsAfterFirst),
+        ("testWrapConditionsBeforeFirst", testWrapConditionsBeforeFirst),
         ("testWrapFuncAttribute", testWrapFuncAttribute),
         ("testWrapFunctionArrow", testWrapFunctionArrow),
         ("testWrapFunctionIfReturnTypeExceedsMaxWidth", testWrapFunctionIfReturnTypeExceedsMaxWidth),

@@ -1288,7 +1288,7 @@ extension Formatter {
                 endOfDeclaration = linebreakSearchIndex + 1
             }
 
-            let declarationRange = startOfDeclaration ... (endOfDeclaration ?? parser.tokens.count - 1)
+            let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, parser.tokens.count - 1)
             let declaration = Array(parser.tokens[declarationRange])
             parser.removeTokens(in: declarationRange)
 

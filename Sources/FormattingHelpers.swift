@@ -397,11 +397,19 @@ extension Formatter {
                 return
             }
 
+            let endOfConditionsToken: Token
+            if token.string == "guard" {
+                endOfConditionsToken = .keyword("else")
+            } else {
+                endOfConditionsToken = .startOfScope("{")
+            }
+
             // Only wrap when this is a control flow condition that spans multiple lines
             guard
-                let nextOpenBracketIndex = self.index(of: .startOfScope("{"), after: index),
+                let endOfConditionsTokenIndex = self.index(of: endOfConditionsToken, after: index),
                 let nextTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                !onSameLine(index, nextOpenBracketIndex)
+                !(onSameLine(index, endOfConditionsTokenIndex)
+                    || self.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfLine(at: index)) == endOfConditionsTokenIndex)
             else { return }
 
             switch options.wrapConditions {

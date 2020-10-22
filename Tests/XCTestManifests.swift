@@ -2035,6 +2035,7 @@ extension RulesTests {
         ("testWrapColorLiteral", testWrapColorLiteral),
         ("testWrapConditionsAfterFirst", testWrapConditionsAfterFirst),
         ("testWrapConditionsBeforeFirst", testWrapConditionsBeforeFirst),
+        ("testWrapConditionsBeforeFirstWhereShouldPreserveExisting", testWrapConditionsBeforeFirstWhereShouldPreserveExisting),
         ("testWrapFuncAttribute", testWrapFuncAttribute),
         ("testWrapFunctionArrow", testWrapFunctionArrow),
         ("testWrapFunctionIfReturnTypeExceedsMaxWidth", testWrapFunctionIfReturnTypeExceedsMaxWidth),

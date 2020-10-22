@@ -2230,8 +2230,6 @@ extension RulesTests {
         else if foo != bar,
                 let quux = quux {}
 
-        else {}
-
         if let baaz = baaz {}
 
         guard baaz.filter({ $0 == foo }),
@@ -2251,8 +2249,6 @@ extension RulesTests {
           foo != bar,
           let quux = quux {}
 
-        else {}
-
         if let baaz = baaz {}
 
         guard
@@ -2267,6 +2263,30 @@ extension RulesTests {
         testFormatting(
             for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.indent],
             options: FormatOptions(indent: "  ", wrapConditions: .beforeFirst)
+        )
+    }
+
+    func testWrapConditionsBeforeFirstWhereShouldPreserveExisting() {
+        let input = """
+        else {}
+
+        else
+        {}
+
+        if foo == bar
+        {}
+
+        guard let foo = bar else
+        {}
+
+        guard let foo = bar
+        else {}
+        """
+
+        testFormatting(
+            for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
+            options: FormatOptions(indent: "  ", wrapConditions: .beforeFirst),
+            exclude: ["elseOnSameLine"]
         )
     }
 

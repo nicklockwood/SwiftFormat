@@ -456,7 +456,7 @@ struct _Descriptors {
         argumentName: "wrapconditions",
         displayName: "Wrap Conditions",
         help: "Wrap conditions: \"before-first\", \"after-first\", \"preserve\"",
-        keyPath: \.wrapCollections
+        keyPath: \.wrapConditions
     )
     let closingParenOnSameLine = OptionDescriptor(
         argumentName: "closingparen",

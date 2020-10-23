@@ -65,12 +65,15 @@ class RulesTests: XCTestCase {
         precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
         precondition(Set(exclude).intersection(rules.map { $0.name }).isEmpty, "Cannot exclude rule under test")
         let output = outputs.first ?? input, output2 = outputs.last ?? input
-        let exclude = exclude
+        var exclude = exclude
             + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
             + (rules.first?.name == "organizeDeclarations" ? [] : ["organizeDeclarations"])
             + (rules.first?.name == "extensionAccessControl" ? [] : ["extensionAccessControl"])
             + (rules.first?.name == "markTypes" ? [] : ["markTypes"])
             + (rules.first?.name == "blockComments" ? [] : ["blockComments"])
+            
+        exclude += FormatRule.ststAllRules
+          
         XCTAssertEqual(try format(input, rules: rules, options: options), output, file: file, line: line)
         XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude), options: options),
                        output2, file: file, line: line)

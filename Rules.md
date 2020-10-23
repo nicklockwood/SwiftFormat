@@ -67,6 +67,13 @@
 * [specifiers *(deprecated)*](#specifiers)
 * [strongOutlets](#strongOutlets)
 * [strongifiedSelf](#strongifiedSelf)
+* [ststLinebreakAfterClassExtensionStruct](#ststLinebreakAfterClassExtensionStruct)
+* [ststLinebreakAfterGuard](#ststLinebreakAfterGuard)
+* [ststLinebreakAfterSuper](#ststLinebreakAfterSuper)
+* [ststLinebreakAtTheBeginning](#ststLinebreakAtTheBeginning)
+* [ststLinebreakBeforeReturn](#ststLinebreakBeforeReturn)
+* [ststRedundantOneLineVarReturn](#ststRedundantOneLineVarReturn)
+* [ststRedundantTypeName](#ststRedundantTypeName)
 * [todos](#todos)
 * [trailingClosures](#trailingClosures)
 * [trailingCommas](#trailingCommas)
@@ -162,7 +169,7 @@ swift version is set to 4.1 or above.
 
 ## assertionFailures
 
-Changes all instances of assert(false, ...) to assertionFailure(...) 
+Changes all instances of assert(false, ...) to assertionFailure(...)
 and precondition(false, ...) to preconditionFailure(...).
 
 <details>
@@ -1711,6 +1718,34 @@ set to 4.2 or above.
 
 </details>
 <br/>
+
+## ststLinebreakAfterClassExtensionStruct
+
+.
+
+## ststLinebreakAfterGuard
+
+.
+
+## ststLinebreakAfterSuper
+
+.
+
+## ststLinebreakAtTheBeginning
+
+.
+
+## ststLinebreakBeforeReturn
+
+.
+
+## ststRedundantOneLineVarReturn
+
+.
+
+## ststRedundantTypeName
+
+.
 
 ## todos
 

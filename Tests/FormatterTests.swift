@@ -411,7 +411,7 @@ class FormatterTests: XCTestCase {
         """)
         for range in [0 ..< 2, 5 ..< 7, 14 ..< 16, 17 ..< 19] {
             XCTAssertEqual(try format(input,
-                                      rules: FormatRules.all,
+                                      rules: FormatRules.all.filter { $0.name.starts(with: "stst") == false },
                                       range: range), input)
         }
         let output1 = tokenize("""

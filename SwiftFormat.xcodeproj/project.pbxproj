@@ -74,6 +74,7 @@
 		01F3DF901DBA003E00454944 /* InferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8F1DBA003E00454944 /* InferenceTests.swift */; };
 		37D828AB24BF77DA0012FC0A /* XcodeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; };
 		37D828AC24BF77DA0012FC0A /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6D908640278325F0003A8BA1 /* RuleTests+StepstoneRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D90863F278325F0003A8BA1 /* RuleTests+StepstoneRules.swift */; };
 		9028F7831DA4B435009FE5B4 /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
 		9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
 		9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
@@ -211,6 +212,7 @@
 		01F3DF8B1DB9FD3F00454944 /* Options.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Options.swift; sourceTree = "<group>"; };
 		01F3DF8F1DBA003E00454944 /* InferenceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InferenceTests.swift; sourceTree = "<group>"; };
 		37D828AA24BF77DA0012FC0A /* XcodeKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XcodeKit.framework; path = Library/Frameworks/XcodeKit.framework; sourceTree = DEVELOPER_DIR; };
+		6D90863F278325F0003A8BA1 /* RuleTests+StepstoneRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RuleTests+StepstoneRules.swift"; sourceTree = "<group>"; };
 		90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftFormat for Xcode.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		90C4B6D01DA4B04A009EB000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -377,6 +379,7 @@
 				01BBD85D21DAA30700457380 /* GlobsTests.swift */,
 				018E82741D62E730008CA0F8 /* TokenizerTests.swift */,
 				011A53E921FFAA3A00DD9268 /* VersionTests.swift */,
+				6D90863F278325F0003A8BA1 /* RuleTests+StepstoneRules.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -777,6 +780,7 @@
 				01426E4E23AA29B100E7D871 /* ParsingHelpersTests.swift in Sources */,
 				018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */,
 				01C209BB2502D62000E728A2 /* RulesTests+Organization.swift in Sources */,
+				6D908640278325F0003A8BA1 /* RuleTests+StepstoneRules.swift in Sources */,
 				011A53EB21FFAA4200DD9268 /* VersionTests.swift in Sources */,
 				01EF830F25616089003F6F2D /* RulesTests+Syntax.swift in Sources */,
 				01BBD85E21DAA30700457380 /* GlobsTests.swift in Sources */,
@@ -1170,9 +1174,9 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CLANG_ENABLE_CODE_COVERAGE = NO;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = 8VQKF583ED;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_MODULE_NAME = "$(PRODUCT_NAME:c99extidentifier)Tool";
 				PRODUCT_NAME = swiftformat;

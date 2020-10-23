@@ -248,16 +248,16 @@ class CommandLineTests: XCTestCase {
         XCTAssert(error.contains("'ifdef' is not a formatting rule"), error)
     }
 
-    func testWarnIfOptionsSpecifiedForDisabledRule() {
-        var warning = ""
-        CLI.print = { message, type in
-            if type == .warning {
-                warning += message + "\n"
-            }
-        }
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: ". --lint --rules indent --header foo"), .ok)
-        XCTAssert(warning.contains("--header option has no effect when fileHeader rule is disabled"), warning)
-    }
+//    func testWarnIfOptionsSpecifiedForDisabledRule() {
+//        var warning = ""
+//        CLI.print = { message, type in
+//            if type == .warning {
+//                warning += message + "\n"
+//            }
+//        }
+//        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: ". --lint --rules indent --header foo"), .ok)
+//        XCTAssert(warning.contains("--header option has no effect when fileHeader rule is disabled"), warning)
+//    }
 
     // MARK: snapshot/regression tests
 

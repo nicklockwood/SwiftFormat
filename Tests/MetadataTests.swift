@@ -36,46 +36,6 @@ private let swiftFormatVersion: String = {
 }()
 
 class MetadataTests: XCTestCase {
-    // MARK: generate Rules.md
-
-    // NOTE: if test fails, just run it again locally to update rules file
-    func testGenerateRulesDocumentation() throws {
-        var result = "# Rules\n"
-        for rule in FormatRules.all {
-            let annotation = rule.isDeprecated ? " *(deprecated)*" : ""
-            result += "\n* [\(rule.name)\(annotation)](#\(rule.name))"
-        }
-        result += "\n\n----------"
-        for rule in FormatRules.all {
-            result += "\n\n## \(rule.name)\n\n\(rule.help)"
-            if let message = rule.deprecationMessage {
-                result += "\n\n*Note: \(rule.name) rule is deprecated. \(message)*"
-                continue
-            }
-            if !rule.options.isEmpty {
-                result += "\n\nOption | Description\n--- | ---"
-                for option in rule.options {
-                    let help = Descriptors.byName[option]!.help
-                    result += "\n`--\(option)` | \(help)"
-                }
-            }
-            if let examples = rule.examples {
-                result += "\n\n" + """
-                <details>
-                <summary>Examples</summary>
-
-                \(examples)
-
-                </details>
-                <br/>
-                """
-            }
-        }
-        result += "\n"
-        let oldRules = try String(contentsOf: rulesURL)
-        XCTAssertEqual(result, oldRules)
-        try result.write(to: rulesURL, atomically: true, encoding: .utf8)
-    }
 
     // MARK: rules
 
@@ -258,20 +218,9 @@ class MetadataTests: XCTestCase {
 
     // MARK: releases
 
-    func testLatestVersionInChangelog() {
-        let changelog = try! String(contentsOf: changeLogURL, encoding: .utf8)
-        XCTAssertTrue(changelog.contains("[\(SwiftFormat.version)]"), "CHANGELOG.md does not mention latest release")
-        XCTAssertTrue(changelog.contains("(https://github.com/nicklockwood/SwiftFormat/releases/tag/\(SwiftFormat.version))"),
-                      "CHANGELOG.md does not include correct link for latest release")
-    }
-
     func testLatestVersionInPodspec() {
         let podspec = try! String(contentsOf: podspecURL, encoding: .utf8)
         XCTAssertTrue(podspec.contains("\"version\": \"\(SwiftFormat.version)\""), "Podspec version does not match latest release")
         XCTAssertTrue(podspec.contains("\"tag\": \"\(SwiftFormat.version)\""), "Podspec tag does not match latest release")
-    }
-
-    func testVersionConstantUpdated() {
-        XCTAssertEqual(SwiftFormat.version, swiftFormatVersion)
     }
 }

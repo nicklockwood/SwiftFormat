@@ -100,7 +100,7 @@ func matchGlobs(_ globs: [Glob], in directory: String) -> [URL] {
             if globs.contains(where: { $0.matches(path) }) {
                 urls.append(url)
             } else if manager.fileExists(atPath: path, isDirectory: &isDirectory),
-                isDirectory.boolValue
+                      isDirectory.boolValue
             {
                 enumerate(url)
             }

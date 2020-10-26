@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.47.0
+//  Version 0.47.1
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -1434,7 +1434,7 @@ public func tokenize(_ source: String) -> [Token] {
             } else if prevToken.isLvalue {
                 type = .postfix
             } else if prevToken.isSpaceOrCommentOrLinebreak, prevNonSpaceToken.isLvalue,
-                nextToken.isSpaceOrCommentOrLinebreak, nextNonSpaceToken.isRvalue
+                      nextToken.isSpaceOrCommentOrLinebreak, nextNonSpaceToken.isRvalue
             {
                 type = .infix
             } else {
@@ -1625,10 +1625,10 @@ public func tokenize(_ source: String) -> [Token] {
                     break
                 }
             } else if token == .delimiter(":"),
-                scope == .startOfScope("(") || scope == .startOfScope("["),
-                let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
-                tokens[prevIndex].isIdentifierOrKeyword,
-                let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex)
+                      scope == .startOfScope("(") || scope == .startOfScope("["),
+                      let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
+                      tokens[prevIndex].isIdentifierOrKeyword,
+                      let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex)
             {
                 if case let .keyword(name) = tokens[prevIndex] {
                     tokens[prevIndex] = .identifier(name)

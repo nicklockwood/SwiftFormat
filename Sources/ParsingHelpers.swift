@@ -1165,10 +1165,10 @@ extension Formatter {
                 // `isDeclarationTypeKeyword` in the declaration's opening sequence (up until the `{`).
                 //  - This makes sure that we correctly identify `class func` declarations as being functions.
                 else if let endOfDeclarationOpeningSequence = parser.index(after: -1, where: { $0 == .startOfScope("{") }),
-                    let lastDeclarationTypeKeywordIndex = parser.lastIndex(
-                        in: 0 ..< endOfDeclarationOpeningSequence,
-                        where: { $0.isDeclarationTypeKeyword }
-                    )
+                        let lastDeclarationTypeKeywordIndex = parser.lastIndex(
+                            in: 0 ..< endOfDeclarationOpeningSequence,
+                            where: { $0.isDeclarationTypeKeyword }
+                        )
                 {
                     declarationTypeKeywordIndex = lastDeclarationTypeKeywordIndex
                     declarationKeyword = parser.tokens[lastDeclarationTypeKeywordIndex].string
@@ -1344,9 +1344,9 @@ extension Formatter {
             // If this declaration represents a conditional compilation block,
             // we also have to parse its inner declarations.
             else if declaration.keyword == "#if",
-                let declarationTypeKeywordIndex = declarationParser
-                .index(after: -1, where: { $0.string == declaration.keyword }),
-                let endOfBody = declarationParser.endOfScope(at: declarationTypeKeywordIndex)
+                    let declarationTypeKeywordIndex = declarationParser
+                    .index(after: -1, where: { $0.string == declaration.keyword }),
+                    let endOfBody = declarationParser.endOfScope(at: declarationTypeKeywordIndex)
             {
                 let startOfBody = declarationParser.endOfLine(at: declarationTypeKeywordIndex)
                 let (startTokens, bodyDeclarations, endTokens) = parseBody(in: startOfBody ... endOfBody)
@@ -1512,12 +1512,12 @@ extension Formatter {
         guard let commaIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index + 1, if: {
             $0 == .delimiter(",")
         }), case let lineStart = startOfLine(at: commaIndex),
-            let firstToken = self.index(of: .nonSpace, after: lineStart - 1),
-            let keywordIndex = lastIndex(in: firstToken ..< commaIndex, where: {
-                [.keyword("if"), .keyword("guard"), .keyword("while")].contains($0)
-            }) ?? lastIndex(in: firstToken ..< commaIndex, where: {
-                [.keyword("let"), .keyword("var"), .keyword("case")].contains($0)
-            })
+                     let firstToken = self.index(of: .nonSpace, after: lineStart - 1),
+                     let keywordIndex = lastIndex(in: firstToken ..< commaIndex, where: {
+                         [.keyword("if"), .keyword("guard"), .keyword("while")].contains($0)
+                     }) ?? lastIndex(in: firstToken ..< commaIndex, where: {
+                         [.keyword("let"), .keyword("var"), .keyword("case")].contains($0)
+                     })
         else {
             return options.indent
         }

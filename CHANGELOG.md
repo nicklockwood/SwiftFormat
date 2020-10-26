@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.47.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.1) (2020-1026)
+
+- Fixed a crash when using the `fileHeader` rule
+- Fixed occasional out-of-bounds crash in `markTypes` rule
+- Fixed bug where `wrapArguments` rule unexpectedly indented blank lines inside braces or brackets
+- Added `--wrapconditions` option for controlling how multiline conditional statements are wrapped
+- Unicode whitespace characters other than space and tab are no longer treated as an error
+- Indenting of `else` clauses now matches Xcode 12
+
 ## [0.47.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.0) (2020-10-14)
  
 - Indenting of wrapped `if`, `guard`, `while`, etc. now matches Xcode 12 behavior

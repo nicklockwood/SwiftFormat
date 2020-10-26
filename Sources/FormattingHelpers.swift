@@ -477,7 +477,7 @@ extension Formatter {
                 insert(.space(" "), at: index + 1)
             }
         } else if tokenInsideParenRequiresSpacing(at: index - 1),
-            tokenOutsideParenRequiresSpacing(at: index + 1)
+                  tokenOutsideParenRequiresSpacing(at: index + 1)
         {
             // Need to insert one
             insert(.space(" "), at: index + 1)

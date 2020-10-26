@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.47.0
+//  Version 0.47.1
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -419,7 +419,7 @@ public extension Formatter {
                     return i
                 }
             } else if token == .endOfScope("case") || token == .endOfScope("default"),
-                scopeStack.last == .startOfScope("#if")
+                      scopeStack.last == .startOfScope("#if")
             {
                 continue
             } else if scopeStack.isEmpty, matches(token) {

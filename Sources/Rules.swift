@@ -3312,70 +3312,39 @@ public struct _FormatRules {
             let hoist = formatter.options.hoistPatternLet
             // Check if pattern already starts with let/var
             var openParenIndex = i
-            var startIndex = i
-            var keyword = "let"
-            var isTuple = true
-            if var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) {
-                if case .identifier = formatter.tokens[prevIndex] {
-                    isTuple = false
-                    prevIndex = formatter.index(before: prevIndex) {
-                        $0.isSpaceOrCommentOrLinebreak || $0.isStartOfScope || $0 == .endOfScope("case")
-                    } ?? -1
-                    startIndex = prevIndex + 1
-                    prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) ?? 0
-                }
-                let prevToken = formatter.tokens[prevIndex]
-                if [.keyword("let"), .keyword("var")].contains(prevToken) {
-                    if hoist {
-                        // No changes needed
+            guard let endIndex = formatter.index(of: .endOfScope(")"), after: openParenIndex),
+                  var prevIndex = formatter.index(before: i, where: {
+                      [.delimiter(","), .endOfScope("case"), .keyword("case"), .keyword("catch")].contains($0)
+                  })
+            else {
+                return
+            }
+            if formatter.tokens[prevIndex] == .delimiter(",") {
+                loop: for token in formatter.tokens[0 ..< prevIndex].reversed() {
+                    switch token {
+                    case .endOfScope("case"), .keyword("catch"):
+                        break loop
+                    case .keyword("as"), .keyword("is"), .keyword("var"), .keyword("let"):
+                        break
+                    case .keyword:
+                        // Tuple assignment
                         return
-                    }
-                    switch formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) {
-                    case .keyword("catch")?, .keyword("case")?, .endOfScope("case")?,
-                         .delimiter(",")? where !isTuple:
-                        keyword = prevToken.string
-                        formatter.removeTokens(in: prevIndex ..< startIndex)
-                        openParenIndex -= (startIndex - prevIndex)
-                        startIndex = prevIndex
                     default:
-                        // Tuple assignment, not a pattern
-                        return
+                        break
                     }
-                } else if hoist == false {
+                }
+            }
+            let startIndex = prevIndex + 1
+            if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: prevIndex),
+               case let .keyword(keyword) = formatter.tokens[nextIndex], ["let", "var"].contains(keyword)
+            {
+                if hoist {
                     // No changes needed
                     return
                 }
-            }
-            guard let endIndex = formatter.index(of: .endOfScope(")"), after: openParenIndex) else {
-                return
-            }
-            if hoist {
-                // Find let/var keyword indices
-                guard let indices: [Int] = {
-                    guard let indices = indicesOf(keyword, in: openParenIndex + 1 ..< endIndex) else {
-                        keyword = "var"
-                        return indicesOf(keyword, in: openParenIndex + 1 ..< endIndex)
-                    }
-                    return indices
-                }() else {
-                    return
-                }
-                // Remove keywords inside parens
-                for index in indices.reversed() {
-                    if formatter.tokens[index + 1].isSpace {
-                        formatter.removeToken(at: index + 1)
-                    }
-                    formatter.removeToken(at: index)
-                }
-                // Insert keyword before parens
-                formatter.insert(.keyword(keyword), at: startIndex)
-                formatter.insert(.space(" "), at: startIndex + 1)
-                if let prevToken = formatter.token(at: startIndex - 1),
-                   !prevToken.isSpaceOrCommentOrLinebreak, !prevToken.isStartOfScope
-                {
-                    formatter.insert(.space(" "), at: startIndex)
-                }
-            } else {
+                let range = startIndex ... nextIndex
+                formatter.removeTokens(in: range)
+                openParenIndex -= range.count
                 // Find variable indices
                 var indices = [Int]()
                 var index = openParenIndex + 1
@@ -3401,6 +3370,35 @@ public struct _FormatRules {
                 // Insert keyword at indices
                 for index in indices.reversed() {
                     formatter.insert([.keyword(keyword), .space(" ")], at: index)
+                }
+            } else if hoist {
+                // Find let/var keyword indices
+                var keyword = "let"
+                guard let indices: [Int] = {
+                    guard let indices = indicesOf(keyword, in: openParenIndex + 1 ..< endIndex) else {
+                        keyword = "var"
+                        return indicesOf(keyword, in: openParenIndex + 1 ..< endIndex)
+                    }
+                    return indices
+                }() else {
+                    return
+                }
+                // Remove keywords inside parens
+                for index in indices.reversed() {
+                    if formatter.tokens[index + 1].isSpace {
+                        formatter.removeToken(at: index + 1)
+                    }
+                    formatter.removeToken(at: index)
+                }
+                // Insert keyword before parens
+                formatter.insert(.keyword(keyword), at: startIndex)
+                if let nextToken = formatter.token(at: startIndex + 1), !nextToken.isSpaceOrLinebreak {
+                    formatter.insert(.space(" "), at: startIndex + 1)
+                }
+                if let prevToken = formatter.token(at: startIndex - 1),
+                   !prevToken.isSpaceOrCommentOrLinebreak, !prevToken.isStartOfScope
+                {
+                    formatter.insert(.space(" "), at: startIndex)
                 }
             }
         }

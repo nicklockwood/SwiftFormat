@@ -1157,18 +1157,17 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.hoistPatternLet, exclude: ["trailingClosures"])
     }
 
-    // TODO: this could actually hoist out the let to the next level, but that's tricky
-    // to implement without breaking the `testNoOverHoistSwitchCaseWithNestedParens` case
+    // TODO: this could actually hoist the let, but that's tricky to implement without
+    // breaking the `testNoOverHoistSwitchCaseWithNestedParens` case
     func testHoistSwitchCaseWithNestedParens() {
         let input = "import Foo\nswitch (foo, bar) {\ncase (.baz(let quux), Foo.bar): break\n}"
-        let output = "import Foo\nswitch (foo, bar) {\ncase (let .baz(quux), Foo.bar): break\n}"
-        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet)
     }
 
+    // TODO: this could actually hoist the let by one level, but that's tricky to implement
     func testNoOverHoistSwitchCaseWithNestedParens() {
         let input = "import Foo\nswitch (foo, bar) {\ncase (.baz(let quux), bar): break\n}"
-        let output = "import Foo\nswitch (foo, bar) {\ncase (let .baz(quux), bar): break\n}"
-        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet)
     }
 
     func testNoHoistLetWithEmptArg() {
@@ -1180,6 +1179,24 @@ class RulesTests: XCTestCase {
     func testHoistLetWithNoSpaceAfterCase() {
         let input = "switch x { case.some(let y): return y }"
         let output = "switch x { case let .some(y): return y }"
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
+    }
+
+    func testHoistWrappedGuardCaseLet() {
+        let input = """
+        guard case Foo
+            .bar(let baz)
+        else {
+            return
+        }
+        """
+        let output = """
+        guard case let Foo
+            .bar(baz)
+        else {
+            return
+        }
+        """
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
     }
 

@@ -822,6 +822,7 @@ extension RulesTests {
         ("testHoistLabelledCaseLet", testHoistLabelledCaseLet),
         ("testHoistLetWithNoSpaceAfterCase", testHoistLetWithNoSpaceAfterCase),
         ("testHoistSwitchCaseWithNestedParens", testHoistSwitchCaseWithNestedParens),
+        ("testHoistWrappedGuardCaseLet", testHoistWrappedGuardCaseLet),
         ("testIfAfterSwitchCaseNotWrapped", testIfAfterSwitchCaseNotWrapped),
         ("testIfAndParensReplaced", testIfAndParensReplaced),
         ("testIfAndReplaced", testIfAndReplaced),

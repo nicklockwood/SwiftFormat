@@ -1738,7 +1738,7 @@ public struct _FormatRules {
                 {
                     formatter.replaceTokens(in: prevIndex + 1 ..< i, with:
                         formatter.linebreakToken(for: prevIndex + 1))
-                    formatter.insertSpace(formatter.indentForLine(at: i), at: prevIndex + 2)
+                    formatter.insertSpace(formatter.indentForLine(at: prevIndex + 1), at: prevIndex + 2)
                 }
             default:
                 break

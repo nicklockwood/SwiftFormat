@@ -1137,162 +1137,77 @@ extension Formatter {
     }
 
     func parseDeclarations() -> [Declaration] {
-        let parser = Formatter(tokens)
         var declarations = [Declaration]()
+        var startOfDeclaration = 0
+        forEachToken(onlyWhereEnabled: false) { i, token in
+            guard i >= startOfDeclaration,
+                  token.isDeclarationTypeKeyword || token == .startOfScope("#if")
+            else {
+                return
+            }
 
-        while !parser.tokens.isEmpty {
-            let startOfDeclaration = 0
-            var endOfDeclaration: Int?
-
-            // Determine what type of declaration this is
-            let declarationTypeKeywordIndex: Int?
-            let declarationKeyword: String?
-
-            if let firstDeclarationTypeKeywordIndex = parser.index(
-                after: startOfDeclaration - 1,
-                where: { $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if") }
+            // Most declarations will include exactly one token that `isDeclarationTypeKeyword` in
+            //  - `class func` methods will have two (and the first one will be incorrect!)
+            //  - Symbol imports (like `import class Module.Type`) will have two,
+            //    but the first one will be correct, so we don't make any corrections right here.
+            var declarationTypeKeywordIndex = i
+            var declarationKeyword = token.string
+            if declarationKeyword == "class", let endOfDeclarationOpeningSequence = index(
+                of: .startOfScope("{"), after: declarationTypeKeywordIndex
+            ), let nextDeclarationTypeKeywordIndex = lastIndex(
+                in: declarationTypeKeywordIndex ..< endOfDeclarationOpeningSequence,
+                where: { $0.isDeclarationTypeKeyword }
             ) {
-                // Most declarations will include exactly one token that `isDeclarationTypeKeyword` in
-                //  - `class func` methods will have two (and the first one will be incorrect!)
-                //  - Symbol imports (like `import class Module.Type`) will have two,
-                //    but the first one will be correct, so we don't make any corrections right here.
-                if parser.tokens[firstDeclarationTypeKeywordIndex].string != "class" {
-                    declarationTypeKeywordIndex = firstDeclarationTypeKeywordIndex
-                    declarationKeyword = parser.tokens[firstDeclarationTypeKeywordIndex].string
-                }
-
-                // For `class` declarations, we have to look at the _last_ token that
-                // `isDeclarationTypeKeyword` in the declaration's opening sequence (up until the `{`).
-                //  - This makes sure that we correctly identify `class func` declarations as being functions.
-                else if let endOfDeclarationOpeningSequence = parser.index(after: -1, where: { $0 == .startOfScope("{") }),
-                        let lastDeclarationTypeKeywordIndex = parser.lastIndex(
-                            in: 0 ..< endOfDeclarationOpeningSequence,
-                            where: { $0.isDeclarationTypeKeyword }
-                        )
-                {
-                    declarationTypeKeywordIndex = lastDeclarationTypeKeywordIndex
-                    declarationKeyword = parser.tokens[lastDeclarationTypeKeywordIndex].string
-                } else {
-                    declarationTypeKeywordIndex = nil
-                    declarationKeyword = nil
-                }
-            } else {
-                declarationTypeKeywordIndex = nil
-                declarationKeyword = nil
+                declarationTypeKeywordIndex = nextDeclarationTypeKeywordIndex
+                declarationKeyword = tokens[declarationTypeKeywordIndex].string
             }
 
-            if let declarationTypeKeywordIndex = declarationTypeKeywordIndex {
-                // Search for the next declaration so we know where this declaration ends.
-                var nextDeclarationKeywordIndex: Int?
-                var searchIndex = declarationTypeKeywordIndex + 1
-
-                // For conditional compilation blocks, the `declarationKeyword` _is_ the `startOfScope`
-                // so we can immediately skip to the corresponding #endif
-                if declarationKeyword == "#if",
-                   let endOfConditionalCompilationScope = parser.endOfScope(at: searchIndex)
-                {
-                    searchIndex = endOfConditionalCompilationScope
-                }
-
-                // Symbol imports (like `import class Module.Type`) will have an extra `isDeclarationTypeKeyword`
-                // immediately following their `declarationKeyword`, so we need to skip them.
-                if declarationKeyword == "import",
-                   let symbolTypeKeywordIndex = parser.index(of: .nonSpaceOrComment, after: declarationTypeKeywordIndex),
-                   parser.tokens[symbolTypeKeywordIndex].isDeclarationTypeKeyword
-                {
-                    searchIndex = symbolTypeKeywordIndex + 1
-                }
-
-                while searchIndex < parser.tokens.count, nextDeclarationKeywordIndex == nil {
-                    // If we encounter a `startOfScope`, we have to skip to the end of the scope.
-                    // This accounts for things like function bodies, etc.
-                    //  - Comment marker tokens (e.g. `//`) are `startOfScope` tokens,
-                    //    but they don't have a corresponding `endOfScope` so we can't skip through them.
-                    //  - `#if` tokens are `startOfScope`, but immediately represent the start of a new
-                    //    conditional compilation declaration so we can't skip through them.
-                    if parser.tokens[searchIndex].isStartOfScope,
-                       !parser.tokens[searchIndex].isComment,
-                       parser.tokens[searchIndex].string != "#if",
-                       let endOfScope = parser.endOfScope(at: searchIndex)
-                    {
-                        searchIndex = endOfScope + 1
-                    } else if parser.tokens[searchIndex].isDeclarationTypeKeyword
-                        || parser.tokens[searchIndex].string == "#if"
-                    {
-                        nextDeclarationKeywordIndex = searchIndex
-                    } else {
-                        searchIndex += 1
-                    }
-                }
-
-                if let nextDeclarationKeywordIndex = nextDeclarationKeywordIndex {
-                    // Search backward from the next declaration's type keyword
-                    // to find exactly where that declaration begins.
-                    var startOfNextDeclaration: Int?
-                    searchIndex = nextDeclarationKeywordIndex
-
-                    while searchIndex > declarationTypeKeywordIndex, startOfNextDeclaration == nil {
-                        if parser.tokens[searchIndex - 1].canPrecedeDeclarationTypeKeyword {
-                            searchIndex -= 1
-                        }
-
-                        // If we encounter a closing paren, we have to skip to the beginning of the scope.
-                        // This accounts for things like attribute bodies, etc.
-                        else if parser.tokens[searchIndex - 1] == .endOfScope(")") {
-                            let encounteredEndOfScope = searchIndex - 1
-                            var startOfScope: Int?
-                            searchIndex -= 1
-
-                            while searchIndex > declarationTypeKeywordIndex, startOfScope == nil {
-                                if parser.tokens[searchIndex].isStartOfScope,
-                                   parser.endOfScope(at: searchIndex) == encounteredEndOfScope
-                                {
-                                    startOfScope = searchIndex
-                                    // Confirm whether or not this scope should be grouped with the
-                                    // current or previous declaration:
-                                    if let previousNonwhitespace = parser.index(
-                                        of: .nonSpaceOrCommentOrLinebreak,
-                                        before: searchIndex
-                                    ), !parser.tokens[previousNonwhitespace].canPrecedeDeclarationTypeKeyword {
-                                        startOfNextDeclaration = encounteredEndOfScope + 1
-                                    }
-
-                                } else {
-                                    searchIndex -= 1
-                                }
-                            }
-
-                        } else {
-                            startOfNextDeclaration = searchIndex
-                        }
-                    }
-
-                    // Now that we know where the next declaration starts,
-                    // we know where this declaration ends.
-                    if let startOfNextDeclaration = startOfNextDeclaration {
-                        endOfDeclaration = startOfNextDeclaration - 1
-                    }
-                }
+            // For conditional compilation blocks, the `declarationKeyword` _is_ the `startOfScope`
+            // so we can immediately skip to the corresponding #endif
+            var searchIndex = declarationTypeKeywordIndex + 1
+            if declarationKeyword == "#if",
+               let endOfConditionalCompilationScope = endOfScope(at: searchIndex)
+            {
+                searchIndex = endOfConditionalCompilationScope + 1
             }
 
-            // Only separate declarations by line (never break up individual lines)
-            endOfDeclaration = endOfDeclaration.flatMap {
-                parser.endOfLine(at: $0)
+            // Symbol imports (like `import class Module.Type`) will have an extra `isDeclarationTypeKeyword`
+            // immediately following their `declarationKeyword`, so we need to skip them.
+            else if declarationKeyword == "import",
+                    let symbolTypeKeywordIndex = index(of: .nonSpaceOrComment, after: declarationTypeKeywordIndex),
+                    tokens[symbolTypeKeywordIndex].isDeclarationTypeKeyword
+            {
+                searchIndex = symbolTypeKeywordIndex + 1
+            }
+
+            // Search for the next declaration so we know where this declaration ends.
+            let nextDeclarationKeywordIndex = index(after: searchIndex - 1, where: {
+                $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if")
+            })
+
+            // Search backward from the next declaration keyword to find where declaration begins.
+            var endOfDeclaration = nextDeclarationKeywordIndex.flatMap {
+                index(before: startOfModifiers(at: $0), where: {
+                    !$0.isSpaceOrCommentOrLinebreak
+                }).map { endOfLine(at: $0) }
             }
 
             // Prefer keeping linebreaks at the end of a declaration's tokens,
             // instead of the start of the next delaration's tokens
             while let linebreakSearchIndex = endOfDeclaration,
-                  parser.token(at: linebreakSearchIndex + 1)?.isLinebreak == true
+                  self.token(at: linebreakSearchIndex + 1)?.isLinebreak == true
             {
                 endOfDeclaration = linebreakSearchIndex + 1
             }
 
-            let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, parser.tokens.count - 1)
-            let declaration = Array(parser.tokens[declarationRange])
-            parser.removeTokens(in: declarationRange)
-
-            declarations.append(.declaration(kind: declarationKeyword ?? "unknown", tokens: declaration))
+            let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, tokens.count - 1)
+            startOfDeclaration = declarationRange.upperBound + 1
+            let declaration = Array(tokens[declarationRange])
+            declarations.append(.declaration(kind: declarationKeyword, tokens: declaration))
+        }
+        if startOfDeclaration < tokens.count {
+            let declaration = Array(tokens[startOfDeclaration...])
+            declarations.append(.declaration(kind: "", tokens: declaration))
         }
 
         return declarations.map { declaration in
@@ -1597,17 +1512,5 @@ extension Token {
         return ["import", "let", "var", "typealias", "func", "enum", "case",
                 "struct", "class", "protocol", "init", "deinit",
                 "extension", "subscript", "operator", "precedencegroup"].contains(keyword)
-    }
-
-    /// Whether or not this token can precede the token that `isDeclarationTypeKeyword`
-    /// in a given declaration. e.g. `public` can precede `var` in `public var foo = "bar"`.
-    var canPrecedeDeclarationTypeKeyword: Bool {
-        if isAttribute || isKeyword || isSpaceOrCommentOrLinebreak {
-            return true
-        }
-        if case let .identifier(string) = self, _FormatRules.allModifiers.contains(string) {
-            return true
-        }
-        return false
     }
 }

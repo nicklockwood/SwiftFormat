@@ -1098,6 +1098,7 @@ extension RulesTests {
         ("testNoFractionGrouping", testNoFractionGrouping),
         ("testNoHoistAccessModifierForExtensionThatAddsProtocolConformance", testNoHoistAccessModifierForExtensionThatAddsProtocolConformance),
         ("testNoHoistAccessModifierForOpenMethod", testNoHoistAccessModifierForOpenMethod),
+        ("testNoHoistCaseLetContainingGenerics", testNoHoistCaseLetContainingGenerics),
         ("testNoHoistClosureVariables", testNoHoistClosureVariables),
         ("testNoHoistIfFirstArgSpecified", testNoHoistIfFirstArgSpecified),
         ("testNoHoistIfLastArgSpecified", testNoHoistIfLastArgSpecified),

@@ -3301,6 +3301,9 @@ public struct _FormatRules {
                     identifierFound = false
                 case .startOfScope("{"):
                     return nil
+                case .startOfScope("<"):
+                    // See: https://github.com/nicklockwood/SwiftFormat/issues/768
+                    return nil
                 default:
                     break
                 }

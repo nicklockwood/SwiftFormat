@@ -1200,6 +1200,13 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet)
     }
 
+    func testNoHoistCaseLetContainingGenerics() {
+        // Hoisting in this case causes a compilation error as-of Swift 5.3
+        // See: https://github.com/nicklockwood/SwiftFormat/issues/768
+        let input = "if case .some(Optional<Any>.some(let foo)) = bar else {}"
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet)
+    }
+
     // hoist = false
 
     func testUnhoistCaseLet() {

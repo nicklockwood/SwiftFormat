@@ -1366,10 +1366,11 @@ public struct _FormatRules {
             case .linebreak:
                 // Detect linewrap
                 let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
-                let linewrapped =
+                let linewrapped = lastNonSpaceOrLinebreakIndex > -1 && (
                     !formatter.isEndOfStatement(at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last) ||
-                    !(nextTokenIndex == nil ||
-                        formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last))
+                        !(nextTokenIndex == nil ||
+                            formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last))
+                )
 
                 // Determine current indent
                 var indent = indentStack.last ?? ""

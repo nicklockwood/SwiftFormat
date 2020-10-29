@@ -520,8 +520,9 @@ public struct FormatOptions: CustomStringConvertible {
 
     public var description: String {
         let allowedCharacters = CharacterSet.newlines.inverted
-        return Mirror(reflecting: self).children.map {
-            "\($0.value);".addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? ""
+        return Mirror(reflecting: self).children.compactMap { child in
+            let value = (child.value as? Set<AnyHashable>).map { $0.sorted as Any } ?? child.value
+            return "\(value);".addingPercentEncoding(withAllowedCharacters: allowedCharacters)
         }.joined()
     }
 }

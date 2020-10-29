@@ -315,6 +315,7 @@ extension OptionDescriptorTests {
         ("testAllDescriptorsHaveProperty", testAllDescriptorsHaveProperty),
         ("testAllPropertiesHaveDescriptor", testAllPropertiesHaveDescriptor),
         ("testFileHeader", testFileHeader),
+        ("testFormatOptionsDescriptionConsistency", testFormatOptionsDescriptionConsistency),
         ("testIndentation", testIndentation),
         ("testModifierOrder", testModifierOrder),
         ("testNoSpaceOperators", testNoSpaceOperators),

@@ -1405,6 +1405,7 @@ extension RulesTests {
         ("testOptionalCountNotEqualToZero", testOptionalCountNotEqualToZero),
         ("testOptionalFunctionCallNotUnwrapped", testOptionalFunctionCallNotUnwrapped),
         ("testOptionalTypeConvertedToSugar", testOptionalTypeConvertedToSugar),
+        ("testOptionalTypeInsideCaseConvertedToSugar", testOptionalTypeInsideCaseConvertedToSugar),
         ("testOrganizeClassDeclarationsIntoCategories", testOrganizeClassDeclarationsIntoCategories),
         ("testOrganizeEnumCasesFirst", testOrganizeEnumCasesFirst),
         ("testOrganizePrivateSet", testOrganizePrivateSet),

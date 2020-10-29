@@ -4383,11 +4383,11 @@ public struct _FormatRules {
         options: ["shortoptionals"]
     ) { formatter in
         formatter.forEach(.startOfScope("<")) { i, _ in
-            guard let typeIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {
-                $0.isIdentifier
-            }), let endIndex = formatter.index(of: .endOfScope(">"), after: i),
-                    let typeStart = formatter.index(of: .nonSpaceOrLinebreak, in: i + 1 ..< endIndex),
-                    let typeEnd = formatter.lastIndex(of: .nonSpaceOrLinebreak, in: i + 1 ..< endIndex)
+            guard let typeIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i),
+                  case let .identifier(identifier) = formatter.tokens[typeIndex],
+                  let endIndex = formatter.index(of: .endOfScope(">"), after: i),
+                  let typeStart = formatter.index(of: .nonSpaceOrLinebreak, in: i + 1 ..< endIndex),
+                  let typeEnd = formatter.lastIndex(of: .nonSpaceOrLinebreak, in: i + 1 ..< endIndex)
             else {
                 return
             }
@@ -4395,7 +4395,7 @@ public struct _FormatRules {
                 $0.isOperator(".")
             }), formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex, if: {
                 ![.identifier("self"), .identifier("Type")].contains($0)
-            }) != nil {
+            }) != nil, identifier != "Optional" {
                 return
             }
             // Workaround for https://bugs.swift.org/browse/SR-12856

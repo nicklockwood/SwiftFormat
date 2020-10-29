@@ -1204,7 +1204,7 @@ class RulesTests: XCTestCase {
         // Hoisting in this case causes a compilation error as-of Swift 5.3
         // See: https://github.com/nicklockwood/SwiftFormat/issues/768
         let input = "if case .some(Optional<Any>.some(let foo)) = bar else {}"
-        testFormatting(for: input, rule: FormatRules.hoistPatternLet)
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet, exclude: ["typeSugar"])
     }
 
     // hoist = false
@@ -2800,6 +2800,12 @@ class RulesTests: XCTestCase {
         let input = "let a: Swift.String = Optional<String>"
         let output = "let a: Swift.String = String?"
         testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    func testOptionalTypeInsideCaseConvertedToSugar() {
+        let input = "if case .some(Optional<Any>.some(let foo)) = bar else {}"
+        let output = "if case .some(Any?.some(let foo)) = bar else {}"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, exclude: ["hoistPatternLet"])
     }
 
     // shortOptionals = exceptProperties

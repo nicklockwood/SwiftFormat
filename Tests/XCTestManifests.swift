@@ -316,6 +316,7 @@ extension OptionDescriptorTests {
         ("testAllPropertiesHaveDescriptor", testAllPropertiesHaveDescriptor),
         ("testFileHeader", testFileHeader),
         ("testIndentation", testIndentation),
+        ("testModifierOrder", testModifierOrder),
         ("testNoSpaceOperators", testNoSpaceOperators),
         ("testNoWrapOperators", testNoWrapOperators),
     ]
@@ -369,6 +370,7 @@ extension ParsingHelpersTests {
         ("testIsEnumCase", testIsEnumCase),
         ("testIsNotEnumCase", testIsNotEnumCase),
         ("testModifierOrder", testModifierOrder),
+        ("testModifierOrder2", testModifierOrder2),
         ("testMultipleNestedTrailingClosures", testMultipleNestedTrailingClosures),
         ("testNonVoidFunctionAllmanBracesNotTreatedAsClosure", testNonVoidFunctionAllmanBracesNotTreatedAsClosure),
         ("testNonVoidFunctionBracesNotTreatedAsClosure", testNonVoidFunctionBracesNotTreatedAsClosure),

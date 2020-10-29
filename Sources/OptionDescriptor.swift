@@ -660,7 +660,7 @@ struct _Descriptors {
         help: "Comma-delimited list of modifiers in preferred order",
         keyPath: \FormatOptions.modifierOrder,
         validate: {
-            guard _FormatRules.allModifiers.contains($0) else {
+            guard _FormatRules.mapModifiers($0) != nil else {
                 throw FormatError.options("'\($0)' is not a valid modifier")
             }
         }
@@ -889,7 +889,7 @@ struct _Descriptors {
         deprecationMessage: "Use --modifierorder instead.",
         keyPath: \FormatOptions.modifierOrder,
         validate: {
-            guard _FormatRules.allModifiers.contains($0) else {
+            guard _FormatRules.mapModifiers($0) != nil else {
                 throw FormatError.options("'\($0)' is not a valid specifier")
             }
         }

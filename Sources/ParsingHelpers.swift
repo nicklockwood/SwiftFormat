@@ -1370,21 +1370,11 @@ extension Formatter {
                 priorities[modifier] = i
             }
         }
-        var order = options.modifierOrder
+        var order = options.modifierOrder.flatMap { _FormatRules.mapModifiers($0) ?? [] }
         for (i, modifiers) in _FormatRules.defaultModifierOrder.enumerated() {
-            for modifier in modifiers where !order.contains(modifier) {
-                var insertionPoint = order.count
-                for (index, s) in order.enumerated() {
-                    if let j = priorities[s] {
-                        if j > i {
-                            insertionPoint = index
-                        } else if j == i {
-                            insertionPoint = index + 1
-                        }
-                    }
-                }
-                order.insert(modifier, at: insertionPoint)
-            }
+            let insertionPoint = order.firstIndex(where: { modifiers.contains($0) }) ??
+                order.firstIndex(where: { (priorities[$0] ?? 0) > i }) ?? order.count
+            order.insert(contentsOf: modifiers.filter { !order.contains($0) }, at: insertionPoint)
         }
         return order
     }
@@ -1555,12 +1545,33 @@ extension _FormatRules {
     // ACL modifiers
     static let aclModifiers = ["private", "fileprivate", "internal", "public", "open"]
 
+    // ACL setter modifiers
+    static let aclSetterModifiers = ["private(set)", "fileprivate(set)", "internal(set)", "public(set)", "open(set)"]
+
+    // Modifier mapping (designed to match SwiftLint)
+    static func mapModifiers(_ input: String) -> [String]? {
+        switch input.lowercased() {
+        case "acl":
+            return aclModifiers
+        case "setteracl":
+            return aclSetterModifiers
+        case "mutators":
+            return ["mutating", "nonmutating"]
+        case "typemethods":
+            return [] // Not clear what this is for - legacy?
+        case "owned":
+            return ["weak", "unowned"]
+        default:
+            return allModifiers.contains(input) ? [input] : nil
+        }
+    }
+
     // Swift modifier keywords, in default order
     static let defaultModifierOrder = [
         ["override"],
         aclModifiers,
-        ["private(set)", "fileprivate(set)", "internal(set)", "public(set)"],
-        ["final", "dynamic"], // Can't be both
+        aclSetterModifiers,
+        ["final", "dynamic"],
         ["optional", "required"],
         ["convenience"],
         ["indirect"],

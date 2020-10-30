@@ -96,6 +96,8 @@ extension CommandLineTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__CommandLineTests = [
+        ("testBadConfigFails", testBadConfigFails),
+        ("testBadConfigFails2", testBadConfigFails2),
         ("testCacheHit", testCacheHit),
         ("testCacheMiss", testCacheMiss),
         ("testCachePotentialFalsePositive2", testCachePotentialFalsePositive2),

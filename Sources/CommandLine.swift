@@ -86,13 +86,9 @@ private func printWarnings(_ errors: [Error]) -> Bool {
         }
         let isError: Bool
         switch error {
-        case let .options(string):
-            isError = ["File not found", "Malformed", "--minversion"].contains(where: {
-                string.contains($0)
-            })
         case let .writing(string):
             isError = !string.contains(" cache ")
-        case .parsing, .reading:
+        case .parsing, .reading, .options:
             isError = true
         }
         if isError {

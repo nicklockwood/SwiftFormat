@@ -222,6 +222,26 @@ class CommandLineTests: XCTestCase {
         ])
     }
 
+    // MARK: config file
+
+    func testBadConfigFails() {
+        var error = ""
+        CLI.print = { message, _ in
+            error = message
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Tests/BadConfig/Test.swift --unexclude Tests/BadConfig --config Tests/BadConfig/.swiftformat --lint"), .error)
+        XCTAssert(error.contains("'ifdef' is not a formatting rule"), error)
+    }
+
+    func testBadConfigFails2() {
+        var error = ""
+        CLI.print = { message, _ in
+            error = message
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Tests/BadConfig/Test.swift --unexclude Tests/BadConfig --lint"), .error)
+        XCTAssert(error.contains("'ifdef' is not a formatting rule"), error)
+    }
+
     // MARK: snapshot/regression tests
 
     func testRegressionSuite() {

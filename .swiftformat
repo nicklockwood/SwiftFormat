@@ -1,6 +1,6 @@
 # file options
 
---exclude Tests/XCTestManifests.swift,Snapshots
+--exclude Tests/XCTestManifests.swift,Tests/BadConfig,Snapshots
 
 # format options
 

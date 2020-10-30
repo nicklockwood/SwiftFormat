@@ -215,8 +215,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
             do {
                 try processDirectory(inputURL, with: &options, logger: logger)
             } catch {
-                // Non-fatal error - no need to return
                 onComplete { throw error }
+                return
             }
             let enumerationOptions: FileManager.DirectoryEnumerationOptions
             #if os(macOS)
@@ -257,8 +257,8 @@ public func enumerateFiles(withInputURL inputURL: URL,
         do {
             try gatherOptions(&options, for: inputURL, with: logger)
         } catch {
-            // Non-fatal error - no need to return
             onComplete { throw error }
+            return
         }
         enumerate(inputURL: inputURL, outputURL: outputURL, options: options)
     }

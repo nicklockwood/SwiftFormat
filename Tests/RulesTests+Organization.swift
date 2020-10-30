@@ -1580,6 +1580,17 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.extensionAccessControl)
     }
 
+    func testAccessNotHoistedIfTypeVisibilityIsLower() {
+        let input = """
+        class Foo {}
+
+        extension Foo {
+            public func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
     // MARK: markTypes
 
     func testAddsMarkBeforeTypes() {

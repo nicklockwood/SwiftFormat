@@ -446,6 +446,7 @@ extension RulesTests {
     static let __allTests__RulesTests = [
         ("testAboveCustomExtensionOrganizationThreshold", testAboveCustomExtensionOrganizationThreshold),
         ("testAboveCustomStructOrganizationThreshold", testAboveCustomStructOrganizationThreshold),
+        ("testAccessNotHoistedIfTypeVisibilityIsLower", testAccessNotHoistedIfTypeVisibilityIsLower),
         ("testAddsMarkBeforeTypes", testAddsMarkBeforeTypes),
         ("testAddsMarkBeforeTypeWithDocComment", testAddsMarkBeforeTypeWithDocComment),
         ("testAddsMarkCommentForExtensionWithConformance", testAddsMarkCommentForExtensionWithConformance),

@@ -4962,7 +4962,8 @@ public struct _FormatRules {
         help: "Configure the placement of an extension's access control keyword.",
         options: ["extensionacl"]
     ) { formatter in
-        formatter.mapRecursiveDeclarations { declaration -> Formatter.Declaration in
+        let declarations = formatter.parseDeclarations()
+        let updatedDeclarations = formatter.mapRecursiveDeclarations(of: declarations) { declaration in
             guard case let .type("extension", open, body, close) = declaration else {
                 return declaration
             }
@@ -5002,6 +5003,19 @@ public struct _FormatRules {
                       // (private applied at extension level is equivalent to `fileprivate`)
                       memberVisibility > .private
                 else { return declaration }
+
+                if memberVisibility > extensionVisibility ?? .internal {
+                    // Check type being extended does not have lower visibility
+                    for d in declarations where d.name == declaration.name {
+                        if case let .type(kind: kind, _, _, _) = d {
+                            if kind != "extension", formatter.visibility(of: d) ?? .internal < memberVisibility {
+                                // Cannot make extension with greater visibility than type being extended
+                                return declaration
+                            }
+                            break
+                        }
+                    }
+                }
 
                 let extensionWithUpdatedVisibility: Formatter.Declaration
                 if memberVisibility == extensionVisibility ||
@@ -5047,6 +5061,9 @@ public struct _FormatRules {
                 }
             }
         }
+
+        let updatedTokens = updatedDeclarations.flatMap { $0.tokens }
+        formatter.replaceTokens(in: formatter.tokens.indices, with: updatedTokens)
     }
 
     public let markTypes = FormatRule(

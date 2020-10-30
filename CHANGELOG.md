@@ -1,6 +1,18 @@
 # Change Log
 
-## [0.47.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.1) (2020-1026)
+## [0.47.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.2) (2020-10-30)
+
+- The `markTypes`, `organizeDeclarations` and`extensionAccessControl` rules now respect comment directives
+- Errors in `.swiftformat` config files no longer fail silently
+- Fixed bug in `--modifierorder` config and added support for SwiftLint modifierorder syntax
+- Fixed issue where `hoistPatternLet` breaks compilation due to a quirk in Swift parser
+- Fixed bug in `hoistPatternLet` when expression is wrapped or contains spaces
+- The `typeSugar` rule is now applied in more cases
+- Fixed bug in cache logic resulting in slower formatting when using certain config options
+- Fixed crash in `indent` rule
+- Fixed bug in wrapped else indent
+
+## [0.47.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.1) (2020-10-26)
 
 - Fixed a crash when using the `fileHeader` rule
 - Fixed occasional out-of-bounds crash in `markTypes` rule

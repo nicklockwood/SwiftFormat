@@ -7,14 +7,14 @@
 	<key>BuildVersion</key>
 	<string>2</string>
 	<key>CFBundleShortVersionString</key>
-	<string>12.0</string>
+	<string>12.1</string>
 	<key>CFBundleVersion</key>
-	<string>17219</string>
+	<string>17222</string>
 	<key>ProductBuildVersion</key>
-	<string>12A7209</string>
+	<string>12A7403</string>
 	<key>ProjectName</key>
 	<string>IDEFrameworks</string>
 	<key>SourceVersion</key>
-	<string>17219000000000000</string>
+	<string>17222000000000000</string>
 </dict>
 </plist>

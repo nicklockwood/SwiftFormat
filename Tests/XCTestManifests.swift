@@ -976,6 +976,7 @@ extension RulesTests {
         ("testMalformedFunctionNotMisidentifiedAsClosure", testMalformedFunctionNotMisidentifiedAsClosure),
         ("testMapNestedPropertyWithSpacesToKeyPath", testMapNestedPropertyWithSpacesToKeyPath),
         ("testMapPropertyToKeyPath", testMapPropertyToKeyPath),
+        ("testMarkExtensionsDisabled", testMarkExtensionsDisabled),
         ("testMarkExtensionsIfNotEmpty", testMarkExtensionsIfNotEmpty),
         ("testMarkInsideMultilineComment", testMarkInsideMultilineComment),
         ("testMarkIsUpdated", testMarkIsUpdated),

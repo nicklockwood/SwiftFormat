@@ -68,6 +68,11 @@ class RulesTests: XCTestCase {
         if input != output {
             XCTAssertEqual(try format(output, rules: rules, options: options),
                            output, file: file, line: line)
+            for rule in rules {
+                let disabled = "// swiftformat:disable \(rule.name)\n\(input)"
+                XCTAssertEqual(try format(disabled, rules: [rule], options: options),
+                               disabled, "Failed to disable \(rule.name) rule", file: file, line: line)
+            }
         }
         if input != output2, output != output2 {
             XCTAssertEqual(try format(output2, rules: FormatRules.all(except: exclude), options: options),

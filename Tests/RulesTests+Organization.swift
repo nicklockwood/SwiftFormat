@@ -2126,4 +2126,42 @@ extension RulesTests {
             exclude: ["emptyBraces", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "blankLinesBetweenScopes"]
         )
     }
+
+    func testMarkExtensionsDisabled() {
+        let input = """
+        extension Foo: FooProtocol {}
+
+        // swiftformat:disable markTypes
+
+        extension Bar: BarProtocol {}
+
+        // swiftformat:enable markTypes
+
+        extension Baz: BazProtocol {}
+
+        extension Quux: QuuxProtocol {}
+        """
+
+        let output = """
+        // MARK: - Foo + FooProtocol
+
+        extension Foo: FooProtocol {}
+
+        // swiftformat:disable markTypes
+
+        extension Bar: BarProtocol {}
+
+        // MARK: - Baz + BazProtocol
+
+        // swiftformat:enable markTypes
+
+        extension Baz: BazProtocol {}
+
+        // MARK: - Quux + QuuxProtocol
+
+        extension Quux: QuuxProtocol {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
 }

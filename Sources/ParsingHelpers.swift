@@ -1203,7 +1203,7 @@ extension Formatter {
             let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, tokens.count - 1)
             startOfDeclaration = declarationRange.upperBound + 1
             let declaration = Array(tokens[declarationRange])
-            declarations.append(.declaration(kind: declarationKeyword, tokens: declaration))
+            declarations.append(.declaration(kind: isEnabled ? declarationKeyword : "", tokens: declaration))
         }
         if startOfDeclaration < tokens.count {
             let declaration = Array(tokens[startOfDeclaration...])

@@ -1023,7 +1023,7 @@ extension Formatter {
         var openTokens: [Token] {
             switch self {
             case .declaration:
-                return []
+                return tokens
             case let .type(_, open, _, _),
                  let .conditionalCompilation(open, _, _):
                 return open

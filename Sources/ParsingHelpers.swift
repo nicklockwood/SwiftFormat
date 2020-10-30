@@ -247,10 +247,21 @@ extension Formatter {
         return modifiersForType(at: index, contains: { $1 == contains })
     }
 
+    func indexOfModifier(_ modifier: String, forTypeAt index: Int) -> Int? {
+        var i: Int?
+        return modifiersForType(at: index, contains: {
+            i = $0
+            return $1 == modifier
+        }) ? i : nil
+    }
+
     // first index of modifier list
-    func startOfModifiers(at index: Int) -> Int {
+    func startOfModifiers(at index: Int, includingAttributes: Bool) -> Int {
         var startIndex = index
-        _ = modifiersForType(at: index, contains: { i, _ in
+        _ = modifiersForType(at: index, contains: { i, name in
+            if !includingAttributes, name.hasPrefix("@") {
+                return true
+            }
             startIndex = i
             return false
         })
@@ -1066,17 +1077,14 @@ extension Formatter {
 
         /// The name of this type or variable
         var name: String? {
-            let openingFormatter = Formatter(openTokens)
-
-            guard let keywordIndex = openingFormatter.index(after: -1, where: {
-                $0.string == keyword
-            }) else { return nil }
-
-            guard let typeNameIndex = openingFormatter.index(of: .identifier, after: keywordIndex) else {
+            let parser = Formatter(openTokens)
+            guard let keywordIndex = openTokens.firstIndex(of: .keyword(keyword)),
+                  let nameIndex = parser.index(of: .identifier, after: keywordIndex)
+            else {
                 return nil
             }
 
-            return openingFormatter.fullyQualifiedName(startingAt: typeNameIndex).name
+            return parser.fullyQualifiedName(startingAt: nameIndex).name
         }
     }
 
@@ -1146,48 +1154,40 @@ extension Formatter {
                 return
             }
 
-            // Most declarations will include exactly one token that `isDeclarationTypeKeyword` in
-            //  - `class func` methods will have two (and the first one will be incorrect!)
-            //  - Symbol imports (like `import class Module.Type`) will have two,
-            //    but the first one will be correct, so we don't make any corrections right here.
-            var declarationTypeKeywordIndex = i
-            var declarationKeyword = token.string
-            if declarationKeyword == "class", let endOfDeclarationOpeningSequence = index(
-                of: .startOfScope("{"), after: declarationTypeKeywordIndex
-            ), let nextDeclarationTypeKeywordIndex = lastIndex(
-                in: declarationTypeKeywordIndex ..< endOfDeclarationOpeningSequence,
-                where: { $0.isDeclarationTypeKeyword }
-            ) {
-                declarationTypeKeywordIndex = nextDeclarationTypeKeywordIndex
-                declarationKeyword = tokens[declarationTypeKeywordIndex].string
-            }
-
-            // For conditional compilation blocks, the `declarationKeyword` _is_ the `startOfScope`
-            // so we can immediately skip to the corresponding #endif
-            var searchIndex = declarationTypeKeywordIndex + 1
-            if declarationKeyword == "#if",
-               let endOfConditionalCompilationScope = endOfScope(at: searchIndex)
-            {
-                searchIndex = endOfConditionalCompilationScope + 1
-            }
-
-            // Symbol imports (like `import class Module.Type`) will have an extra `isDeclarationTypeKeyword`
-            // immediately following their `declarationKeyword`, so we need to skip them.
-            else if declarationKeyword == "import",
-                    let symbolTypeKeywordIndex = index(of: .nonSpaceOrComment, after: declarationTypeKeywordIndex),
-                    tokens[symbolTypeKeywordIndex].isDeclarationTypeKeyword
-            {
-                searchIndex = symbolTypeKeywordIndex + 1
+            // Get declaration keyword
+            var searchIndex = i
+            let declarationKeyword = declarationType(at: i) ?? "#if"
+            switch token {
+            case .startOfScope("#if"):
+                // For conditional compilation blocks, the `declarationKeyword` _is_ the `startOfScope`
+                // so we can immediately skip to the corresponding #endif
+                if let endOfConditionalCompilationScope = endOfScope(at: i) {
+                    searchIndex = endOfConditionalCompilationScope
+                }
+            case .keyword("class") where declarationKeyword != "class":
+                // Most declarations will include exactly one token that `isDeclarationTypeKeyword` in
+                //  - `class func` methods will have two (and the first one will be incorrect!)
+                searchIndex = index(of: .keyword(declarationKeyword), after: i) ?? searchIndex
+            case .keyword("import"):
+                // Symbol imports (like `import class Module.Type`) will have an extra `isDeclarationTypeKeyword`
+                // immediately following their `declarationKeyword`, so we need to skip them.
+                if let symbolTypeKeywordIndex = index(of: .nonSpaceOrComment, after: i),
+                   tokens[symbolTypeKeywordIndex].isDeclarationTypeKeyword
+                {
+                    searchIndex = symbolTypeKeywordIndex
+                }
+            default:
+                break
             }
 
             // Search for the next declaration so we know where this declaration ends.
-            let nextDeclarationKeywordIndex = index(after: searchIndex - 1, where: {
+            let nextDeclarationKeywordIndex = index(after: searchIndex, where: {
                 $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if")
             })
 
             // Search backward from the next declaration keyword to find where declaration begins.
             var endOfDeclaration = nextDeclarationKeywordIndex.flatMap {
-                index(before: startOfModifiers(at: $0), where: {
+                index(before: startOfModifiers(at: $0, includingAttributes: true), where: {
                     !$0.isSpaceOrCommentOrLinebreak
                 }).map { endOfLine(at: $0) }
             }
@@ -1461,7 +1461,7 @@ extension _FormatRules {
     static let aclModifiers = ["private", "fileprivate", "internal", "public", "open"]
 
     // ACL setter modifiers
-    static let aclSetterModifiers = ["private(set)", "fileprivate(set)", "internal(set)", "public(set)", "open(set)"]
+    static let aclSetterModifiers = aclModifiers.map { "\($0)(set)" }
 
     // Modifier mapping (designed to match SwiftLint)
     static func mapModifiers(_ input: String) -> [String]? {

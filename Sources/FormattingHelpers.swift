@@ -393,23 +393,22 @@ extension Formatter {
 
         // -- wrapconditions
         forEach(.keyword) { index, token in
-            guard ["if", "guard", "while"].contains(token.string) else {
+            let endOfConditionsToken: Token
+            switch token {
+            case .keyword("guard"):
+                endOfConditionsToken = .keyword("else")
+            case .keyword("if"), .keyword("while"):
+                endOfConditionsToken = .startOfScope("{")
+            default:
                 return
             }
 
-            let endOfConditionsToken: Token
-            if token.string == "guard" {
-                endOfConditionsToken = .keyword("else")
-            } else {
-                endOfConditionsToken = .startOfScope("{")
-            }
-
             // Only wrap when this is a control flow condition that spans multiple lines
-            guard
-                let endOfConditionsTokenIndex = self.index(of: endOfConditionsToken, after: index),
-                let nextTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                !(onSameLine(index, endOfConditionsTokenIndex)
-                    || self.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfLine(at: index)) == endOfConditionsTokenIndex)
+            guard let endOfConditionsTokenIndex = self.index(of: endOfConditionsToken, after: index),
+                  let nextTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                  !(onSameLine(index, endOfConditionsTokenIndex)
+                      || self.index(of: .nonSpaceOrCommentOrLinebreak,
+                                    after: endOfLine(at: index)) == endOfConditionsTokenIndex)
             else { return }
 
             switch options.wrapConditions {
@@ -729,12 +728,10 @@ extension Formatter {
     ]
 
     /// The `Category` of the given `Declaration`
-    func category(of declaration: Formatter.Declaration) -> Category {
+    func category(of declaration: Declaration) -> Category {
         switch declaration {
         case let .declaration(keyword, tokens), let .type(keyword, open: tokens, _, _):
-            let parser = Formatter(tokens)
-
-            guard let keywordIndex = parser.index(after: -1, where: { $0.string == keyword }) else {
+            guard let keywordIndex = tokens.firstIndex(of: .keyword(keyword)) else {
                 // This should never happen (the declaration's `keyword` will always be present in the tokens)
                 return .internal
             }
@@ -742,10 +739,11 @@ extension Formatter {
             // Enum cases don't fit into any of the other categories,
             // so they should go in the intial top section.
             //  - The user can also provide other declaration types to place in this category
-            if declaration.keyword == "case" || options.beforeMarks.contains(declaration.keyword) {
+            if keyword == "case" || options.beforeMarks.contains(keyword) {
                 return .beforeMarks
             }
 
+            let parser = Formatter(tokens)
             if Formatter.categoryOrdering.contains(.lifecycle) {
                 // `init` and `deinit` always go in Lifecycle if it's present
                 if ["init", "deinit"].contains(keyword) {
@@ -781,19 +779,17 @@ extension Formatter {
     }
 
     /// The access control `Visibility` of the given `Declaration`
-    func visibility(of declaration: Formatter.Declaration) -> Visibility? {
+    func visibility(of declaration: Declaration) -> Visibility? {
         switch declaration {
         case let .declaration(keyword, tokens), let .type(keyword, open: tokens, _, _):
-            let parser = Formatter(tokens)
-
-            guard let keywordIndex = parser.index(after: -1, where: { $0.string == keyword }) else {
+            guard let keywordIndex = tokens.firstIndex(of: .keyword(keyword)) else {
                 return nil
             }
 
             // Search for a visibility keyword in the tokens before the primary keyword,
             // making sure we exclude groups like private(set).
             var searchIndex = 0
-
+            let parser = Formatter(tokens)
             while searchIndex < keywordIndex {
                 if let visibility = Visibility(rawValue: parser.tokens[searchIndex].string),
                    parser.next(.nonSpaceOrComment, after: searchIndex) != .startOfScope("(")
@@ -817,14 +813,11 @@ extension Formatter {
             return .nestedType
 
         case let .declaration(keyword, tokens):
+            guard let declarationTypeTokenIndex = tokens.firstIndex(of: .keyword(keyword)) else {
+                return nil
+            }
+
             let declarationParser = Formatter(tokens)
-
-            guard let declarationTypeTokenIndex = declarationParser.index(
-                after: -1,
-                where: { $0.isKeyword && $0.string == keyword }
-            )
-            else { return nil }
-
             let declarationTypeToken = declarationParser.tokens[declarationTypeTokenIndex]
 
             let isStaticDeclaration = declarationParser.lastToken(
@@ -929,7 +922,7 @@ extension Formatter {
     }
 
     /// Removes any existing category separators from the given declarations
-    func removeExistingCategorySeparators(from typeBody: [Formatter.Declaration]) -> [Formatter.Declaration] {
+    func removeExistingCategorySeparators(from typeBody: [Declaration]) -> [Declaration] {
         var typeBody = typeBody
 
         for (declarationIndex, declaration) in typeBody.enumerated() {
@@ -1018,8 +1011,8 @@ extension Formatter {
 
     /// Organizes the flat list of declarations based on category and type
     func organizeType(
-        _ typeDeclaration: (kind: String, open: [Token], body: [Formatter.Declaration], close: [Token])
-    ) -> (kind: String, open: [Token], body: [Formatter.Declaration], close: [Token]) {
+        _ typeDeclaration: (kind: String, open: [Token], body: [Declaration], close: [Token])
+    ) -> (kind: String, open: [Token], body: [Declaration], close: [Token]) {
         guard options.organizeTypes.contains(typeDeclaration.kind) else {
             return typeDeclaration
         }
@@ -1058,7 +1051,7 @@ extension Formatter {
         let bodyWithoutCategorySeparators = removeExistingCategorySeparators(from: typeDeclaration.body)
 
         // Categorize each of the declarations into their primary groups
-        typealias CategorizedDeclarations = [(declaration: Formatter.Declaration, category: Category, type: DeclarationType?)]
+        typealias CategorizedDeclarations = [(declaration: Declaration, category: Category, type: DeclarationType?)]
 
         let categorizedDeclarations = bodyWithoutCategorySeparators.map {
             (declaration: $0, category: category(of: $0), type: type(of: $0))
@@ -1115,7 +1108,7 @@ extension Formatter {
             /// Whether or not this declaration is an instance property that can affect
             /// the parameters struct's synthesized memberwise initializer
             func affectsSynthesizedMemberwiseInitializer(
-                _ declaration: Formatter.Declaration,
+                _ declaration: Declaration,
                 _ type: DeclarationType?
             ) -> Bool {
                 switch type {
@@ -1132,16 +1125,15 @@ extension Formatter {
                     // based on the grammar for a variable declaration:
                     // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_variable-declaration
                     let parser = Formatter(declaration.tokens)
-                    var hasWillSetOrDidSetBlock = false
 
                     if let bodyOpenBrace = parser.index(of: .startOfScope("{"), after: -1),
-                       let firstBodyToken = parser.next(.nonSpaceOrCommentOrLinebreak, after: bodyOpenBrace),
-                       firstBodyToken.string == "willSet" || firstBodyToken.string == "didSet"
+                       let nextToken = parser.next(.nonSpaceOrCommentOrLinebreak, after: bodyOpenBrace),
+                       [.identifier("willSet"), .identifier("didSet")].contains(nextToken)
                     {
-                        hasWillSetOrDidSetBlock = true
+                        return true
                     }
 
-                    return hasWillSetOrDidSetBlock
+                    return false
 
                 default:
                     return false
@@ -1236,12 +1228,11 @@ extension Formatter {
     /// Removes the given visibility keyword from the given declaration
     func remove(_ visibilityKeyword: Visibility, from declaration: Declaration) -> Declaration {
         return mapOpeningTokens(in: declaration) { openTokens in
+            guard let visibilityKeywordIndex = openTokens.index(of: .keyword(visibilityKeyword.rawValue)) else {
+                return openTokens
+            }
+
             let openTokensFormatter = Formatter(openTokens)
-
-            guard let visibilityKeywordIndex = openTokensFormatter.index(after: -1, where: {
-                $0.string == visibilityKeyword.rawValue
-            }) else { return openTokens }
-
             openTokensFormatter.removeToken(at: visibilityKeywordIndex)
 
             while openTokensFormatter.token(at: visibilityKeywordIndex)?.isSpace == true {
@@ -1262,28 +1253,13 @@ extension Formatter {
         }
 
         return mapOpeningTokens(in: declaration) { openTokens in
-            let openTokensFormatter = Formatter(openTokens)
-
-            guard let indexOfKeyword = openTokensFormatter.index(after: -1, where: {
-                $0.string == declaration.keyword
-            }) else { return openTokens }
-
-            var startOfModifiers = openTokensFormatter.startOfModifiers(at: indexOfKeyword)
-
-            // If there are any annotations, skip past them
-            while startOfModifiers < indexOfKeyword,
-                  openTokensFormatter.tokens[startOfModifiers].string.hasPrefix("@")
-                  || openTokensFormatter.tokens[startOfModifiers].isSpaceOrCommentOrLinebreak
-            {
-                startOfModifiers += 1
-
-                // Also skip through annotation bodies, like in `@available(iOS 14.0, *)`
-                if openTokensFormatter.tokens[startOfModifiers] == .startOfScope("("),
-                   let endOfScope = openTokensFormatter.endOfScope(at: startOfModifiers)
-                {
-                    startOfModifiers = endOfScope + 1
-                }
+            guard let indexOfKeyword = openTokens.index(of: .keyword(declaration.keyword)) else {
+                return openTokens
             }
+
+            let openTokensFormatter = Formatter(openTokens)
+            let startOfModifiers = openTokensFormatter
+                .startOfModifiers(at: indexOfKeyword, includingAttributes: false)
 
             openTokensFormatter.insert(
                 tokenize("\(visibilityKeyword.rawValue) "),

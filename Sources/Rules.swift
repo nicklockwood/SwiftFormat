@@ -749,7 +749,7 @@ public struct _FormatRules {
             return true
         }
 
-        formatter.forEachToken(where: { $0 == .keyword("class") || $0 == .keyword("struct") }) { i, _ in
+        formatter.forEachToken(where: { [.keyword("class"), .keyword("struct")].contains($0) }) { i, _ in
             guard formatter.last(.keyword, before: i) != .keyword("import") else { return }
             // exit if class is a type modifier
             guard let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i), !next.isKeyword else { return }
@@ -767,10 +767,7 @@ public struct _FormatRules {
             if rangeHostsOnlyStaticMembersAtTopLevel(start: braceIndex + 1, end: endIndex) {
                 formatter.replaceToken(at: i, with: [.keyword("enum")])
 
-                let start = formatter.startOfModifiers(at: i)
-                if formatter.modifiersForType(at: i, contains: "final"),
-                   let finalIndex = formatter.lastIndex(in: start ..< i, where: { $0 == .identifier("final") })
-                {
+                if let finalIndex = formatter.indexOfModifier("final", forTypeAt: i) {
                     formatter.removeTokens(in: finalIndex ... finalIndex + 1)
                 }
             }
@@ -1557,7 +1554,7 @@ public struct _FormatRules {
             // avoid adding attribute if it's already there
             if formatter.modifiersForType(at: i, contains: "@available") { return }
 
-            let startIndex = formatter.startOfModifiers(at: i)
+            let startIndex = formatter.startOfModifiers(at: i, includingAttributes: true)
             formatter.insert(.space(formatter.indentForLine(at: startIndex)), at: startIndex)
             formatter.insertLinebreak(at: startIndex)
             formatter.insert(unavailableTokens, at: startIndex)
@@ -4616,7 +4613,7 @@ public struct _FormatRules {
                 return
             }
             // Check for code outside of main type definition
-            let startIndex = formatter.startOfModifiers(at: typeIndex)
+            let startIndex = formatter.startOfModifiers(at: typeIndex, includingAttributes: true)
             if fileJustContainsOneType == nil {
                 fileJustContainsOneType = !ifCodeInRange(0 ..< startIndex) &&
                     !ifCodeInRange(endIndex + 1 ..< formatter.tokens.count)
@@ -4809,7 +4806,6 @@ public struct _FormatRules {
         }
     }
 
-    /// Strip header comments from the file
     public let wrapAttributes = FormatRule(
         help: "Wrap @attributes onto a separate line, or keep them on the same line.",
         options: ["funcattributes", "typeattributes", "varattributes"],
@@ -4940,6 +4936,8 @@ public struct _FormatRules {
         options: ["categorymark", "beforemarks", "lifecycle", "organizetypes",
                   "structthreshold", "classthreshold", "enumthreshold", "extensionlength"]
     ) { formatter in
+        guard !formatter.options.fragment else { return }
+
         formatter.mapRecursiveDeclarations { declaration in
             switch declaration {
             // Organize the body of type declarations
@@ -4962,6 +4960,8 @@ public struct _FormatRules {
         help: "Configure the placement of an extension's access control keyword.",
         options: ["extensionacl"]
     ) { formatter in
+        guard !formatter.options.fragment else { return }
+
         let declarations = formatter.parseDeclarations()
         let updatedDeclarations = formatter.mapRecursiveDeclarations(of: declarations) { declaration in
             guard case let .type("extension", open, body, close) = declaration else {
@@ -5007,7 +5007,7 @@ public struct _FormatRules {
                 if memberVisibility > extensionVisibility ?? .internal {
                     // Check type being extended does not have lower visibility
                     for d in declarations where d.name == declaration.name {
-                        if case let .type(kind: kind, _, _, _) = d {
+                        if case let .type(kind, _, _, _) = d {
                             if kind != "extension", formatter.visibility(of: d) ?? .internal < memberVisibility {
                                 // Cannot make extension with greater visibility than type being extended
                                 return declaration
@@ -5049,7 +5049,7 @@ public struct _FormatRules {
 
                 // And apply the extension's visibility to each of its child declarations
                 // that don't have an explicit visibility keyword
-                return formatter.mapBodyDeclarations(in: extensionWithUpdatedVisibility) { bodyDeclaration -> Formatter.Declaration in
+                return formatter.mapBodyDeclarations(in: extensionWithUpdatedVisibility) { bodyDeclaration in
                     if formatter.visibility(of: bodyDeclaration) == nil {
                         // If there was no explicit visibility keyword, then this declaration
                         // was using the visibility of the extension itself.

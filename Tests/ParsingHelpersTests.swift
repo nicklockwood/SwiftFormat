@@ -611,9 +611,16 @@ class ParsingHelpersTests: XCTestCase {
 
     func testStartOfModifiers() {
         let formatter = Formatter(tokenize("""
-        class Foo { public required init() {} }
+        class Foo { @objc public required init() {} }
         """))
-        XCTAssertEqual(formatter.startOfModifiers(at: 10), 6)
+        XCTAssertEqual(formatter.startOfModifiers(at: 12, includingAttributes: false), 8)
+    }
+
+    func testStartOfModifiersIncludingAttributes() {
+        let formatter = Formatter(tokenize("""
+        class Foo { @objc public required init() {} }
+        """))
+        XCTAssertEqual(formatter.startOfModifiers(at: 12, includingAttributes: true), 6)
     }
 
     // MARK: processDeclaredVariables

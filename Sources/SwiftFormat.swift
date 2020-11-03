@@ -320,12 +320,15 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
     let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
     if manager.fileExists(atPath: versionFile.path) {
         let versionString = try String(contentsOf: versionFile, encoding: .utf8)
-        guard let version = Version(rawValue: versionString) else {
-            throw FormatError.options("Unrecognized swift version string '\(versionString)' "
-                + "found in file \(versionFile.path)")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if let version = Version(rawValue: versionString) {
+            assert(options.formatOptions != nil)
+            options.formatOptions?.swiftVersion = version
+        } else {
+            // Don't treat as error, per: https://github.com/nicklockwood/SwiftFormat/issues/639
+            // TODO: find a better solution for logging warnings here
+            logger?("Unrecognized swift version string '\(versionString)' in \(versionFile.path)")
         }
-        assert(options.formatOptions != nil)
-        options.formatOptions?.swiftVersion = version
     }
 }
 

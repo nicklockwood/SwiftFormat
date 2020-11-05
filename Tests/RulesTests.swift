@@ -1235,6 +1235,15 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
     }
 
+    func testNoUnhoistGuardCaseLetFollowedByFunction() {
+        let input = """
+        guard case let foo as Foo = bar { else return }
+        foo.bar(foo: bar)
+        """
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
     // MARK: - enumNamespaces
 
     func testEnumNamespacesClassAsProtocolRestriction() {

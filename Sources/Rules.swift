@@ -3312,15 +3312,18 @@ public struct _FormatRules {
         formatter.forEach(.startOfScope("(")) { i, _ in
             let hoist = formatter.options.hoistPatternLet
             // Check if pattern already starts with let/var
-            var openParenIndex = i
-            guard let endIndex = formatter.index(of: .endOfScope(")"), after: openParenIndex),
-                  var prevIndex = formatter.index(before: i, where: {
-                      [.delimiter(","), .endOfScope("case"), .keyword("case"), .keyword("catch")].contains($0)
+            guard let endIndex = formatter.index(of: .endOfScope(")"), after: i),
+                  let prevIndex = formatter.index(before: i, where: {
+                      [.endOfScope("case"), .keyword("case"), .keyword("catch"),
+                       .delimiter(","), .endOfScope("}"), .operator("=", .infix)].contains($0)
                   })
             else {
                 return
             }
-            if formatter.tokens[prevIndex] == .delimiter(",") {
+            switch formatter.tokens[prevIndex] {
+            case .endOfScope("}"), .operator("=", .infix):
+                return
+            case .delimiter(","):
                 loop: for token in formatter.tokens[0 ..< prevIndex].reversed() {
                     switch token {
                     case .endOfScope("case"), .keyword("catch"):
@@ -3334,6 +3337,8 @@ public struct _FormatRules {
                         break
                     }
                 }
+            default:
+                break
             }
             let startIndex = prevIndex + 1
             if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: prevIndex),
@@ -3343,12 +3348,9 @@ public struct _FormatRules {
                     // No changes needed
                     return
                 }
-                let range = startIndex ... nextIndex
-                formatter.removeTokens(in: range)
-                openParenIndex -= range.count
                 // Find variable indices
                 var indices = [Int]()
-                var index = openParenIndex + 1
+                var index = i + 1
                 var wasParenOrCommaOrLabel = true
                 while index < endIndex {
                     let token = formatter.tokens[index]
@@ -3372,13 +3374,16 @@ public struct _FormatRules {
                 for index in indices.reversed() {
                     formatter.insert([.keyword(keyword), .space(" ")], at: index)
                 }
+                // Remove keyword
+                let range = startIndex ... nextIndex
+                formatter.removeTokens(in: range)
             } else if hoist {
                 // Find let/var keyword indices
                 var keyword = "let"
                 guard let indices: [Int] = {
-                    guard let indices = indicesOf(keyword, in: openParenIndex + 1 ..< endIndex) else {
+                    guard let indices = indicesOf(keyword, in: i + 1 ..< endIndex) else {
                         keyword = "var"
-                        return indicesOf(keyword, in: openParenIndex + 1 ..< endIndex)
+                        return indicesOf(keyword, in: i + 1 ..< endIndex)
                     }
                     return indices
                 }() else {

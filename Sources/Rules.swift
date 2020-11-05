@@ -1269,6 +1269,17 @@ public struct _FormatRules {
                 let start = formatter.startOfLine(at: i)
                 let stringIndent = stringBodyIndentStack.last!
                 i += formatter.insertSpaceIfEnabled(stringIndent + indent, at: start)
+            case .keyword("in") where scopeStack.last == .startOfScope("{"):
+                guard let lastIndex = formatter.index(of: .nonSpaceOrComment, before: i, if: {
+                    $0 == .endOfScope(")")
+                }), let startIndex = formatter.index(of: .startOfScope("("), before: lastIndex),
+                        formatter.tokens[startIndex ..< lastIndex].contains(where: {
+                            if case .linebreak = $0 { return true } else { return false }
+                        })
+                else {
+                    break
+                }
+                indentStack[indentStack.count - 1] += formatter.options.indent
             default:
                 // Handle end of scope
                 if let scope = scopeStack.last, token.isEndOfScope(scope) {

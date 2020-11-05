@@ -928,6 +928,7 @@ extension RulesTests {
         ("testIndentUnknownDefaultCorrectlyWhenIndentCaseTrue", testIndentUnknownDefaultCorrectlyWhenIndentCaseTrue),
         ("testIndentUnknownDefaultOnOwnLine", testIndentUnknownDefaultOnOwnLine),
         ("testIndentWrappedClosureAfterSwitch", testIndentWrappedClosureAfterSwitch),
+        ("testIndentWrappedClosureParameters", testIndentWrappedClosureParameters),
         ("testIndentWrappedFunctionArgument", testIndentWrappedFunctionArgument),
         ("testIndentWrappedFunctionClosureArgument", testIndentWrappedFunctionClosureArgument),
         ("testIndentWrappedFunctionWithClosureArgument", testIndentWrappedFunctionWithClosureArgument),

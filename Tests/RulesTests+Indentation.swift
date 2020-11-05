@@ -195,6 +195,18 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapArguments"])
     }
 
+    func testIndentWrappedClosureParameters() {
+        let input = """
+        foo { (
+            bar: Int,
+            baz: Int
+        ) in
+            print(bar + baz)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     func testIndentAllmanTrailingClosureArguments() {
         let input = """
         let foo = Foo

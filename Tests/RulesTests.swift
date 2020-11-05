@@ -1464,9 +1464,31 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
-    func testEnumNamespaceDoesNothingEmptyDeclaration() {
+    func testEnumNamespaceDoesNothingForEmptyDeclaration() {
         let input = """
-        class Foo {}
+        struct Foo {}
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesDoesNothingIfTypeInitializedInternally() {
+        let input = """
+        struct Foo {
+            static func bar() {
+                Foo().baz
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesDoesNothingIfSelfInitializedInternally() {
+        let input = """
+        struct Foo {
+            static func bar() {
+                Self().baz
+            }
+        }
         """
         testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }

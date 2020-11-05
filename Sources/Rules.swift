@@ -718,18 +718,18 @@ public struct _FormatRules {
 
     // Converts types used for hosting only static members into enums to avoid instantiation.
     public let enumNamespaces = FormatRule(
-        help: "Converts types used for hosting only static members into enums.",
-        options: []
+        help: "Converts types used for hosting only static members into enums."
     ) { formatter in
-        func rangeHostsOnlyStaticMembersAtTopLevel(start startIndex: Int, end endIndex: Int) -> Bool {
+        func rangeHostsOnlyStaticMembersAtTopLevel(_ range: Range<Int>) -> Bool {
             // exit for empty declarations
-            guard formatter.next(.nonSpaceOrCommentOrLinebreak, in: startIndex ..< endIndex) != nil else { return false }
+            guard formatter.next(.nonSpaceOrCommentOrLinebreak, in: range) != nil else {
+                return false
+            }
 
-            var j = startIndex
-            while j < endIndex, let token = formatter.token(at: j) {
-                if token == .startOfScope("{"), let skip = formatter.index(of: .endOfScope,
-                                                                           after: j,
-                                                                           if: { $0 == .endOfScope("}") })
+            var j = range.startIndex
+            while j < range.endIndex, let token = formatter.token(at: j) {
+                if token == .startOfScope("{"),
+                   let skip = formatter.index(of: .endOfScope, after: j, if: { $0 == .endOfScope("}") })
                 {
                     j = skip
                     continue
@@ -749,23 +749,38 @@ public struct _FormatRules {
             return true
         }
 
+        func rangeContainsTypeInit(_ type: String, in range: Range<Int>) -> Bool {
+            for i in range {
+                guard case let .identifier(name) = formatter.tokens[i], [type, "Self"].contains(name) else {
+                    continue
+                }
+                if let nextToken = formatter.next(.nonSpaceOrComment, after: i),
+                   [.startOfScope("("), .identifier("init")].contains(nextToken)
+                {
+                    return true
+                }
+            }
+            return false
+        }
+
         formatter.forEachToken(where: { [.keyword("class"), .keyword("struct")].contains($0) }) { i, _ in
-            guard formatter.last(.keyword, before: i) != .keyword("import") else { return }
-            // exit if class is a type modifier
-            guard let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i), !next.isKeyword else { return }
+            guard formatter.last(.keyword, before: i) != .keyword("import"),
+                  // exit if class is a type modifier
+                  let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i), !next.isKeyword,
+                  // exit for class as protocol conformance
+                  formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"),
+                  let braceIndex = formatter.index(after: i, where: { $0 == .startOfScope("{") }),
+                  // exit if type is conforming any types
+                  !formatter.tokens[i ... braceIndex].contains(.delimiter(":")),
+                  let endIndex = formatter.index(after: braceIndex, where: { $0 == .endOfScope("}") }),
+                  case let .identifier(name)? = formatter.next(.identifier, after: i + 1)
+            else {
+                return
+            }
 
-            // exit for class as protocol conformance
-            guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":") else { return }
-
-            guard let braceIndex = formatter.index(after: i, where: { $0 == .startOfScope("{") }) else { return }
-
-            // exit if type is conforming any types
-            guard !formatter.tokens[i ... braceIndex].contains(.delimiter(":")) else { return }
-
-            guard let endIndex = formatter.index(after: braceIndex, where: { $0 == .endOfScope("}") }) else { return }
-
-            if rangeHostsOnlyStaticMembersAtTopLevel(start: braceIndex + 1, end: endIndex) {
-                formatter.replaceToken(at: i, with: [.keyword("enum")])
+            let range = braceIndex + 1 ..< endIndex
+            if rangeHostsOnlyStaticMembersAtTopLevel(range), !rangeContainsTypeInit(name, in: range) {
+                formatter.replaceToken(at: i, with: .keyword("enum"))
 
                 if let finalIndex = formatter.indexOfModifier("final", forTypeAt: i) {
                     formatter.removeTokens(in: finalIndex ... finalIndex + 1)

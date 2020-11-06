@@ -447,6 +447,34 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentWrappedConditionAlignsWithParen() {
+        let input = """
+        do {
+            if let foo = foo(
+                bar: 5
+            ), let bar = bar,
+            baz == quux {
+                baz()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentWrappedConditionAlignsWithParen2() {
+        let input = """
+        do {
+            if let foo = foo({
+                bar()
+            }), bar == baz,
+            let quux == baz {
+                baz()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     func testIndentUnknownDefault() {
         let input = """
         switch foo {

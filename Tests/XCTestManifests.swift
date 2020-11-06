@@ -929,6 +929,8 @@ extension RulesTests {
         ("testIndentUnknownDefaultOnOwnLine", testIndentUnknownDefaultOnOwnLine),
         ("testIndentWrappedClosureAfterSwitch", testIndentWrappedClosureAfterSwitch),
         ("testIndentWrappedClosureParameters", testIndentWrappedClosureParameters),
+        ("testIndentWrappedConditionAlignsWithParen", testIndentWrappedConditionAlignsWithParen),
+        ("testIndentWrappedConditionAlignsWithParen2", testIndentWrappedConditionAlignsWithParen2),
         ("testIndentWrappedFunctionArgument", testIndentWrappedFunctionArgument),
         ("testIndentWrappedFunctionClosureArgument", testIndentWrappedFunctionClosureArgument),
         ("testIndentWrappedFunctionWithClosureArgument", testIndentWrappedFunctionWithClosureArgument),

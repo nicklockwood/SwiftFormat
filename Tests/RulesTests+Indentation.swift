@@ -625,6 +625,17 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    func testIndentSwitchCaseDo() {
+        let input = """
+        switch foo {
+        case .bar: do {
+                baz()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indentCase = true
 
     func testSwitchCaseWithIndentCaseTrue() {
@@ -707,6 +718,18 @@ extension RulesTests {
         """
         let options = FormatOptions(indentCase: true)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentSwitchCaseDoWhenIndentCaseTrue() {
+        let input = """
+        switch foo {
+            case .bar: do {
+                    baz()
+                }
+        }
+        """
+        let options = FormatOptions(indentCase: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
     // indent wrapped lines

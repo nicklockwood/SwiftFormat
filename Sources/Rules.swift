@@ -1121,6 +1121,8 @@ public struct _FormatRules {
                           formatter.next(.linebreak, in: endIndex + 1 ..< closingIndex) != nil
                 {
                     indentCount = 1
+                } else if scopeStack.count > 1, scopeStack[scopeStack.count - 2] == .startOfScope(":") {
+                    indentCount = 1
                 } else {
                     indentCount = indentCounts.last! + 1
                 }

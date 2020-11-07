@@ -920,6 +920,8 @@ extension RulesTests {
         ("testIndentNestedArrayLiteral", testIndentNestedArrayLiteral),
         ("testIndentSwitchAfterRangeCase", testIndentSwitchAfterRangeCase),
         ("testIndentSwitchCaseCommentsCorrectly", testIndentSwitchCaseCommentsCorrectly),
+        ("testIndentSwitchCaseDo", testIndentSwitchCaseDo),
+        ("testIndentSwitchCaseDoWhenIndentCaseTrue", testIndentSwitchCaseDoWhenIndentCaseTrue),
         ("testIndentUnbalancedBraces", testIndentUnbalancedBraces),
         ("testIndentUnknownCase", testIndentUnknownCase),
         ("testIndentUnknownCaseCorrectlyWhenIndentCaseTrue", testIndentUnknownCaseCorrectlyWhenIndentCaseTrue),

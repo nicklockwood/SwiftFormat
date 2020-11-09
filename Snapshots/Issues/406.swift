@@ -32,8 +32,7 @@ SessionManager
 SessionManager
     .shared
     .validateSession()
-    .switchMap
-    { _ -> Observable<SomeEntity> in
+    .switchMap { _ -> Observable<SomeEntity> in
         someCode()
     }
     .switchMap {

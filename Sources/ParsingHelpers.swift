@@ -1417,12 +1417,11 @@ extension Formatter {
         guard let commaIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index + 1, if: {
             $0 == .delimiter(",")
         }), case let lineStart = startOfLine(at: commaIndex),
-                     let firstToken = self.index(of: .nonSpace, after: lineStart - 1),
-                     let firstNonBrace = (firstToken ..< commaIndex).first(where: {
-                         let token = self.tokens[$0]
-                         return !token.isEndOfScope && !token.isSpaceOrComment
-                     })
-        else {
+        let firstToken = self.index(of: .nonSpace, after: lineStart - 1),
+        let firstNonBrace = (firstToken ..< commaIndex).first(where: {
+            let token = self.tokens[$0]
+            return !token.isEndOfScope && !token.isSpaceOrComment
+        }) else {
             return options.indent
         }
         if case .endOfScope = tokens[firstToken],
@@ -1434,9 +1433,7 @@ extension Formatter {
             [.keyword("if"), .keyword("guard"), .keyword("while")].contains($0)
         }) ?? lastIndex(in: firstNonBrace ..< commaIndex, where: {
             [.keyword("let"), .keyword("var"), .keyword("case")].contains($0)
-        }),
-            let nextTokenIndex = self.index(of: .nonSpace, after: keywordIndex)
-        else {
+        }), let nextTokenIndex = self.index(of: .nonSpace, after: keywordIndex) else {
             return options.indent
         }
         return spaceEquivalentToTokens(from: firstToken, upTo: nextTokenIndex)

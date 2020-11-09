@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.47.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.3) (2020-11-09)
+
+- Fixed bug with `extensionAccessControl` increasing extension access level beyond extended type
+- Fixed regression with non-standard `.swift-version` contents being flagged as an error
+- Fixed bug in `hoistPatternLet` rule when using `--patternlet inline`
+- Fixed case where `enumNamespaces` was incorrectly applied
+- Fixed indenting of wrapped line starting with a closing paren or brace
+- Fixed indenting of blocks starting on same line as a switch case
+- Fixed indenting of wrapped closure parameter
+- Fixed bug in `--allman` inference
+
 ## [0.47.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.2) (2020-10-30)
 
 - The `markTypes`, `organizeDeclarations` and`extensionAccessControl` rules now respect comment directives
@@ -10,7 +21,7 @@
 - The `typeSugar` rule is now applied in more cases
 - Fixed bug in cache logic resulting in slower formatting when using certain config options
 - Fixed crash in `indent` rule
-- Fixed bug in wrapped else indent
+- Fixed bug in wrapped `else` indent
 
 ## [0.47.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.1) (2020-10-26)
 

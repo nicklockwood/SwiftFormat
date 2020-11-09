@@ -594,8 +594,7 @@ private struct Inference {
                     return false // Keep looking
                 }
             }), formatter.tokens[bodyStartIndex] == .startOfScope("{"),
-                let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex)
-            else {
+            let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else {
                 return
             }
             removeUsed(from: &argNames, with: &nameIndices, in: bodyStartIndex + 1 ..< bodyEndIndex)

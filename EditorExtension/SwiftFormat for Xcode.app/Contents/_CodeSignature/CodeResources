@@ -10,31 +10,31 @@
 		</data>
 		<key>Resources/Assets.car</key>
 		<data>
-		2YoZ0Da4mCpyFL3PmNUqjhBclNs=
+		TTIWe4xVphrMC6YH1bZfmAfPhOo=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/9ZR-Qg-hHT-view-iDF-FY-6tf.nib</key>
 		<data>
-		uK0RdX+b6+vbxkOLrHaoPCs6Qjs=
+		G5nqQn5muMKa4p4zKHZmdmrjxEo=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/Info.plist</key>
 		<data>
-		BIuGtXwJ0nQ6i3Jzplnk400HNdk=
+		Bn4JObhT6MXI+HZ2GTUfZWtql2k=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/MainMenu.nib</key>
 		<data>
-		oGw9ifNwr412P+UMqHHJw6ApbcA=
+		JZ/kqd07Vfly2KgaliPkcX08L9I=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/MainWindowTabViewController.nib</key>
 		<data>
-		PoGRzWVI+b9U/8s1YS6Um+uHrkc=
+		yCCf0r408inabwo9LHE+JqzFXWQ=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/NSWindowController-B8D-0N-5wS.nib</key>
 		<data>
-		u1K8Kor8nYLX5gqVMLgPw0hLx7U=
+		BUryZ7jyzjTBnVfeonLgAC8u10Y=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/RulesViewController.nib</key>
 		<data>
-		O4mwayiFJtYMfiUA1h3Gtd54qRc=
+		bTOrfjf3y5eVX/CGEx3XYkHn0GM=
 		</data>
 		<key>Resources/Base.lproj/Main.storyboardc/XfG-lQ-9wD-view-m2S-Jp-Qdl.nib</key>
 		<data>
@@ -182,7 +182,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			zZ/v9o5QtoBHScfchRt5iXcOy8s=
+			0JJUi8QMfQkhq0lgVuecOyByUoY=
 			</data>
 			<key>requirement</key>
 			<string>anchor apple generic and identifier "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension" and (certificate leaf[field.1.2.840.113635.100.6.1.9] /* exists */ or certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "8VQKF583ED")</string>
@@ -198,49 +198,49 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			MIAZxr1q5EwSj3eZ5pzHDdZgF7eCLCnNlNtQpSulsqY=
+			cN8Y4tXG4NJHzWIFFfn5cl/ZGWQYWccMlk9cdpIFibY=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/9ZR-Qg-hHT-view-iDF-FY-6tf.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			vjwuubSANur9RETgkHarQW5s6tFV8341IQ2KWPrYYnY=
+			cAJixDO8vnHRPuPlUxTSoRApM7smXTdBA8XNVfkbGKE=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			8sKJbJR71o+HVV9/1iVfRXocX0svNGwGDdNlUo8IZM4=
+			meha+4BnRJUJx1a/7Uo9hJt25m3JiWJNLUwN/DBwYfM=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/MainMenu.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			o/Qc9h2AuuCEroeMHtB5Q6qYbFEzAB8Pg1V3kXhKu0A=
+			TbAVKio9lyh/dlN2NX3C4UWBD25yQ6n73ACVmLQgsfI=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/MainWindowTabViewController.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			zRLyr25uGW7p+Z1laOd6Fyvkg27MnoFT8pNguJPnUpI=
+			+vcMmCCxUhQhR5ws5C8B6fJR/znkvMYoSFIF2rQw9LY=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/NSWindowController-B8D-0N-5wS.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			277VFl3yoYtkGDhHRk2yD6OtFiX9hyJwQ3cU2wTlFMA=
+			4KAJQYHV0ZT0s61v9YozpPYV7H/8TlnMtgaIwdmeCNk=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/RulesViewController.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			FCIkFV/qbvR+IeBBu1Y3YzsoA6jpuvUITbVb8KYebf0=
+			VZIk3ug+n6mzPkm677pon2T3xPgfuibGQ50EhYcDNl0=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/Main.storyboardc/XfG-lQ-9wD-view-m2S-Jp-Qdl.nib</key>

@@ -968,6 +968,8 @@ extension RulesTests {
         ("testKnRNoMangleClosureReturningClosure", testKnRNoMangleClosureReturningClosure),
         ("testKnRNoMangleClosureReturningClosure2", testKnRNoMangleClosureReturningClosure2),
         ("testKnRNoMangleCommentBeforeClosure", testKnRNoMangleCommentBeforeClosure),
+        ("testKnRNoUnwrapClosureIfWidthExceeded", testKnRNoUnwrapClosureIfWidthExceeded),
+        ("testKnRUnwrapClosure", testKnRUnwrapClosure),
         ("testLabeledTupleYodaCondition", testLabeledTupleYodaCondition),
         ("testLabelsAreNotArguments", testLabelsAreNotArguments),
         ("testLeadingColonFollowedByCommentMovedToPreviousLine", testLeadingColonFollowedByCommentMovedToPreviousLine),

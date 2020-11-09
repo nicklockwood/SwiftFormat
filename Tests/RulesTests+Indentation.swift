@@ -1232,7 +1232,7 @@ extension RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["braces"])
     }
 
     func testSingleIndentTrailingClosureBodyOfShortMethod() {

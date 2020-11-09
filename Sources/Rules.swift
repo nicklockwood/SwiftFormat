@@ -1640,21 +1640,21 @@ public struct _FormatRules {
                 else {
                     return
                 }
-                let maxWidth = formatter.options.maxWidth
+
+                var maxWidth = formatter.options.maxWidth
                 if maxWidth == 0 {
-                    // Check that brace doesn't have inline content after it
-                    guard formatter.next(.nonSpace, after: i)?.isLinebreak == true else {
-                        return
-                    }
-                } else {
-                    // Check that unwrapping wouldn't exceed line length
-                    let endOfLine = formatter.endOfLine(at: i)
-                    let length = formatter.lineLength(from: i, upTo: endOfLine)
-                    let prevLineLength = formatter.lineLength(at: prevIndex)
-                    guard prevLineLength + length + 1 <= maxWidth else {
-                        return
-                    }
+                    // Set reasonable default
+                    maxWidth = 100
                 }
+
+                // Check that unwrapping wouldn't exceed line length
+                let endOfLine = formatter.endOfLine(at: i)
+                let length = formatter.lineLength(from: i, upTo: endOfLine)
+                let prevLineLength = formatter.lineLength(at: prevIndex)
+                guard prevLineLength + length + 1 <= maxWidth else {
+                    return
+                }
+
                 // Avoid conflicts with wrapMultilineStatementBraces
                 // TODO: find a better solution for this
                 if let keywordIndex =

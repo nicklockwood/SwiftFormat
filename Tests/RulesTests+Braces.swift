@@ -119,6 +119,32 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.braces, options: options)
     }
 
+    func testKnRUnwrapClosure() {
+        let input = """
+        let foo =
+        { bar in
+            bar()
+        }
+        """
+        let output = """
+        let foo = { bar in
+            bar()
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.braces)
+    }
+
+    func testKnRNoUnwrapClosureIfWidthExceeded() {
+        let input = """
+        let foo =
+        { bar in
+            bar()
+        }
+        """
+        let options = FormatOptions(maxWidth: 15)
+        testFormatting(for: input, rule: FormatRules.braces, options: options, exclude: ["indent"])
+    }
+
     func testKnRClosingBraceWrapped() {
         let input = "func foo() {\n    print(bar) }"
         let output = "func foo() {\n    print(bar)\n}"

@@ -70,6 +70,45 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.elseOnSameLine)
     }
 
+    func testElseOnSameLineInferenceEdgeCase() {
+        let input = """
+        func foo() {
+            if let foo == bar {
+                // ...
+            } else {
+                // ...
+            }
+
+            if let foo == bar,
+               let baz = quux
+            {
+                print()
+            }
+
+            if let foo == bar,
+               let baz = quux
+            {
+                print()
+            }
+
+            if let foo == bar,
+               let baz = quux
+            {
+                print()
+            }
+
+            if let foo == bar,
+               let baz = quux
+            {
+                print()
+            }
+        }
+        """
+        let options = FormatOptions(elseOnNextLine: false)
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options,
+                       exclude: ["braces"])
+    }
+
     // guardelse = auto
 
     func testSingleLineGuardElseNotWrappedByDefault() {

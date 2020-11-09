@@ -265,6 +265,12 @@ private struct Inference {
             else {
                 return
             }
+            // Ignore wrapped if/else/guard
+            if let keyword = formatter.lastSignificantKeyword(at: i - 1, excluding: ["else"]),
+               ["if", "guard", "while", "let", "var", "case"].contains(keyword)
+            {
+                return
+            }
             // Check if brace is wrapped
             if let prevTokenIndex = formatter.index(of: .nonSpace, before: i),
                let prevToken = formatter.token(at: prevTokenIndex)

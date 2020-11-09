@@ -721,6 +721,7 @@ extension RulesTests {
         ("testElseOnNextLineOption", testElseOnNextLineOption),
         ("testElseOnSameLine", testElseOnSameLine),
         ("testElseOnSameLineDoesntEatPreviousStatement", testElseOnSameLineDoesntEatPreviousStatement),
+        ("testElseOnSameLineInferenceEdgeCase", testElseOnSameLineInferenceEdgeCase),
         ("testElseOnSameLineOnlyAppliedToDanglingBrace", testElseOnSameLineOnlyAppliedToDanglingBrace),
         ("testEmptyBracesNotRemovedInDoCatch", testEmptyBracesNotRemovedInDoCatch),
         ("testEmptyBracesNotRemovedInIfElse", testEmptyBracesNotRemovedInIfElse),

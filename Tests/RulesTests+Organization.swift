@@ -2191,4 +2191,58 @@ extension RulesTests {
 
         testFormatting(for: input, rule: FormatRules.markTypes)
     }
+
+    func testDoesntUseGroupedMarkTemplateWhenSeparatedByOtherType() {
+        let input = """
+        // MARK: - MyComponent
+
+        class MyComponent {}
+
+        // MARK: - MyComponentContent
+
+        struct MyComponentContent {}
+
+        // MARK: - MyComponent + ContentConfigurableView
+
+        extension MyComponent: ContentConfigurableView {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func testUsesGroupedMarkTemplateWhenSeparatedByExtensionOfSameType() {
+        let input = """
+        // MARK: - MyComponent
+
+        class MyComponent {}
+
+        // MARK: Equatable
+
+        extension MyComponent: Equatable {}
+
+        // MARK: ContentConfigurableView
+
+        extension MyComponent: ContentConfigurableView {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func testDoesntUseGroupedMarkTemplateWhenSeparatedByExtensionOfOtherType() {
+        let input = """
+        // MARK: - MyComponent
+
+        class MyComponent {}
+
+        // MARK: - OtherComponent + Equatable
+
+        extension OtherComponent: Equatable {}
+
+        // MARK: - MyComponent + ContentConfigurableView
+
+        extension MyComponent: ContentConfigurableView {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
 }

@@ -5125,9 +5125,26 @@ public struct _FormatRules {
                 //  extension Foo { } // This extension is "grouped" with its extending type
                 //  extension String { } // This extension is standalone (not grouped with any type)
                 //
-                let isGroupedWithExtendingType = declarations[..<index].contains(where: {
+                let isGroupedWithExtendingType: Bool
+                if let indexOfExtendingType = declarations[..<index].lastIndex(where: {
                     $0.name == typeName && ["class", "enum", "protocol", "struct", "typealias"].contains($0.keyword)
-                })
+                }) {
+                    let declarationsBetweenTypeAndExtension = declarations[indexOfExtendingType + 1 ..< index]
+                    isGroupedWithExtendingType = declarationsBetweenTypeAndExtension.allSatisfy {
+                        // Only treat the type and its extension as grouped if there aren't any other
+                        // types or type-like declarations between them
+                        if ["class", "enum", "protocol", "struct", "typealias"].contains($0.keyword) {
+                            return false
+                        }
+                        // Extensions extending other types also break the grouping
+                        if $0.keyword == "extension", $0.name != declaration.name {
+                            return false
+                        }
+                        return true
+                    }
+                } else {
+                    isGroupedWithExtendingType = false
+                }
 
                 if isGroupedWithExtendingType {
                     commentTemplate = "// \(formatter.options.groupedExtensionMarkComment)"

@@ -2175,4 +2175,20 @@ extension RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.markTypes)
     }
+
+    func testExtensionMarkWithImportOfSameName() {
+        let input = """
+        import MagazineLayout
+
+        // MARK: - MagazineLayout + FooProtocol
+
+        extension MagazineLayout: FooProtocol {}
+
+        // MARK: - MagazineLayout + BarProtocol
+
+        extension MagazineLayout: BarProtocol {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.markTypes)
+    }
 }

@@ -759,6 +759,7 @@ extension RulesTests {
         ("testExponentialGrouping", testExponentialGrouping),
         ("testExpressionCountEqualsZero", testExpressionCountEqualsZero),
         ("testExpressionCountNotEqualToZero", testExpressionCountNotEqualToZero),
+        ("testExtensionMarkWithImportOfSameName", testExtensionMarkWithImportOfSameName),
         ("testFileHeaderCreationDateReplacement", testFileHeaderCreationDateReplacement),
         ("testFileHeaderCreationYearReplacement", testFileHeaderCreationYearReplacement),
         ("testFileHeaderFileReplacement", testFileHeaderFileReplacement),

@@ -5126,7 +5126,7 @@ public struct _FormatRules {
                 //  extension String { } // This extension is standalone (not grouped with any type)
                 //
                 let isGroupedWithExtendingType = declarations[..<index].contains(where: {
-                    $0.name == typeName && $0.keyword != "extension"
+                    $0.name == typeName && ["class", "enum", "protocol", "struct", "typealias"].contains($0.keyword)
                 })
 
                 if isGroupedWithExtendingType {

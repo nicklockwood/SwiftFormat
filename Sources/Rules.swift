@@ -3337,21 +3337,27 @@ public struct _FormatRules {
             // Check if pattern already starts with let/var
             guard let endIndex = formatter.index(of: .endOfScope(")"), after: i),
                   let prevIndex = formatter.index(before: i, where: {
-                      [.endOfScope("case"), .keyword("case"), .keyword("catch"),
-                       .delimiter(","), .endOfScope("}"), .operator("=", .infix)].contains($0)
+                      switch $0 {
+                      case .operator(".", _), .keyword("let"), .keyword("var"):
+                          return false
+                      case .endOfScope, .delimiter, .operator, .keyword:
+                          return true
+                      default:
+                          return false
+                      }
                   })
             else {
                 return
             }
             switch formatter.tokens[prevIndex] {
-            case .endOfScope("}"), .operator("=", .infix):
-                return
+            case .endOfScope("case"), .keyword("case"), .keyword("catch"):
+                break
             case .delimiter(","):
                 loop: for token in formatter.tokens[0 ..< prevIndex].reversed() {
                     switch token {
                     case .endOfScope("case"), .keyword("catch"):
                         break loop
-                    case .keyword("as"), .keyword("is"), .keyword("var"), .keyword("let"):
+                    case .keyword("var"), .keyword("let"):
                         break
                     case .keyword:
                         // Tuple assignment
@@ -3361,7 +3367,7 @@ public struct _FormatRules {
                     }
                 }
             default:
-                break
+                return
             }
             let startIndex = prevIndex + 1
             if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: prevIndex),

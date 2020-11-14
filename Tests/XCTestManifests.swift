@@ -1383,6 +1383,8 @@ extension RulesTests {
         ("testNoUnhoistIfArgIsNamespacedEnumCaseLiteralInParens", testNoUnhoistIfArgIsNamespacedEnumCaseLiteralInParens),
         ("testNoUnhoistIfCaseFollowedByLetTuple", testNoUnhoistIfCaseFollowedByLetTuple),
         ("testNoUnhoistIfLetTuple", testNoUnhoistIfLetTuple),
+        ("testNoUnhoistSwitchCaseLetFollowedByAs", testNoUnhoistSwitchCaseLetFollowedByAs),
+        ("testNoUnhoistSwitchCaseLetFollowedByWhere", testNoUnhoistSwitchCaseLetFollowedByWhere),
         ("testNoUnhoistTupleLet", testNoUnhoistTupleLet),
         ("testNoWrapAfterFirstArgumentInStringInterpolation", testNoWrapAfterFirstArgumentInStringInterpolation),
         ("testNoWrapAfterFirstArgumentInStringInterpolation2", testNoWrapAfterFirstArgumentInStringInterpolation2),

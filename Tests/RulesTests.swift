@@ -1244,6 +1244,28 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.hoistPatternLet, options: options)
     }
 
+    func testNoUnhoistSwitchCaseLetFollowedByWhere() {
+        let input = """
+        switch foo {
+        case let bar? where bar >= baz(quux):
+            break
+        }
+        """
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
+    func testNoUnhoistSwitchCaseLetFollowedByAs() {
+        let input = """
+        switch foo {
+        case let bar as (String, String):
+            break
+        }
+        """
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
     // MARK: - enumNamespaces
 
     func testEnumNamespacesClassAsProtocolRestriction() {

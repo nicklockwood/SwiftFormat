@@ -202,7 +202,7 @@ This will install SwiftFormat for Xcode in your Applications folder. Double-clic
 To update to the latest version once installed use:
 
 ```bash
-$ brew cask upgrade swiftformat-for-xcode
+$ brew upgrade --cask swiftformat-for-xcode
 ```
 
 Alternatively, if you prefer not to use Homebrew, you'll find the latest version of the SwiftFormat for Xcode application inside the EditorExtension folder included in the SwiftFormat repository. Download and unpack the zip archive, then drag `SwiftFormat for Xcode.app` into your `Applications` folder.

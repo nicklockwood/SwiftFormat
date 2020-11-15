@@ -1090,4 +1090,45 @@ extension RulesTests {
         let input = "//    foo  bar"
         testFormatting(for: input, rule: FormatRules.consecutiveSpaces)
     }
+
+    // MARK: - emptyBraces
+
+    func testLinebreaksRemovedInsideBraces() {
+        let input = "func foo() {\n  \n }"
+        let output = "func foo() {}"
+        let options = FormatOptions(fragment: true)
+        testFormatting(for: input, output, rule: FormatRules.emptyBraces, options: options)
+    }
+
+    func testCommentNotRemovedInsideBraces() {
+        let input = "func foo() { // foo\n}"
+        let options = FormatOptions(fragment: true)
+        testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+    }
+
+    func testEmptyBracesNotRemovedInDoCatch() {
+        let input = """
+        do {
+        } catch is FooError {
+        } catch {}
+        """
+        let options = FormatOptions(fragment: true)
+        testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+    }
+
+    func testEmptyBracesNotRemovedInIfElse() {
+        let input = """
+        if {
+        } else if foo {
+        } else {}
+        """
+        let options = FormatOptions(fragment: true)
+        testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+    }
+
+    func testSpaceRemovedInsideEmptybraces() {
+        let input = "foo { }"
+        let output = "foo {}"
+        testFormatting(for: input, output, rule: FormatRules.emptyBraces)
+    }
 }

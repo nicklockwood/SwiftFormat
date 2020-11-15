@@ -2245,4 +2245,363 @@ extension RulesTests {
 
         testFormatting(for: input, rule: FormatRules.markTypes)
     }
+
+    // MARK: - sortedImports
+
+    func testSortedImportsSimpleCase() {
+        let input = "import Foo\nimport Bar"
+        let output = "import Bar\nimport Foo"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testSortedImportsKeepsPreviousCommentWithImport() {
+        let input = "import Foo\n// important comment\n// (very important)\nimport Bar"
+        let output = "// important comment\n// (very important)\nimport Bar\nimport Foo"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testSortedImportsKeepsPreviousCommentWithImport2() {
+        let input = "// important comment\n// (very important)\nimport Foo\nimport Bar"
+        let output = "import Bar\n// important comment\n// (very important)\nimport Foo"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testSortedImportsDoesntMoveHeaderComment() {
+        let input = "// header comment\n\nimport Foo\nimport Bar"
+        let output = "// header comment\n\nimport Bar\nimport Foo"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testSortedImportsDoesntMoveHeaderCommentFollowedByImportComment() {
+        let input = "// header comment\n\n// important comment\nimport Foo\nimport Bar"
+        let output = "// header comment\n\nimport Bar\n// important comment\nimport Foo"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testSortedImportsOnSameLine() {
+        let input = "import Foo; import Bar\nimport Baz"
+        let output = "import Baz\nimport Foo; import Bar"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testSortedImportsWithSemicolonAndCommentOnSameLine() {
+        let input = "import Foo; // foobar\nimport Bar\nimport Baz"
+        let output = "import Bar\nimport Baz\nimport Foo; // foobar"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports, exclude: ["semicolons"])
+    }
+
+    func testSortedImportEnum() {
+        let input = "import enum Foo.baz\nimport Foo.bar"
+        let output = "import Foo.bar\nimport enum Foo.baz"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testSortedImportFunc() {
+        let input = "import func Foo.baz\nimport Foo.bar"
+        let output = "import Foo.bar\nimport func Foo.baz"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testAlreadySortedImportsDoesNothing() {
+        let input = "import Bar\nimport Foo"
+        testFormatting(for: input, rule: FormatRules.sortedImports)
+    }
+
+    func testPreprocessorSortedImports() {
+        let input = "#if os(iOS)\n    import Foo2\n    import Bar2\n#else\n    import Foo1\n    import Bar1\n#endif\nimport Foo3\nimport Bar3"
+        let output = "#if os(iOS)\n    import Bar2\n    import Foo2\n#else\n    import Bar1\n    import Foo1\n#endif\nimport Bar3\nimport Foo3"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testTestableSortedImports() {
+        let input = "@testable import Foo3\nimport Bar3"
+        let output = "import Bar3\n@testable import Foo3"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testTestableImportsWithTestableOnPreviousLine() {
+        let input = "@testable\nimport Foo3\nimport Bar3"
+        let output = "import Bar3\n@testable\nimport Foo3"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testTestableImportsWithGroupingTestableBottom() {
+        let input = "@testable import Bar\nimport Foo\n@testable import UIKit"
+        let output = "import Foo\n@testable import Bar\n@testable import UIKit"
+        let options = FormatOptions(importGrouping: .testableBottom)
+        testFormatting(for: input, output, rule: FormatRules.sortedImports, options: options)
+    }
+
+    func testTestableImportsWithGroupingTestableTop() {
+        let input = "@testable import Bar\nimport Foo\n@testable import UIKit"
+        let output = "@testable import Bar\n@testable import UIKit\nimport Foo"
+        let options = FormatOptions(importGrouping: .testableTop)
+        testFormatting(for: input, output, rule: FormatRules.sortedImports, options: options)
+    }
+
+    func testCaseInsensitiveSortedImports() {
+        let input = "import Zlib\nimport lib"
+        let output = "import lib\nimport Zlib"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testCaseInsensitiveCaseDifferingSortedImports() {
+        let input = "import c\nimport B\nimport A.a\nimport A.A"
+        let output = "import A.A\nimport A.a\nimport B\nimport c"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testNoDeleteCodeBetweenImports() {
+        let input = "import Foo\nfunc bar() {}\nimport Bar"
+        testFormatting(for: input, rule: FormatRules.sortedImports)
+    }
+
+    func testNoDeleteCodeBetweenImports2() {
+        let input = "import Foo\nimport Bar\nfoo = bar\nimport Bar"
+        let output = "import Bar\nimport Foo\nfoo = bar\nimport Bar"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testNoDeleteCodeBetweenImports3() {
+        let input = """
+        import Z
+
+        // one
+
+        #if FLAG
+            print("hi")
+        #endif
+
+        import A
+        """
+        testFormatting(for: input, rule: FormatRules.sortedImports)
+    }
+
+    func testSortContiguousImports() {
+        let input = "import Foo\nimport Bar\nfunc bar() {}\nimport Quux\nimport Baz"
+        let output = "import Bar\nimport Foo\nfunc bar() {}\nimport Baz\nimport Quux"
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    func testNoMangleImportsPrecededByComment() {
+        let input = """
+        // evil comment
+
+        #if canImport(Foundation)
+            import Foundation
+            #if canImport(UIKit) && canImport(AVFoundation)
+                import UIKit
+                import AVFoundation
+            #endif
+        #endif
+        """
+        let output = """
+        // evil comment
+
+        #if canImport(Foundation)
+            import Foundation
+            #if canImport(UIKit) && canImport(AVFoundation)
+                import AVFoundation
+                import UIKit
+            #endif
+        #endif
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
+    // MARK: - sortedSwitchCases
+
+    func testSortedSwitchCaseMultilineWithComments() {
+        let input = """
+        switch self {
+        case let .type, // something
+             let .conditionalCompilation:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case let .conditionalCompilation, // something
+             let .type:
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+    }
+
+    func testSortedSwitchCaseMultiline() {
+        let input = """
+        switch self {
+        case let .type,
+             let .conditionalCompilation:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case let .conditionalCompilation,
+             let .type:
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+    }
+
+    func testSortedSwitchCaseMultipleAssociatedValues() {
+        let input = """
+        switch self {
+        case let .b(whatever, whatever2), .a(whatever):
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case .a(whatever), let .b(whatever, whatever2):
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
+    func testSortedSwitchCaseLet() {
+        let input = """
+        switch self {
+        case let .b(whatever), .a(whatever):
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case .a(whatever), let .b(whatever):
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
+    func testSortedSwitchCaseOneCaseDoesNothing() {
+        let input = """
+        switch self {
+        case "a":
+            break
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.sortedSwitchCases)
+    }
+
+    func testSortedSwitchStrings() {
+        let input = """
+        switch self {
+        case "GET", "POST", "PUT", "DELETE":
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case "DELETE", "GET", "POST", "PUT":
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
+    func testSortedSwitchWhereConditionNotLastCase() {
+        let input = """
+        switch self {
+        case .b, .c, .a where isTrue:
+            break
+        }
+        """
+        testFormatting(for: input,
+                       rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
+    func testSortedSwitchWhereConditionLastCase() {
+        let input = """
+        switch self {
+        case .b, .c where isTrue, .a:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case .a, .b, .c where isTrue:
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
+    // MARK: - modifierOrder
+
+    func testVarModifiersCorrected() {
+        let input = "unowned private static var foo"
+        let output = "private unowned static var foo"
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder)
+    }
+
+    func testPrivateSetModifierNotMangled() {
+        let input = "private(set) public weak lazy var foo"
+        let output = "public private(set) lazy weak var foo"
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder)
+    }
+
+    func testPrivateRequiredStaticFuncModifiers() {
+        let input = "required static private func foo()"
+        let output = "private required static func foo()"
+        let options = FormatOptions(fragment: true)
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder, options: options)
+    }
+
+    func testPrivateConvenienceInit() {
+        let input = "convenience private init()"
+        let output = "private convenience init()"
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder)
+    }
+
+    func testSpaceInModifiersLeftIntact() {
+        let input = "weak private(set) /* read-only */\npublic var"
+        let output = "public private(set) /* read-only */\nweak var"
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder)
+    }
+
+    func testPrefixModifier() {
+        let input = "prefix public static func - (rhs: Foo) -> Foo"
+        let output = "public static prefix func - (rhs: Foo) -> Foo"
+        let options = FormatOptions(fragment: true)
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder, options: options)
+    }
+
+    func testModifierOrder() {
+        let input = "override public var foo: Int { 5 }"
+        let output = "public override var foo: Int { 5 }"
+        let options = FormatOptions(modifierOrder: ["public", "override"])
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder, options: options)
+    }
+
+    func testNoConfusePostfixIdentifierWithKeyword() {
+        let input = "var foo = .postfix\noverride init() {}"
+        testFormatting(for: input, rule: FormatRules.modifierOrder)
+    }
+
+    func testNoConfusePostfixIdentifierWithKeyword2() {
+        let input = "var foo = postfix\noverride init() {}"
+        testFormatting(for: input, rule: FormatRules.modifierOrder)
+    }
+
+    func testNoConfuseCaseWithModifier() {
+        let input = """
+        enum Foo {
+            case strong
+            case weak
+            public init() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.modifierOrder)
+    }
 }

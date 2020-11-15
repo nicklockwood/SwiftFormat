@@ -3234,4 +3234,272 @@ extension RulesTests {
         let output = "do { return }"
         testFormatting(for: input, output, rule: FormatRules.semicolons)
     }
+
+    // MARK: - duplicateImports
+
+    func testRemoveDuplicateImport() {
+        let input = "import Foundation\nimport Foundation"
+        let output = "import Foundation"
+        testFormatting(for: input, output, rule: FormatRules.duplicateImports)
+    }
+
+    func testRemoveDuplicateConditionalImport() {
+        let input = "#if os(iOS)\n    import Foo\n    import Foo\n#else\n    import Bar\n    import Bar\n#endif"
+        let output = "#if os(iOS)\n    import Foo\n#else\n    import Bar\n#endif"
+        testFormatting(for: input, output, rule: FormatRules.duplicateImports)
+    }
+
+    func testNoRemoveOverlappingImports() {
+        let input = "import MyModule\nimport MyModule.Private"
+        testFormatting(for: input, rule: FormatRules.duplicateImports)
+    }
+
+    func testNoRemoveCaseDifferingImports() {
+        let input = "import Auth0.Authentication\nimport Auth0.authentication"
+        testFormatting(for: input, rule: FormatRules.duplicateImports)
+    }
+
+    func testRemoveDuplicateImportFunc() {
+        let input = "import func Foo.bar\nimport func Foo.bar"
+        let output = "import func Foo.bar"
+        testFormatting(for: input, output, rule: FormatRules.duplicateImports)
+    }
+
+    func testNoRemoveTestableDuplicateImport() {
+        let input = "import Foo\n@testable import Foo"
+        let output = "\n@testable import Foo"
+        testFormatting(for: input, output, rule: FormatRules.duplicateImports)
+    }
+
+    func testNoRemoveTestableDuplicateImport2() {
+        let input = "@testable import Foo\nimport Foo"
+        let output = "@testable import Foo"
+        testFormatting(for: input, output, rule: FormatRules.duplicateImports)
+    }
+
+    // MARK: - unusedArguments
+
+    // closures
+
+    func testUnusedTypedClosureArguments() {
+        let input = "let foo = { (bar: Int, baz: String) in\n    print(\"Hello \\(baz)\")\n}"
+        let output = "let foo = { (_: Int, baz: String) in\n    print(\"Hello \\(baz)\")\n}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedUntypedClosureArguments() {
+        let input = "let foo = { bar, baz in\n    print(\"Hello \\(baz)\")\n}"
+        let output = "let foo = { _, baz in\n    print(\"Hello \\(baz)\")\n}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testNoRemoveClosureReturnType() {
+        let input = "let foo = { () -> Foo.Bar in baz() }"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testNoRemoveClosureThrows() {
+        let input = "let foo = { () throws in }"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testNoRemoveClosureGenericReturnTypes() {
+        let input = "let foo = { () -> Promise<String> in bar }"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testNoRemoveClosureTupleReturnTypes() {
+        let input = "let foo = { () -> (Int, Int) in (5, 6) }"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testNoRemoveClosureGenericArgumentTypes() {
+        let input = "let foo = { (_: Foo<Bar, Baz>) in }"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testNoRemoveFunctionNameBeforeForLoop() {
+        let input = "{\n    func foo() -> Int {}\n    for a in b {}\n}"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testClosureTypeInClosureArgumentsIsNotMangled() {
+        let input = "{ (foo: (Int) -> Void) in }"
+        let output = "{ (_: (Int) -> Void) in }"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedUnnamedClosureArguments() {
+        let input = "{ (_ foo: Int, _ bar: Int) in }"
+        let output = "{ (_: Int, _: Int) in }"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedInoutClosureArgumentsNotMangled() {
+        let input = "{ (foo: inout Foo, bar: inout Bar) in }"
+        let output = "{ (_: inout Foo, _: inout Bar) in }"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testMalformedFunctionNotMisidentifiedAsClosure() {
+        let input = "func foo() { bar(5) {} in }"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    // functions
+
+    func testMarkUnusedFunctionArgument() {
+        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let output = "func foo(bar _: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testMarkUnusedArgumentsInNonVoidFunction() {
+        let input = "func foo(bar: Int, baz: String) -> (A<B, C>, D & E, [F: G]) { return baz.quux }"
+        let output = "func foo(bar _: Int, baz: String) -> (A<B, C>, D & E, [F: G]) { return baz.quux }"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testMarkUnusedArgumentsInThrowsFunction() {
+        let input = "func foo(bar: Int, baz: String) throws {\n    print(\"Hello \\(baz)\")\n}"
+        let output = "func foo(bar _: Int, baz: String) throws {\n    print(\"Hello \\(baz)\")\n}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testMarkUnusedArgumentsInOptionalReturningFunction() {
+        let input = "func foo(bar: Int, baz: String) -> String? {\n    return \"Hello \\(baz)\"\n}"
+        let output = "func foo(bar _: Int, baz: String) -> String? {\n    return \"Hello \\(baz)\"\n}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testNoMarkUnusedArgumentsInProtocolFunction() {
+        let input = "protocol Foo {\n    func foo(bar: Int) -> Int\n    var bar: Int { get }\n}"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedUnnamedFunctionArgument() {
+        let input = "func foo(_ foo: Int) {}"
+        let output = "func foo(_: Int) {}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedInoutFunctionArgumentIsNotMangled() {
+        let input = "func foo(_ foo: inout Foo) {}"
+        let output = "func foo(_: inout Foo) {}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedInternallyRenamedFunctionArgument() {
+        let input = "func foo(foo bar: Int) {}"
+        let output = "func foo(foo _: Int) {}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testNoMarkProtocolFunctionArgument() {
+        let input = "func foo(foo bar: Int)\nvar bar: Bool { get }"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testMembersAreNotArguments() {
+        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(bar.baz)\")\n}"
+        let output = "func foo(bar: Int, baz _: String) {\n    print(\"Hello \\(bar.baz)\")\n}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testLabelsAreNotArguments() {
+        let input = "func foo(bar: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
+        let output = "func foo(bar _: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testDictionaryLiteralsRuinEverything() {
+        let input = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testOperatorArgumentsAreUnnamed() {
+        let input = "func == (lhs: Int, rhs: Int) { return false }"
+        let output = "func == (_: Int, _: Int) { return false }"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedtFailableInitArgumentsAreNotMangled() {
+        let input = "init?(foo: Bar) {}"
+        let output = "init?(foo _: Bar) {}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testTreatEscapedArgumentsAsUsed() {
+        let input = "func foo(default: Int) -> Int {\n    return `default`\n}"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testPartiallyMarkedUnusedArguments() {
+        let input = "func foo(bar: Bar, baz _: Baz) {}"
+        let output = "func foo(bar _: Bar, baz _: Baz) {}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testPartiallyMarkedUnusedArguments2() {
+        let input = "func foo(bar _: Bar, baz: Baz) {}"
+        let output = "func foo(bar _: Bar, baz _: Baz) {}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    // functions (closure-only)
+
+    func testNoMarkFunctionArgument() {
+        let input = "func foo(_ bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let options = FormatOptions(stripUnusedArguments: .closureOnly)
+        testFormatting(for: input, rule: FormatRules.unusedArguments, options: options)
+    }
+
+    // functions (unnamed-only)
+
+    func testNoMarkNamedFunctionArgument() {
+        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let options = FormatOptions(stripUnusedArguments: .unnamedOnly)
+        testFormatting(for: input, rule: FormatRules.unusedArguments, options: options)
+    }
+
+    func testRemoveUnnamedFunctionArgument() {
+        let input = "func foo(_ foo: Int) {}"
+        let output = "func foo(_: Int) {}"
+        let options = FormatOptions(stripUnusedArguments: .unnamedOnly)
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments, options: options)
+    }
+
+    func testNoRemoveInternalFunctionArgumentName() {
+        let input = "func foo(foo bar: Int) {}"
+        let options = FormatOptions(stripUnusedArguments: .unnamedOnly)
+        testFormatting(for: input, rule: FormatRules.unusedArguments, options: options)
+    }
+
+    // init
+
+    func testMarkUnusedInitArgument() {
+        let input = "init(bar: Int, baz: String) {\n    self.baz = baz\n}"
+        let output = "init(bar _: Int, baz: String) {\n    self.baz = baz\n}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    // subscript
+
+    func testMarkUnusedSubscriptArgument() {
+        let input = "subscript(foo: Int, baz: String) -> String {\n    return get(baz)\n}"
+        let output = "subscript(_: Int, baz: String) -> String {\n    return get(baz)\n}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testMarkUnusedUnnamedSubscriptArgument() {
+        let input = "subscript(_ foo: Int, baz: String) -> String {\n    return get(baz)\n}"
+        let output = "subscript(_: Int, baz: String) -> String {\n    return get(baz)\n}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testMarkUnusedNamedSubscriptArgument() {
+        let input = "subscript(foo foo: Int, baz: String) -> String {\n    return get(baz)\n}"
+        let output = "subscript(foo _: Int, baz: String) -> String {\n    return get(baz)\n}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
 }

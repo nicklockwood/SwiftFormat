@@ -1940,6 +1940,7 @@ extension RulesTests {
         ("testTestableSortedImports", testTestableSortedImports),
         ("testTodoIsUpdated", testTodoIsUpdated),
         ("testTrailingClosureOnRhsNotMangledInYodaCondition", testTrailingClosureOnRhsNotMangledInYodaCondition),
+        ("testTrailingCommaNotAddedToCaptureList", testTrailingCommaNotAddedToCaptureList),
         ("testTrailingCommaNotAddedToSubscript", testTrailingCommaNotAddedToSubscript),
         ("testTrailingCommaNotAddedToSubscript2", testTrailingCommaNotAddedToSubscript2),
         ("testTrailingCommaNotAddedToSubscript3", testTrailingCommaNotAddedToSubscript3),

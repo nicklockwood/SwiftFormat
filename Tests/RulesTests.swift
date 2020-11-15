@@ -291,6 +291,15 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.trailingCommas)
     }
 
+    func testTrailingCommaNotAddedToCaptureList() {
+        let input = """
+        let foo = { [
+            self
+        ] in }
+        """
+        testFormatting(for: input, rule: FormatRules.trailingCommas)
+    }
+
     // trailingCommas = false
 
     func testCommaNotAddedToLastItem() {

@@ -1777,7 +1777,9 @@ public struct _FormatRules {
         options: ["commas"]
     ) { formatter in
         formatter.forEach(.endOfScope("]")) { i, _ in
-            guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else { return }
+            guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else {
+                return
+            }
             if let startIndex = formatter.index(of: .startOfScope("["), before: i),
                let prevToken = formatter.last(.nonSpaceOrComment, before: startIndex)
             {
@@ -1800,7 +1802,8 @@ public struct _FormatRules {
                     {
                         return
                     }
-                case .operator("->", .infix):
+                case .operator("->", .infix),
+                     .startOfScope("{") where formatter.isInClosureArguments(at: i):
                     return
                 default:
                     break

@@ -944,6 +944,7 @@ extension Formatter {
                 }
             }
             // Gather comments
+            let codeStartIndex = startIndex
             var prevIndex = index(of: .linebreak, before: startIndex) ?? 0
             while startIndex > 0,
                   next(.nonSpace, after: prevIndex)?.isComment == true,
@@ -954,6 +955,17 @@ extension Formatter {
                 }
                 startIndex = prevIndex
                 prevIndex = index(of: .linebreak, before: startIndex) ?? 0
+            }
+            // Check if comment is potentially a file header
+            if last(.nonSpaceOrCommentOrLinebreak, before: startIndex) == nil {
+                for case let .commentBody(body) in tokens[startIndex ..< codeStartIndex] {
+                    if body.contains("created") || body.contains("Created") ||
+                        body.contains(options.fileInfo.fileName ?? ".swift")
+                    {
+                        startIndex = codeStartIndex
+                        break
+                    }
+                }
             }
             // Get end of line
             let endIndex = index(of: .linebreak, after: i) ?? tokens.count

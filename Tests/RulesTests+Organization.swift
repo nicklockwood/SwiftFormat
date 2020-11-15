@@ -2409,6 +2409,34 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.sortedImports)
     }
 
+    func testNoMangleFileHeaderNotFollowedByLinebreak() {
+        let input = """
+        //
+        //  Code.swift
+        //  Module
+        //
+        //  Created by Someone on 4/30/20.
+        //
+        import AModuleUI
+        import AModule
+        import AModuleHelper
+        import SomeOtherModule
+        """
+        let output = """
+        //
+        //  Code.swift
+        //  Module
+        //
+        //  Created by Someone on 4/30/20.
+        //
+        import AModule
+        import AModuleHelper
+        import AModuleUI
+        import SomeOtherModule
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+    }
+
     // MARK: - sortedSwitchCases
 
     func testSortedSwitchCaseMultilineWithComments() {

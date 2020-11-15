@@ -1161,6 +1161,7 @@ extension RulesTests {
         ("testNoLinebreakAtEndOfFragment", testNoLinebreakAtEndOfFragment),
         ("testNoMangleCommentedLinesWhenWrappingArguments", testNoMangleCommentedLinesWhenWrappingArguments),
         ("testNoMangleCommentedLinesWhenWrappingArgumentsWithNoCommas", testNoMangleCommentedLinesWhenWrappingArgumentsWithNoCommas),
+        ("testNoMangleFileHeaderNotFollowedByLinebreak", testNoMangleFileHeaderNotFollowedByLinebreak),
         ("testNoMangleImportsPrecededByComment", testNoMangleImportsPrecededByComment),
         ("testNoMangleLabelWhenIndentCaseTrue", testNoMangleLabelWhenIndentCaseTrue),
         ("testNoMangleNestedFunctionCalls", testNoMangleNestedFunctionCalls),

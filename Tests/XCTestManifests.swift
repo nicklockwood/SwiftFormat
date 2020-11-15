@@ -115,6 +115,7 @@ extension CommandLineTests {
         ("testRulesNotMarkedAsDisabled", testRulesNotMarkedAsDisabled),
         ("testSplitInputPaths", testSplitInputPaths),
         ("testStdin", testStdin),
+        ("testWarnIfOptionsSpecifiedForDisabledRule", testWarnIfOptionsSpecifiedForDisabledRule),
     ]
 }
 

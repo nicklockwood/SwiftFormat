@@ -583,6 +583,21 @@ func warningsForArguments(_ args: [String: String]) -> [String] {
             warnings.append("\(name) rule is deprecated. \(message)")
         }
     }
+    if let rules = try? rulesFor(args) {
+        for arg in args.keys where formattingArguments.contains(arg) {
+            if !rules.contains(where: {
+                guard let rule = FormatRules.byName[$0] else {
+                    return false
+                }
+                return rule.options.contains(arg) || rule.sharedOptions.contains(arg)
+            }) {
+                let expected = FormatRules.all.first(where: {
+                    $0.options.contains(arg)
+                })?.name ?? "associated"
+                warnings.append("--\(arg) option has no effect when \(expected) rule is disabled")
+            }
+        }
+    }
     return warnings
 }
 

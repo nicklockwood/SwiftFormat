@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.47.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.4) (2020-11-15)
+
+- Increased strictness of grouped extensions logic
+- Fixed issue where `markTypes` rule would mistake an import declaration as a type
+- Fixed some additional bugs with unhoisting pattern let
+- Fixed bug with trailing comma being inserted in capture lists
+- Added warning when setting options for disabled rules
+- Fixed bug with `sortedImports` mangling file header comment
+- Fixed bug with indenting of multiline comments
+
 ## [0.47.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.3) (2020-11-09)
 
 - Fixed bug with `extensionAccessControl` increasing extension access level beyond extended type

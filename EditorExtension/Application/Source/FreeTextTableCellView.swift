@@ -66,7 +66,7 @@ class FreeTextTableCellView: NSTableCellView {
 }
 
 extension FreeTextTableCellView: NSTextFieldDelegate {
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         guard let textView: NSTextView = obj.userInfo!["NSFieldEditor"] as? NSTextView,
               let freeText = objectValue as? UserSelectionFreeText
         else {

@@ -200,7 +200,7 @@ final class RulesViewController: NSViewController {
 // MARK: - Search Field Delegate
 
 extension RulesViewController: NSSearchFieldDelegate {
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         if obj.object as? NSTextField == searchField {
             viewModels = buildRules()
             tableView?.reloadData()

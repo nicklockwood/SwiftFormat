@@ -36,7 +36,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.47.3</string>
+	<string>0.47.4</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>
@@ -46,19 +46,19 @@
 	<key>DTCompiler</key>
 	<string>com.apple.compilers.llvm.clang.1_0</string>
 	<key>DTPlatformBuild</key>
-	<string>12A7403</string>
+	<string>12B45b</string>
 	<key>DTPlatformName</key>
 	<string>macosx</string>
 	<key>DTPlatformVersion</key>
-	<string>10.15.6</string>
+	<string>11.0</string>
 	<key>DTSDKBuild</key>
-	<string>19G68</string>
+	<string>20A2408</string>
 	<key>DTSDKName</key>
-	<string>macosx10.15</string>
+	<string>macosx11.0</string>
 	<key>DTXcode</key>
-	<string>1210</string>
+	<string>1220</string>
 	<key>DTXcodeBuild</key>
-	<string>12A7403</string>
+	<string>12B45b</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.developer-tools</string>
 	<key>LSMinimumSystemVersion</key>

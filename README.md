@@ -309,9 +309,9 @@ To run SwiftFormat on the frontmost Xcode document (project or workspace) you ca
 
 ```applescript
 tell application "Xcode"
-	set frontWindow to the first window
-	set myPath to path of document of frontWindow
-	do shell script "cd " & myPath & ";cd ..; /usr/local/bin/swiftformat ."
+    set frontWindow to the first window
+    set myPath to path of document of frontWindow
+    do shell script "cd " & myPath & ";cd ..; /usr/local/bin/swiftformat ."
 end tell
 ```
 

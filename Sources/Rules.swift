@@ -598,8 +598,8 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.startOfScope("//")) { i, _ in
             guard let nextToken = formatter.token(at: i + 1),
-                  case let .commentBody(string) = nextToken else { return }
-            guard let first = string.first else { return }
+                  case let .commentBody(string) = nextToken,
+                  let first = string.first else { return }
             if "/!:".contains(first) {
                 let nextIndex = string.index(after: string.startIndex)
                 if nextIndex < string.endIndex, case let next = string[nextIndex], !" \t/".contains(next) {
@@ -628,7 +628,9 @@ public struct _FormatRules {
                 formatter.insert(.space(" "), at: i + 1)
             }
             if let i = formatter.index(of: .endOfScope("*/"), after: i), let prevToken = formatter.token(at: i - 1) {
-                if !prevToken.isSpaceOrLinebreak, !prevToken.string.hasSuffix("*") {
+                if !prevToken.isSpaceOrLinebreak, !prevToken.string.hasSuffix("*"),
+                   !prevToken.string.trimmingCharacters(in: .whitespaces).isEmpty
+                {
                     formatter.insert(.space(" "), at: i)
                 }
             }

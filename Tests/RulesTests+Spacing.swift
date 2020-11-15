@@ -1045,6 +1045,19 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.spaceInsideComments)
     }
 
+    func testNoExtraTrailingSpaceAddedToDocComment() {
+        let input = """
+        class Foo {
+            /**
+            Call to configure forced disabling of Bills fallback mode.
+            Intended for use only in debug builds and automated tests.
+             */
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.spaceInsideComments, exclude: ["indent"])
+    }
+
     // MARK: - consecutiveSpaces
 
     func testConsecutiveSpaces() {

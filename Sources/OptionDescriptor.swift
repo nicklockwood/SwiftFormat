@@ -787,6 +787,22 @@ struct _Descriptors {
         help: "Place ACL \"on-extension\" (default) or \"on-declarations\"",
         keyPath: \.extensionACLPlacement
     )
+    // TODO: If needing to match the existing rule, this should be blankLinesAtStartOfScope.
+    // TODO: If switching to blankLinesAtStartOfScope, then the enum values might need to be modified to make more sense.
+    let removeBlankLinesAtStartOfScope = OptionDescriptor(
+        argumentName: "removeBlankLinesAtStartOfScope",
+        displayName: "Remove Blank Lines At Start Of Scope",
+        help: "TODO:", // TODO:
+        keyPath: \.removeBlankLinesAtStartOfScope
+    )
+    // TODO: If needing to match the existing rule, this should be blankLinesAtEndOfScope.
+    // TODO: If switching to blankLinesAtStartOfScope, then the enum values might need to be modified to make more sense.
+    let removeBlankLinesAtEndOfScope = OptionDescriptor(
+        argumentName: "removeBlankLinesAtEndOfScope",
+        displayName: "Remove Blank Lines At End Of Scope",
+        help: "TODO:", // TODO:
+        keyPath: \.removeBlankLinesAtEndOfScope
+    )
 
     // MARK: - Internal
 
@@ -837,6 +853,8 @@ struct _Descriptors {
         argumentName: "removelines",
         displayName: "Remove Lines",
         help: "deprecated",
+        // TODO: Replace this message with the correct directions
+        // TODO: Should blankLinesAtStartOfScope and blankLinesAtEndOfScope be deprecated too?
         deprecationMessage: "Use '--enable blankLinesAtStartOfScope' or '--enable blankLinesAtEndOfScope' or '--disable blankLinesAtStartOfScope' or '--disable blankLinesAtEndOfScope' instead.",
         keyPath: \.removeBlankLines,
         trueValues: ["enabled", "true"],

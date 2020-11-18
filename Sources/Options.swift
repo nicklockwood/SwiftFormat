@@ -285,6 +285,16 @@ public enum MarkMode: String, CaseIterable {
     case ifNotEmpty = "if-not-empty"
 }
 
+// TODO: Better name?
+/// The line removal mode for inside of a scope.
+public enum InsideScopeLineRemovalMode: String, CaseIterable {
+    // TODO: Better names and values for these.
+    case always
+    case types = "types-only"
+    case others = "others-only"
+    case never
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -299,6 +309,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var truncateBlankLines: Bool
     public var insertBlankLines: Bool
     public var removeBlankLines: Bool
+    public var removeBlankLinesAtStartOfScope: InsideScopeLineRemovalMode
+    public var removeBlankLinesAtEndOfScope: InsideScopeLineRemovalMode
     public var allmanBraces: Bool
     public var fileHeader: HeaderStrippingMode
     public var ifdefIndent: IndentMode
@@ -376,6 +388,8 @@ public struct FormatOptions: CustomStringConvertible {
                 truncateBlankLines: Bool = true,
                 insertBlankLines: Bool = true,
                 removeBlankLines: Bool = true,
+                removeBlankLinesAtStartOfScope: InsideScopeLineRemovalMode = .always,
+                removeBlankLinesAtEndOfScope: InsideScopeLineRemovalMode = .always,
                 allmanBraces: Bool = false,
                 fileHeader: HeaderStrippingMode = .ignore,
                 ifdefIndent: IndentMode = .indent,
@@ -447,6 +461,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.truncateBlankLines = truncateBlankLines
         self.insertBlankLines = insertBlankLines
         self.removeBlankLines = removeBlankLines
+        self.removeBlankLinesAtStartOfScope = removeBlankLinesAtStartOfScope
+        self.removeBlankLinesAtEndOfScope = removeBlankLinesAtEndOfScope
         self.allmanBraces = allmanBraces
         self.fileHeader = fileHeader
         self.ifdefIndent = ifdefIndent

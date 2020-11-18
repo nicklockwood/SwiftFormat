@@ -844,6 +844,30 @@ public struct _FormatRules {
                   // If there is extra code on the same line, ignore it
                   formatter.tokens[indexOfFirstLineBreak].isLinebreak
             else { return }
+
+            let shouldRemoveBlankLines = Self.shouldRemoveBlankLinesInsideScope(
+                removalMode: formatter.options.removeBlankLinesAtStartOfScope,
+                isTypeLikeScope: {
+                    if
+                        let lastKeyword = formatter.lastToken(before: i, where: { $0.isDeclarationTypeKeyword }),
+                        lastKeyword.string.isTypeLikeKeyword
+                    {
+                        return true
+                    } else {
+                        return false
+                    }
+                }
+            )
+
+            // TODO: How to handle "conflicts" in the rules. For example:
+            // --disable blankLinesAtStartOfScope
+            // --removeBlankLinesAtStartOfScope always
+
+            // TODO: Could we check `&& formatter.options.removeBlankLines` here and remove it from below?
+            guard shouldRemoveBlankLines else {
+                return
+            }
+
             // Find next non-space token
             var index = indexOfFirstLineBreak + 1
             var indexOfLastLineBreak = indexOfFirstLineBreak
@@ -876,6 +900,27 @@ public struct _FormatRules {
                   // If there is extra code after the closing scope on the same line, ignore it
                   (formatter.next(.nonSpaceOrComment, after: i).map { $0.isLinebreak }) ?? true
             else { return }
+
+            let shouldRemoveBlankLines = Self.shouldRemoveBlankLinesInsideScope(
+                removalMode: formatter.options.removeBlankLinesAtEndOfScope,
+                isTypeLikeScope: {
+                    if
+                        let startIndex = formatter.index(of: .startOfScope, before: i),
+                        let lastKeyword = formatter.lastToken(before: startIndex, where: { $0.isDeclarationTypeKeyword }),
+                        lastKeyword.string.isTypeLikeKeyword
+                    {
+                        return true
+                    } else {
+                        return false
+                    }
+                }
+            )
+
+            // TODO: Could we check `&& formatter.options.removeBlankLines` here and remove it from below?
+            guard shouldRemoveBlankLines else {
+                return
+            }
+
             // Find previous non-space token
             var index = i - 1
             var indexOfFirstLineBreak: Int?
@@ -901,6 +946,23 @@ public struct _FormatRules {
                 formatter.removeTokens(in: indexOfFirstLineBreak ..< indexOfLastLineBreak!)
                 return
             }
+        }
+    }
+
+    // TODO: Where does it make sense to keep this helper function?
+    private static func shouldRemoveBlankLinesInsideScope(
+        removalMode: InsideScopeLineRemovalMode,
+        isTypeLikeScope: () -> Bool
+    ) -> Bool {
+        switch removalMode {
+        case .always:
+            return true
+        case .types:
+            return isTypeLikeScope()
+        case .others:
+            return !isTypeLikeScope()
+        case .never:
+            return false
         }
     }
 

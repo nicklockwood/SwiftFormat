@@ -1249,9 +1249,7 @@ extension Formatter {
             }
 
             // If this declaration represents a type, we need to parse its inner declarations as well.
-            let typelikeKeywords = ["class", "struct", "enum", "protocol", "extension"]
-
-            if typelikeKeywords.contains(declaration.keyword),
+            if declaration.keyword.isTypeLikeKeyword,
                let declarationTypeKeywordIndex = declarationParser
                .index(after: -1, where: { $0.string == declaration.keyword }),
                let startOfBody = declarationParser

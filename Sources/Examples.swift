@@ -65,6 +65,7 @@ private struct Examples {
     swift version is set to 4.1 or above.
     """
 
+    // TODO: Add examples
     let blankLinesAtEndOfScope = """
     ```diff
       func foo() {
@@ -93,6 +94,7 @@ private struct Examples {
     ```
     """
 
+    // TODO: Add examples
     let blankLinesAtStartOfScope = """
     ```diff
       func foo() {

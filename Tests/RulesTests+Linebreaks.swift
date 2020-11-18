@@ -133,6 +133,93 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.blankLinesAtStartOfScope, exclude: ["wrapArguments"])
     }
 
+    // TODO: Match other test naming, make sure test name matches final enum naming.
+    func testRemoveBlankLinesAtStartOfScope_Always() {
+        let input = """
+        struct Foo {
+
+            func bar() {
+
+                baz()
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            func bar() {
+                baz()
+            }
+        }
+        """
+
+        let options = FormatOptions(removeBlankLinesAtStartOfScope: .always)
+        testFormatting(for: input, output, rule: FormatRules.blankLinesAtStartOfScope, options: options)
+    }
+
+    // TODO: Match other test naming, make sure test name matches final enum naming.
+    func testRemoveBlankLinesAtStartOfScope_Types() {
+        let input = """
+        struct Foo {
+
+            func bar() {
+
+                baz()
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            func bar() {
+
+                baz()
+            }
+        }
+        """
+
+        let options = FormatOptions(removeBlankLinesAtStartOfScope: .types)
+        testFormatting(for: input, output, rule: FormatRules.blankLinesAtStartOfScope, options: options)
+    }
+
+    // TODO: Match other test naming, make sure test name matches final enum naming.
+    func testRemoveBlankLinesAtStartOfScope_Others() {
+        let input = """
+        struct Foo {
+
+            func bar() {
+
+                baz()
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+
+            func bar() {
+                baz()
+            }
+        }
+        """
+
+        let options = FormatOptions(removeBlankLinesAtStartOfScope: .others)
+        testFormatting(for: input, output, rule: FormatRules.blankLinesAtStartOfScope, options: options)
+    }
+
+    // TODO: Match other test naming, make sure test name matches final enum naming.
+    func testRemoveBlankLinesAtStartOfScope_Never() {
+        let input = """
+        struct Foo {
+
+            func bar() {
+
+                baz()
+            }
+        }
+        """
+
+        let options = FormatOptions(removeBlankLinesAtStartOfScope: .never)
+        testFormatting(for: input, rule: FormatRules.blankLinesAtStartOfScope, options: options)
+    }
+
     // MARK: - blankLinesAtEndOfScope
 
     func testBlankLinesRemovedAtEndOfFunction() {
@@ -158,6 +245,93 @@ extension RulesTests {
         let output = "if x {\n\n    // do something\n\n} else if y {\n\n    // do something else\n}"
         testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope,
                        exclude: ["blankLinesAtStartOfScope"])
+    }
+
+    // TODO: Match other test naming, make sure test name matches final enum naming.
+    func testRemoveBlankLinesAtEndOfScope_Always() {
+        let input = """
+        struct Foo {
+            func bar() {
+                baz()
+
+            }
+
+        }
+        """
+        let output = """
+        struct Foo {
+            func bar() {
+                baz()
+            }
+        }
+        """
+
+        let options = FormatOptions(removeBlankLinesAtEndOfScope: .always)
+        testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope, options: options)
+    }
+
+    // TODO: Match other test naming, make sure test name matches final enum naming.
+    func testRemoveBlankLinesAtEndOfScope_Types() {
+        let input = """
+        struct Foo {
+            func bar() {
+                baz()
+
+            }
+
+        }
+        """
+        let output = """
+        struct Foo {
+            func bar() {
+                baz()
+
+            }
+        }
+        """
+
+        let options = FormatOptions(removeBlankLinesAtEndOfScope: .types)
+        testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope, options: options)
+    }
+
+    // TODO: Match other test naming, make sure test name matches final enum naming.
+    func testRemoveBlankLinesAtEndOfScope_Others() {
+        let input = """
+        struct Foo {
+            func bar() {
+                baz()
+
+            }
+
+        }
+        """
+        let output = """
+        struct Foo {
+            func bar() {
+                baz()
+            }
+
+        }
+        """
+
+        let options = FormatOptions(removeBlankLinesAtEndOfScope: .others)
+        testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope, options: options)
+    }
+
+    // TODO: Match other test naming, make sure test name matches final enum naming.
+    func testRemoveBlankLinesAtEndOfScope_Never() {
+        let input = """
+        struct Foo {
+            func bar() {
+                baz()
+
+            }
+
+        }
+        """
+
+        let options = FormatOptions(removeBlankLinesAtEndOfScope: .never)
+        testFormatting(for: input, rule: FormatRules.blankLinesAtEndOfScope, options: options)
     }
 
     // MARK: - blankLinesBetweenScopes

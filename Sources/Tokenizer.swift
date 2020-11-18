@@ -56,6 +56,13 @@ public extension String {
         return swiftKeywords.contains(self)
     }
 
+    private static let typeLikeKeywords = ["class", "struct", "enum", "protocol", "extension"]
+
+    /// Is this string a type-like keyword?
+    var isTypeLikeKeyword: Bool {
+        return Self.typeLikeKeywords.contains(self)
+    }
+
     /// Is this string a valid operator?
     var isOperator: Bool {
         let tokens = tokenize(self)

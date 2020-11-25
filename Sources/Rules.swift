@@ -648,7 +648,9 @@ public struct _FormatRules {
                 [.delimiter(":"), .operator("=", .infix)].contains($0)
             }), formatter.tokens[colonIndex] == .delimiter(":"),
             let equalsIndex = formatter.index(of: .operator("=", .infix), after: colonIndex),
-            let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
+            let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex),
+            let assignmentTypeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+            let openParensIndex = formatter.index(of: .delimiter("("), after: assignmentTypeStartIndex)
             else { return }
 
             // Check types match
@@ -674,9 +676,14 @@ public struct _FormatRules {
                 return
             }
 
-            formatter.removeTokens(in: colonIndex ... endIndex)
-            if formatter.tokens[colonIndex - 1].isSpace {
-                formatter.removeToken(at: colonIndex - 1)
+            switch formatter.options.redundantType {
+            case .assignment:
+                formatter.removeTokens(in: colonIndex ... endIndex)
+                if formatter.tokens[colonIndex - 1].isSpace {
+                    formatter.removeToken(at: colonIndex - 1)
+                }
+            case .explicitType:
+                formatter.removeTokens(in: assignmentTypeStartIndex ..< openParensIndex)
             }
         }
     }

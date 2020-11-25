@@ -789,6 +789,18 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantType)
     }
 
+//    func testVarNonRedundantTypeDoesNothingExplicitType() {
+//        let input = "var view: UIView = UINavigationBar()"
+//        testFormatting(for: input, rule: FormatRules.redundantType)
+//    }
+//
+    func testLetRedundantTypeRemovalExplicitType() {
+        let input = "let view: UIView = UIView()"
+        let output = "let view: UIView = .init()"
+        let options = FormatOptions(redundantType: .explicitType, swiftVersion: "5.1")
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
     func testLetNonRedundantTypeDoesNothing() {
         let input = "let view: UIView = UINavigationBar()"
         testFormatting(for: input, rule: FormatRules.redundantType)

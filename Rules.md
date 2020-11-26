@@ -1185,6 +1185,10 @@ by using `--self init-only`:
 
 Remove redundant type from variable declarations.
 
+Option | Description
+--- | ---
+`--redundanttype` | Keep "inferred" (default) or "explicit" type annotation
+
 <details>
 <summary>Examples</summary>
 

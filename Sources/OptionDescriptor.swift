@@ -787,6 +787,12 @@ struct _Descriptors {
         help: "Place ACL \"on-extension\" (default) or \"on-declarations\"",
         keyPath: \.extensionACLPlacement
     )
+    let redundantType = OptionDescriptor(
+        argumentName: "redundanttype",
+        displayName: "Redundant Type",
+        help: "Keep \"inferred\" (default) or \"explicit\" type annotation",
+        keyPath: \.redundantType
+    )
 
     // MARK: - Internal
 

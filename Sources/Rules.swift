@@ -639,7 +639,8 @@ public struct _FormatRules {
 
     /// Removes explicit type declarations from initialization declarations
     public let redundantType = FormatRule(
-        help: "Remove redundant type from variable declarations."
+        help: "Remove redundant type from variable declarations.",
+        options: ["redundanttype"]
     ) { formatter in
         formatter.forEachToken(where: { (token) -> Bool in
             token == .keyword("var") || token == .keyword("let")

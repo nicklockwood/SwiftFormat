@@ -3989,7 +3989,7 @@ public struct _FormatRules {
             // last one from the cases list
             if let nextStart = nextStartIndex,
                let nextEnd = formatter.lastIndex(of: .nonSpaceOrCommentOrLinebreak, in: nextStart ..< endIndex),
-               nextStart < nextEnd
+               nextStart <= nextEnd
             {
                 enums.append(Range(nextStart ... nextEnd))
             }
@@ -4002,7 +4002,7 @@ public struct _FormatRules {
                 let rhs = formatter.tokens[range2]
                     .first(where: { $0.isIdentifier || $0.isStringBody || $0.isNumber })?.string ?? ""
 
-                return lhs < rhs
+                return lhs.localizedStandardCompare(rhs) == .orderedAscending
             }
 
             let sortedTokens = sorted.map { formatter.tokens[$0] }

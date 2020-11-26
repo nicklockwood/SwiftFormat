@@ -2565,6 +2565,23 @@ extension RulesTests {
                        exclude: ["wrapSwitchCases"])
     }
 
+    func testSortNumericSwitchCases() {
+        let input = """
+        switch foo {
+        case 12, 3, 5, 7, 8, 10, 1:
+            break
+        }
+        """
+        let output = """
+        switch foo {
+        case 1, 3, 5, 7, 8, 10, 12:
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
     // MARK: - modifierOrder
 
     func testVarModifiersCorrected() {

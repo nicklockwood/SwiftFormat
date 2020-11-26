@@ -1,7 +1,18 @@
 # Change Log
 
+## [0.47.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.5) (2020-11-27)
+
+- Added `--redundanttype` option for controlling how redundant types are resolved
+- Numeric case values are now sorted naturally instead of alphabetically
+- Fixed bug where `redundantFileprivate` rule broke trailing-closure inits
+- Fixed various `enumNamespaces` rule edge-cases
+- Broken symlinks no longer raise an error if they are ignored in config
+- File creation date can now be used in header formats on Linux
+- The `--symlinks` option now works correctly on Linux
+
 ## [0.47.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.4) (2020-11-15)
 
+- Command-line tool now includes an arm64 slice for Apple Silicon
 - Increased strictness of grouped extensions logic
 - Fixed issue where `markTypes` rule would mistake an import declaration as a type
 - Fixed some additional bugs with unhoisting pattern let

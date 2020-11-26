@@ -765,8 +765,6 @@ Known issues
 
 * When running a version of SwiftFormat built using Xcode 10.2 on macOS 10.14.3 or earlier, you may experience a crash with the error "dyld: Library not loaded: @rpath/libswiftCore.dylib". To fix this, you need to install the [Swift 5 Runtime Support for Command Line Tools](https://support.apple.com/kb/DL1998). These tools are included by default in macOS 10.14.4 and later.
 
-* When running on Linux, the `--symlinks` option has no effect, and some of the `fileHeader` placeholders are not supported.
-
 
 Tip Jar
 -----------

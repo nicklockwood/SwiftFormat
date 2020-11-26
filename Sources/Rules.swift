@@ -762,11 +762,29 @@ public struct _FormatRules {
 
         func rangeContainsTypeInit(_ type: String, in range: Range<Int>) -> Bool {
             for i in range {
-                guard case let .identifier(name) = formatter.tokens[i], [type, "Self"].contains(name) else {
+                guard case let .identifier(name) = formatter.tokens[i],
+                      [type, "Self", "self"].contains(name)
+                else {
                     continue
                 }
-                if let nextToken = formatter.next(.nonSpaceOrComment, after: i),
-                   [.startOfScope("("), .identifier("init")].contains(nextToken)
+                if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: i),
+                   let nextToken = formatter.token(at: nextIndex), nextToken == .startOfScope("(") ||
+                   (nextToken == .operator(".", .infix) && [.identifier("init"), .identifier("self")]
+                       .contains(formatter.next(.nonSpaceOrComment, after: nextIndex) ?? .space("")))
+                {
+                    return true
+                }
+            }
+            return false
+        }
+
+        func rangeContainsSelfAssignment(_ range: Range<Int>) -> Bool {
+            for i in range {
+                guard case .identifier("self") = formatter.tokens[i] else {
+                    continue
+                }
+                if let token = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
+                   [.operator("=", .infix), .delimiter(":"), .startOfScope("(")].contains(token)
                 {
                     return true
                 }
@@ -790,7 +808,9 @@ public struct _FormatRules {
             }
 
             let range = braceIndex + 1 ..< endIndex
-            if rangeHostsOnlyStaticMembersAtTopLevel(range), !rangeContainsTypeInit(name, in: range) {
+            if rangeHostsOnlyStaticMembersAtTopLevel(range),
+               !rangeContainsTypeInit(name, in: range), !rangeContainsSelfAssignment(range)
+            {
                 formatter.replaceToken(at: i, with: .keyword("enum"))
 
                 if let finalIndex = formatter.indexOfModifier("final", forTypeAt: i) {

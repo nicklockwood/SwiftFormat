@@ -1024,6 +1024,50 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
+    func testEnumNamespacesDoesNothingIfSelfInitializedInternally2() {
+        let input = """
+        struct Foo {
+            static func bar() -> Foo {
+                self.init()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesDoesNothingIfSelfAssignedInternally() {
+        let input = """
+        class Foo {
+            public static func bar() {
+                let bundle = Bundle(for: self)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesDoesNothingIfSelfAssignedInternally2() {
+        let input = """
+        class Foo {
+            public static func bar() {
+                let `class` = self
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesDoesNothingIfSelfAssignedInternally3() {
+        let input = """
+        class Foo {
+            public static func bar() {
+                let `class` = Foo.self
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
     // MARK: - numberFormatting
 
     // hex case

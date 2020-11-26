@@ -639,7 +639,8 @@ public struct _FormatRules {
 
     /// Removes explicit type declarations from initialization declarations
     public let redundantType = FormatRule(
-        help: "Remove redundant type from variable declarations."
+        help: "Remove redundant type from variable declarations.",
+        options: ["redundanttype"]
     ) { formatter in
         formatter.forEachToken(where: { (token) -> Bool in
             token == .keyword("var") || token == .keyword("let")
@@ -648,7 +649,9 @@ public struct _FormatRules {
                 [.delimiter(":"), .operator("=", .infix)].contains($0)
             }), formatter.tokens[colonIndex] == .delimiter(":"),
             let equalsIndex = formatter.index(of: .operator("=", .infix), after: colonIndex),
-            let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
+            let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex),
+            let assignmentTypeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+            let openParensIndex = formatter.index(of: .startOfScope("("), after: assignmentTypeStartIndex)
             else { return }
 
             // Check types match
@@ -674,9 +677,15 @@ public struct _FormatRules {
                 return
             }
 
-            formatter.removeTokens(in: colonIndex ... endIndex)
-            if formatter.tokens[colonIndex - 1].isSpace {
-                formatter.removeToken(at: colonIndex - 1)
+            switch formatter.options.redundantType {
+            case .inferred:
+                formatter.removeTokens(in: colonIndex ... endIndex)
+                if formatter.tokens[colonIndex - 1].isSpace {
+                    formatter.removeToken(at: colonIndex - 1)
+                }
+            case .explicit:
+                formatter.removeTokens(in: assignmentTypeStartIndex ..< openParensIndex)
+                formatter.insert([.identifier(".init")], at: assignmentTypeStartIndex)
             }
         }
     }

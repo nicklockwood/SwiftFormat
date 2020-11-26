@@ -110,6 +110,12 @@ public enum WrapReturnType: String, CaseIterable {
     case preserve
 }
 
+/// Annotation which should be kept when removing a redundant type
+public enum RedundantType: String, CaseIterable {
+    case explicit
+    case inferred
+}
+
 /// Version number wrapper
 public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral, CustomStringConvertible {
     public let rawValue: String
@@ -352,6 +358,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var organizeExtensionThreshold: Int
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
+    public var redundantType: RedundantType
 
     // Deprecated
     public var indentComments: Bool
@@ -429,6 +436,7 @@ public struct FormatOptions: CustomStringConvertible {
                 organizeExtensionThreshold: Int = 0,
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
+                redundantType: RedundantType = .inferred,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -500,6 +508,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.organizeExtensionThreshold = organizeExtensionThreshold
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
+        self.redundantType = redundantType
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

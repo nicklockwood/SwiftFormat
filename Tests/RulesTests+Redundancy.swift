@@ -862,6 +862,73 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantType)
     }
 
+    func testVarRedundantTypeRemovalExplicitType() {
+        let input = "var view: UIView = UIView()"
+        let output = "var view: UIView = .init()"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testLetRedundantGenericTypeRemovalExplicitType() {
+        let input = "let relay: BehaviourRelay<Int?> = BehaviourRelay<Int?>(value: nil)"
+        let output = "let relay: BehaviourRelay<Int?> = .init(value: nil)"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testVarNonRedundantTypeDoesNothingExplicitType() {
+        let input = "var view: UIView = UINavigationBar()"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testLetRedundantTypeRemovalExplicitType() {
+        let input = "let view: UIView = UIView()"
+        let output = "let view: UIView = .init()"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeRemovedIfValueOnNextLineExplicitType() {
+        let input = """
+        let view: UIView
+            = UIView()
+        """
+        let output = """
+        let view: UIView
+            = .init()
+        """
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeRemovedIfValueOnNextLine2ExplicitType() {
+        let input = """
+        let view: UIView =
+            UIView()
+        """
+        let output = """
+        let view: UIView =
+            .init()
+        """
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeRemovalWithCommentExplicitType() {
+        let input = "var view: UIView /* view */ = UIView()"
+        let output = "var view: UIView /* view */ = .init()"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeRemovalWithComment2ExplicitType() {
+        let input = "var view: UIView = /* view */ UIView()"
+        let output = "var view: UIView = /* view */ .init()"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
     // MARK: - redundantNilInit
 
     func testRemoveRedundantNilInit() {

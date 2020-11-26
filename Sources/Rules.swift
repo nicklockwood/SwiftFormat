@@ -4566,12 +4566,22 @@ public struct _FormatRules {
             for i in range {
                 switch formatter.tokens[i] {
                 case .identifier(name):
-                    if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
-                        $0 == .operator(".", .infix)
-                    }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: dotIndex) == .identifier("init") {
+                    guard let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) else {
+                        break
+                    }
+                    switch formatter.tokens[nextIndex] {
+                    case .operator(".", .infix):
+                        if formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .identifier("init") {
+                            return true
+                        }
+                    case .startOfScope("("):
                         return true
-                    } else if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .startOfScope("(") {
-                        return true
+                    case .startOfScope("{"):
+                        if formatter.isStartOfClosure(at: nextIndex) {
+                            return true
+                        }
+                    default:
+                        break
                     }
                 case .identifier("init"):
                     // TODO: this will return true if *any* type is initialized using type inference.

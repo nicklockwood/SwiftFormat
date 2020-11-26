@@ -534,6 +534,22 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
     }
 
+    func testFileprivateInitNotChangedToPrivateWhenUsingTrailingClosureInit() {
+        let input = """
+        private struct Foo {}
+
+        public struct Bar {
+            fileprivate let consumeFoo: (Foo) -> Void
+        }
+
+        public func makeBar() -> Bar {
+            Bar { _ in }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+    }
+
     // MARK: - redundantGet
 
     func testRemoveSingleLineIsolatedGet() {

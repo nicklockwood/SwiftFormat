@@ -110,9 +110,10 @@ public enum WrapReturnType: String, CaseIterable {
     case preserve
 }
 
+/// Annotation which should be kept when removing a redundant type
 public enum RedundantType: String, CaseIterable {
-    case explicitType = "explicit-type"
-    case assignment
+    case explicit
+    case inferred
 }
 
 /// Version number wrapper
@@ -435,7 +436,7 @@ public struct FormatOptions: CustomStringConvertible {
                 organizeExtensionThreshold: Int = 0,
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
-                redundantType: RedundantType = .assignment,
+                redundantType: RedundantType = .inferred,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,

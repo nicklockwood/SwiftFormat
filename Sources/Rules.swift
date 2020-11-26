@@ -650,7 +650,7 @@ public struct _FormatRules {
             let equalsIndex = formatter.index(of: .operator("=", .infix), after: colonIndex),
             let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex),
             let assignmentTypeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-            let openParensIndex = formatter.index(of: .delimiter("("), after: assignmentTypeStartIndex)
+            let openParensIndex = formatter.index(of: .startOfScope("("), after: assignmentTypeStartIndex)
             else { return }
 
             // Check types match
@@ -677,13 +677,14 @@ public struct _FormatRules {
             }
 
             switch formatter.options.redundantType {
-            case .assignment:
+            case .inferred:
                 formatter.removeTokens(in: colonIndex ... endIndex)
                 if formatter.tokens[colonIndex - 1].isSpace {
                     formatter.removeToken(at: colonIndex - 1)
                 }
-            case .explicitType:
+            case .explicit:
                 formatter.removeTokens(in: assignmentTypeStartIndex ..< openParensIndex)
+                formatter.insert([.identifier(".init")], at: assignmentTypeStartIndex)
             }
         }
     }

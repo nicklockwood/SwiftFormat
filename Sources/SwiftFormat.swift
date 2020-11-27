@@ -215,12 +215,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 onComplete { throw error }
                 return
             }
-            let enumerationOptions: FileManager.DirectoryEnumerationOptions
-            #if os(macOS)
-                enumerationOptions = .skipsHiddenFiles
-            #else
-                enumerationOptions = []
-            #endif
+            let enumerationOptions: FileManager.DirectoryEnumerationOptions = .skipsHiddenFiles
             guard let files = try? manager.contentsOfDirectory(
                 at: inputURL, includingPropertiesForKeys: keys, options: enumerationOptions
             ) else {
@@ -647,12 +642,16 @@ func getResourceValues(for url: URL, keys: [URLResourceKey]) throws -> ResourceV
     #else
         var isDirectory: ObjCBool = false
         if manager.fileExists(atPath: url.path, isDirectory: &isDirectory) {
+            guard let attributes = try? manager.attributesOfItem(atPath: url.path) else {
+                throw FormatError.reading("Failed to read attributes for \(url.path)")
+            }
+            let isSymbolicLink = url.resolvingSymlinksInPath() != url
             return ResourceValues(
-                isRegularFile: !isDirectory.boolValue,
+                isRegularFile: !isDirectory.boolValue && !isSymbolicLink,
                 isDirectory: isDirectory.boolValue,
                 isAliasFile: false,
-                isSymbolicLink: false,
-                creationDate: nil,
+                isSymbolicLink: isSymbolicLink,
+                creationDate: attributes[.creationDate] as? Date,
                 path: url.path
             )
         }

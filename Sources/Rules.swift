@@ -649,15 +649,15 @@ public struct _FormatRules {
                 [.delimiter(":"), .operator("=", .infix)].contains($0)
             }), formatter.tokens[colonIndex] == .delimiter(":"),
             let equalsIndex = formatter.index(of: .operator("=", .infix), after: colonIndex),
-            let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex),
-            let assignmentTypeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-            let openParensIndex = formatter.index(of: .startOfScope("("), after: assignmentTypeStartIndex)
+            let explicitTypeEndIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex),
+            let assignmentTypeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
+//            let openParensIndex = formatter.index(of: .startOfScope("("), after: assignmentTypeStartIndex)
             else { return }
 
             // Check types match
             var i = colonIndex, j = equalsIndex
             while let typeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                  typeIndex <= endIndex,
+                  typeIndex <= explicitTypeEndIndex,
                   let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: j)
             {
                 guard formatter.tokens[typeIndex] == formatter.tokens[valueIndex] else {
@@ -666,7 +666,7 @@ public struct _FormatRules {
                 i = typeIndex
                 j = valueIndex
             }
-            guard i == endIndex else {
+            guard i == explicitTypeEndIndex else {
                 return
             }
 
@@ -679,11 +679,15 @@ public struct _FormatRules {
 
             switch formatter.options.redundantType {
             case .inferred:
-                formatter.removeTokens(in: colonIndex ... endIndex)
+                formatter.removeTokens(in: colonIndex ... explicitTypeEndIndex)
                 if formatter.tokens[colonIndex - 1].isSpace {
                     formatter.removeToken(at: colonIndex - 1)
                 }
             case .explicit:
+                // check for static type -> let blah: Blah = Blah.instance or Blah.makeBlah() // but can this be chained? Blah = .makeBlah().makeCopy() ??
+                // if static, then just remove Blah from Blah.instance
+                // if not static then remove Blah and add .init
+//                if tokenAfter
                 formatter.removeTokens(in: assignmentTypeStartIndex ..< openParensIndex)
                 formatter.insert([.identifier(".init")], at: assignmentTypeStartIndex)
             }

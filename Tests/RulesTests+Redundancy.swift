@@ -945,6 +945,54 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
     }
 
+    func testRedundantTypeRemovalWithStaticMember() {
+        let input = """
+        let session: URLSession = URLSession.default
+
+        init(foo: Foo, bar: Bar) {
+            self.foo = foo
+            self.bar = bar
+        }
+        """
+        let output = """
+        let session: URLSession = .default
+
+        init(foo: Foo, bar: Bar) {
+            self.foo = foo
+            self.bar = bar
+        }
+        """
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeRemovalWithStaticFunc() {
+        let input = """
+        let session: URLSession = URLSession.default()
+
+        init(foo: Foo, bar: Bar) {
+            self.foo = foo
+            self.bar = bar
+        }
+        """
+        let output = """
+        let session: URLSession = .default()
+
+        init(foo: Foo, bar: Bar) {
+            self.foo = foo
+            self.bar = bar
+        }
+        """
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeDoesNothingWithStaticMemberMakingCopy() {
+        let input = "let session: URLSession = URLSession.default.makeCopy()"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+    }
+
     // MARK: - redundantNilInit
 
     func testRemoveRedundantNilInit() {

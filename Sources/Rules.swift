@@ -649,15 +649,13 @@ public struct _FormatRules {
                 [.delimiter(":"), .operator("=", .infix)].contains($0)
             }), formatter.tokens[colonIndex] == .delimiter(":"),
             let equalsIndex = formatter.index(of: .operator("=", .infix), after: colonIndex),
-            let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex),
-            let assignmentTypeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-            let openParensIndex = formatter.index(of: .startOfScope("("), after: assignmentTypeStartIndex)
+            let typeEndIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
             else { return }
 
             // Check types match
             var i = colonIndex, j = equalsIndex
             while let typeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                  typeIndex <= endIndex,
+                  typeIndex <= typeEndIndex,
                   let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: j)
             {
                 guard formatter.tokens[typeIndex] == formatter.tokens[valueIndex] else {
@@ -666,7 +664,7 @@ public struct _FormatRules {
                 i = typeIndex
                 j = valueIndex
             }
-            guard i == endIndex else {
+            guard i == typeEndIndex else {
                 return
             }
 
@@ -679,13 +677,22 @@ public struct _FormatRules {
 
             switch formatter.options.redundantType {
             case .inferred:
-                formatter.removeTokens(in: colonIndex ... endIndex)
+                formatter.removeTokens(in: colonIndex ... typeEndIndex)
                 if formatter.tokens[colonIndex - 1].isSpace {
                     formatter.removeToken(at: colonIndex - 1)
                 }
             case .explicit:
-                formatter.removeTokens(in: assignmentTypeStartIndex ..< openParensIndex)
-                formatter.insert([.identifier(".init")], at: assignmentTypeStartIndex)
+                guard let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex) else { break }
+                if formatter.nextToken(after: j) == .startOfScope("(") {
+                    formatter.replaceTokens(in: valueStartIndex ... j, with: [.operator(".", .infix), .identifier("init")])
+                } else if
+                    // check for `= Type.identifier` or `= Type.identifier()`
+                    formatter.token(at: j + 1) == .operator(".", .infix),
+                    formatter.endOfExpression(at: j + 1, upTo: []) == j + 2 ||
+                    (formatter.token(at: j + 3) == .startOfScope("(") && formatter.token(at: j + 4) == .endOfScope(")"))
+                {
+                    formatter.removeTokens(in: valueStartIndex ... j)
+                }
             }
         }
     }

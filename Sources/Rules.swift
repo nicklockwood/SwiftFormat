@@ -682,15 +682,16 @@ public struct _FormatRules {
                     formatter.removeToken(at: colonIndex - 1)
                 }
             case .explicit:
+                guard let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex) else { break }
                 if formatter.nextToken(after: j) == .startOfScope("(") {
-                    formatter.replaceToken(at: j, with: [.operator(".", .infix), .identifier("init")])
+                    formatter.replaceTokens(in: valueStartIndex ... j, with: [.operator(".", .infix), .identifier("init")])
                 } else if
                     // check for `= Type.identifier` or `= Type.identifier()`
                     formatter.token(at: j + 1) == .operator(".", .infix),
                     formatter.endOfExpression(at: j + 1, upTo: []) == j + 2 ||
                     (formatter.token(at: j + 3) == .startOfScope("(") && formatter.token(at: j + 4) == .endOfScope(")"))
                 {
-                    formatter.removeToken(at: j)
+                    formatter.removeTokens(in: valueStartIndex ... j)
                 }
             }
         }

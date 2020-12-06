@@ -1,4 +1,4 @@
-![](EditorExtension/Application/Assets.xcassets/AppIcon.appiconset/AppIcon256.png)
+![](EditorExtension/Application/Assets.xcassets/AppIcon.appiconset/icon_256x256.png)
 
 [![PayPal](https://img.shields.io/badge/paypal-donate-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9ZGWNK5FEZFF6&source=url)
 [![Travis](https://api.travis-ci.org/nicklockwood/SwiftFormat.svg?branch=master)](https://travis-ci.org/nicklockwood/SwiftFormat)

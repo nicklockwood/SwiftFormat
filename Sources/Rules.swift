@@ -2045,15 +2045,18 @@ public struct _FormatRules {
         help: "Use trailing closure syntax where applicable.",
         options: ["trailingclosures"]
     ) { formatter in
-        let whitelist = Set(
-            ["async", "asyncAfter", "sync", "autoreleasepool"] + formatter.options.trailingClosures
-        )
-        let blacklist = Set(["performBatchUpdates"])
+        let useTrailing = Set([
+            "async", "asyncAfter", "sync", "autoreleasepool",
+        ] + formatter.options.trailingClosures)
+        let nonTrailing = Set([
+            "performBatchUpdates",
+            "expect", // Special case to support autoclosure arguments in the Nimble framework
+        ])
 
         formatter.forEach(.startOfScope("(")) { i, _ in
             guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
                   case let .identifier(name) = prevToken, // TODO: are trailing closures allowed in other cases?
-                  !blacklist.contains(name), !formatter.isConditionalStatement(at: i)
+                  !nonTrailing.contains(name), !formatter.isConditionalStatement(at: i)
             else {
                 return
             }
@@ -2073,7 +2076,7 @@ public struct _FormatRules {
             case .delimiter(","), .startOfScope("("):
                 break
             case .delimiter(":"):
-                guard whitelist.contains(name) else {
+                guard useTrailing.contains(name) else {
                     return
                 }
                 if let commaIndex = formatter.index(of: .delimiter(","), before: openingBraceIndex) {

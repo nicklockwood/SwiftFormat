@@ -439,7 +439,7 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.trailingClosures)
     }
 
-    // whitelisted methods
+    // explicit trailing closure methods
 
     func testCustomMethodMadeTrailing() {
         let input = "foo(bar: 1, baz: { /* some code */ })"
@@ -448,10 +448,15 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.trailingClosures, options: options)
     }
 
-    // blacklisted methods
+    // explicit non-trailing closure methods
 
     func testPerformBatchUpdatesNotMadeTrailing() {
         let input = "collectionView.performBatchUpdates({ /* some code */ })"
+        testFormatting(for: input, rule: FormatRules.trailingClosures)
+    }
+
+    func testNimbleExpectNotMadeTrailing() {
+        let input = "expect({ bar }).to(beNil())"
         testFormatting(for: input, rule: FormatRules.trailingClosures)
     }
 

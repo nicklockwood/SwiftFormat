@@ -460,6 +460,12 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.trailingClosures)
     }
 
+    func testCustomMethodNotMadeTrailing() {
+        let input = "foo({ /* some code */ })"
+        let options = FormatOptions(neverTrailing: ["foo"])
+        testFormatting(for: input, rule: FormatRules.trailingClosures, options: options)
+    }
+
     // multiple closures
 
     func testMultipleNestedClosures() throws {

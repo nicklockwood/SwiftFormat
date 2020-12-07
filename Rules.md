@@ -1567,6 +1567,7 @@ Use trailing closure syntax where applicable.
 Option | Description
 --- | ---
 `--trailingclosures` | Comma-delimited list of functions that use trailing closures
+`--nevertrailing` | List of functions that should never use trailing closures
 
 <details>
 <summary>Examples</summary>

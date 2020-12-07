@@ -2039,19 +2039,18 @@ public struct _FormatRules {
     }
 
     /// Convert closure arguments to trailing closure syntax where possible
-    /// NOTE: Parens around trailing closures are sometimes required for disambiguation.
-    /// SwiftFormat can't detect those cases, so `trailingClosures` is disabled by default
     public let trailingClosures = FormatRule(
         help: "Use trailing closure syntax where applicable.",
-        options: ["trailingclosures"]
+        options: ["trailingclosures", "nevertrailing"]
     ) { formatter in
         let useTrailing = Set([
             "async", "asyncAfter", "sync", "autoreleasepool",
         ] + formatter.options.trailingClosures)
+
         let nonTrailing = Set([
             "performBatchUpdates",
             "expect", // Special case to support autoclosure arguments in the Nimble framework
-        ])
+        ] + formatter.options.neverTrailing)
 
         formatter.forEach(.startOfScope("(")) { i, _ in
             guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),

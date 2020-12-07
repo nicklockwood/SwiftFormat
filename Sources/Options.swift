@@ -331,6 +331,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var experimentalRules: Bool
     public var importGrouping: ImportGrouping
     public var trailingClosures: Set<String>
+    public var neverTrailing: Set<String>
     public var xcodeIndentation: Bool
     public var tabWidth: Int
     public var maxWidth: Int
@@ -409,6 +410,7 @@ public struct FormatOptions: CustomStringConvertible {
                 experimentalRules: Bool = false,
                 importGrouping: ImportGrouping = .alphabetized,
                 trailingClosures: Set<String> = [],
+                neverTrailing: Set<String> = [],
                 xcodeIndentation: Bool = false,
                 tabWidth: Int = 0,
                 maxWidth: Int = 0,
@@ -481,6 +483,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.experimentalRules = experimentalRules
         self.importGrouping = importGrouping
         self.trailingClosures = trailingClosures
+        self.neverTrailing = neverTrailing
         self.xcodeIndentation = xcodeIndentation
         self.tabWidth = tabWidth
         self.maxWidth = maxWidth

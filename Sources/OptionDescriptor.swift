@@ -574,6 +574,12 @@ struct _Descriptors {
         help: "Comma-delimited list of functions that use trailing closures",
         keyPath: \FormatOptions.trailingClosures
     )
+    let neverTrailing = OptionDescriptor(
+        argumentName: "nevertrailing",
+        displayName: "Never Trailing Functions",
+        help: "List of functions that should never use trailing closures",
+        keyPath: \FormatOptions.neverTrailing
+    )
     let xcodeIndentation = OptionDescriptor(
         argumentName: "xcodeindentation",
         displayName: "Xcode Indentation",

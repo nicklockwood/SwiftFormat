@@ -1341,6 +1341,29 @@ extension RulesTests {
         )
     }
 
+    func testPrivateExtensionAppliedToMembersAsPrivateInSwift4AndAbove() {
+        let input = """
+        struct Foo {}
+
+        private extension Foo {
+            func bar() {}
+        }
+        """
+
+        let output = """
+        struct Foo {}
+
+        extension Foo {
+            private func bar() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output, rule: FormatRules.extensionAccessControl,
+            options: FormatOptions(extensionACLPlacement: .onDeclarations, swiftVersion: "4")
+        )
+    }
+
     // MARK: extensionAccessControl .onExtension
 
     func testUpdatedVisibilityOfExtension() {

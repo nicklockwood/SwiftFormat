@@ -292,7 +292,7 @@ public extension UICollectionView {
         layoutsData![identifier] = layoutData
     }
 
-    fileprivate func registerLayout(
+    private func registerLayout(
         _ layout: Layout,
         state: Any = (),
         constants: [String: Any]...,

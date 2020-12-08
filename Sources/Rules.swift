@@ -4030,9 +4030,11 @@ public struct _FormatRules {
 
             let sorted: [Range<Int>] = enums.sorted { (range1, range2) -> Bool in
                 let lhs = formatter.tokens[range1]
-                    .first(where: { $0.isIdentifier || $0.isStringBody || $0.isNumber })?.string ?? ""
+                    .compactMap { $0.isIdentifier || $0.isStringBody || $0.isNumber ? $0.string : nil }
+                    .joined()
                 let rhs = formatter.tokens[range2]
-                    .first(where: { $0.isIdentifier || $0.isStringBody || $0.isNumber })?.string ?? ""
+                    .compactMap { $0.isIdentifier || $0.isStringBody || $0.isNumber ? $0.string : nil }
+                    .joined()
 
                 return lhs.localizedStandardCompare(rhs) == .orderedAscending
             }

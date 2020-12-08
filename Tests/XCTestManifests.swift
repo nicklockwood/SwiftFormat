@@ -1792,6 +1792,8 @@ extension RulesTests {
         ("testSortedSwitchCaseMultipleAssociatedValues", testSortedSwitchCaseMultipleAssociatedValues),
         ("testSortedSwitchCaseOneCaseDoesNothing", testSortedSwitchCaseOneCaseDoesNothing),
         ("testSortedSwitchStrings", testSortedSwitchStrings),
+        ("testSortedSwitchTuples", testSortedSwitchTuples),
+        ("testSortedSwitchTuples2", testSortedSwitchTuples2),
         ("testSortedSwitchWhereConditionLastCase", testSortedSwitchWhereConditionLastCase),
         ("testSortedSwitchWhereConditionNotLastCase", testSortedSwitchWhereConditionNotLastCase),
         ("testSortNumericSwitchCases", testSortNumericSwitchCases),

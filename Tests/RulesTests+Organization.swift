@@ -2605,6 +2605,50 @@ extension RulesTests {
                        exclude: ["wrapSwitchCases"])
     }
 
+    func testSortedSwitchTuples() {
+        let input = """
+        switch foo {
+        case (.foo, _),
+             (.bar, _),
+             (.baz, _),
+             (_, .foo):
+        }
+        """
+        let output = """
+        switch foo {
+        case (_, .foo),
+             (.bar, _),
+             (.baz, _),
+             (.foo, _):
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
+    func testSortedSwitchTuples2() {
+        let input = """
+        switch self {
+        case (.quux, .bar),
+             (_, .foo),
+             (_, .bar),
+             (_, .baz),
+             (.foo, .bar):
+        }
+        """
+        let output = """
+        switch self {
+        case (_, .bar),
+             (_, .baz),
+             (_, .foo),
+             (.foo, .bar),
+             (.quux, .bar):
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
     // MARK: - modifierOrder
 
     func testVarModifiersCorrected() {

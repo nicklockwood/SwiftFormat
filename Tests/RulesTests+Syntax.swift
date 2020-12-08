@@ -751,7 +751,7 @@ extension RulesTests {
         let output = "switch foo {\ncase Foo.foo(let bar), Foo.bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: ["wrapSwitchCases", "sortedSwitchCases"])
     }
 
     func testUnhoistCatchLet() {

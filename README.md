@@ -277,6 +277,8 @@ You can also use `swift run -c release --package-path BuildTools swiftformat "$S
 
 **NOTE:** This will only install the pre-built command-line app, not the source code for the SwiftFormat framework.
 
+**NOTE (2):** When installing this way, GateKeeper may block swiftformat from running until you open it manually the first time by right-clicking in the Finder and selecting "Open".
+
 #### 2) Add a Build phase to your app target
 
 1. Click on your project in the file list, choose your target under `TARGETS`, click the `Build Phases` tab
@@ -757,7 +759,7 @@ Known issues
 
 * The `--self insert` option can only recognize locally declared member variables, not ones inherited from superclasses or extensions in other files, so it cannot insert missing `self` references for those. Note that the reverse is not true: `--self remove` should remove *all* redundant `self` references.
 
-* The `trailingClosures` rule can generate ambiguous code if a function has multiple optional closure arguments, or if multiple functions have signatures differing only by the name of the closure argument. For this reason, the rule is limited to anonymous closure arguments by default, with a whitelist for exceptions.
+* The `trailingClosures` rule can generate ambiguous code if a function has multiple optional closure arguments, or if multiple functions have signatures differing only by the name of the closure argument. For this reason, the rule is limited to anonymous closure arguments by default. You can use the `--trailingclosures` and `--nevertrailing` arguments to explicitly opt in or out of trailing closure support for specific functions.
 
 * The `isEmpty` rule will convert `count == 0` to `isEmpty` even for types that do not have an `isEmpty` method, such as `NSArray`/`NSDictionary`/etc. Use of Foundation collections in Swift code is pretty rare, but just in case, the rule is disabled by default.
 
@@ -793,6 +795,7 @@ Credits
 * [Anthony Miller](https://github.com/AnthonyMDev) - Improvements to wrap/indent logic
 * [Shingo Takagi](https://github.com/zizi4n5) - Several brace-related bug fixes
 * [Juri Pakaste](https://github.com/juri) - Filelist feature
+* [Jim Puls](https://github.com/puls) - Big Sur icon update
 * [Nick Lockwood](https://github.com/nicklockwood) - Everything else
 
 ([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

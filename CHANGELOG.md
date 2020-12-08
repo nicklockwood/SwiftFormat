@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.47.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.6) (2020-12-08)
+ 
+- Fixed bug in `redundantReturn` when the `return` statement is not the last line in a block
+- Fixed sorting of tuple cases when using `sortedSwitchCases` rule
+- Added `--nevertrailing` option for excluding functions from the `trailingClosures` rule
+- Added `trailingClosures` exception for Nimble `expect()` function
+- The `redundantFileprivate` rule is now applied correctly to extension members
+- Fixed some bugs with static members when using the `--redundanttype explicit` option
+- SwiftFormat command line tool is now signed for better compliance with Big Sur
+- Updated icon for Big Sur (thanks to Jim Puls for the icon design)
+
 ## [0.47.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.5) (2020-11-27)
 
 - Added `--redundanttype` option for controlling how redundant types are resolved

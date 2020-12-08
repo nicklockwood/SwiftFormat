@@ -1491,6 +1491,17 @@ extension RulesTests {
                        options: options)
     }
 
+    func testNoRemoveReturnFollowedByMoreCode() {
+        let input = """
+        var foo: Bar = {
+            return foo
+            let bar = baz
+            return bar
+        }()
+        """
+        testFormatting(for: input, rule: FormatRules.redundantReturn)
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

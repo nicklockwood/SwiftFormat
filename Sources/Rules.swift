@@ -2555,6 +2555,9 @@ public struct _FormatRules {
             default:
                 return
             }
+            if formatter.index(of: .keyword("return"), after: i) != nil {
+                return
+            }
             formatter.removeToken(at: i)
             if var nextIndex = formatter.index(of: .nonSpace, after: i - 1, if: { $0.isLinebreak }) {
                 if let i = formatter.index(of: .nonSpaceOrLinebreak, after: nextIndex) {

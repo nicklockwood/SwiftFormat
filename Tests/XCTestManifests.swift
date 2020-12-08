@@ -1258,6 +1258,7 @@ extension RulesTests {
         ("testNoRemoveReturnAfterKeyPath", testNoRemoveReturnAfterKeyPath),
         ("testNoRemoveReturnAfterMultipleAs", testNoRemoveReturnAfterMultipleAs),
         ("testNoRemoveReturnAfterParentheses", testNoRemoveReturnAfterParentheses),
+        ("testNoRemoveReturnFollowedByMoreCode", testNoRemoveReturnFollowedByMoreCode),
         ("testNoRemoveReturnInCatch", testNoRemoveReturnInCatch),
         ("testNoRemoveReturnInComputedVar", testNoRemoveReturnInComputedVar),
         ("testNoRemoveReturnInFailableInit", testNoRemoveReturnInFailableInit),

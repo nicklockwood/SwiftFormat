@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.47.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.7) (2020-12-09)
+
+- Fixed critical bug where `fileprivate` was incorrectly converted to `private` in some cases
+
 ## [0.47.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.6) (2020-12-08)
  
 - Fixed bug in `redundantReturn` when the `return` statement is not the last line in a block

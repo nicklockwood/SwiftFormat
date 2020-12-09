@@ -1341,21 +1341,21 @@ extension RulesTests {
         )
     }
 
-    func testPrivateExtensionAppliedToMembersAsPrivateInSwift4AndAbove() {
+    func testConvertsExtensionPrivateToMemberFileprivate() {
         let input = """
-        struct Foo {}
-
         private extension Foo {
-            func bar() {}
+            var bar: Int
         }
+
+        let bar = Foo().bar
         """
 
         let output = """
-        struct Foo {}
-
         extension Foo {
-            private func bar() {}
+            fileprivate var bar: Int
         }
+
+        let bar = Foo().bar
         """
 
         testFormatting(

@@ -4681,7 +4681,9 @@ public struct _FormatRules {
                       $0 == .startOfScope("{")
                   }), let typeIndex = formatter.index(of: .keyword, before: scopeIndex, if: {
                       ["class", "struct", "enum", "extension"].contains($0.string)
-                  }), case let .identifier(typeName)? = formatter.next(.identifier, after: typeIndex),
+                  }), let nameIndex = formatter.index(of: .identifier, after: typeIndex),
+                  formatter.next(.nonSpaceOrCommentOrLinebreak, after: nameIndex)?.isOperator(".") == false,
+                  case let .identifier(typeName) = formatter.tokens[nameIndex],
                   let endIndex = formatter.index(of: .endOfScope, after: scopeIndex),
                   formatter.currentScope(at: typeIndex) == nil
             else {
@@ -5057,9 +5059,8 @@ public struct _FormatRules {
             }
 
             let visibilityKeyword = formatter.visibility(of: declaration)
-            // `private` visibility at top level of file is equivalent to `fileprivate` if Swift < 4
-            let extensionVisibility = (visibilityKeyword == .private && formatter.options.swiftVersion < "4") ?
-                .fileprivate : visibilityKeyword
+            // `private` visibility at top level of file is equivalent to `fileprivate`
+            let extensionVisibility = (visibilityKeyword == .private) ? .fileprivate : visibilityKeyword
 
             switch formatter.options.extensionACLPlacement {
             // If all declarations in the extension have the same visibility,

@@ -550,6 +550,38 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
     }
 
+    func testFileprivateNotChangedToPrivateWhenAccessedFromExtensionOnContainingType() {
+        let input = """
+        extension Foo.Bar {
+            fileprivate init() {}
+        }
+
+        extension Foo {
+            func baz() -> Foo.Bar {
+                return Bar()
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+    }
+
+    func testFileprivateNotChangedToPrivateWhenAccessedFromExtensionOnNestedType() {
+        let input = """
+        extension Foo {
+            fileprivate init() {}
+        }
+
+        extension Foo.Bar {
+            func baz() -> Foo {
+                return Foo()
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+    }
+
     // MARK: - redundantGet
 
     func testRemoveSingleLineIsolatedGet() {

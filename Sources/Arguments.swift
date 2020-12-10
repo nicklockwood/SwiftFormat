@@ -340,16 +340,24 @@ private func cumulate(successiveLines: [String]) throws -> [String] {
     var cumulatedLines = [String]()
     var iterator = successiveLines.makeIterator()
     while let currentLine = iterator.next() {
-        var cumulatedLine = currentLine.trimmingCharacters(in: .whitespaces)
+        var cumulatedLine = effectiveContent(of: currentLine)
         while cumulatedLine.hasSuffix("\\") {
             guard let nextLine = iterator.next() else {
                 throw FormatError.reading("Configuration file ends with an illegal line continuation character '\'")
             }
-            cumulatedLine = cumulatedLine.dropLast() + nextLine
+            if !nextLine.trimmingCharacters(in: .whitespaces).starts(with: "#") {
+                cumulatedLine = cumulatedLine.dropLast() + effectiveContent(of: nextLine)
+            }
         }
-        cumulatedLines.append(cumulatedLine)
+        cumulatedLines.append(String(cumulatedLine))
     }
     return cumulatedLines
+}
+
+private func effectiveContent(of line: String) -> String {
+    return line
+        .prefix { $0 != "#" }
+        .trimmingCharacters(in: .whitespaces)
 }
 
 // Serialize a set of options into either an arguments string or a file

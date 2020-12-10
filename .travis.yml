@@ -8,7 +8,7 @@ matrix:
       osx_image: xcode10.1
       before_install:
         - rvm install ruby-2.5.0
-        - gem install bundler
+        - gem install bundler -v '2.1.4'
       install:
         - bundle install --without=documentation
       script:

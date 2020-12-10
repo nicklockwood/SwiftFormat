@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.47.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.8) (2020-12-10)
+
+- Fixed additional cases where `fileprivate` was incorrectly converted to `private` in extensions
+- Added preliminary support for upcoming async/await syntax
+
 ## [0.47.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.7) (2020-12-09)
 
 - Fixed critical bug where `fileprivate` was incorrectly converted to `private` in some cases

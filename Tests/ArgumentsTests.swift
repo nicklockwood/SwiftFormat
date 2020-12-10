@@ -338,6 +338,24 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(args["hexgrouping"], "4, 8")
     }
 
+    func testCommentsInConsecutiveLines() throws {
+        let config = """
+        --rules braces, \\
+                # some comment
+                fileHeader, \\
+                # another comment invalidating this line separator \\
+                # yet another comment
+                andOperator
+        --hexgrouping   \\
+                4,      \\  # comment after line separator
+                8           # comment invalidating this line separator \\
+        """
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        XCTAssertEqual(args["rules"], "braces, fileHeader, andOperator")
+        XCTAssertEqual(args["hexgrouping"], "4, 8")
+    }
+
     func testLineContinuationCharacterOnLastLine() throws {
         let config = """
         --rules braces,\\

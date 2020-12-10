@@ -16,6 +16,7 @@ extension ArgumentsTests {
         ("testCommentContainingSpace", testCommentContainingSpace),
         ("testCommentedLine", testCommentedLine),
         ("testCommentInLine", testCommentInLine),
+        ("testCommentsInConsecutiveLines", testCommentsInConsecutiveLines),
         ("testDisableArgumentOverridesConfigRules", testDisableArgumentOverridesConfigRules),
         ("testDuplicateDisableArgumentsAreMerged", testDuplicateDisableArgumentsAreMerged),
         ("testDuplicateExcludeArgumentsAreMerged", testDuplicateExcludeArgumentsAreMerged),

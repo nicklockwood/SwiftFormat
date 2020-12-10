@@ -352,6 +352,23 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isStartOfClosure(at: 21))
     }
 
+    // async / await
+
+    func testAsyncClosure() {
+        let formatter = Formatter(tokenize("{ (foo) async in foo }"))
+        XCTAssert(formatter.isStartOfClosure(at: 0))
+    }
+
+    func testFunctionNamedAsync() {
+        let formatter = Formatter(tokenize("foo = async { bar }"))
+        XCTAssert(formatter.isStartOfClosure(at: 6))
+    }
+
+    func testAwaitClosure() {
+        let formatter = Formatter(tokenize("foo = await { bar }"))
+        XCTAssert(formatter.isStartOfClosure(at: 6))
+    }
+
     // edge cases
 
     func testMultipleNestedTrailingClosures() {

@@ -47,7 +47,7 @@ private let swiftKeywords = Set([
     "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
     "throw", "typealias", "where", "break", "deinit", "subscript", "is", "while",
     "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
-    "default", "protocol", "defer", /* Any, Self, self, super, nil, true, false */
+    "default", "protocol", "defer", "await", /* Any, Self, self, super, nil, true, false */
 ])
 
 public extension String {
@@ -1474,12 +1474,15 @@ public func tokenize(_ source: String) -> [Token] {
         let token = tokens.last!
         let count = tokens.count
         switch token {
-        case let .keyword(string):
-            // Track switch/case statements
+        case let .keyword(name):
             if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
-               case .operator(".", _) = tokens[prevIndex]
+               tokens[prevIndex].isOperator(".") || (name == "await" && [
+                   .keyword("func"), .keyword("let"), .keyword("var"),
+                   .keyword("class"), .keyword("struct"), .keyword("enum"),
+                   .keyword("extension"), .keyword("typealias"),
+               ].contains(tokens[prevIndex]))
             {
-                tokens[tokens.count - 1] = .identifier(string)
+                tokens[tokens.count - 1] = .identifier(name)
                 processToken()
                 return
             }

@@ -288,7 +288,7 @@ extension Formatter {
                 }
                 inner: while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
                     switch tokens[nextIndex] {
-                    case .keyword("as"), .keyword("is"), .keyword("try"):
+                    case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
                         break
                     case .startOfScope("<"), .startOfScope("["), .startOfScope("("),
                          .startOfScope where token.isStringDelimiter:
@@ -359,7 +359,7 @@ extension Formatter {
     /// the specified index is in a return type declaration.
     func startOfReturnType(at i: Int) -> Int? {
         guard let startIndex = indexOfLastSignificantKeyword(
-            at: i, excluding: ["throws", "rethrows"]
+            at: i, excluding: ["throws", "rethrows", "async"]
         ), ["func", "subscript"].contains(tokens[startIndex].string) else {
             return nil
         }
@@ -386,12 +386,12 @@ extension Formatter {
         }
         switch tokens[prevIndex] {
         case .startOfScope("("), .startOfScope("["), .startOfScope("{"),
-             .operator(_, .infix), .operator(_, .prefix), .delimiter,
-             .keyword("return"), .keyword("in"), .keyword("where"):
+             .operator(_, .infix), .operator(_, .prefix), .delimiter, .keyword("return"),
+             .keyword("in"), .keyword("where"), .keyword("try"), .keyword("throw"), .keyword("await"):
             return true
         case .operator(_, .none),
-             .keyword("deinit"), .keyword("catch"), .keyword("else"),
-             .keyword("repeat"), .keyword("throws"), .keyword("rethrows"):
+             .keyword("deinit"), .keyword("catch"), .keyword("else"), .keyword("repeat"),
+             .keyword("throws"), .keyword("rethrows"), .keyword("async"):
             return false
         case .endOfScope("}"):
             guard let startOfScope = index(of: .startOfScope("{"), before: prevIndex) else {
@@ -471,7 +471,8 @@ extension Formatter {
                     }
                 }
                 return false
-            case "func", "subscript", "class", "struct", "protocol", "enum", "extension", "throws":
+            case "func", "subscript", "class", "struct", "protocol", "enum", "extension",
+                 "throws", "rethrows", "async":
                 return false
             default:
                 return true
@@ -488,8 +489,10 @@ extension Formatter {
         var i = i
         while let token = self.token(at: i) {
             switch token {
-            case .keyword("in"):
-                guard let scopeIndex = index(of: .startOfScope, before: i) else {
+            case .keyword("in"), .keyword("throws"), .keyword("rethrows"), .keyword("async"):
+                guard let scopeIndex = index(of: .startOfScope, before: i, if: {
+                    $0 == .startOfScope("{")
+                }) else {
                     return false
                 }
                 return isStartOfClosure(at: scopeIndex)
@@ -595,7 +598,7 @@ extension Formatter {
         case let name where
             name.hasPrefix("#") || name.hasPrefix("@") || excluding.contains(name):
             fallthrough
-        case "in", "as", "is", "try":
+        case "in", "is", "as", "try", "await":
             return indexOfLastSignificantKeyword(at: index - 1, excluding: excluding)
         default:
             guard let braceIndex = self.index(of: .startOfScope("{"), in: index ..< i),
@@ -649,7 +652,7 @@ extension Formatter {
             switch string {
             case "let", "func", "var", "if", "as", "import", "try", "guard", "case",
                  "for", "init", "switch", "throw", "where", "subscript", "is",
-                 "while", "associatedtype", "inout":
+                 "while", "associatedtype", "inout", "await":
                 return false
             case "in":
                 return lastSignificantKeyword(at: i) != "for"
@@ -702,7 +705,7 @@ extension Formatter {
         guard let token = self.token(at: i) else { return true }
         switch token {
         case let .keyword(string) where [ // TODO: handle "in"
-            "where", "dynamicType", "rethrows", "throws",
+            "where", "dynamicType", "rethrows", "throws", "async",
         ].contains(string):
             return false
         case .keyword("as"):
@@ -880,17 +883,25 @@ extension Formatter {
 
     func isParameterList(at i: Int) -> Bool {
         assert([.startOfScope("("), .startOfScope("<")].contains(tokens[i]))
-        if let endIndex = endOfScope(at: i),
-           let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
-           [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken)
-        {
+        guard let endIndex = endOfScope(at: i),
+              let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex)
+        else { return false }
+        switch tokens[nextIndex] {
+        case .operator("->", .infix), .keyword("throws"), .keyword("rethrows"), .keyword("async"):
             return true
-        }
-        if let funcIndex = index(of: .keyword, before: i, if: {
-            [.keyword("func"), .keyword("init"), .keyword("subscript")].contains($0)
-        }), lastIndex(of: .endOfScope("}"), in: funcIndex ..< i) == nil {
-            // Is parameters at start of function
-            return true
+        case .identifier("async"):
+            if let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: nextIndex),
+               [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken)
+            {
+                return true
+            }
+        default:
+            if let funcIndex = index(of: .keyword, before: i, if: {
+                [.keyword("func"), .keyword("init"), .keyword("subscript")].contains($0)
+            }), lastIndex(of: .endOfScope("}"), in: funcIndex ..< i) == nil {
+                // Is parameters at start of function
+                return true
+            }
         }
         return false
     }

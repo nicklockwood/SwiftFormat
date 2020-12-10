@@ -585,6 +585,7 @@ private struct Inference {
                     return true
                 case .keyword("throws"),
                      .keyword("rethrows"),
+                     .keyword("async"),
                      .keyword("where"),
                      .keyword("is"):
                     return false // Keep looking
@@ -726,7 +727,7 @@ private struct Inference {
             var classOrStatic = false
             while let token = formatter.token(at: index) {
                 switch token {
-                case .keyword("is"), .keyword("as"), .keyword("try"):
+                case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
                     break
                 case .keyword("init"), .keyword("subscript"),
                      .keyword("func") where lastKeyword != "import":
@@ -783,7 +784,7 @@ private struct Inference {
                             formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index)
                         {
                             switch formatter.tokens[nextIndex] {
-                            case .keyword("as"), .keyword("is"), .keyword("try"):
+                            case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
                                 break
                             case .keyword, .startOfScope("{"):
                                 break loop
@@ -1166,6 +1167,7 @@ private struct Inference {
                     return true
                 case .keyword("throws"),
                      .keyword("rethrows"),
+                     .keyword("async"),
                      .keyword("where"),
                      .keyword("is"):
                     return false // Keep looking

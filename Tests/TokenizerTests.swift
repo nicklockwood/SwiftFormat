@@ -3646,4 +3646,49 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqual(tokenize(input), output)
     }
+
+    // MARK: await
+
+    func testAwaitExpression() {
+        let input = "let foo = await bar()"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .keyword("await"),
+            .space(" "),
+            .identifier("bar"),
+            .startOfScope("("),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAwaitFunction() {
+        let input = "func await()"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("await"),
+            .startOfScope("("),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAwaitClass() {
+        let input = "class await {}"
+        let output: [Token] = [
+            .keyword("class"),
+            .space(" "),
+            .identifier("await"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
 }

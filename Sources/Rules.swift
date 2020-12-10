@@ -208,15 +208,13 @@ public struct _FormatRules {
 
         func isCaptureList(at i: Int) -> Bool {
             assert(formatter.tokens[i] == .endOfScope("]"))
-            guard formatter.lastToken(before: i + 1, where: {
-                !$0.isSpaceOrCommentOrLinebreak && $0 != .endOfScope("]")
-            }) == .startOfScope("{"),
-                let nextToken = formatter.nextToken(after: i, where: {
-                    !$0.isSpaceOrCommentOrLinebreak && $0 != .startOfScope("(")
-                }),
-                [.operator("->", .infix), .keyword("throws"), .keyword("rethrows"), .keyword("in")].contains(nextToken)
-            else { return false }
-            return true
+            guard let startIndex = formatter.index(of: .startOfScope("["), before: i),
+                  let braceIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex),
+                  formatter.tokens[braceIndex] == .startOfScope("{")
+            else {
+                return false
+            }
+            return formatter.isStartOfClosure(at: braceIndex)
         }
 
         formatter.forEach(.startOfScope("(")) { i, token in
@@ -480,7 +478,7 @@ public struct _FormatRules {
                     return
                 case let token where token.isUnwrapOperator:
                     if let prevToken = formatter.last(.nonSpace, before: prevIndex),
-                       [.keyword("try"), .keyword("as")].contains(prevToken)
+                       [.keyword("as"), .keyword("try")].contains(prevToken)
                     {
                         spaceRequired = true
                     } else {
@@ -1479,8 +1477,9 @@ public struct _FormatRules {
                 } else if linewrapped {
                     func isWrappedDeclaration() -> Bool {
                         guard let keywordIndex = formatter
-                            .indexOfLastSignificantKeyword(at: i, excluding: ["where", "throws", "rethrows"]),
-                            !formatter.tokens[keywordIndex ..< i].contains(.endOfScope("}")),
+                            .indexOfLastSignificantKeyword(at: i, excluding: [
+                                "where", "throws", "rethrows", "async",
+                            ]), !formatter.tokens[keywordIndex ..< i].contains(.endOfScope("}")),
                             case let .keyword(keyword) = formatter.tokens[keywordIndex],
                             ["class", "struct", "enum", "protocol", "func"].contains(keyword)
                         else {
@@ -2127,7 +2126,9 @@ public struct _FormatRules {
                 innerParens = nestedParens(in: i ... closingIndex)
             }
             let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) ?? .space("")
-            if [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken) {
+            if [.operator("->", .infix), .keyword("throws"), .keyword("rethrows"),
+                .keyword("async"), .identifier("async")].contains(nextToken)
+            {
                 return // It's a closure type or function declaration
             }
             let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
@@ -2160,8 +2161,7 @@ public struct _FormatRules {
                 }
                 formatter.removeParen(at: closingIndex)
                 formatter.removeParen(at: i)
-            case .stringBody, .operator("?", .postfix), .operator("!", .postfix),
-                 .operator("->", .infix), .keyword("throws"), .keyword("rethrows"):
+            case .stringBody, .operator("?", .postfix), .operator("!", .postfix), .operator("->", .infix):
                 return
             case .identifier: // TODO: are trailing closures allowed in other cases?
                 // Parens before closure
@@ -2242,6 +2242,9 @@ public struct _FormatRules {
                           case .operator(".", _):
                               return false
                           case .operator, .keyword("as"), .keyword("is"), .keyword("try"):
+                              if $0 == .keyword("try") {
+                                  print("")
+                              }
                               switch token {
                               case .operator(_, .prefix), .operator(_, .infix), .keyword("as"), .keyword("is"):
                                   return true
@@ -2488,8 +2491,6 @@ public struct _FormatRules {
             guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{") else {
                 return
             }
-            guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-                  [.endOfScope(")"), .keyword("throws"), .keyword("rethrows")].contains(prevToken) else { return }
             guard let prevIndex = formatter.index(of: .endOfScope(")"), before: i),
                   let startIndex = formatter.index(of: .startOfScope("("), before: prevIndex),
                   let startToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex),
@@ -2726,7 +2727,7 @@ public struct _FormatRules {
             var classOrStatic = false
             while let token = formatter.token(at: index) {
                 switch token {
-                case .keyword("is"), .keyword("as"), .keyword("try"):
+                case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
                     break
                 case .keyword("init"), .keyword("subscript"),
                      .keyword("func") where lastKeyword != "import":
@@ -2782,7 +2783,7 @@ public struct _FormatRules {
                             formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index)
                         {
                             switch formatter.tokens[nextIndex] {
-                            case .keyword("as"), .keyword("is"), .keyword("try"):
+                            case .keyword("as"), .keyword("is"), .keyword("try"), .keyword("await"):
                                 break
                             case .keyword, .startOfScope("{"):
                                 break loop
@@ -3130,6 +3131,7 @@ public struct _FormatRules {
                     return true
                 case .keyword("throws"),
                      .keyword("rethrows"),
+                     .keyword("async"),
                      .keyword("where"),
                      .keyword("is"):
                     return false // Keep looking
@@ -3306,6 +3308,7 @@ public struct _FormatRules {
                     return true
                 case .keyword("throws"),
                      .keyword("rethrows"),
+                     .identifier("async"),
                      .keyword("where"),
                      .keyword("is"):
                     return false // Keep looking
@@ -3661,7 +3664,8 @@ public struct _FormatRules {
                 return false
             }
             switch nextToken {
-            case .operator("->", .infix), .keyword("throws"), .keyword("rethrows"):
+            case .operator("->", .infix), .keyword("throws"), .keyword("rethrows"),
+                 .keyword("async"), .identifier("async"):
                 return true
             case .startOfScope("{"):
                 if formatter.tokens[index] == .endOfScope(")"),
@@ -5062,7 +5066,7 @@ public struct _FormatRules {
         guard !formatter.options.fragment else { return }
 
         let declarations = formatter.parseDeclarations()
-        let updatedDeclarations = formatter.mapRecursiveDeclarations(declarations) { declaration, stack in
+        let updatedDeclarations = formatter.mapRecursiveDeclarations(declarations) { declaration, _ in
             guard case let .type("extension", open, body, close) = declaration else {
                 return declaration
             }

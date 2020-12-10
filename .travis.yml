@@ -6,15 +6,11 @@ matrix:
     - os: osx
       language: swift
       osx_image: xcode10.1
-      before_install:
-        - rvm install ruby-2.5.0
-        - gem install bundler -v '2.1.4'
-      install:
-        - bundle install --without=documentation
       script:
         - set -o pipefail
-        - xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test | bundle exec xcpretty
-      after_success: bundle exec slather
+        - xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test
+      after_success:
+        - bash <(curl -s https://codecov.io/bash) -t a47579fa-9a2a-4c48-b557-aa725c6b5f92
     - os: linux
       dist: xenial
       sudo: required

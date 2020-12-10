@@ -1,6 +1,0 @@
-coverage_service: coveralls
-xcodeproj: SwiftFormat.xcodeproj
-scheme: "SwiftFormat (Framework)"
-source_directory: Sources/*
-ignore:
-  - Tests/*

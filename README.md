@@ -2,7 +2,7 @@
 
 [![PayPal](https://img.shields.io/badge/paypal-donate-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9ZGWNK5FEZFF6&source=url)
 [![Travis](https://api.travis-ci.org/nicklockwood/SwiftFormat.svg?branch=master)](https://travis-ci.org/nicklockwood/SwiftFormat)
-[![Coveralls](https://coveralls.io/repos/github/nicklockwood/SwiftFormat/badge.svg)](https://coveralls.io/github/nicklockwood/SwiftFormat)
+[![Codecov](https://codecov.io/gh/nicklockwood/SwiftFormat/graphs/badge.svg)](https://codecov.io/gh/nicklockwood/SwiftFormat)
 [![Swift 4.2](https://img.shields.io/badge/swift-4.2-red.svg?style=flat)](https://developer.apple.com/swift)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://opensource.org/licenses/MIT)
 [![Twitter](https://img.shields.io/badge/twitter-@nicklockwood-blue.svg)](http://twitter.com/nicklockwood)

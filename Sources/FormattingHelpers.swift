@@ -487,36 +487,35 @@ extension Formatter {
 
 /// Helpers for recursively traversing the declaration hierarchy
 extension Formatter {
-    /// Applies `mapDeclaration` to every recursive declaration from this formatter's tokens
-    func mapRecursiveDeclarations(mapDeclaration: (Declaration) -> Declaration) {
-        let updatedDeclarations = mapRecursiveDeclarations(
-            of: parseDeclarations(),
-            mapDeclaration: mapDeclaration
-        )
-
+    /// Applies `mapRecursiveDeclarations` in place
+    func mapRecursiveDeclarations(with transform: (Declaration) -> Declaration) {
+        let updatedDeclarations = mapRecursiveDeclarations(parseDeclarations()) { declaration, _ in
+            transform(declaration)
+        }
         let updatedTokens = updatedDeclarations.flatMap { $0.tokens }
-        replaceTokens(in: 0 ..< tokens.count, with: updatedTokens)
+        replaceTokens(in: tokens.indices, with: updatedTokens)
     }
 
-    /// Applies `mapDeclaration` to every recursive declaration of the given declarations
+    /// Applies `transform` to every recursive declaration of the given declarations
     func mapRecursiveDeclarations(
-        of declarations: [Declaration],
-        mapDeclaration: (Declaration) -> Declaration
+        _ declarations: [Declaration], in stack: [Declaration] = [],
+        with transform: (Declaration, _ stack: [Declaration]) -> Declaration
     ) -> [Declaration] {
         return declarations.map { declaration in
-            switch mapDeclaration(declaration) {
+            let mapped = transform(declaration, stack)
+            switch mapped {
             case let .type(kind, open, body, close):
                 return .type(
                     kind: kind,
                     open: open,
-                    body: mapRecursiveDeclarations(of: body, mapDeclaration: mapDeclaration),
+                    body: mapRecursiveDeclarations(body, in: stack + [mapped], with: transform),
                     close: close
                 )
 
             case let .conditionalCompilation(open, body, close):
                 return .conditionalCompilation(
                     open: open,
-                    body: mapRecursiveDeclarations(of: body, mapDeclaration: mapDeclaration),
+                    body: mapRecursiveDeclarations(body, in: stack + [mapped], with: transform),
                     close: close
                 )
 
@@ -531,21 +530,21 @@ extension Formatter {
     ///  but not including declarations dested within child types).
     func mapBodyDeclarations(
         in declaration: Declaration,
-        mapBodyDeclaration: (Declaration) -> Declaration
+        with transform: (Declaration) -> Declaration
     ) -> Declaration {
         switch declaration {
         case let .type(kind, open, body, close):
             return .type(
                 kind: kind,
                 open: open,
-                body: mapBodyDeclarations(in: body, mapBodyDeclaration: mapBodyDeclaration),
+                body: mapBodyDeclarations(body, with: transform),
                 close: close
             )
 
         case let .conditionalCompilation(open, body, close):
             return .conditionalCompilation(
                 open: open,
-                body: mapBodyDeclarations(in: body, mapBodyDeclaration: mapBodyDeclaration),
+                body: mapBodyDeclarations(body, with: transform),
                 close: close
             )
 
@@ -556,19 +555,19 @@ extension Formatter {
     }
 
     private func mapBodyDeclarations(
-        in body: [Declaration],
-        mapBodyDeclaration: (Declaration) -> Declaration
+        _ body: [Declaration],
+        with transform: (Declaration) -> Declaration
     ) -> [Declaration] {
         return body.map { bodyDeclaration in
             // Apply `mapBodyDeclaration` to each declaration in the body
             switch bodyDeclaration {
             case .declaration, .type:
-                return mapBodyDeclaration(bodyDeclaration)
+                return transform(bodyDeclaration)
 
             // Recursively step through conditional compilation blocks
             // since their body tokens are effectively body tokens of the parent type
             case .conditionalCompilation:
-                return mapBodyDeclarations(in: bodyDeclaration, mapBodyDeclaration: mapBodyDeclaration)
+                return mapBodyDeclarations(in: bodyDeclaration, with: transform)
             }
         }
     }
@@ -578,14 +577,14 @@ extension Formatter {
     /// of other nested types)
     func mapDeclarations<T>(
         _ declarations: [Declaration],
-        mapDeclaration: (Declaration) -> T
+        with transform: (Declaration) -> T
     ) -> [T] {
         return declarations.flatMap { declaration -> [T] in
             switch declaration {
             case .declaration, .type:
-                return [mapDeclaration(declaration)]
+                return [transform(declaration)]
             case let .conditionalCompilation(_, body, _):
-                return mapDeclarations(body, mapDeclaration: mapDeclaration)
+                return mapDeclarations(body, with: transform)
             }
         }
     }
@@ -595,20 +594,20 @@ extension Formatter {
     ///  - For declarations without a body, this maps the entire declaration's tokens
     func mapOpeningTokens(
         in declaration: Declaration,
-        mapOpeningTokens: ([Token]) -> [Token]
+        with transform: ([Token]) -> [Token]
     ) -> Declaration {
         switch declaration {
         case let .type(kind, open, body, close):
             return .type(
                 kind: kind,
-                open: mapOpeningTokens(open),
+                open: transform(open),
                 body: body,
                 close: close
             )
 
         case let .conditionalCompilation(open, body, close):
             return .conditionalCompilation(
-                open: mapOpeningTokens(open),
+                open: transform(open),
                 body: body,
                 close: close
             )
@@ -616,7 +615,7 @@ extension Formatter {
         case let .declaration(kind, tokens):
             return .declaration(
                 kind: kind,
-                tokens: mapOpeningTokens(tokens)
+                tokens: transform(tokens)
             )
         }
     }
@@ -626,7 +625,7 @@ extension Formatter {
     ///  - For declarations without a body, this maps the entire declaration's tokens
     func mapClosingTokens(
         in declaration: Declaration,
-        mapClosingTokens: ([Token]) -> [Token]
+        with transform: ([Token]) -> [Token]
     ) -> Declaration {
         switch declaration {
         case let .type(kind, open, body, close):
@@ -634,20 +633,20 @@ extension Formatter {
                 kind: kind,
                 open: open,
                 body: body,
-                close: mapClosingTokens(close)
+                close: transform(close)
             )
 
         case let .conditionalCompilation(open, body, close):
             return .conditionalCompilation(
                 open: open,
                 body: body,
-                close: mapClosingTokens(close)
+                close: transform(close)
             )
 
         case let .declaration(kind, tokens):
             return .declaration(
                 kind: kind,
-                tokens: mapClosingTokens(tokens)
+                tokens: transform(tokens)
             )
         }
     }

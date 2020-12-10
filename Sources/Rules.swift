@@ -5053,7 +5053,7 @@ public struct _FormatRules {
         guard !formatter.options.fragment else { return }
 
         let declarations = formatter.parseDeclarations()
-        let updatedDeclarations = formatter.mapRecursiveDeclarations(of: declarations) { declaration in
+        let updatedDeclarations = formatter.mapRecursiveDeclarations(declarations) { declaration, stack in
             guard case let .type("extension", open, body, close) = declaration else {
                 return declaration
             }

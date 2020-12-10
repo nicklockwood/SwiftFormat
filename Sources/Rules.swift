@@ -4629,16 +4629,44 @@ public struct _FormatRules {
             }
             return false
         }
-        func isMemberReferenced(_ name: String, in range: CountableRange<Int>) -> Bool {
-            for i in range {
-                guard case .identifier(name) = formatter.tokens[i] else { continue }
-                if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
-                    $0 == .operator(".", .infix)
-                }), formatter.last(.nonSpaceOrCommentOrLinebreak, before: dotIndex)
-                    != .identifier("self")
-                {
-                    return true
+        // TODO: improve this logic to handle shadowing
+        func areMembers(_ names: Set<String>, of type: String,
+                        referencedIn range: CountableRange<Int>) -> Bool
+        {
+            var i = range.lowerBound
+            while i < range.upperBound {
+                switch formatter.tokens[i] {
+                case .keyword("struct"), .keyword("extension"), .keyword("enum"),
+                     .keyword("class") where formatter.declarationType(at: i) == "class":
+                    guard let startIndex = formatter.index(of: .startOfScope("{"), after: i),
+                          let endIndex = formatter.endOfScope(at: startIndex)
+                    else {
+                        break
+                    }
+                    guard let nameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                          formatter.tokens[nameIndex] != .identifier(type)
+                    else {
+                        i = endIndex
+                        break
+                    }
+                    for case let .identifier(name) in formatter.tokens[startIndex ..< endIndex]
+                        where names.contains(name)
+                    {
+                        return true
+                    }
+                    i = endIndex
+                case let .identifier(name) where names.contains(name):
+                    if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+                        $0 == .operator(".", .infix)
+                    }), formatter.last(.nonSpaceOrCommentOrLinebreak, before: dotIndex)
+                        != .identifier("self")
+                    {
+                        return true
+                    }
+                default:
+                    break
                 }
+                i += 1
             }
             return false
         }
@@ -4653,23 +4681,6 @@ public struct _FormatRules {
                 else {
                     continue
                 }
-                return true
-            }
-            return false
-        }
-        func membersAreReferenced(_: Set<String> /* unused */, inSubclassOf className: String) -> Bool {
-            for i in 0 ..< formatter.tokens.count where formatter.tokens[i] == .keyword("class") {
-                guard let nameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
-                    $0.isIdentifier
-                }), let openBraceIndex = formatter.index(of: .startOfScope("{"), after: nameIndex),
-                let colonIndex =
-                formatter.index(of: .delimiter(":"), in: nameIndex + 1 ..< openBraceIndex),
-                formatter.index(of: .identifier(className), in: colonIndex + 1 ..< openBraceIndex)
-                != nil else {
-                    continue
-                }
-                // TODO: check if member names are actually referenced
-                // this is complicated by the need to check if there are extensions on the subclass
                 return true
             }
             return false
@@ -4731,11 +4742,9 @@ public struct _FormatRules {
                 {
                     formatter.replaceToken(at: i, with: .keyword("private"))
                 }
-            } else if let names = formatter.namesInDeclaration(at: keywordIndex), !names.contains(where: {
-                isMemberReferenced($0, in: 0 ..< startIndex) ||
-                    isMemberReferenced($0, in: endIndex + 1 ..< formatter.tokens.count)
-            }), formatter.tokens[typeIndex] != .keyword("class") ||
-                !membersAreReferenced(names, inSubclassOf: typeName)
+            } else if let names = formatter.namesInDeclaration(at: keywordIndex),
+                      !areMembers(names, of: typeName, referencedIn: 0 ..< startIndex),
+                      !areMembers(names, of: typeName, referencedIn: endIndex + 1 ..< formatter.tokens.count)
             {
                 formatter.replaceToken(at: i, with: .keyword("private"))
             }

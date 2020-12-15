@@ -424,6 +424,11 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantParens)
     }
 
+    func testNoRemoveParensAroundArrayInitializer() {
+        let input = "let foo = bar { [Int](foo) }"
+        testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+    }
+
     // before trailing closure
 
     func testParensRemovedBeforeTrailingClosure() {

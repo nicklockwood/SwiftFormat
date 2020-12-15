@@ -206,17 +206,6 @@ public struct _FormatRules {
             }
         }
 
-        func isCaptureList(at i: Int) -> Bool {
-            assert(formatter.tokens[i] == .endOfScope("]"))
-            guard let startIndex = formatter.index(of: .startOfScope("["), before: i),
-                  let braceIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex),
-                  formatter.tokens[braceIndex] == .startOfScope("{")
-            else {
-                return false
-            }
-            return formatter.isStartOfClosure(at: braceIndex)
-        }
-
         formatter.forEach(.startOfScope("(")) { i, token in
             guard let prevToken = formatter.token(at: i - 1) else {
                 return
@@ -224,7 +213,7 @@ public struct _FormatRules {
             switch prevToken {
             case let .keyword(string) where spaceAfter(string, index: i - 1):
                 fallthrough
-            case .endOfScope("]") where isCaptureList(at: i - 1),
+            case .endOfScope("]") where formatter.isInClosureArguments(at: i - 1),
                  .endOfScope(")") where formatter.isAttribute(at: i - 1):
                 formatter.insert(.space(" "), at: i)
             case .space:
@@ -235,7 +224,7 @@ public struct _FormatRules {
                     case .identifier, .number:
                         fallthrough
                     case .endOfScope("}"), .endOfScope(">"),
-                         .endOfScope("]") where !isCaptureList(at: i - 2),
+                         .endOfScope("]") where !formatter.isInClosureArguments(at: i - 2),
                          .endOfScope(")") where !formatter.isAttribute(at: i - 2):
                         formatter.removeToken(at: i - 1)
                     default:
@@ -316,10 +305,16 @@ public struct _FormatRules {
                 return
             }
             switch nextToken {
-            case .identifier, .keyword, .startOfScope("{"):
+            case .identifier, .keyword, .startOfScope("{"),
+                 .startOfScope("(") where formatter.isInClosureArguments(at: i):
                 formatter.insert(.space(" "), at: i + 1)
-            case .space where formatter.token(at: i + 2) == .startOfScope("["):
-                formatter.removeToken(at: i + 1)
+            case .space:
+                switch formatter.token(at: i + 2) {
+                case .startOfScope("(")? where !formatter.isInClosureArguments(at: i + 2), .startOfScope("[")?:
+                    formatter.removeToken(at: i + 1)
+                default:
+                    break
+                }
             default:
                 break
             }
@@ -2134,13 +2129,7 @@ public struct _FormatRules {
             let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
             let token = formatter.token(at: previousIndex) ?? .space("")
             switch token {
-            case .endOfScope("]"):
-                if let startIndex = formatter.index(of: .startOfScope("["), before: previousIndex),
-                   formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex) == .startOfScope("{")
-                {
-                    fallthrough // Could be a capture list
-                }
-            case .startOfScope("{"):
+            case .endOfScope("]") where formatter.isInClosureArguments(at: previousIndex), .startOfScope("{"):
                 guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) == .keyword("in"),
                       formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex,
                       formatter.index(of: .delimiter(":"), in: i + 1 ..< closingIndex) == nil

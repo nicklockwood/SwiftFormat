@@ -174,6 +174,24 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
+    func testRemoveSpaceBetweenParenAndBracket() {
+        let input = "let foo = bar[5] ()"
+        let output = "let foo = bar[5]()"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
+    func testRemoveSpaceBetweenParenAndBracketInsideClosure() {
+        let input = "let foo = bar { [Int] () }"
+        let output = "let foo = bar { [Int]() }"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
+    func testAddSpaceBetweenParenAndCaptureList() {
+        let input = "let foo = bar { [self](foo: Int) in foo }"
+        let output = "let foo = bar { [self] (foo: Int) in foo }"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
     // MARK: - spaceInsideParens
 
     func testSpaceInsideParens() {
@@ -231,6 +249,24 @@ extension RulesTests {
     func testSpaceBeforeTupleIndexSubscript() {
         let input = "foo.1 [2]"
         let output = "foo.1[2]"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets)
+    }
+
+    func testRemoveSpaceBetweenBracketAndParen() {
+        let input = "let foo = bar[5] ()"
+        let output = "let foo = bar[5]()"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets)
+    }
+
+    func testRemoveSpaceBetweenBracketAndParenInsideClosure() {
+        let input = "let foo = bar { [Int] () }"
+        let output = "let foo = bar { [Int]() }"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets)
+    }
+
+    func testAddSpaceBetweenCaptureListAndParen() {
+        let input = "let foo = bar { [self](foo: Int) in foo }"
+        let output = "let foo = bar { [self] (foo: Int) in foo }"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets)
     }
 

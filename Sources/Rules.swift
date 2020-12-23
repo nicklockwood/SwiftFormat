@@ -4021,12 +4021,19 @@ public struct _FormatRules {
             let sorted: [Range<Int>] = enums.sorted { (range1, range2) -> Bool in
                 let lhs = formatter.tokens[range1]
                     .compactMap { $0.isIdentifier || $0.isStringBody || $0.isNumber ? $0.string : nil }
-                    .joined()
                 let rhs = formatter.tokens[range2]
                     .compactMap { $0.isIdentifier || $0.isStringBody || $0.isNumber ? $0.string : nil }
-                    .joined()
-
-                return lhs.localizedStandardCompare(rhs) == .orderedAscending
+                for (lhs, rhs) in zip(lhs, rhs) {
+                    switch lhs.localizedStandardCompare(rhs) {
+                    case .orderedAscending:
+                        return true
+                    case .orderedDescending:
+                        return false
+                    case .orderedSame:
+                        continue
+                    }
+                }
+                return lhs.count < rhs.count
             }
 
             let sortedTokens = sorted.map { formatter.tokens[$0] }

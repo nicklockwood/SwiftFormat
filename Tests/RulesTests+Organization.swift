@@ -2622,8 +2622,7 @@ extension RulesTests {
              (.foo, _):
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
-                       exclude: ["wrapSwitchCases"])
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
     }
 
     func testSortedSwitchTuples2() {
@@ -2645,8 +2644,23 @@ extension RulesTests {
              (.quux, .bar):
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
-                       exclude: ["wrapSwitchCases"])
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+    }
+
+    func testSortedSwitchCasesShortestFirst() {
+        let input = """
+        switch foo {
+        case let .fooAndBar(baz, quux),
+             let .foo(baz):
+        }
+        """
+        let output = """
+        switch foo {
+        case let .foo(baz),
+             let .fooAndBar(baz, quux):
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
     }
 
     // MARK: - modifierOrder

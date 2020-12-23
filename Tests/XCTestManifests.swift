@@ -1806,6 +1806,7 @@ extension RulesTests {
         ("testSortedSwitchCaseMultilineWithComments", testSortedSwitchCaseMultilineWithComments),
         ("testSortedSwitchCaseMultipleAssociatedValues", testSortedSwitchCaseMultipleAssociatedValues),
         ("testSortedSwitchCaseOneCaseDoesNothing", testSortedSwitchCaseOneCaseDoesNothing),
+        ("testSortedSwitchCasesShortestFirst", testSortedSwitchCasesShortestFirst),
         ("testSortedSwitchStrings", testSortedSwitchStrings),
         ("testSortedSwitchTuples", testSortedSwitchTuples),
         ("testSortedSwitchTuples2", testSortedSwitchTuples2),

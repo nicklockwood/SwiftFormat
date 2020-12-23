@@ -32,6 +32,7 @@ extension ArgumentsTests {
         ("testFileHeaderOptionToArguments", testFileHeaderOptionToArguments),
         ("testFormattingArgumentsAreAllImplemented", testFormattingArgumentsAreAllImplemented),
         ("testHMatchesHelp", testHMatchesHelp),
+        ("testInvalidArgumentThrows", testInvalidArgumentThrows),
         ("testLineContinuationCharacterOnLastLine", testLineContinuationCharacterOnLastLine),
         ("testMergeDisableRules", testMergeDisableRules),
         ("testMergeEmptyRules", testMergeEmptyRules),

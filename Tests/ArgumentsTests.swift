@@ -141,6 +141,15 @@ class ArgumentsTests: XCTestCase {
         ]), output)
     }
 
+    func testInvalidArgumentThrows() {
+        XCTAssertThrowsError(try preprocessArguments(["", "--vers"], [
+            "verbose",
+            "version",
+        ])) { error in
+            XCTAssertEqual("\(error)", "Unknown option --vers. Did you mean --version?")
+        }
+    }
+
     // merging
 
     func testDuplicateDisableArgumentsAreMerged() {

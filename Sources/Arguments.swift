@@ -153,22 +153,28 @@ func bestMatches(for query: String, in options: [String]) -> [String] {
     let lowercaseQuery = query.lowercased()
     // Sort matches by Levenshtein edit distance
     return options
-        .compactMap { option -> (String, Int)? in
+        .compactMap { option -> (String, distance: Int, commonPrefix: Int)? in
             let lowercaseOption = option.lowercased()
             let distance = editDistance(lowercaseOption, lowercaseQuery)
-            guard distance <= lowercaseQuery.count / 2 ||
-                !lowercaseOption.commonPrefix(with: lowercaseQuery).isEmpty
-            else {
+            let commonPrefix = lowercaseOption.commonPrefix(with: lowercaseQuery)
+            if commonPrefix.isEmpty, distance > lowercaseQuery.count / 2 {
                 return nil
             }
-            return (option, distance)
+            return (option, distance, commonPrefix.count)
         }
-        .sorted { $0.1 < $1.1 }
+        .sorted {
+            if $0.distance == $1.distance {
+                return $0.commonPrefix > $1.commonPrefix
+            }
+            return $0.distance < $1.distance
+        }
         .map { $0.0 }
 }
 
-/// The Levenshtein edit-distance between two strings
+/// The Damerau-Levenshtein edit-distance between two strings
 func editDistance(_ lhs: String, _ rhs: String) -> Int {
+    let lhs = Array(lhs)
+    let rhs = Array(rhs)
     var dist = [[Int]]()
     for i in 0 ... lhs.count {
         dist.append([i])
@@ -177,12 +183,16 @@ func editDistance(_ lhs: String, _ rhs: String) -> Int {
         dist[0].append(j)
     }
     for i in 1 ... lhs.count {
-        let lhs = lhs[lhs.index(lhs.startIndex, offsetBy: i - 1)]
         for j in 1 ... rhs.count {
-            if lhs == rhs[rhs.index(rhs.startIndex, offsetBy: j - 1)] {
+            if lhs[i - 1] == rhs[j - 1] {
                 dist[i].append(dist[i - 1][j - 1])
             } else {
-                dist[i].append(min(min(dist[i - 1][j] + 1, dist[i][j - 1] + 1), dist[i - 1][j - 1] + 1))
+                dist[i].append(min(dist[i - 1][j] + 1,
+                                   dist[i][j - 1] + 1,
+                                   dist[i - 1][j - 1] + 1))
+            }
+            if i > 1, j > 1, lhs[i - 1] == rhs[j - 2], lhs[i - 2] == rhs[j - 1] {
+                dist[i][j] = min(dist[i][j], dist[i - 2][j - 2] + 1)
             }
         }
     }

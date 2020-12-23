@@ -2242,9 +2242,6 @@ public struct _FormatRules {
                           case .operator(".", _):
                               return false
                           case .operator, .keyword("as"), .keyword("is"), .keyword("try"):
-                              if $0 == .keyword("try") {
-                                  print("")
-                              }
                               switch token {
                               case .operator(_, .prefix), .operator(_, .infix), .keyword("as"), .keyword("is"):
                                   return true

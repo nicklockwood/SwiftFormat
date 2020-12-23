@@ -5028,7 +5028,7 @@ public struct _FormatRules {
         help: "Organizes declarations within class, struct, and enum bodies.",
         runOnceOnly: true,
         disabledByDefault: true,
-        orderAfter: ["extensionAccessControl"],
+        orderAfter: ["extensionAccessControl", "redundantFileprivate"],
         options: ["categorymark", "beforemarks", "lifecycle", "organizetypes",
                   "structthreshold", "classthreshold", "enumthreshold", "extensionlength"]
     ) { formatter in

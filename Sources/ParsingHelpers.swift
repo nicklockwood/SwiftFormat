@@ -1199,6 +1199,10 @@ extension Formatter {
                 {
                     searchIndex = symbolTypeKeywordIndex
                 }
+            case .keyword("protocol"), .keyword("struct"), .keyword("enum"), .keyword("extension"):
+                if let scopeStart = index(of: .startOfScope("{"), after: i) {
+                    searchIndex = endOfScope(at: scopeStart) ?? searchIndex
+                }
             default:
                 break
             }

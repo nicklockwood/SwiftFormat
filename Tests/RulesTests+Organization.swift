@@ -1187,6 +1187,39 @@ extension RulesTests {
                        exclude: ["blankLinesAtStartOfScope"])
     }
 
+    func testOrganizeRuleNotConfusedByClassProtocol() {
+        let input = """
+        protocol Foo: class {
+            func foo()
+        }
+
+        class Bar {
+            // MARK: Fileprivate
+
+            private var baz: Int
+
+            // MARK: Private
+
+            private let quux: String
+        }
+        """
+
+        let output = """
+        protocol Foo: class {
+            func foo()
+        }
+
+        class Bar {
+            private var baz: Int
+
+            private let quux: String
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
+                       exclude: ["blankLinesAtStartOfScope"])
+    }
+
     // MARK: extensionAccessControl .onDeclarations
 
     func testUpdatesVisibilityOfExtensionMembers() {

@@ -1458,6 +1458,7 @@ extension RulesTests {
         ("testOrganizeClassDeclarationsIntoCategories", testOrganizeClassDeclarationsIntoCategories),
         ("testOrganizeEnumCasesFirst", testOrganizeEnumCasesFirst),
         ("testOrganizePrivateSet", testOrganizePrivateSet),
+        ("testOrganizeRuleNotConfusedByClassProtocol", testOrganizeRuleNotConfusedByClassProtocol),
         ("testOrganizesNestedTypesWithinConditionalCompilationBlock", testOrganizesNestedTypesWithinConditionalCompilationBlock),
         ("testOrganizesStructPropertiesThatDontBreakMemberwiseInitializer", testOrganizesStructPropertiesThatDontBreakMemberwiseInitializer),
         ("testOrganizesTypeBelowSymbolImport", testOrganizesTypeBelowSymbolImport),

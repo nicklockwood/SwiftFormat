@@ -1059,6 +1059,24 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
+    func testRedundantTypeDoesNothingIfLet() {
+        let input = "if let foo: Foo = Foo() {}"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeDoesNothingGuardLet() {
+        let input = "guard let foo: Foo = Foo() else {}"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeDoesNothingIfLetAfterComma() {
+        let input = "if check == true, let foo: Foo = Foo() {}"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+    }
+
     // MARK: - redundantNilInit
 
     func testRemoveRedundantNilInit() {

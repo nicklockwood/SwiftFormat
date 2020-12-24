@@ -675,7 +675,11 @@ public struct _FormatRules {
                     formatter.removeToken(at: colonIndex - 1)
                 }
             case .explicit:
-                guard let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex) else { break }
+                guard
+                    let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+                    // ensure is not optional binding
+                    formatter.lastToken(before: i, where: { [.delimiter(","), .keyword("if"), .keyword("guard")].contains($0) }) == nil
+                else { break }
                 if formatter.nextToken(after: j) == .startOfScope("(") {
                     formatter.replaceTokens(in: valueStartIndex ... j, with: [.operator(".", .infix), .identifier("init")])
                 } else if

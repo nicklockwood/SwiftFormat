@@ -747,6 +747,8 @@ Q. I don't want to be surprised by new rules added when I upgrade SwiftFormat. H
 Known issues
 ---------------
 
+* If a type initializer or factory method returns an implicitly unwrapped optional value then the `redundantType` rule may remove the explicit type in a situation where it's actually required. To work around this you can either use `--redundanttype explicit`, or use the `// swiftformat:disable:next redundantType` comment directive to disable the rule at the call site (or just disable the `redundantType` rule completely).
+
 * When using the `initCoderUnavailable` rule, if an `init` that is marked as unavailable is overridden elsewhere in the program then it will cause a compilation error. The recommended workaround is to remove the override (which shouldn't affect the program behavior if the init was really unused) or use the `// swiftformat:disable:next initCoderUnavailable` comment directive to disable the rule for the overridden init (or just disable the `initCoderUnavailable` rule completely).
 
 * When using the `extensionAccessControl` rule with the `--extensionacl on-extension` option, if you have public methods defined on an internal type defined in another file, the resultant public extension will no longer compile. The recommended solution is to manually remove the `public` modifier (this won't change the program behavior) or disable the `extensionAccessControl` rule.

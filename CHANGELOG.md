@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.47.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.9) (2020-12-24)
+
+- Fixed bug with `redundantType` rule removing required type in `if let` expressions
+- Fixed a bug in `organizeDeclarations` when file contains a class-bound protocol
+- Improved `sortedSwitchCases` ordering
+- Removed erroneous space inserted into array initializer by the `spaceAroundParens` rule
+- Comments followed by a continuation character in SwiftFormat config files now handled correctly 
+- Removed spurious blank lines in console output introduced in 0.47.8
+
 ## [0.47.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.8) (2020-12-10)
 
 - Fixed additional cases where `fileprivate` was incorrectly converted to `private` in extensions

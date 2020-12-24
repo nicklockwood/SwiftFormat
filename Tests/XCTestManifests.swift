@@ -1626,6 +1626,7 @@ extension RulesTests {
         ("testRedundantTypeRemovedIfValueOnNextLine2", testRedundantTypeRemovedIfValueOnNextLine2),
         ("testRedundantTypeRemovedIfValueOnNextLine2ExplicitType", testRedundantTypeRemovedIfValueOnNextLine2ExplicitType),
         ("testRedundantTypeRemovedIfValueOnNextLineExplicitType", testRedundantTypeRemovedIfValueOnNextLineExplicitType),
+        ("testRedundantTypeWorksAfterIf", testRedundantTypeWorksAfterIf),
         ("testRemoveBacktickCaseRawStringCases", testRemoveBacktickCaseRawStringCases),
         ("testRemoveBackticksAroundClassSelfArgument", testRemoveBackticksAroundClassSelfArgument),
         ("testRemoveBackticksAroundClassSelfAsParameterType", testRemoveBackticksAroundClassSelfAsParameterType),

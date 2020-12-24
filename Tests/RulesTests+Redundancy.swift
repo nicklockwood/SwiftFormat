@@ -1077,6 +1077,19 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
+    func testRedundantTypeWorksAfterIf() {
+        let input = """
+        if foo {}
+        let foo: Foo = Foo()
+        """
+        let output = """
+        if foo {}
+        let foo: Foo = .init()
+        """
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
     // MARK: - redundantNilInit
 
     func testRemoveRedundantNilInit() {

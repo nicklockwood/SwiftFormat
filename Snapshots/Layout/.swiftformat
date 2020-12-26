@@ -2,3 +2,4 @@
 --binarygrouping 8,8
 --decimalgrouping ignore
 --importgrouping testable-bottom
+--modifierorder public,override

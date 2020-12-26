@@ -809,6 +809,7 @@ extension RulesTests {
         ("testFileprivateVarNotChangedToPrivateIfAccessedFromAVar", testFileprivateVarNotChangedToPrivateIfAccessedFromAVar),
         ("testFileprivateVarNotChangedToPrivateIfAccessedFromCode", testFileprivateVarNotChangedToPrivateIfAccessedFromCode),
         ("testFileprivateVarNotChangedToPrivateIfAccessedFromSubclass", testFileprivateVarNotChangedToPrivateIfAccessedFromSubclass),
+        ("testFileprivateVarWithPropertWrapperNotChangedToPrivateIfAccessedFromSubclass", testFileprivateVarWithPropertWrapperNotChangedToPrivateIfAccessedFromSubclass),
         ("testFileScopeFileprivateVarChangedToPrivate", testFileScopeFileprivateVarChangedToPrivate),
         ("testFileScopeFileprivateVarNotChangedToPrivateIfFragment", testFileScopeFileprivateVarNotChangedToPrivateIfFragment),
         ("testFixmeIsUpdated", testFixmeIsUpdated),

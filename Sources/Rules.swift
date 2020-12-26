@@ -4630,7 +4630,7 @@ public struct _FormatRules {
             return false
         }
         // TODO: improve this logic to handle shadowing
-        func areMembers(_ names: Set<String>, of type: String,
+        func areMembers(_ names: [String], of type: String,
                         referencedIn range: CountableRange<Int>) -> Bool
         {
             var i = range.lowerBound
@@ -4742,7 +4742,8 @@ public struct _FormatRules {
                 {
                     formatter.replaceToken(at: i, with: .keyword("private"))
                 }
-            } else if let names = formatter.namesInDeclaration(at: keywordIndex),
+            } else if let _names = formatter.namesInDeclaration(at: keywordIndex),
+                      case let names = _names + _names.map({ "$\($0)" }),
                       !areMembers(names, of: typeName, referencedIn: 0 ..< startIndex),
                       !areMembers(names, of: typeName, referencedIn: endIndex + 1 ..< formatter.tokens.count)
             {

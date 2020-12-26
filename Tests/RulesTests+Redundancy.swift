@@ -616,6 +616,22 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
     }
 
+    func testFileprivateVarWithPropertWrapperNotChangedToPrivateIfAccessedFromSubclass() {
+        let input = """
+        class Foo {
+            @Foo fileprivate var foo: Int = 5
+        }
+
+        class Bar: Foo {
+            func bar() {
+                return $foo
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+    }
+
     // MARK: - redundantGet
 
     func testRemoveSingleLineIsolatedGet() {

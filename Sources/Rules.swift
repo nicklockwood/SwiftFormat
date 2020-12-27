@@ -1997,12 +1997,9 @@ public struct _FormatRules {
                     lastModifier = nil
                     lastIndex = previousIndex
                     break loop
-                case let .keyword(string), let .identifier(string):
-                    if !allModifiers.contains(string) {
-                        break loop
-                    }
+                case let token where token.isModifierKeyword:
                     lastModifier.map { modifiers[$0.0] = $0.1 }
-                    lastModifier = (string, [Token](formatter.tokens[index ..< lastIndex]))
+                    lastModifier = (token.string, [Token](formatter.tokens[index ..< lastIndex]))
                     previousIndex = lastIndex
                     lastIndex = index
                 case .endOfScope(")"):
@@ -4410,12 +4407,10 @@ public struct _FormatRules {
                     {
                         nextIndex = endIndex
                     }
-                case let .keyword(name), let .identifier(name):
-                    if !allModifiers.contains(name) {
+                case let token:
+                    guard token.isModifierKeyword else {
                         break loop
                     }
-                default:
-                    break loop
                 }
                 index = nextIndex
             }
@@ -4932,7 +4927,7 @@ public struct _FormatRules {
             }
 
             // Skip modifiers
-            while _FormatRules.allModifiers.contains(keyword.string) {
+            while keyword.isModifierKeyword {
                 guard let nextIndex = formatter
                     .index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex, if: {
                         $0.isKeyword

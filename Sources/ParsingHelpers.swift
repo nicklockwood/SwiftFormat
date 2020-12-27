@@ -214,16 +214,12 @@ public extension Formatter {
 
 extension Formatter {
     func modifiersForDeclaration(at index: Int, contains: (Int, String) -> Bool) -> Bool {
-        let allModifiers = _FormatRules.allModifiers
         var index = index
         while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
             let token = tokens[prevIndex]
             switch token {
-            case let .keyword(name), let .identifier(name):
-                if !allModifiers.contains(name), !name.hasPrefix("@") {
-                    return false
-                }
-                if contains(prevIndex, name) {
+            case _ where token.isModifierKeyword || token.isAttribute:
+                if contains(prevIndex, token.string) {
                     return true
                 }
             case .endOfScope(")"):
@@ -1137,10 +1133,18 @@ extension Formatter {
         else {
             return nil
         }
-        if keyword == "class",
-           let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: index),
-           nextToken.isDeclarationTypeKeyword, case let .keyword(keyword) = nextToken
-        {
+        if keyword == "class" {
+            var nextIndex = index
+            while let i = self.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex) {
+                let nextToken = tokens[i]
+                if nextToken.isDeclarationTypeKeyword {
+                    return nextToken.string
+                }
+                guard nextToken.isModifierKeyword else {
+                    break
+                }
+                nextIndex = i
+            }
             return keyword
         }
         return keyword
@@ -1546,5 +1550,14 @@ extension Token {
         return ["import", "let", "var", "typealias", "func", "enum", "case",
                 "struct", "class", "protocol", "init", "deinit",
                 "extension", "subscript", "operator", "precedencegroup"].contains(keyword)
+    }
+
+    var isModifierKeyword: Bool {
+        switch self {
+        case let .keyword(keyword), let .identifier(keyword):
+            return _FormatRules.allModifiers.contains(keyword)
+        default:
+            return false
+        }
     }
 }

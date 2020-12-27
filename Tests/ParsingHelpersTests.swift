@@ -1189,6 +1189,17 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(declarations[8].body?[1].keyword, "func")
     }
 
+    func testClassOverrideDoesntCrashParseDeclarations() {
+        let input = """
+        class Foo {
+            var bar: Int?
+            class override var baz: String
+        }
+        """
+        let tokens = tokenize(input)
+        _ = Formatter(tokens).parseDeclarations()
+    }
+
     // MARK: spaceEquivalentToWidth
 
     func testSpaceEquivalentToWidth() {

@@ -213,7 +213,7 @@ public extension Formatter {
 }
 
 extension Formatter {
-    func modifiersForType(at index: Int, contains: (Int, String) -> Bool) -> Bool {
+    func modifiersForDeclaration(at index: Int, contains: (Int, String) -> Bool) -> Bool {
         let allModifiers = _FormatRules.allModifiers
         var index = index
         while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
@@ -243,13 +243,13 @@ extension Formatter {
         return false
     }
 
-    func modifiersForType(at index: Int, contains: String) -> Bool {
-        return modifiersForType(at: index, contains: { $1 == contains })
+    func modifiersForDeclaration(at index: Int, contains: String) -> Bool {
+        return modifiersForDeclaration(at: index, contains: { $1 == contains })
     }
 
     func indexOfModifier(_ modifier: String, forTypeAt index: Int) -> Int? {
         var i: Int?
-        return modifiersForType(at: index, contains: {
+        return modifiersForDeclaration(at: index, contains: {
             i = $0
             return $1 == modifier
         }) ? i : nil
@@ -258,7 +258,7 @@ extension Formatter {
     // first index of modifier list
     func startOfModifiers(at index: Int, includingAttributes: Bool) -> Int {
         var startIndex = index
-        _ = modifiersForType(at: index, contains: { i, name in
+        _ = modifiersForDeclaration(at: index, contains: { i, name in
             if !includingAttributes, name.hasPrefix("@") {
                 return true
             }

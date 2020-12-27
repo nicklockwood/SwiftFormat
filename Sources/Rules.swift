@@ -754,7 +754,7 @@ public struct _FormatRules {
                 } else if [.keyword("let"),
                            .keyword("var"),
                            .keyword("func")].contains(token),
-                    !formatter.modifiersForType(at: j, contains: "static")
+                    !formatter.modifiersForDeclaration(at: j, contains: "static")
                 {
                     return false
                 }
@@ -1614,7 +1614,7 @@ public struct _FormatRules {
             }) else { return }
 
             // avoid adding attribute if it's already there
-            if formatter.modifiersForType(at: i, contains: "@available") { return }
+            if formatter.modifiersForDeclaration(at: i, contains: "@available") { return }
 
             let startIndex = formatter.startOfModifiers(at: i, includingAttributes: true)
             formatter.insert(.space(formatter.indentForLine(at: startIndex)), at: startIndex)
@@ -2309,7 +2309,7 @@ public struct _FormatRules {
 
         // Check modifiers don't include `lazy`
         formatter.forEach(.keyword("var")) { i, _ in
-            if formatter.modifiersForType(at: i, contains: {
+            if formatter.modifiersForDeclaration(at: i, contains: {
                 $1 == "lazy" || ($1 != "@objc" && $1.hasPrefix("@"))
             }) {
                 return // Can't remove the init
@@ -4442,11 +4442,11 @@ public struct _FormatRules {
             }
             switch formatter.tokens[keywordIndex] {
             case .keyword("class"):
-                if formatter.modifiersForType(at: keywordIndex, contains: "@objcMembers") {
+                if formatter.modifiersForDeclaration(at: keywordIndex, contains: "@objcMembers") {
                     removeAttribute()
                 }
             case .keyword("extension"):
-                if formatter.modifiersForType(at: keywordIndex, contains: "@objc") {
+                if formatter.modifiersForDeclaration(at: keywordIndex, contains: "@objc") {
                     removeAttribute()
                 }
             default:
@@ -4544,7 +4544,7 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.keyword("extension")) { i, _ in
             var acl = ""
-            guard formatter.modifiersForType(at: i, contains: {
+            guard formatter.modifiersForDeclaration(at: i, contains: {
                 acl = $1
                 return aclModifiers.contains(acl)
             }), let startIndex = formatter.index(of: .startOfScope("{"), after: i),
@@ -4673,7 +4673,7 @@ public struct _FormatRules {
         func isInitOverridden(for type: String, in range: CountableRange<Int>) -> Bool {
             for i in range {
                 guard case .keyword("init") = formatter.tokens[i],
-                      formatter.modifiersForType(at: i, contains: "override"),
+                      formatter.modifiersForDeclaration(at: i, contains: "override"),
                       let scopeIndex = formatter.index(of: .startOfScope("{"), before: i),
                       let colonIndex = formatter.index(of: .delimiter(":"), before: scopeIndex),
                       formatter.next(.nonSpaceOrCommentOrLinebreak, in: colonIndex + 1 ..< scopeIndex)

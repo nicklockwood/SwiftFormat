@@ -418,6 +418,7 @@ extension ParsingHelpersTests {
         ("testSpaceEquivalentToWidthWithTabs", testSpaceEquivalentToWidthWithTabs),
         ("testStartOfModifiers", testStartOfModifiers),
         ("testStartOfModifiersIncludingAttributes", testStartOfModifiersIncludingAttributes),
+        ("testStartOfPropertyModifiers", testStartOfPropertyModifiers),
         ("testStructBracesNotTreatedAsClosure", testStructBracesNotTreatedAsClosure),
         ("testStructWithMultipleProtocolsBracesNotTreatedAsClosure", testStructWithMultipleProtocolsBracesNotTreatedAsClosure),
         ("testStructWithProtocolBracesNotTreatedAsClosure", testStructWithProtocolBracesNotTreatedAsClosure),

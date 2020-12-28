@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.47.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.10) (2020-12-28)
+
+- The `blankLinesBetweenScopes` no longer inserts a blank line before Sourcery comment directives
+- Fixed bug where `redundantFileprivate` rule could break code that uses property wrappers
+- Fixed crash in `parseDeclarations` helper
+
 ## [0.47.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.9) (2020-12-24)
 
 - Fixed bug with `redundantType` rule removing required type in `if let` expressions
@@ -8,6 +14,7 @@
 - Removed erroneous space inserted into array initializer by the `spaceAroundParens` rule
 - Comments followed by a continuation character in SwiftFormat config files now handled correctly 
 - Removed spurious blank lines in console output introduced in 0.47.8
+- Improved command-line typo suggestions
 
 ## [0.47.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.8) (2020-12-10)
 

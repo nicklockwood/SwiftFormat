@@ -303,6 +303,21 @@ extension RulesTests {
                        exclude: ["emptyBraces"])
     }
 
+    func testNoInsertBlankLineAfterBraceBeforeSourceryComment() {
+        let input = """
+        struct Foo {
+            var bar: String
+
+            // sourcery:inline:Foo.init
+            public init(bar: String) {
+                self.bar = bar
+            }
+            // sourcery:end
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+    }
+
     // MARK: - blankLinesAroundMark
 
     func testInsertBlankLinesAroundMark() {

@@ -1161,6 +1161,7 @@ extension RulesTests {
         ("testNoIndentCommentedCodeBeforeIfdefAroundCase", testNoIndentCommentedCodeBeforeIfdefAroundCase),
         ("testNoIndentIfdefFollowedByCommentAroundCase", testNoIndentIfdefFollowedByCommentAroundCase),
         ("testNoIndentWrappedModifiersForProtocol", testNoIndentWrappedModifiersForProtocol),
+        ("testNoInsertBlankLineAfterBraceBeforeSourceryComment", testNoInsertBlankLineAfterBraceBeforeSourceryComment),
         ("testNoInsertBlankLineAfterMarkAtEndOfScope", testNoInsertBlankLineAfterMarkAtEndOfScope),
         ("testNoInsertBlankLineBeforeMarkAtStartOfScope", testNoInsertBlankLineBeforeMarkAtStartOfScope),
         ("testNoInsertBlankLinesInConditionalCompilation", testNoInsertBlankLinesInConditionalCompilation),

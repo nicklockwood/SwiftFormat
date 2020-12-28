@@ -590,8 +590,7 @@ public struct _FormatRules {
         help: "Add leading and/or trailing space inside comments."
     ) { formatter in
         formatter.forEach(.startOfScope("//")) { i, _ in
-            guard let nextToken = formatter.token(at: i + 1),
-                  case let .commentBody(string) = nextToken,
+            guard case let .commentBody(string)? = formatter.token(at: i + 1),
                   let first = string.first else { return }
             if "/!:".contains(first) {
                 let nextIndex = string.index(after: string.startIndex)
@@ -604,7 +603,7 @@ public struct _FormatRules {
             }
         }
         formatter.forEach(.startOfScope("/*")) { i, _ in
-            guard let nextToken = formatter.token(at: i + 1), case let .commentBody(string) = nextToken,
+            guard case let .commentBody(string)? = formatter.token(at: i + 1),
                   !string.hasPrefix("---"), !string.hasPrefix("@"), !string.hasSuffix("---"), !string.hasSuffix("@")
             else {
                 return
@@ -976,7 +975,11 @@ public struct _FormatRules {
                 {
                     i = closingParenIndex
                 }
-                guard let nextTokenIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i) else {
+                guard let nextTokenIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i),
+                      formatter.isEnabled, formatter.options.insertBlankLines,
+                      let firstLinebreakIndex = formatter.index(of: .linebreak, in: i + 1 ..< nextTokenIndex),
+                      formatter.index(of: .linebreak, in: firstLinebreakIndex + 1 ..< nextTokenIndex) == nil
+                else {
                     break
                 }
                 switch formatter.tokens[nextTokenIndex] {
@@ -989,15 +992,17 @@ public struct _FormatRules {
                        formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousBraceIndex)
                        != .keyword("repeat")
                     {
-                        fallthrough
-                    }
-                default:
-                    if formatter.isEnabled, formatter.options.insertBlankLines,
-                       let firstLinebreakIndex = formatter.index(of: .linebreak, in: i + 1 ..< nextTokenIndex),
-                       formatter.index(of: .linebreak, in: firstLinebreakIndex + 1 ..< nextTokenIndex) == nil
-                    {
                         formatter.insertLinebreak(at: firstLinebreakIndex)
                     }
+                case .startOfScope("//"):
+                    if case let .commentBody(body)? = formatter.next(.nonSpace, after: nextTokenIndex),
+                       body.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("sourcery:")
+                    {
+                        break
+                    }
+                    formatter.insertLinebreak(at: firstLinebreakIndex)
+                default:
+                    formatter.insertLinebreak(at: firstLinebreakIndex)
                 }
             default:
                 break

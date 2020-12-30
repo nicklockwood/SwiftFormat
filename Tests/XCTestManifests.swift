@@ -999,6 +999,7 @@ extension RulesTests {
         ("testLabelsAreNotArguments", testLabelsAreNotArguments),
         ("testLeadingColonFollowedByCommentMovedToPreviousLine", testLeadingColonFollowedByCommentMovedToPreviousLine),
         ("testLeadingCommaMovedToPreviousLine", testLeadingCommaMovedToPreviousLine),
+        ("testLengthSortedImports", testLengthSortedImports),
         ("testLetNonRedundantTypeDoesNothing", testLetNonRedundantTypeDoesNothing),
         ("testLetRedundantGenericTypeRemoval", testLetRedundantGenericTypeRemoval),
         ("testLetRedundantGenericTypeRemovalExplicitType", testLetRedundantGenericTypeRemovalExplicitType),

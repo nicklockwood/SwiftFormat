@@ -565,7 +565,7 @@ struct _Descriptors {
     let importGrouping = OptionDescriptor(
         argumentName: "importgrouping",
         displayName: "Import Grouping",
-        help: "\"testable-top\", \"testable-bottom\" or \"alphabetized\" (default)",
+        help: "\"testable-top\", \"testable-bottom\", \"length\" or \"alphabetized\" (default)",
         keyPath: \FormatOptions.importGrouping
     )
     let trailingClosures = OptionDescriptor(

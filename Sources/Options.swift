@@ -255,6 +255,7 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
 /// Grouping for sorting imports
 public enum ImportGrouping: String, CaseIterable {
     case alphabetized
+    case length
     case testableTop = "testable-top"
     case testableBottom = "testable-bottom"
 }

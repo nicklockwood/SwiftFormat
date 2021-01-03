@@ -192,7 +192,7 @@ Xcode source editor extension
 Like the command-line tool, you can install the SwiftFormat for Xcode extension application via [Homebrew](http://brew.sh/). Assuming you already have Homebrew installed, type:
 
 ```bash
-$ brew cask install swiftformat-for-xcode
+$ brew install --cask swiftformat-for-xcode
 ```
 
 This will install SwiftFormat for Xcode in your Applications folder. Double-click the app to launch it, and then follow the on-screen instructions.

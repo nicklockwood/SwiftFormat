@@ -309,6 +309,16 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.spaceAroundBraces)
     }
 
+    func testNoSpaceAfterPrefixOperator() {
+        let input = "let foo = ..{ bar }"
+        testFormatting(for: input, rule: FormatRules.spaceAroundBraces)
+    }
+
+    func testNoSpaceBeforePostfixOperator() {
+        let input = "let foo = { bar }.."
+        testFormatting(for: input, rule: FormatRules.spaceAroundBraces)
+    }
+
     func testSpaceAroundBracesAfterOptionalProperty() {
         let input = "var: Foo?{}"
         let output = "var: Foo? {}"

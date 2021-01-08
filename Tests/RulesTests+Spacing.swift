@@ -309,6 +309,16 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.spaceAroundBraces)
     }
 
+    func testNoSpaceAfterPrefixOperator() {
+        let input = "let foo = ..{ bar }"
+        testFormatting(for: input, rule: FormatRules.spaceAroundBraces)
+    }
+
+    func testNoSpaceBeforePostfixOperator() {
+        let input = "let foo = { bar }.."
+        testFormatting(for: input, rule: FormatRules.spaceAroundBraces)
+    }
+
     func testSpaceAroundBracesAfterOptionalProperty() {
         let input = "var: Foo?{}"
         let output = "var: Foo? {}"
@@ -874,6 +884,84 @@ extension RulesTests {
         let options = FormatOptions(noSpaceOperators: ["+"])
         testFormatting(for: input, rule: FormatRules.spaceAroundOperators, options: options,
                        exclude: ["indent"])
+    }
+
+    func testAddSpaceEvenAfterLHSClosure() {
+        let input = "let foo = { $0 }..bar"
+        let output = "let foo = { $0 } .. bar"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
+    }
+
+    func testAddSpaceEvenBeforeRHSClosure() {
+        let input = "let foo = bar..{ $0 }"
+        let output = "let foo = bar .. { $0 }"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
+    }
+
+    func testAddSpaceEvenAfterLHSArray() {
+        let input = "let foo = [42]..bar"
+        let output = "let foo = [42] .. bar"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
+    }
+
+    func testAddSpaceEvenBeforeRHSArray() {
+        let input = "let foo = bar..[42]"
+        let output = "let foo = bar .. [42]"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
+    }
+
+    func testAddSpaceEvenAfterLHSParens() {
+        let input = "let foo = (42, 1337)..bar"
+        let output = "let foo = (42, 1337) .. bar"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
+    }
+
+    func testAddSpaceEvenBeforeRHSParens() {
+        let input = "let foo = bar..(42, 1337)"
+        let output = "let foo = bar .. (42, 1337)"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
+    }
+
+    func testRemoveSpaceEvenAfterLHSClosure() {
+        let input = "let foo = { $0 } .. bar"
+        let output = "let foo = { $0 }..bar"
+        let options = FormatOptions(noSpaceOperators: [".."])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testRemoveSpaceEvenBeforeRHSClosure() {
+        let input = "let foo = bar .. { $0 }"
+        let output = "let foo = bar..{ $0 }"
+        let options = FormatOptions(noSpaceOperators: [".."])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testRemoveSpaceEvenAfterLHSArray() {
+        let input = "let foo = [42] .. bar"
+        let output = "let foo = [42]..bar"
+        let options = FormatOptions(noSpaceOperators: [".."])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testRemoveSpaceEvenBeforeRHSArray() {
+        let input = "let foo = bar .. [42]"
+        let output = "let foo = bar..[42]"
+        let options = FormatOptions(noSpaceOperators: [".."])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testRemoveSpaceEvenAfterLHSParens() {
+        let input = "let foo = (42, 1337) .. bar"
+        let output = "let foo = (42, 1337)..bar"
+        let options = FormatOptions(noSpaceOperators: [".."])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
+    func testRemoveSpaceEvenBeforeRHSParens() {
+        let input = "let foo = bar .. (42, 1337)"
+        let output = "let foo = bar..(42, 1337)"
+        let options = FormatOptions(noSpaceOperators: [".."])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
     }
 
     // spaceAroundRangeOperators = false

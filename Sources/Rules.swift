@@ -4063,6 +4063,8 @@ public struct _FormatRules {
         func sortRanges(_ ranges: [Formatter.ImportRange]) -> [Formatter.ImportRange] {
             if case .alphabetized = formatter.options.importGrouping {
                 return ranges.sorted(by: <)
+            } else if case .length = formatter.options.importGrouping {
+                return ranges.sorted { $0.module.count < $1.module.count }
             }
             // Group @testable imports at the top or bottom
             return ranges.sorted {

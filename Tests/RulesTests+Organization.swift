@@ -2375,6 +2375,13 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.sortedImports)
     }
 
+    func testLengthSortedImports() {
+        let input = "import Foo\nimport Module\nimport Bar3"
+        let output = "import Foo\nimport Bar3\nimport Module"
+        let options = FormatOptions(importGrouping: .length)
+        testFormatting(for: input, output, rule: FormatRules.sortedImports, options: options)
+    }
+
     func testTestableImportsWithTestableOnPreviousLine() {
         let input = "@testable\nimport Foo3\nimport Bar3"
         let output = "import Bar3\n@testable\nimport Foo3"

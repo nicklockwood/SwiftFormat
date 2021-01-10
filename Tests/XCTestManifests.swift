@@ -216,6 +216,7 @@ extension InferenceTests {
     // to regenerate.
     static let __allTests__InferenceTests = [
         ("testIgnoreInlineIfElse", testIgnoreInlineIfElse),
+        ("testIgnoreMultilineCommentWhenInferringIndent", testIgnoreMultilineCommentWhenInferringIndent),
         ("testInferAllmanComments", testInferAllmanComments),
         ("testInferAllowInlineSemicolons", testInferAllowInlineSemicolons),
         ("testInferByteGrouping", testInferByteGrouping),
@@ -2149,6 +2150,7 @@ extension RulesTests {
         ("testWrapInitAttribute", testWrapInitAttribute),
         ("testWrapParametersAfterFirstIfMaxLengthExceededInReturnType", testWrapParametersAfterFirstIfMaxLengthExceededInReturnType),
         ("testWrapParametersAfterFirstWithSeparatedArgumentLabels", testWrapParametersAfterFirstWithSeparatedArgumentLabels),
+        ("testWrapParametersAfterMultilineComment", testWrapParametersAfterMultilineComment),
         ("testWrapParametersBeforeFirstIfMaxLengthExceededInReturnType", testWrapParametersBeforeFirstIfMaxLengthExceededInReturnType),
         ("testWrapParametersBeforeFirstWithSeparatedArgumentLabels", testWrapParametersBeforeFirstWithSeparatedArgumentLabels),
         ("testWrapParametersClosureAfterParameterListDoesNotWrapClosureArguments", testWrapParametersClosureAfterParameterListDoesNotWrapClosureArguments),

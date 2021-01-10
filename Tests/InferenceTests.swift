@@ -109,6 +109,21 @@ class InferenceTests: XCTestCase {
         XCTAssertEqual(options.indent.count, 4)
     }
 
+    func testIgnoreMultilineCommentWhenInferringIndent() {
+        let input = """
+        /**
+         a
+         b
+         c
+         */
+        func foo(
+            bar: Int
+        )
+        """
+        let options = inferFormatOptions(from: tokenize(input))
+        XCTAssertEqual(options.indent.count, 4)
+    }
+
     // MARK: linebreak
 
     func testInferLinebreaks() {

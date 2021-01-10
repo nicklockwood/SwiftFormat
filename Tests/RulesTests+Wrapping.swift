@@ -735,6 +735,46 @@ extension RulesTests {
 
     // MARK: - wrapArguments
 
+    func testIndentFirstElementWhenApplyingWrap() {
+        let input = """
+        let foo = Set([
+        Thing(),
+        Thing(),
+        ])
+        """
+        let output = """
+        let foo = Set([
+            Thing(),
+            Thing(),
+        ])
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments)
+    }
+
+    func testWrapArgumentsDoesntIndentTrailingComment() {
+        let input = """
+        foo( // foo
+        bar: Int
+        )
+        """
+        let output = """
+        foo( // foo
+            bar: Int
+        )
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments)
+    }
+
+    func testWrapArgumentsDoesntIndentClosingBracket() {
+        let input = """
+        [
+            "foo": [
+            ],
+        ]
+        """
+        testFormatting(for: input, rule: FormatRules.wrapArguments)
+    }
+
     // MARK: wrapArguments
 
     func testWrapParametersDoesNotAffectFunctionDeclaration() {
@@ -831,44 +871,18 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
-    func testIndentFirstElementWhenApplyingWrap() {
+    func testWrapParametersAfterMultilineComment() {
         let input = """
-        let foo = Set([
-        Thing(),
-        Thing(),
-        ])
-        """
-        let output = """
-        let foo = Set([
-            Thing(),
-            Thing(),
-        ])
-        """
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments)
-    }
-
-    func testWrapArgumentsDoesntIndentTrailingComment() {
-        let input = """
-        foo( // foo
-        bar: Int
+        /**
+         Some function comment.
+         */
+        func barFunc(
+            _ firstParam: FirstParamType,
+            secondParam: SecondParamType
         )
         """
-        let output = """
-        foo( // foo
-            bar: Int
-        )
-        """
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments)
-    }
-
-    func testWrapArgumentsDoesntIndentClosingBracket() {
-        let input = """
-        [
-            "foo": [
-            ],
-        ]
-        """
-        testFormatting(for: input, rule: FormatRules.wrapArguments)
+        let options = FormatOptions(wrapParameters: .preserve)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
     // MARK: afterFirst

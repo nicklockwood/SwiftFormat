@@ -66,8 +66,13 @@ private struct Inference {
             indents.append((indent, 0))
         }
         var previousLength = 0
-        formatter.forEach(.linebreak) { i, _ in
-            if case let .space(string)? = formatter.token(at: i + 1) {
+        var scopeStack = [Token]()
+        formatter.forEachToken { i, token in
+            switch token {
+            case .linebreak where scopeStack.isEmpty:
+                guard case let .space(string)? = formatter.token(at: i + 1) else {
+                    break
+                }
                 if string.hasPrefix("\t") {
                     increment("\t")
                 } else {
@@ -89,6 +94,14 @@ private struct Inference {
                         }
                     }
                 }
+            case .startOfScope("/*"):
+                scopeStack.append(token)
+            case .endOfScope:
+                if let scope = scopeStack.last, token.isEndOfScope(scope) {
+                    scopeStack.removeLast()
+                }
+            default:
+                break
             }
         }
         if let indent = indents.sorted(by: {

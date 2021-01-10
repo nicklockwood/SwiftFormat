@@ -254,10 +254,10 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
 
 /// Grouping for sorting imports
 public enum ImportGrouping: String, CaseIterable {
-    case alphabetized
+    case alpha
     case length
-    case testableTop = "testable-top"
-    case testableBottom = "testable-bottom"
+    case testableFirst = "testable-first"
+    case testableLast = "testable-last"
 }
 
 /// Self insertion mode
@@ -409,7 +409,7 @@ public struct FormatOptions: CustomStringConvertible {
                 explicitSelf: SelfMode = .remove,
                 selfRequired: Set<String> = [],
                 experimentalRules: Bool = false,
-                importGrouping: ImportGrouping = .alphabetized,
+                importGrouping: ImportGrouping = .alpha,
                 trailingClosures: Set<String> = [],
                 neverTrailing: Set<String> = [],
                 xcodeIndentation: Bool = false,

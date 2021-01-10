@@ -2391,14 +2391,14 @@ extension RulesTests {
     func testTestableImportsWithGroupingTestableBottom() {
         let input = "@testable import Bar\nimport Foo\n@testable import UIKit"
         let output = "import Foo\n@testable import Bar\n@testable import UIKit"
-        let options = FormatOptions(importGrouping: .testableBottom)
+        let options = FormatOptions(importGrouping: .testableLast)
         testFormatting(for: input, output, rule: FormatRules.sortedImports, options: options)
     }
 
     func testTestableImportsWithGroupingTestableTop() {
         let input = "@testable import Bar\nimport Foo\n@testable import UIKit"
         let output = "@testable import Bar\n@testable import UIKit\nimport Foo"
-        let options = FormatOptions(importGrouping: .testableTop)
+        let options = FormatOptions(importGrouping: .testableFirst)
         testFormatting(for: input, output, rule: FormatRules.sortedImports, options: options)
     }
 

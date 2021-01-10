@@ -4061,7 +4061,7 @@ public struct _FormatRules {
         sharedOptions: ["linebreaks"]
     ) { formatter in
         func sortRanges(_ ranges: [Formatter.ImportRange]) -> [Formatter.ImportRange] {
-            if case .alphabetized = formatter.options.importGrouping {
+            if case .alpha = formatter.options.importGrouping {
                 return ranges.sorted(by: <)
             } else if case .length = formatter.options.importGrouping {
                 return ranges.sorted { $0.module.count < $1.module.count }
@@ -4072,7 +4072,7 @@ public struct _FormatRules {
                 guard $0.isTestable != $1.isTestable else {
                     return $0 < $1
                 }
-                return formatter.options.importGrouping == .testableTop ? $0.isTestable : $1.isTestable
+                return formatter.options.importGrouping == .testableFirst ? $0.isTestable : $1.isTestable
             }
         }
 

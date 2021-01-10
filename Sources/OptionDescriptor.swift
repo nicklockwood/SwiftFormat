@@ -186,15 +186,18 @@ class OptionDescriptor {
                               help: String,
                               deprecationMessage: String? = nil,
                               keyPath: WritableKeyPath<FormatOptions, T>,
-                              type: ArgumentType) where T.RawValue == String
+                              type: ArgumentType,
+                              altOptions: [String: T] = [:]) where T.RawValue == String
     {
         self.argumentName = argumentName
         self.displayName = displayName
         self.help = help
         self.deprecationMessage = deprecationMessage
         self.type = type
-        toOptions = { value, options in
-            guard let value = T(rawValue: value) ?? T(rawValue: value.lowercased()) else {
+        toOptions = { rawValue, options in
+            guard let value = T(rawValue: rawValue) ?? T(rawValue: rawValue.lowercased()) ??
+                altOptions[rawValue] ?? altOptions[rawValue.lowercased()]
+            else {
                 throw FormatError.options("")
             }
             options[keyPath: keyPath] = value
@@ -226,7 +229,8 @@ class OptionDescriptor {
         displayName: String,
         help: String,
         deprecationMessage: String? = nil,
-        keyPath: WritableKeyPath<FormatOptions, T>
+        keyPath: WritableKeyPath<FormatOptions, T>,
+        altOptions: [String: T] = [:]
     ) where T.RawValue == String {
         self.init(
             argumentName: argumentName,
@@ -234,7 +238,8 @@ class OptionDescriptor {
             help: help,
             deprecationMessage: deprecationMessage,
             keyPath: keyPath,
-            type: .enum(T.allCases.map { $0.rawValue })
+            type: .enum(T.allCases.map { $0.rawValue }),
+            altOptions: altOptions
         )
     }
 
@@ -565,8 +570,14 @@ struct _Descriptors {
     let importGrouping = OptionDescriptor(
         argumentName: "importgrouping",
         displayName: "Import Grouping",
-        help: "\"testable-top\", \"testable-bottom\", \"length\" or \"alphabetized\" (default)",
-        keyPath: \FormatOptions.importGrouping
+        help: "\"testable-first/last\", \"alpha\" (default) or \"length\"",
+        keyPath: \FormatOptions.importGrouping,
+        altOptions: [
+            "alphabetized": .alpha,
+            "alphabetical": .alpha,
+            "testable-top": .testableFirst,
+            "testable-bottom": .testableLast,
+        ]
     )
     let trailingClosures = OptionDescriptor(
         argumentName: "trailingclosures",

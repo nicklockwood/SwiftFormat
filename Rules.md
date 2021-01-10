@@ -1257,7 +1257,7 @@ Sort import statements alphabetically.
 
 Option | Description
 --- | ---
-`--importgrouping` | "testable-top", "testable-bottom", "length" or "alphabetized" (default)
+`--importgrouping` | "testable-first/last", "alpha" (default) or "length"
 
 <details>
 <summary>Examples</summary>

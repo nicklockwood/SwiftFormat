@@ -517,7 +517,9 @@ public struct _FormatRules {
                     [.startOfScope("["), .startOfScope("("), .startOfScope("<")].contains($0)
                 }) {
                     formatter.removeTokens(in: prevIndex + 1 ..< i)
-                } else if formatter.token(at: i - 1)?.isSpaceOrLinebreak == false {
+                } else if let prevToken = formatter.token(at: i - 1),
+                          !prevToken.isSpaceOrLinebreak, !prevToken.isOperator
+                {
                     formatter.insert(.space(" "), at: i)
                 }
             case .delimiter(":"):

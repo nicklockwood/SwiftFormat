@@ -785,6 +785,11 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators)
     }
 
+    func testSpaceNotAddedInKeyPath() {
+        let input = "let a = b.map(\\.?.something)"
+        testFormatting(for: input, rule: FormatRules.spaceAroundOperators)
+    }
+
     // noSpaceOperators
 
     func testNoAddSpaceAroundNoSpaceStar() {

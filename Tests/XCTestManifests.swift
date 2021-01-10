@@ -1918,6 +1918,7 @@ extension RulesTests {
         ("testSpaceInsideWrappedArray", testSpaceInsideWrappedArray),
         ("testSpaceNotAddedAfterMarkDashAtEndOfString", testSpaceNotAddedAfterMarkDashAtEndOfString),
         ("testSpaceNotAddedAroundStarInAvailableAnnotation", testSpaceNotAddedAroundStarInAvailableAnnotation),
+        ("testSpaceNotAddedInKeyPath", testSpaceNotAddedInKeyPath),
         ("testSpaceNotInsertedAfterClosureBeforeForceUnwrap", testSpaceNotInsertedAfterClosureBeforeForceUnwrap),
         ("testSpaceNotInsertedAfterClosureBeforeUnwrap", testSpaceNotInsertedAfterClosureBeforeUnwrap),
         ("testSpaceNotRemovedAroundRangeFollowedByPrefixOperator", testSpaceNotRemovedAroundRangeFollowedByPrefixOperator),

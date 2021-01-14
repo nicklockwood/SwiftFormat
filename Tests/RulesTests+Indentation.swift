@@ -1320,6 +1320,25 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    func testChainedFunctionInGuardWithXcodeIndentation() {
+        let input = """
+        guard
+            let foo = self.foo
+            .bar
+            .baz
+        else { return }
+        """
+        let output = """
+        guard
+            let foo = self.foo
+                .bar
+                .baz
+        else { return }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
     func testChainedOrOperatorsInFunctionWithReturnOnNewLine() {
         let input = """
         func foo(lhs: Bool, rhs: Bool) -> Bool {

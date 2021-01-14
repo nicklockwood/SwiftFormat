@@ -742,7 +742,14 @@ extension Formatter {
                 return false
             }
             return true
+        case .keyword:
+            return true
         default:
+            if let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i),
+               prevToken == .keyword("return") || prevToken.isOperator(ofType: .infix)
+            {
+                return false
+            }
             return true
         }
     }

@@ -1478,6 +1478,15 @@ public struct _FormatRules {
                         indentStack.removeLast()
                         linewrapStack[linewrapStack.count - 1] = false
                         indent = indentStack.last!
+                    } else {
+                        if formatter.options.xcodeIndentation,
+                           formatter.next(.nonSpace, after: i) == .operator(".", .infix),
+                           let startIndex = formatter.index(of: .nonSpace, after: formatter.startOfLine(at: i - 1)),
+                           formatter.isStartOfStatement(at: startIndex)
+                        {
+                            indent += formatter.options.indent
+                            indentStack[indentStack.count - 1] = indent
+                        }
                     }
                 } else if linewrapped {
                     func isWrappedDeclaration() -> Bool {

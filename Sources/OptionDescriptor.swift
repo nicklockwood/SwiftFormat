@@ -463,6 +463,14 @@ struct _Descriptors {
         help: "Wrap conditions: \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapConditions
     )
+
+    let conditionsWrap = OptionDescriptor(
+        argumentName: "conditionswrap",
+        displayName: "Conditions Wrap",
+        help: "Wrap conditions as Xcode 12:\"auto\", \"always\", \"disabled\"",
+        keyPath: \.conditionsWrap
+    )
+
     let closingParenOnSameLine = OptionDescriptor(
         argumentName: "closingparen",
         displayName: "Closing Paren Position",

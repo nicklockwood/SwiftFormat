@@ -2149,6 +2149,7 @@ Option | Description
 `--wrapreturntype` | Wrap return type: "if-multiline", "preserve" (default)
 `--wrapconditions` | Wrap conditions: "before-first", "after-first", "preserve"
 `--wraptypealiases` | Wrap typealiases: "before-first", "after-first", "preserve"
+`--conditionswrap` | Wrap conditions as Xcode 12:"auto", "always", "disabled"
 
 <details>
 <summary>Examples</summary>
@@ -2207,6 +2208,17 @@ provided for `--wrapparameters`, the value for `--wraparguments` will be used.
 +   quuz
 + ]
 ```
+
+`--conditionswrap auto`:
+
+```diff
+- guard let foo = foo, let bar = bar, let third = third
++ guard let foo = foo,
++       let bar = bar,
++       let third = third
+  else {}
+```
+
 
 </details>
 <br/>

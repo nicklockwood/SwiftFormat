@@ -510,6 +510,12 @@ struct _Descriptors {
         help: "Wrap ternary operators: \"default\", \"before-operators\"",
         keyPath: \.wrapTernaryOperators
     )
+    let conditionsWrap = OptionDescriptor(
+        argumentName: "conditionswrap",
+        displayName: "Conditions Wrap",
+        help: "Wrap conditions as Xcode 12:\"auto\", \"always\", \"disabled\"",
+        keyPath: \.conditionsWrap
+    )
     let closingParenPosition = OptionDescriptor(
         argumentName: "closingparen",
         displayName: "Closing Paren Position",

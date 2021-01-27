@@ -461,22 +461,34 @@ extension Formatter {
 
             // Remove linebreak after opening paren
             removeTokens(in: i + 1 ..< firstArgumentIndex)
+
             endOfScope -= (firstArgumentIndex - (i + 1))
             firstArgumentIndex = i + 1
             // Get indent
             let start = startOfLine(at: i)
             let indent = spaceEquivalentToTokens(from: start, upTo: firstArgumentIndex)
-            removeLinebreakBeforeEndOfScope(at: &endOfScope)
+
+            // Don't remove linebreak if there is one for `guard ... else` conditions
+            if token(at: endOfScope) != .keyword("else") {
+                removeLinebreakBeforeEndOfScope(at: &endOfScope)
+            }
             // Insert linebreak after each comma
             var lastBreakIndex: Int?
             var index = firstArgumentIndex
+
+            let wrapIgnoringMaxWidth = Set([WrapMode.always, WrapMode.auto]).contains(options.conditionsWrap)
+
             while let commaIndex = self.index(of: .delimiter(","), in: index ..< endOfScope),
                   var linebreakIndex = self.index(of: .nonSpaceOrComment, after: commaIndex)
             {
                 if let index = self.index(of: .nonSpace, before: linebreakIndex) {
                     linebreakIndex = index + 1
                 }
-                if maxWidth > 0, lineLength(upTo: commaIndex) >= maxWidth, let breakIndex = lastBreakIndex {
+
+                if maxWidth > 0,
+                   wrapIgnoringMaxWidth || lineLength(upTo: commaIndex) >= maxWidth || wrapIgnoringMaxWidth,
+                   let breakIndex = lastBreakIndex
+                {
                     endOfScope += 1 + insertSpace(indent, at: breakIndex)
                     insertLinebreak(at: breakIndex)
                     lastBreakIndex = nil
@@ -495,7 +507,10 @@ extension Formatter {
                 }
                 index = commaIndex + 1
             }
-            if maxWidth > 0, let breakIndex = lastBreakIndex, lineLength(at: breakIndex) > maxWidth {
+
+            if maxWidth > 0, let breakIndex = lastBreakIndex,
+               wrapIgnoringMaxWidth || lineLength(at: breakIndex) > maxWidth
+            {
                 insertSpace(indent, at: breakIndex)
                 insertLinebreak(at: breakIndex)
             }
@@ -592,7 +607,7 @@ extension Formatter {
                     wrapArgumentsAfterFirst(startOfScope: i,
                                             endOfScope: endOfScope,
                                             allowGrouping: true)
-                case .disabled, .default:
+                case .disabled, .default, .auto, .always:
                     assertionFailure() // Shouldn't happen
                 }
 
@@ -648,7 +663,7 @@ extension Formatter {
                         wrapArgumentsAfterFirst(startOfScope: i,
                                                 endOfScope: endOfScope,
                                                 allowGrouping: true)
-                    case .disabled, .default:
+                    case .disabled, .default, .auto, .always:
                         assertionFailure() // Shouldn't happen
                     }
                 }
@@ -671,7 +686,7 @@ extension Formatter {
             lastIndex = i
         }
 
-        // -- wrapconditions
+        // -- wrapconditions && -- conditionswrap
         forEach(.keyword) { index, token in
             let endOfConditionsToken: Token
             switch token {
@@ -683,19 +698,24 @@ extension Formatter {
                 return
             }
 
+            guard let endOfConditionsTokenIndex = self.index(of: endOfConditionsToken, after: index) else { return }
+
             // Only wrap when this is a control flow condition that spans multiple lines
-            guard let endOfConditionsTokenIndex = self.index(of: endOfConditionsToken, after: index),
-                  let nextTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                  !(onSameLine(index, endOfConditionsTokenIndex)
-                      || self.index(of: .nonSpaceOrCommentOrLinebreak,
-                                    after: endOfLine(at: index)) == endOfConditionsTokenIndex)
-            else { return }
+            func isControlFlowConditionSpansMultipleLines() -> Bool {
+                let nextLineStartsWithEndOfCondition = self.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                                  after: endOfLine(at: index)) == endOfConditionsTokenIndex
+                let conditionEndsOnNewLine = onSameLine(index, endOfConditionsTokenIndex)
+
+                return !(nextLineStartsWithEndOfCondition || conditionEndsOnNewLine)
+            }
+
+            guard let nextTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) else { return }
 
             switch options.wrapConditions {
-            case .preserve, .disabled, .default:
+            case .preserve, .disabled, .default, .auto, .always:
                 break
-
             case .beforeFirst:
+                guard isControlFlowConditionSpansMultipleLines() else { return }
                 // Wrap if the next non-whitespace-or-comment
                 // is on the same line as the control flow keyword
                 if onSameLine(index, nextTokenIndex) {
@@ -703,6 +723,7 @@ extension Formatter {
                 }
 
             case .afterFirst:
+                guard isControlFlowConditionSpansMultipleLines() else { return }
                 // Unwrap if the next non-whitespace-or-comment
                 // is not on the same line as the control flow keyword
                 if !onSameLine(index, nextTokenIndex),
@@ -713,6 +734,71 @@ extension Formatter {
 
                 // Make sure there is exactly one space after control flow keyword
                 insertSpace(" ", at: index + 1)
+            }
+
+            switch options.conditionsWrap {
+            case .auto, .always:
+                if !onSameLine(index, nextTokenIndex),
+                   let linebreakIndex = self.index(of: .linebreak, in: index ..< nextTokenIndex)
+                {
+                    removeToken(at: linebreakIndex)
+                }
+
+                insertSpace(" ", at: index + 1)
+
+                let isCaseForAutoWrap = lineLength(at: index) > maxWidth || isControlFlowConditionSpansMultipleLines()
+                if !(options.conditionsWrap == .always || isCaseForAutoWrap) {
+                    return
+                }
+
+                wrapArgumentsAfterFirst(startOfScope: index + 1,
+                                        endOfScope: endOfConditionsTokenIndex,
+                                        allowGrouping: true)
+
+                // Xcode 12 wraps guard's else on a new line
+                guard token == .keyword("guard") else { break }
+
+                // Leave only one breakline before else
+                if let endOfConditionsTokenIndexAfterChanges = self.index(of: endOfConditionsToken, after: index),
+                   let lastArgumentIndex = self.index(of: .nonSpaceOrLinebreak, before: endOfConditionsTokenIndexAfterChanges)
+                {
+                    let slice = tokens[lastArgumentIndex ..< endOfConditionsTokenIndexAfterChanges]
+                    let breaklineIndexes = slice.indices.filter { tokens[$0].isLinebreak }
+
+                    if breaklineIndexes.isEmpty {
+                        insertLinebreak(at: endOfConditionsTokenIndexAfterChanges - 1)
+                    } else if breaklineIndexes.count > 1 {
+                        for breaklineIndex in breaklineIndexes.dropFirst() {
+                            removeToken(at: breaklineIndex)
+                        }
+                    }
+                }
+
+                // Space token before `else` should match space token before `guard`
+                if let endOfConditionsTokenIndexAfterChanges = self.index(of: endOfConditionsToken, after: index),
+                   let lastArgumentIndex = self.index(of: .nonSpaceOrLinebreak, before: endOfConditionsTokenIndexAfterChanges)
+                {
+                    let slice = tokens[lastArgumentIndex ..< endOfConditionsTokenIndexAfterChanges]
+                    let spaceIndexes = slice.indices.filter { tokens[$0].isSpace }
+
+                    if let spaceToken = self.token(at: index - 1), spaceToken.isSpace {
+                        if spaceIndexes.count == 1, let spaceIndex = spaceIndexes.first,
+                           let existedSpaceToken = self.token(at: spaceIndex), spaceToken == existedSpaceToken
+                        {
+                            /* Nothing to do here */
+                            break
+                        } else {
+                            spaceIndexes.forEach { removeToken(at: $0) }
+                            insertSpace(spaceToken.string, at: endOfConditionsTokenIndexAfterChanges)
+                        }
+                    } else {
+                        spaceIndexes.forEach { removeToken(at: $0) }
+                    }
+                }
+
+            default:
+                /* Nothing to do here */
+                break
             }
         }
 
@@ -818,7 +904,7 @@ extension Formatter {
                 wrapIndices = andTokenIndices
             case .beforeFirst:
                 wrapIndices = [equalsIndex] + andTokenIndices
-            case .default, .disabled, .preserve:
+            case .default, .disabled, .preserve, .auto, .always:
                 return
             }
 

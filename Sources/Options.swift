@@ -56,6 +56,8 @@ public enum WrapMode: String, CaseIterable {
     case beforeFirst = "before-first"
     case afterFirst = "after-first"
     case preserve
+    case auto
+    case always
     case disabled
     case `default`
 
@@ -71,6 +73,10 @@ public enum WrapMode: String, CaseIterable {
             self = .disabled
         case "default":
             self = .default
+        case "auto":
+            self = .auto
+        case "always":
+            self = .always
         default:
             return nil
         }
@@ -375,6 +381,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapReturnType: WrapReturnType
     public var wrapConditions: WrapMode
     public var wrapTernaryOperators: TernaryOperatorWrapMode
+    public var conditionsWrap: WrapMode
     public var uppercaseHex: Bool
     public var uppercaseExponent: Bool
     public var decimalGrouping: Grouping
@@ -472,6 +479,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapReturnType: WrapReturnType = .preserve,
                 wrapConditions: WrapMode = .preserve,
                 wrapTernaryOperators: TernaryOperatorWrapMode = .default,
+                conditionsWrap: WrapMode = .disabled,
                 uppercaseHex: Bool = true,
                 uppercaseExponent: Bool = false,
                 decimalGrouping: Grouping = .group(3, 6),
@@ -560,6 +568,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapReturnType = wrapReturnType
         self.wrapConditions = wrapConditions
         self.wrapTernaryOperators = wrapTernaryOperators
+        self.conditionsWrap = conditionsWrap
         self.uppercaseHex = uppercaseHex
         self.uppercaseExponent = uppercaseExponent
         self.decimalGrouping = decimalGrouping

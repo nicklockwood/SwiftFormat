@@ -202,7 +202,7 @@ class MetadataTests: XCTestCase {
                         Descriptors.linebreak, Descriptors.truncateBlankLines,
                         Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs, Descriptors.maxWidth,
                         Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.wrapEffects,
-                        Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators,
+                        Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators, Descriptors.conditionsWrap,
                     ]
                 case .identifier("wrapStatementBody"):
                     referencedOptions += [Descriptors.indent, Descriptors.linebreak]
@@ -241,6 +241,7 @@ class MetadataTests: XCTestCase {
                     continue
                 }
             }
+
             for option in referencedOptions {
                 XCTAssert(ruleOptions.contains(option.argumentName) || option.isDeprecated,
                           "\(option.argumentName) not listed in \(name) rule")

@@ -56,6 +56,7 @@ public enum WrapMode: String, CaseIterable {
     case beforeFirst = "before-first"
     case afterFirst = "after-first"
     case preserve
+    case auto
     case disabled
     case `default`
 

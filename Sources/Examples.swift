@@ -1163,6 +1163,17 @@ private struct Examples {
     +   quuz
     + ]
     ```
+
+    `--conditionswrap auto`:
+
+    ```diff
+    - guard let foo = foo, let bar = bar, let third = third
+    + guard let foo = foo,
+    +       let bar = bar,
+    +       let third = third
+      else {}
+    ```
+
     """
 
     let wrapMultilineStatementBraces = """

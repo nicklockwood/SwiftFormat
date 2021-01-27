@@ -473,7 +473,7 @@ struct _Descriptors {
     let wrapConditions = OptionDescriptor(
         argumentName: "wrapconditions",
         displayName: "Wrap Conditions",
-        help: "Wrap conditions: \"before-first\", \"after-first\", \"preserve\"",
+        help: "Wrap conditions: \"before-first\", \"after-first\", \"preserve\", \"auto\"",
         keyPath: \.wrapConditions
     )
     let wrapTernaryOperators = OptionDescriptor(

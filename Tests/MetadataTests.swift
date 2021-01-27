@@ -194,7 +194,7 @@ class MetadataTests: XCTestCase {
                         Descriptors.closingParenOnSameLine, Descriptors.linebreak, Descriptors.truncateBlankLines,
                         Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs, Descriptors.maxWidth,
                         Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.wrapEffects,
-                        Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators,
+                        Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators, Descriptors.conditionsWrap,
                     ]
                 case .identifier("indexWhereLineShouldWrapInLine"), .identifier("indexWhereLineShouldWrap"):
                     referencedOptions += [
@@ -230,6 +230,7 @@ class MetadataTests: XCTestCase {
                     continue
                 }
             }
+
             for option in referencedOptions {
                 XCTAssert(allOptions.contains(option.argumentName) || option.isDeprecated,
                           "\(option.argumentName) not listed in \(name) rule")

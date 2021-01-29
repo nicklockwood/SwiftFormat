@@ -2583,6 +2583,30 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testWrapPrivateSetVarAttributes() {
+        let input = """
+        @objc private(set) dynamic var foo = Foo()
+        """
+        let output = """
+        @objc
+        private(set) dynamic var foo = Foo()
+        """
+        let options = FormatOptions(varAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testWrapConvenienceInitAttribute() {
+        let input = """
+        @objc public convenience init() {}
+        """
+        let output = """
+        @objc
+        public convenience init() {}
+        """
+        let options = FormatOptions(funcAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     // MARK: wrapEnumCases
 
     func testMultilineEnumCases() {

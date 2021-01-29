@@ -4949,11 +4949,7 @@ public struct _FormatRules {
 
             // Skip modifiers
             while keyword.isModifierKeyword {
-                guard let nextIndex = formatter
-                    .index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex, if: {
-                        $0.isKeyword
-                    })
-                else {
+                guard let nextIndex = formatter.index(of: .keyword, after: keywordIndex) else {
                     break
                 }
                 keywordIndex = nextIndex

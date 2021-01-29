@@ -2657,6 +2657,9 @@ public struct _FormatRules {
                         }
                         i = nextIndex
                     case .keyword("if"), .keyword("while"):
+                        if explicitSelf == .insert {
+                            break
+                        }
                         guard let nextIndex = formatter.index(of: .startOfScope("{"), after: i) else {
                             return formatter.fatalError("Expected {", at: i)
                         }

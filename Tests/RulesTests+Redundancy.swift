@@ -3070,6 +3070,71 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testNoInsertSelfForVarDefinedInIfCaseLet() {
+        let input = """
+        struct A {
+            var localVar = ""
+
+            var B: String {
+                if case let .c(localVar) = self.d, localVar == .e {
+                    print(localVar)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testNoInsertSelfForVarDefinedInUnhoistedIfCaseLet() {
+        let input = """
+        struct A {
+            var localVar = ""
+
+            var B: String {
+                if case .c(let localVar) = self.d, localVar == .e {
+                    print(localVar)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options,
+                       exclude: ["hoistPatternLet"])
+    }
+
+    func testNoInsertSelfForVarDefinedInFor() {
+        let input = """
+        struct A {
+            var localVar = ""
+
+            var B: String {
+                for localVar in 0 ..< 6 where localVar < 5 {
+                    print(localVar)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testNoInsertSelfForVarDefinedInWhileLet() {
+        let input = """
+        struct A {
+            var localVar = ""
+
+            var B: String {
+                while let localVar = self.localVar, localVar < 5 {
+                    print(localVar)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // explicitSelf = .initOnly
 
     func testPreserveSelfInsideClassInit() {

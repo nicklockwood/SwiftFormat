@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.47.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.11) (2020-01-29
+
+- Fixed bug with `redundandSelf` rule sometimes inserting `self` for a local variable
+- Fixed `wrapAttributes` rule not working for convenience `init`s, or vars with `private(set)`
+- Fixed bug with indenting of wrapped members when using `--xcodeindentation` mode
+- Fixed erroneous space being inserted into keyPaths by `spaceAroundOperators` rule
+- Fixed bug with `--nospaceoperators` affecting custom infix operators with closure operands
+- Added support for sorting imports by length instead of alphabetically
+
 ## [0.47.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.10) (2020-12-28)
 
 - The `blankLinesBetweenScopes` no longer inserts a blank line before Sourcery comment directives

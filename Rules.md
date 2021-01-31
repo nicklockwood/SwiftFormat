@@ -1755,8 +1755,7 @@ Option | Description
 `--closingparen` | Closing paren position: "balanced" (default) or "same-line"
 `--wrapreturntype` | Wrap return type: "if-multiline", "preserve" (default)
 `--wrapconditions` | Wrap conditions: "before-first", "after-first", "preserve"
-`--conditionswrap` | Wrap conditions in Xcode 12 style:
-"auto", "always", "disabled"
+`--conditionswrap` | Wrap conditions as Xcode 12:"auto", "always", "disabled"
 
 <details>
 <summary>Examples</summary>
@@ -1815,6 +1814,17 @@ provided for `--wrapparameters`, the value for `--wraparguments` will be used.
 +   quuz
 + ]
 ```
+
+`--conditionswrap auto`:
+
+```diff
+- guard let foo = foo, let bar = bar, let third = third
++ guard let foo = foo,
++       let bar = bar,
++       let third = third
+  else {}
+```
+
 
 </details>
 <br/>

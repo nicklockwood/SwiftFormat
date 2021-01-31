@@ -485,7 +485,7 @@ struct _Descriptors {
     let conditionsWrap = OptionDescriptor(
         argumentName: "conditionswrap",
         displayName: "Conditions Wrap",
-        help: "Wrap conditions in Xcode 12 style:\n\"auto\", \"always\", \"disabled\"",
+        help: "Wrap conditions as Xcode 12:\"auto\", \"always\", \"disabled\"",
         keyPath: \.conditionsWrap
     )
     let closingParenOnSameLine = OptionDescriptor(

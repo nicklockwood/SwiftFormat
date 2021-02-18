@@ -2032,6 +2032,26 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
+    func testDoesntWrapReturnOnSingleLineFunctionDeclarationAfterMultilineArray() {
+        let input = """
+        final class Foo {
+            private static let array = [
+                "one",
+            ]
+
+            private func singleLine() -> String {}
+        }
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: true,
+            wrapReturnType: .ifMultiline
+        )
+
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
     func testPreserveReturnOnMultilineFunctionDeclarationByDefault() {
         let input = """
         func multilineFunction(

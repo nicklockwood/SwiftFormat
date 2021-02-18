@@ -60,7 +60,7 @@ public func expandGlobs(_ paths: String, in directory: String) -> [Glob] {
         var options = paths[range].dropFirst().dropLast()
             .replacingOccurrences(of: "[.+(){\\\\|]", with: "\\\\$0", options: .regularExpression)
             .components(separatedBy: ",")
-        options.append("{\(options.joined(separator: ","))}")
+        options.append("\\\\{\(options.joined(separator: ","))\\\\}")
         let token = "<<<\(tokens.count)>>>"
         tokens[token] = "(\(options.joined(separator: "|")))"
         paths.replaceSubrange(range, with: token)

@@ -132,7 +132,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
         }
         if let existing = namedArgs[name], !existing.isEmpty,
            // TODO: find a more general way to represent merge-able options
-           ["exclude", "unexclude", "disable", "enable", "rules"].contains(name) ||
+           ["exclude", "unexclude", "disable", "enable", "lintonly", "rules"].contains(name) ||
            Descriptors.all.contains(where: {
                $0.argumentName == name && $0.isSetType
            })
@@ -280,6 +280,7 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
             input["rules"] = nil
             input["enable"] = nil
             input["disable"] = nil
+            input["lintonly"] = nil
         }
     } else {
         if let _disable = try output["disable"].map(parseRules) {
@@ -289,18 +290,30 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
             if let enable = try input["enable"].map(parseRules) {
                 input["enable"] = Set(enable).subtracting(_disable).sorted().joined(separator: ",")
             }
+            if let lintonly = try input["lintonly"].map(parseRules) {
+                input["lintonly"] = Set(lintonly).subtracting(_disable).sorted().joined(separator: ",")
+            }
             if let disable = try input["disable"].map(parseRules) {
                 input["disable"] = Set(disable).union(_disable).sorted().joined(separator: ",")
                 output["disable"] = nil
             }
         }
-        if let _enable = try args["enable"].map(parseRules) {
+        if let _enable = try output["enable"].map(parseRules) {
             if let enable = try input["enable"].map(parseRules) {
                 input["enable"] = Set(enable).union(_enable).sorted().joined(separator: ",")
                 output["enable"] = nil
             }
+            if let lintonly = try input["lintonly"].map(parseRules) {
+                input["lintonly"] = Set(lintonly).subtracting(_enable).sorted().joined(separator: ",")
+            }
             if let disable = try input["disable"].map(parseRules) {
                 input["disable"] = Set(disable).subtracting(_enable).sorted().joined(separator: ",")
+            }
+        }
+        if let _lintonly = try output["lintonly"].map(parseRules) {
+            if let lintonly = try input["lintonly"].map(parseRules) {
+                input["lintonly"] = Set(lintonly).union(_lintonly).sorted().joined(separator: ",")
+                output["lintonly"] = nil
             }
         }
     }
@@ -529,6 +542,13 @@ func rulesFor(_ args: [String: String]) throws -> Set<String> {
     try args["disable"].map {
         try rules.subtract(parseRules($0))
     }
+    try args["lintonly"].map { rulesString in
+        if args.keys.contains("lint") {
+            try rules.formUnion(parseRules(rulesString))
+        } else {
+            try rules.subtract(parseRules(rulesString))
+        }
+    }
     return rules
 }
 
@@ -629,6 +649,7 @@ let fileArguments = [
 let rulesArguments = [
     "disable",
     "enable",
+    "lintonly",
     "rules",
 ]
 

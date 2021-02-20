@@ -711,6 +711,7 @@ extension RulesTests {
         ("testDoesntUseGroupedMarkTemplateWhenSeparatedByExtensionOfOtherType", testDoesntUseGroupedMarkTemplateWhenSeparatedByExtensionOfOtherType),
         ("testDoesntUseGroupedMarkTemplateWhenSeparatedByOtherType", testDoesntUseGroupedMarkTemplateWhenSeparatedByOtherType),
         ("testDoesntWrapReturnOnSingleLineFunctionDeclaration", testDoesntWrapReturnOnSingleLineFunctionDeclaration),
+        ("testDoesntWrapReturnOnSingleLineFunctionDeclarationAfterMultilineArray", testDoesntWrapReturnOnSingleLineFunctionDeclarationAfterMultilineArray),
         ("testDontChangePrivateExtensionToFileprivate", testDontChangePrivateExtensionToFileprivate),
         ("testDontCorruptPartialFragment", testDontCorruptPartialFragment),
         ("testDontCorruptPartialFragment2", testDontCorruptPartialFragment2),

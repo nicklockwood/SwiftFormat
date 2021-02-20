@@ -80,7 +80,14 @@ extension Formatter {
             }
         }
 
-        func wrapReturnIfNecessary(endOfFunctionScope: Int) {
+        func wrapReturnIfNecessary(
+            startOfScope: Int,
+            endOfFunctionScope: Int
+        ) {
+            guard token(at: startOfScope) == .startOfScope("(") else {
+                return
+            }
+
             switch options.wrapReturnType {
             case .preserve:
                 break
@@ -171,7 +178,10 @@ extension Formatter {
                 }
             }
 
-            wrapReturnIfNecessary(endOfFunctionScope: endOfScope)
+            wrapReturnIfNecessary(
+                startOfScope: i,
+                endOfFunctionScope: endOfScope
+            )
         }
         func wrapArgumentsAfterFirst(startOfScope i: Int, endOfScope: Int, allowGrouping: Bool) {
             guard var firstArgumentIndex = self.index(of: .nonSpaceOrLinebreak, in: i + 1 ..< endOfScope) else {
@@ -223,7 +233,10 @@ extension Formatter {
                 insertLinebreak(at: breakIndex)
             }
 
-            wrapReturnIfNecessary(endOfFunctionScope: endOfScope)
+            wrapReturnIfNecessary(
+                startOfScope: i,
+                endOfFunctionScope: endOfScope
+            )
         }
 
         var lastIndex = -1

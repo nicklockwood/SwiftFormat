@@ -577,6 +577,7 @@ extension RulesTests {
         ("testChainedClosureIndentsAfterVarDeclaration", testChainedClosureIndentsAfterVarDeclaration),
         ("testChainedFunctionInGuardWithXcodeIndentation", testChainedFunctionInGuardWithXcodeIndentation),
         ("testChainedFunctionOnNewLineWithXcodeIndentation", testChainedFunctionOnNewLineWithXcodeIndentation),
+        ("testChainedFunctionOnNewLineWithXcodeIndentation2", testChainedFunctionOnNewLineWithXcodeIndentation2),
         ("testChainedFunctionsAfterAnIfStatement", testChainedFunctionsAfterAnIfStatement),
         ("testChainedFunctionsInFunctionWithReturnOnNewLineWithXcodeIndentation", testChainedFunctionsInFunctionWithReturnOnNewLineWithXcodeIndentation),
         ("testChainedFunctionsInPropertySetter", testChainedFunctionsInPropertySetter),

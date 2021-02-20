@@ -1436,7 +1436,9 @@ public struct _FormatRules {
                 let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
                 let linewrapped = lastNonSpaceOrLinebreakIndex > -1 && (
                     !formatter.isEndOfStatement(at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last) ||
-                        !(nextTokenIndex == nil ||
+                        !(nextTokenIndex == nil || [
+                            .endOfScope("}"), .endOfScope("]"), .endOfScope(")"),
+                        ].contains(formatter.tokens[nextTokenIndex!]) ||
                             formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last))
                 )
 

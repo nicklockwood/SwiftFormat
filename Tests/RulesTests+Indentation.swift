@@ -1282,6 +1282,20 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    func testChainedFunctionOnNewLineWithXcodeIndentation2() {
+        let input = """
+        let foo = bar
+            .baz { _ in
+                true
+            }
+            .quux { _ in
+                false
+            }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testChainedFunctionsInPropertySetterOnNewLineWithXcodeIndentation() {
         let input = """
         private let foo =

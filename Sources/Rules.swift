@@ -201,6 +201,9 @@ public struct _FormatRules {
             case "private", "fileprivate", "internal",
                  "init", "subscript":
                 return false
+            case "await":
+                return formatter.options.swiftVersion >= "6" ||
+                    formatter.options.swiftVersion == .undefined
             default:
                 return keyword.first.map { !"@#".contains($0) } ?? true
             }

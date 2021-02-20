@@ -192,6 +192,25 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
+    func testAddSpaceBetweenParenAndAwait() {
+        let input = "let foo = await(bar: 5)"
+        let output = "let foo = await (bar: 5)"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
+    func testAddSpaceBetweenParenAndAwaitForSwift6() {
+        let input = "let foo = await(bar: 5)"
+        let output = "let foo = await (bar: 5)"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens,
+                       options: FormatOptions(swiftVersion: "6.0.0"))
+    }
+
+    func testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan6() {
+        let input = "let foo = await(bar: 5)"
+        testFormatting(for: input, rule: FormatRules.spaceAroundParens,
+                       options: FormatOptions(swiftVersion: "5.9.9"))
+    }
+
     // MARK: - spaceInsideParens
 
     func testSpaceInsideParens() {

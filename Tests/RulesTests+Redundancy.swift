@@ -2607,6 +2607,24 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testSelfNotRemovedInDynamicMemberLookup() {
+        let input = """
+        @dynamicMemberLookup
+        struct Foo {
+            subscript(dynamicMember foo: String) -> String {
+                return foo + "bar"
+            }
+
+            func bar() {
+                if self.foo == "foobar" {
+                    return
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {

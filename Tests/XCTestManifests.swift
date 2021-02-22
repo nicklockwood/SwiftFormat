@@ -1787,6 +1787,7 @@ extension RulesTests {
         ("testSelfNotRemovedInClosureAfterSwitch", testSelfNotRemovedInClosureAfterSwitch),
         ("testSelfNotRemovedInClosureInCaseWithWhereClause", testSelfNotRemovedInClosureInCaseWithWhereClause),
         ("testSelfNotRemovedInClosureInIf", testSelfNotRemovedInClosureInIf),
+        ("testSelfNotRemovedInDynamicMemberLookup", testSelfNotRemovedInDynamicMemberLookup),
         ("testSelfNotRemovedInGetter", testSelfNotRemovedInGetter),
         ("testSelfNotRemovedInIfdef", testSelfNotRemovedInIfdef),
         ("testSelfNotRemovedWhenPropertyIsContextualKeyword", testSelfNotRemovedWhenPropertyIsContextualKeyword),

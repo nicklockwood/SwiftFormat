@@ -617,7 +617,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0810;
-				LastUpgradeCheck = 1230;
+				LastUpgradeCheck = 1240;
 				ORGANIZATIONNAME = "Nick Lockwood";
 				TargetAttributes = {
 					015AF2B61DC6A538008F0A8C = {
@@ -1111,7 +1111,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.47.11;
+				MARKETING_VERSION = 0.47.12;
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1139,7 +1139,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.47.11;
+				MARKETING_VERSION = 0.47.12;
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1185,7 +1185,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CLANG_ENABLE_CODE_COVERAGE = NO;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = 8VQKF583ED;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1201,7 +1201,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CLANG_ENABLE_CODE_COVERAGE = NO;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = 8VQKF583ED;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1223,7 +1223,7 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CODE_SIGN_ENTITLEMENTS = EditorExtension/Application/SwiftFormatter.entitlements;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -1235,7 +1235,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 0.47.11;
+				MARKETING_VERSION = 0.47.12;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
 				PRODUCT_NAME = "SwiftFormat for Xcode";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1253,7 +1253,7 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CODE_SIGN_ENTITLEMENTS = EditorExtension/Application/SwiftFormatter.entitlements;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -1265,7 +1265,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 0.47.11;
+				MARKETING_VERSION = 0.47.12;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
 				PRODUCT_NAME = "SwiftFormat for Xcode";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1280,7 +1280,7 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CODE_SIGN_ENTITLEMENTS = EditorExtension/Extension/SwiftFormatter.entitlements;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
@@ -1293,7 +1293,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 0.47.11;
+				MARKETING_VERSION = 0.47.12;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
 				PRODUCT_NAME = SwiftFormat;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1310,7 +1310,7 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CODE_SIGN_ENTITLEMENTS = EditorExtension/Extension/SwiftFormatter.entitlements;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
@@ -1323,7 +1323,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 0.47.11;
+				MARKETING_VERSION = 0.47.12;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
 				PRODUCT_NAME = SwiftFormat;
 				PROVISIONING_PROFILE_SPECIFIER = "";

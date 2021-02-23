@@ -2,7 +2,7 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
-//  Version 0.47.11
+//  Version 0.47.12
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood

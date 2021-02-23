@@ -1980,6 +1980,8 @@ extension RulesTests {
         ("testSwiftOptionalTypeConvertedToSugar", testSwiftOptionalTypeConvertedToSugar),
         ("testSwitchCaseHoistedLetVarRecognized", testSwitchCaseHoistedLetVarRecognized),
         ("testSwitchCaseIndenting", testSwitchCaseIndenting),
+        ("testSwitchCaseInIfEndif", testSwitchCaseInIfEndif),
+        ("testSwitchCaseInIfEndifNoIndenting", testSwitchCaseInIfEndifNoIndenting),
         ("testSwitchCaseIsDictionaryIndenting", testSwitchCaseIsDictionaryIndenting),
         ("testSwitchCaseLetVarRecognized", testSwitchCaseLetVarRecognized),
         ("testSwitchCaseVarDoesntLeak", testSwitchCaseVarDoesntLeak),

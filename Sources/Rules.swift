@@ -1350,12 +1350,29 @@ public struct _FormatRules {
                     if firstIndex != i {
                         break
                     }
+                    func isInIfdef() -> Bool {
+                        guard scopeStack.last == .startOfScope("#if") else {
+                            return false
+                        }
+                        var index = i - 1
+                        while index > 0 {
+                            switch formatter.tokens[index] {
+                            case .keyword("switch"):
+                                return false
+                            case .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"):
+                                return true
+                            default:
+                                index -= 1
+                            }
+                        }
+                        return false
+                    }
                     if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {
                         i += formatter.insertSpaceIfEnabled("", at: start)
                     } else {
                         var indent = indentStack.last ?? ""
                         if [.endOfScope("case"), .endOfScope("default")].contains(token),
-                           formatter.options.indentCase, scopeStack.last != .startOfScope("#if")
+                           formatter.options.indentCase, !isInIfdef()
                         {
                             indent += formatter.options.indent
                         }

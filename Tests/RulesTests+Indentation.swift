@@ -1903,6 +1903,50 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    func testSwitchCaseInIfEndif() {
+        let input = """
+        func baz(value: Example) -> String {
+            #if DEBUG
+                switch value {
+                    case .foo: return "foo"
+                    case .bar: return "bar"
+                    @unknown default: return "unknown"
+                }
+            #else
+                switch value {
+                    case .foo: return "foo"
+                    case .bar: return "bar"
+                    @unknown default: return "unknown"
+                }
+            #endif
+        }
+        """
+        let options = FormatOptions(indentCase: true, ifdefIndent: .indent)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testSwitchCaseInIfEndifNoIndenting() {
+        let input = """
+        func baz(value: Example) -> String {
+            #if DEBUG
+            switch value {
+                case .foo: return "foo"
+                case .bar: return "bar"
+                @unknown default: return "unknown"
+            }
+            #else
+            switch value {
+                case .foo: return "foo"
+                case .bar: return "bar"
+                @unknown default: return "unknown"
+            }
+            #endif
+        }
+        """
+        let options = FormatOptions(indentCase: true, ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testIfEndifInsideEnumNoIndenting() {
         let input = """
         enum Foo {

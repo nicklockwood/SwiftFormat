@@ -724,6 +724,8 @@ extension Formatter {
             return ["<", "[", "(", "case"].contains(scope.string)
         case .delimiter, .operator(_, .infix), .operator(_, .postfix):
             return false
+        case .endOfScope("}"), .endOfScope("]"), .endOfScope(")"), .endOfScope(">"):
+            return false
         case .startOfScope("{") where isStartOfClosure(at: i):
             guard last(.nonSpaceOrComment, before: i)?.isLinebreak == true,
                   let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i),

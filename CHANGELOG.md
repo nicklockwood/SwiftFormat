@@ -1,6 +1,15 @@
 # Change Log
 
-## [0.47.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.11) (2020-01-29
+## [0.47.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.12) (2020-02-23)
+
+- Fixed indenting of `switch` cases inside `#if`/`#endif` clauses 
+- Explicit `self` is no longer removed inside types using `@dynamicMemberLookup`
+- Fixed indenting of wrapped, chained methods when using `--xcodeindentation`
+- `await` is no longer treated as a keyword if `--swiftversion` is set to < 6
+- Fixed issue where single line method after array would wrap unexpectedly
+- Made repository checkoutable on Windows
+
+## [0.47.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.11) (2020-01-29)
 
 - Fixed bug with `redundandSelf` rule sometimes inserting `self` for a local variable
 - Fixed `wrapAttributes` rule not working for convenience `init`s, or vars with `private(set)`

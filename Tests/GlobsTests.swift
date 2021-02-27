@@ -117,7 +117,7 @@ class GlobsTests: XCTestCase {
     }
 
     func testExpandGlobsChecksForExactPaths() {
-        let path = "Tests/GlobTest{a,b}.txt"
+        let path = "Tests/GlobTest[5].txt"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
         XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)

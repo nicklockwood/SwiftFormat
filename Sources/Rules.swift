@@ -201,6 +201,9 @@ public struct _FormatRules {
             case "private", "fileprivate", "internal",
                  "init", "subscript":
                 return false
+            case "await":
+                return formatter.options.swiftVersion >= "6" ||
+                    formatter.options.swiftVersion == .undefined
             default:
                 return keyword.first.map { !"@#".contains($0) } ?? true
             }
@@ -1347,12 +1350,29 @@ public struct _FormatRules {
                     if firstIndex != i {
                         break
                     }
+                    func isInIfdef() -> Bool {
+                        guard scopeStack.last == .startOfScope("#if") else {
+                            return false
+                        }
+                        var index = i - 1
+                        while index > 0 {
+                            switch formatter.tokens[index] {
+                            case .keyword("switch"):
+                                return false
+                            case .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"):
+                                return true
+                            default:
+                                index -= 1
+                            }
+                        }
+                        return false
+                    }
                     if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {
                         i += formatter.insertSpaceIfEnabled("", at: start)
                     } else {
                         var indent = indentStack.last ?? ""
                         if [.endOfScope("case"), .endOfScope("default")].contains(token),
-                           formatter.options.indentCase, scopeStack.last != .startOfScope("#if")
+                           formatter.options.indentCase, !isInIfdef()
                         {
                             indent += formatter.options.indent
                         }
@@ -1433,7 +1453,9 @@ public struct _FormatRules {
                 let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
                 let linewrapped = lastNonSpaceOrLinebreakIndex > -1 && (
                     !formatter.isEndOfStatement(at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last) ||
-                        !(nextTokenIndex == nil ||
+                        !(nextTokenIndex == nil || [
+                            .endOfScope("}"), .endOfScope("]"), .endOfScope(")"),
+                        ].contains(formatter.tokens[nextTokenIndex!]) ||
                             formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last))
                 )
 
@@ -2599,6 +2621,7 @@ public struct _FormatRules {
                          typeStack: inout [String],
                          membersByType: inout [String: Set<String>],
                          classMembersByType: inout [String: Set<String>],
+                         usingDynamicLookup: Bool,
                          isTypeRoot: Bool,
                          isInit: Bool)
         {
@@ -2743,12 +2766,14 @@ public struct _FormatRules {
                         }
                         processFunction(at: &index, localNames: localNames, members: classMembers,
                                         typeStack: &typeStack, membersByType: &membersByType,
-                                        classMembersByType: &classMembersByType)
+                                        classMembersByType: &classMembersByType,
+                                        usingDynamicLookup: usingDynamicLookup)
                         classOrStatic = false
                     } else {
                         processFunction(at: &index, localNames: localNames, members: members,
                                         typeStack: &typeStack, membersByType: &membersByType,
-                                        classMembersByType: &classMembersByType)
+                                        classMembersByType: &classMembersByType,
+                                        usingDynamicLookup: usingDynamicLookup)
                     }
                     assert(formatter.token(at: index) != .endOfScope("}"))
                     continue
@@ -2774,11 +2799,15 @@ public struct _FormatRules {
                     else {
                         return formatter.fatalError("Expected identifier", at: index)
                     }
+                    let usingDynamicLookup = formatter.modifiersForDeclaration(
+                        at: index,
+                        contains: "@dynamicMemberLookup"
+                    )
                     index = scopeStart + 1
                     typeStack.append(name)
                     processBody(at: &index, localNames: ["init"], members: [], typeStack: &typeStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                isTypeRoot: true, isInit: false)
+                                usingDynamicLookup: usingDynamicLookup, isTypeRoot: true, isInit: false)
                     typeStack.removeLast()
                 case .keyword("var"), .keyword("let"):
                     index += 1
@@ -2810,7 +2839,7 @@ public struct _FormatRules {
                         index = startIndex + 1
                         processBody(at: &index, localNames: scopedNames, members: members, typeStack: &typeStack,
                                     membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                    isTypeRoot: false, isInit: isInit)
+                                    usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                         lastKeyword = ""
                     default:
                         lastKeyword = token.string
@@ -2833,7 +2862,7 @@ public struct _FormatRules {
                     index += 1
                     processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                isTypeRoot: false, isInit: isInit)
+                                usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                     continue
                 case .keyword("while") where lastKeyword == "repeat":
                     lastKeyword = ""
@@ -2867,7 +2896,7 @@ public struct _FormatRules {
                     index += 1
                     processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                isTypeRoot: false, isInit: isInit)
+                                usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where isWhereClause:
                     return
@@ -2881,7 +2910,7 @@ public struct _FormatRules {
                             let localNames = localNames
                             processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
                                         membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                        isTypeRoot: false, isInit: isInit)
+                                        usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                             index -= 1
                         case .endOfScope("}"):
                             break loop
@@ -2900,7 +2929,7 @@ public struct _FormatRules {
                     index += 1
                     processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                isTypeRoot: false, isInit: isInit)
+                                usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
                     lastKeyword = ""
@@ -2926,13 +2955,14 @@ public struct _FormatRules {
                         processAccessors(["get", "set", "willSet", "didSet"], for: name,
                                          at: &index, localNames: localNames, members: members,
                                          typeStack: &typeStack, membersByType: &membersByType,
-                                         classMembersByType: &classMembersByType)
+                                         classMembersByType: &classMembersByType,
+                                         usingDynamicLookup: usingDynamicLookup)
                     }
                     continue
                 case .startOfScope:
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .identifier("self"):
-                    guard formatter.isEnabled, !isTypeRoot, !localNames.contains("self"),
+                    guard formatter.isEnabled, !usingDynamicLookup, !isTypeRoot, !localNames.contains("self"),
                           let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
                               $0 == .operator(".", .infix)
                           }), let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {
@@ -3053,7 +3083,8 @@ public struct _FormatRules {
                               localNames: Set<String>, members: Set<String>,
                               typeStack: inout [String],
                               membersByType: inout [String: Set<String>],
-                              classMembersByType: inout [String: Set<String>])
+                              classMembersByType: inout [String: Set<String>],
+                              usingDynamicLookup: Bool)
         {
             assert(formatter.tokens[index] == .startOfScope("{"))
             var foundAccessors = false
@@ -3084,7 +3115,7 @@ public struct _FormatRules {
                 }
                 processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
                             membersByType: &membersByType, classMembersByType: &classMembersByType,
-                            isTypeRoot: false, isInit: false)
+                            usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: false)
             }
             if foundAccessors {
                 guard let endIndex = formatter.index(of: .endOfScope("}"), after: index) else { return }
@@ -3094,13 +3125,14 @@ public struct _FormatRules {
                 localNames.insert(name)
                 processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
                             membersByType: &membersByType, classMembersByType: &classMembersByType,
-                            isTypeRoot: false, isInit: false)
+                            usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: false)
             }
         }
         func processFunction(at index: inout Int, localNames: Set<String>, members: Set<String>,
                              typeStack: inout [String],
                              membersByType: inout [String: Set<String>],
-                             classMembersByType: inout [String: Set<String>])
+                             classMembersByType: inout [String: Set<String>],
+                             usingDynamicLookup: Bool)
         {
             let startToken = formatter.tokens[index]
             var localNames = localNames
@@ -3152,7 +3184,8 @@ public struct _FormatRules {
                 index = bodyStartIndex
                 processAccessors(["get", "set"], for: "", at: &index, localNames: localNames,
                                  members: members, typeStack: &typeStack, membersByType: &membersByType,
-                                 classMembersByType: &classMembersByType)
+                                 classMembersByType: &classMembersByType,
+                                 usingDynamicLookup: usingDynamicLookup)
                 return
             } else {
                 index = bodyStartIndex + 1
@@ -3162,6 +3195,7 @@ public struct _FormatRules {
                             typeStack: &typeStack,
                             membersByType: &membersByType,
                             classMembersByType: &classMembersByType,
+                            usingDynamicLookup: usingDynamicLookup,
                             isTypeRoot: false,
                             isInit: startToken == .keyword("init"))
             }
@@ -3170,9 +3204,9 @@ public struct _FormatRules {
         var membersByType = [String: Set<String>]()
         var classMembersByType = [String: Set<String>]()
         var index = 0
-        processBody(at: &index, localNames: ["init"], members: [], typeStack: &typeStack,
+        processBody(at: &index, localNames: [], members: [], typeStack: &typeStack,
                     membersByType: &membersByType, classMembersByType: &classMembersByType,
-                    isTypeRoot: false, isInit: false)
+                    usingDynamicLookup: false, isTypeRoot: false, isInit: false)
     }
 
     /// Replace unused arguments with an underscore

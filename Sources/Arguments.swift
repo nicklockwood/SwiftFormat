@@ -37,7 +37,9 @@ extension Options {
     init(_ args: [String: String], in directory: String) throws {
         fileOptions = try fileOptionsFor(args, in: directory)
         formatOptions = try formatOptionsFor(args)
-        rules = try rulesFor(args)
+        let lint = args.keys.contains("lint")
+        self.lint = lint
+        rules = try rulesFor(args, lint: lint)
     }
 
     mutating func addArguments(_ args: [String: String], in directory: String) throws {
@@ -486,6 +488,9 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             args[argumentName] = args[Descriptors.wrapArguments.argumentName]
         }
     }
+    if options.lint {
+        args["lint"] = ""
+    }
     if let rules = options.rules {
         let defaultRules = allRules.subtracting(FormatRules.disabledByDefault)
 
@@ -531,7 +536,7 @@ private func processOption(_ key: String,
 }
 
 // Parse rule names from arguments
-func rulesFor(_ args: [String: String]) throws -> Set<String> {
+func rulesFor(_ args: [String: String], lint: Bool) throws -> Set<String> {
     var rules = allRules
     rules = try args["rules"].map {
         try Set(parseRules($0))
@@ -543,7 +548,7 @@ func rulesFor(_ args: [String: String]) throws -> Set<String> {
         try rules.subtract(parseRules($0))
     }
     try args["lintonly"].map { rulesString in
-        if args.keys.contains("lint") {
+        if lint {
             try rules.formUnion(parseRules(rulesString))
         } else {
             try rules.subtract(parseRules(rulesString))
@@ -621,7 +626,7 @@ func warningsForArguments(_ args: [String: String]) -> [String] {
             warnings.append("\(name) rule is deprecated. \(message)")
         }
     }
-    if let rules = try? rulesFor(args) {
+    if let rules = try? rulesFor(args, lint: true) {
         for arg in args.keys where formattingArguments.contains(arg) {
             if !rules.contains(where: {
                 guard let rule = FormatRules.byName[$0] else {

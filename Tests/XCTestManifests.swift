@@ -468,6 +468,8 @@ extension RulesTests {
         ("testAddSpaceBetweenCaptureListAndArguments", testAddSpaceBetweenCaptureListAndArguments),
         ("testAddSpaceBetweenCaptureListAndArguments2", testAddSpaceBetweenCaptureListAndArguments2),
         ("testAddSpaceBetweenCaptureListAndArguments3", testAddSpaceBetweenCaptureListAndArguments3),
+        ("testAddSpaceBetweenCaptureListAndArguments4", testAddSpaceBetweenCaptureListAndArguments4),
+        ("testAddSpaceBetweenCaptureListAndArguments5", testAddSpaceBetweenCaptureListAndArguments5),
         ("testAddSpaceBetweenCaptureListAndParen", testAddSpaceBetweenCaptureListAndParen),
         ("testAddSpaceBetweenConventionAndBlock", testAddSpaceBetweenConventionAndBlock),
         ("testAddSpaceBetweenConventionAndEscaping", testAddSpaceBetweenConventionAndEscaping),

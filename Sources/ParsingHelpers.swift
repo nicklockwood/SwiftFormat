@@ -493,7 +493,8 @@ extension Formatter {
                 }
                 return isStartOfClosure(at: scopeIndex)
             case .startOfScope("("), .startOfScope("["), .startOfScope("<"),
-                 .endOfScope(")"), .endOfScope("]"), .endOfScope(">"):
+                 .endOfScope(")"), .endOfScope("]"), .endOfScope(">"),
+                 .keyword where token.isAttribute:
                 break
             case .keyword, .startOfScope, .endOfScope:
                 return false

@@ -2018,6 +2018,49 @@ extension RulesTests {
         )
     }
 
+    func testWrapReturnOnMultilineThrowingFunctionDeclarationWithAfterFirst() {
+        let input = """
+        func multilineFunction(foo _: String,
+                               bar _: String) throws -> String {}
+        """
+
+        let output = """
+        func multilineFunction(foo _: String,
+                               bar _: String) throws
+                               -> String {}
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .afterFirst,
+            closingParenOnSameLine: true,
+            wrapReturnType: .ifMultiline
+        )
+
+        testFormatting(
+            for: input, output, rule: FormatRules.wrapArguments, options: options,
+            exclude: ["indent"]
+        )
+    }
+
+    func testDoesntWrapReturnOnMultilineThrowingFunction() {
+        let input = """
+        func multilineFunction(foo _: String,
+                               bar _: String)
+                               throws -> String {}
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .afterFirst,
+            closingParenOnSameLine: true,
+            wrapReturnType: .ifMultiline
+        )
+
+        testFormatting(
+            for: input, rule: FormatRules.wrapArguments, options: options,
+            exclude: ["indent"]
+        )
+    }
+
     func testDoesntWrapReturnOnSingleLineFunctionDeclaration() {
         let input = """
         func multilineFunction(foo _: String, bar _: String) -> String {}
@@ -2040,6 +2083,28 @@ extension RulesTests {
             ]
 
             private func singleLine() -> String {}
+        }
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: true,
+            wrapReturnType: .ifMultiline
+        )
+
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testDoesntWrapReturnOnSingleLineFunctionDeclarationAfterMultilineMethodCall() {
+        let input = """
+        public final class Foo {
+            public var multiLineMethodCall = Foo.multiLineMethodCall(
+                bar: bar,
+                baaz: baaz)
+
+            func singleLine() -> String {
+                return "method body"
+            }
         }
         """
 

@@ -84,23 +84,19 @@ extension Formatter {
             startOfScope: Int,
             endOfFunctionScope: Int
         ) {
-            guard token(at: startOfScope) == .startOfScope("(") else {
-                return
-            }
-
             switch options.wrapReturnType {
             case .preserve:
                 break
             case .ifMultiline:
-                guard let openBracket = index(of: .startOfScope("{"), after: endOfFunctionScope),
+                guard token(at: startOfScope) == .startOfScope("("),
+                      let openBracket = index(of: .startOfScope, after: endOfFunctionScope),
+                      token(at: openBracket) == .startOfScope("{"),
                       let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
                       returnArrowIndex < openBracket
                 else { return }
 
-                // If the return arrow isnt on its own line, wrap it
-                if let previousNonSpaceOrComment = index(of: .nonSpaceOrComment, before: returnArrowIndex),
-                   startOfLine(at: returnArrowIndex) < previousNonSpaceOrComment
-                {
+                // If the return arrow is on the same line as the closing paren, wrap it
+                if startOfLine(at: endOfFunctionScope) == startOfLine(at: returnArrowIndex) {
                     insertSpace(indentForLine(at: returnArrowIndex), at: returnArrowIndex)
                     insertLinebreak(at: returnArrowIndex)
 

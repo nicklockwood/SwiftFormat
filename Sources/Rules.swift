@@ -2356,7 +2356,7 @@ public struct _FormatRules {
                     switch formatter.tokens[index] {
                     case .identifier("Codable"), .identifier("Decodable"):
                         return // Can't safely remove the default value
-                    case .keyword("struct"):
+                    case .keyword("struct") where formatter.options.swiftVersion < "5.2":
                         if formatter.index(of: .keyword("init"), after: scopeIndex) == nil {
                             return // Can't safely remove the default value
                         }

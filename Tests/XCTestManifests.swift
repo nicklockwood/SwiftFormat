@@ -1677,6 +1677,7 @@ extension RulesTests {
         ("testRemoveMultilineIsolatedGet", testRemoveMultilineIsolatedGet),
         ("testRemoveMultipleRedundantNilInitsInSameLine", testRemoveMultipleRedundantNilInitsInSameLine),
         ("testRemoveNilInitInStructWithCustomInit", testRemoveNilInitInStructWithCustomInit),
+        ("testRemoveNilInitInStructWithDefaultInitInSwiftVersion5_2", testRemoveNilInitInStructWithDefaultInitInSwiftVersion5_2),
         ("testRemoveNilInitWithObjcAttributes", testRemoveNilInitWithObjcAttributes),
         ("testRemoveRedundantBackticksInLet", testRemoveRedundantBackticksInLet),
         ("testRemoveRedundantEmptyReturnType", testRemoveRedundantEmptyReturnType),

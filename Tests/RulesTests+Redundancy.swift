@@ -1187,6 +1187,21 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantNilInit)
     }
 
+    func testRemoveNilInitInStructWithDefaultInitInSwiftVersion5_2() {
+        let input = """
+        struct Foo {
+            var bar: String? = nil
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar: String?
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantNilInit,
+                       options: FormatOptions(swiftVersion: "5.2"))
+    }
+
     func testRemoveNilInitInStructWithCustomInit() {
         let input = """
         struct Foo {

@@ -3759,7 +3759,12 @@ public struct _FormatRules {
                     formatter.removeTokens(in: prevIndex + 1 ..< nextIndex)
                 }
             } else if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-                      [.operator(".", .prefix), .operator(".", .infix), .keyword("typealias")].contains(prevToken)
+                      [.operator(".", .prefix), .operator(".", .infix),
+                       .keyword("typealias")].contains(prevToken)
+            {
+                return
+            } else if formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) ==
+                .operator(".", .infix)
             {
                 return
             } else {

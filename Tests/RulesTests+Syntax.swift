@@ -276,6 +276,18 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.void, options: options)
     }
 
+    func testNoConvertVoidSelfToTuple() {
+        let input = "Void.self"
+        let options = FormatOptions(useVoid: false)
+        testFormatting(for: input, rule: FormatRules.void, options: options)
+    }
+
+    func testNoConvertVoidTypeToTuple() {
+        let input = "Void.Type"
+        let options = FormatOptions(useVoid: false)
+        testFormatting(for: input, rule: FormatRules.void, options: options)
+    }
+
     // MARK: - trailingClosures
 
     func testAnonymousClosureArgumentMadeTrailing() {

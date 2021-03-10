@@ -1134,6 +1134,8 @@ extension RulesTests {
         ("testNoConfuseCaseWithModifier", testNoConfuseCaseWithModifier),
         ("testNoConfusePostfixIdentifierWithKeyword", testNoConfusePostfixIdentifierWithKeyword),
         ("testNoConfusePostfixIdentifierWithKeyword2", testNoConfusePostfixIdentifierWithKeyword2),
+        ("testNoConvertVoidSelfToTuple", testNoConvertVoidSelfToTuple),
+        ("testNoConvertVoidTypeToTuple", testNoConvertVoidTypeToTuple),
         ("testNoCrashWrap", testNoCrashWrap),
         ("testNoCrashWrap2", testNoCrashWrap2),
         ("testNoCrashWrap3", testNoCrashWrap3),

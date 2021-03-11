@@ -567,6 +567,25 @@ extension RulesTests {
                        exclude: ["wrapSwitchCases", "sortedSwitchCases"])
     }
 
+    func testHoistNewlineSeparatedSwitchCaseLets() {
+        let input = """
+        switch foo {
+        case .foo(let bar),
+             .bar(let bar):
+        }
+        """
+
+        let output = """
+        switch foo {
+        case let .foo(bar),
+             let .bar(bar):
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet,
+                       exclude: ["wrapSwitchCases", "sortedSwitchCases"])
+    }
+
     func testHoistCatchLet() {
         let input = "do {} catch Foo.foo(bar: let bar) {}"
         let output = "do {} catch let Foo.foo(bar: bar) {}"

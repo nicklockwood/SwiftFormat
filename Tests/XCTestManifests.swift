@@ -868,6 +868,7 @@ extension RulesTests {
         ("testHoistIfSecondArgIsUnderscore", testHoistIfSecondArgIsUnderscore),
         ("testHoistLabelledCaseLet", testHoistLabelledCaseLet),
         ("testHoistLetWithNoSpaceAfterCase", testHoistLetWithNoSpaceAfterCase),
+        ("testHoistNewlineSeparatedSwitchCaseLets", testHoistNewlineSeparatedSwitchCaseLets),
         ("testHoistSwitchCaseWithNestedParens", testHoistSwitchCaseWithNestedParens),
         ("testHoistWrappedGuardCaseLet", testHoistWrappedGuardCaseLet),
         ("testIfAfterSwitchCaseNotWrapped", testIfAfterSwitchCaseNotWrapped),

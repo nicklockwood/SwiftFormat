@@ -579,6 +579,25 @@ extension RulesTests {
                        exclude: ["wrapSwitchCases", "sortedSwitchCases"])
     }
 
+    func testHoistNewlineSeparatedSwitchCaseLets() {
+        let input = """
+        switch foo {
+        case .foo(let bar),
+             .bar(let bar):
+        }
+        """
+
+        let output = """
+        switch foo {
+        case let .foo(bar),
+             let .bar(bar):
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet,
+                       exclude: ["wrapSwitchCases", "sortedSwitchCases"])
+    }
+
     func testHoistCatchLet() {
         let input = "do {} catch Foo.foo(bar: let bar) {}"
         let output = "do {} catch let Foo.foo(bar: bar) {}"
@@ -595,7 +614,7 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.hoistPatternLet, exclude: ["trailingClosures"])
     }
 
-    // TODO: this could actually hoist the let, but that's tricky to implement without
+    // TODO: this should actually hoist the let, but that's tricky to implement without
     // breaking the `testNoOverHoistSwitchCaseWithNestedParens` case
     func testHoistSwitchCaseWithNestedParens() {
         let input = "import Foo\nswitch (foo, bar) {\ncase (.baz(let quux), Foo.bar): break\n}"
@@ -796,6 +815,24 @@ extension RulesTests {
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, rule: FormatRules.hoistPatternLet, options: options,
                        exclude: ["redundantParens"])
+    }
+
+    func testNoDeleteCommentWhenUnhoistingWrappedLet() {
+        let input = """
+        switch foo {
+        case /* next */ let .bar(bar):
+        }
+        """
+
+        let output = """
+        switch foo {
+        case /* next */ .bar(let bar):
+        }
+        """
+
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet,
+                       options: options, exclude: ["wrapSwitchCases", "sortedSwitchCases"])
     }
 
     // MARK: - enumNamespaces

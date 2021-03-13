@@ -3426,7 +3426,8 @@ public struct _FormatRules {
             guard let endIndex = formatter.index(of: .endOfScope(")"), after: i),
                   let prevIndex = formatter.index(before: i, where: {
                       switch $0 {
-                      case .operator(".", _), .keyword("let"), .keyword("var"):
+                      case .operator(".", _), .keyword("let"), .keyword("var"),
+                           .endOfScope("*/"):
                           return false
                       case .endOfScope, .delimiter, .operator, .keyword:
                           return true
@@ -3457,9 +3458,10 @@ public struct _FormatRules {
             default:
                 return
             }
-            let startIndex = prevIndex + 1
-            if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: prevIndex),
-               case let .keyword(keyword) = formatter.tokens[nextIndex], ["let", "var"].contains(keyword)
+            let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: prevIndex)
+                ?? (prevIndex + 1)
+            if case let .keyword(keyword) = formatter.tokens[startIndex],
+               ["let", "var"].contains(keyword)
             {
                 if hoist {
                     // No changes needed
@@ -3492,7 +3494,8 @@ public struct _FormatRules {
                     formatter.insert([.keyword(keyword), .space(" ")], at: index)
                 }
                 // Remove keyword
-                let range = startIndex ... nextIndex
+                let range = ((formatter.index(of: .nonSpace, before: startIndex) ??
+                        (prevIndex - 1)) + 1) ... startIndex
                 formatter.removeTokens(in: range)
             } else if hoist {
                 // Find let/var keyword indices

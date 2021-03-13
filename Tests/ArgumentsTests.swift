@@ -722,4 +722,32 @@ class ArgumentsTests: XCTestCase {
             XCTAssert("\(error)".contains("'sortedImports'"))
         }
     }
+
+    // MARK: lintonly
+
+    func testLintonlyRulesContain() throws {
+        let options = try Options(["lint": "", "lintonly": "wrapEnumCases"], in: "")
+        XCTAssert(options.rules?.contains("wrapEnumCases") == true)
+        let arguments = argumentsFor(options)
+        XCTAssertEqual(arguments, ["lint": "", "enable": "wrapEnumCases"])
+    }
+
+    func testLintonlyRulesDontContain() throws {
+        let options = try Options(["lintonly": "unusedArguments"], in: "")
+        XCTAssert(options.rules?.contains("unusedArguments") == false)
+        let arguments = argumentsFor(options)
+        XCTAssertEqual(arguments, ["disable": "unusedArguments"])
+    }
+
+    func testLintonlyMergeOptionsAdd() throws {
+        var options = try Options(["lint": "", "disable": "unusedArguments"], in: "")
+        try options.addArguments(["lintonly": "unusedArguments"], in: "")
+        XCTAssert(options.rules?.contains("unusedArguments") == true)
+    }
+
+    func testLintonlyMergeOptionsRemove() throws {
+        var options = try Options(["enable": "wrapEnumCases"], in: "")
+        try options.addArguments(["lintonly": "wrapEnumCases"], in: "")
+        XCTAssert(options.rules?.contains("wrapEnumCases") == false)
+    }
 }

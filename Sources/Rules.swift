@@ -1511,7 +1511,8 @@ public struct _FormatRules {
                     } else {
                         if formatter.options.xcodeIndentation,
                            formatter.next(.nonSpace, after: i) == .operator(".", .infix),
-                           let startIndex = formatter.index(of: .nonSpace, after: formatter.startOfLine(at: i - 1)),
+                           let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                           let startIndex = formatter.index(of: .nonSpace, after: formatter.startOfLine(at: prevIndex) - 1),
                            formatter.isStartOfStatement(at: startIndex)
                         {
                             indent += formatter.options.indent

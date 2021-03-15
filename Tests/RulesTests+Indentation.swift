@@ -1022,6 +1022,25 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
+    func testChainedClosureIndentsSeparatedByComments() {
+        let input = """
+        foo {
+            doFoo()
+        }
+        // bar
+        .bar {
+            doBar()
+        }
+        // baz
+        .baz {
+            doBaz($0)
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["blankLinesBetweenScopes"])
+    }
+
     func testWrappedClosureIndentAfterAssignment() {
         let input = """
         let bar =

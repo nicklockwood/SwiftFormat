@@ -1125,6 +1125,7 @@ extension RulesTests {
         ("testNoBlankLineAfterCalledClosureAtEndOfScope", testNoBlankLineAfterCalledClosureAtEndOfScope),
         ("testNoBlankLineBeforeFuncAsIdentifier", testNoBlankLineBeforeFuncAsIdentifier),
         ("testNoBlankLineBeforeWhileInRepeatWhile", testNoBlankLineBeforeWhileInRepeatWhile),
+        ("testNoBlankLineBetweenChainedClosureIndents", testNoBlankLineBetweenChainedClosureIndents),
         ("testNoBlankLineBetweenFunctionsInProtocol", testNoBlankLineBetweenFunctionsInProtocol),
         ("testNoBlankLineBetweenFunctionsWithInlineBody", testNoBlankLineBetweenFunctionsWithInlineBody),
         ("testNoBlankLineBetweenIfStatements", testNoBlankLineBetweenIfStatements),

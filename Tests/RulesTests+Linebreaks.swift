@@ -318,6 +318,23 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
     }
 
+    func testNoBlankLineBetweenChainedClosureIndents() {
+        let input = """
+        foo {
+            doFoo()
+        }
+        // bar
+        .bar {
+            doBar()
+        }
+        // baz
+        .baz {
+            doBaz($0)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+    }
+
     // MARK: - blankLinesAroundMark
 
     func testInsertBlankLinesAroundMark() {

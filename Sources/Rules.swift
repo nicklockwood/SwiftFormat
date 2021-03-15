@@ -951,7 +951,7 @@ public struct _FormatRules {
         var spaceableScopeStack = [true]
         var isSpaceableScopeType = false
         formatter.forEachToken(onlyWhereEnabled: false) { i, token in
-            switch token {
+            outer: switch token {
             case .keyword("class"),
                  .keyword("struct"),
                  .keyword("extension"),
@@ -987,18 +987,26 @@ public struct _FormatRules {
                 else {
                     break
                 }
-                switch formatter.tokens[nextTokenIndex] {
-                case .error, .endOfScope,
-                     .operator(".", _), .delimiter(","), .delimiter(":"),
-                     .keyword("else"), .keyword("catch"), .keyword("#else"):
-                    break
-                case .keyword("while"):
-                    if let previousBraceIndex = formatter.index(of: .startOfScope("{"), before: i),
-                       formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousBraceIndex)
-                       != .keyword("repeat")
-                    {
-                        formatter.insertLinebreak(at: firstLinebreakIndex)
+                if let nextNonCommentIndex =
+                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+                {
+                    switch formatter.tokens[nextNonCommentIndex] {
+                    case .error, .endOfScope,
+                         .operator(".", _), .delimiter(","), .delimiter(":"),
+                         .keyword("else"), .keyword("catch"), .keyword("#else"):
+                        break outer
+                    case .keyword("while"):
+                        if let previousBraceIndex = formatter.index(of: .startOfScope("{"), before: i),
+                           formatter.last(.nonSpaceOrCommentOrLinebreak, before: previousBraceIndex)
+                           == .keyword("repeat")
+                        {
+                            break outer
+                        }
+                    default:
+                        break
                     }
+                }
+                switch formatter.tokens[nextTokenIndex] {
                 case .startOfScope("//"):
                     if case let .commentBody(body)? = formatter.next(.nonSpace, after: nextTokenIndex),
                        body.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("sourcery:")

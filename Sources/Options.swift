@@ -569,19 +569,23 @@ public struct Options {
     public var fileOptions: FileOptions?
     public var formatOptions: FormatOptions?
     public var rules: Set<String>?
+    public var lint: Bool
 
     public static let `default` = Options(
         fileOptions: .default,
         formatOptions: .default,
-        rules: Set(FormatRules.byName.keys).subtracting(FormatRules.disabledByDefault)
+        rules: Set(FormatRules.byName.keys).subtracting(FormatRules.disabledByDefault),
+        lint: false
     )
 
     public init(fileOptions: FileOptions? = nil,
                 formatOptions: FormatOptions? = nil,
-                rules: Set<String>? = nil)
+                rules: Set<String>? = nil,
+                lint: Bool = false)
     {
         self.fileOptions = fileOptions
         self.formatOptions = formatOptions
         self.rules = rules
+        self.lint = lint
     }
 }

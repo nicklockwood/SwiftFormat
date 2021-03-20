@@ -273,12 +273,22 @@ class RulesTests: XCTestCase {
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration() {
-        let input = "var: [\n    Int:\n        String\n]"
+        let input = """
+        var: [
+            Int:
+                String
+        ]
+        """
         testFormatting(for: input, rule: FormatRules.trailingCommas)
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration2() {
-        let input = "func foo(bar: [\n    Int:\n        String\n])"
+        let input = """
+        func foo(bar: [
+            Int:
+                String
+        ])
+        """
         testFormatting(for: input, rule: FormatRules.trailingCommas)
     }
 
@@ -287,6 +297,46 @@ class RulesTests: XCTestCase {
         func foo() -> [
             String: String
         ]
+        """
+        testFormatting(for: input, rule: FormatRules.trailingCommas)
+    }
+
+    func testTrailingCommaNotAddedToTypeDeclaration4() {
+        let input = """
+        func foo() -> [String: [
+            String: Int
+        ]]
+        """
+        testFormatting(for: input, rule: FormatRules.trailingCommas)
+    }
+
+    func testTrailingCommaNotAddedToTypeDeclaration5() {
+        let input = """
+        let foo = [String: [
+            String: Int
+        ]]()
+        """
+        testFormatting(for: input, rule: FormatRules.trailingCommas)
+    }
+
+    func testTrailingCommaNotAddedToTypeDeclaration6() {
+        let input = """
+        let foo = [String: [
+            (Foo<[
+                String
+            ]>, [
+                Int
+            ])
+        ]]()
+        """
+        testFormatting(for: input, rule: FormatRules.trailingCommas)
+    }
+
+    func testTrailingCommaNotAddedToTypeDeclaration7() {
+        let input = """
+        func foo() -> Foo<[String: [
+            String: Int
+        ]]>
         """
         testFormatting(for: input, rule: FormatRules.trailingCommas)
     }

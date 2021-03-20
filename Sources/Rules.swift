@@ -1862,7 +1862,25 @@ public struct _FormatRules {
             guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else {
                 return
             }
-            if let startIndex = formatter.index(of: .startOfScope("["), before: i),
+            var endIndex = i
+            var index = i
+            loop: while let _index = formatter.index(of: .endOfScope, after: index) {
+                switch formatter.tokens[_index] {
+                case .endOfScope("}"):
+                    break loop
+                case .endOfScope(">"):
+                    return
+                case .endOfScope("]"):
+                    endIndex = _index
+                    fallthrough
+                default:
+                    index = _index
+                }
+            }
+            if formatter.next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") {
+                return
+            }
+            if let startIndex = formatter.index(of: .startOfScope("["), before: endIndex),
                let prevToken = formatter.last(.nonSpaceOrComment, before: startIndex)
             {
                 switch prevToken {

@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.47.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.13) (2020-03-21)
+
+- Fixed bug where `--wrapreturntype if-multiline` would unexpectedly wrap a single-line method
+- Multiline chained functions are now indented correctly when using `--xcodeindentation`
+- Blank lines are no longer inserted between multiline chained functions separated by comments
+- Fixed bug in `hoistPatternLet` rule where `let` would be placed on the wrong line
+- Fixed bug where `Void.self` would incorrectly be converted to `().self`
+- Fixed incorrect spacing of closure arguments containing attributes
+- Trailing commas are no longer incorrectly inserted inside wrapped type signatures
+- Added `--lintonly` argument to specify rules that should only be applied in `--lint` mode
+
 ## [0.47.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.12) (2020-02-23)
 
 - Fixed indenting of `switch` cases inside `#if`/`#endif` clauses 

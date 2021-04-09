@@ -1630,6 +1630,77 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantReturn)
     }
 
+    func testNoRemoveReturnInForWhereLoop() {
+        let input = """
+        func foo() -> Bool {
+            for bar in baz where !bar {
+                return false
+            }
+            return true
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testRedundantReturnInVoidFunction() {
+        let input = """
+        func foo() {
+            return
+        }
+        """
+        let output = """
+        func foo() {
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn,
+                       exclude: ["emptyBraces"])
+    }
+
+    func testRedundantReturnInVoidFunction2() {
+        let input = """
+        func foo() {
+            print("")
+            return
+        }
+        """
+        let output = """
+        func foo() {
+            print("")
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn)
+    }
+
+    func testRedundantReturnInVoidFunction3() {
+        let input = """
+        func foo() {
+            // empty
+            return
+        }
+        """
+        let output = """
+        func foo() {
+            // empty
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn)
+    }
+
+    func testRedundantReturnInVoidFunction4() {
+        let input = """
+        func foo() {
+            return // empty
+        }
+        """
+        let output = """
+        func foo() {
+            // empty
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn)
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

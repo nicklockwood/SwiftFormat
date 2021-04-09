@@ -2553,7 +2553,7 @@ public struct _FormatRules {
         }
     }
 
-    /// Remove redundant return keyword from single-line closures
+    /// Remove redundant return keyword
     public let redundantReturn = FormatRule(
         help: "Remove unneeded `return` keyword."
     ) { formatter in
@@ -2584,8 +2584,10 @@ public struct _FormatRules {
                     }
                 }
                 let prevToken = formatter.tokens[prevIndex]
-                guard ![.delimiter(":"), .startOfScope("(")].contains(prevToken), var prevKeywordIndex =
-                    formatter.indexOfLastSignificantKeyword(at: startIndex, excluding: ["where"])
+                guard ![.delimiter(":"), .startOfScope("(")].contains(prevToken),
+                      var prevKeywordIndex = formatter.indexOfLastSignificantKeyword(
+                          at: startIndex, excluding: ["where"]
+                      )
                 else {
                     break
                 }
@@ -2597,17 +2599,34 @@ public struct _FormatRules {
                     else {
                         return
                     }
-                case "func", "throws", "rethrows", "init", "subscript":
-                    if formatter.options.swiftVersion < "5.1" {
+                case "func", "throws", "rethrows", "async", "init", "subscript":
+                    if formatter.options.swiftVersion < "5.1",
+                       formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .endOfScope("}")
+                    {
                         return
                     }
                 default:
                     return
                 }
             default:
-                return
+                guard let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                    $0 == .endOfScope("}")
+                }), let startIndex = formatter.index(of: .startOfScope("{"), before: endIndex) else {
+                    return
+                }
+                if !formatter.isStartOfClosure(at: startIndex), !["func", "throws", "rethrows", "async"]
+                    .contains(formatter.lastSignificantKeyword(at: startIndex, excluding: ["where"]) ?? "")
+                {
+                    return
+                }
             }
             if formatter.index(of: .keyword("return"), after: i) != nil {
+                return
+            }
+            if formatter.next(.nonSpaceOrLinebreak, after: i) == .endOfScope("}"),
+               let startIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i)
+            {
+                formatter.removeTokens(in: startIndex + 1 ... i)
                 return
             }
             formatter.removeToken(at: i)

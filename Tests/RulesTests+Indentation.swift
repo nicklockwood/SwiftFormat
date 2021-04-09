@@ -253,7 +253,8 @@ extension RulesTests {
             }
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["redundantReturn"])
     }
 
     func testNoDoubleIndentClosureArguments() {

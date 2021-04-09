@@ -2185,27 +2185,30 @@ public struct _FormatRules {
                 closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
                 innerParens = nestedParens(in: i ... closingIndex)
             }
+            let isClosure: Bool
             let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) ?? .space("")
-            if [.operator("->", .infix), .keyword("throws"), .keyword("rethrows"),
-                .keyword("async"), .identifier("async")].contains(nextToken)
+            if [.operator("->", .infix), .keyword("throws"), .keyword("rethrows"), .keyword("async"),
+                .identifier("async"), .keyword("in")].contains(nextToken)
             {
-                return // It's a closure type or function declaration
+                guard let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
+                    return
+                }
+                isClosure = formatter.tokens[prevIndex] == .endOfScope("]") ||
+                    formatter.isStartOfClosure(at: prevIndex)
+                if !isClosure, nextToken != .keyword("in") {
+                    return // It's a closure type or function declaration
+                }
+            } else {
+                isClosure = false
             }
             let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
             let token = formatter.token(at: previousIndex) ?? .space("")
             switch token {
-            case .endOfScope("]") where formatter.isInClosureArguments(at: previousIndex), .startOfScope("{"):
-                guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) == .keyword("in"),
-                      formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex,
-                      formatter.index(of: .delimiter(":"), in: i + 1 ..< closingIndex) == nil
-                else {
-                    // Not a closure
-                    if formatter.last(.nonSpaceOrComment, before: i) == .endOfScope("]") {
-                        return
-                    }
-                    fallthrough
-                }
-                if formatter.tokens[i + 1 ..< closingIndex].contains(.identifier("self")) {
+            case _ where isClosure:
+                if formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) == closingIndex ||
+                    formatter.index(of: .delimiter(":"), in: i + 1 ..< closingIndex) != nil ||
+                    formatter.tokens[i + 1 ..< closingIndex].contains(.identifier("self"))
+                {
                     return
                 }
                 if let index = formatter.tokens[i + 1 ..< closingIndex].index(of: .identifier("_")),

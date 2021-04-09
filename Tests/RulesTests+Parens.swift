@@ -279,7 +279,8 @@ extension RulesTests {
 
     func testRedundantParensRemovedInsideClosure() {
         let input = "{ (foo) + bar }"
-        testFormatting(for: input, rule: FormatRules.redundantParens)
+        let output = "{ foo + bar }"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
     }
 
     func testSpaceInsertedWhenRemovingParens() {
@@ -368,6 +369,12 @@ extension RulesTests {
     func testSingleClosureArgumentUnwrapped() {
         let input = "{ (foo) in }"
         let output = "{ foo in }"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens, exclude: ["unusedArguments"])
+    }
+
+    func testSingleClosureArgumentWithReturnValueUnwrapped() {
+        let input = "{ (foo) -> Int in 5 }"
+        let output = "{ foo -> Int in 5 }"
         testFormatting(for: input, output, rule: FormatRules.redundantParens, exclude: ["unusedArguments"])
     }
 

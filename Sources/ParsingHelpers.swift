@@ -366,8 +366,9 @@ extension Formatter {
     }
 
     func isStartOfClosure(at i: Int, in _: Token? = nil) -> Bool {
-        assert(tokens[i] == .startOfScope("{"))
-
+        guard token(at: i) == .startOfScope("{") else {
+            return false
+        }
         if isConditionalStatement(at: i) {
             if let endIndex = endOfScope(at: i),
                next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") ||

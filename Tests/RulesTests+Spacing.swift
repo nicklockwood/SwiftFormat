@@ -1269,14 +1269,12 @@ extension RulesTests {
     func testLinebreaksRemovedInsideBraces() {
         let input = "func foo() {\n  \n }"
         let output = "func foo() {}"
-        let options = FormatOptions(fragment: true)
-        testFormatting(for: input, output, rule: FormatRules.emptyBraces, options: options)
+        testFormatting(for: input, output, rule: FormatRules.emptyBraces)
     }
 
     func testCommentNotRemovedInsideBraces() {
         let input = "func foo() { // foo\n}"
-        let options = FormatOptions(fragment: true)
-        testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+        testFormatting(for: input, rule: FormatRules.emptyBraces)
     }
 
     func testEmptyBracesNotRemovedInDoCatch() {
@@ -1285,18 +1283,16 @@ extension RulesTests {
         } catch is FooError {
         } catch {}
         """
-        let options = FormatOptions(fragment: true)
-        testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+        testFormatting(for: input, rule: FormatRules.emptyBraces)
     }
 
     func testEmptyBracesNotRemovedInIfElse() {
         let input = """
-        if {
+        if bar {
         } else if foo {
         } else {}
         """
-        let options = FormatOptions(fragment: true)
-        testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+        testFormatting(for: input, rule: FormatRules.emptyBraces)
     }
 
     func testSpaceRemovedInsideEmptybraces() {
@@ -1308,40 +1304,64 @@ extension RulesTests {
     func testSpaceAddedInsideEmptyBracesWithSpacedConfiguration() {
         let input = "foo {}"
         let output = "foo { }"
-        let options = FormatOptions(emptyBracesSpacingBehavior: .spaced)
+        let options = FormatOptions(emptyBracesSpacing: .spaced)
         testFormatting(for: input, output, rule: FormatRules.emptyBraces, options: options)
     }
 
     func testLinebreaksRemovedInsideBracesWithSpacedConfiguration() {
         let input = "func foo() {\n  \n }"
         let output = "func foo() { }"
-        let options = FormatOptions(emptyBracesSpacingBehavior: .spaced, fragment: true)
+        let options = FormatOptions(emptyBracesSpacing: .spaced)
         testFormatting(for: input, output, rule: FormatRules.emptyBraces, options: options)
     }
 
     func testCommentNotRemovedInsideBracesWithSpacedConfiguration() {
         let input = "func foo() { // foo\n}"
-        let options = FormatOptions(emptyBracesSpacingBehavior: .spaced, fragment: true)
+        let options = FormatOptions(emptyBracesSpacing: .spaced)
         testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
     }
 
-    func testEmptyBracesNotRemovedInDoCatchWithSpacedConfiguration() {
+    func testEmptyBracesSpaceNotRemovedInDoCatchWithSpacedConfiguration() {
         let input = """
         do {
         } catch is FooError {
         } catch { }
         """
-        let options = FormatOptions(emptyBracesSpacingBehavior: .spaced, fragment: true)
+        let options = FormatOptions(emptyBracesSpacing: .spaced)
         testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
     }
 
-    func testEmptyBracesNotRemovedInIfElseWithSpacedConfiguration() {
+    func testEmptyBracesSpaceNotRemovedInIfElseWithSpacedConfiguration() {
         let input = """
-        if {
+        if bar {
         } else if foo {
         } else { }
         """
-        let options = FormatOptions(emptyBracesSpacingBehavior: .spaced, fragment: true)
+        let options = FormatOptions(emptyBracesSpacing: .spaced)
+        testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+    }
+
+    func testEmptyBracesLinebreakNotRemovedInIfElseWithLinebreakConfiguration() {
+        let input = """
+        if bar {
+        } else if foo {
+        } else {
+        }
+        """
+        let options = FormatOptions(emptyBracesSpacing: .linebreak)
+        testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+    }
+
+    func testEmptyBracesLinebreakIndentedCorrectly() {
+        let input = """
+        func foo() {
+            if bar {
+            } else if foo {
+            } else {
+            }
+        }
+        """
+        let options = FormatOptions(emptyBracesSpacing: .linebreak)
         testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
     }
 }

@@ -425,7 +425,7 @@ Remove whitespace inside empty braces.
 
 Option | Description
 --- | ---
-`--emptybraces` | Spacing inside empty braces, "no-space" (default) or "spaced"
+`--emptybraces` | Empty braces: "no-space" (default), "spaced" or "linebreak"
 
 <details>
 <summary>Examples</summary>

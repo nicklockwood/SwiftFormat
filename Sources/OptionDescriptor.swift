@@ -810,11 +810,11 @@ struct _Descriptors {
         help: "Keep \"inferred\" (default) or \"explicit\" type annotation",
         keyPath: \.redundantType
     )
-    let emptyBracesSpacingBehavior = OptionDescriptor(
+    let emptyBracesSpacing = OptionDescriptor(
         argumentName: "emptybraces",
         displayName: "Empty Braces",
-        help: "Spacing inside empty braces, \"no-space\" (default) or \"spaced\"",
-        keyPath: \.emptyBracesSpacingBehavior
+        help: "Empty braces: \"no-space\" (default), \"spaced\" or \"linebreak\"",
+        keyPath: \.emptyBracesSpacing
     )
 
     // MARK: - Internal

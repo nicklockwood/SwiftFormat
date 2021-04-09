@@ -4230,7 +4230,8 @@ public struct _FormatRules {
     /// Remove white-space between empty braces
     public let emptyBraces = FormatRule(
         help: "Remove whitespace inside empty braces.",
-        options: ["emptybraces"]
+        options: ["emptybraces"],
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard let closingIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
@@ -4243,11 +4244,15 @@ public struct _FormatRules {
             {
                 return
             }
-            switch formatter.options.emptyBracesSpacingBehavior {
+            let range = i + 1 ..< closingIndex
+            switch formatter.options.emptyBracesSpacing {
             case .noSpace:
-                formatter.removeTokens(in: i + 1 ..< closingIndex)
+                formatter.removeTokens(in: range)
             case .spaced:
-                formatter.replaceTokens(in: i + 1 ..< closingIndex, with: .space(" "))
+                formatter.replaceTokens(in: range, with: .space(" "))
+            case .linebreak:
+                formatter.insertSpace(formatter.indentForLine(at: i), at: range.endIndex)
+                formatter.replaceTokens(in: range, with: formatter.linebreakToken(for: i + 1))
             }
         }
     }

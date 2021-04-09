@@ -117,9 +117,10 @@ public enum RedundantType: String, CaseIterable {
 }
 
 /// Argument type for empty brace spacing behavior
-public enum EmptyBracesSpacingBehavior: String, CaseIterable {
+public enum EmptyBracesSpacing: String, CaseIterable {
     case spaced
     case noSpace = "no-space"
+    case linebreak
 }
 
 /// Version number wrapper
@@ -367,7 +368,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
     public var redundantType: RedundantType
-    public var emptyBracesSpacingBehavior: EmptyBracesSpacingBehavior
+    public var emptyBracesSpacing: EmptyBracesSpacing
 
     // Deprecated
     public var indentComments: Bool
@@ -447,7 +448,7 @@ public struct FormatOptions: CustomStringConvertible {
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 redundantType: RedundantType = .inferred,
-                emptyBracesSpacingBehavior: EmptyBracesSpacingBehavior = .noSpace,
+                emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -521,7 +522,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
         self.redundantType = redundantType
-        self.emptyBracesSpacingBehavior = emptyBracesSpacingBehavior
+        self.emptyBracesSpacing = emptyBracesSpacing
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

@@ -171,8 +171,11 @@ public class Formatter: NSObject {
         public let rule: FormatRule
         public let filePath: String?
 
+        public var help: String {
+            return stripMarkdown(rule.help).replacingOccurrences(of: "\n", with: " ")
+        }
+
         public var description: String {
-            let help = stripMarkdown(rule.help).replacingOccurrences(of: "\n", with: " ")
             return "\(filePath ?? ""):\(line):1: warning: (\(rule.name)) \(help)"
         }
     }

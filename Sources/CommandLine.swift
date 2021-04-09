@@ -289,6 +289,14 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             print("warning: \(warning)", as: .warning)
         }
 
+        // JSON output
+        let jsonReporter: JSONReporter?
+        if let jsonOutput = args["json-output"] {
+            jsonReporter = JSONReporter(outputURL: URL(fileURLWithPath: jsonOutput))
+        } else {
+            jsonReporter = nil
+        }
+
         // Show help
         if args["help"] != nil {
             printHelp(as: .content)
@@ -622,7 +630,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                         }
                     }
                     let output = try applyRules(input, options: options, lineRange: lineRange,
-                                                verbose: verbose, lint: lint)
+                                                verbose: verbose, lint: lint, jsonReporter: jsonReporter)
                     if let outputURL = outputURL, !useStdout {
                         if (try? String(contentsOf: outputURL)) != output, !dryrun {
                             do {
@@ -690,7 +698,8 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                                                   verbose: verbose,
                                                   dryrun: dryrun,
                                                   lint: lint,
-                                                  cacheURL: cacheURL)
+                                                  cacheURL: cacheURL,
+                                                  jsonReporter: jsonReporter)
             errors += _errors
         })
 
@@ -702,6 +711,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             print("warning: No eligible files found at \(inputPaths).", as: .warning)
         }
         print("SwiftFormat completed in \(time).", as: .success)
+        try jsonReporter?.write()
         return printResult(dryrun, lint, lenient, outputFlags)
     } catch {
         _ = printWarnings(errors)
@@ -776,7 +786,7 @@ func computeHash(_ source: String) -> String {
 }
 
 func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?,
-                verbose: Bool, lint: Bool) throws -> String
+                verbose: Bool, lint: Bool, jsonReporter: JSONReporter?) throws -> String
 {
     // Parse source
     var tokens = tokenize(source)
@@ -801,6 +811,7 @@ func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?
     let updatedSource = sourceCode(for: tokens)
     if lint, updatedSource != source {
         changes.forEach { print($0.description, as: .warning) }
+        jsonReporter?.report(changes)
     }
     if verbose {
         let rulesApplied = changes.reduce(into: Set<String>()) {
@@ -826,7 +837,8 @@ func processInput(_ inputURLs: [URL],
                   verbose: Bool,
                   dryrun: Bool,
                   lint: Bool,
-                  cacheURL: URL?) -> (OutputFlags, [Error])
+                  cacheURL: URL?,
+                  jsonReporter: JSONReporter?) -> (OutputFlags, [Error])
 {
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
@@ -913,7 +925,7 @@ func processInput(_ inputURLs: [URL],
                     }
                 } else {
                     output = try applyRules(input, options: options, lineRange: lineRange,
-                                            verbose: verbose, lint: lint)
+                                            verbose: verbose, lint: lint, jsonReporter: jsonReporter)
                     if output != input {
                         sourceHash = nil
                     }

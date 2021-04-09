@@ -1304,4 +1304,44 @@ extension RulesTests {
         let output = "foo {}"
         testFormatting(for: input, output, rule: FormatRules.emptyBraces)
     }
+
+    func testSpaceAddedInsideEmptyBracesWithSpacedConfiguration() {
+        let input = "foo {}"
+        let output = "foo { }"
+        let options = FormatOptions(emptyBracesSpacingBehavior: .spaced)
+        testFormatting(for: input, output, rule: FormatRules.emptyBraces, options: options)
+    }
+
+    func testLinebreaksRemovedInsideBracesWithSpacedConfiguration() {
+        let input = "func foo() {\n  \n }"
+        let output = "func foo() { }"
+        let options = FormatOptions(emptyBracesSpacingBehavior: .spaced, fragment: true)
+        testFormatting(for: input, output, rule: FormatRules.emptyBraces, options: options)
+    }
+
+    func testCommentNotRemovedInsideBracesWithSpacedConfiguration() {
+        let input = "func foo() { // foo\n}"
+        let options = FormatOptions(emptyBracesSpacingBehavior: .spaced, fragment: true)
+        testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+    }
+
+    func testEmptyBracesNotRemovedInDoCatchWithSpacedConfiguration() {
+        let input = """
+        do {
+        } catch is FooError {
+        } catch { }
+        """
+        let options = FormatOptions(emptyBracesSpacingBehavior: .spaced, fragment: true)
+        testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+    }
+
+    func testEmptyBracesNotRemovedInIfElseWithSpacedConfiguration() {
+        let input = """
+        if {
+        } else if foo {
+        } else { }
+        """
+        let options = FormatOptions(emptyBracesSpacingBehavior: .spaced, fragment: true)
+        testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
+    }
 }

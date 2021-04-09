@@ -423,6 +423,10 @@ Option | Description
 
 Remove whitespace inside empty braces.
 
+Option | Description
+--- | ---
+`--emptybraces` | Spacing inside empty braces, "no-space" (default) or "spaced"
+
 <details>
 <summary>Examples</summary>
 

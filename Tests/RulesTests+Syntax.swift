@@ -835,6 +835,21 @@ extension RulesTests {
                        options: options, exclude: ["wrapSwitchCases", "sortedSwitchCases"])
     }
 
+    func testMultilineGuardLet() {
+        let input = """
+        guard
+            let first = response?.first,
+            let last = response?.last,
+            case .foo(token: let foo, provider: let bar) = first,
+            case .foo(token: let baz, provider: let quux) = last
+        else {
+            return
+        }
+        """
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
     // MARK: - enumNamespaces
 
     func testEnumNamespacesClassAsProtocolRestriction() {

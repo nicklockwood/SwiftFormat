@@ -25,6 +25,87 @@ extension Formatter {
         return true
     }
 
+    // gather declared variable names, starting at index after let/var keyword
+    func processDeclaredVariables(at index: inout Int, names: inout Set<String>, removeSelf: Bool) {
+        let isConditional = isConditionalStatement(at: index)
+        var declarationIndex: Int? = -1
+        var scopeIndexStack = [Int]()
+        while let token = self.token(at: index) {
+            switch token {
+            case .identifier where
+                last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false:
+                let name = token.unescaped()
+                if name != "_", declarationIndex != nil || !isConditional {
+                    names.insert(name)
+                }
+                inner: while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                    switch tokens[nextIndex] {
+                    case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
+                        break
+                    case .startOfScope("<"), .startOfScope("["), .startOfScope("("),
+                         .startOfScope where token.isStringDelimiter:
+                        guard let endIndex = endOfScope(at: nextIndex) else {
+                            return fatalError("Expected end of scope", at: nextIndex)
+                        }
+                        if removeSelf, isEnabled {
+                            var i = endIndex - 1
+                            while i > nextIndex {
+                                switch tokens[i] {
+                                case .endOfScope("}"):
+                                    i = self.index(of: .startOfScope("{"), before: i) ?? i
+                                case .identifier("self"):
+                                    _ = self.removeSelf(at: i, localNames: names)
+                                default:
+                                    break
+                                }
+                                i -= 1
+                            }
+                            index = endOfScope(at: nextIndex)!
+                        } else {
+                            index = endIndex
+                        }
+                        continue
+                    case .keyword("let"), .keyword("var"):
+                        declarationIndex = nextIndex
+                        index = nextIndex
+                        break inner
+                    case .keyword, .startOfScope("{"), .endOfScope("}"), .startOfScope(":"):
+                        return
+                    case .endOfScope(")"):
+                        let scopeIndex = scopeIndexStack.popLast() ?? -1
+                        if let d = declarationIndex, d > scopeIndex {
+                            declarationIndex = nil
+                        }
+                    case .delimiter(","):
+                        if let d = declarationIndex, d > scopeIndexStack.last ?? -1 {
+                            declarationIndex = nil
+                        }
+                        index = nextIndex
+                        break inner
+                    case .identifier("self") where removeSelf && isEnabled:
+                        _ = self.removeSelf(at: nextIndex, localNames: names)
+                    default:
+                        break
+                    }
+                    index = nextIndex
+                }
+            case .keyword("let"), .keyword("var"):
+                declarationIndex = index
+            case .startOfScope("("):
+                scopeIndexStack.append(index)
+            case .startOfScope("{"):
+                guard isStartOfClosure(at: index), let nextIndex = endOfScope(at: index) else {
+                    index -= 1
+                    return
+                }
+                index = nextIndex
+            default:
+                break
+            }
+            index += 1
+        }
+    }
+
     // Shared wrap implementation
     func wrapCollectionsAndArguments(completePartialWrapping: Bool, wrapSingleArguments: Bool) {
         let maxWidth = options.maxWidth

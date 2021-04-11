@@ -2876,12 +2876,15 @@ public struct _FormatRules {
                             index = nextIndex
                         }
                         lastKeyword = ""
-                    case "if", "while", "guard":
+                    case "if", "while", "guard", "for":
                         assert(!isTypeRoot)
                         // Guard is included because it's an error to reference guard vars in body
                         var scopedNames = localNames
                         formatter.processDeclaredVariables(at: &index, names: &scopedNames,
                                                            removeSelf: explicitSelf != .insert)
+                        if scopeStack.last == .startOfScope("(") {
+                            scopeStack.removeLast()
+                        }
                         guard let startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
                             return formatter.fatalError("Expected {", at: index)
                         }
@@ -2890,6 +2893,8 @@ public struct _FormatRules {
                                     membersByType: &membersByType, classMembersByType: &classMembersByType,
                                     usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                         lastKeyword = ""
+                    case "case" where ["if", "while", "guard", "for"].contains(lastKeyword):
+                        break
                     default:
                         lastKeyword = token.string
                     }

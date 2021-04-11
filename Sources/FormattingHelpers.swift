@@ -33,7 +33,8 @@ extension Formatter {
         while let token = self.token(at: index) {
             switch token {
             case .identifier where
-                last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false:
+                last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false &&
+                next(.nonSpaceOrCommentOrLinebreak, after: index)?.isOperator(".") == false:
                 let name = token.unescaped()
                 if name != "_", declarationIndex != nil || !isConditional {
                     names.insert(name)

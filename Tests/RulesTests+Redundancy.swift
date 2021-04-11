@@ -2711,6 +2711,77 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testNoRemoveSelfAfterGuardCaseLetWithExplicitNamespace() {
+        let input = """
+        class Foo {
+            var name: String?
+
+            func bug(element: Something) {
+                guard case let Something.a(name) = element
+                else { return }
+                self.name = name
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
+    func testRedundantSelfParsingBug() {
+        let input = """
+        private class Foo {
+            mutating func bar() -> Statement? {
+                let start = self
+                guard case Token.identifier(let name)? = self.popFirst() else {
+                    self = start
+                    return nil
+                }
+                return Statement.declaration(name: name)
+            }
+        }
+        """
+        let output = """
+        private class Foo {
+            mutating func bar() -> Statement? {
+                let start = self
+                guard case Token.identifier(let name)? = popFirst() else {
+                    self = start
+                    return nil
+                }
+                return Statement.declaration(name: name)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf,
+                       exclude: ["hoistPatternLet"])
+    }
+
+    func testRedundantSelfParsingBug2() {
+        let input = """
+        extension Foo {
+            private enum NonHashableEnum: RawRepresentable {
+                case foo
+                case bar
+
+                var rawValue: RuntimeTypeTests.TestStruct {
+                    return TestStruct(foo: 0)
+                }
+
+                init?(rawValue: RuntimeTypeTests.TestStruct) {
+                    switch rawValue.foo {
+                    case 0:
+                        self = .foo
+                    case 1:
+                        self = .bar
+                    default:
+                        return nil
+                    }
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {

@@ -53,12 +53,14 @@ extension Formatter.Change: Encodable {
     case file
     case line
     case reason
-    case rule_id
+    case ruleID = "rule_id"
   }
 
   public func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
-    try container.encode(self.filePath ?? "", forKey: .file)
+    if let filePath = self.filePath {
+      try container.encode(filePath, forKey: .file)
+    }
     try container.encode(self.line, forKey: .line)
     try container.encode(self.help, forKey: .reason)
     try container.encode(self.rule.name, forKey: .rule_id)

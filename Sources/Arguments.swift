@@ -676,8 +676,7 @@ let commandLineArguments = [
     "lenient",
     "verbose",
     "quiet",
-    "reporter",
-    "reporter-output",
+    "report",
     // Misc
     "help",
     "version",

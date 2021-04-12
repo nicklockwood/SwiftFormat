@@ -198,8 +198,7 @@ func printHelp(as type: CLI.OutputType) {
     --lenient          Suppress errors for unformatted code in --lint mode
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
-    --reporter         Defines a custom reporter (only `json` is supported)
-    --reporter-output  Reporter output file (defaults to `output.<reporter>`)
+    --report           The changes report file
 
     SwiftFormat has a number of rules that can be enabled or disabled. By default
     most rules are enabled. Use --rules to display all enabled/disabled rules.
@@ -292,16 +291,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         // JSON output
-        let jsonReporter: JSONReporter?
-        if let reporter = args["reporter"] {
-            guard reporter == "json" else {
-                throw FormatError.options("Unsupported reporter: \(reporter).")
-            }
-            let outputFile = args["reporter-output"] ?? "output.\(reporter)"
-            jsonReporter = JSONReporter(outputURL: URL(fileURLWithPath: outputFile))
-        } else {
-            jsonReporter = nil
-        }
+        let jsonReporter = args["report"]?.map { JSONReporter(outputURL: URL(fileURLWithPath: $0)) }
 
         // Show help
         if args["help"] != nil {

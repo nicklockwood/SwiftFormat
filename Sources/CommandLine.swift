@@ -398,16 +398,18 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             let fileListURL = try parsePath(fileListPath, for: "filelist", in: directory)
             do {
                 let source = try String(contentsOf: fileListURL)
-                inputURLs += parseFileList(source, in: fileListURL.deletingLastPathComponent().path)
+                inputURLs += try parseFileList(source, in: fileListURL.deletingLastPathComponent().path)
             } catch {
                 throw FormatError.options("Failed to read file list at \(fileListPath)")
             }
         }
         var useStdin = false
         while let inputPath = args[String(inputURLs.count + 1)] {
-            inputURLs += try parsePaths(inputPath, for: "input", in: directory)
             if inputPath.lowercased() == "stdin" {
                 useStdin = true
+                inputURLs.append(URL(string: "stdin")!)
+            } else {
+                inputURLs += try parsePaths(inputPath, in: directory)
             }
         }
         if useStdin {
@@ -447,7 +449,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             if arg.lowercased() == "stdin" {
                 useStdin = true
             } else {
-                inputURLs += try parsePaths(arg, for: "input", in: directory)
+                inputURLs += try parsePaths(arg, in: directory)
             }
         }
         try addInputPaths(for: "quiet")
@@ -715,12 +717,11 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
     }
 }
 
-func parseFileList(_ source: String, in directory: String) -> [URL] {
-    return source
+func parseFileList(_ source: String, in directory: String) throws -> [URL] {
+    return try source
         .components(separatedBy: .newlines)
         .map { $0.components(separatedBy: "#")[0].trimmingCharacters(in: .whitespaces) }
-        .filter { !$0.isEmpty }
-        .map { expandPath($0, in: directory) }
+        .flatMap { try parsePaths($0, in: directory) }
 }
 
 func printResult(_ dryrun: Bool, _ lint: Bool, _ lenient: Bool, _ flags: OutputFlags) -> ExitCode {

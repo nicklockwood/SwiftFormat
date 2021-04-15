@@ -211,14 +211,16 @@ class CommandLineTests: XCTestCase {
     func testParseFileList() {
         let source = """
         #foo
-        foo.swift #bar
+        Package.swift #bar
 
         #baz
-        bar/baz.swift
+        Sources/Rules.swift
+        CommandLineTool/*.swift
         """
-        XCTAssertEqual(parseFileList(source, in: projectDirectory.path), [
-            URL(fileURLWithPath: "\(projectDirectory.path)/foo.swift"),
-            URL(fileURLWithPath: "\(projectDirectory.path)/bar/baz.swift"),
+        XCTAssertEqual(try parseFileList(source, in: projectDirectory.path), [
+            URL(fileURLWithPath: "\(projectDirectory.path)/Package.swift"),
+            URL(fileURLWithPath: "\(projectDirectory.path)/Sources/Rules.swift"),
+            URL(fileURLWithPath: "\(projectDirectory.path)/CommandLineTool/main.swift"),
         ])
     }
 

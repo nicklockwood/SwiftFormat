@@ -16,118 +16,118 @@ class GlobsTests: XCTestCase {
         let path = "Tokenizer.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 
     func testExpandPathWithWildcardInMiddle() {
         let path = "Rule*.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 
     func testExpandPathWithSingleCharacterWildcardInMiddle() {
         let path = "Rule?.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 
     func testExpandPathWithWildcardAtEnd() {
         let path = "Option*"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
     }
 
     func testExpandPathWithDoubleWildcardAtEnd() {
         let path = "Option**"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
     }
 
     func testExpandPathWithCharacterClass() {
         let path = "Option[sD]*.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
     }
 
     func testExpandPathWithCharacterClassRange() {
         let path = "Option[e-t]*.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("EditorExtension/Shared")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 
     func testExpandPathWithEitherOr() {
         let path = "Option{s,Descriptor}.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
     }
 
     func testExpandPathsWithEitherOr() {
         let path = "Option{s,Descriptor}.swift, SwiftFormat.{h,swift}"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 4)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 4)
     }
 
     func testExpandPathWithEitherOrContainingDot() {
         let path = "SwiftFormat{.h,.swift}"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 2)
     }
 
     func testExpandPathWithWildcardAtStart() {
         let path = "*Tests.swift"
         let directory = URL(fileURLWithPath: #file).deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 13)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 13)
     }
 
     func testExpandPathWithSubdirectoryAndWildcard() {
         let path = "Tests/*Tests.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 13)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 13)
     }
 
     func testSingleWildcardDoesNotMatchDirectorySlash() {
         let path = "*SwiftFormatTests.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 0)
+        XCTAssertThrowsError(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path))
     }
 
     func testDoubleWildcardMatchesDirectorySlash() {
         let path = "**SwiftFormatTests.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 
     func testDoubleWildcardMatchesNoSubdirectories() {
         let path = "Tests/**/SwiftFormatTests.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 
     func testExpandGlobsChecksForExactPaths() {
         let path = "Tests/GlobTest[5].txt"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 
     func testExpandPathWithDotDot() {
         let path = "Tests/BadConfig/../SwiftFormatTests.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 
     // MARK: glob regex
@@ -135,46 +135,46 @@ class GlobsTests: XCTestCase {
     func testWildcardRegex() {
         let path = "/Rule*.swift"
         let directory = URL(fileURLWithPath: #file)
-        guard case let .regex(regex) = expandGlobs(path, in: directory.path)[0] else {
+        guard case let .regex(_, regex) = expandGlobs(path, in: directory.path)[0] else {
             return
         }
-        XCTAssertEqual(regex.pattern, "^/Rule([^/]+)?\\.swift$")
+        XCTAssertEqual(regex.pattern, "^Rule([^/]+)?\\.swift$")
     }
 
     func testDoubleWildcardRegex() {
         let path = "/**Rule.swift"
         let directory = URL(fileURLWithPath: #file)
-        guard case let .regex(regex) = expandGlobs(path, in: directory.path)[0] else {
+        guard case let .regex(_, regex) = expandGlobs(path, in: directory.path)[0] else {
             return
         }
-        XCTAssertEqual(regex.pattern, "^/.+Rule\\.swift$")
+        XCTAssertEqual(regex.pattern, "^.+Rule\\.swift$")
     }
 
     func testDoubleWildcardSlashRegex() {
         let path = "/**/Rule.swift"
         let directory = URL(fileURLWithPath: #file)
-        guard case let .regex(regex) = expandGlobs(path, in: directory.path)[0] else {
+        guard case let .regex(_, regex) = expandGlobs(path, in: directory.path)[0] else {
             return
         }
-        XCTAssertEqual(regex.pattern, "^/(.+/)?Rule\\.swift$")
+        XCTAssertEqual(regex.pattern, "^(.+/)?Rule\\.swift$")
     }
 
     func testEitherOrRegex() {
         let path = "/SwiftFormat.{h,swift}"
         let directory = URL(fileURLWithPath: #file)
-        guard case let .regex(regex) = expandGlobs(path, in: directory.path)[0] else {
+        guard case let .regex(_, regex) = expandGlobs(path, in: directory.path)[0] else {
             return
         }
-        XCTAssertEqual(regex.pattern, "^/SwiftFormat\\.(h|swift)$")
+        XCTAssertEqual(regex.pattern, "^SwiftFormat\\.(h|swift)$")
     }
 
     func testEitherOrContainingDotRegex() {
         let path = "/SwiftFormat{.h,.swift}"
         let directory = URL(fileURLWithPath: #file)
-        guard case let .regex(regex) = expandGlobs(path, in: directory.path)[0] else {
+        guard case let .regex(_, regex) = expandGlobs(path, in: directory.path)[0] else {
             return
         }
-        XCTAssertEqual(regex.pattern, "^/SwiftFormat(\\.h|\\.swift)$")
+        XCTAssertEqual(regex.pattern, "^SwiftFormat(\\.h|\\.swift)$")
     }
 
     // MARK: glob description

@@ -235,7 +235,7 @@ func parseRules(_ rules: String) throws -> [String] {
     }
 }
 
-// Parse single file path
+// Parse single file path, disallowing globs or commas
 func parsePath(_ path: String, for argument: String, in directory: String) throws -> URL {
     let expandedPath = expandPath(path, in: directory)
     if !FileManager.default.fileExists(atPath: expandedPath.path) {
@@ -249,11 +249,9 @@ func parsePath(_ path: String, for argument: String, in directory: String) throw
     return expandedPath
 }
 
-// Parse one or more comma-delimited file paths
-func parsePaths(_ paths: String, for argument: String, in directory: String) throws -> [URL] {
-    return try parseCommaDelimitedList(paths).map {
-        try parsePath($0, for: argument, in: directory)
-    }
+// Parse one or more comma-delimited file paths, expanding globs as required
+func parsePaths(_ paths: String, in directory: String) throws -> [URL] {
+    return try matchGlobs(expandGlobs(paths, in: directory), in: directory)
 }
 
 // Merge two dictionaries of arguments

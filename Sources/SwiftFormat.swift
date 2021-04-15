@@ -272,7 +272,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
 
 // Process configuration in all directories in specified path.
 func gatherOptions(_ options: inout Options, for inputURL: URL, with logger: Logger?) throws {
-    var directory = URL(fileURLWithPath: inputURL.pathComponents[0])
+    var directory = URL(fileURLWithPath: inputURL.pathComponents[0]).standardized
     for part in inputURL.pathComponents.dropFirst().dropLast() {
         directory.appendPathComponent(part)
         if shouldSkipFile(directory, with: options) {
@@ -606,12 +606,12 @@ public func lint(
 
 public func expandPath(_ path: String, in directory: String) -> URL {
     if path.hasPrefix("/") {
-        return URL(fileURLWithPath: path)
+        return URL(fileURLWithPath: path).standardized
     }
     if path.hasPrefix("~") {
-        return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
+        return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath).standardized
     }
-    return URL(fileURLWithPath: directory).appendingPathComponent(path)
+    return URL(fileURLWithPath: directory).appendingPathComponent(path).standardized
 }
 
 struct ResourceValues {

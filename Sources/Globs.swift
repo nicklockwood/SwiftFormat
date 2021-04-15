@@ -106,6 +106,6 @@ func matchGlobs(_ globs: [Glob], in directory: String) -> [URL] {
             }
         }
     }
-    enumerate(URL(fileURLWithPath: directory))
+    enumerate(URL(fileURLWithPath: directory).standardized)
     return urls
 }

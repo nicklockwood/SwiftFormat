@@ -123,6 +123,13 @@ class GlobsTests: XCTestCase {
         XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 
+    func testExpandPathWithDotDot() {
+        let path = "Tests/BadConfig/../SwiftFormatTests.swift"
+        let directory = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent().deletingLastPathComponent()
+        XCTAssertEqual(matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
+    }
+
     // MARK: glob regex
 
     func testWildcardRegex() {

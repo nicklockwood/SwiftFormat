@@ -191,6 +191,7 @@ extension GlobsTests {
         ("testExpandPathsWithEitherOr", testExpandPathsWithEitherOr),
         ("testExpandPathWithCharacterClass", testExpandPathWithCharacterClass),
         ("testExpandPathWithCharacterClassRange", testExpandPathWithCharacterClassRange),
+        ("testExpandPathWithDotDot", testExpandPathWithDotDot),
         ("testExpandPathWithDoubleWildcardAtEnd", testExpandPathWithDoubleWildcardAtEnd),
         ("testExpandPathWithEitherOr", testExpandPathWithEitherOr),
         ("testExpandPathWithEitherOrContainingDot", testExpandPathWithEitherOrContainingDot),

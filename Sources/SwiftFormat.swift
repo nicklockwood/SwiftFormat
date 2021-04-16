@@ -519,6 +519,19 @@ private func applyRules(
         }
     }
 
+    // Split tokens into lines
+    func lines(in tokens: [Token]) -> [Int: ArraySlice<Token>?] {
+        var lines: [Int: ArraySlice<Token>?] = [:]
+        var start = 0
+        for (i, token) in tokens.enumerated() {
+            if case let .linebreak(_, line) = token {
+                lines[line] = tokens[start ..< i]
+                start = i + 1
+            }
+        }
+        return lines
+    }
+
     // Recursively apply rules until no changes are detected
     let group = DispatchGroup()
     let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
@@ -541,6 +554,9 @@ private func applyRules(
         }
         changes += formatter.changes
         if tokens == formatter.tokens {
+            if changes.isEmpty {
+                return (tokens, [])
+            }
             // Sort changes
             changes.sort(by: {
                 if $0.line == $1.line {
@@ -548,13 +564,19 @@ private func applyRules(
                 }
                 return $0.line < $1.line
             })
-            // Filter out duplicates
+            // Get lines
+            let oldLines = lines(in: originalTokens)
+            let newLines = lines(in: tokens)
+            // Filter out duplicates and lines that haven't changed
             var last: Formatter.Change?
             return (tokens, changes.filter { change in
                 if last == change {
                     return false
                 }
                 last = change
+                if newLines[change.line] == oldLines[change.line] {
+                    return false
+                }
                 return true
             })
         }

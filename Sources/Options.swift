@@ -534,6 +534,11 @@ public struct FormatOptions: CustomStringConvertible {
         return indent.first == "\t"
     }
 
+    public var requiresFileInfo: Bool {
+        let string = fileHeader.rawValue
+        return string.contains("{created") || string.contains("{file")
+    }
+
     public var allOptions: [String: Any] {
         let pairs = Mirror(reflecting: self).children.map { ($0!, $1) }
         var options = Dictionary(pairs, uniquingKeysWith: { $1 })

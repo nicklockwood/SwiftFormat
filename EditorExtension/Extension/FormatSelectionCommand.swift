@@ -56,6 +56,9 @@ class FormatSelectionCommand: NSObject, XCSourceEditorCommand {
         formatOptions.indent = invocation.buffer.indentationString
         formatOptions.tabWidth = invocation.buffer.tabWidth
         formatOptions.swiftVersion = store.formatOptions.swiftVersion
+        if formatOptions.requiresFileInfo {
+            formatOptions.fileHeader = .ignore
+        }
 
         // Apply formatting for each range
         var output = input

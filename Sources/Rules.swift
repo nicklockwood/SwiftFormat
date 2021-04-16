@@ -3984,8 +3984,17 @@ public struct _FormatRules {
             }
             header = string
         }
+        var start = 0
         var lastHeaderTokenIndex = -1
         if var startIndex = formatter.index(of: .nonSpaceOrLinebreak, after: -1) {
+            if formatter.tokens[startIndex] == .startOfScope("#!") {
+                guard let endIndex = formatter.index(of: .linebreak, after: startIndex) else {
+                    return
+                }
+                startIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endIndex) ?? endIndex
+                start = startIndex
+                lastHeaderTokenIndex = startIndex - 1
+            }
             switch formatter.tokens[startIndex] {
             case .startOfScope("//"):
                 if case let .commentBody(body)? = formatter.next(.nonSpace, after: startIndex) {
@@ -4048,7 +4057,7 @@ public struct _FormatRules {
             }
         }
         if header.isEmpty {
-            formatter.removeTokens(in: 0 ..< lastHeaderTokenIndex + 1)
+            formatter.removeTokens(in: start ..< lastHeaderTokenIndex + 1)
             return
         }
         var headerTokens = tokenize(header)
@@ -4070,7 +4079,7 @@ public struct _FormatRules {
         }) {
             lastHeaderTokenIndex = index
         }
-        formatter.replaceTokens(in: 0 ..< lastHeaderTokenIndex + 1, with: headerTokens)
+        formatter.replaceTokens(in: start ..< lastHeaderTokenIndex + 1, with: headerTokens)
     }
 
     /// Strip redundant `.init` from type instantiations

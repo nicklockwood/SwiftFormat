@@ -198,6 +198,7 @@ func printHelp(as type: CLI.OutputType) {
     --lenient          Suppress errors for unformatted code in --lint mode
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
+    --report           The changes report file
 
     SwiftFormat has a number of rules that can be enabled or disabled. By default
     most rules are enabled. Use --rules to display all enabled/disabled rules.
@@ -287,6 +288,11 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         // Warnings
         for warning in warningsForArguments(args) {
             print("warning: \(warning)", as: .warning)
+        }
+
+        // JSON output
+        let jsonReporter = args["report"].map {
+            JSONReporter(outputURL: URL(fileURLWithPath: $0))
         }
 
         // Show help
@@ -624,7 +630,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                         }
                     }
                     let output = try applyRules(input, options: options, lineRange: lineRange,
-                                                verbose: verbose, lint: lint)
+                                                verbose: verbose, lint: lint, jsonReporter: jsonReporter)
                     if let outputURL = outputURL, !useStdout {
                         if (try? String(contentsOf: outputURL)) != output, !dryrun {
                             do {
@@ -692,7 +698,8 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                                                   verbose: verbose,
                                                   dryrun: dryrun,
                                                   lint: lint,
-                                                  cacheURL: cacheURL)
+                                                  cacheURL: cacheURL,
+                                                  jsonReporter: jsonReporter)
             errors += _errors
         })
 
@@ -704,6 +711,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             print("warning: No eligible files found at \(inputPaths).", as: .warning)
         }
         print("SwiftFormat completed in \(time).", as: .success)
+        try jsonReporter?.write()
         return printResult(dryrun, lint, lenient, outputFlags)
     } catch {
         _ = printWarnings(errors)
@@ -777,7 +785,7 @@ func computeHash(_ source: String) -> String {
 }
 
 func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?,
-                verbose: Bool, lint: Bool) throws -> String
+                verbose: Bool, lint: Bool, jsonReporter: JSONReporter?) throws -> String
 {
     // Parse source
     var tokens = tokenize(source)
@@ -802,6 +810,7 @@ func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?
     let updatedSource = sourceCode(for: tokens)
     if lint, updatedSource != source {
         changes.forEach { print($0.description, as: .warning) }
+        jsonReporter?.report(changes)
     }
     if verbose {
         let rulesApplied = changes.reduce(into: Set<String>()) {
@@ -827,7 +836,8 @@ func processInput(_ inputURLs: [URL],
                   verbose: Bool,
                   dryrun: Bool,
                   lint: Bool,
-                  cacheURL: URL?) -> (OutputFlags, [Error])
+                  cacheURL: URL?,
+                  jsonReporter: JSONReporter?) -> (OutputFlags, [Error])
 {
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
@@ -914,7 +924,7 @@ func processInput(_ inputURLs: [URL],
                     }
                 } else {
                     output = try applyRules(input, options: options, lineRange: lineRange,
-                                            verbose: verbose, lint: lint)
+                                            verbose: verbose, lint: lint, jsonReporter: jsonReporter)
                     if output != input {
                         sourceHash = nil
                     }

@@ -22,3 +22,6 @@ DerivedData
 .swiftpm
 
 /Snapshots/Private
+
+# AppCode
+.idea

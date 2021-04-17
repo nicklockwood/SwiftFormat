@@ -44,25 +44,46 @@ class JSONReporter {
     }
 
     func write() throws {
-        try JSONEncoder().encode(changes).write(to: outputURL)
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        encoder.outputFormatting = .prettyPrinted
+        if #available(macOS 10.13, *) {
+            encoder.outputFormatting.insert(.sortedKeys)
+        }
+        let stripSlashes: Bool
+        #if swift(>=5.2)
+            if #available(macOS 10.15, *) {
+                stripSlashes = false
+                encoder.outputFormatting.insert(.withoutEscapingSlashes)
+            } else {
+                stripSlashes = true
+            }
+        #else
+            stripSlashes = true
+        #endif
+        var data = try encoder.encode(changes.map(ReportItem.init))
+        if stripSlashes, let string = String(data: data, encoding: .utf8) {
+            data = string.replacingOccurrences(of: "\\/", with: "/").data(using: .utf8) ?? data
+        }
+        try data.write(to: outputURL, options: .atomic)
     }
 }
 
-extension Formatter.Change: Encodable {
+private struct ReportItem: Encodable {
+    var change: Formatter.Change
+
     enum CodingKeys: String, CodingKey {
         case file
         case line
         case reason
-        case ruleID = "rule_id"
+        case ruleID
     }
 
-    public func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        if let filePath = self.filePath {
-            try container.encode(filePath, forKey: .file)
-        }
-        try container.encode(line, forKey: .line)
-        try container.encode(help, forKey: .reason)
-        try container.encode(rule.name, forKey: .ruleID)
+        try container.encodeIfPresent(change.filePath, forKey: .file)
+        try container.encode(change.line, forKey: .line)
+        try container.encode(change.help, forKey: .reason)
+        try container.encode(change.rule.name, forKey: .ruleID)
     }
 }

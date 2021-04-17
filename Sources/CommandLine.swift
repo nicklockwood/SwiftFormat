@@ -194,11 +194,11 @@ func printHelp(as type: CLI.OutputType) {
     --minversion       The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --dryrun           Run in "dry" mode (without actually changing any files)
-    --lint             Like --dryrun, but returns an error if formatting is needed
+    --lint             Return an error for unformatted input, and list violations
+    --report           Path to a file where --lint output should be written
     --lenient          Suppress errors for unformatted code in --lint mode
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
-    --report           The changes report file
 
     SwiftFormat has a number of rules that can be enabled or disabled. By default
     most rules are enabled. Use --rules to display all enabled/disabled rules.
@@ -290,8 +290,8 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             print("warning: \(warning)", as: .warning)
         }
 
-        // JSON output
-        let jsonReporter = args["report"].map {
+        // Report output
+        let reporter = args["report"].map {
             JSONReporter(outputURL: URL(fileURLWithPath: $0))
         }
 
@@ -476,6 +476,9 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 useStdout = true
                 return URL(string: arg)
             }
+            if args["lint"] != nil {
+                print("warning: --output argument is unused when running in --lint mode", as: .warning)
+            }
             return try parsePath(arg, for: "--output", in: directory)
         }
 
@@ -630,7 +633,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                         }
                     }
                     let output = try applyRules(input, options: options, lineRange: lineRange,
-                                                verbose: verbose, lint: lint, jsonReporter: jsonReporter)
+                                                verbose: verbose, lint: lint, reporter: reporter)
                     if let outputURL = outputURL, !useStdout {
                         if (try? String(contentsOf: outputURL)) != output, !dryrun {
                             do {
@@ -699,7 +702,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                                                   dryrun: dryrun,
                                                   lint: lint,
                                                   cacheURL: cacheURL,
-                                                  jsonReporter: jsonReporter)
+                                                  reporter: reporter)
             errors += _errors
         })
 
@@ -710,8 +713,11 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             let inputPaths = inputURLs.map { $0.path }.joined(separator: ", ")
             print("warning: No eligible files found at \(inputPaths).", as: .warning)
         }
+        if let reporter = reporter {
+            print("Writing report file to \(reporter.outputURL.path)")
+            try reporter.write()
+        }
         print("SwiftFormat completed in \(time).", as: .success)
-        try jsonReporter?.write()
         return printResult(dryrun, lint, lenient, outputFlags)
     } catch {
         _ = printWarnings(errors)
@@ -785,7 +791,7 @@ func computeHash(_ source: String) -> String {
 }
 
 func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?,
-                verbose: Bool, lint: Bool, jsonReporter: JSONReporter?) throws -> String
+                verbose: Bool, lint: Bool, reporter: JSONReporter?) throws -> String
 {
     // Parse source
     var tokens = tokenize(source)
@@ -803,14 +809,17 @@ func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?
     let formatOptions = options.formatOptions ?? .default
     var changes = [Formatter.Change]()
     let range = lineRange.map { tokenRange(forLineRange: $0, in: tokens) }
-    (tokens, changes) = try applyRules(rules, to: tokens, with: formatOptions,
-                                       trackChanges: lint || verbose, range: range)
+    (tokens, changes) = try applyRules(
+        rules, to: tokens, with: formatOptions,
+        trackChanges: lint || verbose || reporter != nil,
+        range: range
+    )
 
     // Display info
     let updatedSource = sourceCode(for: tokens)
     if lint, updatedSource != source {
         changes.forEach { print($0.description, as: .warning) }
-        jsonReporter?.report(changes)
+        reporter?.report(changes)
     }
     if verbose {
         let rulesApplied = changes.reduce(into: Set<String>()) {
@@ -837,7 +846,7 @@ func processInput(_ inputURLs: [URL],
                   dryrun: Bool,
                   lint: Bool,
                   cacheURL: URL?,
-                  jsonReporter: JSONReporter?) -> (OutputFlags, [Error])
+                  reporter: JSONReporter?) -> (OutputFlags, [Error])
 {
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
@@ -924,7 +933,7 @@ func processInput(_ inputURLs: [URL],
                     }
                 } else {
                     output = try applyRules(input, options: options, lineRange: lineRange,
-                                            verbose: verbose, lint: lint, jsonReporter: jsonReporter)
+                                            verbose: verbose, lint: lint, reporter: reporter)
                     if output != input {
                         sourceHash = nil
                     }

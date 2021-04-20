@@ -639,7 +639,7 @@ public struct _FormatRules {
         help: "Remove redundant type from variable declarations.",
         options: ["redundanttype"]
     ) { formatter in
-        formatter.forEachToken(where: { (token) -> Bool in
+        formatter.forEachToken(where: { token -> Bool in
             token == .keyword("var") || token == .keyword("let")
         }) { i, _ in
             guard let colonIndex = formatter.index(after: i, where: {
@@ -4142,7 +4142,7 @@ public struct _FormatRules {
 
             guard enums.count > 1 else { return } // nothing to sort
 
-            let sorted: [Range<Int>] = enums.sorted { (range1, range2) -> Bool in
+            let sorted: [Range<Int>] = enums.sorted { range1, range2 -> Bool in
                 let lhs = formatter.tokens[range1]
                     .compactMap { $0.isIdentifier || $0.isStringBody || $0.isNumber ? $0.string : nil }
                 let rhs = formatter.tokens[range2]

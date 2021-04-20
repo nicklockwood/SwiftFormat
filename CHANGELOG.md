@@ -1,5 +1,21 @@
 # Change Log
 
+## [0.48.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.0) (2020-04-20)
+
+- Add `--emptybraces` to control how empty braces are formatted
+- The `redundantReturn` rule now removes redundant `return` statements in Void functions
+- The `redundantParens` rule now removes redundant parens around closure arguments
+- Fixed parsing error with complex `guard` statements
+- Extended `prefersKeyPath` to support `contains`, `allSatisfy` and `filter` methods
+- Fixed matching of excluded paths containing ../
+- Added support for using globs/wildcards in input paths
+- Eliminated false positives in change list when using `--lint` mode
+- File header comments are now inserted after the shebang/hashbang in executable Swift scripts
+- Xcode Extension now silently ignores rules requiring file info that isn't available to extensions
+- Fixed bug where `wrapEnumCases` rule was incorrectly applied to `if case` or `guard case`
+- Added `--report` argument for exporting formatting changes or lint violations as a JSON file
+- Improved tab layout in SwiftFormat for Xcode companion app
+
 ## [0.47.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.13) (2020-03-21)
 
 - Fixed bug where `--wrapreturntype if-multiline` would unexpectedly wrap a single-line method

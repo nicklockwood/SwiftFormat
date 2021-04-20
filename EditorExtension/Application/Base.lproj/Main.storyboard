@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="16097.2" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="16097.3" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16097.2"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16097.3"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -385,10 +385,10 @@
         <!--Tab View Controller-->
         <scene sceneID="y9y-mK-zv0">
             <objects>
-                <tabViewController storyboardIdentifier="MainWindowTabViewController" showSeguePresentationStyle="single" selectedTabViewItemIndex="0" id="5TS-Xa-esv" sceneMemberID="viewController">
+                <tabViewController storyboardIdentifier="MainWindowTabViewController" showSeguePresentationStyle="single" selectedTabViewItemIndex="0" tabStyle="toolbar" id="5TS-Xa-esv" sceneMemberID="viewController">
                     <tabViewItems>
-                        <tabViewItem id="a30-N6-piJ"/>
-                        <tabViewItem identifier="" id="zOv-w8-921"/>
+                        <tabViewItem image="NSTouchBarGetInfoTemplate" id="a30-N6-piJ"/>
+                        <tabViewItem identifier="" image="NSTouchBarTextListTemplate" id="zOv-w8-921"/>
                     </tabViewItems>
                     <viewControllerTransitionOptions key="transitionOptions" allowUserInteraction="YES"/>
                     <tabView key="tabView" type="noTabsNoBorder" id="EJQ-wo-I9k">
@@ -407,37 +407,37 @@
                 </tabViewController>
                 <customObject id="gwc-tk-N4m" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="75" y="670"/>
+            <point key="canvasLocation" x="74" y="863"/>
         </scene>
         <!--Rules-->
         <scene sceneID="v8f-un-92m">
             <objects>
                 <viewController title="Rules" storyboardIdentifier="RulesViewController" showSeguePresentationStyle="single" id="9ZR-Qg-hHT" customClass="RulesViewController" customModule="SwiftFormat_for_Xcode" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" id="iDF-FY-6tf">
-                        <rect key="frame" x="0.0" y="0.0" width="476" height="614"/>
+                    <view key="view" misplaced="YES" id="iDF-FY-6tf">
+                        <rect key="frame" x="0.0" y="0.0" width="498" height="615"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="RZx-Ps-pFP">
-                                <rect key="frame" x="0.0" y="571" width="476" height="5"/>
+                                <rect key="frame" x="0.0" y="587" width="505" height="5"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="1" id="cK6-hE-hqz"/>
                                 </constraints>
                             </box>
                             <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="33" horizontalPageScroll="10" verticalLineScroll="33" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="vVz-rA-tRS">
-                                <rect key="frame" x="0.0" y="0.0" width="476" height="535"/>
+                                <rect key="frame" x="0.0" y="0.0" width="505" height="551"/>
                                 <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="1nY-Z5-cvR">
-                                    <rect key="frame" x="0.0" y="0.0" width="476" height="535"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="505" height="551"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" selectionHighlightStyle="none" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="30" rowSizeStyle="automatic" usesAutomaticRowHeights="YES" viewBased="YES" id="JTc-wy-tJT">
-                                            <rect key="frame" x="0.0" y="0.0" width="476" height="535"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="505" height="551"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <size key="intercellSpacing" width="3" height="3"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             <tableViewGridLines key="gridStyleMask" dashed="YES"/>
                                             <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                             <tableColumns>
-                                                <tableColumn editable="NO" width="473" minWidth="40" maxWidth="1000" id="jXL-aR-Mks">
+                                                <tableColumn editable="NO" width="466" minWidth="40" maxWidth="1000" id="jXL-aR-Mks">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -449,11 +449,11 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView identifier="BinarySelectionTableCellView" id="CZN-za-xvO" customClass="BinarySelectionTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
-                                                            <rect key="frame" x="1" y="1" width="473" height="26"/>
+                                                            <rect key="frame" x="1" y="1" width="466" height="26"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <button verticalHuggingPriority="750" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Mfi-uR-j8t">
-                                                                    <rect key="frame" x="2" y="4" width="469" height="18"/>
+                                                                    <rect key="frame" x="2" y="4" width="462" height="18"/>
                                                                     <buttonCell key="cell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="aQA-fV-2dz">
                                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                                         <font key="font" metaFont="system"/>
@@ -474,7 +474,7 @@
                                                             </connections>
                                                         </tableCellView>
                                                         <tableCellView identifier="FreeTextTableCellView" id="ISi-9v-fr9" customClass="FreeTextTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
-                                                            <rect key="frame" x="1" y="30" width="473" height="30"/>
+                                                            <rect key="frame" x="1" y="30" width="466" height="30"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hfs-ko-uob">
@@ -486,7 +486,7 @@
                                                                     </textFieldCell>
                                                                 </textField>
                                                                 <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="3FH-Sx-Hfs">
-                                                                    <rect key="frame" x="106" y="4" width="359" height="21"/>
+                                                                    <rect key="frame" x="106" y="4" width="352" height="21"/>
                                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="Mkg-Qi-aiV">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -511,14 +511,14 @@
                                                             </connections>
                                                         </tableCellView>
                                                         <tableCellView identifier="ListSelectionTableCellView" id="gu5-aI-ODU" customClass="ListSelectionTableCellView" customModule="SwiftFormat_for_Xcode" customModuleProvider="target">
-                                                            <rect key="frame" x="1" y="63" width="473" height="29"/>
+                                                            <rect key="frame" x="1" y="63" width="466" height="29"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <popUpButton horizontalHuggingPriority="500" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="uIw-Th-pkZ">
-                                                                    <rect key="frame" x="391" y="1" width="77" height="25"/>
+                                                                    <rect key="frame" x="384" y="1" width="77" height="25"/>
                                                                     <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="oEo-Ud-RHl" id="99Z-zT-syJ">
                                                                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                                                                        <font key="font" metaFont="system"/>
+                                                                        <font key="font" metaFont="menu"/>
                                                                         <menu key="menu" id="jQM-YH-P6z">
                                                                             <items>
                                                                                 <menuItem title="Item 1" state="on" id="oEo-Ud-RHl"/>
@@ -532,7 +532,7 @@
                                                                     </connections>
                                                                 </popUpButton>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8Sj-pm-88d">
-                                                                    <rect key="frame" x="32" y="7" width="355" height="16"/>
+                                                                    <rect key="frame" x="32" y="7" width="348" height="16"/>
                                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Option name" id="72m-8i-Mg3">
                                                                         <font key="font" metaFont="system"/>
                                                                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -574,7 +574,7 @@
                                 </scroller>
                             </scrollView>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="pHb-Fu-MRN">
-                                <rect key="frame" x="6" y="572" width="186" height="44"/>
+                                <rect key="frame" x="6" y="588" width="186" height="44"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="qEB-fw-FrU"/>
                                 </constraints>
@@ -587,10 +587,10 @@
                                 </connections>
                             </button>
                             <popUpButton horizontalHuggingPriority="500" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="YId-jI-Kpd">
-                                <rect key="frame" x="394" y="580" width="77" height="25"/>
+                                <rect key="frame" x="423" y="596" width="77" height="25"/>
                                 <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="nhQ-Kk-Ta3" id="JGl-KG-s99">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
+                                    <font key="font" metaFont="menu"/>
                                     <menu key="menu" id="gu2-yX-6cs">
                                         <items>
                                             <menuItem title="Item 1" state="on" id="nhQ-Kk-Ta3"/>
@@ -604,7 +604,7 @@
                                 </connections>
                             </popUpButton>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8vB-lt-Jpe">
-                                <rect key="frame" x="312" y="586" width="82" height="16"/>
+                                <rect key="frame" x="341" y="602" width="82" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Swift version" id="pwb-qe-8jm">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -612,7 +612,7 @@
                                 </textFieldCell>
                             </textField>
                             <searchField wantsLayer="YES" verticalHuggingPriority="750" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="g0F-OD-16q">
-                                <rect key="frame" x="8" y="543" width="460" height="22"/>
+                                <rect key="frame" x="8" y="559" width="489" height="22"/>
                                 <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" usesSingleLineMode="YES" bezelStyle="round" id="7UJ-JQ-nkl">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -652,7 +652,7 @@
                 </viewController>
                 <customObject id="i1Z-CA-hdr" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-408" y="1334.5"/>
+            <point key="canvasLocation" x="-462" y="1642"/>
         </scene>
         <!--About-->
         <scene sceneID="hIz-AP-VOD">
@@ -808,7 +808,11 @@
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="524.5" y="1269"/>
+            <point key="canvasLocation" x="536" y="1521"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="NSTouchBarGetInfoTemplate" width="18" height="30"/>
+        <image name="NSTouchBarTextListTemplate" width="18" height="30"/>
+    </resources>
 </document>

@@ -1128,8 +1128,10 @@ private struct Examples {
     let preferKeyPath = """
     ```diff
     - let barArray = fooArray.map { $0.bar }
-
     + let barArray = fooArray.map(\\.bar)
+
+    - let barArray = fooArray.compactMap { $0.optionalBar }
+    + let barArray = fooArray.compactMap(\\.optionalBar)
     ```
     """
 

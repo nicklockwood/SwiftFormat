@@ -838,10 +838,12 @@ extension Formatter {
 
     func isEnumCase(at i: Int) -> Bool {
         assert(tokens[i] == .keyword("case"))
-        if last(.keyword, before: i) == .keyword("case") {
+        switch last(.nonSpaceOrCommentOrLinebreak, before: i) {
+        case .identifier?, .endOfScope(")")?, .startOfScope("{")?:
             return true
+        default:
+            return false
         }
-        return last(.nonSpaceOrCommentOrLinebreak, before: i) == .startOfScope("{")
     }
 
     struct ImportRange: Comparable {

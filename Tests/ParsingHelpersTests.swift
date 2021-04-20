@@ -573,11 +573,48 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isEnumCase(at: 15))
     }
 
+    func testIsEnumCaseWithValue() {
+        let formatter = Formatter(tokenize("""
+        enum Foo {
+            case foo, bar(Int)
+            case baz
+        }
+        """))
+        XCTAssert(formatter.isEnumCase(at: 7))
+        XCTAssert(formatter.isEnumCase(at: 18))
+    }
+
     func testIsNotEnumCase() {
+        let formatter = Formatter(tokenize("""
+        if case let .foo(bar) = baz {}
+        """))
+        XCTAssertFalse(formatter.isEnumCase(at: 2))
+    }
+
+    func testTypoIsNotEnumCase() {
         let formatter = Formatter(tokenize("""
         if let case .foo(bar) = baz {}
         """))
         XCTAssertFalse(formatter.isEnumCase(at: 4))
+    }
+
+    func testMixedCaseTypes() {
+        let formatter = Formatter(tokenize("""
+        enum Foo {
+            case foo
+            case bar(value: [Int])
+        }
+
+        func baz() {
+            if case .foo = foo,
+               case .bar(let value) = bar,
+               value.isEmpty {}
+        }
+        """))
+        XCTAssert(formatter.isEnumCase(at: 7))
+        XCTAssert(formatter.isEnumCase(at: 12))
+        XCTAssertFalse(formatter.isEnumCase(at: 38))
+        XCTAssertFalse(formatter.isEnumCase(at: 49))
     }
 
     // MARK: modifierOrder

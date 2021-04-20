@@ -2777,6 +2777,26 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapEnumCases)
     }
 
+    func testNoConfuseIfCaseWithEnum() {
+        let input = """
+        enum Foo {
+            case foo
+            case bar(value: [Int])
+        }
+
+        func baz() {
+            if case .foo = foo,
+               case .bar(let value) = bar,
+               value.isEmpty
+            {
+                print("")
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.wrapEnumCases,
+                       exclude: ["hoistPatternLet"])
+    }
+
     // MARK: wrapSwitchCases
 
     func testMultilineSwitchCases() {

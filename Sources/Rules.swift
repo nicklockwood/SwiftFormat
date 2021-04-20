@@ -5118,23 +5118,40 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard formatter.options.swiftVersion >= "5.2",
-                  let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i)
+                  var prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i)
             else {
                 return
             }
             var prevToken = formatter.tokens[prevIndex]
+            var label: String?
+            if prevToken == .delimiter(":"),
+               let labelIndex = formatter.index(of: .nonSpace, before: prevIndex),
+               case let .identifier(name) = formatter.tokens[labelIndex],
+               let prevIndex2 = formatter.index(of: .nonSpaceOrLinebreak, before: labelIndex)
+            {
+                label = name
+                prevToken = formatter.tokens[prevIndex2]
+                prevIndex = prevIndex2
+            }
             let parenthesized = prevToken == .startOfScope("(")
             if parenthesized {
                 prevToken = formatter.last(.nonSpaceOrLinebreak, before: prevIndex) ?? prevToken
             }
             guard case let .identifier(name) = prevToken,
-                  ["map", "flatMap", "compactMap", "allSatisfy", "filter"].contains(name),
+                  ["map", "flatMap", "compactMap", "allSatisfy", "filter", "contains"].contains(name),
                   let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
                       $0 == .identifier("$0")
                   }),
                   let endIndex = formatter.endOfScope(at: i),
                   let lastIndex = formatter.index(of: .nonSpaceOrLinebreak, before: endIndex)
             else {
+                return
+            }
+            if name == "contains" {
+                if label != "where" {
+                    return
+                }
+            } else if label != nil {
                 return
             }
             var replacementTokens: [Token]
@@ -5148,6 +5165,9 @@ public struct _FormatRules {
                     return
                 }
                 replacementTokens = [.operator("\\", .prefix)] + tokens
+            }
+            if let label = label {
+                replacementTokens = [.identifier(label), .delimiter(":"), .space(" ")] + replacementTokens
             }
             if !parenthesized {
                 replacementTokens = [.startOfScope("(")] + replacementTokens + [.endOfScope(")")]

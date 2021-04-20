@@ -1893,4 +1893,17 @@ extension RulesTests {
         let options = FormatOptions(swiftVersion: "5.2")
         testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
     }
+
+    func testNoMapPropertyToKeyPathForTrailingContains() {
+        let input = "let foo = bar.contains { $0.foo }"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
+    }
+
+    func testMapPropertyToKeyPathForContainsWhere() {
+        let input = "let foo = bar.contains(where: { $0.foo })"
+        let output = "let foo = bar.contains(where: \\.foo)"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, output, rule: FormatRules.preferKeyPath, options: options)
+    }
 }

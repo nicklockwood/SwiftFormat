@@ -773,7 +773,7 @@ Known issues
 Tip Jar
 -----------
 
-SwiftFormat is not a commercially-funded product, it's a labour of love given freely to the community. If you find it useful, please consider making a donation.
+SwiftFormat is not a commercially-funded product, it's a labor of love given freely to the community. If you find it useful, please consider making a donation.
 
 [![Donate via PayPal](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9ZGWNK5FEZFF6&source=url)
 
@@ -799,6 +799,7 @@ Credits
 * [Benedek Kozma](https://github.com/cyberbeni) - Lint-only rules option
 * [Juri Pakaste](https://github.com/juri) - Filelist feature
 * [Jim Puls](https://github.com/puls) - Big Sur icon update
+* [Daniele Formichelli](https://github.com/danyf90) - JSON reporter
 * [Nick Lockwood](https://github.com/nicklockwood) - Everything else
 
 ([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

@@ -1,8 +1,20 @@
 # Change Log
 
+## [0.48.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.1) (2020-05-08)
+
+- Fixed bug where `typeSugar` rule triggered a Swift bug inside case statements
+- Fixed double-indenting of trailing closure body on a wrapped line
+- Fixed compilation failure when installing SwiftFormat using Swift Package Manager
+- Fixed wrapping of namespaced property wrapper attributes
+- Fixed bug where `redundantReturn` rule removed required return inside `catch` statement
+- Fixed issue where `redundantType` rule introduced compilation warnings by removing explicit Void type
+- Fixed bug where trailing comma could be inserted inside a subscript nested inside a collection
+- Fixed spurious space inserted in generic result builder attributes
+- Successive reads of the same configuration file while formatting are now cached to improve performance
+
 ## [0.48.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.0) (2020-04-20)
 
-- Add `--emptybraces` to control how empty braces are formatted
+- Added `--emptybraces` option to control how empty braces are formatted
 - The `redundantReturn` rule now removes redundant `return` statements in Void functions
 - The `redundantParens` rule now removes redundant parens around closure arguments
 - Fixed parsing error with complex `guard` statements

@@ -2,7 +2,7 @@
 
 ## [0.48.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.0) (2020-04-20)
 
-- Add `--emptybraces` to control how empty braces are formatted
+- Added `--emptybraces` option to control how empty braces are formatted
 - The `redundantReturn` rule now removes redundant `return` statements in Void functions
 - The `redundantParens` rule now removes redundant parens around closure arguments
 - Fixed parsing error with complex `guard` statements

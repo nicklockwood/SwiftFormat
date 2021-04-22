@@ -443,7 +443,7 @@ Option | Description
 
 ## enumNamespaces
 
-Converts types used for hosting only static members into enums.
+Converts types used for hosting only static members into enums (an empty enum is the canonical way to create a namespace in Swift as it can't be instantiated.)
 
 ## extensionAccessControl
 

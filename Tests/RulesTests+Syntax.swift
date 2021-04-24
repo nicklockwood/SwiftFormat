@@ -1456,6 +1456,29 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.andOperator)
     }
 
+    func testReplaceAndInViewBuilderInSwift5_3() {
+        let input = """
+        SomeView {
+            if foo == 5 && bar {
+                Text("5")
+            } else {
+                Text("Not 5")
+            }
+        }
+        """
+        let output = """
+        SomeView {
+            if foo == 5, bar {
+                Text("5")
+            } else {
+                Text("Not 5")
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.andOperator, options: options)
+    }
+
     // MARK: - isEmpty
 
     // count == 0

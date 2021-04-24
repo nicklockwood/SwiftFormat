@@ -736,7 +736,10 @@ public struct _FormatRules {
 
     // Converts types used for hosting only static members into enums to avoid instantiation.
     public let enumNamespaces = FormatRule(
-        help: "Converts types used for hosting only static members into enums."
+        help: """
+        Converts types used for hosting only static members into enums (an empty enum is
+        the canonical way to create a namespace in Swift as it can't be instantiated).
+        """
     ) { formatter in
         func rangeHostsOnlyStaticMembersAtTopLevel(_ range: Range<Int>) -> Bool {
             // exit for empty declarations

@@ -1078,7 +1078,7 @@ public struct _FormatRules {
         help: "Indent code in accordance with the scope level.",
         orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
         options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation"],
-        sharedOptions: ["trimwhitespace", "closingparen", "allman"]
+        sharedOptions: ["trimwhitespace", "allman"]
     ) { formatter in
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []
@@ -1236,23 +1236,20 @@ public struct _FormatRules {
                     indentStack[indentStack.count - 1] = indent
                     indent += formatter.options.indent
                     indentCount -= 1
-                case "{" where formatter.options.closingParenOnSameLine && formatter.isStartOfClosure(at: i):
-                    // When a trailing closure starts on the same line as the end of
-                    // a multi-line method call, and `closingParenOnSameLine` is enabled,
-                    // the trailing closure body should be double-indented.
-                    //  - Check that the trailing closure starts on the same line as the end of a parameter list
-                    //    But _not_ on the same line as the start of the parameter list
-                    let startOfLine = formatter.startOfLine(at: i)
-                    if let previousTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i),
-                       formatter.tokens[previousTokenIndex] == .endOfScope(")"),
-                       startOfLine < previousTokenIndex,
-                       let startOfParameterList = formatter.index(of: .startOfScope("("), before: previousTokenIndex),
-                       startOfParameterList < startOfLine
+                case "{" where formatter.isStartOfClosure(at: i):
+                    // When a trailing closure starts on the same line as the end of a multi-line
+                    // method call the trailing closure body should be double-indented
+                    if let prevIndex = formatter.index(of: .nonSpaceOrComment, before: i),
+                       formatter.tokens[prevIndex] == .endOfScope(")"),
+                       formatter.last(.nonSpaceOrComment, before: prevIndex)?.isLinebreak == false,
+                       let scopeStart = formatter.index(of: .startOfScope("("), before: prevIndex),
+                       formatter.next(.nonSpaceOrComment, after: scopeStart)?.isLinebreak == true
                     {
-                        indent += formatter.options.indent + formatter.options.indent
-                    } else {
                         indent += formatter.options.indent
                     }
+                    let stringIndent = stringBodyIndent(at: i)
+                    stringBodyIndentStack[stringBodyIndentStack.count - 1] = stringIndent
+                    indent += stringIndent + formatter.options.indent
                 case _ where token.isStringDelimiter, "//":
                     break
                 case "[", "(":

@@ -1860,6 +1860,7 @@ extension RulesTests {
         ("testSingleClosureArgumentUnwrapped", testSingleClosureArgumentUnwrapped),
         ("testSingleClosureArgumentWithReturnValueUnwrapped", testSingleClosureArgumentWithReturnValueUnwrapped),
         ("testSingleIndentTrailingClosureBody", testSingleIndentTrailingClosureBody),
+        ("testSingleIndentTrailingClosureBody2", testSingleIndentTrailingClosureBody2),
         ("testSingleIndentTrailingClosureBodyOfShortMethod", testSingleIndentTrailingClosureBodyOfShortMethod),
         ("testSingleIndentTrailingClosureBodyThatStartsOnFollowingLine", testSingleIndentTrailingClosureBodyThatStartsOnFollowingLine),
         ("testSingleLineGuardBrace", testSingleLineGuardBrace),

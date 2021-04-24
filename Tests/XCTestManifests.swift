@@ -1798,6 +1798,7 @@ extension RulesTests {
         ("testRemoveWeakFromPrivateOutlet", testRemoveWeakFromPrivateOutlet),
         ("testRenamedObjcNotRemoved", testRenamedObjcNotRemoved),
         ("testRepeatWhileNotOnSameLineForAllman", testRepeatWhileNotOnSameLineForAllman),
+        ("testReplaceAndInViewBuilderInSwift5_3", testReplaceAndInViewBuilderInSwift5_3),
         ("testReplaceInlineSemicolon", testReplaceInlineSemicolon),
         ("testReplaceSemicolonFollowedByComment", testReplaceSemicolonFollowedByComment),
         ("testRequiredParensNotRemoved", testRequiredParensNotRemoved),

@@ -827,6 +827,20 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
+    func testHandleXcodeTokenApplyingWrap() {
+        let input = """
+        test(image: <#T##UIImage#>, name: "Name")
+        """
+        let output = """
+        test(
+            image: <#T##UIImage#>,
+            name: "Name"
+        )
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 20)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
     // MARK: wrapParameters
 
     // MARK: preserve

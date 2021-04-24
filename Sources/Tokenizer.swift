@@ -911,6 +911,31 @@ private extension UnicodeScalarView {
                 return .identifier("`" + identifier + "`")
             }
             self = start
+        } else if read("<") {
+            if read("#") {
+                // look for closing Xcode token
+                var previousWasHash = false
+                var index = startIndex
+                var found = false
+                while index < endIndex {
+                    let idx = index
+                    index = self.index(after: index)
+                    if self[idx] == ">" {
+                        if previousWasHash {
+                            found = true
+                            break
+                        }
+                    } else {
+                        previousWasHash = self[idx] == "#"
+                    }
+                }
+                if found {
+                    let string = String(prefix(upTo: index))
+                    self = suffix(from: index)
+                    return .identifier("<#\(string)")
+                }
+            }
+            self = start
         } else if read("#") {
             if let identifier = readIdentifier() {
                 if identifier == "if" {

@@ -1367,6 +1367,56 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testXcodeToken() {
+        let input = """
+        test(image: <#T##UIImage#>)
+        """
+        let output: [Token] = [
+            .identifier("test"),
+            .startOfScope("("),
+            .identifier("image"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("<#T##UIImage#>"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testXcodeWithArrayAndClosureToken() {
+        let input = """
+        monkey(smelly: <#T##Bool#>, happy: <#T##Bool#>, names: <#T##[String]#>, throw💩: <#T##((Int) -> Void)##((Int) -> Void)##(Int) -> Void#>)
+        """
+        let output: [Token] = [
+            .identifier("monkey"),
+            .startOfScope("("),
+            .identifier("smelly"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("<#T##Bool#>"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("happy"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("<#T##Bool#>"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("names"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("<#T##[String]#>"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("throw💩"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("<#T##((Int) -> Void)##((Int) -> Void)##(Int) -> Void#>"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Operators
 
     func testBasicOperator() {

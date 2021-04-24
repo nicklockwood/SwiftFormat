@@ -879,6 +879,7 @@ extension RulesTests {
         ("testHandleAndAtStartOfLine", testHandleAndAtStartOfLine),
         ("testHandleAndAtStartOfLineAfterComment", testHandleAndAtStartOfLineAfterComment),
         ("testHandlesTrailingCommentCorrectly", testHandlesTrailingCommentCorrectly),
+        ("testHandleXcodeTokenApplyingWrap", testHandleXcodeTokenApplyingWrap),
         ("testHexFractionGrouping", testHexFractionGrouping),
         ("testHoistCaseLet", testHoistCaseLet),
         ("testHoistCaseVar", testHoistCaseVar),
@@ -2590,6 +2591,8 @@ extension TokenizerTests {
         ("testUnescapeUnicodeLiterals", testUnescapeUnicodeLiterals),
         ("testUnicode", testUnicode),
         ("testUnicodeOperator", testUnicodeOperator),
+        ("testXcodeToken", testXcodeToken),
+        ("testXcodeWithArrayAndClosureToken", testXcodeWithArrayAndClosureToken),
         ("testZero", testZero),
     ]
 }

@@ -410,6 +410,11 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.spaceAroundGenerics, exclude: ["andOperator"])
     }
 
+    func testSpaceAroundGenericResultBuilder() {
+        let input = "func foo(@SomeResultBuilder<Self> builder: () -> Void) {}"
+        testFormatting(for: input, rule: FormatRules.spaceAroundGenerics)
+    }
+
     // MARK: - spaceInsideGenerics
 
     func testSpaceInsideGenerics() {

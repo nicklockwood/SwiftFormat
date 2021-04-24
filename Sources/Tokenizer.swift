@@ -1542,7 +1542,14 @@ public func tokenize(_ source: String) -> [Token] {
                     else {
                         fallthrough
                     }
-                case .startOfScope where token.isStringDelimiter, .identifier, .number:
+                case .identifier:
+                    guard let scopeIndex = closedGenericScopeIndexes.last,
+                          let prevIndex = index(of: .nonSpaceOrComment, before: scopeIndex),
+                          tokens[prevIndex].isAttribute
+                    else {
+                        fallthrough
+                    }
+                case .startOfScope where token.isStringDelimiter, .number:
                     convertClosingChevronToOperator(at: prevIndex, andOpeningChevron: true)
                     processToken()
                     return

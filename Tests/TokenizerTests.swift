@@ -2725,6 +2725,35 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testGenericResultBuilder() {
+        let input = "func foo(@SomeResultBuilder<Self> builder: () -> Void) {}"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("foo"),
+            .startOfScope("("),
+            .keyword("@SomeResultBuilder"),
+            .startOfScope("<"),
+            .identifier("Self"),
+            .endOfScope(">"),
+            .space(" "),
+            .identifier("builder"),
+            .delimiter(":"),
+            .space(" "),
+            .startOfScope("("),
+            .endOfScope(")"),
+            .space(" "),
+            .operator("->", .infix),
+            .space(" "),
+            .identifier("Void"),
+            .endOfScope(")"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: optionals
 
     func testAssignOptional() {

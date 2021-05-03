@@ -655,7 +655,7 @@ public struct _FormatRules {
                   typeIndex <= typeEndIndex,
                   let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: j)
             {
-                guard formatter.tokens[typeIndex] == formatter.tokens[valueIndex] else {
+                guard formatter.type(at: typeIndex, matchesValueAt: valueIndex) else {
                     return
                 }
                 i = typeIndex

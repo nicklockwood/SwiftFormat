@@ -1368,14 +1368,6 @@ extension Formatter {
         let typeName = tokens[typeIndex].string
         let value = tokens[valueIndex]
 
-        // Match arrays and dictionaries
-        if currentScope(at: typeIndex) == .startOfScope("["),
-           let startOfValueScope = index(of: .startOfScope, before: valueIndex),
-           tokens[startOfValueScope] == .startOfScope("[") || currentScope(at: startOfValueScope) == .startOfScope("[")
-        {
-            return true
-        }
-
         if typeName == "Bool",
            ["true", "false"].contains(value.string)
         {

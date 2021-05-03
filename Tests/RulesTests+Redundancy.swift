@@ -1119,12 +1119,6 @@ extension RulesTests {
 
         let d1: Double = 3.14
         let d2: Double = 3
-
-        let e1: [String] = ["bar"]
-        let e2: [Int] = [1, 2, 3, 4]
-
-        let f1: [String: Int] = ["baaz": 1]
-        let f2: [Int: String] = [1: "baaz"]
         """
 
         let output = """
@@ -1139,12 +1133,6 @@ extension RulesTests {
 
         let d1 = 3.14
         let d2: Double = 3
-
-        let e1 = ["bar"]
-        let e2 = [1, 2, 3, 4]
-
-        let f1 = ["baaz": 1]
-        let f2 = [1: "baaz"]
         """
 
         let options = FormatOptions(redundantType: .inferred)

@@ -619,7 +619,7 @@ extension RulesTests {
     func testFileprivateVarWithPropertWrapperNotChangedToPrivateIfAccessedFromSubclass() {
         let input = """
         class Foo {
-            @Foo fileprivate var foo: Int = 5
+            @Foo fileprivate var foo = 5
         }
 
         class Bar: Foo {
@@ -2424,7 +2424,7 @@ extension RulesTests {
     func testSelfRemovedInDidSet() {
         let input = """
         class Foo {
-            var bar: Bool = false {
+            var bar = false {
                 didSet {
                     self.bar = !self.bar
                 }
@@ -2433,7 +2433,7 @@ extension RulesTests {
         """
         let output = """
         class Foo {
-            var bar: Bool = false {
+            var bar = false {
                 didSet {
                     bar = !bar
                 }
@@ -3131,7 +3131,7 @@ extension RulesTests {
     func testSelfInsertedInDidSet() {
         let input = """
         class Foo {
-            var bar: Bool = false {
+            var bar = false {
                 didSet {
                     bar = !bar
                 }
@@ -3140,7 +3140,7 @@ extension RulesTests {
         """
         let output = """
         class Foo {
-            var bar: Bool = false {
+            var bar = false {
                 didSet {
                     self.bar = !self.bar
                 }

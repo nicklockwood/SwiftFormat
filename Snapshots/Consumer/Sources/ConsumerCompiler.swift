@@ -87,7 +87,7 @@ private extension Consumer {
             } else {
                 ranges = charset.ranges
             }
-            let string: String = "[" + ranges.map {
+            let string = "[" + ranges.map {
                 "\($0.lowerBound) ... \($0.upperBound)"
             }.joined(separator: ", ") + "]"
             charsetRanges[charset] = string

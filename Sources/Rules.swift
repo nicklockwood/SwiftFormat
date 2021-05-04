@@ -1859,79 +1859,39 @@ public struct _FormatRules {
         options: ["commas"]
     ) { formatter in
         formatter.forEach(.endOfScope("]")) { i, _ in
-            guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else {
+            guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i),
+                  let scopeType = formatter.scopeType(at: i)
+            else {
                 return
             }
-            var endIndex = i
-            var index = i
-            loop: while let _index = formatter.index(of: .endOfScope, after: index) {
-                switch formatter.tokens[_index] {
-                case .endOfScope("}"):
-                    break loop
-                case .endOfScope(">"):
-                    return
-                case .endOfScope("]"):
-                    endIndex = _index
-                    fallthrough
-                default:
-                    index = _index
-                }
-            }
-            if formatter.next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") {
-                return
-            }
-            if let startIndex = formatter.index(of: .startOfScope("["), before: endIndex),
-               let prevToken = formatter.last(.nonSpaceOrComment, before: startIndex)
-            {
-                switch prevToken {
-                case .identifier,
-                     .operator("!", .postfix), .operator("?", .postfix),
-                     .endOfScope(")"), .endOfScope("]"):
-                    // Subscript
-                    return
-                case .delimiter(":"):
-                    // Check for type declaration
-                    if let scopeStart = formatter.index(of: .startOfScope, before: startIndex),
-                       formatter.tokens[scopeStart] == .startOfScope("(")
-                    {
-                        if formatter.last(.keyword, before: scopeStart) == .keyword("func") {
-                            return
-                        }
-                    } else if let token = formatter.last(.keyword, before: startIndex),
-                              [.keyword("let"), .keyword("var")].contains(token)
-                    {
-                        return
-                    }
-                case .operator("->", .infix),
-                     .startOfScope("{") where formatter.isInClosureArguments(at: i):
-                    return
-                default:
-                    break
-                }
-            }
-            switch formatter.tokens[prevTokenIndex] {
-            case .linebreak:
-                guard let prevTokenIndex = formatter.index(
-                    of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex + 1
-                ) else {
-                    break
-                }
+            switch scopeType {
+            case .array, .dictionary:
                 switch formatter.tokens[prevTokenIndex] {
-                case .startOfScope("["), .delimiter(":"):
-                    break // do nothing
+                case .linebreak:
+                    guard let prevTokenIndex = formatter.index(
+                        of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex + 1
+                    ) else {
+                        break
+                    }
+                    switch formatter.tokens[prevTokenIndex] {
+                    case .startOfScope("["), .delimiter(":"):
+                        break // do nothing
+                    case .delimiter(","):
+                        if !formatter.options.trailingCommas {
+                            formatter.removeToken(at: prevTokenIndex)
+                        }
+                    default:
+                        if formatter.options.trailingCommas {
+                            formatter.insert(.delimiter(","), at: prevTokenIndex + 1)
+                        }
+                    }
                 case .delimiter(","):
-                    if !formatter.options.trailingCommas {
-                        formatter.removeToken(at: prevTokenIndex)
-                    }
+                    formatter.removeToken(at: prevTokenIndex)
                 default:
-                    if formatter.options.trailingCommas {
-                        formatter.insert(.delimiter(","), at: prevTokenIndex + 1)
-                    }
+                    break
                 }
-            case .delimiter(","):
-                formatter.removeToken(at: prevTokenIndex)
             default:
-                break
+                return
             }
         }
     }

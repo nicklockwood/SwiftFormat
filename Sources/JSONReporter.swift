@@ -47,12 +47,12 @@ class JSONReporter {
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.outputFormatting = .prettyPrinted
-        if #available(macOS 10.13, *) {
+        if #available(macOS 10.13, iOS 11.0, watchOS 4.0, tvOS 11.0, *) {
             encoder.outputFormatting.insert(.sortedKeys)
         }
         let stripSlashes: Bool
         #if swift(>=5.2)
-            if #available(macOS 10.15, *) {
+            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
                 stripSlashes = false
                 encoder.outputFormatting.insert(.withoutEscapingSlashes)
             } else {

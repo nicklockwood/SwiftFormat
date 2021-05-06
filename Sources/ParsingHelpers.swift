@@ -495,7 +495,7 @@ extension Formatter {
                 }
                 return false
             case "func", "subscript", "class", "struct", "protocol", "enum", "extension",
-                 "throws", "rethrows", "async":
+                 "throws", "rethrows", "async", "catch":
                 return false
             default:
                 return true

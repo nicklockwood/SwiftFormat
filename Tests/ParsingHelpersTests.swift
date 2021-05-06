@@ -110,9 +110,10 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 2))
     }
 
-    func testDoBracesNotTreatedAsClosure() {
-        let formatter = Formatter(tokenize("do {}"))
+    func testDoCatchBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("do {} catch Foo.error {}"))
         XCTAssertFalse(formatter.isStartOfClosure(at: 2))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 11))
     }
 
     // functions

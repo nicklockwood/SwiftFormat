@@ -1744,6 +1744,21 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantReturn)
     }
 
+    func testNoRemoveVoidReturnInCatch() {
+        let input = """
+        func foo() {
+            do {
+                try Foo()
+            } catch Feature.error {
+                print("feature error")
+                return
+            }
+            print("foo")
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantReturn)
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

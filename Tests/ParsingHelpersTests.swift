@@ -473,7 +473,7 @@ class ParsingHelpersTests: XCTestCase {
 
     func testParameterBodyAfterStringIsNotClosure() {
         let formatter = Formatter(tokenize("""
-        var foo: String = "bar" {
+        var foo = "bar" {
             didSet { print("didSet") }
         }
         """))

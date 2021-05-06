@@ -655,7 +655,14 @@ public struct _FormatRules {
                   typeIndex <= typeEndIndex,
                   let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: j)
             {
-                guard formatter.tokens[typeIndex] == formatter.tokens[valueIndex] else {
+                let typeToken = formatter.tokens[typeIndex]
+                guard typeToken == formatter.tokens[valueIndex] else {
+                    return
+                }
+                // Avoid introducing "inferred to have type 'Void'" warning
+                if formatter.options.redundantType == .inferred, typeToken == .identifier("Void") ||
+                    typeToken == .endOfScope(")") && formatter.tokens[i] == .startOfScope("(")
+                {
                     return
                 }
                 i = typeIndex

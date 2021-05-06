@@ -960,6 +960,42 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantType)
     }
 
+    func testNoRemoveRedundantTypeIfVoid() {
+        let input = "let foo: Void = Void()"
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       exclude: ["void"])
+    }
+
+    func testNoRemoveRedundantTypeIfVoid2() {
+        let input = "let foo: () = ()"
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       exclude: ["void"])
+    }
+
+    func testNoRemoveRedundantTypeIfVoid3() {
+        let input = "let foo: [Void] = [Void]()"
+        testFormatting(for: input, rule: FormatRules.redundantType)
+    }
+
+    func testNoRemoveRedundantTypeIfVoid4() {
+        let input = "let foo: Array<Void> = Array<Void>()"
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       exclude: ["typeSugar"])
+    }
+
+    func testNoRemoveRedundantTypeIfVoid5() {
+        let input = "let foo: Void? = Void?.none"
+        testFormatting(for: input, rule: FormatRules.redundantType)
+    }
+
+    func testNoRemoveRedundantTypeIfVoid6() {
+        let input = "let foo: Optional<Void> = Optional<Void>.none"
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       exclude: ["typeSugar"])
+    }
+
+    // --redundanttype explicit
+
     func testVarRedundantTypeRemovalExplicitType() {
         let input = "var view: UIView = UIView()"
         let output = "var view: UIView = .init()"
@@ -1102,6 +1138,13 @@ extension RulesTests {
         if foo {}
         let foo: Foo = .init()
         """
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeIfVoid() {
+        let input = "let foo: [Void] = [Void]()"
+        let output = "let foo: [Void] = .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
     }

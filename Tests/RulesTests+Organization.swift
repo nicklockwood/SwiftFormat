@@ -1142,11 +1142,11 @@ extension RulesTests {
                 didSet { print("didSet") }
             }
 
-            var withBody3: String = "bar" {
+            var withBody3 = "bar" {
                 didSet { print("didSet") }
             }
 
-            var withBody4: String = "bar" {
+            var withBody4 = "bar" {
                 didSet { print("didSet") }
             }
 

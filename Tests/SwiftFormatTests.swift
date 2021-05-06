@@ -144,14 +144,14 @@ class SwiftFormatTests: XCTestCase {
 
     func testFormattingRange() {
         let input = """
-        let  badlySpaced1:Int   = 5
-        let   badlySpaced2:Int=5
-        let   badlySpaced3 : Int = 5
+        let  badlySpaced1:UInt   = 5
+        let   badlySpaced2:UInt=5
+        let   badlySpaced3 : UInt = 5
         """
         let output = """
-        let  badlySpaced1:Int   = 5
-        let badlySpaced2: Int = 5
-        let   badlySpaced3 : Int = 5
+        let  badlySpaced1:UInt   = 5
+        let badlySpaced2: UInt = 5
+        let   badlySpaced3 : UInt = 5
         """
         XCTAssertEqual(try format(input, lineRange: 2 ... 2), output)
     }

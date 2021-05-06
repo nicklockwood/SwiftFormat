@@ -5013,19 +5013,9 @@ public struct _FormatRules {
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.attribute) { i, _ in
-            // Determine the end index of the attribute
-            let endIndex: Int
-            if let argumentStartIndex = formatter.index(of: .nonSpaceOrComment, after: i),
-               formatter.token(at: argumentStartIndex) == .startOfScope("("),
-               let endOfArgumentScope = formatter.endOfScope(at: argumentStartIndex)
-            {
-                endIndex = endOfArgumentScope
-            } else {
-                endIndex = i
-            }
-
             // Ignore sequential attributes
-            guard var keywordIndex = formatter.index(of: .keyword, after: endIndex),
+            guard let endIndex = formatter.endOfAttribute(at: i),
+                  var keywordIndex = formatter.index(of: .keyword, after: endIndex),
                   var keyword = formatter.token(at: keywordIndex),
                   !formatter.tokens[keywordIndex].isAttribute
             else {

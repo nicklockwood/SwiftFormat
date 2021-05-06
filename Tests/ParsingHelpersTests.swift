@@ -685,6 +685,20 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.startOfModifiers(at: 6, includingAttributes: true), 0)
     }
 
+    func testStartOfPropertyModifiers2() {
+        let formatter = Formatter(tokenize("""
+        @objc(SFFoo) public var foo: Int?
+        """))
+        XCTAssertEqual(formatter.startOfModifiers(at: 7, includingAttributes: false), 5)
+    }
+
+    func testStartOfPropertyModifiers3() {
+        let formatter = Formatter(tokenize("""
+        @OuterType.Wrapper var foo: Int?
+        """))
+        XCTAssertEqual(formatter.startOfModifiers(at: 4, includingAttributes: true), 0)
+    }
+
     // MARK: processDeclaredVariables
 
     func testProcessCommaDelimitedDeclaredVariables() {

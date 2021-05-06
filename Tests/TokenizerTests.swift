@@ -1215,6 +1215,16 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testNamespacedAttribute() {
+        let input = "@OuterType.Wrapper"
+        let output: [Token] = [
+            .keyword("@OuterType"),
+            .operator(".", .infix),
+            .identifier("Wrapper"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testKeywordsAsArgumentLabelNames() {
         let input = "foo(for: bar, if: baz)"
         let output: [Token] = [

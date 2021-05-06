@@ -334,6 +334,13 @@ extension Formatter {
                     return false
                 }
                 prevIndex = startIndex
+            case .identifier:
+                guard let startIndex = startOfAttribute(at: prevIndex),
+                      let nextIndex = self.index(of: .operator(".", .infix), after: startIndex)
+                else {
+                    return false
+                }
+                prevIndex = nextIndex
             default:
                 return false
             }
@@ -651,14 +658,40 @@ extension Formatter {
             return i
         case .endOfScope(")"):
             guard let openParenIndex = index(of: .startOfScope("("), before: i),
-                  let prevTokenIndex = index(of: .nonSpaceOrComment, before: openParenIndex),
-                  tokens[prevTokenIndex].isAttribute
+                  let prevTokenIndex = index(of: .nonSpaceOrComment, before: openParenIndex)
             else {
                 return nil
             }
-            return prevTokenIndex
+            return startOfAttribute(at: prevTokenIndex)
+        case .identifier:
+            guard let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+                $0.isOperator(".")
+            }), let prevTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: dotIndex) else {
+                return nil
+            }
+            return startOfAttribute(at: prevTokenIndex)
         default:
             return nil
+        }
+    }
+
+    func endOfAttribute(at i: Int) -> Int? {
+        guard let startIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i) else {
+            return i
+        }
+        switch tokens[startIndex] {
+        case .startOfScope("(") where !tokens[i + 1 ..< startIndex].contains(where: { $0.isLinebreak }):
+            guard let closeParenIndex = index(of: .endOfScope(")"), after: startIndex) else {
+                return nil
+            }
+            return closeParenIndex
+        case .operator(".", .infix):
+            guard let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex) else {
+                return nil
+            }
+            return endOfAttribute(at: nextIndex)
+        default:
+            return i
         }
     }
 

@@ -619,7 +619,7 @@ extension RulesTests {
     func testFileprivateVarWithPropertWrapperNotChangedToPrivateIfAccessedFromSubclass() {
         let input = """
         class Foo {
-            @Foo fileprivate var foo: Int = 5
+            @Foo fileprivate var foo = 5
         }
 
         class Bar: Foo {
@@ -1147,6 +1147,53 @@ extension RulesTests {
         let output = "let foo: [Void] = .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeWithLiterals() {
+        let input = """
+        let a1: Bool = true
+        let a2: Bool = false
+
+        let b1: String = "foo"
+        let b2: String = "\\(b1)"
+
+        let c1: Int = 1
+        let c2: Int = 1.0
+
+        let d1: Double = 3.14
+        let d2: Double = 3
+        """
+
+        let output = """
+        let a1 = true
+        let a2 = false
+
+        let b1 = "foo"
+        let b2 = "\\(b1)"
+
+        let c1 = 1
+        let c2: Int = 1.0
+
+        let d1 = 3.14
+        let d2: Double = 3
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypePreservesLiteralRepresentableTypes() {
+        let input = """
+        let a: MyBoolRepresentable = true
+        let b: MyStringRepresentable = "foo"
+        let c: MyIntRepresentable = 1
+        let d: MyDoubleRepresentable = 3.14
+        let e: MyArrayRepresentable = ["bar"]
+        let f: MyDictionaryRepresentable = ["baaz": 1]
+        """
+
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
     // MARK: - redundantNilInit
@@ -2435,7 +2482,7 @@ extension RulesTests {
     func testSelfRemovedInDidSet() {
         let input = """
         class Foo {
-            var bar: Bool = false {
+            var bar = false {
                 didSet {
                     self.bar = !self.bar
                 }
@@ -2444,7 +2491,7 @@ extension RulesTests {
         """
         let output = """
         class Foo {
-            var bar: Bool = false {
+            var bar = false {
                 didSet {
                     bar = !bar
                 }
@@ -3142,7 +3189,7 @@ extension RulesTests {
     func testSelfInsertedInDidSet() {
         let input = """
         class Foo {
-            var bar: Bool = false {
+            var bar = false {
                 didSet {
                     bar = !bar
                 }
@@ -3151,7 +3198,7 @@ extension RulesTests {
         """
         let output = """
         class Foo {
-            var bar: Bool = false {
+            var bar = false {
                 didSet {
                     self.bar = !self.bar
                 }

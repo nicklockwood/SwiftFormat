@@ -303,28 +303,38 @@ private func shouldSkipFile(_ inputURL: URL, with options: Options) -> Bool {
 }
 
 // Process configuration files in specified directory.
+private var configCache = [URL: [String: String]]()
+private let configQueue = DispatchQueue(label: "swiftformat.config", qos: .userInteractive)
 private func processDirectory(_ inputURL: URL, with options: inout Options, logger: Logger?) throws {
+    if let args = configQueue.sync(execute: { configCache[inputURL] }) {
+        try options.addArguments(args, in: inputURL.path)
+        return
+    }
+    var args = [String: String]()
     let manager = FileManager.default
     let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
     if manager.fileExists(atPath: configFile.path) {
-        let data = try Data(contentsOf: configFile)
-        let args = try parseConfigFile(data)
-        try options.addArguments(args, in: inputURL.path)
         logger?("Reading config file at \(configFile.path)")
+        let data = try Data(contentsOf: configFile)
+        args = try parseConfigFile(data)
     }
     let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
     if manager.fileExists(atPath: versionFile.path) {
         let versionString = try String(contentsOf: versionFile, encoding: .utf8)
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        if let version = Version(rawValue: versionString) {
-            assert(options.formatOptions != nil)
-            options.formatOptions?.swiftVersion = version
+        if Version(rawValue: versionString) != nil {
+            args["swiftversion"] = versionString
         } else {
             // Don't treat as error, per: https://github.com/nicklockwood/SwiftFormat/issues/639
             // TODO: find a better solution for logging warnings here
             logger?("Unrecognized swift version string '\(versionString)' in \(versionFile.path)")
         }
     }
+    configQueue.async {
+        configCache[inputURL] = args
+    }
+    assert(options.formatOptions != nil)
+    try options.addArguments(args, in: inputURL.path)
 }
 
 /// Line and column offset in source

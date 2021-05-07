@@ -4570,9 +4570,10 @@ public struct _FormatRules {
             else {
                 return
             }
-            if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex, if: {
+            let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex, if: {
                 $0.isOperator(".")
-            }), formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex, if: {
+            })
+            if let dotIndex = dotIndex, formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex, if: {
                 ![.identifier("self"), .identifier("Type")].contains($0)
             }) != nil, identifier != "Optional" {
                 return
@@ -4622,8 +4623,14 @@ public struct _FormatRules {
                 {
                     return
                 }
+                if formatter.lastSignificantKeyword(at: i) == "case" ||
+                    formatter.last(.endOfScope, before: i) == .endOfScope("case")
+                {
+                    // https://bugs.swift.org/browse/SR-13838
+                    return
+                }
                 var typeTokens = formatter.tokens[typeStart ... typeEnd]
-                if formatter.tokens[typeStart] == .startOfScope("("),
+                if typeTokens.first == .startOfScope("("),
                    let commaEnd = formatter.index(of: .endOfScope(")"), after: typeStart),
                    commaEnd < typeEnd
                 {

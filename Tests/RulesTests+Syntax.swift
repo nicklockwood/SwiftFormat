@@ -1772,6 +1772,20 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.typeSugar, exclude: ["hoistPatternLet"])
     }
 
+    func testSwitchCaseOptionalNotReplaced() {
+        let input = """
+        switch foo {
+        case Optional<Any>.none:
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.typeSugar)
+    }
+
+    func testCaseOptionalNotReplaced2() {
+        let input = "if case Optional<Any>.none = foo {}"
+        testFormatting(for: input, rule: FormatRules.typeSugar)
+    }
+
     // shortOptionals = exceptProperties
 
     func testPropertyTypeNotConvertedToSugar() {

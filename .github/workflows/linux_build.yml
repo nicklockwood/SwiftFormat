@@ -22,7 +22,6 @@ jobs:
           swift build --configuration release
           SWIFTFORMAT_BIN_PATH=`swift build --configuration release --show-bin-path`
           mv $SWIFTFORMAT_BIN_PATH/swiftformat "${HOME}/swiftformat_linux"
-          ${HOME}/swiftformat_linux version
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v2
         with:

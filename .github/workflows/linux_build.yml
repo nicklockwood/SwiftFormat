@@ -18,8 +18,9 @@ jobs:
           ref: ${{ github.event.inputs.ref }}
       - name: Build it
         run: |
-          swift build --configuration release
+          swift build --configuration release -Xswiftc -static-stdlib
           SWIFTFORMAT_BIN_PATH=`swift build --configuration release --show-bin-path`
+          chmod a+x $SWIFTFORMAT_BIN_PATH/swiftformat
           mv $SWIFTFORMAT_BIN_PATH/swiftformat "${HOME}/swiftformat_linux"
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v2

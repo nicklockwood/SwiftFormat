@@ -23,6 +23,7 @@ jobs:
           SWIFTFORMAT_BIN_PATH=`swift build --configuration release --show-bin-path`
           mv $SWIFTFORMAT_BIN_PATH/swiftformat "${HOME}/swiftformat_linux"
           apt update && apt install zip -y
+          cd ${HOME}/swiftformat_linux
           zip swiftformat_linux.zip swiftformat_linux
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v2

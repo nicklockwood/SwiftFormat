@@ -385,6 +385,19 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.trailingCommas)
     }
 
+    func testTrailingCommaNotAddedToTypeDeclaration8() {
+        let input = """
+        extension Foo {
+            var bar: [
+                Int
+            ] {
+                fatalError()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.trailingCommas)
+    }
+
     func testTrailingCommaNotAddedToCaptureList() {
         let input = """
         let foo = { [

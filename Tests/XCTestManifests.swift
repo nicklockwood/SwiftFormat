@@ -2095,6 +2095,7 @@ extension RulesTests {
         ("testTrailingCommaNotAddedToTypeDeclaration5", testTrailingCommaNotAddedToTypeDeclaration5),
         ("testTrailingCommaNotAddedToTypeDeclaration6", testTrailingCommaNotAddedToTypeDeclaration6),
         ("testTrailingCommaNotAddedToTypeDeclaration7", testTrailingCommaNotAddedToTypeDeclaration7),
+        ("testTrailingCommaNotAddedToTypeDeclaration8", testTrailingCommaNotAddedToTypeDeclaration8),
         ("testTrailingCommaRemovedInInlineArray", testTrailingCommaRemovedInInlineArray),
         ("testTrailingCommaRemovedInWrappedArray", testTrailingCommaRemovedInWrappedArray),
         ("testTrailingCommasAddedToSingleLineNestedDictionary", testTrailingCommasAddedToSingleLineNestedDictionary),

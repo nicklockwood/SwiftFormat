@@ -275,6 +275,7 @@ extension Formatter {
                         case .startOfScope("("):
                             if last(.keyword, before: scopeStart) == .keyword("func") {
                                 isType = true
+                                break
                             } else {
                                 fallthrough
                             }
@@ -286,7 +287,6 @@ extension Formatter {
                         default:
                             break
                         }
-                        break
                     }
                     if let token = last(.keyword, before: index),
                        [.keyword("let"), .keyword("var")].contains(token)

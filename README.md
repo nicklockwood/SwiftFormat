@@ -800,10 +800,7 @@ Credits
 * [Juri Pakaste](https://github.com/juri) - Filelist feature
 * [Jim Puls](https://github.com/puls) - Big Sur icon update
 * [Daniele Formichelli](https://github.com/danyf90) - JSON reporter
-<<<<<<< HEAD
-=======
 * [Mahdi Bchatnia](https://github.com/inket) - Linux build workflow
->>>>>>> bf20721e5f77e00f3da30f7c1a1b6f757d8b5cd1
 * [Nick Lockwood](https://github.com/nicklockwood) - Everything else
 
 ([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

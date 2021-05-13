@@ -17,11 +17,7 @@
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-<<<<<<< HEAD
-	<string>0.48.0</string>
-=======
 	<string>0.48.1</string>
->>>>>>> bf20721e5f77e00f3da30f7c1a1b6f757d8b5cd1
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>

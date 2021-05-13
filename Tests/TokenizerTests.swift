@@ -1215,6 +1215,16 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testNamespacedAttribute() {
+        let input = "@OuterType.Wrapper"
+        let output: [Token] = [
+            .keyword("@OuterType"),
+            .operator(".", .infix),
+            .identifier("Wrapper"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testKeywordsAsArgumentLabelNames() {
         let input = "foo(for: bar, if: baz)"
         let output: [Token] = [
@@ -1363,6 +1373,56 @@ class TokenizerTests: XCTestCase {
             .endOfScope(")"),
             .operator(".", .infix),
             .identifier("1"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testXcodeToken() {
+        let input = """
+        test(image: <#T##UIImage#>)
+        """
+        let output: [Token] = [
+            .identifier("test"),
+            .startOfScope("("),
+            .identifier("image"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("<#T##UIImage#>"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testXcodeWithArrayAndClosureToken() {
+        let input = """
+        monkey(smelly: <#T##Bool#>, happy: <#T##Bool#>, names: <#T##[String]#>, throw💩: <#T##((Int) -> Void)##((Int) -> Void)##(Int) -> Void#>)
+        """
+        let output: [Token] = [
+            .identifier("monkey"),
+            .startOfScope("("),
+            .identifier("smelly"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("<#T##Bool#>"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("happy"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("<#T##Bool#>"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("names"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("<#T##[String]#>"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("throw💩"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("<#T##((Int) -> Void)##((Int) -> Void)##(Int) -> Void#>"),
+            .endOfScope(")"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }
@@ -2721,6 +2781,35 @@ class TokenizerTests: XCTestCase {
             .space(" "),
             .operator(".", .prefix),
             .identifier("quux"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testGenericResultBuilder() {
+        let input = "func foo(@SomeResultBuilder<Self> builder: () -> Void) {}"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("foo"),
+            .startOfScope("("),
+            .keyword("@SomeResultBuilder"),
+            .startOfScope("<"),
+            .identifier("Self"),
+            .endOfScope(">"),
+            .space(" "),
+            .identifier("builder"),
+            .delimiter(":"),
+            .space(" "),
+            .startOfScope("("),
+            .endOfScope(")"),
+            .space(" "),
+            .operator("->", .infix),
+            .space(" "),
+            .identifier("Void"),
+            .endOfScope(")"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

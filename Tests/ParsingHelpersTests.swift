@@ -110,9 +110,10 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 2))
     }
 
-    func testDoBracesNotTreatedAsClosure() {
-        let formatter = Formatter(tokenize("do {}"))
+    func testDoCatchBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("do {} catch Foo.error {}"))
         XCTAssertFalse(formatter.isStartOfClosure(at: 2))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 11))
     }
 
     // functions
@@ -682,6 +683,20 @@ class ParsingHelpersTests: XCTestCase {
         @objc public class override var foo: Int?
         """))
         XCTAssertEqual(formatter.startOfModifiers(at: 6, includingAttributes: true), 0)
+    }
+
+    func testStartOfPropertyModifiers2() {
+        let formatter = Formatter(tokenize("""
+        @objc(SFFoo) public var foo: Int?
+        """))
+        XCTAssertEqual(formatter.startOfModifiers(at: 7, includingAttributes: false), 5)
+    }
+
+    func testStartOfPropertyModifiers3() {
+        let formatter = Formatter(tokenize("""
+        @OuterType.Wrapper var foo: Int?
+        """))
+        XCTAssertEqual(formatter.startOfModifiers(at: 4, includingAttributes: true), 0)
     }
 
     // MARK: processDeclaredVariables

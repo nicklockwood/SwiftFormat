@@ -827,6 +827,20 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
+    func testHandleXcodeTokenApplyingWrap() {
+        let input = """
+        test(image: <#T##UIImage#>, name: "Name")
+        """
+        let output = """
+        test(
+            image: <#T##UIImage#>,
+            name: "Name"
+        )
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 20)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
     // MARK: wrapParameters
 
     // MARK: preserve
@@ -2689,6 +2703,18 @@ extension RulesTests {
         public convenience init() {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testWrapPropertyWrapperAttribute() {
+        let input = """
+        @OuterType.Wrapper var foo: Int
+        """
+        let output = """
+        @OuterType.Wrapper
+        var foo: Int
+        """
+        let options = FormatOptions(varAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 

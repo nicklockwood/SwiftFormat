@@ -2,7 +2,11 @@
 //  Tokenizer.swift
 //  SwiftFormat
 //
+<<<<<<< HEAD
 //  Version 0.48.0
+=======
+//  Version 0.48.1
+>>>>>>> bf20721e5f77e00f3da30f7c1a1b6f757d8b5cd1
 //
 //  Created by Nick Lockwood on 11/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -911,6 +915,31 @@ private extension UnicodeScalarView {
                 return .identifier("`" + identifier + "`")
             }
             self = start
+        } else if read("<") {
+            if read("#") {
+                // look for closing Xcode token
+                var previousWasHash = false
+                var index = startIndex
+                var found = false
+                while index < endIndex {
+                    let idx = index
+                    index = self.index(after: index)
+                    if self[idx] == ">" {
+                        if previousWasHash {
+                            found = true
+                            break
+                        }
+                    } else {
+                        previousWasHash = self[idx] == "#"
+                    }
+                }
+                if found {
+                    let string = String(prefix(upTo: index))
+                    self = suffix(from: index)
+                    return .identifier("<#\(string)")
+                }
+            }
+            self = start
         } else if read("#") {
             if let identifier = readIdentifier() {
                 if identifier == "if" {
@@ -1402,7 +1431,7 @@ public func tokenize(_ source: String) -> [Token] {
         case ":", "=", "->":
             type = .infix
         case ".":
-            type = prevNonSpaceToken.isLvalue ? .infix : .prefix
+            type = prevNonSpaceToken.isLvalue || prevNonSpaceToken.isAttribute ? .infix : .prefix
         case "?":
             if prevToken.isSpaceOrCommentOrLinebreak {
                 // ? is a ternary operator, treat it as the start of a scope
@@ -1542,7 +1571,14 @@ public func tokenize(_ source: String) -> [Token] {
                     else {
                         fallthrough
                     }
-                case .startOfScope where token.isStringDelimiter, .identifier, .number:
+                case .identifier:
+                    guard let scopeIndex = closedGenericScopeIndexes.last,
+                          let prevIndex = index(of: .nonSpaceOrComment, before: scopeIndex),
+                          tokens[prevIndex].isAttribute
+                    else {
+                        fallthrough
+                    }
+                case .startOfScope where token.isStringDelimiter, .number:
                     convertClosingChevronToOperator(at: prevIndex, andOpeningChevron: true)
                     processToken()
                     return

@@ -274,9 +274,51 @@ class RulesTests: XCTestCase {
         testFormatting(for: input, rule: FormatRules.trailingCommas)
     }
 
+    func testTrailingCommaNotAddedToSubscriptInsideArrayLiteral() {
+        let input = """
+        let array = [
+            foo
+                .bar[
+                    0
+                ]
+                .baz,
+        ]
+        """
+        testFormatting(for: input, rule: FormatRules.trailingCommas)
+    }
+
+    func testTrailingCommaAddedToArrayLiteralInsideTuple() {
+        let input = """
+        let arrays = ([
+            foo
+        ], [
+            bar
+        ])
+        """
+        let output = """
+        let arrays = ([
+            foo,
+        ], [
+            bar,
+        ])
+        """
+        testFormatting(for: input, output, rule: FormatRules.trailingCommas)
+    }
+
+    func testNoTrailingCommaAddedToArrayLiteralInsideTuple() {
+        let input = """
+        let arrays = ([
+            Int
+        ], [
+            Int
+        ]).self
+        """
+        testFormatting(for: input, rule: FormatRules.trailingCommas)
+    }
+
     func testTrailingCommaNotAddedToTypeDeclaration() {
         let input = """
-        var: [
+        var foo: [
             Int:
                 String
         ]

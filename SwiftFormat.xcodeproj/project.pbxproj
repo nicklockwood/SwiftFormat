@@ -1099,7 +1099,11 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
+<<<<<<< HEAD
 				MARKETING_VERSION = 0.48.0;
+=======
+				MARKETING_VERSION = 0.48.1;
+>>>>>>> bf20721e5f77e00f3da30f7c1a1b6f757d8b5cd1
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1127,7 +1131,11 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
+<<<<<<< HEAD
 				MARKETING_VERSION = 0.48.0;
+=======
+				MARKETING_VERSION = 0.48.1;
+>>>>>>> bf20721e5f77e00f3da30f7c1a1b6f757d8b5cd1
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1223,7 +1231,11 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
+<<<<<<< HEAD
 				MARKETING_VERSION = 0.48.0;
+=======
+				MARKETING_VERSION = 0.48.1;
+>>>>>>> bf20721e5f77e00f3da30f7c1a1b6f757d8b5cd1
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
 				PRODUCT_NAME = "SwiftFormat for Xcode";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1253,7 +1265,11 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
+<<<<<<< HEAD
 				MARKETING_VERSION = 0.48.0;
+=======
+				MARKETING_VERSION = 0.48.1;
+>>>>>>> bf20721e5f77e00f3da30f7c1a1b6f757d8b5cd1
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
 				PRODUCT_NAME = "SwiftFormat for Xcode";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1281,7 +1297,11 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
+<<<<<<< HEAD
 				MARKETING_VERSION = 0.48.0;
+=======
+				MARKETING_VERSION = 0.48.1;
+>>>>>>> bf20721e5f77e00f3da30f7c1a1b6f757d8b5cd1
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
 				PRODUCT_NAME = SwiftFormat;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1311,7 +1331,11 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
+<<<<<<< HEAD
 				MARKETING_VERSION = 0.48.0;
+=======
+				MARKETING_VERSION = 0.48.1;
+>>>>>>> bf20721e5f77e00f3da30f7c1a1b6f757d8b5cd1
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
 				PRODUCT_NAME = SwiftFormat;
 				PROVISIONING_PROFILE_SPECIFIER = "";

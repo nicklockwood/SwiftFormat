@@ -212,7 +212,110 @@ public extension Formatter {
     }
 }
 
+enum ScopeType {
+    case array
+    case arrayType
+    case captureList
+    case dictionary
+    case dictionaryType
+    case `subscript`
+    case tuple
+    case tupleType
+
+    var isType: Bool {
+        switch self {
+        case .array, .captureList, .dictionary, .subscript, .tuple:
+            return false
+        case .arrayType, .dictionaryType, .tupleType:
+            return true
+        }
+    }
+}
+
 extension Formatter {
+    func scopeType(at index: Int) -> ScopeType? {
+        guard let token = self.token(at: index) else {
+            return nil
+        }
+        guard case .startOfScope = token else {
+            guard let startIndex = self.index(of: .startOfScope, before: index) else {
+                return nil
+            }
+            return scopeType(at: startIndex)
+        }
+        switch token {
+        case .startOfScope("["), .startOfScope("("):
+            guard let endIndex = endOfScope(at: index) else {
+                return nil
+            }
+            var isType = false
+            if let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex, if: {
+                $0.isOperator(".")
+            }), [.identifier("self"), .identifier("init")]
+                .contains(next(.nonSpaceOrCommentOrLinebreak, after: nextIndex))
+            {
+                isType = true
+            } else if next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") {
+                isType = true
+            } else if let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
+                switch tokens[prevIndex] {
+                case .identifier, .endOfScope(")"), .endOfScope("]"),
+                     .operator("?", _), .operator("!", _),
+                     .endOfScope where token.isStringDelimiter:
+                    if tokens[prevIndex + 1 ..< index].contains(where: { $0.isLinebreak }) {
+                        break
+                    }
+                    return .subscript
+                case .startOfScope("{") where isInClosureArguments(at: index):
+                    return .captureList
+                case .delimiter(":"), .delimiter(","):
+                    // Check for type declaration
+                    if let scopeStart = self.index(of: .startOfScope, before: prevIndex) {
+                        switch tokens[scopeStart] {
+                        case .startOfScope("("):
+                            if last(.keyword, before: scopeStart) == .keyword("func") {
+                                isType = true
+                            } else {
+                                fallthrough
+                            }
+                        case .startOfScope("["):
+                            guard let type = scopeType(at: scopeStart) else {
+                                return nil
+                            }
+                            isType = type.isType
+                        default:
+                            break
+                        }
+                        break
+                    }
+                    if let token = last(.keyword, before: index),
+                       [.keyword("let"), .keyword("var")].contains(token)
+                    {
+                        isType = true
+                    }
+                case .operator("->", _), .startOfScope("<"):
+                    isType = true
+                case .startOfScope("["), .startOfScope("("):
+                    guard let type = scopeType(at: prevIndex) else {
+                        return nil
+                    }
+                    isType = type.isType
+                default:
+                    break
+                }
+            }
+            if token == .startOfScope("(") {
+                return isType ? .tupleType : .tuple
+            }
+            if !isType {
+                return self.index(of: .delimiter(":"), after: index) == nil ? .array : .dictionary
+            }
+            return self.index(of: .delimiter(":"), after: index) == nil ? .arrayType : .dictionaryType
+        default:
+            return nil
+        }
+    }
+
     func modifiersForDeclaration(at index: Int, contains: (Int, String) -> Bool) -> Bool {
         var index = index
         while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
@@ -231,6 +334,13 @@ extension Formatter {
                     return false
                 }
                 prevIndex = startIndex
+            case .identifier:
+                guard let startIndex = startOfAttribute(at: prevIndex),
+                      let nextIndex = self.index(of: .operator(".", .infix), after: startIndex)
+                else {
+                    return false
+                }
+                prevIndex = nextIndex
             default:
                 return false
             }
@@ -392,7 +502,7 @@ extension Formatter {
                 }
                 return false
             case "func", "subscript", "class", "struct", "protocol", "enum", "extension",
-                 "throws", "rethrows", "async":
+                 "throws", "rethrows", "async", "catch":
                 return false
             default:
                 return true
@@ -548,14 +658,40 @@ extension Formatter {
             return i
         case .endOfScope(")"):
             guard let openParenIndex = index(of: .startOfScope("("), before: i),
-                  let prevTokenIndex = index(of: .nonSpaceOrComment, before: openParenIndex),
-                  tokens[prevTokenIndex].isAttribute
+                  let prevTokenIndex = index(of: .nonSpaceOrComment, before: openParenIndex)
             else {
                 return nil
             }
-            return prevTokenIndex
+            return startOfAttribute(at: prevTokenIndex)
+        case .identifier:
+            guard let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+                $0.isOperator(".")
+            }), let prevTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: dotIndex) else {
+                return nil
+            }
+            return startOfAttribute(at: prevTokenIndex)
         default:
             return nil
+        }
+    }
+
+    func endOfAttribute(at i: Int) -> Int? {
+        guard let startIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i) else {
+            return i
+        }
+        switch tokens[startIndex] {
+        case .startOfScope("(") where !tokens[i + 1 ..< startIndex].contains(where: { $0.isLinebreak }):
+            guard let closeParenIndex = index(of: .endOfScope(")"), after: startIndex) else {
+                return nil
+            }
+            return closeParenIndex
+        case .operator(".", .infix):
+            guard let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex) else {
+                return nil
+            }
+            return endOfAttribute(at: nextIndex)
+        default:
+            return i
         }
     }
 

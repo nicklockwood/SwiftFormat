@@ -333,7 +333,7 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
 }
 
 // Parse a configuration file into a dictionary of arguments
-func parseConfigFile(_ data: Data) throws -> [String: String] {
+public func parseConfigFile(_ data: Data) throws -> [String: String] {
     guard let input = String(data: data, encoding: .utf8) else {
         throw FormatError.reading("Unable to read data for configuration file")
     }
@@ -534,7 +534,7 @@ private func processOption(_ key: String,
 }
 
 // Parse rule names from arguments
-func rulesFor(_ args: [String: String], lint: Bool) throws -> Set<String> {
+public func rulesFor(_ args: [String: String], lint: Bool) throws -> Set<String> {
     var rules = allRules
     rules = try args["rules"].map {
         try Set(parseRules($0))
@@ -596,7 +596,7 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
 
 // Parse FormatOptions from arguments
 // Returns nil if the arguments dictionary does not contain any formatting arguments
-func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
+public func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
     var options = FormatOptions.default
     var arguments = Set(formattingArguments)
 

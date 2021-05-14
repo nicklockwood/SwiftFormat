@@ -850,6 +850,14 @@ struct _Descriptors {
         help: "Acronyms to auto-capitalize. Defaults to \"ID,URL,UUID\".",
         keyPath: \.acronyms
     )
+    let indentStrings = OptionDescriptor(
+        argumentName: "indentstrings",
+        displayName: "Indent Strings",
+        help: "Indent Multiline Strings: \"false\" (default) or \"true\"",
+        keyPath: \.indentStrings,
+        trueValues: ["true", "enabled"],
+        falseValues: ["false", "disabled"]
+    )
 
     // MARK: - Internal
 

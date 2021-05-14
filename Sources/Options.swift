@@ -395,6 +395,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var redundantType: RedundantType
     public var emptyBracesSpacing: EmptyBracesSpacing
     public var acronyms: Set<String>
+    public var indentStrings: Bool
 
     // Deprecated
     public var indentComments: Bool
@@ -480,6 +481,7 @@ public struct FormatOptions: CustomStringConvertible {
                 redundantType: RedundantType = .inferLocalsOnly,
                 emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
                 acronyms: Set<String> = ["ID", "URL", "UUID"],
+                indentStrings: Bool = false,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -559,6 +561,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.redundantType = redundantType
         self.emptyBracesSpacing = emptyBracesSpacing
         self.acronyms = acronyms
+        self.indentStrings = indentStrings
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

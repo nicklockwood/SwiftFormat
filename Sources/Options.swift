@@ -369,6 +369,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var extensionACLPlacement: ExtensionACLPlacement
     public var redundantType: RedundantType
     public var emptyBracesSpacing: EmptyBracesSpacing
+    public var useLineComments: Bool
 
     // Deprecated
     public var indentComments: Bool
@@ -449,6 +450,7 @@ public struct FormatOptions: CustomStringConvertible {
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 redundantType: RedundantType = .inferred,
                 emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
+                useLineComments: Bool = false,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -523,6 +525,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.extensionACLPlacement = extensionACLPlacement
         self.redundantType = redundantType
         self.emptyBracesSpacing = emptyBracesSpacing
+        self.useLineComments = useLineComments
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

@@ -816,6 +816,14 @@ struct _Descriptors {
         help: "Empty braces: \"no-space\" (default), \"spaced\" or \"linebreak\"",
         keyPath: \.emptyBracesSpacing
     )
+    let useLineComments = OptionDescriptor(
+        argumentName: "uselinecomments",
+        displayName: "Remove Block Comments",
+        help: "Only Use Single Line Comments: \"false\" (default) or \"true\"",
+        keyPath: \.useLineComments,
+        trueValues: ["true", "enabled"],
+        falseValues: ["false", "disabled"]
+    )
 
     // MARK: - Internal
 

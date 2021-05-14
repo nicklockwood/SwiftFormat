@@ -5470,4 +5470,65 @@ public struct _FormatRules {
         let updatedTokens = declarations.flatMap { $0.tokens }
         formatter.replaceTokens(in: 0 ..< formatter.tokens.count, with: updatedTokens)
     }
+
+    public let indentMultilineStrings = FormatRule(
+        help: "Indents multiline strings.",
+        options: ["indentstrings"]
+    ) { formatter in
+        if (!formatter.options.indentStrings){
+            return
+        }
+        var indentLines = false
+        var firstSpace = 0
+
+        formatter.forEachToken { i, token in
+            switch token {
+                // count the number of spaces on the first line
+                case .startOfScope("\"\"\""):
+                    indentLines = true
+                    var tok = formatter.token(at:formatter.startOfLine(at: i))
+                    switch tok {
+                        case let .space(s):
+                            firstSpace = s.count
+                            break
+                        default:
+                            firstSpace = 0
+                            break
+                    }
+                    break
+
+                case .endOfScope("\"\"\""):
+                    indentLines = false
+                    break
+                
+                // for each line in the string, add extra spaces at the beginning
+                case .linebreak:
+                    if (indentLines){
+                        // count the number of spaces it already has
+                        var totalSpaces = 0
+                        var ind = i+1
+                        var beginsWithSpaces = true
+                        while (beginsWithSpaces){
+                            switch formatter.token(at: ind){
+                                case let .space(s):
+                                    totalSpaces += s.count
+                                    ind+=1
+                                    break
+                                default:
+                                    beginsWithSpaces = false
+                                    break
+                            }
+                        }
+                        // if it does not have enough spaces, add 4 spaces
+                        if (totalSpaces < firstSpace + 4){
+                            formatter.insert(.space("    "), at: i+1)
+                        }
+                        
+                    } 
+                    break
+                default:
+                    break
+            }
+        }
+    }
 }

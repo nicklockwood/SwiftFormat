@@ -1943,4 +1943,27 @@ extension RulesTests {
         let options = FormatOptions(swiftVersion: "5.2")
         testFormatting(for: input, output, rule: FormatRules.preferKeyPath, options: options)
     }
+
+    func testIndentMultilineStrings() {
+        let input = """
+            func foo() {
+                let sql = \"\"\"
+                SELECT *
+                FROM authors
+                WHERE authors.name LIKE '%David%'
+                \"\"\"
+            }
+            """
+        let output = """
+            func foo() {
+                let sql = \"\"\"
+                    SELECT *
+                    FROM authors
+                    WHERE authors.name LIKE '%David%'
+                    \"\"\"
+            }
+            """
+        let options = FormatOptions(indentStrings: true)
+        testFormatting(for: input, output, rule: FormatRules.indentMultilineStrings, options: options)
+    }
 }

@@ -2295,4 +2295,27 @@ class SyntaxTests: RulesTests {
         """
         testFormatting(for: input, output, rule: FormatRules.blockToLineComments)
     }
+
+    func testIndentMultilineStrings() {
+        let input = #"""
+        func foo() {
+            let sql = """
+            SELECT *
+            FROM authors
+            WHERE authors.name LIKE '%David%'
+            """
+        }
+        """#
+        let output = #"""
+        func foo() {
+            let sql = """
+                SELECT *
+                FROM authors
+                WHERE authors.name LIKE '%David%'
+                """
+        }
+        """#
+        let options = FormatOptions(indentStrings: true)
+        testFormatting(for: input, output, rule: FormatRules.indentMultilineStrings, options: options)
+    }
 }

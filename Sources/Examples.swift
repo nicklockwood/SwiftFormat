@@ -1274,4 +1274,18 @@ private struct Examples {
     + let entityUUID: UUID
     ```
     """
+
+    let blockToLineComments = """
+    ```diff
+    - /*
+    -  * foo
+    -  * bar
+    -  */
+
+    + //
+    + // foo
+    + // bar
+    + //
+    ```
+    """
 }

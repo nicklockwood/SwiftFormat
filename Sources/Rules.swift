@@ -6295,4 +6295,57 @@ public struct _FormatRules {
             }
         }
     }
+
+    public let indentMultilineStrings = FormatRule(
+        help: "Indents multiline strings.",
+        options: ["indentstrings"]
+    ) { formatter in
+        if !formatter.options.indentStrings {
+            return
+        }
+        var indentLines = false
+        var firstSpace = 0
+
+        formatter.forEachToken { i, token in
+            switch token {
+            // count the number of spaces on the first line
+            case .startOfScope("\"\"\""):
+                indentLines = true
+                var tok = formatter.token(at: formatter.startOfLine(at: i))
+                switch tok {
+                case let .space(s):
+                    firstSpace = s.count
+                default:
+                    firstSpace = 0
+                }
+
+            case .endOfScope("\"\"\""):
+                indentLines = false
+
+            // for each line in the string, add extra spaces at the beginning
+            case .linebreak:
+                if indentLines {
+                    // count the number of spaces it already has
+                    var totalSpaces = 0
+                    var ind = i + 1
+                    var beginsWithSpaces = true
+                    while beginsWithSpaces {
+                        switch formatter.token(at: ind) {
+                        case let .space(s):
+                            totalSpaces += s.count
+                            ind += 1
+                        default:
+                            beginsWithSpaces = false
+                        }
+                    }
+                    // if it does not have enough spaces, add 4 spaces
+                    if totalSpaces < firstSpace + 4 {
+                        formatter.insert(.space("    "), at: i + 1)
+                    }
+                }
+            default:
+                break
+            }
+        }
+    }
 }

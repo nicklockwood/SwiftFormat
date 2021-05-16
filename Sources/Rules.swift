@@ -5508,4 +5508,36 @@ public struct _FormatRules {
         let updatedTokens = declarations.flatMap { $0.tokens }
         formatter.replaceTokens(in: 0 ..< formatter.tokens.count, with: updatedTokens)
     }
+
+    public let assertionFailures = FormatRule(
+        help: """
+        Changes all instances of assert(false, ...) to assertionFailure(...) 
+        and precondition(false, ...) to preconditionFailure(...).
+        """
+    ) { formatter in
+        formatter.forEachToken { i, token in
+            switch token {
+            case let .identifier(condition) where
+                formatter.token(at: i + 1) == .startOfScope("(")
+                && formatter.token(at: i + 2) == .identifier("false"):
+
+                let conditions = ["assert", "precondition"]
+                if !conditions.contains(condition) {
+                    break
+                }
+
+                var endIndex = i + 2
+                // if there are more arguments, replace the comma and space as well
+                if formatter.token(at: endIndex + 1) == .delimiter(",") {
+                    endIndex += 2
+                }
+
+                let replacements = ["assert": "assertionFailure", "precondition": "preconditionFailure"]
+                formatter.replaceTokens(in: i ... endIndex, with: .identifier(replacements[condition]!))
+                formatter.insert(.startOfScope("("), at: i + 1)
+            default:
+                break
+            }
+        }
+    }
 }

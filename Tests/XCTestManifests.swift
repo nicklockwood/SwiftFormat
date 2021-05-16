@@ -2227,6 +2227,8 @@ extension RulesTests {
         ("testWrapFunctionIfReturnTypeExceedsMaxWidth4", testWrapFunctionIfReturnTypeExceedsMaxWidth4),
         ("testWrapFunctionIfReturnTypeExceedsMaxWidth4WithXcodeIndentation", testWrapFunctionIfReturnTypeExceedsMaxWidth4WithXcodeIndentation),
         ("testWrapFunctionIfReturnTypeExceedsMaxWidthWithXcodeIndentation", testWrapFunctionIfReturnTypeExceedsMaxWidthWithXcodeIndentation),
+        ("testWrapGenericPropertyWrapperAttribute", testWrapGenericPropertyWrapperAttribute),
+        ("testWrapGenericPropertyWrapperAttribute2", testWrapGenericPropertyWrapperAttribute2),
         ("testWrapGuardStatement", testWrapGuardStatement),
         ("testWrapIfElseStatement", testWrapIfElseStatement),
         ("testWrapIfStatement", testWrapIfStatement),

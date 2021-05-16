@@ -690,6 +690,11 @@ extension Formatter {
                 return nil
             }
             return endOfAttribute(at: nextIndex)
+        case .startOfScope("<"):
+            guard let nextIndex = index(of: .endOfScope(">"), after: startIndex) else {
+                return nil
+            }
+            return endOfAttribute(at: nextIndex)
         default:
             return i
         }

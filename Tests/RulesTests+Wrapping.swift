@@ -2718,6 +2718,30 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testWrapGenericPropertyWrapperAttribute() {
+        let input = """
+        @OuterType.Generic<WrappedType> var foo: WrappedType
+        """
+        let output = """
+        @OuterType.Generic<WrappedType>
+        var foo: WrappedType
+        """
+        let options = FormatOptions(varAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testWrapGenericPropertyWrapperAttribute2() {
+        let input = """
+        @OuterType.Generic<WrappedType>.Foo var foo: WrappedType
+        """
+        let output = """
+        @OuterType.Generic<WrappedType>.Foo
+        var foo: WrappedType
+        """
+        let options = FormatOptions(varAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     // MARK: wrapEnumCases
 
     func testMultilineEnumCases() {

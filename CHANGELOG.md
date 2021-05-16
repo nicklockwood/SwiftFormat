@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.48.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.2) (2020-05-16)
+
+- Fixed wrapping of generic property wrapper attributes
+- Fixed bug where trailing comma could be inserted inside a collection type signature
+
 ## [0.48.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.1) (2020-05-08)
 
 - Fixed bug where `typeSugar` rule triggered a Swift bug inside case statements

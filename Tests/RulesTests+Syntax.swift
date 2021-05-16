@@ -1997,4 +1997,38 @@ extension RulesTests {
         let options = FormatOptions(swiftVersion: "5.2")
         testFormatting(for: input, output, rule: FormatRules.preferKeyPath, options: options)
     }
+
+    func testAssertionFailuresForAssertFalse() {
+        let input = "assert(false)"
+        let output = "assertionFailure()"
+        testFormatting(for: input, output, rule: FormatRules.assertionFailures)
+    }
+
+    func testAssertionFailuresForAssertTrue() {
+        let input = "assert(true)"
+        testFormatting(for: input, rule: FormatRules.assertionFailures)
+    }
+
+    func testAssertionFailuresForAssertFalseWithArgs() {
+        let input = "assert(false, msg, 20, 21)"
+        let output = "assertionFailure(msg, 20, 21)"
+        testFormatting(for: input, output, rule: FormatRules.assertionFailures)
+    }
+
+    func testAssertionFailuresForPreconditionFalse() {
+        let input = "precondition(false)"
+        let output = "preconditionFailure()"
+        testFormatting(for: input, output, rule: FormatRules.assertionFailures)
+    }
+
+    func testAssertionFailuresForPreconditionTrue() {
+        let input = "precondition(true)"
+        testFormatting(for: input, rule: FormatRules.assertionFailures)
+    }
+
+    func testAssertionFailuresForPreconditionFalseWithArgs() {
+        let input = "precondition(false, msg, 0, 1)"
+        let output = "preconditionFailure(msg, 0, 1)"
+        testFormatting(for: input, output, rule: FormatRules.assertionFailures)
+    }
 }

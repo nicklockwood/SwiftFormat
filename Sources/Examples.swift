@@ -1227,4 +1227,21 @@ private struct Examples {
      extension String: FooProtocol { }
     ```
     """
+
+    let assertionFailures = """
+    ```diff
+    - assert(false)
+    + assertionFailure()
+    ```
+
+    ```diff
+    - assert(false, "message", 2, 1)
+    + assertionFailure("message", 2, 1)
+    ```
+
+    ```diff
+    - precondition(false, "message", 2, 1)
+    + preconditionFailure("message", 2, 1)
+    ```
+    """
 }

@@ -2,6 +2,7 @@
 
 * [andOperator](#andOperator)
 * [anyObjectProtocol](#anyObjectProtocol)
+* [assertionFailures](#assertionFailures)
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
@@ -123,6 +124,32 @@ Prefer `AnyObject` over `class` in protocol definitions.
 **NOTE:** The guideline to use `AnyObject` instead of `class` was only
 introduced in Swift 4.1, so the `anyObjectProtocol` rule is disabled unless the
 swift version is set to 4.1 or above.
+
+</details>
+<br/>
+
+## assertionFailures
+
+Changes all instances of assert(false, ...) to assertionFailure(...) 
+and precondition(false, ...) to preconditionFailure(...).
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- assert(false)
++ assertionFailure()
+```
+
+```diff
+- assert(false, "message", 2, 1)
++ assertionFailure("message", 2, 1)
+```
+
+```diff
+- precondition(false, "message", 2, 1)
++ preconditionFailure("message", 2, 1)
+```
 
 </details>
 <br/>

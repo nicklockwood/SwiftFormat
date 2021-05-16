@@ -537,6 +537,8 @@ extension RulesTests {
         ("testAsOptionalArrayCastingSpacing", testAsOptionalArrayCastingSpacing),
         ("testAssertionFailuresForAssertFalse", testAssertionFailuresForAssertFalse),
         ("testAssertionFailuresForAssertFalseWithArgs", testAssertionFailuresForAssertFalseWithArgs),
+        ("testAssertionFailuresForAssertFalseWithLinebreaks", testAssertionFailuresForAssertFalseWithLinebreaks),
+        ("testAssertionFailuresForAssertFalseWithSpaces", testAssertionFailuresForAssertFalseWithSpaces),
         ("testAssertionFailuresForAssertTrue", testAssertionFailuresForAssertTrue),
         ("testAssertionFailuresForPreconditionFalse", testAssertionFailuresForPreconditionFalse),
         ("testAssertionFailuresForPreconditionFalseWithArgs", testAssertionFailuresForPreconditionFalseWithArgs),

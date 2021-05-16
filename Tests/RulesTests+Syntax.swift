@@ -2037,8 +2037,26 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.preferKeyPath, options: options)
     }
 
+    // MARK: - assertionFailures
+
     func testAssertionFailuresForAssertFalse() {
         let input = "assert(false)"
+        let output = "assertionFailure()"
+        testFormatting(for: input, output, rule: FormatRules.assertionFailures)
+    }
+
+    func testAssertionFailuresForAssertFalseWithSpaces() {
+        let input = "assert ( false )"
+        let output = "assertionFailure()"
+        testFormatting(for: input, output, rule: FormatRules.assertionFailures)
+    }
+
+    func testAssertionFailuresForAssertFalseWithLinebreaks() {
+        let input = """
+        assert(
+            false
+        )
+        """
         let output = "assertionFailure()"
         testFormatting(for: input, output, rule: FormatRules.assertionFailures)
     }

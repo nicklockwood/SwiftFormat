@@ -1790,6 +1790,18 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.typeSugar)
     }
 
+    func testOptionalTupleWrappedInParensConvertedToSugar() {
+        let input = "let foo: Optional<(foo: Int, bar: String)>"
+        let output = "let foo: (foo: Int, bar: String)?"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
+    func testOptionalComposedProtocolWrappedInParensConvertedToSugar() {
+        let input = "let foo: Optional<UIView & Foo>"
+        let output = "let foo: (UIView & Foo)?"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
     func testSwiftOptionalClosureParenthesizedConvertedToSugar() {
         let input = "var foo: Swift.Optional<(Int) -> String>"
         let output = "var foo: ((Int) -> String)?"

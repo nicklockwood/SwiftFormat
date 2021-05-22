@@ -4632,9 +4632,8 @@ public struct _FormatRules {
                     return
                 }
                 var typeTokens = formatter.tokens[typeStart ... typeEnd]
-                if typeTokens.first == .startOfScope("("),
-                   let commaEnd = formatter.index(of: .endOfScope(")"), after: typeStart),
-                   commaEnd < typeEnd
+                if formatter.index(of: .operator("&", .infix), in: typeStart ..< typeEnd) != nil ||
+                    formatter.index(of: .operator("->", .infix), in: typeStart ..< typeEnd) != nil
                 {
                     typeTokens.insert(.startOfScope("("), at: typeTokens.startIndex)
                     typeTokens.append(.endOfScope(")"))

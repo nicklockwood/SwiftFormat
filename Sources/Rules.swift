@@ -3497,10 +3497,12 @@ public struct _FormatRules {
                     switch token {
                     case .delimiter(","), .startOfScope("("), .delimiter(":"):
                         wasParenOrCommaOrLabel = true
+                    case .identifier("_"), .identifier("true"), .identifier("false"), .identifier("nil"):
+                        wasParenOrCommaOrLabel = false
                     case let .identifier(name) where wasParenOrCommaOrLabel:
                         wasParenOrCommaOrLabel = false
                         let next = formatter.next(.nonSpaceOrComment, after: index)
-                        if name != "_", next != .operator(".", .infix), next != .delimiter(":") {
+                        if next != .operator(".", .infix), next != .delimiter(":") {
                             indices.append(index)
                         }
                     case _ where token.isSpaceOrCommentOrLinebreak:

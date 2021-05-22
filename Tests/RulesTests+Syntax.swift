@@ -850,6 +850,48 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.hoistPatternLet, options: options)
     }
 
+    func testUnhoistCaseWithNilValue() {
+        let input = """
+        switch (foo, bar) {
+        case let (.some(unwrappedFoo), nil):
+            print(unwrappedFoo)
+        default:
+            break
+        }
+        """
+        let output = """
+        switch (foo, bar) {
+        case (.some(let unwrappedFoo), nil):
+            print(unwrappedFoo)
+        default:
+            break
+        }
+        """
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
+    func testUnhoistCaseWithBoolValue() {
+        let input = """
+        switch (foo, bar) {
+        case let (.some(unwrappedFoo), false):
+            print(unwrappedFoo)
+        default:
+            break
+        }
+        """
+        let output = """
+        switch (foo, bar) {
+        case (.some(let unwrappedFoo), false):
+            print(unwrappedFoo)
+        default:
+            break
+        }
+        """
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
     // MARK: - enumNamespaces
 
     func testEnumNamespacesClassAsProtocolRestriction() {

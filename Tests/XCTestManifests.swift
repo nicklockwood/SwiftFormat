@@ -2121,6 +2121,8 @@ extension RulesTests {
         ("testTypeNoRedundancyDoesNothing", testTypeNoRedundancyDoesNothing),
         ("testUnhoistCaseLet", testUnhoistCaseLet),
         ("testUnhoistCaseVar", testUnhoistCaseVar),
+        ("testUnhoistCaseWithBoolValue", testUnhoistCaseWithBoolValue),
+        ("testUnhoistCaseWithNilValue", testUnhoistCaseWithNilValue),
         ("testUnhoistCatchLet", testUnhoistCatchLet),
         ("testUnhoistCommaSeparatedSwitchCaseLets", testUnhoistCommaSeparatedSwitchCaseLets),
         ("testUnhoistCommaSeparatedSwitchCaseLets2", testUnhoistCommaSeparatedSwitchCaseLets2),

@@ -622,9 +622,11 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                     try serializeOptions(options, to: outputURL)
                 } else {
                     printRunningMessage()
+                    var shouldSkip = false
                     if let stdinURL = options.formatOptions?.fileInfo.filePath.map(URL.init(fileURLWithPath:)) {
                         do {
                             try gatherOptions(&options, for: stdinURL, with: { print($0, as: .info) })
+                            shouldSkip = options.shouldSkipFile(stdinURL)
                         } catch {
                             if printWarnings([error]) {
                                 status = .finished(error)
@@ -632,8 +634,10 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                             }
                         }
                     }
-                    let output = try applyRules(input, options: options, lineRange: lineRange,
-                                                verbose: verbose, lint: lint, reporter: reporter)
+                    let output = shouldSkip ? input : try applyRules(
+                        input, options: options, lineRange: lineRange,
+                        verbose: verbose, lint: lint, reporter: reporter
+                    )
                     if let outputURL = outputURL, !useStdout {
                         if (try? String(contentsOf: outputURL)) != output, !dryrun {
                             do {

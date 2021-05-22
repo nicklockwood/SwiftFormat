@@ -116,7 +116,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
     let queue = concurrent ? DispatchQueue.global(qos: .userInitiated) : completionQueue
 
     func wasSkipped(_ inputURL: URL, with options: Options) -> Bool {
-        guard shouldSkipFile(inputURL, with: options) else {
+        guard options.shouldSkipFile(inputURL) else {
             return false
         }
         if let handler = skipped {
@@ -275,31 +275,11 @@ func gatherOptions(_ options: inout Options, for inputURL: URL, with logger: Log
     var directory = URL(fileURLWithPath: inputURL.pathComponents[0]).standardized
     for part in inputURL.pathComponents.dropFirst().dropLast() {
         directory.appendPathComponent(part)
-        if shouldSkipFile(directory, with: options) {
+        if options.shouldSkipFile(directory) {
             return
         }
         try processDirectory(directory, with: &options, logger: logger)
     }
-}
-
-// Determine if file should be skipped
-private func shouldSkipFile(_ inputURL: URL, with options: Options) -> Bool {
-    guard let excludedGlobs = options.fileOptions?.excludedGlobs else {
-        return false
-    }
-    let path = inputURL.standardizedFileURL.path
-    for excluded in excludedGlobs {
-        guard excluded.matches(path) else {
-            continue
-        }
-        if let unexcluded = options.fileOptions?.unexcludedGlobs,
-           unexcluded.contains(where: { $0.matches(path) })
-        {
-            return false
-        }
-        return true
-    }
-    return false
 }
 
 // Process configuration files in specified directory.

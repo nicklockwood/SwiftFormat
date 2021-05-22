@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.48.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.3) (2020-05-22)
+
+- Fixed bug where files would not be correctly excluded when using `--stdinpath`
+- Fixed bug with `typeSugar` rule affecting optional composed protocol types
+- Fixed bug where `hoistPatternLet` would incorrectly add let before `nil` or `true`/`false`
+
 ## [0.48.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.2) (2020-05-16)
 
 - Fixed wrapping of generic property wrapper attributes

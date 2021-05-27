@@ -376,6 +376,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var extensionACLPlacement: ExtensionACLPlacement
     public var redundantType: RedundantType
     public var emptyBracesSpacing: EmptyBracesSpacing
+    public var acronyms: Set<String>
 
     // Deprecated
     public var indentComments: Bool
@@ -457,6 +458,7 @@ public struct FormatOptions: CustomStringConvertible {
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 redundantType: RedundantType = .inferred,
                 emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
+                acronyms: Set<String> = ["ID", "URL", "UUID"],
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -532,6 +534,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.extensionACLPlacement = extensionACLPlacement
         self.redundantType = redundantType
         self.emptyBracesSpacing = emptyBracesSpacing
+        self.acronyms = acronyms
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

@@ -615,3 +615,25 @@ extension StringProtocol {
         return result
     }
 }
+
+extension Character {
+    /// `Swift.Character.isUppercase` isn't available until Swift 5.0+ / Xcode 10.2+,
+    /// so we provide this as a polyfill.
+    var _isUppercase: Bool {
+        #if swift(>=5.0)
+        return isUppercase
+        #else
+        return String(self).uppercased() == String(self)
+        #endif
+    }
+
+    /// `Swift.Character.isUppercase` isn't available until Swift 5.0+ / Xcode 10.2+,
+    /// so we provide this as a polyfill.
+    var _isWhitespace: Bool {
+        #if swift(>=5.0)
+        return isWhitespace
+        #else
+        return String(self).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        #endif
+    }
+}

@@ -5531,7 +5531,7 @@ public struct _FormatRules {
 
                         // Only treat this as an acronym if the next character is upperased,
                         // to prevent "Id" from matching strings like "Identifier".
-                        if characterAfterMatch.isUppercase || characterAfterMatch.isWhitespace {
+                        if characterAfterMatch._isUppercase || characterAfterMatch._isWhitespace {
                             acronymShouldBeCapitalized = true
                         }
 
@@ -5540,7 +5540,7 @@ public struct _FormatRules {
                         else if characterAfterMatch == Character("s") {
                             if indexAfterMatch < token.string.indices.last! {
                                 let characterAfterNext = token.string[token.string.index(after: indexAfterMatch)]
-                                acronymShouldBeCapitalized = (characterAfterNext.isUppercase || characterAfterNext.isWhitespace)
+                                acronymShouldBeCapitalized = (characterAfterNext._isUppercase || characterAfterNext._isWhitespace)
                             } else {
                                 acronymShouldBeCapitalized = true
                             }

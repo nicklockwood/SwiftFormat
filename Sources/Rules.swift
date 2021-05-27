@@ -5514,25 +5514,61 @@ public struct _FormatRules {
         options: ["acronyms"]
     ) { formatter in
         formatter.forEachToken { index, token in
+            guard token.is(.identifier) || token.isComment else { return }
+
+            var updatedText = token.string
+
             for acronym in formatter.options.acronyms {
                 let find = acronym.capitalized
                 let replace = acronym.uppercased()
 
-                if token.string.contains(find) {
-                    let updatedText = token.string.replacingOccurrences(of: find, with: replace)
-                    let updatedToken: Token
+                for replaceCandidateRange in token.string.ranges(of: find) {
+                    let acronymShouldBeCapitalized: Bool
 
-                    switch token {
-                    case .identifier:
-                        updatedToken = .identifier(updatedText)
-                    case .commentBody:
-                        updatedToken = .commentBody(updatedText)
-                    default:
-                        continue
+                    if replaceCandidateRange.upperBound < token.string.indices.last! {
+                        let indexAfterMatch = replaceCandidateRange.upperBound
+                        let characterAfterMatch = token.string[indexAfterMatch]
+
+                        // Only treat this as an acronym if the next character is upperased,
+                        // to prevent "Id" from matching strings like "Identifier".
+                        if characterAfterMatch.isUppercase || characterAfterMatch.isWhitespace {
+                            acronymShouldBeCapitalized = true
+                        }
+
+                        // But if the next character is 's', and then the character after the 's' is uppercase,
+                        // allow the acronym to be capitalized (to handle the plural case, `Ids` to `IDs`)
+                        else if characterAfterMatch == Character("s") {
+                            if indexAfterMatch < token.string.indices.last! {
+                                let characterAfterNext = token.string[token.string.index(after: indexAfterMatch)]
+                                acronymShouldBeCapitalized = (characterAfterNext.isUppercase || characterAfterNext.isWhitespace)
+                            } else {
+                                acronymShouldBeCapitalized = true
+                            }
+                        } else {
+                            acronymShouldBeCapitalized = false
+                        }
+                    } else {
+                        acronymShouldBeCapitalized = true
                     }
 
-                    formatter.replaceToken(at: index, with: updatedToken)
+                    if acronymShouldBeCapitalized {
+                        updatedText.replaceSubrange(replaceCandidateRange, with: replace)
+                    }
                 }
+            }
+
+            if token.string != updatedText {
+                let updatedToken: Token
+                switch token {
+                case .identifier:
+                    updatedToken = .identifier(updatedText)
+                case .commentBody:
+                    updatedToken = .commentBody(updatedText)
+                default:
+                    return
+                }
+
+                formatter.replaceToken(at: index, with: updatedToken)
             }
         }
     }

@@ -598,3 +598,20 @@ public extension Formatter {
         return .linebreak(options.linebreak, lineNumber)
     }
 }
+
+extension StringProtocol {
+    /// https://stackoverflow.com/a/32306142
+    func ranges<S: StringProtocol>(of string: S, options: String.CompareOptions = []) -> [Range<Index>] {
+        var result: [Range<Index>] = []
+        var startIndex = self.startIndex
+        while startIndex < endIndex,
+              let range = self[startIndex...]
+              .range(of: string, options: options)
+        {
+            result.append(range)
+            startIndex = range.lowerBound < range.upperBound ? range.upperBound :
+                index(range.lowerBound, offsetBy: 1, limitedBy: endIndex) ?? endIndex
+        }
+        return result
+    }
+}

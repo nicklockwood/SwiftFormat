@@ -2058,6 +2058,10 @@ extension RulesTests {
         let destinationUrl: URL
         let id: ID
         let screenId = "screenId" // We intentionally don't change the content of strings
+        let validUrls: Set<URL>
+        let validUrlschemes: Set<URL>
+
+        let uniqueIdentifier = UUID()
 
         /// Opens Urls based on their scheme
         struct UrlRouter {}
@@ -2071,6 +2075,10 @@ extension RulesTests {
         let destinationURL: URL
         let id: ID
         let screenID = "screenId" // We intentionally don't change the content of strings
+        let validURLs: Set<URL>
+        let validUrlschemes: Set<URL>
+
+        let uniqueIdentifier = UUID()
 
         /// Opens URLs based on their scheme
         struct URLRouter {}

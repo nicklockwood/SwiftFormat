@@ -726,6 +726,7 @@ extension RulesTests {
         ("testDisableFileHeaderCommentRespectedAfterHashbang2", testDisableFileHeaderCommentRespectedAfterHashbang2),
         ("testDisableNextRemoveSelf", testDisableNextRemoveSelf),
         ("testDisableRemoveSelf", testDisableRemoveSelf),
+        ("testDisableUppercaseAcronym", testDisableUppercaseAcronym),
         ("testDispatchAsyncAfterClosureArgumentMadeTrailing", testDispatchAsyncAfterClosureArgumentMadeTrailing),
         ("testDispatchAsyncAfterWallClosureArgumentMadeTrailing", testDispatchAsyncAfterWallClosureArgumentMadeTrailing),
         ("testDispatchAsyncClosureArgumentMadeTrailing", testDispatchAsyncClosureArgumentMadeTrailing),

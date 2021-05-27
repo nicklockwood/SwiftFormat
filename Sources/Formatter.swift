@@ -621,9 +621,9 @@ extension Character {
     /// so we provide this as a polyfill.
     var _isUppercase: Bool {
         #if swift(>=5.0)
-        return isUppercase
+            return isUppercase
         #else
-        return String(self).uppercased() == String(self)
+            return String(self).uppercased() == String(self)
         #endif
     }
 
@@ -631,9 +631,9 @@ extension Character {
     /// so we provide this as a polyfill.
     var _isWhitespace: Bool {
         #if swift(>=5.0)
-        return isWhitespace
+            return isWhitespace
         #else
-        return String(self).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return String(self).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         #endif
     }
 }

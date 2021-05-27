@@ -2107,4 +2107,14 @@ extension RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.acronyms, options: FormatOptions(acronyms: ["png"]))
     }
+
+    func testDisableUppercaseAcronym() {
+        let input = """
+        // swiftformat:disable:next acronyms
+        typeNotOwnedByAuthor.destinationUrl = URL()
+        typeOwnedByAuthor.destinationURL = URL()
+        """
+
+        testFormatting(for: input, rule: FormatRules.acronyms)
+    }
 }

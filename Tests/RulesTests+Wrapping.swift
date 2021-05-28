@@ -2411,9 +2411,19 @@ extension RulesTests {
           unwrappedFoo.elements
             .compactMap({ $0 })
             .filter({
-              $0.matchesCondition
-            }),
-          let bar = unwrappedFoo.bar
+              if $0.matchesCondition {
+                return true
+              } else {
+                return false
+              }
+            }).isEmpty,
+          let bar = unwrappedFoo.bar,
+          let baaz = unwrappedFoo.bar?
+            .first(where: { $0.isBaaz }),
+          let unwrappedFoo2 = Foo(
+            bar: bar2,
+            baaz: baaz2),
+          let quux = baaz.quux
         {}
         """
 
@@ -2538,32 +2548,6 @@ extension RulesTests {
         testFormatting(
             for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.indent],
             options: FormatOptions(indent: "  ", wrapConditions: .afterFirst)
-        )
-    }
-
-    func testWrapConditionsAfterFirstPreservesMultilineStatements() {
-        let input = """
-        if let unwrappedFoo = Foo(
-          bar: bar,
-          baaz: baaz),
-          unwrappedFoo.elements
-            .compactMap({ $0 })
-            .filter({
-              $0.matchesCondition
-            })
-        {}
-
-        if unwrappedFoo.elements
-          .compactMap({ $0 })
-          .filter({
-            $0.matchesCondition
-          })
-        {}
-        """
-
-        testFormatting(
-            for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
-            options: FormatOptions(indent: "  ", closingParenOnSameLine: true, wrapConditions: .afterFirst)
         )
     }
 

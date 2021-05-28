@@ -1520,7 +1520,8 @@ public struct _FormatRules {
                         indent = indentStack.last!
                     } else {
                         let shouldIndentLeadingDotStatement = formatter.options.xcodeIndentation
-                            || formatter.startOfConditionalStatement(at: i) != nil
+                            || (formatter.startOfConditionalStatement(at: i) != nil
+                                && formatter.options.wrapConditions == .beforeFirst)
 
                         if shouldIndentLeadingDotStatement,
                            formatter.next(.nonSpace, after: i) == .operator(".", .infix),
@@ -1532,12 +1533,15 @@ public struct _FormatRules {
                             indentStack[indentStack.count - 1] = indent
                         }
 
-                        // When inside conditionals, unindent after any commas (which separate conditions)
-                        // that were indented by the `shouldIndentLeadingDotStatement` block above
-                        if let startOfConditional = formatter.startOfConditionalStatement(at: i),
-                           formatter.lastToken(before: i, where: { $0.is(.nonSpaceOrCommentOrLinebreak) }) == .delimiter(",")
+                        // When inside conditionals, unindent after any commas (which separate conditions) that were indented by the block above
+                        if !formatter.options.xcodeIndentation,
+                           formatter.options.wrapConditions == .beforeFirst,
+                           formatter.isConditionalStatement(at: i),
+                           formatter.lastToken(before: i, where: { $0.is(.nonSpaceOrCommentOrLinebreak) }) == .delimiter(","),
+                           let conditionBeginIndex = formatter.index(before: i, where: { ["if", "guard", "while", "for"].contains($0.string) }),
+                           formatter.indentForLine(at: conditionBeginIndex).count < indent.count + formatter.options.indent.count
                         {
-                            indent = formatter.indentForLine(at: startOfConditional) + formatter.options.indent
+                            indent = formatter.indentForLine(at: conditionBeginIndex) + formatter.options.indent
                             indentStack[indentStack.count - 1] = indent
                         }
                     }

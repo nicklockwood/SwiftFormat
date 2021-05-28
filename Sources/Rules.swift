@@ -1531,6 +1531,15 @@ public struct _FormatRules {
                             indent += formatter.options.indent
                             indentStack[indentStack.count - 1] = indent
                         }
+
+                        // When inside conditionals, unindent after any commas (which separate conditions)
+                        // that were indented by the `shouldIndentLeadingDotStatement` block above
+                        if let startOfConditional = formatter.startOfConditionalStatement(at: i),
+                           formatter.lastToken(before: i, where: { $0.is(.nonSpaceOrCommentOrLinebreak) }) == .delimiter(",")
+                        {
+                            indent = formatter.indentForLine(at: startOfConditional) + formatter.options.indent
+                            indentStack[indentStack.count - 1] = indent
+                        }
                     }
                 } else if linewrapped {
                     func isWrappedDeclaration() -> Bool {

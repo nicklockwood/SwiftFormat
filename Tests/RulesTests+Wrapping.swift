@@ -2412,7 +2412,8 @@ extension RulesTests {
             .compactMap({ $0 })
             .filter({
               $0.matchesCondition
-            })
+            }),
+          let bar = unwrappedFoo.bar
         {}
         """
 

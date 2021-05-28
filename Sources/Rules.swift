@@ -1091,7 +1091,7 @@ public struct _FormatRules {
         help: "Indent code in accordance with the scope level.",
         orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
         options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation"],
-        sharedOptions: ["trimwhitespace", "allman"]
+        sharedOptions: ["trimwhitespace", "allman", "wrapconditions"]
     ) { formatter in
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []

@@ -2241,6 +2241,7 @@ extension RulesTests {
         ("testWrapCollectionsConsecutiveCodeCommentsNotIndentedInWrapBeforeFirst", testWrapCollectionsConsecutiveCodeCommentsNotIndentedInWrapBeforeFirst),
         ("testWrapColorLiteral", testWrapColorLiteral),
         ("testWrapConditionsAfterFirst", testWrapConditionsAfterFirst),
+        ("testWrapConditionsAfterFirstPreservesMultilineStatements", testWrapConditionsAfterFirstPreservesMultilineStatements),
         ("testWrapConditionsBeforeFirst", testWrapConditionsBeforeFirst),
         ("testWrapConditionsBeforeFirstCopy", testWrapConditionsBeforeFirstCopy),
         ("testWrapConditionsBeforeFirstPreservesMultilineStatements", testWrapConditionsBeforeFirstPreservesMultilineStatements),

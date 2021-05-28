@@ -2404,10 +2404,6 @@ extension RulesTests {
 
     func testWrapConditionsBeforeFirstPreservesMultilineStatements() {
         let input = """
-        let foo = foo
-          .elements
-          .compactMap { $0 }
-
         if
           let unwrappedFoo = Foo(
             bar: bar,
@@ -2541,6 +2537,32 @@ extension RulesTests {
         testFormatting(
             for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.indent],
             options: FormatOptions(indent: "  ", wrapConditions: .afterFirst)
+        )
+    }
+
+    func testWrapConditionsAfterFirstPreservesMultilineStatements() {
+        let input = """
+        if let unwrappedFoo = Foo(
+          bar: bar,
+          baaz: baaz),
+          unwrappedFoo.elements
+            .compactMap({ $0 })
+            .filter({
+              $0.matchesCondition
+            })
+        {}
+
+        if unwrappedFoo.elements
+          .compactMap({ $0 })
+          .filter({
+            $0.matchesCondition
+          })
+        {}
+        """
+
+        testFormatting(
+            for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
+            options: FormatOptions(indent: "  ", closingParenOnSameLine: true, wrapConditions: .afterFirst)
         )
     }
 

@@ -1519,7 +1519,10 @@ public struct _FormatRules {
                         linewrapStack[linewrapStack.count - 1] = false
                         indent = indentStack.last!
                     } else {
-                        if formatter.options.xcodeIndentation,
+                        let shouldIndentLeadingDotStatement = formatter.options.xcodeIndentation
+                            || formatter.startOfConditionalStatement(at: i) != nil
+
+                        if shouldIndentLeadingDotStatement,
                            formatter.next(.nonSpace, after: i) == .operator(".", .infix),
                            let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
                            let startIndex = formatter.index(of: .nonSpace, after: formatter.startOfLine(at: prevIndex) - 1),

@@ -2402,6 +2402,30 @@ extension RulesTests {
         )
     }
 
+    func testWrapConditionsBeforeFirstPreservesMultilineStatements() {
+        let input = """
+        let foo = foo
+          .elements
+          .compactMap { $0 }
+
+        if
+          let unwrappedFoo = Foo(
+            bar: bar,
+            baaz: baaz),
+          unwrappedFoo.elements
+            .compactMap({ $0 })
+            .filter({
+              $0.matchesCondition
+            })
+        {}
+        """
+
+        testFormatting(
+            for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
+            options: FormatOptions(indent: "  ", closingParenOnSameLine: true, wrapConditions: .beforeFirst)
+        )
+    }
+
     func testWrapConditionsBeforeFirst() {
         let input = """
         if let foo = foo,

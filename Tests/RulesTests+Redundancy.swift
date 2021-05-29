@@ -667,6 +667,17 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantGet)
     }
 
+    func testEffectfulGetNotRemoved() {
+        let input = """
+        var foo: Int {
+            get async throws {
+                try await getFoo()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantGet)
+    }
+
     // MARK: - redundantInit
 
     func testRemoveRedundantInit() {

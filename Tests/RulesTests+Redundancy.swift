@@ -881,6 +881,18 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantType)
     }
 
+    func testVarRedundantArrayTypeRemoval() {
+        let input = "var foo: [String] = [String]()"
+        let output = "var foo = [String]()"
+        testFormatting(for: input, output, rule: FormatRules.redundantType)
+    }
+
+    func testVarRedundantDictionaryTypeRemoval() {
+        let input = "var foo: [String: Int] = [String: Int]()"
+        let output = "var foo = [String: Int]()"
+        testFormatting(for: input, output, rule: FormatRules.redundantType)
+    }
+
     func testLetRedundantGenericTypeRemoval() {
         let input = "let relay: BehaviourRelay<Int?> = BehaviourRelay<Int?>(value: nil)"
         let output = "let relay = BehaviourRelay<Int?>(value: nil)"
@@ -1003,6 +1015,60 @@ extension RulesTests {
         let input = "let foo: Optional<Void> = Optional<Void>.none"
         testFormatting(for: input, rule: FormatRules.redundantType,
                        exclude: ["typeSugar"])
+    }
+
+    func testRedundantTypeWithLiterals() {
+        let input = """
+        let a1: Bool = true
+        let a2: Bool = false
+
+        let b1: String = "foo"
+        let b2: String = "\\(b1)"
+
+        let c1: Int = 1
+        let c2: Int = 1.0
+
+        let d1: Double = 3.14
+        let d2: Double = 3
+
+        let e1: [Double] = [3.14]
+        let e2: [Double] = [3]
+
+        let f1: [String: Int] = ["foo": 5]
+        let f2: [String: Int?] = ["foo": nil]
+        """
+        let output = """
+        let a1 = true
+        let a2 = false
+
+        let b1 = "foo"
+        let b2 = "\\(b1)"
+
+        let c1 = 1
+        let c2: Int = 1.0
+
+        let d1 = 3.14
+        let d2: Double = 3
+
+        let e1 = [3.14]
+        let e2: [Double] = [3]
+
+        let f1 = ["foo": 5]
+        let f2: [String: Int?] = ["foo": nil]
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantType)
+    }
+
+    func testRedundantTypePreservesLiteralRepresentableTypes() {
+        let input = """
+        let a: MyBoolRepresentable = true
+        let b: MyStringRepresentable = "foo"
+        let c: MyIntRepresentable = 1
+        let d: MyDoubleRepresentable = 3.14
+        let e: MyArrayRepresentable = ["bar"]
+        let f: MyDictionaryRepresentable = ["baz": 1]
+        """
+        testFormatting(for: input, rule: FormatRules.redundantType)
     }
 
     // --redundanttype explicit
@@ -1158,53 +1224,6 @@ extension RulesTests {
         let output = "let foo: [Void] = .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
-    }
-
-    func testRedundantTypeWithLiterals() {
-        let input = """
-        let a1: Bool = true
-        let a2: Bool = false
-
-        let b1: String = "foo"
-        let b2: String = "\\(b1)"
-
-        let c1: Int = 1
-        let c2: Int = 1.0
-
-        let d1: Double = 3.14
-        let d2: Double = 3
-        """
-
-        let output = """
-        let a1 = true
-        let a2 = false
-
-        let b1 = "foo"
-        let b2 = "\\(b1)"
-
-        let c1 = 1
-        let c2: Int = 1.0
-
-        let d1 = 3.14
-        let d2: Double = 3
-        """
-
-        let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
-    }
-
-    func testRedundantTypePreservesLiteralRepresentableTypes() {
-        let input = """
-        let a: MyBoolRepresentable = true
-        let b: MyStringRepresentable = "foo"
-        let c: MyIntRepresentable = 1
-        let d: MyDoubleRepresentable = 3.14
-        let e: MyArrayRepresentable = ["bar"]
-        let f: MyDictionaryRepresentable = ["baaz": 1]
-        """
-
-        let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
     // MARK: - redundantNilInit

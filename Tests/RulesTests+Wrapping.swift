@@ -2373,6 +2373,37 @@ extension RulesTests {
 
     // MARK: wrapConditions before-first
 
+    func testWrapConditionsBeforeFirstPreservesMultilineStatements() {
+        let input = """
+        if
+            let unwrappedFoo = Foo(
+                bar: bar,
+                baz: baz),
+            unwrappedFoo.elements
+                .compactMap({ $0 })
+                .filter({
+                    if $0.matchesCondition {
+                        return true
+                    } else {
+                        return false
+                    }
+                }).isEmpty,
+            let bar = unwrappedFoo.bar,
+            let baz = unwrappedFoo.bar?
+                .first(where: { $0.isBaz }),
+            let unwrappedFoo2 = Foo(
+                bar: bar2,
+                baz: baaz2),
+            let quux = baz.quux
+        {}
+        """
+
+        testFormatting(
+            for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
+            options: FormatOptions(closingParenOnSameLine: true, wrapConditions: .beforeFirst)
+        )
+    }
+
     func testWrapConditionsBeforeFirst() {
         let input = """
         if let foo = foo,

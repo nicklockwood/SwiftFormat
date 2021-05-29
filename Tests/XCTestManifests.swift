@@ -2219,6 +2219,7 @@ extension RulesTests {
         ("testWrapColorLiteral", testWrapColorLiteral),
         ("testWrapConditionsAfterFirst", testWrapConditionsAfterFirst),
         ("testWrapConditionsBeforeFirst", testWrapConditionsBeforeFirst),
+        ("testWrapConditionsBeforeFirstPreservesMultilineStatements", testWrapConditionsBeforeFirstPreservesMultilineStatements),
         ("testWrapConditionsBeforeFirstWhereShouldPreserveExisting", testWrapConditionsBeforeFirstWhereShouldPreserveExisting),
         ("testWrapConvenienceInitAttribute", testWrapConvenienceInitAttribute),
         ("testWrapFuncAttribute", testWrapFuncAttribute),

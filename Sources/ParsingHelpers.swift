@@ -501,8 +501,8 @@ extension Formatter {
                     }
                 }
                 return false
-            case "func", "subscript", "class", "struct", "protocol", "enum", "extension",
-                 "throws", "rethrows", "async", "catch":
+            case "class", "actor", "struct", "protocol", "enum", "extension",
+                 "func", "subscript", "throws", "rethrows", "async", "catch":
                 return false
             default:
                 return true
@@ -1238,7 +1238,7 @@ extension Formatter {
             var names = Set<String>()
             processDeclaredVariables(at: &index, names: &names, removeSelf: false)
             return names
-        case "func", "class", "struct", "enum":
+        case "func", "class", "actor", "struct", "enum":
             guard let name = next(.identifier, after: index) else {
                 return nil
             }
@@ -1280,7 +1280,8 @@ extension Formatter {
                 {
                     searchIndex = symbolTypeKeywordIndex
                 }
-            case .keyword("protocol"), .keyword("struct"), .keyword("enum"), .keyword("extension"):
+            case .keyword("protocol"), .keyword("struct"), .keyword("actor"),
+                 .keyword("enum"), .keyword("extension"):
                 if let scopeStart = index(of: .startOfScope("{"), after: i) {
                     searchIndex = endOfScope(at: scopeStart) ?? searchIndex
                 }
@@ -1345,7 +1346,7 @@ extension Formatter {
             }
 
             // If this declaration represents a type, we need to parse its inner declarations as well.
-            let typelikeKeywords = ["class", "struct", "enum", "protocol", "extension"]
+            let typelikeKeywords = ["class", "actor", "struct", "enum", "protocol", "extension"]
 
             if typelikeKeywords.contains(declaration.keyword),
                let declarationTypeKeywordIndex = declarationParser
@@ -1625,7 +1626,7 @@ extension Token {
         // All of the keywords that map to individual Declaration grammars
         // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
         return ["import", "let", "var", "typealias", "func", "enum", "case",
-                "struct", "class", "protocol", "init", "deinit",
+                "struct", "class", "actor", "protocol", "init", "deinit",
                 "extension", "subscript", "operator", "precedencegroup"].contains(keyword)
     }
 

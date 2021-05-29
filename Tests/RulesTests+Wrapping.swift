@@ -2114,7 +2114,7 @@ extension RulesTests {
         public final class Foo {
             public var multiLineMethodCall = Foo.multiLineMethodCall(
                 bar: bar,
-                baaz: baaz)
+                baz: baz)
 
             func singleLine() -> String {
                 return "method body"
@@ -2393,7 +2393,7 @@ extension RulesTests {
                 .first(where: { $0.isBaz }),
             let unwrappedFoo2 = Foo(
                 bar: bar2,
-                baz: baaz2),
+                baz: baz2),
             let quux = baz.quux
         {}
         """
@@ -2413,9 +2413,9 @@ extension RulesTests {
         else if foo != bar,
                 let quux = quux {}
 
-        if let baaz = baaz {}
+        if let baz = baz {}
 
-        guard baaz.filter({ $0 == foo }),
+        guard baz.filter({ $0 == foo }),
               let bar = bar else {}
 
         while let foo = foo,
@@ -2432,10 +2432,10 @@ extension RulesTests {
           foo != bar,
           let quux = quux {}
 
-        if let baaz = baaz {}
+        if let baz = baz {}
 
         guard
-          baaz.filter({ $0 == foo }),
+          baz.filter({ $0 == foo }),
           let bar = bar else {}
 
         while
@@ -2486,10 +2486,10 @@ extension RulesTests {
 
         else {}
 
-        if let baaz = baaz {}
+        if let baz = baz {}
 
         guard
-          baaz.filter({ $0 == foo }),
+          baz.filter({ $0 == foo }),
           let bar = bar else {}
 
         while
@@ -2507,9 +2507,9 @@ extension RulesTests {
 
         else {}
 
-        if let baaz = baaz {}
+        if let baz = baz {}
 
-        guard baaz.filter({ $0 == foo }),
+        guard baz.filter({ $0 == foo }),
               let bar = bar else {}
 
         while let foo = foo,

@@ -1018,6 +1018,7 @@ extension RulesTests {
         ("testInsertSelfAfterReturn", testInsertSelfAfterReturn),
         ("testInsertSelfForMemberNamedLazy", testInsertSelfForMemberNamedLazy),
         ("testInsertSelfForStaticMemberInClassFunction", testInsertSelfForStaticMemberInClassFunction),
+        ("testInsertSelfInActor", testInsertSelfInActor),
         ("testInsertSelfInExtension", testInsertSelfInExtension),
         ("testInsertSelfInsideClassInit", testInsertSelfInsideClassInit),
         ("testInsertSelfInsideStringInterpolation", testInsertSelfInsideStringInterpolation),

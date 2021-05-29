@@ -826,7 +826,7 @@ class ParsingHelpersTests: XCTestCase {
         }
 
         protocol SomeProtocol {
-            var getter: String { get }
+            var getter: String { get async throws }
             func protocolMethod() -> Bool
         }
 
@@ -925,7 +925,7 @@ class ParsingHelpersTests: XCTestCase {
             sourceCode(for: declarations[6].tokens),
             """
             protocol SomeProtocol {
-                var getter: String { get }
+                var getter: String { get async throws }
                 func protocolMethod() -> Bool
             }
 
@@ -936,7 +936,7 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(
             sourceCode(for: declarations[6].body?[0].tokens),
             """
-                var getter: String { get }
+                var getter: String { get async throws }
 
             """
         )
@@ -1086,7 +1086,7 @@ class ParsingHelpersTests: XCTestCase {
         struct Foo {
             var bar = "bar"
             /// Leading comment
-            public var baaz = "baaz" // Trailing comment
+            public var baz = "baz" // Trailing comment
             var quux = "quux"
         }
         """
@@ -1114,7 +1114,7 @@ class ParsingHelpersTests: XCTestCase {
             sourceCode(for: declarations[0].body?[1].tokens),
             """
                 /// Leading comment
-                public var baaz = "baaz" // Trailing comment
+                public var baz = "baz" // Trailing comment
 
             """
         )
@@ -1190,7 +1190,7 @@ class ParsingHelpersTests: XCTestCase {
 
     func testParseComplexConditionalCompilationBlockCorrectly() {
         let input = """
-        let beforeBlock = "baaz"
+        let beforeBlock = "baz"
 
         #if DEBUG
         struct DebugFoo {

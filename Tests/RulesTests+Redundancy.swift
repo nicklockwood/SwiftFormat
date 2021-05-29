@@ -2860,6 +2860,13 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testInsertSelfInActor() {
+        let input = "actor Foo {\n    let foo: Int\n    init() { foo = 5 }\n}"
+        let output = "actor Foo {\n    let foo: Int\n    init() { self.foo = 5 }\n}"
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
+    }
+
     func testInsertSelfAfterReturn() {
         let input = "class Foo {\n    let foo: Int\n    func bar() -> Int { return foo }\n}"
         let output = "class Foo {\n    let foo: Int\n    func bar() -> Int { return self.foo }\n}"

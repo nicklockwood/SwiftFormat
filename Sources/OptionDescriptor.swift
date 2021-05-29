@@ -747,7 +747,7 @@ struct _Descriptors {
     let organizeTypes = OptionDescriptor(
         argumentName: "organizetypes",
         displayName: "Declaration Types to Organize",
-        help: "Declarations to organize (defaults to `struct,class,enum`)",
+        help: "Declarations to organize (default: `class,actor,struct,enum`)",
         keyPath: \.organizeTypes
     )
     let organizeStructThreshold = OptionDescriptor(

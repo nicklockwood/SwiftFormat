@@ -1186,12 +1186,12 @@ private struct Examples {
     ```diff
     - extension Foo {
     -     public func bar() {}
-    -     public func baaz() {}
+    -     public func baz() {}
       }
 
     + public extension Foo {
     +     func bar() {}
-    +     func baaz() {}
+    +     func baz() {}
       }
     ```
 
@@ -1200,13 +1200,13 @@ private struct Examples {
     ```diff
     - public extension Foo {
     -     func bar() {}
-    -     func baaz() {}
+    -     func baz() {}
     -     internal func quux() {}
       }
 
     + extension Foo {
     +     public func bar() {}
-    +     public func baaz() {}
+    +     public func baz() {}
     +     func quux() {}
       }
     ```

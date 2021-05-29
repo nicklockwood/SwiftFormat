@@ -196,7 +196,7 @@ public struct _FormatRules {
                     return false
                 }
                 return true
-            case "@escaping", "@noescape":
+            case "@escaping", "@noescape", "@Sendable":
                 return true
             case "private", "fileprivate", "internal",
                  "init", "subscript":

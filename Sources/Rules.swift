@@ -2326,7 +2326,9 @@ public struct _FormatRules {
             if formatter.isAccessorKeyword(at: i, checkKeyword: false),
                let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
                    $0 == .startOfScope("{")
-               }), let openIndex = formatter.index(of: .startOfScope("{"), after: i),
+               }), let openIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                   $0 == .startOfScope("{")
+               }),
                let closeIndex = formatter.index(of: .endOfScope("}"), after: openIndex),
                let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closeIndex, if: {
                    $0 == .endOfScope("}")

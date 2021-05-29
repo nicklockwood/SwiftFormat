@@ -763,6 +763,7 @@ extension RulesTests {
         ("testDoubleNestedIndentedIfElseifEndifOutdenting", testDoubleNestedIndentedIfElseifEndifOutdenting),
         ("testDoublePostfixExpressionYodaCondition", testDoublePostfixExpressionYodaCondition),
         ("testEdgeCaseHeaderEndIndexPlusNewHeaderTokensCountEqualsFileTokensEndIndex", testEdgeCaseHeaderEndIndexPlusNewHeaderTokensCountEqualsFileTokensEndIndex),
+        ("testEffectfulGetNotRemoved", testEffectfulGetNotRemoved),
         ("testElseClauseIndenting", testElseClauseIndenting),
         ("testElseNotOnSameLineForAllman", testElseNotOnSameLineForAllman),
         ("testElseOnNextLineOption", testElseOnNextLineOption),

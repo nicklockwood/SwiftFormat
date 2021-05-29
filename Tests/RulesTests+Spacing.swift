@@ -140,6 +140,12 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
+    func testAddSpaceBetweenCaptureListAndArguments6() {
+        let input = "{ [weak self](foo: @Sendable () -> String) -> Baz? in foo() }"
+        let output = "{ [weak self] (foo: @Sendable () -> String) -> Baz? in foo() }"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
     func testSpaceBetweenClosingParenAndOpenBrace() {
         let input = "func foo(){ foo }"
         let output = "func foo() { foo }"
@@ -177,6 +183,11 @@ extension RulesTests {
 
     func testSpaceAfterAutoclosureAttribute() {
         let input = "func foo(bar: @autoclosure () -> Void)"
+        testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+    }
+
+    func testSpaceAfterSendableAttribute() {
+        let input = "func foo(bar: @Sendable () -> Void)"
         testFormatting(for: input, rule: FormatRules.spaceAroundParens)
     }
 

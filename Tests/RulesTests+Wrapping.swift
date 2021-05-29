@@ -2633,6 +2633,23 @@ extension RulesTests {
         )
     }
 
+    func testWrapExtensionAttribute() {
+        let input = """
+        @available(iOS 14.0, *) extension Foo {}
+        """
+        let output = """
+        @available(iOS 14.0, *)
+        extension Foo {}
+        """
+        let options = FormatOptions(typeAttributes: .prevLine)
+        testFormatting(
+            for: input,
+            output,
+            rule: FormatRules.wrapAttributes,
+            options: options
+        )
+    }
+
     func testTypeAttributeStaysWrapped() {
         let input = """
         @available(iOS 14.0, *)

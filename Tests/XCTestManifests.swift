@@ -2222,6 +2222,7 @@ extension RulesTests {
         ("testWrapConditionsBeforeFirstPreservesMultilineStatements", testWrapConditionsBeforeFirstPreservesMultilineStatements),
         ("testWrapConditionsBeforeFirstWhereShouldPreserveExisting", testWrapConditionsBeforeFirstWhereShouldPreserveExisting),
         ("testWrapConvenienceInitAttribute", testWrapConvenienceInitAttribute),
+        ("testWrapExtensionAttribute", testWrapExtensionAttribute),
         ("testWrapFuncAttribute", testWrapFuncAttribute),
         ("testWrapFunctionArrow", testWrapFunctionArrow),
         ("testWrapFunctionIfReturnTypeExceedsMaxWidth", testWrapFunctionIfReturnTypeExceedsMaxWidth),

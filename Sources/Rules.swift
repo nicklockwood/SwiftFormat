@@ -5066,7 +5066,7 @@ public struct _FormatRules {
             switch keyword.string {
             case "func", "init", "subscript":
                 attributeMode = formatter.options.funcAttributes
-            case "class", "struct", "enum", "protocol":
+            case "class", "struct", "enum", "protocol", "extension":
                 attributeMode = formatter.options.typeAttributes
             case "var", "let":
                 attributeMode = formatter.options.varAttributes

@@ -2367,6 +2367,9 @@ extension TokenizerTests {
     static let __allTests__TokenizerTests = [
         ("test_", test_),
         ("test_foo", test_foo),
+        ("testActorProperty", testActorProperty),
+        ("testActorProperty2", testActorProperty2),
+        ("testActorType", testActorType),
         ("testAngleBracketSuffixedOperator", testAngleBracketSuffixedOperator),
         ("testAngleBracketSuffixedOperator2", testAngleBracketSuffixedOperator2),
         ("testAnonymousKeyPath", testAnonymousKeyPath),
@@ -2377,6 +2380,7 @@ extension TokenizerTests {
         ("testAwaitClass", testAwaitClass),
         ("testAwaitExpression", testAwaitExpression),
         ("testAwaitFunction", testAwaitFunction),
+        ("testAwaitProperty", testAwaitProperty),
         ("testBacktickEscapedClass", testBacktickEscapedClass),
         ("testBasicGeneric", testBasicGeneric),
         ("testBasicOperator", testBasicOperator),

@@ -1110,7 +1110,7 @@ extension Formatter {
         // Make sure this type's body is longer than the organization threshold
         let organizationThreshold: Int
         switch typeDeclaration.kind {
-        case "class":
+        case "class", "actor":
             organizationThreshold = options.organizeClassThreshold
         case "struct":
             organizationThreshold = options.organizeStructThreshold

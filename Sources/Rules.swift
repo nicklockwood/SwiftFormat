@@ -667,6 +667,9 @@ public struct _FormatRules {
                 }
                 i = typeIndex
                 j = valueIndex
+                if formatter.tokens[j].isStringDelimiter, let next = formatter.endOfScope(at: j) {
+                    j = next
+                }
             }
             guard i == typeEndIndex else {
                 return

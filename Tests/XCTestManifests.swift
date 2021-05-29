@@ -409,6 +409,7 @@ extension ParsingHelpersTests {
         ("testParseSimpleCompilationBlockCorrectly", testParseSimpleCompilationBlockCorrectly),
         ("testParseSymbolImportCorrectly", testParseSymbolImportCorrectly),
         ("testParseTrailingCommentsCorrectly", testParseTrailingCommentsCorrectly),
+        ("testProcessAwaitVariableInForLoop", testProcessAwaitVariableInForLoop),
         ("testProcessCaseDeclaredVariablesInIf", testProcessCaseDeclaredVariablesInIf),
         ("testProcessCaseDeclaredVariablesInIf2", testProcessCaseDeclaredVariablesInIf2),
         ("testProcessCommaDelimitedDeclaredVariables", testProcessCommaDelimitedDeclaredVariables),

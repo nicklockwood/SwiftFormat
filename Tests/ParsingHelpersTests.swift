@@ -791,6 +791,18 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(names, ["bar", "baz", "x", "y"])
     }
 
+    func testProcessAwaitVariableInForLoop() {
+        let formatter = Formatter(tokenize("""
+        for await foo in DoubleGenerator() {
+            print(foo)
+        }
+        """))
+        var index = 0
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo"])
+    }
+
     // MARK: parseDeclarations
 
     func testParseDeclarations() {

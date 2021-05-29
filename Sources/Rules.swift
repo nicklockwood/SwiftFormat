@@ -202,7 +202,7 @@ public struct _FormatRules {
                  "init", "subscript":
                 return false
             case "await":
-                return formatter.options.swiftVersion >= "6" ||
+                return formatter.options.swiftVersion >= "5.5" ||
                     formatter.options.swiftVersion == .undefined
             default:
                 return keyword.first.map { !"@#".contains($0) } ?? true

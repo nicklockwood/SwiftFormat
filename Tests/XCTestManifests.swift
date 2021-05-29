@@ -1146,7 +1146,7 @@ extension RulesTests {
         ("testNoAddSpaceAroundNoSpaceRange", testNoAddSpaceAroundNoSpaceRange),
         ("testNoAddSpaceAroundNoSpaceStar", testNoAddSpaceAroundNoSpaceStar),
         ("testNoAddSpaceAroundOperatorInsideParens", testNoAddSpaceAroundOperatorInsideParens),
-        ("testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan6", testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan6),
+        ("testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan5_5", testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan5_5),
         ("testNoBeforeFirstPreservedAndTrailingCommaIgnoredInMultilineNestedDictionary", testNoBeforeFirstPreservedAndTrailingCommaIgnoredInMultilineNestedDictionary),
         ("testNoBinaryGrouping", testNoBinaryGrouping),
         ("testNoBlankLineAfterCalledClosureAtEndOfScope", testNoBlankLineAfterCalledClosureAtEndOfScope),

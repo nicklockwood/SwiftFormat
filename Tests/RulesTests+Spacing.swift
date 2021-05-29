@@ -217,10 +217,10 @@ extension RulesTests {
                        options: FormatOptions(swiftVersion: "6.0.0"))
     }
 
-    func testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan6() {
+    func testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan5_5() {
         let input = "let foo = await(bar: 5)"
         testFormatting(for: input, rule: FormatRules.spaceAroundParens,
-                       options: FormatOptions(swiftVersion: "5.9.9"))
+                       options: FormatOptions(swiftVersion: "5.4.9"))
     }
 
     // MARK: - spaceInsideParens

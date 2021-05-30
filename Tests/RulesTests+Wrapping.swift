@@ -2114,7 +2114,7 @@ extension RulesTests {
         public final class Foo {
             public var multiLineMethodCall = Foo.multiLineMethodCall(
                 bar: bar,
-                baaz: baaz)
+                baz: baz)
 
             func singleLine() -> String {
                 return "method body"
@@ -2373,32 +2373,34 @@ extension RulesTests {
 
     // MARK: wrapConditions before-first
 
-    func testWrapConditionsBeforeFirstCopy() {
+    func testWrapConditionsBeforeFirstPreservesMultilineStatements() {
         let input = """
-        if let baaz = baaz {}
-
-        guard baaz.filter({ $0 == foo }),
-              let bar = bar else {}
-
-        while let foo = foo,
-              let bar = bar {}
-        """
-
-        let output = """
-        if let baaz = baaz {}
-
-        guard
-          baaz.filter({ $0 == foo }),
-          let bar = bar else {}
-
-        while
-          let foo = foo,
-          let bar = bar {}
+        if
+            let unwrappedFoo = Foo(
+                bar: bar,
+                baz: baz),
+            unwrappedFoo.elements
+                .compactMap({ $0 })
+                .filter({
+                    if $0.matchesCondition {
+                        return true
+                    } else {
+                        return false
+                    }
+                }).isEmpty,
+            let bar = unwrappedFoo.bar,
+            let baz = unwrappedFoo.bar?
+                .first(where: { $0.isBaz }),
+            let unwrappedFoo2 = Foo(
+                bar: bar2,
+                baz: baz2),
+            let quux = baz.quux
+        {}
         """
 
         testFormatting(
-            for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.indent],
-            options: FormatOptions(indent: "  ", wrapConditions: .beforeFirst)
+            for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
+            options: FormatOptions(closingParenOnSameLine: true, wrapConditions: .beforeFirst)
         )
     }
 
@@ -2411,9 +2413,9 @@ extension RulesTests {
         else if foo != bar,
                 let quux = quux {}
 
-        if let baaz = baaz {}
+        if let baz = baz {}
 
-        guard baaz.filter({ $0 == foo }),
+        guard baz.filter({ $0 == foo }),
               let bar = bar else {}
 
         while let foo = foo,
@@ -2430,10 +2432,10 @@ extension RulesTests {
           foo != bar,
           let quux = quux {}
 
-        if let baaz = baaz {}
+        if let baz = baz {}
 
         guard
-          baaz.filter({ $0 == foo }),
+          baz.filter({ $0 == foo }),
           let bar = bar else {}
 
         while
@@ -2484,10 +2486,10 @@ extension RulesTests {
 
         else {}
 
-        if let baaz = baaz {}
+        if let baz = baz {}
 
         guard
-          baaz.filter({ $0 == foo }),
+          baz.filter({ $0 == foo }),
           let bar = bar else {}
 
         while
@@ -2505,9 +2507,9 @@ extension RulesTests {
 
         else {}
 
-        if let baaz = baaz {}
+        if let baz = baz {}
 
-        guard baaz.filter({ $0 == foo }),
+        guard baz.filter({ $0 == foo }),
               let bar = bar else {}
 
         while let foo = foo,
@@ -2519,6 +2521,8 @@ extension RulesTests {
             options: FormatOptions(indent: "  ", wrapConditions: .afterFirst)
         )
     }
+
+    // --conditionsWrap auto
 
     func testConditionsWrapAutoForLongGuard() {
         let input = """
@@ -2536,7 +2540,7 @@ extension RulesTests {
             for: input,
             [output],
             rules: [FormatRules.wrapArguments],
-            options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
+            options: FormatOptions(conditionsWrap: .auto, maxWidth: 40)
         )
     }
 
@@ -2547,7 +2551,7 @@ extension RulesTests {
         testFormatting(
             for: input,
             rules: [FormatRules.wrapArguments],
-            options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 120)
+            options: FormatOptions(conditionsWrap: .auto, maxWidth: 120)
         )
     }
 
@@ -2568,7 +2572,7 @@ extension RulesTests {
             for: input,
             [output],
             rules: [FormatRules.wrapArguments, FormatRules.indent],
-            options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
+            options: FormatOptions(conditionsWrap: .auto, maxWidth: 40)
         )
     }
 
@@ -2603,7 +2607,7 @@ extension RulesTests {
             for: input,
             [output],
             rules: [FormatRules.wrapArguments],
-            options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
+            options: FormatOptions(conditionsWrap: .auto, maxWidth: 40)
         )
     }
 
@@ -2624,7 +2628,7 @@ extension RulesTests {
             for: input,
             [output],
             rules: [FormatRules.wrapArguments],
-            options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
+            options: FormatOptions(conditionsWrap: .auto, maxWidth: 40)
         )
     }
 
@@ -2654,7 +2658,7 @@ extension RulesTests {
             for: input,
             [output],
             rules: [FormatRules.wrapArguments],
-            options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
+            options: FormatOptions(conditionsWrap: .auto, maxWidth: 40)
         )
     }
 
@@ -2694,7 +2698,7 @@ extension RulesTests {
             for: input,
             [output],
             rules: [FormatRules.wrapArguments],
-            options: FormatOptions(indent: "    ", conditionsWrap: .auto, maxWidth: 120)
+            options: FormatOptions(conditionsWrap: .auto, maxWidth: 120)
         )
     }
 
@@ -2732,7 +2736,7 @@ extension RulesTests {
             for: input,
             [output],
             rules: [FormatRules.wrapArguments],
-            options: FormatOptions(indent: "    ", conditionsWrap: .auto, maxWidth: 120),
+            options: FormatOptions(conditionsWrap: .auto, maxWidth: 120),
             exclude: ["wrapMultilineStatementBraces"]
         )
     }
@@ -2752,7 +2756,7 @@ extension RulesTests {
             for: input,
             [output],
             rules: [FormatRules.wrapArguments, FormatRules.indent],
-            options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 25)
+            options: FormatOptions(conditionsWrap: .auto, maxWidth: 25)
         )
     }
 
@@ -2772,9 +2776,11 @@ extension RulesTests {
             for: input,
             [output],
             rules: [FormatRules.wrapArguments, FormatRules.indent],
-            options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 25)
+            options: FormatOptions(conditionsWrap: .auto, maxWidth: 25)
         )
     }
+
+    // --conditionsWrap always
 
     func testConditionWrapAlwaysOptionForLongGuard() {
         let input = """
@@ -2792,7 +2798,7 @@ extension RulesTests {
             for: input,
             [output],
             rules: [FormatRules.wrapArguments],
-            options: FormatOptions(indent: "  ", conditionsWrap: .always, maxWidth: 120)
+            options: FormatOptions(conditionsWrap: .always, maxWidth: 120)
         )
     }
 
@@ -2897,6 +2903,23 @@ extension RulesTests {
         let output = """
         @available(iOS 14.0, *)
         class Foo {}
+        """
+        let options = FormatOptions(typeAttributes: .prevLine)
+        testFormatting(
+            for: input,
+            output,
+            rule: FormatRules.wrapAttributes,
+            options: options
+        )
+    }
+
+    func testWrapExtensionAttribute() {
+        let input = """
+        @available(iOS 14.0, *) extension Foo {}
+        """
+        let output = """
+        @available(iOS 14.0, *)
+        extension Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
         testFormatting(

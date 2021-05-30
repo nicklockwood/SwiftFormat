@@ -449,7 +449,7 @@ public struct FormatOptions: CustomStringConvertible {
                 categoryMarkComment: String = "MARK: %c",
                 beforeMarks: Set<String> = [],
                 lifecycleMethods: Set<String> = [],
-                organizeTypes: Set<String> = ["class", "struct", "enum"],
+                organizeTypes: Set<String> = ["class", "actor", "struct", "enum"],
                 organizeClassThreshold: Int = 0,
                 organizeStructThreshold: Int = 0,
                 organizeEnumThreshold: Int = 0,

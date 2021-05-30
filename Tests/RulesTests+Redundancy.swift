@@ -667,6 +667,17 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantGet)
     }
 
+    func testEffectfulGetNotRemoved() {
+        let input = """
+        var foo: Int {
+            get async throws {
+                try await getFoo()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantGet)
+    }
+
     // MARK: - redundantInit
 
     func testRemoveRedundantInit() {
@@ -1055,7 +1066,7 @@ extension RulesTests {
         let c: MyIntRepresentable = 1
         let d: MyDoubleRepresentable = 3.14
         let e: MyArrayRepresentable = ["bar"]
-        let f: MyDictionaryRepresentable = ["baaz": 1]
+        let f: MyDictionaryRepresentable = ["baz": 1]
         """
         testFormatting(for: input, rule: FormatRules.redundantType)
     }
@@ -2911,6 +2922,13 @@ extension RulesTests {
     func testInsertSelf() {
         let input = "class Foo {\n    let foo: Int\n    init() { foo = 5 }\n}"
         let output = "class Foo {\n    let foo: Int\n    init() { self.foo = 5 }\n}"
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testInsertSelfInActor() {
+        let input = "actor Foo {\n    let foo: Int\n    init() { foo = 5 }\n}"
+        let output = "actor Foo {\n    let foo: Int\n    init() { self.foo = 5 }\n}"
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
     }

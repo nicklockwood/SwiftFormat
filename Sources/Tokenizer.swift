@@ -1511,8 +1511,17 @@ public func tokenize(_ source: String) -> [Token] {
                 processToken()
                 return
             }
-            fallthrough
+            if count > 1, case .number = tokens[count - 2] {
+                tokens[count - 1] = .error(token.string)
+            }
         case .identifier:
+            if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
+               case .identifier("actor") = tokens[prevIndex]
+            {
+                tokens[prevIndex] = .keyword("actor")
+                processToken()
+                return
+            }
             if count > 1, case .number = tokens[count - 2] {
                 tokens[count - 1] = .error(token.string)
             }

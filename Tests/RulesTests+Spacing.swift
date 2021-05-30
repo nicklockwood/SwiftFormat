@@ -140,6 +140,12 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
+    func testAddSpaceBetweenCaptureListAndArguments6() {
+        let input = "{ [weak self](foo: @Sendable () -> String) -> Baz? in foo() }"
+        let output = "{ [weak self] (foo: @Sendable () -> String) -> Baz? in foo() }"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
     func testSpaceBetweenClosingParenAndOpenBrace() {
         let input = "func foo(){ foo }"
         let output = "func foo() { foo }"
@@ -180,6 +186,11 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.spaceAroundParens)
     }
 
+    func testSpaceAfterSendableAttribute() {
+        let input = "func foo(bar: @Sendable () -> Void)"
+        testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+    }
+
     func testSpaceBeforeTupleIndexArgument() {
         let input = "foo.1 (true)"
         let output = "foo.1(true)"
@@ -217,10 +228,10 @@ extension RulesTests {
                        options: FormatOptions(swiftVersion: "6.0.0"))
     }
 
-    func testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan6() {
+    func testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan5_5() {
         let input = "let foo = await(bar: 5)"
         testFormatting(for: input, rule: FormatRules.spaceAroundParens,
-                       options: FormatOptions(swiftVersion: "5.9.9"))
+                       options: FormatOptions(swiftVersion: "5.4.9"))
     }
 
     // MARK: - spaceInsideParens

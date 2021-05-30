@@ -87,7 +87,7 @@ extension RulesTests {
         let input = """
         public class Foo {
             public class Bar {
-                fileprivate func baaz() {}
+                fileprivate func baz() {}
                 public var quux: Int
                 init() {}
                 deinit {}
@@ -110,7 +110,7 @@ extension RulesTests {
 
                 // MARK: Fileprivate
 
-                fileprivate func baaz() {}
+                fileprivate func baz() {}
             }
         }
         """
@@ -538,7 +538,7 @@ extension RulesTests {
         let input = """
         extension FooBelowThreshold {
             public func bar() {}
-            func baaz() {}
+            func baz() {}
             private func quux() {}
         }
         """
@@ -552,7 +552,7 @@ extension RulesTests {
 
             // MARK: Internal
 
-            func baaz() {}
+            func baz() {}
 
             // MARK: Private
 
@@ -572,7 +572,7 @@ extension RulesTests {
 
     func testPreservesExistingMarks() {
         let input = """
-        class Foo {
+        actor Foo {
 
             // MARK: Lifecycle
 
@@ -593,7 +593,7 @@ extension RulesTests {
 
     func testUpdatesMalformedMarks() {
         let input = """
-        struct Foo {
+        actor Foo {
 
             // MARK: lifecycle
 
@@ -609,7 +609,7 @@ extension RulesTests {
 
             // MARK: - Internal
 
-            func baaz() {}
+            func baz() {}
 
             // mrak: privat
 
@@ -620,7 +620,7 @@ extension RulesTests {
         """
 
         let output = """
-        struct Foo {
+        actor Foo {
 
             // MARK: Lifecycle
 
@@ -632,7 +632,7 @@ extension RulesTests {
 
             // MARK: Internal
 
-            func baaz() {}
+            func baz() {}
 
             // MARK: Private
 
@@ -682,7 +682,7 @@ extension RulesTests {
         class Foo {
             var bar = "bar"
             /// Leading comment
-            public var baaz = "baaz" // Trailing comment
+            public var baz = "baz" // Trailing comment
             var quux = "quux"
         }
         """
@@ -693,7 +693,7 @@ extension RulesTests {
             // MARK: Public
 
             /// Leading comment
-            public var baaz = "baaz" // Trailing comment
+            public var baz = "baz" // Trailing comment
 
             // MARK: Internal
 
@@ -710,7 +710,7 @@ extension RulesTests {
         let input = """
         class Foo {
             var bar: Int
-            var baaz: Int
+            var baz: Int
             func instanceMethod() {}
         }
         """
@@ -718,7 +718,7 @@ extension RulesTests {
         let output = """
         class Foo {
             var bar: Int
-            var baaz: Int
+            var baz: Int
 
             func instanceMethod() {}
         }
@@ -812,7 +812,7 @@ extension RulesTests {
         public struct Foo {
 
             public var bar = "bar"
-            var baaz = "baaz"
+            var baz = "baz"
 
             #if DEBUG
             public struct DebugFoo {
@@ -861,7 +861,7 @@ extension RulesTests {
 
             // MARK: Internal
 
-            var baaz = "baaz"
+            var baz = "baz"
 
             var quuz = "quux"
         }
@@ -924,11 +924,11 @@ extension RulesTests {
                 didSet {}
             }
 
-            var baaz: Int
+            var baz: Int
             public let quux: Int
         }
 
-        Foo(bar: 1, baaz: 2, quux: 3)
+        Foo(bar: 1, baz: 2, quux: 3)
         """
 
         testFormatting(for: input, rule: FormatRules.organizeDeclarations)
@@ -945,13 +945,13 @@ extension RulesTests {
 
             private func instanceMethod() {}
             public let bar: Int
-            var baaz: Int
+            var baz: Int
             var quux: Int {
                 didSet {}
             }
         }
 
-        Foo(bar: 1, baaz: 2, quux: 3)
+        Foo(bar: 1, baz: 2, quux: 3)
         """
 
         let output = """
@@ -963,7 +963,7 @@ extension RulesTests {
 
             // MARK: Internal
 
-            var baaz: Int
+            var baz: Int
 
             var computed: String {
                 let didSet = "didSet"
@@ -980,7 +980,7 @@ extension RulesTests {
             private func instanceMethod() {}
         }
 
-        Foo(bar: 1, baaz: 2, quux: 3)
+        Foo(bar: 1, baz: 2, quux: 3)
         """
 
         testFormatting(
@@ -1003,10 +1003,10 @@ extension RulesTests {
                 didSet {}
             }
 
-            var baaz: Int
+            var baz: Int
         }
 
-        Foo(bar: 1, baaz: 2, quux: 3)
+        Foo(bar: 1, baz: 2, quux: 3)
         """
 
         testFormatting(
@@ -1051,7 +1051,7 @@ extension RulesTests {
 
             // Important comment at start of section!
 
-            var baaz = 1
+            var baz = 1
 
             public let bar = 1
         }
@@ -1074,7 +1074,7 @@ extension RulesTests {
 
             // Important comment at start of section!
 
-            var baaz = 1
+            var baz = 1
 
         }
         """
@@ -1301,7 +1301,7 @@ extension RulesTests {
         let input = """
         public extension Foo {
             struct Bar {
-                var baaz: Int
+                var baz: Int
                 var quux: Int
             }
         }
@@ -1310,7 +1310,7 @@ extension RulesTests {
         let output = """
         extension Foo {
             public struct Bar {
-                var baaz: Int
+                var baz: Int
                 var quux: Int
             }
         }
@@ -1326,7 +1326,7 @@ extension RulesTests {
         let input = """
         extension Foo {
             func bar() {}
-            func baaz() {}
+            func baz() {}
             public func quux() {}
         }
         """
@@ -1346,7 +1346,7 @@ extension RulesTests {
             /// Doc comment
             @discardableResult
             @available(iOS 10.0, *)
-            func baaz() -> Int { 10 }
+            func baz() -> Int { 10 }
 
             @objc func quux() {}
             @available(iOS 10.0, *) func quixotic() {}
@@ -1361,7 +1361,7 @@ extension RulesTests {
             /// Doc comment
             @discardableResult
             @available(iOS 10.0, *)
-            public func baaz() -> Int { 10 }
+            public func baz() -> Int { 10 }
 
             @objc public func quux() {}
             @available(iOS 10.0, *) public func quixotic() {}
@@ -1403,7 +1403,7 @@ extension RulesTests {
         let input = """
         extension Foo {
             public func bar() {}
-            public var baaz: Int { 10 }
+            public var baz: Int { 10 }
 
             public struct Foo2 {
                 var quux: Int
@@ -1414,7 +1414,7 @@ extension RulesTests {
         let output = """
         public extension Foo {
             func bar() {}
-            var baaz: Int { 10 }
+            var baz: Int { 10 }
 
             struct Foo2 {
                 var quux: Int
@@ -1430,7 +1430,7 @@ extension RulesTests {
         extension Foo {
             #if DEBUG
                 public func bar() {}
-                public var baaz: Int { 10 }
+                public var baz: Int { 10 }
             #endif
         }
         """
@@ -1439,7 +1439,7 @@ extension RulesTests {
         public extension Foo {
             #if DEBUG
                 func bar() {}
-                var baaz: Int { 10 }
+                var baz: Int { 10 }
             #endif
         }
         """
@@ -1498,7 +1498,7 @@ extension RulesTests {
         let input = """
         extension Foo {
             func bar() {}
-            var baaz: Int { 10 }
+            var baz: Int { 10 }
         }
         """
 
@@ -1509,7 +1509,7 @@ extension RulesTests {
         let input = """
         public extension Foo {
             func bar() {}
-            func baaz() {}
+            func baz() {}
         }
         """
 
@@ -1520,14 +1520,14 @@ extension RulesTests {
         let input = """
         public extension Foo {
             fileprivate func bar() {}
-            fileprivate func baaz() {}
+            fileprivate func baz() {}
         }
         """
 
         let output = """
         fileprivate extension Foo {
             func bar() {}
-            func baaz() {}
+            func baz() {}
         }
         """
 
@@ -1539,7 +1539,7 @@ extension RulesTests {
         let input = """
         extension Foo {
             private var bar() {}
-            private func baaz() {}
+            private func baz() {}
         }
         """
 
@@ -1550,7 +1550,7 @@ extension RulesTests {
         let input = """
         private extension Foo {
             public var bar() {}
-            public func baaz() {}
+            public func baz() {}
         }
         """
 
@@ -1572,14 +1572,14 @@ extension RulesTests {
         let input = """
         public extension Foo {
             func bar() {}
-            public func baaz() {}
+            public func baz() {}
         }
         """
 
         let output = """
         public extension Foo {
             func bar() {}
-            func baaz() {}
+            func baz() {}
         }
         """
 
@@ -1653,7 +1653,7 @@ extension RulesTests {
         let input = """
         struct Foo {}
         class Bar {}
-        enum Baaz {}
+        enum Baz {}
         protocol Quux {}
         """
 
@@ -1666,9 +1666,9 @@ extension RulesTests {
 
         class Bar {}
 
-        // MARK: - Baaz
+        // MARK: - Baz
 
-        enum Baaz {}
+        enum Baz {}
 
         // MARK: - Quux
 
@@ -1731,7 +1731,7 @@ extension RulesTests {
         /// lines of prose at the start
         ///  - And then, after the prose,
         ///  - a few bullet points just for fun
-        struct Foo {}
+        actor Foo {}
         extension Foo {}
         """
 
@@ -1742,7 +1742,7 @@ extension RulesTests {
         /// lines of prose at the start
         ///  - And then, after the prose,
         ///  - a few bullet points just for fun
-        struct Foo {}
+        actor Foo {}
         extension Foo {}
         """
 
@@ -1824,14 +1824,14 @@ extension RulesTests {
 
     func testAddsMarkCommentForExtensionWithMultipleConformances() {
         let input = """
-        extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo: BarProtocol, BazProtocol {}
         extension Foo {}
         """
 
         let output = """
-        // MARK: - Foo + BarProtocol, BaazProtocol
+        // MARK: - Foo + BarProtocol, BazProtocol
 
-        extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo: BarProtocol, BazProtocol {}
         extension Foo {}
         """
 
@@ -1842,14 +1842,14 @@ extension RulesTests {
         let input = """
         // MARK: - Foo + BarProtocol
 
-        extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo: BarProtocol, BazProtocol {}
         extension Foo {}
         """
 
         let output = """
-        // MARK: - Foo + BarProtocol, BaazProtocol
+        // MARK: - Foo + BarProtocol, BazProtocol
 
-        extension Foo: BarProtocol, BaazProtocol {}
+        extension Foo: BarProtocol, BazProtocol {}
         extension Foo {}
         """
 
@@ -2094,7 +2094,7 @@ extension RulesTests {
         let input = """
         struct EmptyFoo {}
         struct EmptyBar { }
-        struct EmptyBaaz {
+        struct EmptyBaz {
 
         }
         struct Quux {
@@ -2113,7 +2113,7 @@ extension RulesTests {
         let input = """
         struct EmptyFoo {}
         struct EmptyBar { }
-        struct EmptyBaaz {
+        struct EmptyBaz {
 
         }
         struct Quux {
@@ -2124,7 +2124,7 @@ extension RulesTests {
         let output = """
         struct EmptyFoo {}
         struct EmptyBar { }
-        struct EmptyBaaz {
+        struct EmptyBaz {
 
         }
 
@@ -2146,7 +2146,7 @@ extension RulesTests {
         let input = """
         extension EmptyFoo: FooProtocol {}
         extension EmptyBar: BarProtocol { }
-        extension EmptyBaaz: BaazProtocol {
+        extension EmptyBaz: BazProtocol {
 
         }
         extension Quux: QuuxProtocol {
@@ -2165,7 +2165,7 @@ extension RulesTests {
         let input = """
         extension EmptyFoo: FooProtocol {}
         extension EmptyBar: BarProtocol { }
-        extension EmptyBaaz: BaazProtocol {
+        extension EmptyBaz: BazProtocol {
 
         }
         extension Quux: QuuxProtocol {
@@ -2176,7 +2176,7 @@ extension RulesTests {
         let output = """
         extension EmptyFoo: FooProtocol {}
         extension EmptyBar: BarProtocol { }
-        extension EmptyBaaz: BaazProtocol {
+        extension EmptyBaz: BazProtocol {
 
         }
 

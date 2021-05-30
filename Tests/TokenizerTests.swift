@@ -3780,4 +3780,60 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqual(tokenize(input), output)
     }
+
+    func testAwaitProperty() {
+        let input = "let await = 5"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("await"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .number("5", .integer),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    // MARK: actors
+
+    func testActorType() {
+        let input = "actor Foo {}"
+        let output: [Token] = [
+            .keyword("actor"),
+            .space(" "),
+            .identifier("Foo"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testActorProperty() {
+        let input = "let actor = {}"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("actor"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testActorProperty2() {
+        let input = "actor = 5"
+        let output: [Token] = [
+            .identifier("actor"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .number("5", .integer),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
 }

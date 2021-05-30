@@ -1865,6 +1865,24 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentIfDefPostfixMemberSyntax() {
+        let input = """
+        class Bar {
+            func foo() {
+                Text("Hello")
+                #if os(iOS)
+                    .font(.largeTitle)
+                #elseif os(macOS)
+                    .font(.headline)
+                #else
+                    .font(.headline)
+                #endif
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: noindent)
 
     func testIfEndifNoIndenting() {
@@ -2009,6 +2027,25 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testIfDefPostfixMemberSyntaxNoIndenting() {
+        let input = """
+        class Bar {
+            func foo() {
+                Text("Hello")
+                #if os(iOS)
+                    .font(.largeTitle)
+                #elseif os(macOS)
+                    .font(.headline)
+                #else
+                    .font(.headline)
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: outdent)
 
     func testIfEndifOutdenting() {
@@ -2090,6 +2127,25 @@ extension RulesTests {
         #if x
             case baz
         #endif // ends
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .outdent)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIfDefPostfixMemberSyntaxOutdenting() {
+        let input = """
+        class Bar {
+            func foo() {
+                Text("Hello")
+        #if os(iOS)
+                    .font(.largeTitle)
+        #elseif os(macOS)
+                    .font(.headline)
+        #else
+                    .font(.headline)
+        #endif
+            }
         }
         """
         let options = FormatOptions(ifdefIndent: .outdent)

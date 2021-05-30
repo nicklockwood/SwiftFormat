@@ -1575,13 +1575,23 @@ public struct _FormatRules {
                        formatter.isStartOfClosure(at: nextNonSpaceIndex)
                     {
                         // Don't indent further
-                    } else if formatter.token(at: nextTokenIndex ?? -1) == .operator(".", .infix),
-                              formatter.last(.nonSpace, before: lastNonSpaceOrLinebreakIndex)?.isLinebreak == true
-                    {
-                        if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
-                            (formatter.options.xcodeIndentation && lastToken.isMultilineStringDelimiter)
+                    } else if formatter.token(at: nextTokenIndex ?? -1) == .operator(".", .infix) {
+                        let lineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex)
+                        let startToken = formatter.tokens[
+                            formatter.index(of: .nonSpaceOrComment, after: lineStart - 1) ?? lineStart
+                        ]
+                        if formatter.options.ifdefIndent == .indent,
+                           [.keyword("#else"), .keyword("#elseif")].contains(startToken)
                         {
-                            indent += formatter.options.indent
+                            // Don't indent further
+                        } else if formatter.last(.nonSpace, before: lastNonSpaceOrLinebreakIndex)?.isLinebreak == true {
+                            if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
+                                (formatter.options.xcodeIndentation && lastToken.isMultilineStringDelimiter)
+                            {
+                                indent += formatter.options.indent
+                            }
+                        } else if !formatter.options.xcodeIndentation || !isWrappedDeclaration() {
+                            indent += formatter.linewrapIndent(at: i)
                         }
                     } else if !formatter.options.xcodeIndentation || !isWrappedDeclaration() {
                         indent += formatter.linewrapIndent(at: i)

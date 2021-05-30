@@ -1255,4 +1255,18 @@ private struct Examples {
     + preconditionFailure("message", 2, 1)
     ```
     """
+
+    let acronyms = """
+    ```diff
+    - let destinationUrl: URL
+    - let urlRouter: UrlRouter
+    - let screenId: String
+    - let entityUuid: UUID
+
+    + let destinationURL: URL
+    + let urlRouter: URLRouter
+    + let screenID: String
+    + let entityUUID: UUID
+    ```
+    """
 }

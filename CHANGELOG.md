@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.48.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.4) (2020-05-30)
+
+- Added support for `actor` and other async/await syntax introduced in Swift 5.5
+- Functions with `@Sendable` closure parameters are now formatted correctly
+- The `redundantGet` rule no longer removes effectful get clauses (i.e. `get throws` or `get async`)
+- Fixed indenting of postfix expression members inside `#else` and `#elseif` clauses
+- The `--typeattributes` option now applies to extension attributes as well as type declarations
+- Improved indentation for accessors/method calls in multiline conditionals
+
 ## [0.48.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.3) (2020-05-22)
 
 - Fixed bug where files would not be correctly excluded when using `--stdinpath`

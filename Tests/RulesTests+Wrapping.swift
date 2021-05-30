@@ -2823,7 +2823,7 @@ extension RulesTests {
             enum CodingKeys: String, CodingKey {
                 case name
                 case type
-                case categoryId = "category_id"
+                case categoryID = "category_id"
                 case attributes
             }
         }

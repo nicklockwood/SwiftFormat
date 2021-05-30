@@ -1,5 +1,6 @@
 # Rules
 
+* [acronyms](#acronyms)
 * [andOperator](#andOperator)
 * [anyObjectProtocol](#anyObjectProtocol)
 * [assertionFailures](#assertionFailures)
@@ -78,6 +79,32 @@
 * [yodaConditions](#yodaConditions)
 
 ----------
+
+## acronyms
+
+Capitalizes acronyms when the first character is capitalized.
+
+Option | Description
+--- | ---
+`--acronyms` | Acronyms to auto-capitalize. Defaults to "ID,URL,UUID".
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let destinationUrl: URL
+- let urlRouter: UrlRouter
+- let screenId: String
+- let entityUuid: UUID
+
++ let destinationURL: URL
++ let urlRouter: URLRouter
++ let screenID: String
++ let entityUUID: UUID
+```
+
+</details>
+<br/>
 
 ## andOperator
 

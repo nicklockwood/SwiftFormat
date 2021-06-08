@@ -2458,6 +2458,7 @@ extension TokenizerTests {
         ("testGenericInFailableInit", testGenericInFailableInit),
         ("testGenericOperatorFunction", testGenericOperatorFunction),
         ("testGenericResultBuilder", testGenericResultBuilder),
+        ("testGenericResultBuilder2", testGenericResultBuilder2),
         ("testGenericSubclassDeclaration", testGenericSubclassDeclaration),
         ("testGenericsWithWhereClause", testGenericsWithWhereClause),
         ("testGenericTypeAmpersandProtocol", testGenericTypeAmpersandProtocol),

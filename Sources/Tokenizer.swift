@@ -1577,7 +1577,7 @@ public func tokenize(_ source: String) -> [Token] {
                         fallthrough
                     }
                 case .identifier:
-                    guard let scopeIndex = closedGenericScopeIndexes.last,
+                    guard let scopeIndex = closedGenericScopeIndexes.first,
                           let prevIndex = index(of: .nonSpaceOrComment, before: scopeIndex),
                           tokens[prevIndex].isAttribute
                     else {

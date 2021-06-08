@@ -451,8 +451,19 @@ extension Formatter {
                     return true
                 }
             case .operator("->", .infix), .keyword("init"),
-                 .keyword("subscript"), .endOfScope(">"):
+                 .keyword("subscript"):
                 return false
+            case .endOfScope(">"):
+                guard let startIndex = index(of: .startOfScope("<"), before: prev) else {
+                    fatalError("Expected <", at: prev - 1)
+                    return false
+                }
+                guard let prevIndex = index(of: .nonSpaceOrComment, before: startIndex, if: {
+                    $0.isIdentifier
+                }) else {
+                    return false
+                }
+                return last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) != .keyword("func")
             default:
                 if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
                    isAccessorKeyword(at: nextIndex) || isAccessorKeyword(at: prevIndex)

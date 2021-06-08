@@ -188,6 +188,16 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 4))
     }
 
+    func testGenericInitBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("init<T>() { foo = 5 }"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 7))
+    }
+
+    func testGenericOptionalInitBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("init?<T>() { foo = 5 }"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 8))
+    }
+
     func testInitAllmanBracesNotTreatedAsClosure() {
         let formatter = Formatter(tokenize("init()\n{\n    foo = 5\n}"))
         XCTAssertFalse(formatter.isStartOfClosure(at: 4))
@@ -442,6 +452,13 @@ class ParsingHelpersTests: XCTestCase {
             }
         """))
         XCTAssert(formatter.isStartOfClosure(at: 16))
+    }
+
+    func testGenericInitializerTrailingClosure() {
+        let formatter = Formatter(tokenize("""
+        Foo<Bar>(0) { [weak self]() -> Void in }
+        """))
+        XCTAssert(formatter.isStartOfClosure(at: 8))
     }
 
     func testParameterBodyAfterStringIsNotClosure() {

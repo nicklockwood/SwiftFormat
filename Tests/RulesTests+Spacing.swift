@@ -146,6 +146,12 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
+    func testAddSpaceBetweenCaptureListAndArguments7() {
+        let input = "Foo<Bar>(0) { [weak self]() -> Void in }"
+        let output = "Foo<Bar>(0) { [weak self] () -> Void in }"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
     func testSpaceBetweenClosingParenAndOpenBrace() {
         let input = "func foo(){ foo }"
         let output = "func foo() { foo }"

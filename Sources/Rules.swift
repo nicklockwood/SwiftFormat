@@ -1252,9 +1252,15 @@ public struct _FormatRules {
                     // method call the trailing closure body should be double-indented
                     if let prevIndex = formatter.index(of: .nonSpaceOrComment, before: i),
                        formatter.tokens[prevIndex] == .endOfScope(")"),
-                       formatter.last(.nonSpaceOrComment, before: prevIndex)?.isLinebreak == false,
                        let scopeStart = formatter.index(of: .startOfScope("("), before: prevIndex),
-                       formatter.next(.nonSpaceOrComment, after: scopeStart)?.isLinebreak == true
+                       let prevPrevIndex = formatter.tokens[scopeStart ..< prevIndex].lastIndex(where: {
+                           !$0.isSpaceOrComment && !$0.isEndOfScope
+                       }),
+                       !formatter.tokens[prevPrevIndex].isLinebreak,
+                       let linebreakIndex = formatter.tokens[scopeStart ..< prevIndex].firstIndex(where: {
+                           $0.isLinebreak
+                       }),
+                       formatter.last(.nonSpaceOrCommentOrLinebreak, before: linebreakIndex) != .delimiter(",")
                     {
                         indent += formatter.options.indent
                     }

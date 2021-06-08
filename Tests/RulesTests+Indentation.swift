@@ -1255,6 +1255,21 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testDoubleIndentTrailingClosureBody2() {
+        let input = """
+        extension Foo {
+            func bar() -> Bar? {
+                return Bar(with: Baz(
+                    baz: baz)) { _ in
+                        print("hello")
+                }
+            }
+        }
+        """
+        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testSingleIndentTrailingClosureBodyThatStartsOnFollowingLine() {
         let input = """
         func foo() {
@@ -1290,6 +1305,17 @@ extension RulesTests {
         })
         """
         testFormatting(for: input, rule: FormatRules.indent, exclude: ["trailingClosures"])
+    }
+
+    func testNoDoubleIndentInInsideClosure2() {
+        let input = """
+        foo(where: { _ in
+            bar()
+        }) { _ in
+            print("and a trailing closure")
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
     }
 
     func testIndentChainedPropertiesAfterFunctionCall() {

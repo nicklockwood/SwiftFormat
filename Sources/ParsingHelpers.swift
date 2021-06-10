@@ -1558,6 +1558,30 @@ extension Formatter {
         }
         return spaceEquivalentToTokens(from: firstToken, upTo: nextTokenIndex)
     }
+
+    func startOfMultilineStatement(at openBraceIndex: Int) -> Int? {
+        assert(tokens[openBraceIndex] == .startOfScope("{"))
+
+        if let indexBeforeOpenBrace = index(of: .nonSpaceOrCommentOrLinebreak, before: openBraceIndex),
+           tokens[indexBeforeOpenBrace] == .endOfScope(")"),
+           let startOfMethodParameters = index(of: .startOfScope("("), before: indexBeforeOpenBrace),
+           let indexBeforeStartOfParameters = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfMethodParameters),
+           let indexTwoBeforeStartOfParameters = index(of: .nonSpaceOrCommentOrLinebreak, before: indexBeforeStartOfParameters),
+           tokens[indexBeforeStartOfParameters].isIdentifier && tokens[indexTwoBeforeStartOfParameters].string == "."
+           || tokens[indexBeforeStartOfParameters].string == "="
+        {
+            return startOfMethodParameters
+        } else if let keywordIndex = indexOfLastSignificantKeyword(at: openBraceIndex, excluding: ["where"]),
+                  [
+                      "if", "for", "guard", "while", "switch", "func", "init", "subscript",
+                      "extension", "class", "actor", "struct", "enum", "protocol",
+                  ].contains(tokens[keywordIndex].string)
+        {
+            return keywordIndex
+        } else {
+            return nil
+        }
+    }
 }
 
 extension _FormatRules {

@@ -2376,7 +2376,7 @@ extension RulesTests {
         UIView.animate(
             duration: 10,
             options: []) {
-                print()
+            print()
         }
         """
 
@@ -2390,7 +2390,7 @@ extension RulesTests {
         """
 
         let options = FormatOptions(closingParenOnSameLine: true)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineStatementBraces, FormatRules.indent], options: options)
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineStatementBraces], options: options, exclude: ["indent"])
     }
 
     func testMultilineBraceAppliedToGetterBody() {

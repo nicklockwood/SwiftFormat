@@ -649,6 +649,7 @@ class ParsingHelpersTests: XCTestCase {
             "convenience",
             "override",
             "indirect",
+            "isolated", "nonisolated",
             "lazy",
             "weak", "unowned",
             "static", "class",
@@ -667,7 +668,9 @@ class ParsingHelpersTests: XCTestCase {
             "override",
             "private", "fileprivate", "internal", "public", "open",
             "private(set)", "fileprivate(set)", "internal(set)", "public(set)", "open(set)",
-            "dynamic", "indirect",
+            "dynamic",
+            "indirect",
+            "isolated", "nonisolated",
             "static", "class",
             "mutating", "nonmutating",
             "lazy",
@@ -686,6 +689,13 @@ class ParsingHelpersTests: XCTestCase {
         class Foo { @objc public required init() {} }
         """))
         XCTAssertEqual(formatter.startOfModifiers(at: 12, includingAttributes: false), 8)
+    }
+
+    func testStartOfModifiersIncludingNonisolated() {
+        let formatter = Formatter(tokenize("""
+        actor Foo { nonisolated public func foo() {} }
+        """))
+        XCTAssertEqual(formatter.startOfModifiers(at: 10, includingAttributes: true), 6)
     }
 
     func testStartOfModifiersIncludingAttributes() {

@@ -1617,6 +1617,7 @@ extension _FormatRules {
         ["optional", "required"],
         ["convenience"],
         ["indirect"],
+        ["isolated", "nonisolated"],
         ["lazy"],
         ["weak", "unowned"],
         ["static", "class"],

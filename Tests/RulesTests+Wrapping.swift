@@ -2371,6 +2371,50 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces, options: options)
     }
 
+    func testMultilineBraceAppliedToTrailingClosure() {
+        let input = """
+        UIView.animate(
+            duration: 10,
+            options: []) {
+            print()
+        }
+        """
+
+        let output = """
+        UIView.animate(
+            duration: 10,
+            options: [])
+        {
+            print()
+        }
+        """
+
+        let options = FormatOptions(closingParenOnSameLine: true)
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineStatementBraces], options: options, exclude: ["indent"])
+    }
+
+    func testMultilineBraceAppliedToGetterBody() {
+        let input = """
+        var items: Adaptive<CGFloat> = .adaptive(
+            compact: Sizes.horizontalPaddingTiny_8,
+            regular: Sizes.horizontalPaddingLarge_64) {
+                didSet { updateAccessoryViewSpacing() }
+        }
+        """
+
+        let output = """
+        var items: Adaptive<CGFloat> = .adaptive(
+            compact: Sizes.horizontalPaddingTiny_8,
+            regular: Sizes.horizontalPaddingLarge_64)
+        {
+            didSet { updateAccessoryViewSpacing() }
+        }
+        """
+
+        let options = FormatOptions(closingParenOnSameLine: true)
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineStatementBraces, FormatRules.indent], options: options)
+    }
+
     // MARK: wrapConditions before-first
 
     func testWrapConditionsBeforeFirstPreservesMultilineStatements() {

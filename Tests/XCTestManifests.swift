@@ -1124,6 +1124,8 @@ extension RulesTests {
         ("testMixedCaseMarkIsNotUpdated", testMixedCaseMarkIsNotUpdated),
         ("testModifierOrder", testModifierOrder),
         ("testModifiersDontAffectAttributeWrapping", testModifiersDontAffectAttributeWrapping),
+        ("testMultilineBraceAppliedToGetterBody", testMultilineBraceAppliedToGetterBody),
+        ("testMultilineBraceAppliedToTrailingClosure", testMultilineBraceAppliedToTrailingClosure),
         ("testMultilineClassBrace", testMultilineClassBrace),
         ("testMultilineClassBraceNotAppliedForXcodeIndentationMode", testMultilineClassBraceNotAppliedForXcodeIndentationMode),
         ("testMultilineCommentHeader", testMultilineCommentHeader),

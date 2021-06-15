@@ -24,6 +24,7 @@ private let rulesFile =
 class MetadataTests: XCTestCase {
     // MARK: generate Rules.md
 
+    // NOTE: if test fails, just run it again locally to update rules file
     func testGenerateRulesDocumentation() throws {
         var result = "# Rules\n"
         for rule in FormatRules.all {
@@ -57,6 +58,8 @@ class MetadataTests: XCTestCase {
             }
         }
         result += "\n"
+        let oldRules = try String(contentsOf: rulesURL)
+        XCTAssertEqual(result, oldRules)
         try result.write(to: rulesURL, atomically: true, encoding: .utf8)
     }
 

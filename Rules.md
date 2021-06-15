@@ -764,7 +764,7 @@ Option | Description
 `--categorymark` | Template for category mark comments. Defaults to "MARK: %c"
 `--beforemarks` | Declarations placed before first mark (e.g. `typealias,struct`)
 `--lifecycle` | Names of additional Lifecycle methods (e.g. `viewDidLoad`)
-`--organizetypes` | Declarations to organize (defaults to `struct,class,enum`)
+`--organizetypes` | Declarations to organize (default: `class,actor,struct,enum`)
 `--structthreshold` | Minimum line count to organize struct body. Defaults to 0
 `--classthreshold` | Minimum line count to organize class body. Defaults to 0
 `--enumthreshold` | Minimum line count to organize enum body. Defaults to 0

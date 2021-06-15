@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.48.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.5) (2020-06-15)
+
+- Fixed bug when parsing generic result builder attributes, leading to incorrect spacing
+- Fixed bug where wrapped function body was not double-indented as it should have been
+- Parser now correctly handles `isolated` and `nonisolated` modifiers on `actor` members
+- Fixed bug where space was imncorrectly removed between closure capture list and arguments
+- Fixed bug with indenting of wrapped method chains
+
 ## [0.48.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.4) (2020-05-30)
 
 - Added support for `actor` and other async/await syntax introduced in Swift 5.5

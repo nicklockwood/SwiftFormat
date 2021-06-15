@@ -310,6 +310,7 @@ extension MetadataTests {
         ("testArgumentNamesAreValidLength", testArgumentNamesAreValidLength),
         ("testGenerateRulesDocumentation", testGenerateRulesDocumentation),
         ("testLatestVersionInChangelog", testLatestVersionInChangelog),
+        ("testLatestVersionInPodspec", testLatestVersionInPodspec),
         ("testNoInvalidOptionsInRulesFile", testNoInvalidOptionsInRulesFile),
         ("testNoInvalidRulesInRulesFile", testNoInvalidRulesInRulesFile),
         ("testRuleHelpLinesEndInPeriod", testRuleHelpLinesEndInPeriod),

@@ -1396,6 +1396,17 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    func testChainedFunctionInGuardIndentation() {
+        let input = """
+        guard
+            let foo = self.foo
+            .bar
+            .baz
+        else { return }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     func testChainedFunctionInGuardWithXcodeIndentation() {
         let input = """
         guard
@@ -1413,6 +1424,62 @@ extension RulesTests {
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testChainedFunctionInGuardIndentation2() {
+        let input = """
+        guard aBool,
+              anotherBool,
+              aTestArray
+              .map { $0 * 2 }
+              .filter { $0 == 4 }
+              .isEmpty,
+              yetAnotherBool
+        else { return }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testChainedFunctionInGuardWithXcodeIndentation2() {
+        let input = """
+        guard aBool,
+              anotherBool,
+              aTestArray
+              .map { $0 * 2 }
+            .filter { $0 == 4 }
+            .isEmpty,
+            yetAnotherBool
+        else { return }
+        """
+        let output = """
+        guard aBool,
+              anotherBool,
+              aTestArray
+                  .map { $0 * 2 }
+                  .filter { $0 == 4 }
+                  .isEmpty,
+                  yetAnotherBool
+        else { return }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testWrappedChainedFunctionsWithNestedScopeIndent() {
+        let input = """
+        var body: some View {
+            VStack {
+                ZStack {
+                    Text()
+                }
+                .gesture(DragGesture()
+                    .onChanged { value in
+                        print(value)
+                    })
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
     }
 
     func testChainedOrOperatorsInFunctionWithReturnOnNewLine() {

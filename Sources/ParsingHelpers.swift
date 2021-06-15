@@ -1542,6 +1542,14 @@ extension Formatter {
             let token = self.tokens[$0]
             return !token.isEndOfScope && !token.isSpaceOrComment
         }) else {
+            if next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator(".", .infix),
+               let prevIndex = self.index(of: .nonSpaceOrLinebreak, before: index),
+               case let lineStart = startOfLine(at: prevIndex),
+               next(.nonSpaceOrCommentOrLinebreak, after: lineStart - 1) == .operator(".", .infix),
+               self.index(of: .startOfScope, before: index) ?? -1 < lineStart
+            {
+                return indentForLine(at: lineStart)
+            }
             return options.indent
         }
         if case .endOfScope = tokens[firstToken],

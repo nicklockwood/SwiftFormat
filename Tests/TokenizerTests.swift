@@ -3868,4 +3868,21 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqual(tokenize(input), output)
     }
+
+    func testActorLabel() {
+        let input = "init(actor: Actor) {}"
+        let output: [Token] = [
+            .keyword("init"),
+            .startOfScope("("),
+            .identifier("actor"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("Actor"),
+            .endOfScope(")"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
 }

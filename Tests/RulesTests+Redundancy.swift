@@ -1927,6 +1927,29 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantBackticks)
     }
 
+    func testNoRemoveBackticksAroundActorProperty() {
+        let input = "let `actor`: Foo"
+        testFormatting(for: input, rule: FormatRules.redundantBackticks)
+    }
+
+    func testRemoveBackticksAroundActorRvalue() {
+        let input = "let foo = `actor`"
+        let output = "let foo = actor"
+        testFormatting(for: input, output, rule: FormatRules.redundantBackticks)
+    }
+
+    func testRemoveBackticksAroundActorLabel() {
+        let input = "init(`actor`: Foo)"
+        let output = "init(actor: Foo)"
+        testFormatting(for: input, output, rule: FormatRules.redundantBackticks)
+    }
+
+    func testRemoveBackticksAroundActorLabel2() {
+        let input = "init(`actor` foo: Foo)"
+        let output = "init(actor foo: Foo)"
+        testFormatting(for: input, output, rule: FormatRules.redundantBackticks)
+    }
+
     // MARK: - redundantSelf
 
     // explicitSelf = .remove

@@ -912,6 +912,10 @@ extension Formatter {
                 return false
             case "get", "set", "willSet", "didSet":
                 return isAccessorKeyword(at: i, checkKeyword: false)
+            case "actor":
+                if last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(ofType: .infix) == true {
+                    return false
+                }
             default:
                 return false
             }

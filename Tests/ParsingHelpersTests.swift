@@ -830,6 +830,16 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(names, ["foo"])
     }
 
+    func testProcessParametersInInit() {
+        let formatter = Formatter(tokenize("""
+        init(actor: Int, bar: String) {}
+        """))
+        var index = 0
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["actor", "bar"])
+    }
+
     // MARK: parseDeclarations
 
     func testParseDeclarations() {

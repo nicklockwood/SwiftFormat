@@ -3869,6 +3869,31 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testActorProperty3() {
+        let input = """
+        self.actor = actor
+        self.bar = bar
+        """
+        let output: [Token] = [
+            .identifier("self"),
+            .operator(".", .infix),
+            .identifier("actor"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .identifier("actor"),
+            .linebreak("\n", 1),
+            .identifier("self"),
+            .operator(".", .infix),
+            .identifier("bar"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testActorLabel() {
         let input = "init(actor: Actor) {}"
         let output: [Token] = [
@@ -3882,6 +3907,28 @@ class TokenizerTests: XCTestCase {
             .space(" "),
             .startOfScope("{"),
             .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testActorVariable() {
+        let input = "let foo = actor\nlet bar = foo"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .identifier("actor"),
+            .linebreak("\n", 1),
+            .keyword("let"),
+            .space(" "),
+            .identifier("bar"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .identifier("foo"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

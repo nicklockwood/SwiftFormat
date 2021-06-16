@@ -2874,6 +2874,71 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testRedundantSelfWithStaticMethodAfterForLoop() {
+        let input = """
+        struct Foo {
+            init() {
+                for foo in self.bar {}
+            }
+
+            static func foo() {}
+        }
+
+        """
+        let output = """
+        struct Foo {
+            init() {
+                for foo in bar {}
+            }
+
+            static func foo() {}
+        }
+
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
+    func testRedundantSelfWithStaticMethodAfterForWhereLoop() {
+        let input = """
+        struct Foo {
+            init() {
+                for foo in self.bar where !bar.isEmpty {}
+            }
+
+            static func foo() {}
+        }
+
+        """
+        let output = """
+        struct Foo {
+            init() {
+                for foo in bar where !bar.isEmpty {}
+            }
+
+            static func foo() {}
+        }
+
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
+    func testRedundantSelfRuleDoesntErrorInForInTryLoop() {
+        let input = "for foo in try bar() {}"
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
+    func testRedundantSelfInInitWithActorLabel() {
+        let input = """
+        class Foo {
+            init(actor: Actor, bar: Bar) {
+                self.actor = actor
+                self.bar = bar
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {
@@ -3576,59 +3641,6 @@ extension RulesTests {
         """
         let options = FormatOptions(explicitSelf: .initOnly)
         testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
-    }
-
-    func testRedundantSelfWithStaticMethodAfterForLoop() {
-        let input = """
-        struct Foo {
-            init() {
-                for foo in self.bar {}
-            }
-
-            static func foo() {}
-        }
-
-        """
-        let output = """
-        struct Foo {
-            init() {
-                for foo in bar {}
-            }
-
-            static func foo() {}
-        }
-
-        """
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
-    }
-
-    func testRedundantSelfWithStaticMethodAfterForWhereLoop() {
-        let input = """
-        struct Foo {
-            init() {
-                for foo in self.bar where !bar.isEmpty {}
-            }
-
-            static func foo() {}
-        }
-
-        """
-        let output = """
-        struct Foo {
-            init() {
-                for foo in bar where !bar.isEmpty {}
-            }
-
-            static func foo() {}
-        }
-
-        """
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
-    }
-
-    func testRedundantSelfRuleDoesntErrorInForInTryLoop() {
-        let input = "for foo in try bar() {}"
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
     func testRedundantSelfRuleDoesntErrorForStaticFuncInProtocolWithWhere() {

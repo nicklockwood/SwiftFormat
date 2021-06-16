@@ -603,6 +603,8 @@ extension RulesTests {
         ("testCaseOuterParensRemoved", testCaseOuterParensRemoved),
         ("testCaseVarOuterParensRemoved", testCaseVarOuterParensRemoved),
         ("testCatchLetError", testCatchLetError),
+        ("testCGFloatsNotReplacedByDoubleIfLessThanSwift5_5", testCGFloatsNotReplacedByDoubleIfLessThanSwift5_5),
+        ("testCGFloatsReplacedByDoubleOnSwift5_5", testCGFloatsReplacedByDoubleOnSwift5_5),
         ("testChainedClosureIndents", testChainedClosureIndents),
         ("testChainedClosureIndentsAfterIfCondition", testChainedClosureIndentsAfterIfCondition),
         ("testChainedClosureIndentsAfterIfCondition2", testChainedClosureIndentsAfterIfCondition2),

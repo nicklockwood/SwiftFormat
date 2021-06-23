@@ -1,11 +1,17 @@
 # Change Log
 
+## [0.48.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.6) (2020-06-23)
+
+- Fixed bug where `actor` variables were incorrectly interpreted as a keyword in certain cases
+- The `redundantBackticks` rule no longer removes required backticks around `actor` properties
+- Doc comments containing TODO: are no longer converted to regular comments if it would mangle the docs
+
 ## [0.48.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.5) (2020-06-15)
 
 - Fixed bug when parsing generic result builder attributes, leading to incorrect spacing
 - Fixed bug where wrapped function body was not double-indented as it should have been
 - Parser now correctly handles `isolated` and `nonisolated` modifiers on `actor` members
-- Fixed bug where space was imncorrectly removed between closure capture list and arguments
+- Fixed bug where space was incorrectly removed between closure capture list and arguments
 - Fixed bug with indenting of wrapped method chains
 
 ## [0.48.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.4) (2020-05-30)
@@ -33,7 +39,7 @@
 - Fixed bug where `typeSugar` rule triggered a Swift bug inside case statements
 - Fixed double-indenting of trailing closure body on a wrapped line
 - Fixed compilation failure when installing SwiftFormat using Swift Package Manager
-- Fixed wrapping of namespaced property wrapper attributes
+- Fixed wrapping of name-spaced property wrapper attributes
 - Fixed bug where `redundantReturn` rule removed required return inside `catch` statement
 - Fixed issue where `redundantType` rule introduced compilation warnings by removing explicit Void type
 - Fixed bug where trailing comma could be inserted inside a subscript nested inside a collection

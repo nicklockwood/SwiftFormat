@@ -1952,7 +1952,19 @@ public struct _FormatRules {
                 return
             }
             var removedSpace = false
-            if string.hasPrefix("/") {
+            if string.hasPrefix("/"), let scopeStart = formatter.index(of: .startOfScope, before: i, if: {
+                $0 == .startOfScope("//")
+            }) {
+                if let prevLinebreak = formatter.index(of: .linebreak, before: scopeStart),
+                   case .commentBody? = formatter.last(.nonSpace, before: prevLinebreak)
+                {
+                    return
+                }
+                if let nextLinebreak = formatter.index(of: .linebreak, after: i),
+                   case .startOfScope("//")? = formatter.next(.nonSpace, after: nextLinebreak)
+                {
+                    return
+                }
                 removedSpace = true
                 string = string.replacingOccurrences(of: "^/(\\s+)", with: "", options: .regularExpression)
             }

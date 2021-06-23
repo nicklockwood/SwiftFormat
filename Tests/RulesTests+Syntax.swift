@@ -42,6 +42,45 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.todos)
     }
 
+    func testTodoReplacedInMiddleOfCommentBlock() {
+        let input = """
+        // Some comment
+        // todo : foo
+        // Some more comment
+        """
+        let output = """
+        // Some comment
+        // TODO: foo
+        // Some more comment
+        """
+        testFormatting(for: input, output, rule: FormatRules.todos)
+    }
+
+    func testTodoNotReplacedInMiddleOfDocBlock() {
+        let input = """
+        /// Some docs
+        /// TODO: foo
+        /// Some more docs
+        """
+        testFormatting(for: input, rule: FormatRules.todos)
+    }
+
+    func testTodoNotReplacedAtStartOfDocBlock() {
+        let input = """
+        /// TODO: foo
+        /// Some docs
+        """
+        testFormatting(for: input, rule: FormatRules.todos)
+    }
+
+    func testTodoNotReplacedAtEndOfDocBlock() {
+        let input = """
+        /// Some docs
+        /// TODO: foo
+        """
+        testFormatting(for: input, rule: FormatRules.todos)
+    }
+
     func testMarkWithNoSpaceAfterColon() {
         // NOTE: this was an unintended side-effect, but I like it
         let input = "// MARK:foo"

@@ -131,6 +131,10 @@ swift version is set to 4.1 or above.
 
 Insert blank line before and after `MARK:` comments.
 
+Option | Description
+--- | ---
+`--lineaftermarks` | Insert blank line after "MARK:": "true" (default) or "false"
+
 <details>
 <summary>Examples</summary>
 

@@ -12,13 +12,16 @@ import Foundation
 
 public extension Formatter {
     /// Returns the index of the first token of the line containing the specified index
-    func startOfLine(at index: Int) -> Int {
+    func startOfLine(at index: Int, excludingIndent: Bool = false) -> Int {
         var index = index
         while let token = token(at: index - 1) {
             if case .linebreak = token {
                 break
             }
             index -= 1
+        }
+        if excludingIndent, case .space = tokens[index] {
+            return index + 1
         }
         return index
     }
@@ -1425,7 +1428,7 @@ extension Formatter {
     /// - Note: This checks the entire line from the start of the line, the linebreak may be an index preceding the
     ///         `index` passed to the function.
     func indexWhereLineShouldWrapInLine(at index: Int) -> Int? {
-        return indexWhereLineShouldWrap(from: startOfLine(at: index))
+        return indexWhereLineShouldWrap(from: startOfLine(at: index, excludingIndent: true))
     }
 
     func indexWhereLineShouldWrap(from index: Int) -> Int? {
@@ -1540,16 +1543,17 @@ extension Formatter {
     func linewrapIndent(at index: Int) -> String {
         guard let commaIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index + 1, if: {
             $0 == .delimiter(",")
-        }), case let lineStart = startOfLine(at: commaIndex),
-        let firstToken = self.index(of: .nonSpace, after: lineStart - 1),
-        let firstNonBrace = (firstToken ..< commaIndex).first(where: {
-            let token = self.tokens[$0]
-            return !token.isEndOfScope && !token.isSpaceOrComment
-        }) else {
+        }),
+            case let firstToken = startOfLine(at: commaIndex, excludingIndent: true),
+            let firstNonBrace = (firstToken ..< commaIndex).first(where: {
+                let token = self.tokens[$0]
+                return !token.isEndOfScope && !token.isSpaceOrComment
+            })
+        else {
             if next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator(".", .infix),
                let prevIndex = self.index(of: .nonSpaceOrLinebreak, before: index),
-               case let lineStart = startOfLine(at: prevIndex),
-               next(.nonSpaceOrCommentOrLinebreak, after: lineStart - 1) == .operator(".", .infix),
+               case let lineStart = startOfLine(at: prevIndex, excludingIndent: true),
+               tokens[lineStart] == .operator(".", .infix),
                self.index(of: .startOfScope, before: index) ?? -1 < lineStart
             {
                 return indentForLine(at: lineStart)

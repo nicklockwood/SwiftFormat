@@ -1270,6 +1270,18 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testNoDoubleIndentTrailingClosureBodyIfLineStartsWithClosingBrace() {
+        let input = """
+        let alert = Foo.alert(buttonCallback: {
+            okBlock()
+        }, cancelButtonTitle: cancelTitle) {
+            cancelBlock()
+        }
+        """
+        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testSingleIndentTrailingClosureBodyThatStartsOnFollowingLine() {
         let input = """
         func foo() {

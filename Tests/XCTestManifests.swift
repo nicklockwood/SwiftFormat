@@ -1197,6 +1197,7 @@ extension RulesTests {
         ("testNoDoubleIndentInInsideClosure2", testNoDoubleIndentInInsideClosure2),
         ("testNoDoubleIndentOfWrapAfterAsAfterOpenScope", testNoDoubleIndentOfWrapAfterAsAfterOpenScope),
         ("testNoDoubleIndentOfWrapBeforeAsAfterOpenScope", testNoDoubleIndentOfWrapBeforeAsAfterOpenScope),
+        ("testNoDoubleIndentTrailingClosureBodyIfLineStartsWithClosingBrace", testNoDoubleIndentTrailingClosureBodyIfLineStartsWithClosingBrace),
         ("testNoDoubleIndentWhenScopesSeparatedByWrap", testNoDoubleIndentWhenScopesSeparatedByWrap),
         ("testNoDoubleSpaceAddedToWrappedArray", testNoDoubleSpaceAddedToWrappedArray),
         ("testNoDoubleSpaceWhenRemovingParens", testNoDoubleSpaceWhenRemovingParens),

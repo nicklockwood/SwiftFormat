@@ -1260,7 +1260,9 @@ public struct _FormatRules {
                        let linebreakIndex = formatter.tokens[scopeStart ..< prevIndex].firstIndex(where: {
                            $0.isLinebreak
                        }),
-                       formatter.last(.nonSpaceOrCommentOrLinebreak, before: linebreakIndex) != .delimiter(",")
+                       formatter.last(.nonSpaceOrCommentOrLinebreak, before: linebreakIndex) != .delimiter(","),
+                       case let lineStart = formatter.startOfLine(at: i, excludingIndent: true),
+                       !formatter.tokens[lineStart].isEndOfScope
                     {
                         indent += formatter.options.indent
                     }

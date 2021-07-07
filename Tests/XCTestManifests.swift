@@ -2171,6 +2171,7 @@ extension RulesTests {
         ("testUnhoistLabelledCaseLet", testUnhoistLabelledCaseLet),
         ("testUnhoistSingleCaseLet", testUnhoistSingleCaseLet),
         ("testUnindentClosingParenAroundBraces", testUnindentClosingParenAroundBraces),
+        ("testUnownedUnsafeNotStripped", testUnownedUnsafeNotStripped),
         ("testUnterminatedFragment", testUnterminatedFragment),
         ("testUnusedInoutClosureArgumentsNotMangled", testUnusedInoutClosureArgumentsNotMangled),
         ("testUnusedInoutFunctionArgumentIsNotMangled", testUnusedInoutFunctionArgumentIsNotMangled),

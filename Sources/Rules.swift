@@ -3325,6 +3325,9 @@ public struct _FormatRules {
                         return
                     case .endOfScope("}"), .startOfScope("{"):
                         return
+                    case .endOfScope("]"):
+                        // TODO: handle unused capture list arguments
+                        index = formatter.index(of: .startOfScope("["), before: index) ?? index
                     case .endOfScope(")"):
                         argCountStack.append(argNames.count)
                     case .startOfScope("("):

@@ -3952,6 +3952,19 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testUnownedUnsafeNotStripped() {
+        let input = """
+        func foo() {
+            var num = 0
+            Just(1)
+                .sink { [unowned(unsafe) self] in
+                    num += $0
+                }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // functions
 
     func testMarkUnusedFunctionArgument() {

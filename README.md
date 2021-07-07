@@ -28,6 +28,7 @@ Table of Contents
     - [Config file](#config-file)
     - [Globs](#globs)
     - [Linting](#linting)
+    - [Error codes](#error-codes)
     - [Cache](#cache)
     - [File headers](#file-headers)
 - [FAQ](#faq)
@@ -602,7 +603,7 @@ $ swiftformat --lint path/to/project
 
 This runs the same rules as format mode, and all the same configuration options apply, however, no files will be modified. Instead, SwiftFormat will format each file in memory and then compare the result against the input and report the lines that required changes.
 
-The `--lint` option is similar to `--dryrun`, but `--lint` returns warnings for every line that required changes, and will return a nonzero error code if any changes are detected, which is useful if you want it to fail a build step on your CI server.
+The `--lint` option is similar to `--dryrun`, but `--lint` returns warnings for every line that required changes, and will return a nonzero error code (see [Error codes](#error-codes) below) if any changes are detected, which is useful if you want it to fail a build step on your CI server.
 
 If you would prefer `--lint` not to fail your build, you can use the `--lenient` option to force SwiftFormat to return success in `--lint` mode even when formatting issues were detected.
 
@@ -613,6 +614,16 @@ $ swiftformat --lint --lenient path/to/project
 By default, `--lint` will only report lines that require formatting, but you can use the additional `--verbose` flag to display additional info about which files were checked, even if there were no changes needed.
 
 If you would prefer not to see a warning for each and every formatting change, you can use the `--quiet` flag to suppress all output except errors.
+
+
+Error codes
+-----------
+
+The swiftformat command-line tool will always exit with one of the following codes:
+
+* 0 - Success. This code will be returned in the event of a successful formatting run or if linting detects no violations.
+* 1 - Lint failure. This code will be returned when running in `--lint` mode if the input requires formatting.
+* 70 - Program error. This code will be returned if there is a problem with the input or configuration arguments.
 
 
 Cache

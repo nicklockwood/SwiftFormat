@@ -119,6 +119,23 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantParens, exclude: ["unusedArguments"])
     }
 
+    func testMeaningfulParensNotRemovedAroundOperator() {
+        let input = "let foo: (Int, Int) -> Bool = (<)"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testMeaningfulParensNotRemovedAroundOperatorWithSpaces() {
+        let input = "let foo: (Int, Int) -> Bool = ( < )"
+        testFormatting(for: input, rule: FormatRules.redundantParens,
+                       exclude: ["spaceAroundOperators", "spaceInsideParens"])
+    }
+
+    func testMeaningfulParensNotRemovedAroundPrefixOperator() {
+        let input = "let foo: (Int) -> Int = ( -)"
+        testFormatting(for: input, rule: FormatRules.redundantParens,
+                       exclude: ["spaceAroundOperators", "spaceInsideParens"])
+    }
+
     // around conditions
 
     func testRedundantParensRemovedInIf() {

@@ -2322,7 +2322,7 @@ public struct _FormatRules {
                 guard formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex,
                       formatter.index(in: i + 1 ..< closingIndex, where: {
                           switch $0 {
-                          case .operator(_, .postfix), .operator(_, .infix),
+                          case .operator(_, .postfix), .operator(_, .infix), .operator(_, .none),
                                .keyword("as"), .keyword("is"), .keyword("try"):
                               switch token {
                               case .operator(_, .prefix), .operator(_, .infix), .keyword("as"), .keyword("is"):

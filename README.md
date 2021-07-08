@@ -1,7 +1,7 @@
 ![](EditorExtension/Application/Assets.xcassets/AppIcon.appiconset/icon_256x256.png)
 
 [![PayPal](https://img.shields.io/badge/paypal-donate-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9ZGWNK5FEZFF6&source=url)
-[![Travis](https://api.travis-ci.org/nicklockwood/SwiftFormat.svg?branch=master)](https://travis-ci.org/nicklockwood/SwiftFormat)
+[![Travis](https://api.travis-ci.com/nicklockwood/SwiftFormat.svg?branch=master)](https://travis-ci.com/github/nicklockwood/SwiftFormat)
 [![Codecov](https://codecov.io/gh/nicklockwood/SwiftFormat/graphs/badge.svg)](https://codecov.io/gh/nicklockwood/SwiftFormat)
 [![Swift 4.2](https://img.shields.io/badge/swift-4.2-red.svg?style=flat)](https://developer.apple.com/swift)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://opensource.org/licenses/MIT)
@@ -621,8 +621,8 @@ Error codes
 
 The swiftformat command-line tool will always exit with one of the following codes:
 
-* 0 - Success. This code will be returned in the event of a successful formatting run or if linting detects no violations.
-* 1 - Lint failure. This code will be returned when running in `--lint` mode if the input requires formatting.
+* 0 - Success. This code will be returned in the event of a successful formatting run or if `--lint` detects no violations.
+* 1 - Lint failure. This code will be returned only when running in `--lint` mode if the input requires formatting.
 * 70 - Program error. This code will be returned if there is a problem with the input or configuration arguments.
 
 

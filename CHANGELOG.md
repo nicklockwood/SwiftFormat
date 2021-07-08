@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.48.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.8) (2020-07-08)
+
+- Fixed regression introduced in 0.48.7 where parens around operator literals were incorrectly removed
+
 ## [0.48.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.7) (2020-07-07)
 
 - Fixed bug where `redundantParens` rule could introduce an ambiguity by removing parens around a range argument

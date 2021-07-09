@@ -1220,6 +1220,57 @@ extension RulesTests {
                        exclude: ["blankLinesAtStartOfScope"])
     }
 
+    func testOrganizeClassDeclarationsIntoCategoriesWithNoBlankLineAfterMark() {
+        let input = """
+        class Foo {
+            private func privateMethod() {}
+
+            private let bar = 1
+            public let baz = 1
+            open var quack = 2
+            var quux = 2
+
+            init() {}
+
+            /// Doc comment
+            public func publicMethod() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+            init() {}
+
+            // MARK: Open
+            open var quack = 2
+
+            // MARK: Public
+            public let baz = 1
+
+            /// Doc comment
+            public func publicMethod() {}
+
+            // MARK: Internal
+            var quux = 2
+
+            // MARK: Private
+            private let bar = 1
+
+            private func privateMethod() {}
+
+        }
+        """
+        let options = FormatOptions(lineAfterMarks: false)
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: options,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
     // MARK: extensionAccessControl .onDeclarations
 
     func testUpdatesVisibilityOfExtensionMembers() {
@@ -2300,6 +2351,31 @@ extension RulesTests {
         """
 
         testFormatting(for: input, rule: FormatRules.markTypes)
+    }
+
+    func testAddsMarkBeforeTypesWithNoBlankLineAfterMark() {
+        let input = """
+        struct Foo {}
+        class Bar {}
+        enum Baz {}
+        protocol Quux {}
+        """
+
+        let output = """
+        // MARK: - Foo
+        struct Foo {}
+
+        // MARK: - Bar
+        class Bar {}
+
+        // MARK: - Baz
+        enum Baz {}
+
+        // MARK: - Quux
+        protocol Quux {}
+        """
+        let options = FormatOptions(lineAfterMarks: false)
+        testFormatting(for: input, output, rule: FormatRules.markTypes, options: options)
     }
 
     // MARK: - sortedImports

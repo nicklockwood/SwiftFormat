@@ -186,6 +186,10 @@ and precondition(false, ...) to preconditionFailure(...).
 
 Insert blank line before and after `MARK:` comments.
 
+Option | Description
+--- | ---
+`--lineaftermarks` | Insert blank line after "MARK:": "true" (default) or "false"
+
 <details>
 <summary>Examples</summary>
 

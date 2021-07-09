@@ -2314,8 +2314,9 @@ public struct _FormatRules {
                         break
                     }
                 }
-                if case .operator? = formatter.token(at: i + 1),
-                   formatter.token(at: i - 1)?.isSpaceOrCommentOrLinebreak == false
+                if let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                   case .operator = formatter.tokens[index], nextToken.isOperator(".") ||
+                   (index == i + 1 && formatter.token(at: i - 1)?.isSpaceOrCommentOrLinebreak == false)
                 {
                     return
                 }

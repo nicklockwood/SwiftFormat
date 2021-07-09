@@ -136,6 +136,22 @@ extension RulesTests {
                        exclude: ["spaceAroundOperators", "spaceInsideParens"])
     }
 
+    func testMeaningfulParensAroundPrefixExpressionFollowedByDotNotRemoved() {
+        let input = "let foo = (!bar).description"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testMeaningfulParensAroundPrefixExpressionWithSpacesFollowedByDotNotRemoved() {
+        let input = "let foo = ( !bar ).description"
+        testFormatting(for: input, rule: FormatRules.redundantParens,
+                       exclude: ["spaceAroundOperators", "spaceInsideParens"])
+    }
+
+    func testMeaningfulParensAroundPrefixExpressionFollowedByPostfixExpressionNotRemoved() {
+        let input = "let foo = (!bar)!"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
     // around conditions
 
     func testRedundantParensRemovedInIf() {

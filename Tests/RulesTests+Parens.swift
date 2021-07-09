@@ -61,14 +61,14 @@ extension RulesTests {
     }
 
     func testRequiredParensNotRemoved3() {
-        let input = "a = (x is y)"
-        testFormatting(for: input, rule: FormatRules.redundantParens)
-    }
-
-    func testRequiredParensNotRemoved4() {
         let input = "x+(-5)"
         testFormatting(for: input, rule: FormatRules.redundantParens,
                        exclude: ["spaceAroundOperators"])
+    }
+
+    func testRedundantParensAroundIsNotRemoved() {
+        let input = "a = (x is Int)"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
     }
 
     func testRequiredParensNotRemovedBeforeSubscript() {
@@ -149,6 +149,73 @@ extension RulesTests {
 
     func testMeaningfulParensAroundPrefixExpressionFollowedByPostfixExpressionNotRemoved() {
         let input = "let foo = (!bar)!"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testMeaningfulParensAroundPrefixExpressionFollowedBySubscriptNotRemoved() {
+        let input = "let foo = (!bar)[5]"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensAroundPostfixExpressionFollowedByPostfixOperatorRemoved() {
+        let input = "let foo = (bar!)!"
+        let output = "let foo = bar!!"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensAroundPostfixExpressionRemoved() {
+        let input = "let foo = foo + (bar!)"
+        let output = "let foo = foo + bar!"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensAroundPostfixExpressionFollowedBySubscriptRemoved() {
+        let input = "let foo = (bar!)[5]"
+        let output = "let foo = bar![5]"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensAroundPrefixExpressionRemoved() {
+        let input = "let foo = foo + (!bar)"
+        let output = "let foo = foo + !bar"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensAroundInfixExpressionNotRemoved() {
+        let input = "let foo = (foo + bar)"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensAroundInfixEqualsExpressionNotRemoved() {
+        let input = "let foo = (bar == baz)"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensAroundClosureTypeRemoved() {
+        let input = "typealias Foo = ((Int) -> Bool)"
+        let output = "typealias Foo = (Int) -> Bool"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
+    // TODO: future enhancement
+//    func testRedundantParensAroundClosureReturnTypeRemoved() {
+//        let input = "typealias Foo = (Int) -> ((Int) -> Bool)"
+//        let output = "typealias Foo = (Int) -> (Int) -> Bool"
+//        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+//    }
+
+    func testRedundantParensAroundNestedClosureTypesNotRemoved() {
+        let input = "typealias Foo = (((Int) -> Bool) -> Int) -> ((String) -> Bool) -> Void"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testMeaningfulParensAroundClosureTypeNotRemoved() {
+        let input = "let foo = ((Int) -> Bool)?"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testMeaningfulParensAroundTryExpressionNotRemoved() {
+        let input = "let foo = (try? bar()) != nil"
         testFormatting(for: input, rule: FormatRules.redundantParens)
     }
 

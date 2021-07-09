@@ -302,6 +302,7 @@ public enum MarkMode: String, CaseIterable {
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
+    public var lineAfterMarks: Bool
     public var indent: String
     public var linebreak: String
     public var allowInlineSemicolons: Bool
@@ -382,7 +383,8 @@ public struct FormatOptions: CustomStringConvertible {
 
     public static let `default` = FormatOptions()
 
-    public init(indent: String = "    ",
+    public init(lineAfterMarks: Bool = true,
+                indent: String = "    ",
                 linebreak: String = "\n",
                 allowInlineSemicolons: Bool = true,
                 spaceAroundRangeOperators: Bool = true,
@@ -457,6 +459,7 @@ public struct FormatOptions: CustomStringConvertible {
                 swiftVersion: Version = .undefined,
                 fileInfo: FileInfo = FileInfo())
     {
+        self.lineAfterMarks = lineAfterMarks
         self.indent = indent
         self.linebreak = linebreak
         self.allowInlineSemicolons = allowInlineSemicolons

@@ -116,6 +116,16 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 11))
     }
 
+    func testClosureRecognizedInsideGuardCondition() {
+        let formatter = Formatter(tokenize("""
+        guard let bar = { nil }() else {
+            return nil
+        }
+        """))
+        XCTAssertTrue(formatter.isStartOfClosure(at: 8))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 18))
+    }
+
     // functions
 
     func testFunctionBracesNotTreatedAsClosure() {

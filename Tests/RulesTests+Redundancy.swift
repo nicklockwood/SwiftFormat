@@ -3673,6 +3673,22 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testRedundantSelfRuleFailsInInitOnlyMode() {
+        let input = """
+        class Foo {
+            func foo() -> Foo? {
+                guard let bar = { nil }() else {
+                    return nil
+                }
+            }
+
+            static func baz() -> String? {}
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // enable/disable
 
     func testDisableRemoveSelf() {

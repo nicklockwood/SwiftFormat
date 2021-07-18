@@ -2838,9 +2838,6 @@ public struct _FormatRules {
                      .keyword("func") where lastKeyword != "import":
                     lastKeyword = ""
                     if classOrStatic {
-                        if !isTypeRoot {
-                            return formatter.fatalError("Unexpected class/static \(token.string)", at: index)
-                        }
                         processFunction(at: &index, localNames: localNames, members: classMembers,
                                         typeStack: &typeStack, membersByType: &membersByType,
                                         classMembersByType: &classMembersByType,
@@ -2855,10 +2852,16 @@ public struct _FormatRules {
                     assert(formatter.token(at: index) != .endOfScope("}"))
                     continue
                 case .keyword("static"):
+                    if !isTypeRoot {
+                        return formatter.fatalError("Unexpected static keyword", at: index)
+                    }
                     classOrStatic = true
                 case .keyword("class") where
                     formatter.next(.nonSpaceOrCommentOrLinebreak, after: index)?.isIdentifier == false:
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .delimiter(":") {
+                        if !isTypeRoot {
+                            return formatter.fatalError("Unexpected class keyword", at: index)
+                        }
                         classOrStatic = true
                     }
                 case .keyword("where") where lastKeyword == "protocol", .keyword("protocol"):
@@ -2913,8 +2916,17 @@ public struct _FormatRules {
                         if scopeStack.last == .startOfScope("(") {
                             scopeStack.removeLast()
                         }
-                        guard let startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
+                        guard var startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
                             return formatter.fatalError("Expected {", at: index)
+                        }
+                        while formatter.isStartOfClosure(at: startIndex) {
+                            guard let i = formatter.index(of: .endOfScope("}"), after: startIndex) else {
+                                return formatter.fatalError("Expected }", at: startIndex)
+                            }
+                            guard let j = formatter.index(of: .startOfScope("{"), after: i) else {
+                                return formatter.fatalError("Expected {", at: i)
+                            }
+                            startIndex = j
                         }
                         index = startIndex + 1
                         processBody(at: &index, localNames: scopedNames, members: members, typeStack: &typeStack,

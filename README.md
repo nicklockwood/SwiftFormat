@@ -242,7 +242,7 @@ let package = Package(
     name: "BuildTools",
     platforms: [.macOS(.v10_11)],
     dependencies: [
-        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.41.2"),
+        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.48.10"),
     ],
     targets: [.target(name: "BuildTools", path: "")]
 )
@@ -757,6 +757,8 @@ Q. I don't want to be surprised by new rules added when I upgrade SwiftFormat. H
 
 Known issues
 ---------------
+
+* The `redundantType` rule can introduce ambiguous code in certain cases when using the default mode of `--redundanttype inferred`. This can be worked around by by using `--redundanttype explicit`, or by manually removing the redundant type reference on the affected line, or by using the `// swiftformat:disable:next redundantType` comment directive to disable the rule at the call site (or just disable the `redundantType` rule completely).
 
 * If a type initializer or factory method returns an implicitly unwrapped optional value then the `redundantType` rule may remove the explicit type in a situation where it's actually required. To work around this you can either use `--redundanttype explicit`, or use the `// swiftformat:disable:next redundantType` comment directive to disable the rule at the call site (or just disable the `redundantType` rule completely).
 

@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.48.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.10) (2020-07-18)
+
+- Fixed issue with `redundantBackticks` rule incorrectly removing required backticks around underscore
+- Fixed parsing error in `redundantSelf` with guard conditions containing inline closures 
+
 ## [0.48.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.9) (2020-07-09)
 
 - Fixed regression introduced in 0.48.7 where parens around prefix expressions were incorrectly removed

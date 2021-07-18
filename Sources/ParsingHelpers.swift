@@ -893,6 +893,8 @@ extension Formatter {
         let unescaped = token.unescaped()
         if !unescaped.isSwiftKeyword {
             switch unescaped {
+            case "_":
+                return true
             case "super", "self", "nil", "true", "false":
                 if options.swiftVersion < "4" {
                     return true

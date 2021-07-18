@@ -1313,6 +1313,7 @@ extension RulesTests {
         ("testNoRemoveBackticksAroundTypeInsideType", testNoRemoveBackticksAroundTypeInsideType),
         ("testNoRemoveBackticksAroundTypeProperty", testNoRemoveBackticksAroundTypeProperty),
         ("testNoRemoveBackticksAroundTypePropertyInsideType", testNoRemoveBackticksAroundTypePropertyInsideType),
+        ("testNoRemoveBackticksAroundUnderscore", testNoRemoveBackticksAroundUnderscore),
         ("testNoRemoveCaseDifferingImports", testNoRemoveCaseDifferingImports),
         ("testNoRemoveChainedVoidReturnType", testNoRemoveChainedVoidReturnType),
         ("testNoRemoveClosureGenericArgumentTypes", testNoRemoveClosureGenericArgumentTypes),

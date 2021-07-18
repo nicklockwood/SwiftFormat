@@ -1950,6 +1950,11 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantBackticks)
     }
 
+    func testNoRemoveBackticksAroundUnderscore() {
+        let input = "func `_`<T>(_ foo: T) -> T { foo }"
+        testFormatting(for: input, rule: FormatRules.redundantBackticks)
+    }
+
     // MARK: - redundantSelf
 
     // explicitSelf = .remove

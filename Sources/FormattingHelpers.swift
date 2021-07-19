@@ -31,10 +31,14 @@ extension Formatter {
         var declarationIndex: Int? = -1
         var scopeIndexStack = [Int]()
         while let token = self.token(at: index) {
-            switch token {
-            case .identifier where
-                last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator(".") == false &&
-                next(.nonSpaceOrCommentOrLinebreak, after: index)?.isOperator(".") == false:
+            outer: switch token {
+            case .identifier where last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator == false:
+                switch next(.nonSpaceOrCommentOrLinebreak, after: index) {
+                case .delimiter(":")? where !scopeIndexStack.isEmpty, .operator(".", _)?:
+                    break outer
+                default:
+                    break
+                }
                 let name = token.unescaped()
                 if name != "_", declarationIndex != nil || !isConditional {
                     names.insert(name)

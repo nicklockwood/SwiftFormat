@@ -78,7 +78,7 @@ extension Formatter {
                             declarationIndex = nil
                         }
                     case .delimiter(","):
-                        if let d = declarationIndex, d > scopeIndexStack.last ?? -1 {
+                        if let d = declarationIndex, d >= scopeIndexStack.last ?? -1 {
                             declarationIndex = nil
                         }
                         index = nextIndex
@@ -93,6 +93,20 @@ extension Formatter {
             case .keyword("let"), .keyword("var"):
                 declarationIndex = index
             case .startOfScope("("):
+                guard declarationIndex == nil else {
+                    scopeIndexStack.append(index)
+                    break
+                }
+                guard let endIndex = self.index(of: .endOfScope(")"), after: index) else {
+                    fatalError("Expected )", at: index)
+                    return
+                }
+                guard tokens[index ..< endIndex].contains(where: {
+                    [.keyword("let"), .keyword("var")].contains($0)
+                }) else {
+                    index = endIndex
+                    break
+                }
                 scopeIndexStack.append(index)
             case .startOfScope("{"):
                 guard isStartOfClosure(at: index), let nextIndex = endOfScope(at: index) else {

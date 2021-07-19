@@ -746,6 +746,7 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["foo", "x", "baz"])
+        XCTAssertEqual(index, 22)
     }
 
     func testProcessDeclaredVariablesInIfCondition() {
@@ -756,6 +757,7 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["foo", "baz"])
+        XCTAssertEqual(index, 26)
     }
 
     func testProcessDeclaredVariablesInIfWithParenthetical() {
@@ -766,6 +768,7 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["foo", "baz"])
+        XCTAssertEqual(index, 28)
     }
 
     func testProcessDeclaredVariablesInIfWithClosure() {
@@ -776,6 +779,18 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["foo", "baz"])
+        XCTAssertEqual(index, 32)
+    }
+
+    func testProcessDeclaredVariablesInIfWithNamedClosureArgument() {
+        let formatter = Formatter(tokenize("""
+        if let foo = bar, foo.bar(baz: { $0 }), let baz = quux {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo", "baz"])
+        XCTAssertEqual(index, 32)
     }
 
     func testProcessDeclaredVariablesInIfWithArrayLiteral() {
@@ -786,9 +801,10 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["foo", "baz"])
+        XCTAssertEqual(index, 28)
     }
 
-    func testProcessCaseDeclaredVariablesInIf() {
+    func testProcessCaseDeclaredVariablesInIfLetCommaCase() {
         let formatter = Formatter(tokenize("""
         if let foo = bar(), case .bar(var baz) = quux {}
         """))
@@ -796,9 +812,10 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["foo", "baz"])
+        XCTAssertEqual(index, 25)
     }
 
-    func testProcessCaseDeclaredVariablesInIf2() {
+    func testProcessCaseDeclaredVariablesInIfCaseLet() {
         let formatter = Formatter(tokenize("""
         if case let .foo(bar, baz) = quux {}
         """))
@@ -806,9 +823,10 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["bar", "baz"])
+        XCTAssertEqual(index, 17)
     }
 
-    func testProcessTupleDeclaredVariablesInIf() {
+    func testProcessTupleDeclaredVariablesInSwift2IfLetSyntax() {
         let formatter = Formatter(tokenize("""
         if let (bar, baz) = quux, x = y {}
         """))
@@ -816,9 +834,10 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["bar", "baz"])
+        XCTAssertEqual(index, 20)
     }
 
-    func testProcessTupleDeclaredVariablesInIf2() {
+    func testProcessTupleDeclaredVariablesInSwift2IfLetSyntax2() {
         let formatter = Formatter(tokenize("""
         if let ((bar, baz), (x, y)) = quux {}
         """))
@@ -826,6 +845,7 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["bar", "baz", "x", "y"])
+        XCTAssertEqual(index, 23)
     }
 
     func testProcessAwaitVariableInForLoop() {
@@ -838,6 +858,7 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["foo"])
+        XCTAssertEqual(index, 4)
     }
 
     func testProcessParametersInInit() {
@@ -848,6 +869,7 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["actor", "bar"])
+        XCTAssertEqual(index, 12)
     }
 
     // MARK: parseDeclarations

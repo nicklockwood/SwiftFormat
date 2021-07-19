@@ -30,6 +30,7 @@ extension Formatter {
         let isConditional = isConditionalStatement(at: index)
         var declarationIndex: Int? = -1
         var scopeIndexStack = [Int]()
+        var lastToken: Token?
         while let token = self.token(at: index) {
             switch token {
             case .identifier where
@@ -93,7 +94,17 @@ extension Formatter {
             case .keyword("let"), .keyword("var"):
                 declarationIndex = index
             case .startOfScope("("):
-                scopeIndexStack.append(index)
+                switch lastToken {
+                case .keyword("let")?, .keyword("var")?, .keyword("for")?,
+                     .operator("=", .infix)?, nil:
+                    scopeIndexStack.append(index)
+                default:
+                    guard let endIndex = self.index(of: .endOfScope, after: index) else {
+                        fatalError("Expected )", at: index)
+                        return
+                    }
+                    index = endIndex
+                }
             case .startOfScope("{"):
                 guard isStartOfClosure(at: index), let nextIndex = endOfScope(at: index) else {
                     index -= 1
@@ -102,6 +113,9 @@ extension Formatter {
                 index = nextIndex
             default:
                 break
+            }
+            if token.is(.nonSpaceOrCommentOrLinebreak) {
+                lastToken = token
             }
             index += 1
         }

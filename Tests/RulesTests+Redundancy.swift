@@ -2944,6 +2944,15 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testRedundantSelfRuleFailsInGuardWithParenthesizedClosureAfterComma() {
+        let input = """
+        guard let foo = bar, foo.bar(baz: { $0 }) else {
+            return nil
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {

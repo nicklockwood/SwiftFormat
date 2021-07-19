@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.48.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.11) (2020-07-20)
+
+- Fixed parsing error introduced in 0.48.10 involving inline closures inside conditional statements
+- Fixed bug where `redundantSelf` could potentially misidentify tuple labels as local variables
+
 ## [0.48.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.10) (2020-07-18)
 
 - Fixed issue with `redundantBackticks` rule incorrectly removing required backticks around underscore

@@ -33,9 +33,9 @@ Types of PR:
 
 ## Copyright and Licensing
 
-Any new source files that you add should include the standard licence header used in all the existing files. You may include your own name as the author for files that you created or replaced.
+Any new source files that you add should include the standard license header used in all the existing files. You may include your own name as the author for files that you created or replaced.
 
-By contributing code to SwiftFormat, you are implicitly agreeing to licence it under the terms described in the LICENSE.md file. Please do not submit code that you did not write or are not authorized to redistribute.
+By contributing code to SwiftFormat, you are implicitly agreeing to license it under the terms described in the LICENSE.md file. Please do not submit code that you did not write or are not authorized to redistribute.
 
 Inclusion of 3rd party frameworks is **not** permitted, regardless of the license. Small sections of code copied from somewhere else *may* be acceptable, provided that the terms of the original license are compatible with SwiftFormat's LICENSE.md, and that you include a comment linking back to the source.
 
@@ -55,12 +55,12 @@ When making user-facing changes, please update the README.md file if applicable.
 
 All significant code changes should be accompanied by a test.  
 
-Tests are run in [Travis CI](https://travis-ci.org/nicklockwood/SwiftFormat) automatically on all pull requests, branches and tags. These are the same tests that run in Xcode at development time.
+Tests are run automatically on all pull requests, branches and tags. These are the same tests that run in Xcode at development time.
 
 There is a separate Performance Tests scheme that you should run manually if your code changes are likely to affect performance.
 
 ## Code of Conduct
 
-There will be zero tolerance for rudeness or bullying. If you think somebody else's comment or pull request is stupid, keep it to yourself. If you are frustrated because your issue or pull request isn't getting the attention it deserves, feel free to post a comment like "any update on this?", but remember that we are all busy, and other peoples' priorites don't necessarily match yours.
+There will be zero tolerance for rudeness or bullying. If you think somebody else's comment or pull request is stupid, keep it to yourself. If you are frustrated because your issue or pull request isn't getting the attention it deserves, feel free to post a comment like "any update on this?", but remember that we are all busy, and other peoples' priorities don't necessarily match yours.
 
 Abusive contributors will be blocked and/or reported, regardless of how valuable their code contributions may be.

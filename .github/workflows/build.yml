@@ -1,0 +1,29 @@
+name: build
+
+on:
+  push:
+  pull_request:
+jobs:
+  macos:
+    runs-on: macos-10.14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Build and Test
+        run:
+          xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test
+        env:
+          DEVELOPER_DIR: /Applications/Xcode_11.2.1.app/Contents/Developer
+      - name: Codecov
+        run: bash <(curl -s https://codecov.io/bash) -t a47579fa-9a2a-4c48-b557-aa725c6b5f92
+  linux:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:5.2
+      options: --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Build and Test
+        run: swift test
+

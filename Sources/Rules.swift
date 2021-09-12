@@ -3725,7 +3725,7 @@ public struct _FormatRules {
     public let wrapMultilineStatementBraces = FormatRule(
         help: "Wrap the opening brace of multiline statements.",
         orderAfter: ["indent", "braces", "wrapArguments"],
-        sharedOptions: ["linebreaks"]
+        sharedOptions: ["linebreaks", "wraparguments"]
     ) { formatter in
 
         func wrapBraceIfNecessary(at openBraceIndex: Int, startOfMultilineStatement: Int) {
@@ -3770,7 +3770,9 @@ public struct _FormatRules {
             }
 
             // Then attempt to wrap braces following a method call (like trailing closures, or getter bodies)
-            if token == .startOfScope("{"),
+            //  - We only do this for before-first wrapping, since it's less necessary for after-first wrapping
+            if formatter.options.wrapArguments != .afterFirst,
+               token == .startOfScope("{"),
                let indexBeforeOpenBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
                formatter.tokens[indexBeforeOpenBrace] == .endOfScope(")"),
                let startOfMethodParameters = formatter.index(of: .startOfScope("("), before: indexBeforeOpenBrace),

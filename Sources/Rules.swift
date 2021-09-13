@@ -5908,20 +5908,40 @@ public struct _FormatRules {
                // because removing them could break the build.
                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex) != closureEndIndex
             {
+                // Whether this is within the closure, but not within a child closure of the main closure
+                func indexIsWithinMainClosure(_ index: Int) -> Bool {
+                    let startOfScopeAtIndex: Int
+                    if formatter.token(at: index)?.isStartOfScope == true {
+                        startOfScopeAtIndex = index
+                    } else {
+                        startOfScopeAtIndex = formatter.index(of: .startOfScope, before: index) ?? closureStartIndex
+                    }
+
+                    if formatter.isStartOfClosure(at: startOfScopeAtIndex) {
+                        return startOfScopeAtIndex == closureStartIndex
+                    } else if formatter.token(at: startOfScopeAtIndex)?.isStartOfScope == true {
+                        return indexIsWithinMainClosure(startOfScopeAtIndex - 1)
+                    } else {
+                        return false
+                    }
+                }
+
                 // Some heuristics to determine if this is a multi-statement closure:
 
-                // (1) any linebreak within the closure's main scope
-                //     (excluding the linebreak right at the beginning or end
-                for linebreakIndex in closureStartIndex ... closureEndIndex
-                    where formatter.token(at: linebreakIndex)?.isLinebreak == true
+                // (1) any statement-forming scope (mostly just { and #if)
+                //     within the main closure, that isn't itself a closure
+                for startOfScopeIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: startOfScopeIndex)?.isStartOfScope == true
+                    && formatter.token(at: startOfScopeIndex) != .startOfScope("(")
                 {
-                    let isWithinClosureScope = formatter.endOfScope(at: linebreakIndex) == closureEndIndex
+                    let startOfScope = formatter.tokens[startOfScopeIndex]
 
-                    let isInitialLinebreak = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: linebreakIndex) == closureStartIndex
-
-                    let isFinalLinebreak = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: linebreakIndex) == closureEndIndex
-
-                    if isWithinClosureScope, !(isInitialLinebreak || isFinalLinebreak) {
+                    if startOfScope != .startOfScope("("), // Method calls / other parents are fine
+                       startOfScope != .startOfScope("\""), // Strings are fine
+                       startOfScope != .startOfScope("\"\"\""), // Strings are fine
+                       indexIsWithinMainClosure(startOfScopeIndex),
+                       !formatter.isStartOfClosure(at: startOfScopeIndex)
+                    {
                         return
                     }
                 }
@@ -5931,12 +5951,10 @@ public struct _FormatRules {
                 for semicolonIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: semicolonIndex)?.string == ";"
                 {
-                    let isWithinClosureScope = formatter.endOfScope(at: semicolonIndex) == closureEndIndex
-
                     let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: semicolonIndex) ?? semicolonIndex
                     let isAtEndOfLine = formatter.startOfLine(at: semicolonIndex) != formatter.startOfLine(at: nextTokenIndex)
 
-                    if isWithinClosureScope, !isAtEndOfLine {
+                    if indexIsWithinMainClosure(semicolonIndex), !isAtEndOfLine {
                         return
                     }
                 }
@@ -5945,8 +5963,7 @@ public struct _FormatRules {
                 for equalsIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: equalsIndex)?.string == "="
                 {
-                    let isWithinClosureScope = formatter.endOfScope(at: equalsIndex) == closureEndIndex
-                    if isWithinClosureScope {
+                    if indexIsWithinMainClosure(equalsIndex) {
                         return
                     }
                 }

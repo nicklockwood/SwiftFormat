@@ -4264,6 +4264,24 @@ extension RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantClosure)
     }
 
+    func testRemoveRedundantClosureInMultiLinePropertyDeclarationWithString() {
+        let input = #"""
+        lazy var bar = {
+            """
+            Multiline string literal
+            """
+        }()
+        """#
+
+        let output = #"""
+        lazy var bar = """
+        Multiline string literal
+        """
+        """#
+
+        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, FormatRules.indent])
+    }
+
     func testRemoveRedundantClosureInMultiLinePropertyDeclarationInClass() {
         let input = """
         class Foo {
@@ -4362,5 +4380,85 @@ extension RulesTests {
         """
 
         testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, FormatRules.indent])
+    }
+
+    func testKeepsClosureWithIfStatement() {
+        let input = """
+        lazy var baaz = {
+            if let foo == foo {
+                return foo
+            } else {
+                return Foo()
+            }
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testKeepsClosureWithIfStatementOnSingleLine() {
+        let input = """
+        lazy var baaz = {
+            if let foo == foo { return foo } else { return Foo() }
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testRemovesClosureWithIfStatementInsideOtherClosure() {
+        let input = """
+        lazy var baaz = {
+            {
+                if let foo == foo {
+                    return foo
+                } else {
+                    return Foo()
+                }
+            }
+        }()
+        """
+
+        let output = """
+        lazy var baaz = {
+            if let foo == foo {
+                return foo
+            } else {
+                return Foo()
+            }
+        }
+        """
+
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantClosure, FormatRules.indent])
+    }
+
+    func testKeepsClosureWithSwitchStatement() {
+        let input = """
+        lazy var baaz = {
+            switch foo {
+            case let .some(foo):
+                return foo:
+            case .none:
+                return Foo()
+            }
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testKeepsClosureWithIfDirective() {
+        let input = """
+        lazy var baaz = {
+            #if DEBUG
+                return DebugFoo()
+            #else
+                return Foo()
+            #endif
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
     }
 }

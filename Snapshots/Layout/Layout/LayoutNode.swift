@@ -1606,20 +1606,14 @@ public class LayoutNode: NSObject {
         return try value(forParameter: name) ?? value(forVariableOrConstantOrParentParameter: name)
     }
 
-    public lazy var viewExpressionTypes: [String: RuntimeType] = {
-        self.viewClass.cachedExpressionTypes
-    }()
-
+    public lazy var viewExpressionTypes: [String: RuntimeType] = self.viewClass.cachedExpressionTypes
     public lazy var viewControllerExpressionTypes: [String: RuntimeType] = {
         self.viewControllerClass.map { $0.cachedExpressionTypes } ?? [:]
     }()
 
     #if arch(i386) || arch(x86_64)
 
-        private lazy var deprecatedSymbols: [String: String] = {
-            self._class.deprecatedSymbols
-        }()
-
+        private lazy var deprecatedSymbols: [String: String] = self._class.deprecatedSymbols
         private func handleDeprecation(for symbol: String) {
             let alternative: String
             if let _alternative = deprecatedSymbols[symbol] {

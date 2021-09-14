@@ -53,6 +53,59 @@ extension Options {
     }
 }
 
+extension String {
+    // Find best match for the string in a list of options
+    func bestMatches(in options: [String]) -> [String] {
+        let lowercaseQuery = lowercased()
+        // Sort matches by Levenshtein edit distance
+        return options
+            .compactMap { option -> (String, distance: Int, commonPrefix: Int)? in
+                let lowercaseOption = option.lowercased()
+                let distance = lowercaseOption.editDistance(from: lowercaseQuery)
+                let commonPrefix = lowercaseOption.commonPrefix(with: lowercaseQuery)
+                if commonPrefix.isEmpty, distance > lowercaseQuery.count / 2 {
+                    return nil
+                }
+                return (option, distance, commonPrefix.count)
+            }
+            .sorted {
+                if $0.distance == $1.distance {
+                    return $0.commonPrefix > $1.commonPrefix
+                }
+                return $0.distance < $1.distance
+            }
+            .map { $0.0 }
+    }
+
+    /// The Damerau-Levenshtein edit-distance between two strings
+    func editDistance(from other: String) -> Int {
+        let lhs = Array(self)
+        let rhs = Array(other)
+        var dist = [[Int]]()
+        for i in stride(from: 0, through: lhs.count, by: 1) {
+            dist.append([i])
+        }
+        for j in stride(from: 1, through: rhs.count, by: 1) {
+            dist[0].append(j)
+        }
+        for i in stride(from: 1, through: lhs.count, by: 1) {
+            for j in stride(from: 1, through: rhs.count, by: 1) {
+                if lhs[i - 1] == rhs[j - 1] {
+                    dist[i].append(dist[i - 1][j - 1])
+                } else {
+                    dist[i].append(Swift.min(dist[i - 1][j] + 1,
+                                             dist[i][j - 1] + 1,
+                                             dist[i - 1][j - 1] + 1))
+                }
+                if i > 1, j > 1, lhs[i - 1] == rhs[j - 2], lhs[i - 2] == rhs[j - 1] {
+                    dist[i][j] = Swift.min(dist[i][j], dist[i - 2][j - 2] + 1)
+                }
+            }
+        }
+        return dist[lhs.count][rhs.count]
+    }
+}
+
 // Parse a space-delimited string into an array of command-line arguments
 // Replicates the behavior implemented by the console when parsing input
 func parseArguments(_ argumentString: String, ignoreComments: Bool = true) -> [String] {
@@ -104,7 +157,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             // Long argument names
             let key = String(arg.unicodeScalars.dropFirst(2))
             guard names.contains(key) else {
-                guard let match = bestMatches(for: key, in: names).first else {
+                guard let match = key.bestMatches(in: names).first else {
                     throw FormatError.options("Unknown option --\(key)")
                 }
                 throw FormatError.options("Unknown option --\(key). Did you mean --\(match)?")
@@ -150,57 +203,6 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     return namedArgs
 }
 
-// Find best match for a given string in a list of options
-func bestMatches(for query: String, in options: [String]) -> [String] {
-    let lowercaseQuery = query.lowercased()
-    // Sort matches by Levenshtein edit distance
-    return options
-        .compactMap { option -> (String, distance: Int, commonPrefix: Int)? in
-            let lowercaseOption = option.lowercased()
-            let distance = editDistance(lowercaseOption, lowercaseQuery)
-            let commonPrefix = lowercaseOption.commonPrefix(with: lowercaseQuery)
-            if commonPrefix.isEmpty, distance > lowercaseQuery.count / 2 {
-                return nil
-            }
-            return (option, distance, commonPrefix.count)
-        }
-        .sorted {
-            if $0.distance == $1.distance {
-                return $0.commonPrefix > $1.commonPrefix
-            }
-            return $0.distance < $1.distance
-        }
-        .map { $0.0 }
-}
-
-/// The Damerau-Levenshtein edit-distance between two strings
-func editDistance(_ lhs: String, _ rhs: String) -> Int {
-    let lhs = Array(lhs)
-    let rhs = Array(rhs)
-    var dist = [[Int]]()
-    for i in 0 ... lhs.count {
-        dist.append([i])
-    }
-    for j in 1 ... rhs.count {
-        dist[0].append(j)
-    }
-    for i in 1 ... lhs.count {
-        for j in 1 ... rhs.count {
-            if lhs[i - 1] == rhs[j - 1] {
-                dist[i].append(dist[i - 1][j - 1])
-            } else {
-                dist[i].append(min(dist[i - 1][j] + 1,
-                                   dist[i][j - 1] + 1,
-                                   dist[i - 1][j - 1] + 1))
-            }
-            if i > 1, j > 1, lhs[i - 1] == rhs[j - 2], lhs[i - 2] == rhs[j - 1] {
-                dist[i][j] = min(dist[i][j], dist[i - 2][j - 2] + 1)
-            }
-        }
-    }
-    return dist[lhs.count][rhs.count]
-}
-
 // Parse a comma-delimited list of items
 func parseCommaDelimitedList(_ string: String) -> [String] {
     return string.components(separatedBy: ",").compactMap {
@@ -228,7 +230,7 @@ func parseRules(_ rules: String) throws -> [String] {
             }
             throw FormatError.options("'\(proposedName)' is not a formatting rule")
         }
-        guard let match = bestMatches(for: proposedName, in: Array(allRules)).first else {
+        guard let match = proposedName.bestMatches(in: Array(allRules)).first else {
             throw FormatError.options("Unknown rule '\(proposedName)'")
         }
         throw FormatError.options("Unknown rule '\(proposedName)'. Did you mean '\(match)'?")

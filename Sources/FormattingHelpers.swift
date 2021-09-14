@@ -1076,7 +1076,7 @@ extension Formatter {
                     let existingComment = sourceCode(for: Array(parser.tokens[potentialSeparatorRange]))
                     let minimumEditDistance = Int(0.2 * Float(existingComment.count))
 
-                    guard editDistance(existingComment.lowercased(), potentialSeparatorComment.lowercased())
+                    guard existingComment.lowercased().editDistance(from: potentialSeparatorComment.lowercased())
                         <= minimumEditDistance
                     else { continue }
 

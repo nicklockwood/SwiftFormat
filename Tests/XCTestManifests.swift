@@ -25,6 +25,8 @@ extension ArgumentsTests {
         ("testDuplicateRangesArgumentsAreNotMerged", testDuplicateRangesArgumentsAreNotMerged),
         ("testDuplicateSelfrequiredArgumentsAreMerged", testDuplicateSelfrequiredArgumentsAreMerged),
         ("testDuplicateUnexcludeArgumentsAreMerged", testDuplicateUnexcludeArgumentsAreMerged),
+        ("testEditDistance", testEditDistance),
+        ("testEditDistanceWithEmptyStrings", testEditDistanceWithEmptyStrings),
         ("testEmptyArgsAreRecognized", testEmptyArgsAreRecognized),
         ("testEmptyFormatOptions", testEmptyFormatOptions),
         ("testEnabledArgumentOverridesConfigRules", testEnabledArgumentOverridesConfigRules),

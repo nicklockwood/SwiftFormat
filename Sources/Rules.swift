@@ -5887,4 +5887,115 @@ public struct _FormatRules {
             }
         }
     }
+
+    public let redundantClosure = FormatRule(
+        help: """
+        Removes redundant closures bodies, containing a single statement,
+        which are called immediately.
+        """,
+        disabledByDefault: false
+    ) { formatter in
+        formatter.forEach(.startOfScope("{")) { closureStartIndex, _ in
+            if formatter.isStartOfClosure(at: closureStartIndex),
+               let closureEndIndex = formatter.endOfScope(at: closureStartIndex),
+               // Closures that are called immediately are redundant
+               // (as long as there's exactly one statement inside them)
+               let closureCallOpenParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureEndIndex),
+               let closureCallCloseParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureCallOpenParenIndex),
+               formatter.token(at: closureCallOpenParenIndex) == .startOfScope("("),
+               formatter.token(at: closureCallCloseParenIndex) == .endOfScope(")"),
+               // Make sure to exclude closures that are completely empty,
+               // because removing them could break the build.
+               formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex) != closureEndIndex
+            {
+                // Whether this is within the closure, but not within a child closure of the main closure
+                func indexIsWithinMainClosure(_ index: Int) -> Bool {
+                    let startOfScopeAtIndex: Int
+                    if formatter.token(at: index)?.isStartOfScope == true {
+                        startOfScopeAtIndex = index
+                    } else {
+                        startOfScopeAtIndex = formatter.index(of: .startOfScope, before: index) ?? closureStartIndex
+                    }
+
+                    if formatter.isStartOfClosure(at: startOfScopeAtIndex) {
+                        return startOfScopeAtIndex == closureStartIndex
+                    } else if formatter.token(at: startOfScopeAtIndex)?.isStartOfScope == true {
+                        return indexIsWithinMainClosure(startOfScopeAtIndex - 1)
+                    } else {
+                        return false
+                    }
+                }
+
+                // Some heuristics to determine if this is a multi-statement closure:
+
+                // (1) any statement-forming scope (mostly just { and #if)
+                //     within the main closure, that isn't itself a closure
+                for startOfScopeIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: startOfScopeIndex)?.isStartOfScope == true
+                    && formatter.token(at: startOfScopeIndex) != .startOfScope("(")
+                {
+                    let startOfScope = formatter.tokens[startOfScopeIndex]
+
+                    if startOfScope != .startOfScope("("), // Method calls / other parents are fine
+                       startOfScope != .startOfScope("\""), // Strings are fine
+                       startOfScope != .startOfScope("\"\"\""), // Strings are fine
+                       indexIsWithinMainClosure(startOfScopeIndex),
+                       !formatter.isStartOfClosure(at: startOfScopeIndex)
+                    {
+                        return
+                    }
+                }
+
+                // (2) if there are any semicolons within the closure scope
+                //     but not at the end of a line
+                for semicolonIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: semicolonIndex)?.string == ";"
+                {
+                    let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: semicolonIndex) ?? semicolonIndex
+                    let isAtEndOfLine = formatter.startOfLine(at: semicolonIndex) != formatter.startOfLine(at: nextTokenIndex)
+
+                    if indexIsWithinMainClosure(semicolonIndex), !isAtEndOfLine {
+                        return
+                    }
+                }
+
+                // (3) if there are equals operators within the closure scope
+                for equalsIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: equalsIndex)?.string == "="
+                {
+                    if indexIsWithinMainClosure(equalsIndex) {
+                        return
+                    }
+                }
+
+                // Now that we know this closure is redundant, we can remove the { }() tokens,
+                // and the return token if present.
+                formatter.removeToken(at: closureCallCloseParenIndex)
+                formatter.removeToken(at: closureCallOpenParenIndex)
+                formatter.removeToken(at: closureEndIndex)
+
+                // Remove now-redundant spaces after the start { and before the end }
+                while formatter.token(at: closureEndIndex - 1)?.isSpaceOrLinebreak == true {
+                    formatter.removeToken(at: closureEndIndex - 1)
+                }
+
+                while formatter.token(at: closureStartIndex + 1)?.isSpaceOrLinebreak == true {
+                    formatter.removeToken(at: closureStartIndex + 1)
+                }
+
+                // Remove the initial return token, and any trailing space, if present
+                if let returnIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
+                   formatter.token(at: returnIndex)?.string == "return"
+                {
+                    while formatter.token(at: returnIndex + 1)?.isSpaceOrLinebreak == true {
+                        formatter.removeToken(at: returnIndex + 1)
+                    }
+
+                    formatter.removeToken(at: returnIndex)
+                }
+
+                formatter.removeToken(at: closureStartIndex)
+            }
+        }
+    }
 }

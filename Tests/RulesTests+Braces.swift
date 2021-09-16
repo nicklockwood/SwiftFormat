@@ -81,7 +81,7 @@ extension RulesTests {
             }(),
         ]
         """
-        testFormatting(for: input, rule: FormatRules.braces)
+        testFormatting(for: input, rule: FormatRules.braces, exclude: ["redundantClosure"])
     }
 
     func testKnRNoMangleClosureReturningClosure() {

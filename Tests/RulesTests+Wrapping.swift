@@ -2613,7 +2613,7 @@ extension RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces, options: options)
     }
 
-    func testMultilineBraceAppliedToTrailingClosure() {
+    func testMultilineBraceAppliedToTrailingClosure_wrapBeforeFirst() {
         let input = """
         UIView.animate(
             duration: 10,
@@ -2631,11 +2631,11 @@ extension RulesTests {
         }
         """
 
-        let options = FormatOptions(closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true)
         testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineStatementBraces], options: options, exclude: ["indent"])
     }
 
-    func testMultilineBraceAppliedToGetterBody() {
+    func testMultilineBraceAppliedToGetterBody_wrapBeforeFirst() {
         let input = """
         var items: Adaptive<CGFloat> = .adaptive(
             compact: Sizes.horizontalPaddingTiny_8,
@@ -2653,8 +2653,32 @@ extension RulesTests {
         }
         """
 
-        let options = FormatOptions(closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true)
         testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineStatementBraces, FormatRules.indent], options: options)
+    }
+
+    func testMultilineBraceNotAppliedToTrailingClosure_wrapAfterFirst() {
+        let input = """
+        UIView.animate(duration: 10,
+                       options: []) {
+            print()
+        }
+        """
+
+        let options = FormatOptions(wrapArguments: .afterFirst, closingParenOnSameLine: true)
+        testFormatting(for: input, rules: [FormatRules.wrapMultilineStatementBraces], options: options, exclude: ["indent"])
+    }
+
+    func testMultilineBraceNotAppliedToGetterBody_wrapAfterFirst() {
+        let input = """
+        var items: Adaptive<CGFloat> = .adaptive(compact: Sizes.horizontalPaddingTiny_8,
+                                                 regular: Sizes.horizontalPaddingLarge_64) {
+            didSet { updateAccessoryViewSpacing() }
+        }
+        """
+
+        let options = FormatOptions(wrapArguments: .afterFirst, closingParenOnSameLine: true)
+        testFormatting(for: input, rules: [FormatRules.wrapMultilineStatementBraces, FormatRules.indent], options: options)
     }
 
     // MARK: wrapConditions before-first

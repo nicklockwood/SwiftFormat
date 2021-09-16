@@ -290,7 +290,7 @@ extension RulesTests {
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtEndOfScope", "redundantType"]
+            exclude: ["blankLinesAtEndOfScope", "redundantType", "redundantClosure"]
         )
     }
 
@@ -1160,7 +1160,7 @@ extension RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.organizeDeclarations)
+        testFormatting(for: input, rule: FormatRules.organizeDeclarations, exclude: ["redundantClosure"])
     }
 
     func testFuncWithNestedInitNotTreatedAsLifecycle() {

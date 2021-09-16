@@ -5887,4 +5887,98 @@ public struct _FormatRules {
             }
         }
     }
+
+    public let redundantClosure = FormatRule(
+        help: """
+        Removes redundant closures bodies, containing a single statement,
+        which are called immediately.
+        """,
+        disabledByDefault: false
+    ) { formatter in
+        formatter.forEach(.startOfScope("{")) { closureStartIndex, _ in
+            if formatter.isStartOfClosure(at: closureStartIndex),
+               let closureEndIndex = formatter.endOfScope(at: closureStartIndex),
+               // Closures that are called immediately are redundant
+               // (as long as there's exactly one statement inside them)
+               let closureCallOpenParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureEndIndex),
+               let closureCallCloseParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureCallOpenParenIndex),
+               formatter.token(at: closureCallOpenParenIndex) == .startOfScope("("),
+               formatter.token(at: closureCallCloseParenIndex) == .endOfScope(")"),
+               // Make sure to exclude closures that are completely empty,
+               // because removing them could break the build.
+               formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex) != closureEndIndex
+            {
+                // Some heuristics to determine if this is a multi-statement closure:
+
+                // (1) any linebreak within the closure's main scope
+                //     (excluding the linebreak right at the beginning or end
+                for linebreakIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: linebreakIndex)?.isLinebreak == true
+                {
+                    let isWithinClosureScope = formatter.endOfScope(at: linebreakIndex) == closureEndIndex
+
+                    let isInitialLinebreak = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: linebreakIndex) == closureStartIndex
+
+                    let isFinalLinebreak = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: linebreakIndex) == closureEndIndex
+
+                    if isWithinClosureScope, !(isInitialLinebreak || isFinalLinebreak) {
+                        return
+                    }
+                }
+
+                // (2) if there are any semicolons within the closure scope
+                //     but not at the end of a line
+                for semicolonIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: semicolonIndex)?.string == ";"
+                {
+                    let isWithinClosureScope = formatter.endOfScope(at: semicolonIndex) == closureEndIndex
+
+                    let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: semicolonIndex) ?? semicolonIndex
+                    let isAtEndOfLine = formatter.startOfLine(at: semicolonIndex) != formatter.startOfLine(at: nextTokenIndex)
+
+                    if isWithinClosureScope, !isAtEndOfLine {
+                        return
+                    }
+                }
+
+                // (3) if there are equals operators within the closure scope
+                for equalsIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: equalsIndex)?.string == "="
+                {
+                    let isWithinClosureScope = formatter.endOfScope(at: equalsIndex) == closureEndIndex
+                    if isWithinClosureScope {
+                        return
+                    }
+                }
+
+                // Now that we know this closure is redundant, we can remove the { }() tokens,
+                // and the return token if present.
+                formatter.removeToken(at: closureCallCloseParenIndex)
+                formatter.removeToken(at: closureCallOpenParenIndex)
+                formatter.removeToken(at: closureEndIndex)
+
+                // Remove now-redundant spaces after the start { and before the end }
+                while formatter.token(at: closureEndIndex - 1)?.isSpaceOrLinebreak == true {
+                    formatter.removeToken(at: closureEndIndex - 1)
+                }
+
+                while formatter.token(at: closureStartIndex + 1)?.isSpaceOrLinebreak == true {
+                    formatter.removeToken(at: closureStartIndex + 1)
+                }
+
+                // Remove the initial return token, and any trailing space, if present
+                if let returnIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
+                   formatter.token(at: returnIndex)?.string == "return"
+                {
+                    while formatter.token(at: returnIndex + 1)?.isSpaceOrLinebreak == true {
+                        formatter.removeToken(at: returnIndex + 1)
+                    }
+
+                    formatter.removeToken(at: returnIndex)
+                }
+
+                formatter.removeToken(at: closureStartIndex)
+            }
+        }
+    }
 }

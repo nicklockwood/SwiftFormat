@@ -5897,11 +5897,11 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { closureStartIndex, _ in
             if formatter.isStartOfClosure(at: closureStartIndex),
-               let closureEndIndex = formatter.endOfScope(at: closureStartIndex),
+               var closureEndIndex = formatter.endOfScope(at: closureStartIndex),
                // Closures that are called immediately are redundant
                // (as long as there's exactly one statement inside them)
-               let closureCallOpenParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureEndIndex),
-               let closureCallCloseParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureCallOpenParenIndex),
+               var closureCallOpenParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureEndIndex),
+               var closureCallCloseParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureCallOpenParenIndex),
                formatter.token(at: closureCallOpenParenIndex) == .startOfScope("("),
                formatter.token(at: closureCallCloseParenIndex) == .endOfScope(")"),
                // Make sure to exclude closures that are completely empty,
@@ -5968,23 +5968,33 @@ public struct _FormatRules {
                     }
                 }
 
-                // Now that we know this closure is redundant, we can remove the { }() tokens,
-                // and the return token if present.
+                // First we remove the spaces and linebreaks between the { } and the remainder of the closure body
+                //  - This requires a bit of bookkeeping, but makes sure we don't remove any
+                //    whitespace characters outside of the closure itself
+                while formatter.token(at: closureStartIndex + 1)?.isSpaceOrLinebreak == true {
+                    formatter.removeToken(at: closureStartIndex + 1)
+
+                    closureCallOpenParenIndex -= 1
+                    closureCallCloseParenIndex -= 1
+                    closureEndIndex -= 1
+                }
+
+                while formatter.token(at: closureEndIndex - 1)?.isSpaceOrLinebreak == true {
+                    formatter.removeToken(at: closureEndIndex - 1)
+
+                    closureCallOpenParenIndex -= 1
+                    closureCallCloseParenIndex -= 1
+                    closureEndIndex -= 1
+                }
+
+                // remove the { }() tokens
                 formatter.removeToken(at: closureCallCloseParenIndex)
                 formatter.removeToken(at: closureCallOpenParenIndex)
                 formatter.removeToken(at: closureEndIndex)
-
-                // Remove now-redundant spaces after the start { and before the end }
-                while formatter.token(at: closureEndIndex - 1)?.isSpaceOrLinebreak == true {
-                    formatter.removeToken(at: closureEndIndex - 1)
-                }
-
-                while formatter.token(at: closureStartIndex + 1)?.isSpaceOrLinebreak == true {
-                    formatter.removeToken(at: closureStartIndex + 1)
-                }
+                formatter.removeToken(at: closureStartIndex)
 
                 // Remove the initial return token, and any trailing space, if present
-                if let returnIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
+                if let returnIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex - 1),
                    formatter.token(at: returnIndex)?.string == "return"
                 {
                     while formatter.token(at: returnIndex + 1)?.isSpaceOrLinebreak == true {
@@ -5993,8 +6003,6 @@ public struct _FormatRules {
 
                     formatter.removeToken(at: returnIndex)
                 }
-
-                formatter.removeToken(at: closureStartIndex)
             }
         }
     }

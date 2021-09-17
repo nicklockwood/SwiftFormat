@@ -4224,10 +4224,20 @@ extension RulesTests {
     func testRemoveRedundantClosureInSingleLinePropertyDeclaration() {
         let input = """
         let foo = { "Foo" }()
+        let bar = { "Bar" }()
+
+        let baaz = { "baaz" }()
+
+        let quux = { "quux" }()
         """
 
         let output = """
         let foo = "Foo"
+        let bar = "Bar"
+
+        let baaz = "baaz"
+
+        let quux = "quux"
         """
 
         testFormatting(for: input, output, rule: FormatRules.redundantClosure)

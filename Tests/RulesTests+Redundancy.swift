@@ -4350,12 +4350,33 @@ extension RulesTests {
                        options: options)
     }
 
-    func testRedundantClosureKeepsMultiStatementClosureAcrossMultipleLines() {
+    func testRedundantClosureKeepsMultiStatementClosureThatSetsProperty() {
         let input = """
         lazy var baaz = {
             let baaz = Baaz(foo: foo, bar: bar)
             baaz.foo = foo2
             return baaz
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testRedundantClosureKeepsMultiStatementClosureWithMultipleStatements() {
+        let input = """
+        lazy var quux = {
+            print("hello world")
+            return "quux"
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testRedundantClosureKeepsClosureWithInToken() {
+        let input = """
+        lazy var double = { () -> Double in
+            100
         }()
         """
 

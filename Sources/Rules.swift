@@ -5946,7 +5946,21 @@ public struct _FormatRules {
                     }
                 }
 
-                // (2) if there are any semicolons within the closure scope
+                // (2) any return statement within the main closure body
+                //     that isn't at the very beginning of the closure body
+                for returnIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: returnIndex)?.string == "return"
+                {
+                    let isAtStartOfClosure = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: returnIndex) == closureStartIndex
+
+                    if indexIsWithinMainClosure(returnIndex),
+                       !isAtStartOfClosure
+                    {
+                        return
+                    }
+                }
+
+                // (3) if there are any semicolons within the closure scope
                 //     but not at the end of a line
                 for semicolonIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: semicolonIndex)?.string == ";"
@@ -5959,11 +5973,24 @@ public struct _FormatRules {
                     }
                 }
 
-                // (3) if there are equals operators within the closure scope
+                // (4) if there are equals operators within the closure scope
                 for equalsIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: equalsIndex)?.string == "="
                 {
                     if indexIsWithinMainClosure(equalsIndex) {
+                        return
+                    }
+                }
+
+                // This rule also doesn't support closures with an `in` token.
+                //  - We can't just remove this, because it could have important type information.
+                //    For example, `let double = { () -> Double in 100 }()` and `let double = 100` have different types.
+                //  - We could theoretically support more sophisticated checks / transforms here,
+                //    but this seems like an edge case so we choose not to handle it.
+                for inIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: inIndex) == .keyword("in")
+                {
+                    if indexIsWithinMainClosure(inIndex) {
                         return
                     }
                 }

@@ -193,6 +193,27 @@ Remove trailing blank line at the end of a scope.
 </details>
 <br/>
 
+## blankLinesBetweenImports
+
+Remove blank lines between import statements.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  import A
+-
+  import B
+  import C
+-
+-
+  @testable import D
+  import E
+```
+
+</details>
+<br/>
+
 ## blankLinesAtStartOfScope
 
 Remove leading blank line at the start of a scope.

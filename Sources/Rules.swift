@@ -950,6 +950,27 @@ public struct _FormatRules {
         }
     }
 
+    /// Remove blank lines between import statements
+        public let blankLinesBetweenImports = FormatRule(
+            help: """
+            Remove blank lines between import statements.
+            """,
+            disabledByDefault: true,
+            sharedOptions: ["linebreaks"]
+        ) { formatter in
+            formatter.forEach(.keyword("import")) { currentImportIndex, _ in
+                guard let endOfLine = formatter.index(of: .linebreak, after: currentImportIndex),
+                      let nextImportIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endOfLine, if: {
+                          $0 == .keyword("@testable") || $0 == .keyword("import")
+                      })
+                else {
+                    return
+                }
+
+                formatter.replaceTokens(in: endOfLine ..< nextImportIndex, with: formatter.linebreakToken(for: currentImportIndex + 1))
+            }
+        }
+
     /// Adds a blank line immediately after a closing brace, unless followed by another closing brace
     public let blankLinesBetweenScopes = FormatRule(
         help: """

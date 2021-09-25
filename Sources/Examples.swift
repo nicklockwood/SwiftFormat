@@ -1287,6 +1287,18 @@ private struct Examples {
     + // bar
     + //
     ```
+
+    ```diff
+    - /**
+    -  * foo
+    -  * bar
+    -  */
+
+    + ///
+    + /// foo
+    + /// bar
+    + ///
+    ```
     """
 
     let redundantClosure = """

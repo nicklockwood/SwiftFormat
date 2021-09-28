@@ -161,7 +161,7 @@ class SpacingTests: RulesTests {
     func testNoSpaceBetweenClosingBraceAndParens() {
         let input = "{ block } ()"
         let output = "{ block }()"
-        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens, exclude: ["redundantClosure"])
     }
 
     func testDontRemoveSpaceBetweenOpeningBraceAndParens() {

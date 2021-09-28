@@ -262,7 +262,7 @@ class RedundancyTests: RulesTests {
         print({ Foo().foo }())
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options, exclude: ["redundantClosure"])
     }
 
     func testFileprivateVarNotChangedToPrivateIfAccessedFromAnExtensionOnAnotherType() {
@@ -1635,13 +1635,13 @@ class RedundancyTests: RulesTests {
     func testRemoveReturnInVarClosure() {
         let input = "var foo = { return 5 }()"
         let output = "var foo = { 5 }()"
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn)
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, exclude: ["redundantClosure"])
     }
 
     func testRemoveReturnInParenthesizedClosure() {
         let input = "var foo = ({ return 5 }())"
         let output = "var foo = ({ 5 }())"
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, exclude: ["redundantParens"])
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, exclude: ["redundantParens", "redundantClosure"])
     }
 
     func testNoRemoveReturnInFunction() {
@@ -2370,7 +2370,7 @@ class RedundancyTests: RulesTests {
 
     func testNoRemoveSelfFromLazyVarClosure() {
         let input = "lazy var foo = { self.bar }()"
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["redundantClosure"])
     }
 
     func testNoRemoveSelfFromLazyVarClosure2() {
@@ -4132,7 +4132,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(explicitSelf: .initOnly)
-        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options, exclude: ["redundantClosure"])
     }
 
     func testRedundantSelfRuleFailsInInitOnlyMode2() {
@@ -4830,5 +4830,280 @@ class RedundancyTests: RulesTests {
         let input = "subscript(foo foo: Int, baz: String) -> String {\n    return get(baz)\n}"
         let output = "subscript(foo _: Int, baz: String) -> String {\n    return get(baz)\n}"
         testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    // MARK: redundantClosure
+
+    func testRemoveRedundantClosureInSingleLinePropertyDeclaration() {
+        let input = """
+        let foo = { "Foo" }()
+        let bar = { "Bar" }()
+
+        let baaz = { "baaz" }()
+
+        let quux = { "quux" }()
+        """
+
+        let output = """
+        let foo = "Foo"
+        let bar = "Bar"
+
+        let baaz = "baaz"
+
+        let quux = "quux"
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure)
+    }
+
+    func testKeepsClosureThatIsNotCalled() {
+        let input = """
+        let foo = { "Foo" }
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testKeepsEmptyClosures() {
+        let input = """
+        let foo = {}()
+        let bar = { /* comment */ }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testRemoveRedundantClosureInMultiLinePropertyDeclaration() {
+        let input = """
+        lazy var bar = {
+            Bar()
+        }()
+        """
+
+        let output = """
+        lazy var bar = Bar()
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure)
+    }
+
+    func testRemoveRedundantClosureInMultiLinePropertyDeclarationWithString() {
+        let input = #"""
+        lazy var bar = {
+            """
+            Multiline string literal
+            """
+        }()
+        """#
+
+        let output = #"""
+        lazy var bar = """
+        Multiline string literal
+        """
+        """#
+
+        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, FormatRules.indent])
+    }
+
+    func testRemoveRedundantClosureInMultiLinePropertyDeclarationInClass() {
+        let input = """
+        class Foo {
+            lazy var bar = {
+                return Bar();
+            }()
+        }
+        """
+
+        let output = """
+        class Foo {
+            lazy var bar = Bar()
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, FormatRules.semicolons])
+    }
+
+    func testRemoveRedundantClosureInWrappedPropertyDeclaration_beforeFirst() {
+        let input = """
+        lazy var baaz = {
+            Baaz(
+                foo: foo,
+                bar: bar)
+        }()
+        """
+
+        let output = """
+        lazy var baaz = Baaz(
+            foo: foo,
+            bar: bar)
+        """
+
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantClosure, FormatRules.wrapArguments],
+                       options: options)
+    }
+
+    func testRemoveRedundantClosureInWrappedPropertyDeclaration_afterFirst() {
+        let input = """
+        lazy var baaz = {
+            Baaz(foo: foo,
+                 bar: bar)
+        }()
+        """
+
+        let output = """
+        lazy var baaz = Baaz(foo: foo,
+                             bar: bar)
+        """
+
+        let options = FormatOptions(wrapArguments: .afterFirst, closingParenOnSameLine: true)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantClosure, FormatRules.wrapArguments],
+                       options: options)
+    }
+
+    func testRedundantClosureKeepsMultiStatementClosureThatSetsProperty() {
+        let input = """
+        lazy var baaz = {
+            let baaz = Baaz(foo: foo, bar: bar)
+            baaz.foo = foo2
+            return baaz
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testRedundantClosureKeepsMultiStatementClosureWithMultipleStatements() {
+        let input = """
+        lazy var quux = {
+            print("hello world")
+            return "quux"
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testRedundantClosureKeepsClosureWithInToken() {
+        let input = """
+        lazy var double = { () -> Double in
+            100
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testRedundantClosureKeepsMultiStatementClosureOnSameLine() {
+        let input = """
+        lazy var baaz = {
+            print("Foo"); return baaz
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testRedundantClosureRemovesComplexMultilineClosure() {
+        let input = """
+        lazy var closureInClosure = {
+            {
+              print("Foo")
+              print("Bar"); return baaz
+            }
+        }()
+        """
+
+        let output = """
+        lazy var closureInClosure = {
+            print("Foo")
+            print("Bar"); return baaz
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, FormatRules.indent])
+    }
+
+    func testKeepsClosureWithIfStatement() {
+        let input = """
+        lazy var baaz = {
+            if let foo == foo {
+                return foo
+            } else {
+                return Foo()
+            }
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testKeepsClosureWithIfStatementOnSingleLine() {
+        let input = """
+        lazy var baaz = {
+            if let foo == foo { return foo } else { return Foo() }
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure,
+                       exclude: ["conditionalBodiesOnNewline"])
+    }
+
+    func testRemovesClosureWithIfStatementInsideOtherClosure() {
+        let input = """
+        lazy var baaz = {
+            {
+                if let foo == foo {
+                    return foo
+                } else {
+                    return Foo()
+                }
+            }
+        }()
+        """
+
+        let output = """
+        lazy var baaz = {
+            if let foo == foo {
+                return foo
+            } else {
+                return Foo()
+            }
+        }
+        """
+
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantClosure, FormatRules.indent])
+    }
+
+    func testKeepsClosureWithSwitchStatement() {
+        let input = """
+        lazy var baaz = {
+            switch foo {
+            case let .some(foo):
+                return foo:
+            case .none:
+                return Foo()
+            }
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testKeepsClosureWithIfDirective() {
+        let input = """
+        lazy var baaz = {
+            #if DEBUG
+                return DebugFoo()
+            #else
+                return Foo()
+            #endif
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
     }
 }

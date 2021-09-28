@@ -816,6 +816,12 @@ struct _Descriptors {
         help: "Empty braces: \"no-space\" (default), \"spaced\" or \"linebreak\"",
         keyPath: \.emptyBracesSpacing
     )
+    let acronyms = OptionDescriptor(
+        argumentName: "acronyms",
+        displayName: "Acronyms",
+        help: "Acronyms to auto-capitalize. Defaults to \"ID,URL,UUID\".",
+        keyPath: \.acronyms
+    )
 
     // MARK: - Internal
 

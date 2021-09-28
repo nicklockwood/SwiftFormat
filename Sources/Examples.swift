@@ -1300,4 +1300,20 @@ private struct Examples {
     + ///
     ```
     """
+
+    let redundantClosure = """
+    ```diff
+    - let foo = { Foo() }()
+    + let foo = Foo()
+    ```
+
+    ```diff
+    - lazy var bar = {
+    -     Bar(baaz: baaz,
+    -         quux: quux)
+    - }()
+    + lazy var bar = Bar(baaz: baaz,
+    +                    quux: quux)
+    ```
+    """
 }

@@ -830,14 +830,6 @@ struct _Descriptors {
         help: "Acronyms to auto-capitalize. Defaults to \"ID,URL,UUID\".",
         keyPath: \.acronyms
     )
-    let useLineComments = OptionDescriptor(
-        argumentName: "uselinecomments",
-        displayName: "Remove Block Comments",
-        help: "Only Use Single Line Comments: \"false\" (default) or \"true\"",
-        keyPath: \.useLineComments,
-        trueValues: ["true", "enabled"],
-        falseValues: ["false", "disabled"]
-    )
 
     // MARK: - Internal
 

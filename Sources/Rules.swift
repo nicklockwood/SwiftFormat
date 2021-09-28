@@ -5903,15 +5903,32 @@ public struct _FormatRules {
 
     public let blockToLineComments = FormatRule(
         help: "Changes block comments to single line comments.",
-        options: ["uselinecomments"],
+        disabledByDefault: true,
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        if !formatter.options.useLineComments {
-            return
-        }
         formatter.forEachToken { i, token in
             switch token {
             case .startOfScope("/*"):
+                // We can only convert block comments to single-line comments
+                // if there are no non-comment tokens on the same line.
+                //  - For example, we can't convert `if foo { /* code */ }`
+                //    to a line comment because it would comment out the closing brace.
+                //
+                // To guard against this, we verify that there is only
+                // comment or whitespace tokens on the remainder of this line
+                for indexOnLine in i ... formatter.endOfLine(at: i) {
+                    if formatter.token(at: indexOnLine)?.isSpaceOrCommentOrLinebreak == false {
+                        return
+                    }
+                }
+
+                // Determine whether this is a doc comment (/**) or a regular comment (/*)
+                let isDocComment: Bool
+                if formatter.token(at: i + 1)?.string.hasPrefix("*") == true {
+                    isDocComment = true
+                } else {
+                    isDocComment = false
+                }
 
                 // locate the end of this comment
                 // ignore nested comments
@@ -5966,7 +5983,15 @@ public struct _FormatRules {
 
                     // adds // if it's the beginning of the line
                     if startOfLine {
-                        formatter.insert(.identifier("//"), at: ind)
+                        let lineCommentDelimiter: String
+                        if isDocComment {
+                            lineCommentDelimiter = "///"
+                        } else {
+                            lineCommentDelimiter = "//"
+                        }
+
+                        formatter.insert(.identifier(lineCommentDelimiter), at: ind)
+
                         ind += 1
                         endInd += 1
                         startOfLine = false
@@ -5977,14 +6002,32 @@ public struct _FormatRules {
                 ind = startInd
                 while ind < endInd {
                     switch formatter.token(at: ind) {
-                    // remove the *'s at the beginning of each comment
+                    // remove the *'s at the beginning of each comment if present
                     case let .commentBody(ss):
                         var toRemove = 0
                         var commentBody = Array(ss)
                         while toRemove < ss.count, commentBody[toRemove] == " " || commentBody[toRemove] == "*" {
                             toRemove += 1
                         }
-                        formatter.replaceToken(at: ind, with: .commentBody(" " + String(ss.dropFirst(toRemove))))
+
+                        // Insert a space when removing these leading *'s,
+                        // except when removing the first * following the /*
+                        // of a doc comment (these are visually combined
+                        // in the same /**, but not parsed as the same token).
+                        let shouldInsertSpace: Bool
+                        if isDocComment,
+                           ind == i + 1, // this * immediately follows the /*
+                           formatter.token(at: ind + 1)?.isLinebreak == true // this * is the last token on this line
+                        {
+                            shouldInsertSpace = false
+                        } else {
+                            shouldInsertSpace = true
+                        }
+
+                        formatter.replaceToken(
+                            at: ind,
+                            with: .commentBody((shouldInsertSpace ? " " : "") + String(ss.dropFirst(toRemove)))
+                        )
                     // remove any extra spaces
                     case .space(" "):
                         formatter.removeToken(at: ind)

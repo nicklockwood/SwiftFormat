@@ -5723,24 +5723,24 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEachToken { i, token in
             switch token {
-            case let .identifier(condition) where
-                formatter.token(at: i + 1) == .startOfScope("(")
-                && formatter.token(at: i + 2) == .identifier("false"):
-
-                let conditions = ["assert", "precondition"]
-                if !conditions.contains(condition) {
-                    break
+            case .identifier("assert"), .identifier("precondition"):
+                guard let scopeStart = formatter.index(of: .nonSpace, after: i, if: {
+                    $0 == .startOfScope("(")
+                }), let identifierIndex = formatter.index(of: .nonSpaceOrLinebreak, after: scopeStart, if: {
+                    $0 == .identifier("false")
+                }), var endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: identifierIndex) else {
+                    return
                 }
 
-                var endIndex = i + 2
                 // if there are more arguments, replace the comma and space as well
-                if formatter.token(at: endIndex + 1) == .delimiter(",") {
-                    endIndex += 2
+                if formatter.tokens[endIndex] == .delimiter(",") {
+                    endIndex = formatter.index(of: .nonSpace, after: endIndex) ?? endIndex
                 }
 
                 let replacements = ["assert": "assertionFailure", "precondition": "preconditionFailure"]
-                formatter.replaceTokens(in: i ... endIndex, with: .identifier(replacements[condition]!))
-                formatter.insert(.startOfScope("("), at: i + 1)
+                formatter.replaceTokens(in: i ..< endIndex, with: [
+                    .identifier(replacements[token.string]!), .startOfScope("("),
+                ])
             default:
                 break
             }

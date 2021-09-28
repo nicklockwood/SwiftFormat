@@ -342,6 +342,14 @@ extension _Descriptors {
 }
 
 struct _Descriptors {
+    let lineAfterMarks = OptionDescriptor(
+        argumentName: "lineaftermarks",
+        displayName: "Blank line after \"MARK\"",
+        help: "Insert blank line after \"MARK:\": \"true\" (default) or \"false\"",
+        keyPath: \.lineAfterMarks,
+        trueValues: ["true"],
+        falseValues: ["false"]
+    )
     let indent = OptionDescriptor(
         argumentName: "indent",
         displayName: "Indent",

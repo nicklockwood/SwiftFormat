@@ -1306,7 +1306,8 @@ extension Formatter {
                 let declarationParser = Formatter(firstDeclaration.tokens)
                 let indentation = declarationParser.indentForLine(at: 0)
 
-                let markDeclaration = tokenize("\(indentation)\(markComment)\n\n")
+                let endMarkDeclaration = options.lineAfterMarks ? "\n\n" : "\n"
+                let markDeclaration = tokenize("\(indentation)\(markComment)\(endMarkDeclaration)")
 
                 sortedDeclarations.insert(
                     (.declaration(kind: "comment", tokens: markDeclaration), category, nil),

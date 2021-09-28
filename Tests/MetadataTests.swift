@@ -177,6 +177,7 @@ class MetadataTests: XCTestCase {
                         Descriptors.organizeClassThreshold,
                         Descriptors.organizeEnumThreshold,
                         Descriptors.organizeExtensionThreshold,
+                        Descriptors.lineAfterMarks,
                     ]
                 default:
                     continue

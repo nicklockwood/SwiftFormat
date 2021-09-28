@@ -600,3 +600,30 @@ public extension Formatter {
         return .linebreak(options.linebreak, lineNumber)
     }
 }
+
+extension String {
+    /// https://stackoverflow.com/a/32306142
+    func ranges<S: StringProtocol>(of string: S, options: String.CompareOptions = []) -> [Range<Index>] {
+        var result: [Range<Index>] = []
+        var startIndex = self.startIndex
+        while startIndex < endIndex, let range = self[startIndex...].range(of: string, options: options) {
+            result.append(range)
+            startIndex = range.lowerBound < range.upperBound ? range.upperBound :
+                index(range.lowerBound, offsetBy: 1, limitedBy: endIndex) ?? endIndex
+        }
+        return result
+    }
+}
+
+// `Swift.Character.isUppercase` isn't available until Swift 5.0+ / Xcode 10.2+
+#if !swift(>=5.0)
+    extension Character {
+        var isUppercase: Bool {
+            return String(self).uppercased() == String(self)
+        }
+
+        var isWhitespace: Bool {
+            return String(self).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+#endif

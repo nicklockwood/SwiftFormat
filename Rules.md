@@ -33,6 +33,7 @@
 * [preferKeyPath](#preferKeyPath)
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
+* [redundantClosure](#redundantClosure)
 * [redundantExtensionACL](#redundantExtensionACL)
 * [redundantFileprivate](#redundantFileprivate)
 * [redundantGet](#redundantGet)
@@ -972,6 +973,31 @@ Remove redundant `break` in switch case.
         print("default")
 -       break
   }
+```
+
+</details>
+<br/>
+
+## redundantClosure
+
+Removes redundant closures bodies, containing a single statement,
+which are called immediately.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let foo = { Foo() }()
++ let foo = Foo()
+```
+
+```diff
+- lazy var bar = {
+-     Bar(baaz: baaz,
+-         quux: quux)
+- }()
++ lazy var bar = Bar(baaz: baaz,
++                    quux: quux)
 ```
 
 </details>

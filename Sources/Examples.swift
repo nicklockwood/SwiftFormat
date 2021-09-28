@@ -121,6 +121,19 @@ private struct Examples {
     ```
     """
 
+    let blankLinesBetweenImports = """
+    ```diff
+      import A
+    -
+      import B
+      import C
+    -
+    -
+      @testable import D
+      import E
+    ```
+    """
+
     let blankLinesBetweenScopes = """
     ```diff
       func foo() {

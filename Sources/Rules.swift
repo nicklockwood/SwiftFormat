@@ -5900,4 +5900,104 @@ public struct _FormatRules {
             formatter.replaceToken(at: index, with: .identifier("Double"))
         }
     }
+
+    public let blockToLineComments = FormatRule(
+        help: "Changes block comments to single line comments.",
+        options: ["uselinecomments"],
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        if !formatter.options.useLineComments {
+            return
+        }
+        formatter.forEachToken { i, token in
+            switch token {
+            case .startOfScope("/*"):
+
+                // locate the end of this comment
+                // ignore nested comments
+                var startInd = i
+                var startLine = formatter.startOfLine(at: startInd)
+                var endInd = i + 1
+                var numComments = 1
+                while numComments > 0 {
+                    switch formatter.token(at: endInd) {
+                    case .startOfScope("/*"):
+                        numComments += 1
+                    case .endOfScope("*/"):
+                        numComments -= 1
+                    default:
+                        break
+                    }
+                    endInd += 1
+                }
+                var endLine = formatter.endOfLine(at: endInd)
+
+                // if there is code on the same line as a comment,
+                // move it to the next line
+                if endLine > endInd {
+                    formatter.insertLinebreak(at: endInd)
+                }
+
+                // remove /* and */
+                var ind = startInd
+                while ind <= endInd {
+                    switch formatter.token(at: ind) {
+                    case .startOfScope("/*"):
+                        formatter.removeToken(at: ind)
+                        ind -= 1
+                        endInd -= 1
+                    case .endOfScope("*/"):
+                        formatter.removeToken(at: ind)
+                        ind -= 1
+                        endInd -= 1
+                    default:
+                        break
+                    }
+                    ind += 1
+                }
+
+                // turn each line into a single line comment
+                var startOfLine = true
+                ind = startInd
+                while ind < endInd {
+                    if ind == formatter.startOfLine(at: ind) {
+                        startOfLine = true
+                    }
+
+                    // adds // if it's the beginning of the line
+                    if startOfLine {
+                        formatter.insert(.identifier("//"), at: ind)
+                        ind += 1
+                        endInd += 1
+                        startOfLine = false
+                    }
+                    ind += 1
+                }
+
+                ind = startInd
+                while ind < endInd {
+                    switch formatter.token(at: ind) {
+                    // remove the *'s at the beginning of each comment
+                    case let .commentBody(ss):
+                        var toRemove = 0
+                        var commentBody = Array(ss)
+                        while toRemove < ss.count, commentBody[toRemove] == " " || commentBody[toRemove] == "*" {
+                            toRemove += 1
+                        }
+                        formatter.replaceToken(at: ind, with: .commentBody(" " + String(ss.dropFirst(toRemove))))
+                    // remove any extra spaces
+                    case .space(" "):
+                        formatter.removeToken(at: ind)
+                        ind -= 1
+                        endInd -= 1
+                    default:
+                        break
+                    }
+                    ind += 1
+                }
+            default:
+                break
+            }
+        }
+    }
 }

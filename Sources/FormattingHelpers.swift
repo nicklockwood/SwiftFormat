@@ -1386,4 +1386,41 @@ extension Formatter {
             return openTokensFormatter.tokens
         }
     }
+
+    func type(at typeIndex: Int, matchesValueAt valueIndex: Int) -> Bool {
+        if tokens[typeIndex] == tokens[valueIndex] {
+            return true
+        }
+
+        let typeName = tokens[typeIndex].string
+        let value = tokens[valueIndex]
+
+        if typeName == "Bool",
+           ["true", "false"].contains(value.string)
+        {
+            return true
+        }
+
+        if typeName == "String",
+           tokens[valueIndex] == .startOfScope("\"") || tokens[valueIndex] == .startOfScope("\"\"\""),
+           next(.nonSpaceOrCommentOrLinebreak, after: valueIndex)?.isStringBody == true
+        {
+            return true
+        }
+
+        if typeName == "Int",
+           tokens[valueIndex].isNumber,
+           tokens[valueIndex] != .number(value.string, .decimal)
+        {
+            return true
+        }
+
+        if typeName == "Double",
+           tokens[valueIndex] == .number(value.string, .decimal)
+        {
+            return true
+        }
+
+        return false
+    }
 }

@@ -750,4 +750,23 @@ class ArgumentsTests: XCTestCase {
         try options.addArguments(["lintonly": "wrapEnumCases"], in: "")
         XCTAssert(options.rules?.contains("wrapEnumCases") == false)
     }
+
+    // MARK: Edit distance
+
+    func testEditDistance() {
+        XCTAssertEqual("foo".editDistance(from: "fob"), 1)
+        XCTAssertEqual("foo".editDistance(from: "boo"), 1)
+        XCTAssertEqual("foo".editDistance(from: "bar"), 3)
+        XCTAssertEqual("aba".editDistance(from: "bbb"), 2)
+        XCTAssertEqual("foob".editDistance(from: "foo"), 1)
+        XCTAssertEqual("foo".editDistance(from: "foob"), 1)
+        XCTAssertEqual("foo".editDistance(from: "Foo"), 1)
+        XCTAssertEqual("FOO".editDistance(from: "foo"), 3)
+    }
+
+    func testEditDistanceWithEmptyStrings() {
+        XCTAssertEqual("foo".editDistance(from: ""), 3)
+        XCTAssertEqual("".editDistance(from: "foo"), 3)
+        XCTAssertEqual("".editDistance(from: ""), 0)
+    }
 }

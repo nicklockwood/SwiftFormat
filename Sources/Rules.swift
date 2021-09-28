@@ -2335,26 +2335,37 @@ public struct _FormatRules {
                 {
                     return
                 }
-                if let nextNonLinebreak = formatter.next(.nonSpaceOrComment, after: closingIndex) {
+                if case .operator = formatter.tokens[closingIndex - 1],
+                   case .operator(_, .infix)? = formatter.token(at: closingIndex + 1)
+                {
+                    return
+                }
+                let nextNonLinebreak = formatter.next(.nonSpaceOrComment, after: closingIndex)
+                if let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                   case .operator = formatter.tokens[index]
+                {
+                    if nextToken.isOperator(".") || (index == i + 1 &&
+                        formatter.token(at: i - 1)?.isSpaceOrCommentOrLinebreak == false)
+                    {
+                        return
+                    }
                     switch nextNonLinebreak {
-                    case .startOfScope("["), .startOfScope("("), .operator(_, .postfix):
+                    case .startOfScope("[")?, .startOfScope("(")?, .operator(_, .postfix)?:
                         return
                     default:
                         break
                     }
                 }
-                if let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                   case .operator = formatter.tokens[index], nextToken.isOperator(".") ||
-                   (index == i + 1 && formatter.token(at: i - 1)?.isSpaceOrCommentOrLinebreak == false)
-                {
-                    return
-                }
                 guard formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex,
                       formatter.index(in: i + 1 ..< closingIndex, where: {
                           switch $0 {
-                          case .operator(_, .postfix), .operator(_, .infix), .operator(_, .none),
-                               .keyword("as"), .keyword("is"), .keyword("try"):
+                          case .operator(_, .none):
+                              return true
+                          case .operator(_, .infix), .keyword("as"), .keyword("is"), .keyword("try"):
                               switch token {
+                              // TODO: add option to always strip parens in this case (or only for boolean operators?)
+                              case .operator("=", .infix) where $0 == .operator("->", .infix):
+                                  break
                               case .operator(_, .prefix), .operator(_, .infix), .keyword("as"), .keyword("is"):
                                   return true
                               default:
@@ -2362,6 +2373,19 @@ public struct _FormatRules {
                               }
                               switch nextToken {
                               case .operator(_, .postfix), .operator(_, .infix), .keyword("as"), .keyword("is"):
+                                  return true
+                              default:
+                                  break
+                              }
+                              switch nextNonLinebreak {
+                              case .startOfScope("[")?, .startOfScope("(")?, .operator(_, .postfix)?:
+                                  return true
+                              default:
+                                  return false
+                              }
+                          case .operator(_, .postfix):
+                              switch token {
+                              case .operator(_, .prefix), .keyword("as"), .keyword("is"):
                                   return true
                               default:
                                   return false

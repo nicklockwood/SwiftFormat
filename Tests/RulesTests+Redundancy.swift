@@ -1641,7 +1641,8 @@ class RedundancyTests: RulesTests {
 
     func testNoRemoveReturnAfterParentheses() {
         let input = "if let foo = (bar as? String) { return foo }"
-        testFormatting(for: input, rule: FormatRules.redundantReturn)
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       exclude: ["redundantParens"])
     }
 
     func testNoRemoveReturnInTupleVarGetter() {

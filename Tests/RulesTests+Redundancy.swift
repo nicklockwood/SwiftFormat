@@ -2808,6 +2808,58 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testSelfNotRemovedInExtensionOfTypeWithDynamicMemberLookup() {
+        let input = """
+        @dynamicMemberLookup
+        struct Foo {}
+
+        extension Foo {
+            subscript(dynamicMember foo: String) -> String {
+                return foo + "bar"
+            }
+
+            func bar() {
+                if self.foo == "foobar" {
+                    return
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
+    func testSelfRemovedInNestedExtensionOfTypeWithDynamicMemberLookup() {
+        let input = """
+        @dynamicMemberLookup
+        struct Foo {
+            var foo: Int
+            struct Foo {}
+            extension Foo {
+                func bar() {
+                    if self.foo == "foobar" {
+                        return
+                    }
+                }
+            }
+        }
+        """
+        let output = """
+        @dynamicMemberLookup
+        struct Foo {
+            var foo: Int
+            struct Foo {}
+            extension Foo {
+                func bar() {
+                    if foo == "foobar" {
+                        return
+                    }
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
     func testNoRemoveSelfAfterGuardCaseLetWithExplicitNamespace() {
         let input = """
         class Foo {

@@ -2826,10 +2826,13 @@ public struct _FormatRules {
                 classMembersByType[type] = classMembers
             }
             // Remove or add `self`
-            var scopeStack = [Token]()
             var lastKeyword = ""
             var lastKeywordIndex = 0
             var classOrStatic = false
+            var scopeStack = [(
+                token: Token.space(""),
+                dynamicMemberTypes: Set<String>()
+            )]
             while let token = formatter.token(at: index) {
                 switch token {
                 case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
@@ -2879,10 +2882,17 @@ public struct _FormatRules {
                     else {
                         return formatter.fatalError("Expected identifier", at: index)
                     }
-                    let usingDynamicLookup = formatter.modifiersForDeclaration(
+                    var usingDynamicLookup = formatter.modifiersForDeclaration(
                         at: index,
                         contains: "@dynamicMemberLookup"
                     )
+                    if usingDynamicLookup {
+                        scopeStack[scopeStack.count - 1].dynamicMemberTypes.insert(name)
+                    } else if [token.string, lastKeyword].contains("extension"),
+                              scopeStack.last!.dynamicMemberTypes.contains(name)
+                    {
+                        usingDynamicLookup = true
+                    }
                     index = scopeStart + 1
                     typeStack.append(name)
                     processBody(at: &index, localNames: ["init"], members: [], typeStack: &typeStack,
@@ -2913,7 +2923,7 @@ public struct _FormatRules {
                         var scopedNames = localNames
                         formatter.processDeclaredVariables(at: &index, names: &scopedNames,
                                                            removeSelf: explicitSelf != .insert)
-                        if scopeStack.last == .startOfScope("(") {
+                        if scopeStack.last?.token == .startOfScope("(") {
                             scopeStack.removeLast()
                         }
                         guard var startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
@@ -2980,7 +2990,7 @@ public struct _FormatRules {
                     }
                     fallthrough
                 case .startOfScope where token.isStringDelimiter, .startOfScope("#if"), .startOfScope("["):
-                    scopeStack.append(token)
+                    scopeStack.append((token, []))
                 case .startOfScope(":"):
                     lastKeyword = ""
                 case .startOfScope("{") where lastKeyword == "catch":
@@ -3027,7 +3037,7 @@ public struct _FormatRules {
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
                     lastKeyword = ""
-                    if formatter.isStartOfClosure(at: index, in: scopeStack.last) {
+                    if formatter.isStartOfClosure(at: index, in: scopeStack.last?.token) {
                         fallthrough
                     }
                     var prevIndex = index - 1
@@ -3150,13 +3160,13 @@ public struct _FormatRules {
                     return
                 case .endOfScope:
                     if token == .endOfScope("#endif") {
-                        while let scope = scopeStack.last {
+                        while let scope = scopeStack.last?.token, scope != .space("") {
                             scopeStack.removeLast()
                             if scope != .startOfScope("#if") {
                                 break
                             }
                         }
-                    } else if let scope = scopeStack.last {
+                    } else if let scope = scopeStack.last?.token, scope != .space("") {
                         // TODO: fix this bug
                         assert(token.isEndOfScope(scope))
                         scopeStack.removeLast()

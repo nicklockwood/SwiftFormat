@@ -327,10 +327,6 @@ declarations.
 
 Changes block comments to single line comments.
 
-Option | Description
---- | ---
-`--uselinecomments` | Only Use Single Line Comments: "false" (default) or "true"
-
 <details>
 <summary>Examples</summary>
 
@@ -344,6 +340,18 @@ Option | Description
 + // foo
 + // bar
 + //
+```
+
+```diff
+- /**
+-  * foo
+-  * bar
+-  */
+
++ ///
++ /// foo
++ /// bar
++ ///
 ```
 
 </details>

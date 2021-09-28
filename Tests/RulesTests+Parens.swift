@@ -450,7 +450,7 @@ class ParensTests: RulesTests {
 
     func testRequiredParensNotRemovedAfterClosureInWhereClause() {
         let input = "case foo where { x == y }():"
-        testFormatting(for: input, rule: FormatRules.redundantParens)
+        testFormatting(for: input, rule: FormatRules.redundantParens, exclude: ["redundantClosure"])
     }
 
     // around closure arguments
@@ -613,7 +613,7 @@ class ParensTests: RulesTests {
 
     func testParensNotRemovedAfterAnonymousClosureInsideIfStatementBody() {
         let input = "if let foo = bar(), { x == y }() {}"
-        testFormatting(for: input, rule: FormatRules.redundantParens)
+        testFormatting(for: input, rule: FormatRules.redundantParens, exclude: ["redundantClosure"])
     }
 
     func testParensNotRemovedInGenericInit() {

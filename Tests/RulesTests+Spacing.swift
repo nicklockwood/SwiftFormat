@@ -166,7 +166,8 @@ class SpacingTests: RulesTests {
 
     func testDontRemoveSpaceBetweenOpeningBraceAndParens() {
         let input = "a = (b + c)"
-        testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+        testFormatting(for: input, rule: FormatRules.spaceAroundParens,
+                       exclude: ["redundantParens"])
     }
 
     func testKeywordAsIdentifierParensSpacing() {

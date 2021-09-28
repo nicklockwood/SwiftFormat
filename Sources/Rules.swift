@@ -1063,6 +1063,7 @@ public struct _FormatRules {
     /// Adds a blank line around MARK: comments
     public let blankLinesAroundMark = FormatRule(
         help: "Insert blank line before and after `MARK:` comments.",
+        options: ["lineaftermarks"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEachToken { i, token in
@@ -1071,7 +1072,8 @@ public struct _FormatRules {
                   formatter.tokens[startIndex] == .startOfScope("//") else { return }
             if let nextIndex = formatter.index(of: .linebreak, after: i),
                let nextToken = formatter.next(.nonSpace, after: nextIndex),
-               !nextToken.isLinebreak, nextToken != .endOfScope("}")
+               !nextToken.isLinebreak, nextToken != .endOfScope("}"),
+               formatter.options.lineAfterMarks
             {
                 formatter.insertLinebreak(at: nextIndex)
             }
@@ -5447,7 +5449,8 @@ public struct _FormatRules {
         disabledByDefault: true,
         orderAfter: ["extensionAccessControl", "redundantFileprivate"],
         options: ["categorymark", "beforemarks", "lifecycle", "organizetypes",
-                  "structthreshold", "classthreshold", "enumthreshold", "extensionlength"]
+                  "structthreshold", "classthreshold", "enumthreshold", "extensionlength"],
+        sharedOptions: ["lineaftermarks"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
@@ -5583,7 +5586,8 @@ public struct _FormatRules {
         help: "Adds a mark comment before top-level types and extensions.",
         runOnceOnly: true,
         disabledByDefault: true,
-        options: ["marktypes", "typemark", "markextensions", "extensionmark", "groupedextension"]
+        options: ["marktypes", "typemark", "markextensions", "extensionmark", "groupedextension"],
+        sharedOptions: ["lineaftermarks"]
     ) { formatter in
         var declarations = formatter.parseDeclarations()
 
@@ -5753,7 +5757,8 @@ public struct _FormatRules {
                 }
 
                 // Insert the expected comment at the start of the declaration
-                openingFormatter.insert(tokenize("\(expectedComment)\n\n"), at: markInsertIndex)
+                let endMarkDeclaration = formatter.options.lineAfterMarks ? "\n\n" : "\n"
+                openingFormatter.insert(tokenize("\(expectedComment)\(endMarkDeclaration)"), at: markInsertIndex)
 
                 // If the previous declaration doesn't end in a blank line,
                 // add an additional linebreak to balance the mark.

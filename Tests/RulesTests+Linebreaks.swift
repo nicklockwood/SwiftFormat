@@ -412,6 +412,42 @@ class LinebreakTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.blankLinesAroundMark)
     }
 
+    func testInsertBlankLinesJustBeforeMarkNotAfter() {
+        let input = """
+        let foo = "foo"
+        // MARK: bar
+        let bar = "bar"
+        """
+        let output = """
+        let foo = "foo"
+
+        // MARK: bar
+        let bar = "bar"
+        """
+        let options = FormatOptions(lineAfterMarks: false)
+        testFormatting(for: input, output, rule: FormatRules.blankLinesAroundMark, options: options)
+    }
+
+    func testNoInsertExtraBlankLinesAroundMarkWithNoBlankLineAfterMark() {
+        let input = """
+        let foo = "foo"
+
+        // MARK: bar
+        let bar = "bar"
+        """
+        let options = FormatOptions(lineAfterMarks: false)
+        testFormatting(for: input, rule: FormatRules.blankLinesAroundMark, options: options)
+    }
+
+    func testNoInsertBlankLineAfterMarkAtStartOfFile() {
+        let input = """
+        // MARK: bar
+        let bar = "bar"
+        """
+        let options = FormatOptions(lineAfterMarks: false)
+        testFormatting(for: input, rule: FormatRules.blankLinesAroundMark, options: options)
+    }
+
     // MARK: - linebreakAtEndOfFile
 
     func testLinebreakAtEndOfFile() {

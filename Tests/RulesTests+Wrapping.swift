@@ -821,7 +821,7 @@ class WrappingTests: RulesTests {
                \""",
                bar: \"""
                    baz
-               \""")
+               \"\"")
         """
         let options = FormatOptions(wrapArguments: .afterFirst)
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
@@ -829,11 +829,12 @@ class WrappingTests: RulesTests {
 
     func testHandleXcodeTokenApplyingWrap() {
         let input = """
-        test(image: <#T##UIImage#>, name: "Name")
+        test(image: \u{003c}#T##UIImage#>, name: "Name")
         """
+
         let output = """
         test(
-            image: <#T##UIImage#>,
+            image: \u{003c}#T##UIImage#>,
             name: "Name"
         )
         """

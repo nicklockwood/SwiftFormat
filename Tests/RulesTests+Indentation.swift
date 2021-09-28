@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-extension RulesTests {
+class IndentTests: RulesTests {
     // MARK: - indent
 
     func testReduceIndentAtStartOfFile() {

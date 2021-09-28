@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-extension RulesTests {
+class BracesTests: RulesTests {
     // MARK: - braces
 
     func testAllmanBracesAreConverted() {

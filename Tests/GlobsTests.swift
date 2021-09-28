@@ -103,7 +103,7 @@ class GlobsTests: XCTestCase {
     }
 
     func testDoubleWildcardMatchesDirectorySlash() {
-        let path = "**SwiftFormatTests.swift"
+        let path = "**ParsingHelpers.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
         XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-extension RulesTests {
+class LinebreakTests: RulesTests {
     // MARK: - trailingSpace
 
     // truncateBlankLines = true

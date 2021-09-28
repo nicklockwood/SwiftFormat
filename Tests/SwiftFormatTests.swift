@@ -93,7 +93,7 @@ class SwiftFormatTests: XCTestCase {
             return { files.append(inputURL) }
         }
         XCTAssertEqual(errors.count, 0)
-        XCTAssertEqual(files.count, 34)
+        XCTAssertEqual(files.count, 33)
     }
 
     // MARK: format function

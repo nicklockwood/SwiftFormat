@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-extension RulesTests {
+class SpacingTests: RulesTests {
     // MARK: - spaceAroundParens
 
     func testSpaceAfterSet() {

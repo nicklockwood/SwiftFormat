@@ -25,5 +25,5 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
       - name: Build and Test
-        run: swift test
+        run: swift test --enable-test-discovery
 

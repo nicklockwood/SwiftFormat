@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-extension RulesTests {
+class RedundancyTests: RulesTests {
     // MARK: - redundantBreak
 
     func testRedundantBreaksRemoved() {

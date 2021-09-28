@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-extension RulesTests {
+class WrappingTests: RulesTests {
     // MARK: - elseOnSameLine
 
     func testElseOnSameLine() {

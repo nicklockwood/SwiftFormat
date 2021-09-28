@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-extension RulesTests {
+class OrganizationTests: RulesTests {
     // MARK: organizeDeclarations
 
     func testOrganizeClassDeclarationsIntoCategories() {

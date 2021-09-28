@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-extension RulesTests {
+class ParensTests: RulesTests {
     // MARK: - redundantParens
 
     // around expressions

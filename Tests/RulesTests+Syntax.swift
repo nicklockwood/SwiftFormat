@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-extension RulesTests {
+class SyntaxTests: RulesTests {
     // MARK: - todos
 
     func testMarkIsUpdated() {

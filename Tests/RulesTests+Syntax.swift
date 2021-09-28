@@ -2216,4 +2216,47 @@ class SyntaxTests: RulesTests {
         """
         testFormatting(for: input, rule: FormatRules.preferDouble)
     }
+
+    func testBlockToLineCommentsOneLine() {
+        let input = "foo = bar /* comment */"
+        let output = "foo = bar // comment"
+        let options = FormatOptions(useLineComments: true)
+        testFormatting(for: input, output, rule: FormatRules.blockToLineComments, options: options)
+    }
+
+    func testBlockToLineCommentsMultiLine() {
+        let input = """
+        /*
+         * foo
+         * bar
+         */
+        """
+        let output = """
+        //
+        // foo
+        // bar
+        //
+        """
+        let options = FormatOptions(useLineComments: true)
+        testFormatting(for: input, output, rule: FormatRules.blockToLineComments, options: options)
+    }
+
+    func testBlockToLineCommentsNested() {
+        let input = """
+        /*
+         * comment
+         * /* inside */
+         * a comment
+         */
+        """
+        let output = """
+        //
+        // comment
+        //  inside
+        // a comment
+        //
+        """
+        let options = FormatOptions(useLineComments: true)
+        testFormatting(for: input, output, rule: FormatRules.blockToLineComments, options: options)
+    }
 }

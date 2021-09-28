@@ -8,6 +8,7 @@
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
 * [blankLinesBetweenScopes](#blankLinesBetweenScopes)
+* [blockToLineComments](#blockToLineComments)
 * [braces](#braces)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
@@ -317,6 +318,32 @@ declarations.
 +
   var baz: Bool
   var quux: Int
+```
+
+</details>
+<br/>
+
+## blockToLineComments
+
+Changes block comments to single line comments.
+
+Option | Description
+--- | ---
+`--uselinecomments` | Only Use Single Line Comments: "false" (default) or "true"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- /*
+-  * foo
+-  * bar
+-  */
+
++ //
++ // foo
++ // bar
++ //
 ```
 
 </details>

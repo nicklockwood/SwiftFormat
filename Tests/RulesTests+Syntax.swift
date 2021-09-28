@@ -287,6 +287,11 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.void)
     }
 
+    func testCaseVoidNotUnwrapped() {
+        let input = "case some(Void)"
+        testFormatting(for: input, rule: FormatRules.void)
+    }
+
     // useVoid = false
 
     func testUseVoidOptionFalse() {
@@ -325,6 +330,13 @@ class SyntaxTests: RulesTests {
         let input = "Void.Type"
         let options = FormatOptions(useVoid: false)
         testFormatting(for: input, rule: FormatRules.void, options: options)
+    }
+
+    func testCaseVoidConvertedToTuple() {
+        let input = "case some(Void)"
+        let output = "case some(())"
+        let options = FormatOptions(useVoid: false)
+        testFormatting(for: input, output, rule: FormatRules.void, options: options)
     }
 
     // MARK: - trailingClosures

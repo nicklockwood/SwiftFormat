@@ -3846,7 +3846,10 @@ public struct _FormatRules {
                 }
                 return token == .startOfScope("(")
             }() {
-                if isArgumentToken(at: nextIndex) {
+                if isArgumentToken(at: nextIndex) || formatter.last(
+                    .nonSpaceOrLinebreak,
+                    before: prevIndex
+                )?.isIdentifier == true {
                     if !formatter.options.useVoid {
                         // Convert to parens
                         formatter.replaceToken(at: i, with: .endOfScope(")"))

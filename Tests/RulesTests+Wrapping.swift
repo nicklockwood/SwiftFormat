@@ -2871,6 +2871,24 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapEnumCases)
     }
 
+    func testEnumCasesWithCommentsAlreadyWrappedOntoMultipleLines() {
+        let input = """
+        enum Foo {
+            case bar, // bar
+                 baz, // baz
+                 quux // quux
+        }
+        """
+        let output = """
+        enum Foo {
+            case bar // bar
+            case baz // baz
+            case quux // quux
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapEnumCases)
+    }
+
     func testNoWrapEnumStatementAllOnOneLine() {
         let input = "enum Foo { bar, baz }"
         testFormatting(for: input, rule: FormatRules.wrapEnumCases)

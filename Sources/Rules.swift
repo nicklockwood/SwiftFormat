@@ -3767,15 +3767,40 @@ public struct _FormatRules {
             var index = i
             let indent = formatter.indentForLine(at: i)
             while let commaIndex = formatter.index(of: .delimiter(","), in: (index + 1) ..< end),
-                  let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: commaIndex)
+                  var nextIndex = formatter.index(of: .nonSpace, after: commaIndex)
             {
-                formatter.replaceToken(at: commaIndex, with: .keyword("case"))
-                let delta = formatter
-                    .replaceTokens(in: commaIndex + 1 ..< nextIndex, with: .space(" "))
-                formatter.insertLinebreak(at: commaIndex)
-                formatter.insertSpace(indent, at: commaIndex + 1)
-                index = commaIndex
-                end += delta + 2
+                var delta = 0
+                if formatter.tokens[nextIndex] == .startOfScope("//") {
+                    formatter.removeToken(at: commaIndex)
+                    delta -= 1
+                    if formatter.token(at: commaIndex)?.isSpace == true,
+                       formatter.token(at: commaIndex - 1)?.isSpace == true
+                    {
+                        formatter.removeToken(at: commaIndex - 1)
+                        delta -= 1
+                    }
+                    guard let index = formatter
+                        .index(of: .linebreak, after: commaIndex - 1)
+                    else {
+                        return
+                    }
+                    nextIndex = index
+                } else {
+                    let range = commaIndex ..< nextIndex
+                    formatter.removeTokens(in: range)
+                    nextIndex -= range.count
+                    delta -= range.count
+                }
+                if !formatter.tokens[nextIndex].isLinebreak {
+                    formatter.insertLinebreak(at: nextIndex)
+                    delta += 1
+                }
+                delta += formatter.insertSpace(indent, at: nextIndex + 1)
+                formatter.insert([.keyword("case")], at: nextIndex + 2)
+                delta += 1
+                delta += formatter.insertSpace(" ", at: nextIndex + 3)
+                index = nextIndex + 3
+                end += delta
             }
         }
     }

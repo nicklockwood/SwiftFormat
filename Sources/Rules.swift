@@ -2704,9 +2704,7 @@ public struct _FormatRules {
                          isTypeRoot: Bool,
                          isInit: Bool)
         {
-            let selfRequired = formatter.options.selfRequired + [
-                "expect", // Special case to support autoclosure arguments in the Nimble framework
-            ]
+            let selfRequired = formatter.options.selfRequired
             let explicitSelf = formatter.options.explicitSelf
             let isWhereClause = index > 0 && formatter.tokens[index - 1] == .keyword("where")
             assert(isWhereClause || formatter.currentScope(at: index).map { token -> Bool in
@@ -2996,7 +2994,8 @@ public struct _FormatRules {
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .startOfScope("("):
                     if case let .identifier(fn)? = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                       selfRequired.contains(fn)
+                       selfRequired.contains(fn) ||
+                       fn == "expect" // Special case to support autoclosure arguments in the Nimble framework
                     {
                         index = formatter.index(of: .endOfScope(")"), after: index) ?? index
                         break
@@ -3085,7 +3084,7 @@ public struct _FormatRules {
                           }),
                           let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex),
                           let name = formatter.token(at: nextIndex)?.unescaped(),
-                          !localNames.contains(name),
+                          !localNames.contains(name), !selfRequired.contains(name),
                           !["min", "max"].contains(name) // Special case for global Swift functions
                     else {
                         break

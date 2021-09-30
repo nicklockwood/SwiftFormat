@@ -3071,9 +3071,11 @@ public struct _FormatRules {
                     guard formatter.isEnabled, !usingDynamicLookup, !isTypeRoot, !localNames.contains("self"),
                           let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
                               $0 == .operator(".", .infix)
-                          }), let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {
-                              $0.isIdentifier && !localNames.contains($0.unescaped())
-                          })
+                          }),
+                          let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex),
+                          let name = formatter.token(at: nextIndex)?.unescaped(),
+                          !localNames.contains(name),
+                          !["min", "max"].contains(name) // Special case for global Swift functions
                     else {
                         break
                     }

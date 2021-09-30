@@ -3005,6 +3005,17 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testMinSelfNotRemoved() {
+        let input = """
+        extension Array where Element: Comparable {
+            func foo() -> Int {
+                self.min()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {

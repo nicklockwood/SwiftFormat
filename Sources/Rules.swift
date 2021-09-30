@@ -1592,9 +1592,11 @@ public struct _FormatRules {
                            [.keyword("#else"), .keyword("#elseif")].contains(startToken)
                         {
                             // Don't indent further
-                        } else if formatter.last(.nonSpace, before: lastNonSpaceOrLinebreakIndex)?.isLinebreak == true {
+                        } else if formatter.tokens[lineStart ..< lastNonSpaceOrLinebreakIndex].allSatisfy({
+                            $0.isEndOfScope || $0.isSpaceOrComment
+                        }) {
                             if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
-                                (formatter.options.xcodeIndentation && lastToken.isMultilineStringDelimiter)
+                                (formatter.options.xcodeIndentation && lastToken != .endOfScope("}"))
                             {
                                 indent += formatter.options.indent
                             }

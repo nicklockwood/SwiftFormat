@@ -1042,6 +1042,33 @@ class IndentTests: RulesTests {
                        exclude: ["blankLinesBetweenScopes"])
     }
 
+    func testChainedFunctionIndents() {
+        let input = """
+        Button(action: {
+            print("foo")
+        })
+        .buttonStyle(bar())
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testChainedFunctionIndentWithXcodeIndentation() {
+        let input = """
+        Button(action: {
+            print("foo")
+        })
+        .buttonStyle(bar())
+        """
+        let output = """
+        Button(action: {
+            print("foo")
+        })
+            .buttonStyle(bar())
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
     func testWrappedClosureIndentAfterAssignment() {
         let input = """
         let bar =

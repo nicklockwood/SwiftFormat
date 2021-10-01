@@ -345,7 +345,7 @@ class SpacingTests: RulesTests {
     func testSpaceAroundTrailingClosure() {
         let input = "if x{ y }else{ z }"
         let output = "if x { y } else { z }"
-        testFormatting(for: input, output, rule: FormatRules.spaceAroundBraces)
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundBraces, exclude: ["conditionalBodiesOnNewline"])
     }
 
     func testNoSpaceAroundClosureInsiderParens() {

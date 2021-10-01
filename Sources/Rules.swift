@@ -1941,6 +1941,88 @@ public struct _FormatRules {
         }
     }
 
+    public let conditionalBodiesOnNewline = FormatRule(
+        help: "Place the bodies of conditional statements on a newline after brace.",
+        disabledByDefault: true,
+        sharedOptions: ["linebreaks", "indent"]
+    ) { formatter in
+        formatter.forEachToken { i, token in
+            guard ["if", "else"].contains(token.string) else {
+                return
+            }
+
+            guard var openBraceIndex = formatter.index(of: .startOfScope("{"), after: i) else {
+                return
+            }
+
+            // We need to make sure to move past any closures in the conditional
+            while formatter.isStartOfClosure(at: openBraceIndex) {
+                guard let endOfClosureIndex = formatter.index(of: .endOfScope("}"), after: openBraceIndex) else {
+                    return
+                }
+                guard let nextOpenBrace = formatter.index(of: .startOfScope("{"), after: endOfClosureIndex + 1) else {
+                    return
+                }
+                openBraceIndex = nextOpenBrace
+            }
+
+            guard var indexOfFirstTokenInNewScope = formatter.index(of: .nonSpaceOrComment, after: openBraceIndex) else {
+                // If there is only space or comments right after the opening brace we want to leave them alone
+                return
+            }
+
+            guard !formatter.tokens[indexOfFirstTokenInNewScope].isEndOfScope else {
+                // The scope is empty so just stop
+                return
+            }
+
+            guard !formatter.tokens[indexOfFirstTokenInNewScope].isLinebreak else {
+                // There is already a newline after the brace so we can just stop
+                return
+            }
+
+            formatter.insertLinebreak(at: indexOfFirstTokenInNewScope)
+
+            if formatter.tokens[indexOfFirstTokenInNewScope - 1].isSpace {
+                // We left behind a trailing space on the previous line so we should clean it up
+                formatter.removeToken(at: indexOfFirstTokenInNewScope - 1)
+                indexOfFirstTokenInNewScope -= 1
+            }
+
+            let movedTokenIndex = indexOfFirstTokenInNewScope + 1
+
+            // We want the token to be indented one level more than the conditional is
+            let indent = formatter.indentForLine(at: i) + formatter.options.indent
+            formatter.insertSpace(indent, at: movedTokenIndex)
+
+            guard var closingBraceIndex = formatter.index(of: .endOfScope("}"), after: movedTokenIndex) else {
+                return
+            }
+
+            let linebreakBeforeBrace = (movedTokenIndex ..< closingBraceIndex).contains(where: { formatter.tokens[$0].isLinebreak })
+
+            guard !linebreakBeforeBrace else {
+                // The closing brace is already on its own line so we don't need to do anything else
+                return
+            }
+
+            formatter.insertLinebreak(at: closingBraceIndex)
+
+            let lineBreakIndex = closingBraceIndex
+            closingBraceIndex += 1
+
+            let previousIndex = lineBreakIndex - 1
+            if formatter.tokens[previousIndex].isSpace {
+                // We left behind a trailing space on the previous line so we should clean it up
+                formatter.removeToken(at: previousIndex)
+                closingBraceIndex -= 1
+            }
+
+            // We want the closing brace at the same indentation level as conditional
+            formatter.insertSpace(formatter.indentForLine(at: i), at: closingBraceIndex)
+        }
+    }
+
     /// Ensure that the last item in a multi-line array literal is followed by a comma.
     /// This is useful for preventing noise in commits when items are added to end of array.
     public let trailingCommas = FormatRule(

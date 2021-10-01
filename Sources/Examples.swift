@@ -284,6 +284,22 @@ private struct Examples {
     ```
     """
 
+    let conditionalBodiesOnNewline = """
+    ```diff
+    - guard let foo = bar else { return baz }
+    + guard let foo = bar else {
+    +     return baz
+    + }
+    ```
+
+    ```diff
+    - if foo { return bar }
+    + if foo {
+    +    return bar
+    + }
+    ```
+    """
+
     let hoistPatternLet = """
     ```diff
     - (let foo, let bar) = baz()

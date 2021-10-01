@@ -325,7 +325,7 @@ class ParensTests: RulesTests {
     func testGuardParensRemoved() {
         let input = "guard (x == y) else { return }"
         let output = "guard x == y else { return }"
-        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+        testFormatting(for: input, output, rule: FormatRules.redundantParens, exclude: ["conditionalBodiesOnNewline"])
     }
 
     func testForValueParensRemoved() {

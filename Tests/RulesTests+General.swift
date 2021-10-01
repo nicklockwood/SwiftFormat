@@ -657,7 +657,7 @@ class GeneralTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "4.2")
-        testFormatting(for: input, output, rule: FormatRules.strongifiedSelf, options: options)
+        testFormatting(for: input, output, rule: FormatRules.strongifiedSelf, options: options, exclude: ["conditionalBodiesOnNewline"])
     }
 
     func testBacktickedSelfConvertedToSelfInIf() {
@@ -672,7 +672,7 @@ class GeneralTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "4.2")
-        testFormatting(for: input, output, rule: FormatRules.strongifiedSelf, options: options)
+        testFormatting(for: input, output, rule: FormatRules.strongifiedSelf, options: options, exclude: ["conditionalBodiesOnNewline"])
     }
 
     func testBacktickedSelfNotConvertedIfVersionLessThan4_2() {
@@ -682,7 +682,7 @@ class GeneralTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "4.1.5")
-        testFormatting(for: input, rule: FormatRules.strongifiedSelf, options: options)
+        testFormatting(for: input, rule: FormatRules.strongifiedSelf, options: options, exclude: ["conditionalBodiesOnNewline"])
     }
 
     func testBacktickedSelfNotConvertedIfVersionUnspecified() {
@@ -691,7 +691,7 @@ class GeneralTests: RulesTests {
             guard let `self` = self else { return }
         }
         """
-        testFormatting(for: input, rule: FormatRules.strongifiedSelf)
+        testFormatting(for: input, rule: FormatRules.strongifiedSelf, exclude: ["conditionalBodiesOnNewline"])
     }
 
     // MARK: - yodaConditions
@@ -845,7 +845,7 @@ class GeneralTests: RulesTests {
     func testSubscriptYodaConditionInIfStatementWithBraceOnNextLine() {
         let input = "if [0] == foo.bar[0]\n{ baz() }"
         let output = "if foo.bar[0] == [0]\n{ baz() }"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: FormatRules.yodaConditions, exclude: ["conditionalBodiesOnNewline"])
     }
 
     func testYodaConditionInSecondClauseOfIfStatement() {

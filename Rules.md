@@ -9,6 +9,7 @@
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
 * [blankLinesBetweenScopes](#blankLinesBetweenScopes)
 * [braces](#braces)
+* [conditionalBodiesOnNewline](#conditionalBodiesOnNewline)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
 * [duplicateImports](#duplicateImports)
@@ -348,6 +349,30 @@ Option | Description
 + else {
     // bar
   }
+```
+
+</details>
+<br/>
+
+## conditionalBodiesOnNewline
+
+Place the bodies of conditional statements on a newline after brace.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- guard let foo = bar else { return baz }
++ guard let foo = bar else {
++     return baz
++ }
+```
+
+```diff
+- if foo { return bar }
++ if foo {
++    return bar
++ }
 ```
 
 </details>

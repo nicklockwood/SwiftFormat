@@ -827,6 +827,12 @@ extension Formatter {
         case .keyword:
             return true
         default:
+            guard let prevToken = last(.nonSpaceOrComment, before: i) else {
+                return true
+            }
+            guard prevToken.isLinebreak else {
+                return false
+            }
             if let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i),
                prevToken == .keyword("return") || prevToken.isOperator(ofType: .infix)
             {

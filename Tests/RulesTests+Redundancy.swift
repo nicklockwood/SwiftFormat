@@ -4034,14 +4034,125 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
-    func testUnownedUnsafeNotStripped() {
+    func testShadowedUsedArguments() {
         let input = """
-        func foo() {
-            var num = 0
-            Just(1)
-                .sink { [unowned(unsafe) self] in
-                    num += $0
-                }
+        forEach { foo, bar in
+            guard let foo = foo, let bar = bar else {
+                return
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testShadowedPartUsedArguments() {
+        let input = """
+        forEach { foo, bar in
+            guard let foo = baz, bar == baz else {
+                return
+            }
+        }
+        """
+        let output = """
+        forEach { _, bar in
+            guard let foo = baz, bar == baz else {
+                return
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testShadowedParameterUsedInSameGuard() {
+        let input = """
+        forEach { foo in
+            guard let foo = bar, baz = foo else {
+                return
+            }
+        }
+        """
+        let output = """
+        forEach { _ in
+            guard let foo = bar, baz = foo else {
+                return
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testParameterUsedInForIn() {
+        let input = """
+        forEach { foos in
+            for foo in foos {
+                print(foo)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testParameterUsedInWhereClause() {
+        let input = """
+        forEach { foo in
+            if bar where foo {
+                print(bar)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testParameterUsedInSwitchCase() {
+        let input = """
+        forEach { foo in
+            switch bar {
+            case let baz:
+                foo = baz
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testParameterUsedInStringInterpolation() {
+        let input = """
+        forEach { foo in
+            print("\\(foo)")
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    // init
+
+    func testParameterUsedInInit() {
+        let input = """
+        init(m: Rotation) {
+            let x = sqrt(max(0, m)) / 2
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedParametersShadowedInTupleAssignment() {
+        let input = """
+        init(x: Int, y: Int, v: Vector) {
+            let (x, y) = v
+        }
+        """
+        let output = """
+        init(x _: Int, y _: Int, v: Vector) {
+            let (x, y) = v
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUsedParametersShadowedInAssignmentFromFunctionCall() {
+        let input = """
+        init(r: Double) {
+            let r = max(abs(r), epsilon)
         }
         """
         testFormatting(for: input, rule: FormatRules.unusedArguments)
@@ -4144,6 +4255,35 @@ class RedundancyTests: RulesTests {
     func testPartiallyMarkedUnusedArguments2() {
         let input = "func foo(bar _: Bar, baz: Baz) {}"
         let output = "func foo(bar _: Bar, baz _: Baz) {}"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnownedUnsafeNotStripped() {
+        let input = """
+        func foo() {
+            var num = 0
+            Just(1)
+                .sink { [unowned(unsafe) self] in
+                    num += $0
+                }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testShadowedUnusedArguments() {
+        let input = """
+        func foo(bar: String, baz: Int) {
+            let bar = "bar", baz = 5
+            print(bar, baz)
+        }
+        """
+        let output = """
+        func foo(bar _: String, baz _: Int) {
+            let bar = "bar", baz = 5
+            print(bar, baz)
+        }
+        """
         testFormatting(for: input, output, rule: FormatRules.unusedArguments)
     }
 

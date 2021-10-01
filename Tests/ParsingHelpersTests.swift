@@ -880,7 +880,79 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["actor", "bar"])
-        XCTAssertEqual(index, 12)
+        XCTAssertEqual(index, 11)
+    }
+
+    func testProcessGuardCaseLetVariables() {
+        let formatter = Formatter(tokenize("""
+        guard case let Foo.bar(foo) = baz
+        else { return }
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo"])
+        XCTAssertEqual(index, 15)
+    }
+
+    func testProcessLetDictionaryLiteralVariables() {
+        let formatter = Formatter(tokenize("""
+        let foo = [bar: 1, baz: 2]
+        print(foo)
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo"])
+        XCTAssertEqual(index, 17)
+    }
+
+    func testProcessLetStringLiteralFollowedByPrint() {
+        let formatter = Formatter(tokenize("""
+        let bar = "bar"
+        print(bar)
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["bar"])
+        XCTAssertEqual(index, 8)
+    }
+
+    func testProcessLetNumericLiteralFollowedByPrint() {
+        let formatter = Formatter(tokenize("""
+        let bar = 5
+        print(bar)
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["bar"])
+        XCTAssertEqual(index, 6)
+    }
+
+    func testProcessLetBooleanLiteralFollowedByPrint() {
+        let formatter = Formatter(tokenize("""
+        let bar = true
+        print(bar)
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["bar"])
+        XCTAssertEqual(index, 6)
+    }
+
+    func testProcessLetNilLiteralFollowedByPrint() {
+        let formatter = Formatter(tokenize("""
+        let bar: Bar? = nil
+        print(bar)
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["bar"])
+        XCTAssertEqual(index, 10)
     }
 
     // MARK: parseDeclarations

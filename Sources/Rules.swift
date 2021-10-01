@@ -3322,20 +3322,86 @@ public struct _FormatRules {
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
-        func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: CountableRange<Int>) {
-            for i in range {
+        func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T],
+                           in range: CountableRange<Int>)
+        {
+            var isDeclaration = false
+            var wasDeclaration = false
+            var isConditional = false
+            var locals = Set<String>()
+            var tempLocals = Set<String>()
+            func pushLocals() {
+                wasDeclaration = isDeclaration
+                isDeclaration = false
+                locals.formUnion(tempLocals)
+                tempLocals.removeAll()
+            }
+            var i = range.lowerBound
+            while i < range.upperBound {
                 let token = formatter.tokens[i]
-                if case .identifier = token, let index = argNames.index(of: token.unescaped()),
-                   formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
-                   formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
-                   formatter.currentScope(at: i) == .startOfScope("[")
-                {
-                    argNames.remove(at: index)
-                    associatedData.remove(at: index)
-                    if argNames.isEmpty {
+                switch token {
+                case .keyword("let"), .keyword("var"), .keyword("func"), .keyword("for"):
+                    isDeclaration = true
+                    isConditional = formatter.isConditionalStatement(at: i)
+                case .identifier:
+                    if formatter.isStartOfStatement(at: i) {
+                        pushLocals()
+                        wasDeclaration = false
+                    }
+                    let name = token.unescaped()
+                    guard let index = argNames.index(of: name), !locals.contains(name) else {
                         break
                     }
+                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
+                       formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
+                       formatter.currentScope(at: i) == .startOfScope("[")
+                    {
+                        if isDeclaration {
+                            tempLocals.insert(name)
+                            break
+                        }
+                        argNames.remove(at: index)
+                        associatedData.remove(at: index)
+                        if argNames.isEmpty {
+                            return
+                        }
+                    }
+                case .startOfScope("{"):
+                    pushLocals()
+                    guard let endIndex = formatter.endOfScope(at: i) else {
+                        argNames.removeAll()
+                        return
+                    }
+                    removeUsed(from: &argNames, with: &associatedData, in: i + 1 ..< endIndex)
+                    i = endIndex
+                case .startOfScope("("):
+                    if !isDeclaration {
+                        wasDeclaration = false
+                    }
+                case .operator("=", .infix), .delimiter(":"), .startOfScope(":"),
+                     .keyword("in"), .keyword("where"):
+                    wasDeclaration = isDeclaration
+                    isDeclaration = false
+                case .delimiter(","):
+                    if formatter.currentScope(at: i) == .startOfScope("(") {
+                        break
+                    }
+                    if isConditional {
+                        wasDeclaration = false
+                    }
+                    if wasDeclaration {
+                        pushLocals()
+                        isDeclaration = true
+                    } else {
+                        pushLocals()
+                    }
+                case .delimiter(";"):
+                    pushLocals()
+                    wasDeclaration = false
+                default:
+                    break
                 }
+                i += 1
             }
         }
         // Closure arguments

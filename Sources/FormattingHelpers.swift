@@ -44,9 +44,12 @@ extension Formatter {
                     names.insert(name)
                 }
                 inner: while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
-                    switch tokens[nextIndex] {
+                    let token = tokens[nextIndex]
+                    switch token {
                     case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
                         break
+                    case .identifier("self") where removeSelf && isEnabled:
+                        _ = self.removeSelf(at: nextIndex, localNames: names)
                     case .startOfScope("<"), .startOfScope("["), .startOfScope("("),
                          .startOfScope where token.isStringDelimiter:
                         guard let endIndex = endOfScope(at: nextIndex) else {
@@ -69,6 +72,14 @@ extension Formatter {
                         } else {
                             index = endIndex
                         }
+                        fallthrough
+                    case .number, .identifier:
+                        index = max(index, nextIndex)
+                        if nextToken(after: index, where: {
+                            $0 == .delimiter(",") || $0.isOperator(ofType: .infix)
+                        }) == nil {
+                            return
+                        }
                         continue
                     case .keyword("let"), .keyword("var"):
                         declarationIndex = nextIndex
@@ -87,8 +98,6 @@ extension Formatter {
                         }
                         index = nextIndex
                         break inner
-                    case .identifier("self") where removeSelf && isEnabled:
-                        _ = self.removeSelf(at: nextIndex, localNames: names)
                     default:
                         break
                     }

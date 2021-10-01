@@ -985,7 +985,7 @@ private struct Inference {
                           let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex),
                           let name = formatter.token(at: nextIndex)?.unescaped(),
                           !localNames.contains(name), !selfRequired.contains(name),
-                          !["min", "max"].contains(name) // Special case for global Swift functions
+                          !_FormatRules.globalSwiftFunctions.contains(name)
                     else {
                         break
                     }

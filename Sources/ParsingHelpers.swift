@@ -1648,6 +1648,11 @@ extension _FormatRules {
         ["mutating", "nonmutating"],
         ["prefix", "infix", "postfix"],
     ]
+
+    // Global swift functions
+    static let globalSwiftFunctions = [
+        "min", "max", "abs", "print", "stride", "zip",
+    ]
 }
 
 extension Token {

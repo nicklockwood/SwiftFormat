@@ -3074,7 +3074,7 @@ public struct _FormatRules {
                           let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex),
                           let name = formatter.token(at: nextIndex)?.unescaped(),
                           !localNames.contains(name), !selfRequired.contains(name),
-                          !["min", "max"].contains(name) // Special case for global Swift functions
+                          !globalSwiftFunctions.contains(name)
                     else {
                         break
                     }

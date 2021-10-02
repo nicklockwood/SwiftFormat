@@ -1416,6 +1416,55 @@ class ParsingHelpersTests: XCTestCase {
         _ = Formatter(tokens).parseDeclarations()
     }
 
+    // MARK: declarationScope
+
+    func testDeclarationScope_classAndGlobals() {
+        let input = """
+        let foo = Foo()
+
+        class Foo {
+            let instanceMember = Bar()
+        }
+
+        let bar = Bar()
+        """
+
+        let tokens = tokenize(input)
+        let formatter = Formatter(tokens)
+
+        XCTAssertEqual(formatter.declarationScope(at: 3), .global) // foo
+        XCTAssertEqual(formatter.declarationScope(at: 20), .type) // instanceMember
+        XCTAssertEqual(formatter.declarationScope(at: 33), .global) // bar
+    }
+
+    func testDeclarationScope_classAndLocal() {
+        let input = """
+        class Foo {
+            let instanceMember1 = Bar()
+
+            var instanceMember2: Bar = {
+                Bar()
+            }
+
+            func instanceMethod() {
+                let localMember1 = Bar()
+            }
+
+            let instanceMember3 = Bar()
+        }
+        """
+
+        let tokens = tokenize(input)
+        let formatter = Formatter(tokens)
+
+        XCTAssertEqual(formatter.declarationScope(at: 9), .type) // instanceMember1
+        XCTAssertEqual(formatter.declarationScope(at: 21), .type) // instanceMember2
+        XCTAssertEqual(formatter.declarationScope(at: 31), .local) // Bar()
+        XCTAssertEqual(formatter.declarationScope(at: 42), .type) // instanceMethod
+        XCTAssertEqual(formatter.declarationScope(at: 51), .local) // localMember1
+        XCTAssertEqual(formatter.declarationScope(at: 66), .type) // instanceMember3
+    }
+
     // MARK: spaceEquivalentToWidth
 
     func testSpaceEquivalentToWidth() {

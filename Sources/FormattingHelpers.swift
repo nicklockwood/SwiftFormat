@@ -1354,7 +1354,8 @@ extension Formatter {
             else { continue }
 
             // Build the MARK declaration, but only when there is more than one category present.
-            if numberOfCategories > 1,
+            if options.markCategories,
+               numberOfCategories > 1,
                let markComment = category.markComment(from: options.categoryMarkComment)
             {
                 let firstDeclaration = sortedDeclarations[indexOfFirstDeclaration].declaration

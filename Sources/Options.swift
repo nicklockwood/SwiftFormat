@@ -112,8 +112,20 @@ public enum WrapReturnType: String, CaseIterable {
 
 /// Annotation which should be kept when removing a redundant type
 public enum RedundantType: String, CaseIterable {
+    /// Preserves the type as a part of the property definition:
+    /// `let foo: Foo = Foo()` becomes `let foo: Foo = .init()`
     case explicit
+
+    /// Uses type inference to omit the type in the property definition:
+    /// `let foo: Foo = Foo()` becomes `let foo = Foo()`
     case inferred
+
+    /// Uses `.inferred` for properties within local scopes (method bodies, etc.),
+    /// but `.explicit` for globals and properties within types.
+    ///  - This is because type checking for globals and type properties
+    ///    using inferred types can be more expensive.
+    ///    https://twitter.com/uint_min/status/1441448033988722691?s=21
+    case inferLocalsOnly = "infer-locals-only"
 }
 
 /// Argument type for empty brace spacing behavior

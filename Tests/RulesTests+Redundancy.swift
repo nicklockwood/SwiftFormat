@@ -878,46 +878,59 @@ class RedundancyTests: RulesTests {
     func testVarRedundantTypeRemoval() {
         let input = "var view: UIView = UIView()"
         let output = "var view = UIView()"
-        testFormatting(for: input, output, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testVarRedundantArrayTypeRemoval() {
         let input = "var foo: [String] = [String]()"
         let output = "var foo = [String]()"
-        testFormatting(for: input, output, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testVarRedundantDictionaryTypeRemoval() {
         let input = "var foo: [String: Int] = [String: Int]()"
         let output = "var foo = [String: Int]()"
-        testFormatting(for: input, output, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testLetRedundantGenericTypeRemoval() {
         let input = "let relay: BehaviourRelay<Int?> = BehaviourRelay<Int?>(value: nil)"
         let output = "let relay = BehaviourRelay<Int?>(value: nil)"
-        testFormatting(for: input, output, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testVarNonRedundantTypeDoesNothing() {
         let input = "var view: UIView = UINavigationBar()"
-        testFormatting(for: input, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
     func testLetRedundantTypeRemoval() {
         let input = "let view: UIView = UIView()"
         let output = "let view = UIView()"
-        testFormatting(for: input, output, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testLetNonRedundantTypeDoesNothing() {
         let input = "let view: UIView = UINavigationBar()"
-        testFormatting(for: input, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
     func testTypeNoRedundancyDoesNothing() {
         let input = "let foo: Bar = 5"
-        testFormatting(for: input, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
     func testClassTwoVariablesNoRedundantTypeDoesNothing() {
@@ -927,7 +940,8 @@ class RedundancyTests: RulesTests {
             var timeoutIntervalForRequest: TimeInterval = LGCoreKitConstants.websocketTimeOutTimeInterval
         }
         """
-        testFormatting(for: input, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
     func testRedundantTypeRemovedIfValueOnNextLine() {
@@ -939,7 +953,9 @@ class RedundancyTests: RulesTests {
         let view
             = UIView()
         """
-        testFormatting(for: input, output, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypeRemovedIfValueOnNextLine2() {
@@ -951,24 +967,31 @@ class RedundancyTests: RulesTests {
         let view =
             UIView()
         """
-        testFormatting(for: input, output, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypeRemovalWithComment() {
         let input = "var view: UIView /* view */ = UIView()"
         let output = "var view /* view */ = UIView()"
-        testFormatting(for: input, output, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypeRemovalWithComment2() {
         let input = "var view: UIView = /* view */ UIView()"
         let output = "var view = /* view */ UIView()"
-        testFormatting(for: input, output, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testNonRedundantTernaryConditionTypeNotRemoved() {
         let input = "let foo: Bar = Bar.baz() ? .bar1 : .bar2"
-        testFormatting(for: input, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
     func testTernaryConditionAfterLetNotTreatedAsPartOfExpression() {
@@ -980,41 +1003,49 @@ class RedundancyTests: RulesTests {
         let foo = Bar.baz()
         baz ? bar2() : bar2()
         """
-        testFormatting(for: input, output, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testNoRemoveRedundantTypeIfVoid() {
         let input = "let foo: Void = Void()"
+        let options = FormatOptions(redundantType: .inferred)
         testFormatting(for: input, rule: FormatRules.redundantType,
-                       exclude: ["void"])
+                       options: options, exclude: ["void"])
     }
 
     func testNoRemoveRedundantTypeIfVoid2() {
         let input = "let foo: () = ()"
+        let options = FormatOptions(redundantType: .inferred)
         testFormatting(for: input, rule: FormatRules.redundantType,
-                       exclude: ["void"])
+                       options: options, exclude: ["void"])
     }
 
     func testNoRemoveRedundantTypeIfVoid3() {
         let input = "let foo: [Void] = [Void]()"
-        testFormatting(for: input, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
     func testNoRemoveRedundantTypeIfVoid4() {
         let input = "let foo: Array<Void> = Array<Void>()"
+        let options = FormatOptions(redundantType: .inferred)
         testFormatting(for: input, rule: FormatRules.redundantType,
-                       exclude: ["typeSugar"])
+                       options: options, exclude: ["typeSugar"])
     }
 
     func testNoRemoveRedundantTypeIfVoid5() {
         let input = "let foo: Void? = Void?.none"
-        testFormatting(for: input, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
     func testNoRemoveRedundantTypeIfVoid6() {
         let input = "let foo: Optional<Void> = Optional<Void>.none"
+        let options = FormatOptions(redundantType: .inferred)
         testFormatting(for: input, rule: FormatRules.redundantType,
-                       exclude: ["typeSugar"])
+                       options: options, exclude: ["typeSugar"])
     }
 
     func testRedundantTypeWithLiterals() {
@@ -1056,7 +1087,9 @@ class RedundancyTests: RulesTests {
         let f1 = ["foo": 5]
         let f2: [String: Int?] = ["foo": nil]
         """
-        testFormatting(for: input, output, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypePreservesLiteralRepresentableTypes() {
@@ -1068,7 +1101,8 @@ class RedundancyTests: RulesTests {
         let e: MyArrayRepresentable = ["bar"]
         let f: MyDictionaryRepresentable = ["baz": 1]
         """
-        testFormatting(for: input, rule: FormatRules.redundantType)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
     // --redundanttype explicit
@@ -1077,14 +1111,16 @@ class RedundancyTests: RulesTests {
         let input = "var view: UIView = UIView()"
         let output = "var view: UIView = .init()"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testLetRedundantGenericTypeRemovalExplicitType() {
         let input = "let relay: BehaviourRelay<Int?> = BehaviourRelay<Int?>(value: nil)"
         let output = "let relay: BehaviourRelay<Int?> = .init(value: nil)"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testVarNonRedundantTypeDoesNothingExplicitType() {
@@ -1097,7 +1133,8 @@ class RedundancyTests: RulesTests {
         let input = "let view: UIView = UIView()"
         let output = "let view: UIView = .init()"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypeRemovedIfValueOnNextLineExplicitType() {
@@ -1110,7 +1147,8 @@ class RedundancyTests: RulesTests {
             = .init()
         """
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypeRemovedIfValueOnNextLine2ExplicitType() {
@@ -1123,21 +1161,24 @@ class RedundancyTests: RulesTests {
             .init()
         """
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypeRemovalWithCommentExplicitType() {
         let input = "var view: UIView /* view */ = UIView()"
         let output = "var view: UIView /* view */ = .init()"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypeRemovalWithComment2ExplicitType() {
         let input = "var view: UIView = /* view */ UIView()"
         let output = "var view: UIView = /* view */ .init()"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypeRemovalWithStaticMember() {
@@ -1158,7 +1199,8 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypeRemovalWithStaticFunc() {
@@ -1179,7 +1221,8 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypeDoesNothingWithStaticMemberMakingCopy() {
@@ -1216,14 +1259,58 @@ class RedundancyTests: RulesTests {
         let foo: Foo = .init()
         """
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     func testRedundantTypeIfVoid() {
         let input = "let foo: [Void] = [Void]()"
         let output = "let foo: [Void] = .init()"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
+    // --redundanttype infer-locals-only
+
+    func testRedundantTypeinferLocalsOnly() {
+        let input = """
+        let globalFoo: Foo = Foo()
+
+        struct SomeType {
+            let instanceFoo: Foo = Foo()
+
+            func method() {
+                let localFoo: Foo = Foo()
+                let localString: String = "foo"
+            }
+
+            let instanceString: String = "foo"
+        }
+
+        let globalString: String = "foo"
+        """
+
+        let output = """
+        let globalFoo: Foo = .init()
+
+        struct SomeType {
+            let instanceFoo: Foo = .init()
+
+            func method() {
+                let localFoo = Foo()
+                let localString = "foo"
+            }
+
+            let instanceString: String = "foo"
+        }
+
+        let globalString: String = "foo"
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
     }
 
     // MARK: - redundantNilInit

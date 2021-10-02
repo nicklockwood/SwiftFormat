@@ -871,11 +871,12 @@ Option | Description
 
 ## organizeDeclarations
 
-Organizes declarations within class, struct, and enum bodies.
+Organizes declarations within class, struct, enum, actor, and extension bodies.
 
 Option | Description
 --- | ---
 `--categorymark` | Template for category mark comments. Defaults to "MARK: %c"
+`--markcategories` | Insert MARK comments between categories (true by default)
 `--beforemarks` | Declarations placed before first mark (e.g. `typealias,struct`)
 `--lifecycle` | Names of additional Lifecycle methods (e.g. `viewDidLoad`)
 `--organizetypes` | Declarations to organize (default: `class,actor,struct,enum`)

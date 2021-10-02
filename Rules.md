@@ -1365,14 +1365,30 @@ Remove redundant type from variable declarations.
 
 Option | Description
 --- | ---
-`--redundanttype` | Keep "inferred" (default) or "explicit" type annotation
+`--redundanttype` | "inferred" (default), "explicit", or "infer-locals-only"
 
 <details>
 <summary>Examples</summary>
 
 ```diff
+// inferred
 - let view: UIView = UIView()
 + let view = UIView()
+
+// explicit
+- let view: UIView = UIView()
++ let view: UIView = .init()
+
+// infer-locals-only
+  class Foo {
+-     let view: UIView = UIView()
++     let view: UIView = .init()
+
+      func method() {
+-         let view: UIView = UIView()
++         let view = UIView()
+      }
+  }
 ```
 
 </details>

@@ -1226,6 +1226,45 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
     }
 
+    func testRedundantTypeinferLocalsOnly() {
+        let input = """
+        let globalFoo: Foo = Foo()
+
+        struct SomeType {
+            let instanceFoo: Foo = Foo()
+
+            func method() {
+                let localFoo: Foo = Foo()
+                let localString: String = "foo"
+            }
+
+            let instanceString: String = "foo"
+        }
+
+        let globalString: String = "foo"
+        """
+
+        let output = """
+        let globalFoo: Foo = .init()
+
+        struct SomeType {
+            let instanceFoo: Foo = .init()
+
+            func method() {
+                let localFoo = Foo()
+                let localString = "foo"
+            }
+
+            let instanceString: String = "foo"
+        }
+
+        let globalString: String = "foo"
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
     // MARK: - redundantNilInit
 
     func testRemoveRedundantNilInit() {

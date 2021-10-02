@@ -806,8 +806,24 @@ private struct Examples {
 
     let redundantType = """
     ```diff
+    // inferred
     - let view: UIView = UIView()
     + let view = UIView()
+
+    // explicit
+    - let view: UIView = UIView()
+    + let view: UIView = .init()
+
+    // infer-locals-only
+      class Foo {
+    -     let view: UIView = UIView()
+    +     let view: UIView = .init()
+
+          func method() {
+    -         let view: UIView = UIView()
+    +         let view = UIView()
+          }
+      }
     ```
     """
 

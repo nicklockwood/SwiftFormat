@@ -5534,11 +5534,11 @@ public struct _FormatRules {
     }
 
     public let organizeDeclarations = FormatRule(
-        help: "Organizes declarations within class, struct, and enum bodies.",
+        help: "Organizes declarations within class, struct, enum, actor, and extension bodies.",
         runOnceOnly: true,
         disabledByDefault: true,
         orderAfter: ["extensionAccessControl", "redundantFileprivate"],
-        options: ["categorymark", "beforemarks", "lifecycle", "organizetypes",
+        options: ["categorymark", "markcategories", "beforemarks", "lifecycle", "organizetypes",
                   "structthreshold", "classthreshold", "enumthreshold", "extensionlength"],
         sharedOptions: ["lineaftermarks"]
     ) { formatter in

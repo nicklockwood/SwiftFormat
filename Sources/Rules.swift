@@ -682,7 +682,30 @@ public struct _FormatRules {
                 return
             }
 
+            /// The implementation of RedundantType uses inferred or explicit,
+            /// potentially depending on the context.
+            enum RedundantTypeImplementation {
+                case inferred
+                case explicit
+            }
+
+            let implementation: RedundantTypeImplementation
+
             switch formatter.options.redundantType {
+            case .inferred:
+                implementation = .inferred
+            case .explicit:
+                implementation = .explicit
+            case .inferLocalsOnly:
+                switch formatter.declarationScope(at: i) {
+                case .global, .type:
+                    implementation = .explicit
+                case .local:
+                    implementation = .inferred
+                }
+            }
+
+            switch implementation {
             case .inferred:
                 formatter.removeTokens(in: colonIndex ... typeEndIndex)
                 if formatter.tokens[colonIndex - 1].isSpace {

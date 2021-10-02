@@ -1424,6 +1424,67 @@ extension Formatter {
         }
     }
 
+    /// The type of scope that a declaration is contained within
+    enum DeclarationScope {
+        /// The declaration is a top-level global
+        case global
+
+        /// The declaration is a member of some type
+        case type
+
+        /// The declaration is within some local scope,
+        /// like a function body.
+        case local
+    }
+
+    /// The declaration scope (global, type, or local) that the
+    /// given token index is contained by.
+    func declarationScope(at i: Int) -> DeclarationScope {
+        /// Declarations which have `DeclarationScope.type`
+        let typeDeclararions = Set(["class", "struct", "enum", "actor", "extension"])
+
+        /// Declarations which have `DeclarationScope.local`
+        let localDeclararions = Set(["let", "var", "func", "subscript", "init", "deinit"])
+
+        let allDeclarationScopes = typeDeclararions.union(localDeclararions)
+
+        // back track through tokens until we find a startOfScope("{") that isDeclarationTypeKeyword
+        //  - we have to skip scopes that sit between this token and the its actual start of scope,
+        //    so we have to keep track of the number of unpaired end scope tokens we have encountered
+        var unpairedEndScopeCount = 0
+        var currentIndex = i
+        var startOfScope: Int?
+
+        while startOfScope == nil, currentIndex > 0 {
+            currentIndex -= 1
+
+            if tokens[currentIndex] == .endOfScope("}") {
+                unpairedEndScopeCount += 1
+            } else if tokens[currentIndex] == .startOfScope("{") {
+                if unpairedEndScopeCount == 0 {
+                    startOfScope = currentIndex
+                } else {
+                    unpairedEndScopeCount -= 1
+                }
+            }
+        }
+
+        // If this declaration isn't within any scope,
+        // it must be a global.
+        guard
+            let startOfScopeIndex = startOfScope,
+            let declarationTypeKeyword = lastToken(before: startOfScopeIndex, where: { allDeclarationScopes.contains($0.string) })
+        else {
+            return .global
+        }
+
+        if typeDeclararions.contains(declarationTypeKeyword.string) {
+            return .type
+        } else {
+            return .local
+        }
+    }
+
     // Swift modifier keywords, in preferred order
     var modifierOrder: [String] {
         var priorities = [String: Int]()

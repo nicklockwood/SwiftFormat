@@ -170,6 +170,7 @@ class MetadataTests: XCTestCase {
                 case .identifier("organizeType"):
                     referencedOptions += [
                         Descriptors.categoryMarkComment,
+                        Descriptors.markCategories,
                         Descriptors.beforeMarks,
                         Descriptors.lifecycleMethods,
                         Descriptors.organizeTypes,

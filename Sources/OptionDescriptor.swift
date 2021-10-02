@@ -732,6 +732,14 @@ struct _Descriptors {
         fromArgument: { $0 },
         toArgument: { $0 }
     )
+    let markCategories = OptionDescriptor(
+        argumentName: "markcategories",
+        displayName: "Mark Categories",
+        help: "Insert MARK comments between categories (true by default)",
+        keyPath: \.markCategories,
+        trueValues: ["true"],
+        falseValues: ["false"]
+    )
     let categoryMarkComment = OptionDescriptor(
         argumentName: "categorymark",
         displayName: "Category Mark Comment",

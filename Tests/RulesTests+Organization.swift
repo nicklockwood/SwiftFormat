@@ -1271,6 +1271,64 @@ class OrganizationTests: RulesTests {
         )
     }
 
+    func testOrganizeWithNoCategoryMarks_noSpacesBetweenDeclarations() {
+        let input = """
+        class Foo {
+            private func privateMethod() {}
+            private let bar = 1
+            public let baz = 1
+        }
+        """
+
+        let output = """
+        class Foo {
+            public let baz = 1
+
+            private let bar = 1
+
+            private func privateMethod() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(markCategories: false)
+        )
+    }
+
+    func testOrganizeWithNoCategoryMarks_withSpacesBetweenDeclarations() {
+        let input = """
+        class Foo {
+            private func privateMethod() {}
+
+            private let bar = 1
+
+            public let baz = 1
+
+            private func anotherPrivateMethod() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+            public let baz = 1
+
+            private let bar = 1
+
+            private func privateMethod() {}
+
+            private func anotherPrivateMethod() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(markCategories: false)
+        )
+    }
+
     // MARK: extensionAccessControl .onDeclarations
 
     func testUpdatesVisibilityOfExtensionMembers() {

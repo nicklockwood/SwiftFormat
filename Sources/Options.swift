@@ -358,6 +358,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var markExtensions: MarkMode
     public var extensionMarkComment: String
     public var groupedExtensionMarkComment: String
+    public var markCategories: Bool
     public var categoryMarkComment: String
     public var beforeMarks: Set<String>
     public var lifecycleMethods: Set<String>
@@ -440,6 +441,7 @@ public struct FormatOptions: CustomStringConvertible {
                 markExtensions: MarkMode = .always,
                 extensionMarkComment: String = "MARK: - %t + %c",
                 groupedExtensionMarkComment: String = "MARK: %c",
+                markCategories: Bool = true,
                 categoryMarkComment: String = "MARK: %c",
                 beforeMarks: Set<String> = [],
                 lifecycleMethods: Set<String> = [],
@@ -516,6 +518,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.markExtensions = markExtensions
         self.extensionMarkComment = extensionMarkComment
         self.groupedExtensionMarkComment = groupedExtensionMarkComment
+        self.markCategories = markCategories
         self.categoryMarkComment = categoryMarkComment
         self.beforeMarks = beforeMarks
         self.lifecycleMethods = lifecycleMethods

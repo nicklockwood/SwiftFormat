@@ -230,7 +230,7 @@ public extension UIView {
     }
 
     func updateLayout() throws {
-        guard let layout = self.layout(create: true) else {
+        guard let layout = layout(create: true) else {
             return
         }
         frame = CGRect(x: try layout.computedValue(forKey: "left"),

@@ -1438,7 +1438,7 @@ class IndentTests: RulesTests {
     func testChainedFunctionInGuardIndentation() {
         let input = """
         guard
-            let foo = self.foo
+            let baz = foo
             .bar
             .baz
         else { return }
@@ -1449,14 +1449,14 @@ class IndentTests: RulesTests {
     func testChainedFunctionInGuardWithXcodeIndentation() {
         let input = """
         guard
-            let foo = self.foo
+            let baz = foo
             .bar
             .baz
         else { return }
         """
         let output = """
         guard
-            let foo = self.foo
+            let baz = foo
                 .bar
                 .baz
         else { return }

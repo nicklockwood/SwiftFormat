@@ -1237,7 +1237,7 @@ public class LayoutNode: NSObject {
                             break
                         }
                     }
-                    if let viewControllerClass = self.viewControllerClass,
+                    if let viewControllerClass = viewControllerClass,
                        let viewController = try? viewControllerClass.create(with: self),
                        let _ = try? viewController.value(forSymbol: symbol)
                     {
@@ -1474,7 +1474,7 @@ public class LayoutNode: NSObject {
                 return nil
             }
             let subKeyPath = String(keyPath[range.upperBound...])
-            if let value = try self.value(forKeyPath: subKeyPath, in: object) {
+            if let value = try value(forKeyPath: subKeyPath, in: object) {
                 return value
             }
             throw SymbolError("Unknown property \(subKeyPath) in \(key)", for: keyPath)
@@ -1492,7 +1492,7 @@ public class LayoutNode: NSObject {
         let key = String(keyPath[keyPath.startIndex ..< range.lowerBound])
         if let (_, object) = children.first(where: { $0.label == key }) {
             let subKeyPath = String(keyPath[range.upperBound...])
-            if let value = try self.value(forKeyPath: subKeyPath, in: object) {
+            if let value = try value(forKeyPath: subKeyPath, in: object) {
                 return value
             }
             throw SymbolError("Unknown property \(subKeyPath) in \(key)", for: keyPath)
@@ -1583,7 +1583,7 @@ public class LayoutNode: NSObject {
                 return true // Localizable strings are always constant
             case let head where head.hasPrefix("#"):
                 let id = String(head.dropFirst())
-                if let node = self.node(withID: id) {
+                if let node = node(withID: id) {
                     return node.symbolIsConstant(tail)
                 }
             default:

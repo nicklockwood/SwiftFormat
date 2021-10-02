@@ -394,7 +394,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     decoder.codingPath.append(key)
     defer { self.decoder.codingPath.removeLast() }
 
-    guard let value = self.container[key.stringValue] else {
+    guard let value = container[key.stringValue] else {
       throw DecodingError.valueNotFound(KeyedDecodingContainer<NestedKey>.self,
                                         DecodingError.Context(codingPath: codingPath,
                                                               debugDescription: "Cannot get nested keyed container -- no value found for key \"\(key.stringValue)\""))

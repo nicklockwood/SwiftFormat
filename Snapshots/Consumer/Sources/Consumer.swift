@@ -815,7 +815,7 @@ extension Consumer.Error: CustomStringConvertible {
     /// Human-readable error description
     public var description: String {
         var token = ""
-        if var remaining = self.remaining, let first = remaining.first {
+        if var remaining = remaining, let first = remaining.first {
             let whitespace = " \t\n\r".unicodeScalars
             if whitespace.contains(first) {
                 token = String(first)

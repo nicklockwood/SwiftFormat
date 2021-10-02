@@ -2794,7 +2794,10 @@ public struct _FormatRules {
                                 formatter.processDeclaredVariables(at: &i, names: &members)
                             }
                         } else {
-                            formatter.processDeclaredVariables(at: &i, names: &localNames)
+                            let removeSelf = explicitSelf != .insert &&
+                                formatter.isConditionalStatement(at: i)
+                            formatter.processDeclaredVariables(at: &i, names: &localNames,
+                                                               removeSelf: removeSelf)
                         }
                     case .keyword("func"):
                         guard let nameToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) else {
@@ -2925,6 +2928,12 @@ public struct _FormatRules {
                         var scopedNames = localNames
                         formatter.processDeclaredVariables(at: &index, names: &scopedNames,
                                                            removeSelf: explicitSelf != .insert)
+                        while formatter.currentScope(at: index) == .startOfScope("["),
+                              let endIndex = formatter.endOfScope(at: index)
+                        {
+                            // TODO: find less hacky workaround
+                            index = endIndex + 1
+                        }
                         if scopeStack.last?.token == .startOfScope("(") {
                             scopeStack.removeLast()
                         }

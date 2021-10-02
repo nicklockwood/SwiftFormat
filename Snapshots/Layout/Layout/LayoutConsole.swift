@@ -241,7 +241,7 @@ private class LayoutErrorView: UIView, LayoutLoading {
     }
 
     @objc private func _selectMatch(_ sender: UIButton) {
-        if let error = self.error, case let .multipleMatches(matches, path) = error {
+        if let error = error, case let .multipleMatches(matches, path) = error {
             loader.setSourceURL(matches[sender.tag], for: path)
         }
         ReloadManager.reload(hard: false)

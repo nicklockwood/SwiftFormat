@@ -3016,6 +3016,26 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testShadowedSelfRemovedInGuardLet() {
+        let input = """
+        func foo() {
+            guard let optional = self.optional else {
+                return
+            }
+            print(optional)
+        }
+        """
+        let output = """
+        func foo() {
+            guard let optional = optional else {
+                return
+            }
+            print(optional)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {

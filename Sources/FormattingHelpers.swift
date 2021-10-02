@@ -30,6 +30,7 @@ extension Formatter {
         let isConditional = isConditionalStatement(at: index)
         var declarationIndex: Int? = -1
         var scopeIndexStack = [Int]()
+        var locals = Set<String>()
         while let token = self.token(at: index) {
             outer: switch token {
             case .identifier where last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator == false:
@@ -41,7 +42,7 @@ extension Formatter {
                 }
                 let name = token.unescaped()
                 if name != "_", declarationIndex != nil || !isConditional {
-                    names.insert(name)
+                    locals.insert(name)
                 }
                 inner: while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
                     let token = tokens[nextIndex]
@@ -78,14 +79,17 @@ extension Formatter {
                         if nextToken(after: index, where: {
                             $0 == .delimiter(",") || $0.isOperator(ofType: .infix)
                         }) == nil {
+                            names.formUnion(locals)
                             return
                         }
                         continue
                     case .keyword("let"), .keyword("var"):
+                        names.formUnion(locals)
                         declarationIndex = nextIndex
                         index = nextIndex
                         break inner
                     case .keyword, .startOfScope("{"), .endOfScope("}"), .startOfScope(":"):
+                        names.formUnion(locals)
                         return
                     case .endOfScope(")"):
                         let scopeIndex = scopeIndexStack.popLast() ?? -1
@@ -97,6 +101,7 @@ extension Formatter {
                             declarationIndex = nil
                         }
                         index = nextIndex
+                        names.formUnion(locals)
                         break inner
                     default:
                         break
@@ -111,8 +116,7 @@ extension Formatter {
                     break
                 }
                 guard let endIndex = self.index(of: .endOfScope(")"), after: index) else {
-                    fatalError("Expected )", at: index)
-                    return
+                    return fatalError("Expected )", at: index)
                 }
                 guard tokens[index ..< endIndex].contains(where: {
                     [.keyword("let"), .keyword("var")].contains($0)
@@ -124,6 +128,7 @@ extension Formatter {
             case .startOfScope("{"):
                 guard isStartOfClosure(at: index), let nextIndex = endOfScope(at: index) else {
                     index -= 1
+                    names.formUnion(locals)
                     return
                 }
                 index = nextIndex

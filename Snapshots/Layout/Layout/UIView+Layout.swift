@@ -341,7 +341,7 @@ extension UIView: LayoutManaged {
 
     /// Called immediately after a child node is added
     @objc open func didInsertChildNode(_ node: LayoutNode, at index: Int) {
-        if let viewController = self.viewController {
+        if let viewController = viewController {
             for controller in node.viewControllers {
                 viewController.addChild(controller)
             }

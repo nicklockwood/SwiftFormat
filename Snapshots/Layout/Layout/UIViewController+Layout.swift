@@ -443,7 +443,7 @@ extension UITabBarController {
 
     open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
         if let viewController = node.viewController,
-           var viewControllers = self.viewControllers,
+           var viewControllers = viewControllers,
            let index = viewControllers.index(of: viewController)
         {
             viewControllers.remove(at: index)

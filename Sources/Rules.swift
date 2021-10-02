@@ -3129,9 +3129,10 @@ public struct _FormatRules {
                        let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index)
                     {
                         switch prevToken {
-                        case .identifier, .number,
-                             .operator where ![.operator("=", .infix), .operator(".", .prefix)].contains(prevToken),
-                             .endOfScope where prevToken.isStringDelimiter:
+                        case .identifier, .number, .endOfScope,
+                             .operator where ![
+                                 .operator("=", .infix), .operator(".", .prefix)
+                             ].contains(prevToken):
                             isAssignment = false
                             lastKeyword = ""
                         default:

@@ -3755,6 +3755,30 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testRedundantSelfRuleFailsInInitOnlyMode2() {
+        let input = """
+        struct Mesh {
+            var storage: Storage
+            init(vertices: [Vertex]) {
+                let isConvex = pointsAreConvex(vertices)
+                storage = Storage(vertices: vertices)
+            }
+        }
+        """
+        let output = """
+        struct Mesh {
+            var storage: Storage
+            init(vertices: [Vertex]) {
+                let isConvex = pointsAreConvex(vertices)
+                self.storage = Storage(vertices: vertices)
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf,
+                       options: options)
+    }
+
     // enable/disable
 
     func testDisableRemoveSelf() {

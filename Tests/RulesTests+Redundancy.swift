@@ -1981,9 +1981,25 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testRemoveSelfForLocalVariableOn5_4() {
+        let input = "func foo() { var bar = self.bar }"
+        let output = "func foo() { var bar = bar }"
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf,
+                       options: options)
+    }
+
     func testNoRemoveSelfForCommaDelimitedLocalVariables() {
         let input = "func foo() { let foo = self.foo, bar = self.bar }"
         testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
+    func testRemoveSelfForCommaDelimitedLocalVariablesOn5_4() {
+        let input = "func foo() { let foo = self.foo, bar = self.bar }"
+        let output = "func foo() { let foo = self.foo, bar = bar }"
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf,
+                       options: options)
     }
 
     func testNoRemoveSelfForCommaDelimitedLocalVariables2() {
@@ -1992,9 +2008,18 @@ class RedundancyTests: RulesTests {
     }
 
     func testNoRemoveSelfForTupleAssignedVariables() {
-        let input = "func foo() { let (foo, bar) = (self.foo, self.bar) }"
+        let input = "func foo() { let (bar, baz) = (self.bar, self.baz) }"
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
+
+    // TODO: make this work
+//    func testRemoveSelfForTupleAssignedVariablesOn5_4() {
+//        let input = "func foo() { let (bar, baz) = (self.bar, self.baz) }"
+//        let output = "func foo() { let (bar, baz) = (bar, baz) }"
+//        let options = FormatOptions(swiftVersion: "5.4")
+//        testFormatting(for: input, output, rule: FormatRules.redundantSelf,
+//                       options: options)
+//    }
 
     func testNoRemoveSelfForTupleAssignedVariablesFollowedByRegularVariable() {
         let input = "func foo() {\n    let (foo, bar) = (self.foo, self.bar), baz = self.baz\n}"

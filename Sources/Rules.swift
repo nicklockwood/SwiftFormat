@@ -2794,8 +2794,10 @@ public struct _FormatRules {
                                 formatter.processDeclaredVariables(at: &i, names: &members)
                             }
                         } else {
-                            let removeSelf = explicitSelf != .insert &&
-                                formatter.isConditionalStatement(at: i)
+                            let removeSelf = explicitSelf != .insert && (
+                                formatter.options.swiftVersion >= "5.4" ||
+                                    formatter.isConditionalStatement(at: i)
+                            )
                             formatter.processDeclaredVariables(at: &i, names: &localNames,
                                                                removeSelf: removeSelf)
                         }

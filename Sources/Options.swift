@@ -459,7 +459,7 @@ public struct FormatOptions: CustomStringConvertible {
                 organizeExtensionThreshold: Int = 0,
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
-                redundantType: RedundantType = .inferred,
+                redundantType: RedundantType = .inferLocalsOnly,
                 emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,

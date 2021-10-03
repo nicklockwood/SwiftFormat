@@ -807,7 +807,7 @@ struct _Descriptors {
     let redundantType = OptionDescriptor(
         argumentName: "redundanttype",
         displayName: "Redundant Type",
-        help: "\"inferred\" (default), \"explicit\", or \"infer-locals-only\"",
+        help: "\"inferred\", \"explicit\", or \"infer-locals-only\" (default)",
         keyPath: \.redundantType
     )
     let emptyBracesSpacing = OptionDescriptor(

@@ -1221,7 +1221,7 @@ Remove redundant type from variable declarations.
 
 Option | Description
 --- | ---
-`--redundanttype` | "inferred" (default), "explicit", or "infer-locals-only"
+`--redundanttype` | "inferred", "explicit", or "infer-locals-only" (default)
 
 <details>
 <summary>Examples</summary>

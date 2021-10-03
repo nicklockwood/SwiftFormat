@@ -2,19 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>BuildAliasOf</key>
-	<string>IDEFrameworks</string>
 	<key>BuildVersion</key>
-	<string>4</string>
+	<string>16</string>
 	<key>CFBundleShortVersionString</key>
-	<string>12.5.1</string>
+	<string>13.0</string>
 	<key>CFBundleVersion</key>
-	<string>18212</string>
+	<string>19234</string>
 	<key>ProductBuildVersion</key>
-	<string>12E507</string>
+	<string>13A233</string>
 	<key>ProjectName</key>
 	<string>IDEFrameworks</string>
 	<key>SourceVersion</key>
-	<string>18212000000000000</string>
+	<string>19234000000000000</string>
 </dict>
 </plist>

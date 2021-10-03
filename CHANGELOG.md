@@ -1,36 +1,50 @@
 # Change Log
 
-## [0.48.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.11) (2020-07-20)
+## [0.48.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.12) (2021-10-02)
+
+- The `redundantSelf` rule now removes `self` from shadowed variable references where permitted
+- Fixed bug where `self` was not correctly removed on the line following an assignment
+- Fixed some cases where `self` was incorrectly removed from `@dynamicMemberLookup` members
+- Fixed error raised where removing `self` caused ambiguity with global Swift functions
+- Function parameters with shadowed names are now correctly marked as unused
+- The `--selfrequired` option now applies to members, not just `@autoclosure` arguments
+- Fixed trailing comment placement when using `wrapEnumCases` rule
+- Fixed indenting of wrapped chained functions after a closing paren or square bracket
+- Fixed bug where `some(Void)` was converted to `someVoid`
+- Fixed potential range bounds crash in `editDistance()` function
+- Now uses automatic test discovery on Linux instead of XCTestManifests file
+
+## [0.48.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.11) (2021-07-20)
 
 - Fixed parsing error introduced in 0.48.10 involving inline closures inside conditional statements
 - Fixed bug where `redundantSelf` could potentially misidentify tuple labels as local variables
 
-## [0.48.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.10) (2020-07-18)
+## [0.48.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.10) (2021-07-18)
 
 - Fixed issue with `redundantBackticks` rule incorrectly removing required backticks around underscore
 - Fixed parsing error in `redundantSelf` with guard conditions containing inline closures 
 
-## [0.48.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.9) (2020-07-09)
+## [0.48.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.9) (2021-07-09)
 
 - Fixed regression introduced in 0.48.7 where parens around prefix expressions were incorrectly removed
 
-## [0.48.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.8) (2020-07-08)
+## [0.48.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.8) (2021-07-08)
 
 - Fixed regression introduced in 0.48.7 where parens around operator literals were incorrectly removed
 
-## [0.48.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.7) (2020-07-07)
+## [0.48.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.7) (2021-07-07)
 
 - Fixed bug where `redundantParens` rule could introduce an ambiguity by removing parens around a range argument
 - Fixed bug where `unowned(unsafe)` capture argument would be mangled by `unusedArguments` rule
 - Fixed spurious double-indenting of trailing closures in some cases
 
-## [0.48.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.6) (2020-06-23)
+## [0.48.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.6) (2021-06-23)
 
 - Fixed bug where `actor` variables were incorrectly interpreted as a keyword in certain cases
 - The `redundantBackticks` rule no longer removes required backticks around `actor` properties
 - Doc comments containing TODO: are no longer converted to regular comments if it would mangle the docs
 
-## [0.48.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.5) (2020-06-15)
+## [0.48.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.5) (2021-06-15)
 
 - Fixed bug when parsing generic result builder attributes, leading to incorrect spacing
 - Fixed bug where wrapped function body was not double-indented as it should have been
@@ -38,7 +52,7 @@
 - Fixed bug where space was incorrectly removed between closure capture list and arguments
 - Fixed bug with indenting of wrapped method chains
 
-## [0.48.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.4) (2020-05-30)
+## [0.48.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.4) (2021-05-30)
 
 - Added support for `actor` and other async/await syntax introduced in Swift 5.5
 - Functions with `@Sendable` closure parameters are now formatted correctly
@@ -47,18 +61,18 @@
 - The `--typeattributes` option now applies to extension attributes as well as type declarations
 - Improved indentation for accessors/method calls in multiline conditionals
 
-## [0.48.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.3) (2020-05-22)
+## [0.48.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.3) (2021-05-22)
 
 - Fixed bug where files would not be correctly excluded when using `--stdinpath`
 - Fixed bug with `typeSugar` rule affecting optional composed protocol types
 - Fixed bug where `hoistPatternLet` would incorrectly add let before `nil` or `true`/`false`
 
-## [0.48.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.2) (2020-05-16)
+## [0.48.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.2) (2021-05-16)
 
 - Fixed wrapping of generic property wrapper attributes
 - Fixed bug where trailing comma could be inserted inside a collection type signature
 
-## [0.48.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.1) (2020-05-08)
+## [0.48.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.1) (2021-05-08)
 
 - Fixed bug where `typeSugar` rule triggered a Swift bug inside case statements
 - Fixed double-indenting of trailing closure body on a wrapped line
@@ -70,7 +84,7 @@
 - Fixed spurious space inserted in generic result builder attributes
 - Successive reads of the same configuration file while formatting are now cached to improve performance
 
-## [0.48.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.0) (2020-04-20)
+## [0.48.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.0) (2021-04-20)
 
 - Added `--emptybraces` option to control how empty braces are formatted
 - The `redundantReturn` rule now removes redundant `return` statements in Void functions
@@ -86,7 +100,7 @@
 - Added `--report` argument for exporting formatting changes or lint violations as a JSON file
 - Improved tab layout in SwiftFormat for Xcode companion app
 
-## [0.47.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.13) (2020-03-21)
+## [0.47.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.13) (2021-03-21)
 
 - Fixed bug where `--wrapreturntype if-multiline` would unexpectedly wrap a single-line method
 - Multiline chained functions are now indented correctly when using `--xcodeindentation`
@@ -97,7 +111,7 @@
 - Trailing commas are no longer incorrectly inserted inside wrapped type signatures
 - Added `--lintonly` argument to specify rules that should only be applied in `--lint` mode
 
-## [0.47.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.12) (2020-02-23)
+## [0.47.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.12) (2021-02-23)
 
 - Fixed indenting of `switch` cases inside `#if`/`#endif` clauses 
 - Explicit `self` is no longer removed inside types using `@dynamicMemberLookup`
@@ -106,7 +120,7 @@
 - Fixed issue where single line method after array would wrap unexpectedly
 - Made repository checkoutable on Windows
 
-## [0.47.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.11) (2020-01-29)
+## [0.47.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.11) (2021-01-29)
 
 - Fixed bug with `redundandSelf` rule sometimes inserting `self` for a local variable
 - Fixed `wrapAttributes` rule not working for convenience `init`s, or vars with `private(set)`

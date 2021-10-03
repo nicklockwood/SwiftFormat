@@ -31,7 +31,7 @@ extension Formatter {
         var declarationIndex: Int? = -1
         var scopeIndexStack = [Int]()
         var locals = Set<String>()
-        while let token = self.token(at: index) {
+        while let token = token(at: index) {
             outer: switch token {
             case .identifier where last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator == false:
                 switch next(.nonSpaceOrCommentOrLinebreak, after: index) {
@@ -294,7 +294,7 @@ extension Formatter {
             )
         }
         func wrapArgumentsAfterFirst(startOfScope i: Int, endOfScope: Int, allowGrouping: Bool) {
-            guard var firstArgumentIndex = self.index(of: .nonSpaceOrLinebreak, in: i + 1 ..< endOfScope) else {
+            guard var firstArgumentIndex = index(of: .nonSpaceOrLinebreak, in: i + 1 ..< endOfScope) else {
                 return
             }
 
@@ -567,7 +567,7 @@ extension Formatter {
 
     func removeParen(at index: Int) {
         func tokenOutsideParenRequiresSpacing(at index: Int) -> Bool {
-            guard let token = self.token(at: index) else { return false }
+            guard let token = token(at: index) else { return false }
             switch token {
             case .identifier, .keyword, .number, .startOfScope("#if"):
                 return true
@@ -577,7 +577,7 @@ extension Formatter {
         }
 
         func tokenInsideParenRequiresSpacing(at index: Int) -> Bool {
-            guard let token = self.token(at: index) else { return false }
+            guard let token = token(at: index) else { return false }
             switch token {
             case .operator, .startOfScope("{"), .endOfScope("}"):
                 return true

@@ -218,7 +218,7 @@ private struct Inference {
 
     let trailingCommas = OptionInferrer { formatter, options in
         var trailing = 0, noTrailing = 0
-        formatter.forEach(.endOfScope("]")) { i, token in
+        formatter.forEach(.endOfScope("]")) { i, _ in
             guard let linebreakIndex = formatter.index(of: .nonSpaceOrComment, before: i),
                   case .linebreak = formatter.tokens[linebreakIndex],
                   let prevTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: linebreakIndex + 1),

@@ -237,7 +237,7 @@ enum ScopeType {
 
 extension Formatter {
     func scopeType(at index: Int) -> ScopeType? {
-        guard let token = self.token(at: index) else {
+        guard let token = token(at: index) else {
             return nil
         }
         guard case .startOfScope = token else {
@@ -531,7 +531,7 @@ extension Formatter {
 
     func isInClosureArguments(at i: Int) -> Bool {
         var i = i
-        while let token = self.token(at: i) {
+        while let token = token(at: i) {
             switch token {
             case .keyword("in"), .keyword("throws"), .keyword("rethrows"), .keyword("async"):
                 guard let scopeIndex = index(of: .startOfScope, before: i, if: {
@@ -716,7 +716,7 @@ extension Formatter {
 
     // Determine if next line after this token should be indented
     func isEndOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
-        guard let token = self.token(at: i) else { return true }
+        guard let token = token(at: i) else { return true }
         switch token {
         case .endOfScope("case"), .endOfScope("default"):
             return false
@@ -778,7 +778,7 @@ extension Formatter {
 
     // Determine if line starting with this token should be indented
     func isStartOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
-        guard let token = self.token(at: i) else { return true }
+        guard let token = token(at: i) else { return true }
         switch token {
         case let .keyword(string) where [ // TODO: handle "in"
             "where", "dynamicType", "rethrows", "throws", "async",
@@ -1231,7 +1231,7 @@ extension Formatter {
 
     // get type of declaration starting at index of declaration keyword
     func declarationType(at index: Int) -> String? {
-        guard let token = self.token(at: index), token.isDeclarationTypeKeyword,
+        guard let token = token(at: index), token.isDeclarationTypeKeyword,
               case let .keyword(keyword) = token
         else {
             return nil

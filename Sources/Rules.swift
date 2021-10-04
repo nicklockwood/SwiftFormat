@@ -1595,8 +1595,11 @@ public struct _FormatRules {
                         } else if formatter.tokens[lineStart ..< lastNonSpaceOrLinebreakIndex].allSatisfy({
                             $0.isEndOfScope || $0.isSpaceOrComment
                         }) {
+                            if lastToken.isEndOfScope {
+                                indent = formatter.indentForLine(at: lastNonSpaceOrLinebreakIndex)
+                            }
                             if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
-                                (formatter.options.xcodeIndentation && lastToken != .endOfScope("}"))
+                                formatter.options.xcodeIndentation, lastToken != .endOfScope("}")
                             {
                                 indent += formatter.options.indent
                             }

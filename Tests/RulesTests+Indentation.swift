@@ -90,6 +90,19 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentChainedCallAfterClosingParens() {
+        let input = """
+        foo(
+            bar: { baz in
+                baz()
+            })
+            .quux {
+                View()
+            }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent modifiers
 
     func testNoIndentWrappedModifiersForProtocol() {

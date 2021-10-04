@@ -3396,7 +3396,9 @@ public struct _FormatRules {
                     wasDeclaration = isDeclaration
                     isDeclaration = false
                 case .delimiter(","):
-                    if formatter.currentScope(at: i) == .startOfScope("(") {
+                    if let scope = formatter.currentScope(at: i), [
+                        .startOfScope("("), .startOfScope("["), .startOfScope("<"),
+                    ].contains(scope) {
                         break
                     }
                     if isConditional {

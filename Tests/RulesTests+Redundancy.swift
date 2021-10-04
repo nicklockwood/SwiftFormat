@@ -4217,6 +4217,26 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testShadowedClosureArgument() {
+        let input = """
+        _ = Parser<String, String> { input in
+            let parser = Parser<String, String>.with(input)
+            return parser
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testShadowedClosureArgument2() {
+        let input = """
+        _ = foo { input in
+            let input = ["foo": "Foo", "bar": "Bar"][input]
+            return input
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // init
 
     func testParameterUsedInInit() {

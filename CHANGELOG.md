@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.48.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.13) (2021-10-04)
+
+- Fixed bug where `unusedArguments` incorrectly marked shadowed parameters as unused
+- Fixed wrapped chained functions after an indented closing paren or square bracket
+- Fixed Mint install
+
 ## [0.48.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.12) (2021-10-02)
 
 - The `redundantSelf` rule now removes `self` from shadowed variable references where permitted

@@ -90,7 +90,7 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
-    func testIndentChainedCallAfterClosingParens() {
+    func testIndentChainedCallAfterClosingParen() {
         let input = """
         foo(
             bar: { baz in
@@ -101,6 +101,25 @@ class IndentTests: RulesTests {
             }
         """
         testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentChainedCallAfterClosingParen2() {
+        let input = """
+        func makeEpoxyModel() -> EpoxyModeling {
+            LegacyEpoxyModelBuilder<BasicRow>(
+                dataID: DataID.dismissModalBody.rawValue,
+                content: .init(titleText: content.title, subtitleText: content.bodyHtml),
+                style: Style.standard
+                    .with(property: newValue)
+                    .with(anotherProperty: newValue))
+                .with(configurer: { view, content, _, _ in
+                    view.setHTMLText(content.subtitleText?.unstyledText)
+                })
+                .build()
+        }
+        """
+        let options = FormatOptions(closingParenOnSameLine: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
     // indent modifiers

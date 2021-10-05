@@ -1559,12 +1559,17 @@ extension Formatter {
             })
         else {
             if next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator(".", .infix),
-               let prevIndex = self.index(of: .nonSpaceOrLinebreak, before: index),
-               case let lineStart = startOfLine(at: prevIndex, excludingIndent: true),
-               tokens[lineStart] == .operator(".", .infix),
-               self.index(of: .startOfScope, before: index) ?? -1 < lineStart
+               var prevIndex = self.index(of: .nonSpaceOrLinebreak, before: index)
             {
-                return indentForLine(at: lineStart)
+                if case .endOfScope = tokens[prevIndex] {
+                    prevIndex = self.index(of: .startOfScope, before: index) ?? prevIndex
+                }
+                if case let lineStart = startOfLine(at: prevIndex, excludingIndent: true),
+                   tokens[lineStart] == .operator(".", .infix),
+                   self.index(of: .startOfScope, before: index) ?? -1 < lineStart
+                {
+                    return indentForLine(at: lineStart)
+                }
             }
             return options.indent
         }

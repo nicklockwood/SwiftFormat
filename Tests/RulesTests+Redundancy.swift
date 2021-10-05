@@ -3074,6 +3074,60 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testShadowedStringValueNotRemovedInInit() {
+        let input = """
+        init() {
+            let value = "something"
+            self.value = value
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testShadowedIntValueNotRemovedInInit() {
+        let input = """
+        init() {
+            let value = 5
+            self.value = value
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testShadowedPropertyValueNotRemovedInInit() {
+        let input = """
+        init() {
+            let value = foo
+            self.value = value
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testShadowedFuncCallValueNotRemovedInInit() {
+        let input = """
+        init() {
+            let value = foo()
+            self.value = value
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testShadowedFuncParamNotRemovedInInit() {
+        let input = """
+        init() {
+            let value = foo(self.value)
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {

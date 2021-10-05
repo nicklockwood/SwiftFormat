@@ -46,6 +46,9 @@ extension Formatter {
                 }
                 inner: while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
                     let token = tokens[nextIndex]
+                    if isStartOfStatement(at: nextIndex) {
+                        names.formUnion(locals)
+                    }
                     switch token {
                     case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
                         break

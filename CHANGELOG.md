@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.48.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.14) (2021-10-06)
+
+- Fixed some cases where function arguments were incorrectly treated as unused
+- Fixed incorrect removal of self for some shadowed variables when swift version is >= 5.4
+- Fixed indenting of wrapped method chains after a closing paren
+- Rules listed in swiftformat comment directives are now case-insensitive
+
 ## [0.48.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.13) (2021-10-04)
 
 - Fixed bug where `unusedArguments` incorrectly marked shadowed parameters as unused

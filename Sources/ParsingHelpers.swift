@@ -796,15 +796,8 @@ extension Formatter {
                 return false
             }
             return [.endOfScope("case"), .keyword("case"), .delimiter(",")].contains(lastToken)
-        case .delimiter(","):
-            guard let scope = scope ?? currentScope(at: i) else {
-                return false
-            }
-            // For arrays, dictionaries, cases, or argument lists, we already indent
-            return ["<", "[", "(", "case"].contains(scope.string)
-        case .delimiter, .operator(_, .infix), .operator(_, .postfix):
-            return false
-        case .endOfScope("}"), .endOfScope("]"), .endOfScope(")"), .endOfScope(">"):
+        case .space, .delimiter, .operator(_, .infix), .operator(_, .postfix),
+             .endOfScope("}"), .endOfScope("]"), .endOfScope(")"), .endOfScope(">"):
             return false
         case .startOfScope("{") where isStartOfClosure(at: i):
             guard last(.nonSpaceOrComment, before: i)?.isLinebreak == true,
@@ -825,6 +818,23 @@ extension Formatter {
             }
             return true
         case .keyword:
+            return true
+        case .identifier:
+            guard let prevToken = last(.nonSpaceOrComment, before: i) else {
+                return true
+            }
+            guard prevToken.isLinebreak else {
+                return false
+            }
+            if let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i) {
+                switch prevToken {
+                case .number, .operator(_, .postfix), .endOfScope, .identifier,
+                     .startOfScope("{"), .delimiter(";"):
+                    return true
+                default:
+                    return false
+                }
+            }
             return true
         default:
             guard let prevToken = last(.nonSpaceOrComment, before: i) else {

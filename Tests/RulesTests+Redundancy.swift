@@ -3930,6 +3930,32 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testDisableRemoveSelfCaseInsensitive() {
+        let input = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                // swiftformat:disable redundantself
+                self.bar = 1
+                // swiftformat:enable RedundantSelf
+                self.bar = 2
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Int
+            func baz() {
+                // swiftformat:disable redundantself
+                self.bar = 1
+                // swiftformat:enable RedundantSelf
+                bar = 2
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
     func testDisableNextRemoveSelf() {
         let input = """
         class Foo {
@@ -4325,6 +4351,18 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testShadowedUsedArgumentInSwitch() {
+        let input = """
+        init(_ action: Action, hub: Hub) {
+            switch action {
+            case let .get(hub, key):
+                self = .get(key, hub)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // functions
 
     func testMarkUnusedFunctionArgument() {
@@ -4452,6 +4490,32 @@ class RedundancyTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testShadowedUsedArguments2() {
+        let input = """
+        func foo(things: [String], form: Form) {
+            let form = FormRequest(
+                things: things,
+                form: form
+            )
+            print(form)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testShadowedUsedArguments3() {
+        let input = """
+        func zoomTo(locations: [Foo], count: Int) {
+            let num = count
+            guard num > 0, locations.count >= count else {
+                return
+            }
+            print(locations)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
     // functions (closure-only)

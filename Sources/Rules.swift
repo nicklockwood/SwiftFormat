@@ -1480,7 +1480,16 @@ public struct _FormatRules {
                         !(nextTokenIndex == nil || [
                             .endOfScope("}"), .endOfScope("]"), .endOfScope(")"),
                         ].contains(formatter.tokens[nextTokenIndex!]) ||
-                            formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last))
+                            formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last) || (
+                                formatter.tokens[nextTokenIndex!].isIdentifier &&
+                                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: nextTokenIndex!).map {
+                                        $0 != .keyword("return") && !$0.isOperator(ofType: .infix)
+                                    } ?? false) || (
+                                formatter.tokens[nextTokenIndex!] == .delimiter(",") && [
+                                    "<", "[", "(", "case",
+                                ].contains(formatter.currentScope(at: nextTokenIndex!)?.string ?? "")
+                            )
+                        )
                 )
 
                 // Determine current indent
@@ -1533,7 +1542,11 @@ public struct _FormatRules {
                            formatter.next(.nonSpace, after: i) == .operator(".", .infix),
                            let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
                            let startIndex = formatter.index(of: .nonSpace, after: formatter.startOfLine(at: prevIndex) - 1),
-                           formatter.isStartOfStatement(at: startIndex)
+                           formatter.isStartOfStatement(at: startIndex) || (
+                               formatter.tokens[startIndex].isIdentifier &&
+                                   formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex).map {
+                                       $0 != .keyword("return") && !$0.isOperator(ofType: .infix)
+                                   } ?? false)
                         {
                             indent += formatter.options.indent
                             indentStack[indentStack.count - 1] = indent
@@ -3354,16 +3367,16 @@ public struct _FormatRules {
             }
             var i = range.lowerBound
             while i < range.upperBound {
+                if formatter.isStartOfStatement(at: i) {
+                    pushLocals()
+                    wasDeclaration = false
+                }
                 let token = formatter.tokens[i]
                 switch token {
                 case .keyword("let"), .keyword("var"), .keyword("func"), .keyword("for"):
                     isDeclaration = true
                     isConditional = formatter.isConditionalStatement(at: i)
                 case .identifier:
-                    if formatter.isStartOfStatement(at: i) {
-                        pushLocals()
-                        wasDeclaration = false
-                    }
                     let name = token.unescaped()
                     guard let index = argNames.index(of: name), !locals.contains(name) else {
                         break

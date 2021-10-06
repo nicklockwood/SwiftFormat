@@ -95,8 +95,9 @@ public class Formatter: NSObject {
             }
             // TODO: handle typos, error for invalid rule names
             // TODO: warn when trying to enable a rule that isn't enabled at file level
-            return argumentsString.range(of: "\\b(\(rule.name)|all)\\b",
-                                         options: .regularExpression) != nil
+            return argumentsString.range(of: "\\b(\(rule.name)|all)\\b", options: [
+                .regularExpression, .caseInsensitive,
+            ]) != nil
         }
         switch directive {
         case "options":

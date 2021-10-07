@@ -239,6 +239,22 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentTrailingClosureArgumentsAfterFunction() {
+        let input = """
+        var epoxyViewportLogger: EpoxyViewportLogger = {
+            EpoxyViewportLogger(
+                debounceInterval: 0.5,
+                viewportStartImpressionHandler: { [weak self] _, viewportLoggingContext in
+                    self?.viewportLoggingRegistry.logViewportSessionStart(with: viewportLoggingContext)
+                }) { [weak self] _, viewportLoggingContext in
+                    self?.viewportLoggingRegistry.logViewportSessionEnd(with: viewportLoggingContext)
+            }
+        }()
+        """
+        let options = FormatOptions(closingParenOnSameLine: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testIndentAllmanTrailingClosureArguments() {
         let input = """
         let foo = Foo

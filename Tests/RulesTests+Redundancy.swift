@@ -2377,7 +2377,8 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
     func testNoRemoveSelfInExcludedFunction() {
@@ -2833,7 +2834,7 @@ class RedundancyTests: RulesTests {
         @dynamicMemberLookup
         struct Foo {
             subscript(dynamicMember foo: String) -> String {
-                return foo + "bar"
+                foo + "bar"
             }
 
             func bar() {
@@ -2843,7 +2844,26 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testSelfNotRemovedInDeclarationWithDynamicMemberLookup() {
+        let input = """
+        @dynamicMemberLookup
+        struct Foo {
+            subscript(dynamicMember foo: String) -> String {
+                foo + "bar"
+            }
+
+            func bar() {
+                let foo = self.foo
+                print(foo)
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
     func testSelfNotRemovedInExtensionOfTypeWithDynamicMemberLookup() {
@@ -2853,7 +2873,7 @@ class RedundancyTests: RulesTests {
 
         extension Foo {
             subscript(dynamicMember foo: String) -> String {
-                return foo + "bar"
+                foo + "bar"
             }
 
             func bar() {
@@ -2863,7 +2883,8 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
     func testSelfRemovedInNestedExtensionOfTypeWithDynamicMemberLookup() {
@@ -2895,7 +2916,9 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf,
+                       options: options)
     }
 
     func testNoRemoveSelfAfterGuardCaseLetWithExplicitNamespace() {
@@ -3052,6 +3075,57 @@ class RedundancyTests: RulesTests {
         }
         """
         testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
+    func testMinSelfNotRemovedOnSwift5_4() {
+        let input = """
+        extension Array where Element == Foo {
+            func smallest() -> Foo? {
+                let bar = self.min(by: { rect1, rect2 -> Bool in
+                    rect1.perimeter < rect2.perimeter
+                })
+                return bar
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testNoRemoveVariableShadowedLaterInScopeInOlderSwiftVersions() {
+        let input = """
+        func foo() -> Bar? {
+            guard let baz = self.bar else {
+                return nil
+            }
+
+            let bar = Foo()
+            return Bar(baz)
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4.2")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testStillRemoveVariableShadowedInSameDecalarationInOlderSwiftVersions() {
+        let input = """
+        func foo() -> Bar? {
+            guard let bar = self.bar else {
+                return nil
+            }
+            return bar
+        }
+        """
+        let output = """
+        func foo() -> Bar? {
+            guard let bar = bar else {
+                return nil
+            }
+            return bar
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.0")
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
     }
 
     func testShadowedSelfRemovedInGuardLet() {

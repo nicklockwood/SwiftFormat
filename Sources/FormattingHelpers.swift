@@ -12,13 +12,26 @@ import Foundation
 
 extension Formatter {
     // remove self if possible
-    func removeSelf(at i: Int, localNames: Set<String>) -> Bool {
+    func removeSelf(at i: Int, exclude: Set<String>, include: Set<String>? = nil) -> Bool {
         assert(tokens[i] == .identifier("self"))
         guard let dotIndex = index(of: .nonSpaceOrLinebreak, after: i, if: {
             $0 == .operator(".", .infix)
-        }), let nextIndex = index(of: .nonSpaceOrLinebreak, after: dotIndex, if: {
-            $0.isIdentifier && !localNames.contains($0.unescaped())
-        }), !backticksRequired(at: nextIndex, ignoreLeadingDot: true) else {
+        }), !exclude.contains("self"),
+        let nextIndex = index(of: .nonSpaceOrLinebreak, after: dotIndex),
+        let token = token(at: nextIndex), token.isIdentifier,
+        case let name = token.unescaped(), (include.map { $0.contains(name) } ?? true),
+        !exclude.contains(name), !options.selfRequired.contains(name),
+        !_FormatRules.globalSwiftFunctions.contains(name),
+        !backticksRequired(at: nextIndex, ignoreLeadingDot: true)
+        else {
+            return false
+        }
+        if let scopeStart = index(of: .startOfScope, before: i),
+           tokens[scopeStart] == .startOfScope("("),
+           case let .identifier(fn)? = last(.nonSpaceOrCommentOrLinebreak, before: scopeStart),
+           options.selfRequired.contains(fn) ||
+           fn == "expect" // Special case to support autoclosure arguments in the Nimble framework
+        {
             return false
         }
         removeTokens(in: i ..< nextIndex)
@@ -26,7 +39,9 @@ extension Formatter {
     }
 
     // gather declared variable names, starting at index after let/var keyword
-    func processDeclaredVariables(at index: inout Int, names: inout Set<String>, removeSelf: Bool) {
+    func processDeclaredVariables(at index: inout Int, names: inout Set<String>,
+                                  removeSelf: Bool, onlyLocal: Bool)
+    {
         let isConditional = isConditionalStatement(at: index)
         var declarationIndex: Int? = -1
         var scopeIndexStack = [Int]()
@@ -49,24 +64,27 @@ extension Formatter {
                     if isStartOfStatement(at: nextIndex) {
                         names.formUnion(locals)
                     }
+                    let removeSelf = removeSelf && isEnabled &&
+                        (options.swiftVersion >= "5.4" || isConditionalStatement(at: nextIndex))
+                    let include = onlyLocal ? locals : nil
                     switch token {
                     case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
                         break
-                    case .identifier("self") where removeSelf && isEnabled:
-                        _ = self.removeSelf(at: nextIndex, localNames: names)
+                    case .identifier("self") where removeSelf:
+                        _ = self.removeSelf(at: nextIndex, exclude: names, include: include)
                     case .startOfScope("<"), .startOfScope("["), .startOfScope("("),
                          .startOfScope where token.isStringDelimiter:
                         guard let endIndex = endOfScope(at: nextIndex) else {
                             return fatalError("Expected end of scope", at: nextIndex)
                         }
-                        if removeSelf, isEnabled {
+                        if removeSelf {
                             var i = endIndex - 1
                             while i > nextIndex {
                                 switch tokens[i] {
                                 case .endOfScope("}"):
                                     i = self.index(of: .startOfScope("{"), before: i) ?? i
                                 case .identifier("self"):
-                                    _ = self.removeSelf(at: i, localNames: names)
+                                    _ = self.removeSelf(at: i, exclude: names, include: include)
                                 default:
                                     break
                                 }

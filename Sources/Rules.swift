@@ -2720,7 +2720,6 @@ public struct _FormatRules {
                          isTypeRoot: Bool,
                          isInit: Bool)
         {
-            let selfRequired = formatter.options.selfRequired
             let explicitSelf = formatter.options.explicitSelf
             let isWhereClause = index > 0 && formatter.tokens[index - 1] == .keyword("where")
             assert(isWhereClause || formatter.currentScope(at: index).map { token -> Bool in
@@ -2808,12 +2807,11 @@ public struct _FormatRules {
                                 formatter.processDeclaredVariables(at: &i, names: &members)
                             }
                         } else {
-                            let removeSelf = explicitSelf != .insert && (
-                                formatter.options.swiftVersion >= "5.4" ||
-                                    formatter.isConditionalStatement(at: i)
-                            )
+                            let removeSelf = explicitSelf != .insert && !usingDynamicLookup
+                            let onlyLocal = formatter.options.swiftVersion < "5"
                             formatter.processDeclaredVariables(at: &i, names: &localNames,
-                                                               removeSelf: removeSelf)
+                                                               removeSelf: removeSelf,
+                                                               onlyLocal: onlyLocal)
                         }
                     case .keyword("func"):
                         guard let nameToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) else {
@@ -2942,8 +2940,11 @@ public struct _FormatRules {
                         assert(!isTypeRoot)
                         // Guard is included because it's an error to reference guard vars in body
                         var scopedNames = localNames
-                        formatter.processDeclaredVariables(at: &index, names: &scopedNames,
-                                                           removeSelf: explicitSelf != .insert)
+                        formatter.processDeclaredVariables(
+                            at: &index, names: &scopedNames,
+                            removeSelf: explicitSelf != .insert,
+                            onlyLocal: false
+                        )
                         while formatter.currentScope(at: index) == .startOfScope("["),
                               let endIndex = formatter.endOfScope(at: index)
                         {
@@ -3008,16 +3009,8 @@ public struct _FormatRules {
                         }
                     }
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
-                case .startOfScope("("):
-                    if case let .identifier(fn)? = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                       selfRequired.contains(fn) ||
-                       fn == "expect" // Special case to support autoclosure arguments in the Nimble framework
-                    {
-                        index = formatter.index(of: .endOfScope(")"), after: index) ?? index
-                        break
-                    }
-                    fallthrough
-                case .startOfScope where token.isStringDelimiter, .startOfScope("#if"), .startOfScope("["):
+                case .startOfScope where token.isStringDelimiter, .startOfScope("#if"),
+                     .startOfScope("["), .startOfScope("("):
                     scopeStack.append((token, []))
                 case .startOfScope(":"):
                     lastKeyword = ""
@@ -3094,14 +3087,11 @@ public struct _FormatRules {
                 case .startOfScope:
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .identifier("self"):
-                    guard formatter.isEnabled, !usingDynamicLookup, !isTypeRoot, !localNames.contains("self"),
+                    guard formatter.isEnabled, explicitSelf != .insert, !isTypeRoot, !usingDynamicLookup,
                           let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index, if: {
                               $0 == .operator(".", .infix)
                           }),
-                          let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex),
-                          let name = formatter.token(at: nextIndex)?.unescaped(),
-                          !localNames.contains(name), !selfRequired.contains(name),
-                          !globalSwiftFunctions.contains(name)
+                          let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: dotIndex)
                     else {
                         break
                     }
@@ -3116,9 +3106,7 @@ public struct _FormatRules {
                             break
                         }
                     }
-                    if !formatter.backticksRequired(at: nextIndex, ignoreLeadingDot: true) {
-                        formatter.removeTokens(in: index ..< nextIndex)
-                    }
+                    _ = formatter.removeSelf(at: index, exclude: localNames)
                 case .identifier("type"): // Special case for type(of:)
                     guard let parenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
                         $0 == .startOfScope("(")

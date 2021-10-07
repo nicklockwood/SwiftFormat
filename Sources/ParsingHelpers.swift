@@ -379,7 +379,8 @@ extension Formatter {
 
     // gather declared variable names, starting at index after let/var keyword
     func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
-        processDeclaredVariables(at: &index, names: &names, removeSelf: false)
+        processDeclaredVariables(at: &index, names: &names, removeSelf: false,
+                                 onlyLocal: false)
     }
 
     /// Returns true if token is inside the return type of a function or subscript
@@ -1272,7 +1273,7 @@ extension Formatter {
         case "let", "var":
             var index = index + 1
             var names = Set<String>()
-            processDeclaredVariables(at: &index, names: &names, removeSelf: false)
+            processDeclaredVariables(at: &index, names: &names)
             return names
         case "func", "class", "actor", "struct", "enum":
             guard let name = next(.identifier, after: index) else {

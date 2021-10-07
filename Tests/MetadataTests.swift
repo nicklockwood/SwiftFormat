@@ -178,6 +178,10 @@ class MetadataTests: XCTestCase {
                         Descriptors.organizeEnumThreshold,
                         Descriptors.organizeExtensionThreshold,
                     ]
+                case .identifier("removeSelf"):
+                    referencedOptions += [
+                        Descriptors.selfRequired,
+                    ]
                 default:
                     continue
                 }

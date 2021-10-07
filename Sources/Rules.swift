@@ -2829,11 +2829,21 @@ public struct _FormatRules {
                         }
                     case .startOfScope("("), .startOfScope("#if"), .startOfScope(":"):
                         break
+                    case .startOfScope("//"), .startOfScope("/*"):
+                        if case let .commentBody(comment)? = formatter.next(.nonSpace, after: i) {
+                            formatter.processCommentBody(comment, at: i)
+                            if token == .startOfScope("//") {
+                                formatter.processLinebreak()
+                            }
+                        }
+                        i = formatter.endOfScope(at: i) ?? (formatter.tokens.count - 1)
                     case .startOfScope:
                         classOrStatic = false
                         i = formatter.endOfScope(at: i) ?? (formatter.tokens.count - 1)
                     case .endOfScope("}"), .endOfScope("case"), .endOfScope("default"):
                         break outer
+                    case .linebreak:
+                        formatter.processLinebreak()
                     default:
                         break
                     }

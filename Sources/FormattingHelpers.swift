@@ -48,7 +48,7 @@ extension Formatter {
         var locals = Set<String>()
         while let token = token(at: index) {
             outer: switch token {
-            case .identifier where last(.nonSpaceOrCommentOrLinebreak, before: index)?.isOperator == false:
+            case .identifier where last(.nonSpace, before: index)?.isOperator == false:
                 switch next(.nonSpaceOrCommentOrLinebreak, after: index) {
                 case .delimiter(":")? where !scopeIndexStack.isEmpty, .operator(".", _)?:
                     break outer
@@ -59,7 +59,7 @@ extension Formatter {
                 if name != "_", declarationIndex != nil || !isConditional {
                     locals.insert(name)
                 }
-                inner: while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                inner: while let nextIndex = self.index(of: .nonSpace, after: index) {
                     let token = tokens[nextIndex]
                     if isStartOfStatement(at: nextIndex) {
                         names.formUnion(locals)
@@ -124,6 +124,17 @@ extension Formatter {
                         index = nextIndex
                         names.formUnion(locals)
                         break inner
+                    case .startOfScope("//"), .startOfScope("/*"):
+                        if case let .commentBody(comment)? = next(.nonSpace, after: nextIndex) {
+                            processCommentBody(comment, at: nextIndex)
+                            if token == .startOfScope("//") {
+                                processLinebreak()
+                            }
+                        }
+                        index = endOfScope(at: nextIndex) ?? (tokens.count - 1)
+                        continue inner
+                    case .linebreak:
+                        processLinebreak()
                     default:
                         break
                     }
@@ -153,6 +164,16 @@ extension Formatter {
                     return
                 }
                 index = nextIndex
+            case .startOfScope("//"), .startOfScope("/*"):
+                if case let .commentBody(comment)? = next(.nonSpace, after: index) {
+                    processCommentBody(comment, at: index)
+                    if token == .startOfScope("//") {
+                        processLinebreak()
+                    }
+                }
+                index = endOfScope(at: index) ?? (tokens.count - 1)
+            case .linebreak:
+                processLinebreak()
             default:
                 break
             }

@@ -3092,6 +3092,35 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testDisableRedundantSelfDirective() {
+        let input = """
+        func smallest() -> Foo? {
+            // swiftformat:disable:next redundantSelf
+            let bar = self.foo { rect1, rect2 -> Bool in
+                rect1.perimeter < rect2.perimeter
+            }
+            return bar
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testDisableRedundantSelfDirective2() {
+        let input = """
+        func smallest() -> Foo? {
+            let bar =
+                // swiftformat:disable:next redundantSelf
+                self.foo { rect1, rect2 -> Bool in
+                    rect1.perimeter < rect2.perimeter
+                }
+            return bar
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     func testNoRemoveVariableShadowedLaterInScopeInOlderSwiftVersions() {
         let input = """
         func foo() -> Bar? {

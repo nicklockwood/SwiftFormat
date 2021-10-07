@@ -248,7 +248,7 @@ class IndentTests: RulesTests {
                     self?.viewportLoggingRegistry.logViewportSessionStart(with: viewportLoggingContext)
                 }) { [weak self] _, viewportLoggingContext in
                     self?.viewportLoggingRegistry.logViewportSessionEnd(with: viewportLoggingContext)
-            }
+                }
         }()
         """
         let options = FormatOptions(closingParenOnSameLine: true)
@@ -1323,7 +1323,7 @@ class IndentTests: RulesTests {
                 otherParameter: 2) { [weak self] in
                     guard let error = error else { return }
                     print("and a trailing closure")
-            }
+                }
         }
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
@@ -1337,7 +1337,7 @@ class IndentTests: RulesTests {
                 return Bar(with: Baz(
                     baz: baz)) { _ in
                         print("hello")
-                }
+                    }
             }
         }
         """

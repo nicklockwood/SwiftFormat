@@ -120,6 +120,12 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default), output)
     }
 
+    func testDirectiveInMiddleOfComment() {
+        let input = "//fixme: swiftformat:disable spaceAroundOperators - bug\nlet foo : Int=5;"
+        let output = "// FIXME: swiftformat:disable spaceAroundOperators - bug\nlet foo : Int=5\n"
+        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+    }
+
     func testDisableAndReEnableRules() {
         let input = """
         // swiftformat:disable indent blankLinesBetweenScopes redundantSelf

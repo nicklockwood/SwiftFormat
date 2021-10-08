@@ -4775,6 +4775,28 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testTryArgumentNotMarkedUnused() {
+        let input = """
+        func foo(bar: String) throws -> String? {
+            let bar =
+                try parse(bar)
+            return bar
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testTryAwaitArgumentNotMarkedUnused() {
+        let input = """
+        func foo(bar: String) async throws -> String? {
+            let bar = try
+                await parse(bar)
+            return bar
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

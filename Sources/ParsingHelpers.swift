@@ -781,7 +781,7 @@ extension Formatter {
     func isStartOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
         guard let token = token(at: i) else { return true }
         switch token {
-        case let .keyword(string) where [ // TODO: handle "in"
+        case let .keyword(string) where [
             "where", "dynamicType", "rethrows", "throws", "async",
         ].contains(string):
             return false
@@ -818,9 +818,7 @@ extension Formatter {
                 return false
             }
             return true
-        case .keyword:
-            return true
-        case .identifier:
+        case .identifier, .keyword("try"), .keyword("await"):
             guard let prevToken = last(.nonSpaceOrComment, before: i) else {
                 return true
             }
@@ -830,12 +828,15 @@ extension Formatter {
             if let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i) {
                 switch prevToken {
                 case .number, .operator(_, .postfix), .endOfScope, .identifier,
-                     .startOfScope("{"), .delimiter(";"):
+                     .startOfScope("{"), .delimiter(";"),
+                     .keyword("in") where lastSignificantKeyword(at: i) != "for":
                     return true
                 default:
                     return false
                 }
             }
+            return true
+        case .keyword:
             return true
         default:
             guard let prevToken = last(.nonSpaceOrComment, before: i) else {

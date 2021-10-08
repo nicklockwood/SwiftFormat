@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.48.15](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.15) (2021-10-08)
+
+- Fixed false positives in `unusedArgument` rule when using `try`/`await`
+- Closing paren indent is now balanced for double-indented closures
+- Fixed bug where comment directive failed to disable `redundantSelf` rule
+- Fixed bug where `redundantSelf` exclusion list was not always applied
+- Fixed regression introduced in 0.48.5 affecting indenting of wrapped closure bodies
+- SwiftFormat directives are now recognized in the middle of a comment
+
 ## [0.48.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.14) (2021-10-06)
 
 - Fixed some cases where function arguments were incorrectly treated as unused

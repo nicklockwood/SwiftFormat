@@ -1637,6 +1637,17 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testWrappedExpressionIndentAfterTryInClosure() {
+        let input = """
+        getter = { in
+            try foo ??
+                bar
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     // indent comments
 
     func testCommentIndenting() {

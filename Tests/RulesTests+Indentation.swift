@@ -1648,6 +1648,31 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testNoIndentTryAfterCommaInCollection() {
+        let input = """
+        let expectedTabs: [Pet] = [
+            viewModel.bird,
+            try XCTUnwrap(viewModel.cat),
+            try XCTUnwrap(viewModel.dog),
+            viewModel.snake,
+        ]
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentChainedFunctionAfterTryInParens() {
+        let input = """
+        func fooify(_ array: [FooBar]) -> [Foo] {
+            return (
+                try? array
+                    .filter { !$0.isBar }
+                    .compactMap { $0.foo }
+            ) ?? []
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent comments
 
     func testCommentIndenting() {

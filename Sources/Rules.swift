@@ -1475,7 +1475,9 @@ public struct _FormatRules {
                             .endOfScope("}"), .endOfScope("]"), .endOfScope(")"),
                         ].contains(formatter.tokens[nextTokenIndex!]) ||
                             formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last) || (
-                                formatter.tokens[nextTokenIndex!].isIdentifier &&
+                                (formatter.tokens[nextTokenIndex!].isIdentifier || [
+                                    .keyword("try"), .keyword("await"),
+                                ].contains(formatter.tokens[nextTokenIndex!])) &&
                                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: nextTokenIndex!).map {
                                         $0 != .keyword("return") && !$0.isOperator(ofType: .infix)
                                     } ?? false) || (
@@ -1537,7 +1539,9 @@ public struct _FormatRules {
                            let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
                            let startIndex = formatter.index(of: .nonSpace, after: formatter.startOfLine(at: prevIndex) - 1),
                            formatter.isStartOfStatement(at: startIndex) || (
-                               formatter.tokens[startIndex].isIdentifier &&
+                               (formatter.tokens[startIndex].isIdentifier || [
+                                   .keyword("try"), .keyword("await"),
+                               ].contains(formatter.tokens[startIndex])) &&
                                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex).map {
                                        $0 != .keyword("return") && !$0.isOperator(ofType: .infix)
                                    } ?? false)

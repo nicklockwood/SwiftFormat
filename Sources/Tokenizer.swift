@@ -1670,17 +1670,19 @@ public func tokenize(_ source: String) -> [Token] {
                 default:
                     break
                 }
-            } else if token == .delimiter(":"),
-                      scope == .startOfScope("(") || scope == .startOfScope("["),
-                      let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
-                      tokens[prevIndex].isIdentifierOrKeyword,
-                      let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex)
-            {
-                if case let .keyword(name) = tokens[prevIndex] {
-                    tokens[prevIndex] = .identifier(name)
-                }
-                if case let .keyword(name) = tokens[prevPrevIndex] {
-                    tokens[prevPrevIndex] = .identifier(name)
+            } else if token == .delimiter(":") {
+                if [.startOfScope("("), .startOfScope("[")].contains(scope),
+                   let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
+                   tokens[prevIndex].isIdentifierOrKeyword
+                {
+                    if case let .keyword(name) = tokens[prevIndex] {
+                        tokens[prevIndex] = .identifier(name)
+                    }
+                    if let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                       case let .keyword(name) = tokens[prevPrevIndex]
+                    {
+                        tokens[prevPrevIndex] = .identifier(name)
+                    }
                 }
             } else if case let .keyword(string) = token {
                 var scope = scope
@@ -1772,6 +1774,12 @@ public func tokenize(_ source: String) -> [Token] {
             // Previous scope wasn't closed correctly
             tokens[count - 1] = .error(string)
             return
+        case .delimiter(":"):
+            if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
+               case let .keyword(name) = tokens[prevIndex]
+            {
+                tokens[prevIndex] = .identifier(name)
+            }
         default:
             break
         }

@@ -1353,6 +1353,34 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testKeywordAsClosureLabel() {
+        let input = "foo.if(bar) { bar } else: { baz }"
+        let output: [Token] = [
+            .identifier("foo"),
+            .operator(".", .infix),
+            .identifier("if"),
+            .startOfScope("("),
+            .identifier("bar"),
+            .endOfScope(")"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .identifier("bar"),
+            .space(" "),
+            .endOfScope("}"),
+            .space(" "),
+            .identifier("else"),
+            .delimiter(":"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .identifier("baz"),
+            .space(" "),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testNumberedTupleVariableMember() {
         let input = "foo.2"
         let output: [Token] = [

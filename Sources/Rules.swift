@@ -1255,8 +1255,10 @@ public struct _FormatRules {
                        case let prevIndent = formatter.indentForLine(at: prevIndex),
                        prevIndent == indent + formatter.options.indent
                     {
-                        if !indentStack.isEmpty {
-                            indentStack[indentStack.count - 1] = prevIndent
+                        if linewrapStack.last == false {
+                            linewrapStack[linewrapStack.count - 1] = true
+                            indentStack.append(prevIndent)
+                            stringBodyIndentStack.append("")
                         }
                         indent = prevIndent
                     }

@@ -315,6 +315,45 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentLineAfterIndentedWrappedClosure() {
+        let input = """
+        func foo(for bar: String) -> UIViewController {
+            let viewController = Builder().build(
+                bar: bar) { viewController in
+                    viewController.dismiss(animated, true)
+                }
+
+            return viewController
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentLineAfterIndentedInlineClosure() {
+        let input = """
+        func foo(for bar: String) -> UIViewController {
+            let viewController = foo(Builder().build(
+                bar: bar)) { _ in ViewController() }
+
+            return viewController
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentLineAfterNonIndentedClosure() {
+        let input = """
+        func foo(for bar: String) -> UIViewController {
+            let viewController = Builder().build(bar: bar) { viewController in
+                viewController.dismiss(animated, true)
+            }
+
+            return viewController
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent switch/case
 
     func testSwitchCaseIndenting() {

@@ -4280,6 +4280,23 @@ public struct _FormatRules {
             firstChar != "$", String(firstChar).uppercased() == String(firstChar) else {
                 return
             }
+
+            // If there's a linebreak between the `init` and the open paren,
+            // we have to remove it or this init call will no lomger compile
+            if let newlineIndex = formatter.index(of: .linebreak, before: openParenIndex),
+               newlineIndex > i
+            {
+                formatter.removeToken(at: newlineIndex)
+
+                // Remove any spaces around the linebreak
+                // (e.g. any extra indentation spaces that are no longer necessary)
+                for index in (i ... newlineIndex).reversed() {
+                    if formatter.token(at: index)?.isSpace == true {
+                        formatter.removeToken(at: index)
+                    }
+                }
+            }
+
             formatter.removeTokens(in: dotIndex ... i)
         }
     }

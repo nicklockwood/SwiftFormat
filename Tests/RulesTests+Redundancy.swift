@@ -728,6 +728,27 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantInit)
     }
 
+    func testRemoveInitWithOpenParenOnFollowingLine() {
+        let input = """
+        var foo: Foo {
+            Foo.init
+            (
+                bar: bar,
+                baaz: baaz
+            )
+        }
+        """
+        let output = """
+        var foo: Foo {
+            Foo(
+                bar: bar,
+                baaz: baaz
+            )
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantInit)
+    }
+
     // MARK: - redundantLetError
 
     func testCatchLetError() {

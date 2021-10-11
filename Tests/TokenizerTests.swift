@@ -353,11 +353,11 @@ class TokenizerTests: XCTestCase {
 
     func testMultilineStringWithMultilineInterpolation() {
         let input = """
-        \"""
+        \"\""
         \\(
             6
         )
-        \"""
+        \"\""
         """
         let output: [Token] = [
             .startOfScope("\"\"\""),
@@ -377,15 +377,15 @@ class TokenizerTests: XCTestCase {
 
     func testIndentMultilineStringWithMultilineNestedInterpolation() {
         let input = """
-        \"""
+        \"\""
             foo
                 \\(bar {
-                    \"""
+                    \"\""
                         baz
-                    \"""
+                    \"\""
                 })
             quux
-        \"""
+        \"\""
         """
         let output: [Token] = [
             .startOfScope("\"\"\""),
@@ -420,16 +420,16 @@ class TokenizerTests: XCTestCase {
 
     func testIndentMultilineStringWithMultilineNestedInterpolation2() {
         let input = """
-        \"""
+        \"\""
             foo
                 \\(bar {
-                    \"""
+                    \"\""
                         baz
-                    \"""
+                    \"\""
                     }
                 )
             quux
-        \"""
+        \"\""
         """
         let output: [Token] = [
             .startOfScope("\"\"\""),

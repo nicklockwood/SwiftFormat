@@ -816,10 +816,10 @@ class WrappingTests: RulesTests {
 
     func testIndentMultilineStringWhenWrappingArguments() {
         let input = """
-        foobar(foo: \"""
+        foobar(foo: \"\""
                    baz
-               \""",
-               bar: \"""
+               \"\"",
+               bar: \"\""
                    baz
                \"\"")
         """

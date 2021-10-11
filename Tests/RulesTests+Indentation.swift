@@ -1627,9 +1627,9 @@ class IndentTests: RulesTests {
 
     func testIndentChainedPropertiesAfterMultilineStringXcode() {
         let input = """
-        let foo = \"""
+        let foo = \"\""
         bar
-        \"""
+        \"\""
             .bar
             .baz
         """
@@ -1752,27 +1752,27 @@ class IndentTests: RulesTests {
     func testIndentMultilineStringWrappedAfter() {
         let input = """
         foo(baz:
-            \"""
+            \"\""
             baz
-            \""")
+            \"\"")
         """
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
     func testIndentMultilineStringInNestedCalls() {
         let input = """
-        foo(bar(\"""
+        foo(bar(\"\""
         baz
-        \"""))
+        \"\""))
         """
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
     func testIndentMultilineStringInFunctionWithfollowingArgument() {
         let input = """
-        foo(bar(\"""
+        foo(bar(\"\""
         baz
-        \""", quux: 5))
+        \"\"", quux: 5))
         """
         testFormatting(for: input, rule: FormatRules.indent)
     }
@@ -1781,17 +1781,17 @@ class IndentTests: RulesTests {
         let input = """
         switch foo {
             case bar:
-                return \"""
+                return \"\""
                 baz
-                \"""
+                \"\""
         }
         """
         let output = """
         switch foo {
         case bar:
-            return \"""
+            return \"\""
             baz
-            \"""
+            \"\""
         }
         """
         testFormatting(for: input, output, rule: FormatRules.indent)
@@ -1799,14 +1799,14 @@ class IndentTests: RulesTests {
 
     func testReduceIndentForMultilineString2() {
         let input = """
-            foo(\"""
+            foo(\"\""
             bar
-            \""")
+            \"\"")
         """
         let output = """
-        foo(\"""
+        foo(\"\""
         bar
-        \""")
+        \"\"")
         """
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
@@ -1814,13 +1814,13 @@ class IndentTests: RulesTests {
     func testIndentMultilineStringWithMultilineInterpolation() {
         let input = """
         func foo() {
-            \"""
+            \"\""
                 bar
                     \\(bar.map {
                         baz
                     })
                 quux
-            \"""
+            \"\""
         }
         """
         testFormatting(for: input, rule: FormatRules.indent)
@@ -1829,15 +1829,15 @@ class IndentTests: RulesTests {
     func testIndentMultilineStringWithMultilineNestedInterpolation() {
         let input = """
         func foo() {
-            \"""
+            \"\""
                 bar
                     \\(bar.map {
-                        \"""
+                        \"\""
                             quux
-                        \"""
+                        \"\""
                     })
                 quux
-            \"""
+            \"\""
         }
         """
         testFormatting(for: input, rule: FormatRules.indent)
@@ -1846,16 +1846,16 @@ class IndentTests: RulesTests {
     func testIndentMultilineStringWithMultilineNestedInterpolation2() {
         let input = """
         func foo() {
-            \"""
+            \"\""
                 bar
                     \\(bar.map {
-                        \"""
+                        \"\""
                             quux
-                        \"""
+                        \"\""
                     }
                     )
                 quux
-            \"""
+            \"\""
         }
         """
         testFormatting(for: input, rule: FormatRules.indent)

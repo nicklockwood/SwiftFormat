@@ -482,9 +482,9 @@ class ParsingHelpersTests: XCTestCase {
 
     func testParameterBodyAfterMultilineStringIsNotClosure() {
         let formatter = Formatter(tokenize("""
-        var foo: String = \"""
+        var foo: String = \"\""
         bar
-        \""" {
+        \"\"" {
             didSet { print("didSet") }
         }
         """))

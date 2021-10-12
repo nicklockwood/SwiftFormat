@@ -1712,6 +1712,21 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentLabelledTrailingClosure() {
+        let input = """
+        var buttonLabel: some View {
+            self.label()
+                .if(self.isInline) {
+                    $0.font(.hsBody)
+                }
+                else: {
+                    $0.font(.hsControl)
+                }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent comments
 
     func testCommentIndenting() {

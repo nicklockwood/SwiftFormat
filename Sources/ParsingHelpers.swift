@@ -818,7 +818,12 @@ extension Formatter {
                 return false
             }
             return true
-        case .identifier, .keyword("try"), .keyword("await"):
+        case .identifier:
+            if isTrailingClosureLabel(at: i) {
+                return false
+            }
+            fallthrough
+        case .keyword("try"), .keyword("await"):
             guard let prevToken = last(.nonSpaceOrComment, before: i) else {
                 return true
             }
@@ -852,6 +857,18 @@ extension Formatter {
             }
             return true
         }
+    }
+
+    func isTrailingClosureLabel(at i: Int) -> Bool {
+        if case .identifier? = token(at: i),
+           last(.nonSpaceOrCommentOrLinebreak, before: i) == .endOfScope("}"),
+           let nextIndex = index(of: .nonSpaceOrComment, after: i, if: { $0 == .delimiter(":") }),
+           let nextNextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex),
+           isStartOfClosure(at: nextNextIndex, in: nil)
+        {
+            return true
+        }
+        return false
     }
 
     func isSubscriptOrFunctionCall(at i: Int) -> Bool {

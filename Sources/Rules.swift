@@ -1473,6 +1473,7 @@ public struct _FormatRules {
                 let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
                 let linewrapped = lastNonSpaceOrLinebreakIndex > -1 && (
                     !formatter.isEndOfStatement(at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last) ||
+                        (nextTokenIndex.map { formatter.isTrailingClosureLabel(at: $0) } == true) ||
                         !(nextTokenIndex == nil || [
                             .endOfScope("}"), .endOfScope("]"), .endOfScope(")"),
                         ].contains(formatter.tokens[nextTokenIndex!]) ||
@@ -1543,7 +1544,8 @@ public struct _FormatRules {
                            formatter.isStartOfStatement(at: startIndex) || (
                                (formatter.tokens[startIndex].isIdentifier || [
                                    .keyword("try"), .keyword("await"),
-                               ].contains(formatter.tokens[startIndex])) &&
+                               ].contains(formatter.tokens[startIndex]) ||
+                                   formatter.isTrailingClosureLabel(at: startIndex)) &&
                                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex).map {
                                        $0 != .keyword("return") && !$0.isOperator(ofType: .infix)
                                    } ?? false)

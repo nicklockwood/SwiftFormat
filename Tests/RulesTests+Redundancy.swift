@@ -749,6 +749,19 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantInit)
     }
 
+    func testNoRemoveInitWithOpenParenOnFollowingLineAfterComment() {
+        let input = """
+        var foo: Foo {
+            Foo.init // foo
+            (
+                bar: bar,
+                baaz: baaz
+            )
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantInit)
+    }
+
     // MARK: - redundantLetError
 
     func testCatchLetError() {

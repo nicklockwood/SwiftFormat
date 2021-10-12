@@ -4271,7 +4271,7 @@ public struct _FormatRules {
         formatter.forEach(.identifier("init")) { i, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
                 $0 == .operator(".", .infix)
-            }), let openParenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+            }), let openParenIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
                 $0 == .startOfScope("(")
             }), let closeParenIndex = formatter.index(of: .endOfScope(")"), after: openParenIndex),
             formatter.last(.nonSpaceOrCommentOrLinebreak, before: closeParenIndex) != .delimiter(":"),
@@ -4281,22 +4281,7 @@ public struct _FormatRules {
                 return
             }
 
-            // If there's a linebreak between the `init` and the open paren,
-            // we have to remove it or this init call will no lomger compile
-            if let newlineIndex = formatter.index(of: .linebreak, before: openParenIndex),
-               newlineIndex > i
-            {
-                formatter.removeToken(at: newlineIndex)
-
-                // Remove any spaces around the linebreak
-                // (e.g. any extra indentation spaces that are no longer necessary)
-                for index in (i ... newlineIndex).reversed() {
-                    if formatter.token(at: index)?.isSpace == true {
-                        formatter.removeToken(at: index)
-                    }
-                }
-            }
-
+            formatter.removeTokens(in: i + 1 ..< openParenIndex)
             formatter.removeTokens(in: dotIndex ... i)
         }
     }

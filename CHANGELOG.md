@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.48.16](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.16) (2021-10-12)
+
+- Fixed unexpected indentation of next line after a trailing closure
+- Fixed unexpected indentation of `try` expressions
+- Fixed bug where `redundantInit` could cause compilation failure
+- Fixed indenting of multiple trailing closures
+
 ## [0.48.15](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.15) (2021-10-08)
 
 - Fixed false positives in `unusedArgument` rule when using `try`/`await`

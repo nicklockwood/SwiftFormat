@@ -3375,6 +3375,10 @@ public struct _FormatRules {
                 switch token {
                 case .keyword("let"), .keyword("var"), .keyword("func"), .keyword("for"):
                     isDeclaration = true
+                    var i = i
+                    while let scopeStart = formatter.index(of: .startOfScope("("), before: i) {
+                        i = scopeStart
+                    }
                     isConditional = formatter.isConditionalStatement(at: i)
                 case .identifier:
                     let name = token.unescaped()
@@ -3403,10 +3407,6 @@ public struct _FormatRules {
                     }
                     removeUsed(from: &argNames, with: &associatedData, in: i + 1 ..< endIndex)
                     i = endIndex
-                case .startOfScope("("):
-                    if !isDeclaration {
-                        wasDeclaration = false
-                    }
                 case .operator("=", .infix), .delimiter(":"), .startOfScope(":"),
                      .keyword("in"), .keyword("where"):
                     wasDeclaration = isDeclaration
@@ -3429,10 +3429,6 @@ public struct _FormatRules {
                 case .delimiter(";"):
                     pushLocals()
                     wasDeclaration = false
-                case .endOfScope(")"):
-                    if isDeclaration {
-                        isDeclaration = false
-                    }
                 default:
                     break
                 }

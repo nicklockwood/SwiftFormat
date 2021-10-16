@@ -4755,6 +4755,38 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments, options: options)
     }
 
+    func testSecondConditionAfterTupleMarkedUnused() {
+        let input = """
+        func foobar(bar: Int) {
+            let (foo, baz) = (1, 2), bar = 3
+            print(foo, bar, baz)
+        }
+        """
+        let output = """
+        func foobar(bar _: Int) {
+            let (foo, baz) = (1, 2), bar = 3
+            print(foo, bar, baz)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedParamsInTupleAssignment() {
+        let input = """
+        func foobar(_ foo: Int, _ bar: Int, _ baz: Int, _ quux: Int) {
+            let ((foo, bar), baz) = ((foo, quux), bar)
+            print(foo, bar, baz, quux)
+        }
+        """
+        let output = """
+        func foobar(_ foo: Int, _ bar: Int, _: Int, _ quux: Int) {
+            let ((foo, bar), baz) = ((foo, quux), bar)
+            print(foo, bar, baz, quux)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

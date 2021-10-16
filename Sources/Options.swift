@@ -332,6 +332,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapArguments: WrapMode
     public var wrapParameters: WrapMode
     public var wrapCollections: WrapMode
+    public var wrapTypealiases: WrapMode
     public var closingParenOnSameLine: Bool
     public var wrapReturnType: WrapReturnType
     public var wrapConditions: WrapMode
@@ -415,6 +416,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapArguments: WrapMode = .preserve,
                 wrapParameters: WrapMode = .default,
                 wrapCollections: WrapMode = .preserve,
+                wrapTypealiases: WrapMode = .preserve,
                 closingParenOnSameLine: Bool = false,
                 wrapReturnType: WrapReturnType = .preserve,
                 wrapConditions: WrapMode = .preserve,
@@ -492,6 +494,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapArguments = wrapArguments
         self.wrapParameters = wrapParameters
         self.wrapCollections = wrapCollections
+        self.wrapTypealiases = wrapTypealiases
         self.closingParenOnSameLine = closingParenOnSameLine
         self.wrapReturnType = wrapReturnType
         self.wrapConditions = wrapConditions

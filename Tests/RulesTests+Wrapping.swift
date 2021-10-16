@@ -2226,6 +2226,225 @@ class WrappingTests: RulesTests {
                        rules: [FormatRules.wrapArguments, FormatRules.wrap], options: options)
     }
 
+    func testWrapArguments_typealias_beforeFirst() {
+        let input = """
+        typealias Dependencies = FooProviding & BarProviding & BaazProviding & QuuxProviding
+        """
+
+        let output = """
+        typealias Dependencies
+            = FooProviding
+            & BarProviding
+            & BaazProviding
+            & QuuxProviding
+        """
+
+        let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 40)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArguments_multipleTypealiases_beforeFirst() {
+        let input = """
+        enum Namespace {
+            typealias DependenciesA = FooProviding & BarProviding
+            typealias DependenciesB = BaazProviding & QuuxProviding
+        }
+        """
+
+        let output = """
+        enum Namespace {
+            typealias DependenciesA
+                = FooProviding
+                & BarProviding
+            typealias DependenciesB
+                = BaazProviding
+                & QuuxProviding
+        }
+        """
+
+        let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 45)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArguments_typealias_afterFirst() {
+        let input = """
+        typealias Dependencies = FooProviding & BarProviding & BaazProviding & QuuxProviding
+        """
+
+        let output = """
+        typealias Dependencies = FooProviding
+            & BarProviding
+            & BaazProviding
+            & QuuxProviding
+        """
+
+        let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 40)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArguments_multipleTypealiases_afterFirst() {
+        let input = """
+        enum Namespace {
+            typealias DependenciesA = FooProviding & BarProviding
+            typealias DependenciesB = BaazProviding & QuuxProviding
+        }
+        """
+
+        let output = """
+        enum Namespace {
+            typealias DependenciesA = FooProviding
+                & BarProviding
+            typealias DependenciesB = BaazProviding
+                & QuuxProviding
+        }
+        """
+
+        let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 45)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArguments_typealias_shorterThanMaxWidth() {
+        let input = """
+        typealias Dependencies = FooProviding & BarProviding & BaazProviding
+        """
+
+        let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 100)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently() {
+        let input = """
+        typealias Dependencies = FooProviding & BarProviding &
+            BaazProviding & QuuxProviding
+        """
+
+        let output = """
+        typealias Dependencies = FooProviding
+            & BarProviding
+            & BaazProviding
+            & QuuxProviding
+        """
+
+        let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 200)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently2() {
+        let input = """
+        enum Namespace {
+            typealias Dependencies = FooProviding & BarProviding
+                & BaazProviding & QuuxProviding
+        }
+        """
+
+        let output = """
+        enum Namespace {
+            typealias Dependencies
+                = FooProviding
+                & BarProviding
+                & BaazProviding
+                & QuuxProviding
+        }
+        """
+
+        let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 200)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently3() {
+        let input = """
+        typealias Dependencies
+            = FooProviding & BarProviding &
+            BaazProviding & QuuxProviding
+        """
+
+        let output = """
+        typealias Dependencies = FooProviding
+            & BarProviding
+            & BaazProviding
+            & QuuxProviding
+        """
+
+        let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 200)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently4() {
+        let input = """
+        typealias Dependencies
+            = FooProviding
+            & BarProviding
+            & BaazProviding
+            & QuuxProviding
+        """
+
+        let output = """
+        typealias Dependencies = FooProviding
+            & BarProviding
+            & BaazProviding
+            & QuuxProviding
+        """
+
+        let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 200)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistentlyWithComment() {
+        let input = """
+        typealias Dependencies = FooProviding & BarProviding // trailing comment 1
+            // Inline Comment 1
+            & BaazProviding & QuuxProviding // trailing comment 2
+        """
+
+        let output = """
+        typealias Dependencies
+            = FooProviding
+            & BarProviding // trailing comment 1
+            // Inline Comment 1
+            & BaazProviding
+            & QuuxProviding // trailing comment 2
+        """
+
+        let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 200)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArguments_typealias_singleTypePreserved() {
+        let input = """
+        typealias Dependencies = FooProviding
+        """
+
+        let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 10)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["wrap"])
+    }
+
+    func testWrapArguments_typealias_preservesCommentsBetweenTypes() {
+        let input = """
+        typealias Dependencies
+            // We use `FooProviding` because `FooFeature` depends on `Foo`
+            = FooProviding
+            // We use `BarProviding` because `BarFeature` depends on `Bar`
+            & BarProviding
+            // We use `BaazProviding` because `BaazFeature` depends on `Baaz`
+            & BaazProviding
+        """
+
+        let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 100)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapArguments_typealias_preservesCommentsAfterTypes() {
+        let input = """
+        typealias Dependencies
+            = FooProviding // We use `FooProviding` because `FooFeature` depends on `Foo`
+            & BarProviding // We use `BarProviding` because `BarFeature` depends on `Bar`
+            & BaazProviding // We use `BaazProviding` because `BaazFeature` depends on `Baaz`
+        """
+
+        let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 100)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
     // MARK: - -return wrap-if-multiline
 
     func testWrapReturnOnMultilineFunctionDeclaration() {

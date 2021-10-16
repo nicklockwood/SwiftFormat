@@ -239,6 +239,55 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentWrappedClosureCaptureList() {
+        let input = """
+        foo { [
+            title = title,
+            weak topView = topView
+        ] in
+            print(title)
+            _ = topView
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    // TODO: add `unwrap` rule to improve this case
+    func testIndentWrappedClosureCaptureList2() {
+        let input = """
+        class A {}
+        let a = A()
+        let f = { [
+            weak a
+        ]
+        (
+            x: Int,
+            y: Int
+        )
+            throws
+            ->
+            Int
+        in
+            print("Hello, World! " + String(x + y))
+            return x + y
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentWrappedClosureCaptureListWithUnwrappedParameters() {
+        let input = """
+        foo { [
+            title = title,
+            weak topView = topView
+        ] (bar: Int) in
+            print(title, bar)
+            _ = topView
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     func testIndentTrailingClosureArgumentsAfterFunction() {
         let input = """
         var epoxyViewportLogger: EpoxyViewportLogger = {

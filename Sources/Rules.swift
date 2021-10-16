@@ -3584,6 +3584,10 @@ public struct _FormatRules {
                 case .delimiter(";"):
                     pushLocals()
                     wasDeclaration = false
+                case .endOfScope(")"):
+                    if isDeclaration {
+                        isDeclaration = false
+                    }
                 default:
                     break
                 }

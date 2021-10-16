@@ -324,7 +324,8 @@ class IndentTests: RulesTests {
             return viewController
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent,
+                       exclude: ["braces", "wrapMultilineStatementBraces"])
     }
 
     func testIndentLineAfterIndentedInlineClosure() {

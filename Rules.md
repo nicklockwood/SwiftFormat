@@ -1950,6 +1950,7 @@ Option | Description
 `--closingparen` | Closing paren position: "balanced" (default) or "same-line"
 `--wrapreturntype` | Wrap return type: "if-multiline", "preserve" (default)
 `--wrapconditions` | Wrap conditions: "before-first", "after-first", "preserve"
+`--wraptypealiases` | Wrap typealiases: "before-first", "after-first", "preserve"
 
 <details>
 <summary>Examples</summary>

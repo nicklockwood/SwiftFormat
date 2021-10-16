@@ -459,6 +459,12 @@ struct _Descriptors {
         help: "Wrap array/dict: \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapCollections
     )
+    let wrapTypealiases = OptionDescriptor(
+        argumentName: "wraptypealiases",
+        displayName: "Wrap Typealiases",
+        help: "Wrap typealiases: \"before-first\", \"after-first\", \"preserve\"",
+        keyPath: \.wrapTypealiases
+    )
     let wrapReturnType = OptionDescriptor(
         argumentName: "wrapreturntype",
         displayName: "Wrap Return Type",

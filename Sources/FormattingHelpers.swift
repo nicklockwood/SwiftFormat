@@ -605,6 +605,103 @@ extension Formatter {
                 }
             }
         }
+
+        // -- wraptypealiases
+        forEach(.keyword) { typealiasIndex, token in
+            guard
+                options.wrapTypealiases == .beforeFirst || options.wrapTypealiases == .afterFirst,
+                token.string == "typealias",
+                let equalsIndex = index(of: .operator("=", .infix), after: typealiasIndex),
+                // Any type can follow the equals index of a typealias,
+                // but we're specifically looking to wrap lengthy composite protocols.
+                //  - Valid composite protocols are stricly _only_ identifiers
+                //    separated by `&` tokens. Protocols can't be generic,
+                //    so we know that this typealias can't be generic.
+                //  - `&` tokens in types are also _only valid_ for composite protocol types,
+                //    so if we see one then we know this if what we're looking for.
+                // https://docs.swift.org/swift-book/ReferenceManual/Types.html#grammar_protocol-composition-type
+                let firstIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+                tokens[firstIdentifierIndex].isIdentifier,
+                let firstAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: firstIdentifierIndex),
+                tokens[firstAndIndex] == .operator("&", .infix)
+            else { return }
+
+            // Parse through to the end of the composite protocol type
+            // so we know how long it is (and where the &s are)
+            var lastIdentifierIndex = firstIdentifierIndex
+            var andTokenIndicies = [Int]()
+
+            while
+                let nextAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastIdentifierIndex),
+                tokens[nextAndIndex] == .operator("&", .infix),
+                let nextIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextAndIndex),
+                tokens[nextIdentifierIndex].isIdentifier
+            {
+                andTokenIndicies.append(nextAndIndex)
+                lastIdentifierIndex = nextIdentifierIndex
+            }
+
+            // Only wrap if this line if longer than the max width,
+            // or if there is already at least one linebreak somewhere in the type
+            let range = startOfLine(at: typealiasIndex) ... lastIdentifierIndex
+            let typealiasLength = tokens[range].map { $0.string }.joined().count
+
+            guard
+                typealiasLength > maxWidth
+                || tokens[range].contains(where: { $0.isLinebreak })
+            else { return }
+
+            // Decide which indicies to wrap at
+            //  - We always wrap at each `&`
+            //  - For `beforeFirst`, we also wrap before the `=`
+            let wrapIndicies: [Int]
+            switch options.wrapTypealiases {
+            case .afterFirst:
+                wrapIndicies = andTokenIndicies
+            case .beforeFirst:
+                wrapIndicies = [equalsIndex] + andTokenIndicies
+            case .default, .disabled, .preserve:
+                return
+            }
+
+            let baseIndent = indentForLine(at: typealiasIndex)
+            let indent = baseIndent + options.indent
+
+            for indexToWrap in wrapIndicies.reversed() {
+                // if this item isn't already on its own line, then wrap it
+                if last(.nonSpaceOrComment, before: indexToWrap)?.is(.linebreak) == false {
+                    // Remove the space immediately before this token if present,
+                    // so it isn't orphaned on the previous line once we wrap
+                    if tokens[indexToWrap - 1].isSpace {
+                        removeToken(at: indexToWrap - 1)
+                    }
+
+                    insertSpace(indent, at: indexToWrap - 1)
+                    insertLinebreak(at: indexToWrap - 1)
+
+                    // While we're here, make sure there's exactly one space after the &
+                    let updatedAndIndex = indexToWrap + 1
+                    let identifierIndex = index(of: .identifier, after: updatedAndIndex)!
+
+                    replaceTokens(
+                        in: (updatedAndIndex + 1) ..< identifierIndex,
+                        with: .space(" ")
+                    )
+                }
+            }
+
+            // If we're using `afterFirst` and there was unexpectedly a linebreak
+            // between the `typealias` and the `=`, we need to remove it
+            let rangeBetweenTypealiasAndEquals = (typealiasIndex + 1) ..< equalsIndex
+            if options.wrapTypealiases == .afterFirst,
+               let linebreakIndex = rangeBetweenTypealiasAndEquals.first(where: { tokens[$0].isLinebreak })
+            {
+                removeToken(at: linebreakIndex)
+                if tokens[linebreakIndex].isSpace, tokens[linebreakIndex] != .space(" ") {
+                    replaceToken(at: linebreakIndex, with: .space(" "))
+                }
+            }
+        }
     }
 
     func removeParen(at index: Int) {

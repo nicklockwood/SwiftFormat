@@ -388,6 +388,12 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.trailingClosures)
     }
 
+    func testRemoveParensAroundClosureWithInnerSpacesFollowedByUnwrapOperator() {
+        let input = "foo( { bar } )?.baz"
+        let output = "foo { bar }?.baz"
+        testFormatting(for: input, output, rule: FormatRules.trailingClosures)
+    }
+
     // solitary argument
 
     func testParensAroundSolitaryClosureArgumentRemoved() {

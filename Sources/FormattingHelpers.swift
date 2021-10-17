@@ -628,25 +628,33 @@ extension Formatter {
             }
         }
 
-        if token(at: index - 1)?.isSpace == true,
-           token(at: index + 1)?.isSpace == true
-        {
-            // Need to remove one
-            removeToken(at: index + 1)
-        } else if case .startOfScope = tokens[index] {
-            if tokenOutsideParenRequiresSpacing(at: index - 1),
-               tokenInsideParenRequiresSpacing(at: index + 1)
-            {
-                // Need to insert one
-                insert(.space(" "), at: index + 1)
-            }
-        } else if tokenInsideParenRequiresSpacing(at: index - 1),
-                  tokenOutsideParenRequiresSpacing(at: index + 1)
-        {
-            // Need to insert one
-            insert(.space(" "), at: index + 1)
-        }
+        let isStartOfScope = tokens[index].isStartOfScope
+        let spaceBefore = token(at: index - 1)?.isSpace == true
+        let spaceAfter = token(at: index + 1)?.isSpace == true
         removeToken(at: index)
+        if isStartOfScope {
+            if tokenOutsideParenRequiresSpacing(at: index - 1),
+               tokenInsideParenRequiresSpacing(at: index)
+            {
+                if !spaceBefore, !spaceAfter {
+                    // Need to insert one
+                    insert(.space(" "), at: index)
+                }
+            } else if spaceAfter, spaceBefore {
+                removeToken(at: index)
+            }
+        } else {
+            if tokenInsideParenRequiresSpacing(at: index - 1),
+               tokenOutsideParenRequiresSpacing(at: index)
+            {
+                if !spaceBefore, !spaceAfter {
+                    // Need to insert one
+                    insert(.space(" "), at: index)
+                }
+            } else if spaceBefore {
+                removeToken(at: index - 1)
+            }
+        }
     }
 }
 

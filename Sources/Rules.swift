@@ -1137,7 +1137,7 @@ public struct _FormatRules {
     public let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
         orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
-        options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation"],
+        options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation", "indentstrings"],
         sharedOptions: ["trimwhitespace", "allman", "wrapconditions"]
     ) { formatter in
         var scopeStack: [Token] = []
@@ -1744,6 +1744,30 @@ public struct _FormatRules {
                 lastNonSpaceIndex = i
                 if !token.isLinebreak {
                     lastNonSpaceOrLinebreakIndex = i
+                }
+            }
+        }
+
+        if formatter.options.indentStrings {
+            formatter.forEach(.startOfScope("\"\"\"")) { stringStartIndex, _ in
+                let baseIndent = formatter.indentForLine(at: stringStartIndex)
+                let expectedIndent = baseIndent + formatter.options.indent
+
+                guard
+                    let stringEndIndex = formatter.endOfScope(at: stringStartIndex),
+                    // Preserve the default indentation if the opening """ is on a line by itself
+                    formatter.startOfLine(at: stringStartIndex, excludingIndent: true) != stringStartIndex
+                else { return }
+
+                for linebreakIndex in (stringStartIndex ..< stringEndIndex).reversed()
+                    where formatter.tokens[linebreakIndex].isLinebreak
+                {
+                    let indentIndex = linebreakIndex + 1
+                    if formatter.tokens[indentIndex].is(.space) {
+                        formatter.replaceToken(at: indentIndex, with: .space(expectedIndent))
+                    } else {
+                        formatter.insert(.space(expectedIndent), at: indentIndex)
+                    }
                 }
             }
         }
@@ -6264,59 +6288,6 @@ public struct _FormatRules {
 
                     formatter.removeToken(at: returnIndex)
                 }
-            }
-        }
-    }
-
-    public let indentMultilineStrings = FormatRule(
-        help: "Indents multiline strings.",
-        options: ["indentstrings"]
-    ) { formatter in
-        if !formatter.options.indentStrings {
-            return
-        }
-        var indentLines = false
-        var firstSpace = 0
-
-        formatter.forEachToken { i, token in
-            switch token {
-            // count the number of spaces on the first line
-            case .startOfScope("\"\"\""):
-                indentLines = true
-                var tok = formatter.token(at: formatter.startOfLine(at: i))
-                switch tok {
-                case let .space(s):
-                    firstSpace = s.count
-                default:
-                    firstSpace = 0
-                }
-
-            case .endOfScope("\"\"\""):
-                indentLines = false
-
-            // for each line in the string, add extra spaces at the beginning
-            case .linebreak:
-                if indentLines {
-                    // count the number of spaces it already has
-                    var totalSpaces = 0
-                    var ind = i + 1
-                    var beginsWithSpaces = true
-                    while beginsWithSpaces {
-                        switch formatter.token(at: ind) {
-                        case let .space(s):
-                            totalSpaces += s.count
-                            ind += 1
-                        default:
-                            beginsWithSpaces = false
-                        }
-                    }
-                    // if it does not have enough spaces, add 4 spaces
-                    if totalSpaces < firstSpace + 4 {
-                        formatter.insert(.space("    "), at: i + 1)
-                    }
-                }
-            default:
-                break
             }
         }
     }

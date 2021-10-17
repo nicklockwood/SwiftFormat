@@ -21,7 +21,6 @@
 * [fileHeader](#fileHeader)
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
-* [indentMultilineStrings](#indentMultilineStrings)
 * [initCoderUnavailable](#initCoderUnavailable)
 * [isEmpty](#isEmpty)
 * [leadingDelimiters](#leadingDelimiters)
@@ -654,6 +653,7 @@ Option | Description
 `--indentcase` | Indent cases inside a switch: "true" or "false" (default)
 `--ifdef` | #if indenting: "indent" (default), "no-indent" or "outdent"
 `--xcodeindentation` | Match Xcode indenting: "enabled" or "disabled" (default)
+`--indentstrings` | Indent Multiline Strings: "false" (default) or "true"
 
 <details>
 <summary>Examples</summary>
@@ -696,34 +696,6 @@ Option | Description
 + case bar: break
 + case baz: break
   }
-```
-
-</details>
-<br/>
-
-## indentMultilineStrings
-
-Indents multiline strings.
-
-Option | Description
---- | ---
-`--indentstrings` | Indent Multiline Strings: "false" (default) or "true"
-
-<details>
-<summary>Examples</summary>
-
-```diff
-let sql = """
-- SELECT *
-- FROM authors
-- WHERE authors.name LIKE '%David%'
-- """
-
-let sql = """
-+    SELECT *
-+    FROM authors
-+    WHERE authors.name LIKE '%David%'
-+    """
 ```
 
 </details>

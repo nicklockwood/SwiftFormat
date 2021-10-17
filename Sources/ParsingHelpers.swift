@@ -543,7 +543,7 @@ extension Formatter {
                 return isStartOfClosure(at: scopeIndex)
             case .startOfScope("("), .startOfScope("["), .startOfScope("<"),
                  .endOfScope(")"), .endOfScope("]"), .endOfScope(">"),
-                 .keyword where token.isAttribute:
+                 .keyword where token.isAttribute, _ where token.isComment:
                 break
             case .keyword, .startOfScope, .endOfScope:
                 return false

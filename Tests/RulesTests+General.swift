@@ -328,6 +328,15 @@ class GeneralTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.trailingCommas)
     }
 
+    func testTrailingCommaNotAddedToCaptureListWithComment() {
+        let input = """
+        let foo = { [
+            self // captures self
+        ] in }
+        """
+        testFormatting(for: input, rule: FormatRules.trailingCommas)
+    }
+
     // trailingCommas = false
 
     func testCommaNotAddedToLastItem() {

@@ -1913,6 +1913,7 @@ Option | Description
 `--maxwidth` | Maximum length of a line before wrapping. defaults to "none"
 `--nowrapoperators` | Comma-delimited list of operators that shouldn't be wrapped
 `--assetliterals` | Color/image literal width. "actual-width" or "visual-width"
+`--wrapternary` | Wrap ternary operators: "default", "before-operators"
 
 ## wrapArguments
 

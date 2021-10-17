@@ -995,6 +995,169 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrap, options: options)
     }
 
+    func testWrapSimpleTernaryOperator() {
+        let input = """
+        let foo = fooCondition ? longValueThatContainsFoo : longValueThatContainsBar
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? longValueThatContainsFoo
+            : longValueThatContainsBar
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testRewrapsSimpleTernaryOperator() {
+        let input = """
+        let foo = fooCondition ? longValueThatContainsFoo :
+            longValueThatContainsBar
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? longValueThatContainsFoo
+            : longValueThatContainsBar
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapComplexTernaryOperator() {
+        let input = """
+        let foo = fooCondition ? Foo(property: value) : barContainer.getBar(using: barProvider)
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? Foo(property: value)
+            : barContainer.getBar(using: barProvider)
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testRewrapsComplexTernaryOperator() {
+        let input = """
+        let foo = fooCondition ? Foo(property: value) :
+            barContainer.getBar(using: barProvider)
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? Foo(property: value)
+            : barContainer.getBar(using: barProvider)
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrappedTernaryOperatorIndentsChainedCalls() {
+        let input = """
+        let ternary = condition
+            ? values
+                .map { $0.bar }
+                .filter { $0.hasFoo }
+                .last
+            : other.values
+                .compactMap { $0 }
+                .first?
+                .with(property: updatedValue)
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testWrapsSimpleNestedTernaryOperator() {
+        let input = """
+        let foo = fooCondition ? (barCondition ? a : b) : (baazCondition ? c : d)
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? (barCondition ? a : b)
+            : (baazCondition ? c : d)
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapsDoubleNestedTernaryOperation() {
+        let input = """
+        let foo = fooCondition ? barCondition ? longTrueBarResult : longFalseBarResult : baazCondition ? longTrueBaazResult : longFalseBaazResult
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? barCondition
+                ? longTrueBarResult
+                : longFalseBarResult
+            : baazCondition
+                ? longTrueBaazResult
+                : longFalseBaazResult
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapsTripleNestedTernaryOperation() {
+        let input = """
+        let foo = fooCondition ? barCondition ? quuxCondition ? longTrueQuuxResult : longFalseQuuxResult : barCondition2 ? longTrueBarResult : longFalseBarResult : baazCondition ? longTrueBaazResult : longFalseBaazResult
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? barCondition
+                ? quuxCondition
+                    ? longTrueQuuxResult
+                    : longFalseQuuxResult
+                : barCondition2
+                    ? longTrueBarResult
+                    : longFalseBarResult
+            : baazCondition
+                ? longTrueBaazResult
+                : longFalseBaazResult
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testNoWrapTernaryWrappedWithinChildExpression() {
+        let input = """
+        func foo() {
+            return _skipString(string) ? .token(
+                string, Location(source: input, range: startIndex ..< index)
+            ) : nil
+        }
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 0)
+        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+    }
+
+    func testNoWrapTernaryWrappedWithinChildExpression2() {
+        let input = """
+        let types: [PolygonType] = plane.isEqual(to: plane) ? [] : vertices.map {
+            let t = plane.normal.dot($0.position) - plane.w
+            let type: PolygonType = (t < -epsilon) ? .back : (t > epsilon) ? .front : .coplanar
+            polygonType = PolygonType(rawValue: polygonType.rawValue | type.rawValue)!
+            return type
+        }
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 0)
+        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+    }
+
     // MARK: - wrapArguments
 
     func testIndentFirstElementWhenApplyingWrap() {

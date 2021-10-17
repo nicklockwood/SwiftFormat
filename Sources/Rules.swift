@@ -1138,7 +1138,7 @@ public struct _FormatRules {
         help: "Indent code in accordance with the scope level.",
         orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
         options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation"],
-        sharedOptions: ["trimwhitespace", "allman", "wrapconditions"]
+        sharedOptions: ["trimwhitespace", "allman", "wrapconditions", "wrapternary"]
     ) { formatter in
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []
@@ -1621,6 +1621,48 @@ public struct _FormatRules {
                            .count < indent.count + formatter.options.indent.count
                         {
                             indent = formatter.indentForLine(at: conditionBeginIndex) + formatter.options.indent
+                            indentStack[indentStack.count - 1] = indent
+                        }
+
+                        let startOfLineIndex = formatter.startOfLine(at: i, excludingIndent: true)
+                        let startOfLine = formatter.tokens[startOfLineIndex]
+
+                        if formatter.options.wrapTernaryOperators == .beforeOperators,
+                           startOfLine == .operator(":", .infix) || startOfLine == .operator("?", .infix)
+                        {
+                            // Push a ? scope onto the stack so we can easily know
+                            // that the next : is the closing operator of this ternary
+                            if startOfLine.string == "?" {
+                                // We smuggle the index of this operator in the scope stack
+                                // so we can recover it trivially when handling the
+                                // corresponding : operator.
+                                scopeStack.append(.operator("?-\(startOfLineIndex)", .infix))
+                            }
+
+                            // Indent any operator-leading lines following a compomnent operator
+                            // of a wrapped ternary operator expression, except for the :
+                            // following a ?
+                            if
+                                let nextToken = formatter.next(.nonSpace, after: i),
+                                nextToken.isOperator(ofType: .infix),
+                                nextToken != .operator(":", .infix)
+                            {
+                                indent += formatter.options.indent
+                                indentStack[indentStack.count - 1] = indent
+                            }
+                        }
+
+                        // Make sure the indentation for this : operator matches
+                        // the indentation of the previous ? operator
+                        if formatter.options.wrapTernaryOperators == .beforeOperators,
+                           formatter.next(.nonSpace, after: i) == .operator(":", .infix),
+                           let scope = scopeStack.last,
+                           scope.string.hasPrefix("?"),
+                           scope.isOperator(ofType: .infix),
+                           let previousOperatorIndex = scope.string.components(separatedBy: "-").last.flatMap({ Int($0) })
+                        {
+                            scopeStack.removeLast()
+                            indent = formatter.indentForLine(at: previousOperatorIndex)
                             indentStack[indentStack.count - 1] = indent
                         }
                     }
@@ -3905,9 +3947,9 @@ public struct _FormatRules {
 
     public let wrap = FormatRule(
         help: "Wrap lines that exceed the specified maximum width.",
-        options: ["maxwidth", "nowrapoperators", "assetliterals"],
+        options: ["maxwidth", "nowrapoperators", "assetliterals", "wrapternary"],
         sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "indent",
-                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs", "wrapreturntype", "wrapconditions", "wraptypealiases"]
+                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs", "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapternary"]
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
         guard maxWidth > 0 else { return }
@@ -3966,7 +4008,7 @@ public struct _FormatRules {
         options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen",
                   "wrapreturntype", "wrapconditions", "wraptypealiases"],
         sharedOptions: ["indent", "trimwhitespace", "linebreaks",
-                        "tabwidth", "maxwidth", "smarttabs", "assetliterals"]
+                        "tabwidth", "maxwidth", "smarttabs", "assetliterals", "wrapternary"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
                                               wrapSingleArguments: false)

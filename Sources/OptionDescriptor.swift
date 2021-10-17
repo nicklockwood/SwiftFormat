@@ -477,6 +477,12 @@ struct _Descriptors {
         help: "Wrap conditions: \"before-first\", \"after-first\", \"preserve\"",
         keyPath: \.wrapConditions
     )
+    let wrapTernaryOperators = OptionDescriptor(
+        argumentName: "wrapternary",
+        displayName: "Wrap Ternary Operators",
+        help: "Wrap ternary operators: \"default\", \"before-operators\"",
+        keyPath: \.wrapTernaryOperators
+    )
     let closingParenOnSameLine = OptionDescriptor(
         argumentName: "closingparen",
         displayName: "Closing Paren Position",

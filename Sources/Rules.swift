@@ -3898,9 +3898,9 @@ public struct _FormatRules {
 
     public let wrap = FormatRule(
         help: "Wrap lines that exceed the specified maximum width.",
-        options: ["maxwidth", "nowrapoperators", "assetliterals"],
+        options: ["maxwidth", "nowrapoperators", "assetliterals", "wrapternary"],
         sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "indent",
-                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs", "wrapreturntype", "wrapconditions", "wraptypealiases"]
+                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs", "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapternary"]
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
         guard maxWidth > 0 else { return }
@@ -3959,7 +3959,7 @@ public struct _FormatRules {
         options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen",
                   "wrapreturntype", "wrapconditions", "wraptypealiases"],
         sharedOptions: ["indent", "trimwhitespace", "linebreaks",
-                        "tabwidth", "maxwidth", "smarttabs", "assetliterals"]
+                        "tabwidth", "maxwidth", "smarttabs", "assetliterals", "wrapternary"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
                                               wrapSingleArguments: false)

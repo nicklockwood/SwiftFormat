@@ -2296,7 +2296,7 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.blockToLineComments)
     }
 
-    func testIndentMultilineStrings() {
+    func testIndentMultilineStringInMethod() {
         let input = #"""
         func foo() {
             let sql = """
@@ -2316,6 +2316,52 @@ class SyntaxTests: RulesTests {
         }
         """#
         let options = FormatOptions(indentStrings: true)
-        testFormatting(for: input, output, rule: FormatRules.indentMultilineStrings, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentMultilineStringAtTopLevel() {
+        let input = #"""
+        let sql = """
+        SELECT *
+        FROM  authors,
+              books
+        WHERE authors.name LIKE '%David%'
+             AND pubdate < $1
+        """
+        """#
+        let output = #"""
+        let sql = """
+          SELECT *
+          FROM  authors,
+                books
+          WHERE authors.name LIKE '%David%'
+               AND pubdate < $1
+          """
+        """#
+        let options = FormatOptions(indent: "  ", indentStrings: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testUnindentMultilineStringAtTopLevel() {
+        let input = #"""
+        let sql = """
+          SELECT *
+          FROM  authors,
+                books
+          WHERE authors.name LIKE '%David%'
+               AND pubdate < $1
+          """
+        """#
+        let output = #"""
+        let sql = """
+        SELECT *
+        FROM  authors,
+              books
+        WHERE authors.name LIKE '%David%'
+             AND pubdate < $1
+        """
+        """#
+        let options = FormatOptions(indent: "  ", indentStrings: false)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 }

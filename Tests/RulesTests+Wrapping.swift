@@ -975,6 +975,102 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrap, options: options)
     }
 
+    func testWrapSimpleTernaryOperator() {
+        let input = """
+        let foo = fooCondition ? longValueThatContainsFoo : longValueThatContainsBar
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? longValueThatContainsFoo
+            : longValueThatContainsBar
+        """
+
+        let options = FormatOptions(maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testRewrapsSimpleTernaryOperator() {
+        let input = """
+        let foo = fooCondition ? longValueThatContainsFoo :
+            longValueThatContainsBar
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? longValueThatContainsFoo
+            : longValueThatContainsBar
+        """
+
+        let options = FormatOptions(maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapComplexTernaryOperator() {
+        let input = """
+        let foo = fooCondition ? Foo(property: value) : barContainer.getBar(using: barProvider)
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? Foo(property: value)
+            : barContainer.getBar(using: barProvider)
+        """
+
+        let options = FormatOptions(maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testRewrapsComplexTernaryOperator() {
+        let input = """
+        let foo = fooCondition ? Foo(property: value) :
+            barContainer.getBar(using: barProvider)
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? Foo(property: value)
+            : barContainer.getBar(using: barProvider)
+        """
+
+        let options = FormatOptions(maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapsSimpleNestedTernaryOperator() {
+        let input = """
+        let foo = fooCondition ? (barCondition ? a : b) : (baazCondition ? c : d)
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? (barCondition ? a : b)
+            : (baazCondition ? c : d)
+        """
+
+        let options = FormatOptions(maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapsComplexNestedTernaryOperation() {
+        let input = """
+        let foo = fooCondition ? barCondition ? longTrueBarResult : longFalseBarResult : baazCondition ? longTrueBaazResult : longFalseBaazResult
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? barCondition
+                ? longTrueBarResult
+                : longFalseBarResult
+            : baazCondition
+                ? longTrueBaazResult
+                : longFalseBaazResult
+        """
+
+        let options = FormatOptions(maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["indent"])
+    }
+
     // MARK: - wrapArguments
 
     func testIndentFirstElementWhenApplyingWrap() {
@@ -1903,9 +1999,9 @@ class WrappingTests: RulesTests {
 
     func testNoMistakeTernaryExpressionForArguments() {
         let input = """
-        (foo ?
-            bar :
-            baz)
+        (foo
+            ? bar
+            : baz)
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, wrapParameters: .beforeFirst)
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,

@@ -606,11 +606,51 @@ extension Formatter {
             }
         }
 
+        /// Whether or not the multiline statements that starts at `startIndex`
+        /// and ends at `endIndex` should be wraped / re-wraped
+        func shouldWrapMultilineStatement(startIndex: Int, endIndex: Int) -> Bool {
+            // Only wrap if this line if longer than the max width,
+            // or if there is already at least one linebreak somewhere in the statement
+            let range = startOfLine(at: startIndex) ... endIndex
+            let length = tokens[range].map { $0.string }.joined().count
+
+            return (maxWidth > 0 && length > maxWidth)
+                || tokens[range].contains(where: { $0.isLinebreak })
+        }
+
+        /// Wraps a multi-line statement where each delimiter index
+        /// should be the first token on its line
+        func wrapMultilineStatement(startIndex: Int, delimiterIndicies: [Int]) {
+            let indent = indentForLine(at: startIndex) + options.indent
+
+            for indexToWrap in delimiterIndicies.reversed() {
+                // if this item isn't already on its own line, then wrap it
+                if last(.nonSpaceOrComment, before: indexToWrap)?.is(.linebreak) == false {
+                    // Remove the space immediately before this token if present,
+                    // so it isn't orphaned on the previous line once we wrap
+                    if tokens[indexToWrap - 1].isSpace {
+                        removeToken(at: indexToWrap - 1)
+                    }
+
+                    insertSpace(indent, at: indexToWrap - 1)
+                    insertLinebreak(at: indexToWrap - 1)
+
+                    // While we're here, make sure there's exactly one space after the delimiter
+                    let updatedAndIndex = indexToWrap + 1
+                    if let nextExpressionIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: updatedAndIndex) {
+                        replaceTokens(
+                            in: (updatedAndIndex + 1) ..< nextExpressionIndex,
+                            with: .space(" ")
+                        )
+                    }
+                }
+            }
+        }
+
         // -- wraptypealiases
-        forEach(.keyword) { typealiasIndex, token in
+        forEach(.keyword("typealias")) { typealiasIndex, _ in
             guard
                 options.wrapTypealiases == .beforeFirst || options.wrapTypealiases == .afterFirst,
-                token.string == "typealias",
                 let equalsIndex = index(of: .operator("=", .infix), after: typealiasIndex),
                 // Any type can follow the equals index of a typealias,
                 // but we're specifically looking to wrap lengthy composite protocols.
@@ -641,15 +681,9 @@ extension Formatter {
                 lastIdentifierIndex = nextIdentifierIndex
             }
 
-            // Only wrap if this line if longer than the max width,
-            // or if there is already at least one linebreak somewhere in the type
-            let range = startOfLine(at: typealiasIndex) ... lastIdentifierIndex
-            let typealiasLength = tokens[range].map { $0.string }.joined().count
-
-            guard
-                typealiasLength > maxWidth
-                || tokens[range].contains(where: { $0.isLinebreak })
-            else { return }
+            guard shouldWrapMultilineStatement(startIndex: typealiasIndex, endIndex: lastIdentifierIndex) else {
+                return
+            }
 
             // Decide which indicies to wrap at
             //  - We always wrap at each `&`
@@ -664,31 +698,10 @@ extension Formatter {
                 return
             }
 
-            let baseIndent = indentForLine(at: typealiasIndex)
-            let indent = baseIndent + options.indent
-
-            for indexToWrap in wrapIndicies.reversed() {
-                // if this item isn't already on its own line, then wrap it
-                if last(.nonSpaceOrComment, before: indexToWrap)?.is(.linebreak) == false {
-                    // Remove the space immediately before this token if present,
-                    // so it isn't orphaned on the previous line once we wrap
-                    if tokens[indexToWrap - 1].isSpace {
-                        removeToken(at: indexToWrap - 1)
-                    }
-
-                    insertSpace(indent, at: indexToWrap - 1)
-                    insertLinebreak(at: indexToWrap - 1)
-
-                    // While we're here, make sure there's exactly one space after the &
-                    let updatedAndIndex = indexToWrap + 1
-                    let identifierIndex = index(of: .identifier, after: updatedAndIndex)!
-
-                    replaceTokens(
-                        in: (updatedAndIndex + 1) ..< identifierIndex,
-                        with: .space(" ")
-                    )
-                }
-            }
+            wrapMultilineStatement(
+                startIndex: typealiasIndex,
+                delimiterIndicies: wrapIndicies
+            )
 
             // If we're using `afterFirst` and there was unexpectedly a linebreak
             // between the `typealias` and the `=`, we need to remove it
@@ -701,6 +714,56 @@ extension Formatter {
                     replaceToken(at: linebreakIndex, with: .space(" "))
                 }
             }
+        }
+
+        // --wrapternary
+        forEach(.operator("?", .infix)) { conditionIndex, _ in
+            guard let expressionStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conditionIndex) else {
+                return
+            }
+
+            // Find the : operator that separates the true and false branches
+            // of this ternary operator
+            //  - You can have nested ternary operators, so the immediate-next colon
+            //    is not necessarily the colon of _this_ ternary operator.
+            //  - To track nested ternary operators, we maintain a count of
+            //    the unterminated `?` tokens that we've seen.
+            //  - This ternary's colon token is the first colon we find
+            //    where there isn't an unterminated `?`.
+            var unterimatedTernaryCount = 0
+            var currentIndex = conditionIndex + 1
+            var foundColonIndex: Int?
+
+            while
+                foundColonIndex == nil,
+                currentIndex < tokens.count
+            {
+                switch tokens[currentIndex] {
+                case .operator("?", .infix):
+                    unterimatedTernaryCount += 1
+                case .operator(":", .infix):
+                    if unterimatedTernaryCount == 0 {
+                        foundColonIndex = currentIndex
+                    } else {
+                        unterimatedTernaryCount -= 1
+                    }
+                default:
+                    break
+                }
+
+                currentIndex += 1
+            }
+
+            guard
+                let colonIndex = foundColonIndex,
+                let endOfElseExpression = endOfExpression(at: colonIndex, upTo: []),
+                shouldWrapMultilineStatement(startIndex: expressionStartIndex, endIndex: endOfElseExpression)
+            else { return }
+
+            wrapMultilineStatement(
+                startIndex: expressionStartIndex,
+                delimiterIndicies: [conditionIndex, colonIndex]
+            )
         }
     }
 

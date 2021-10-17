@@ -891,8 +891,8 @@ class SyntaxTests: RulesTests {
         guard
             let first = response?.first,
             let last = response?.last,
-            case .foo(token: let foo, Providing: let bar) = first,
-            case .foo(token: let baz, Providing: let quux) = last
+            case .foo(token: let foo, provider: let bar) = first,
+            case .foo(token: let baz, provider: let quux) = last
         else {
             return
         }

@@ -606,21 +606,37 @@ extension Formatter {
             }
         }
 
-        /// Whether or not the multiline statements that starts at `startIndex`
-        /// and ends at `endIndex` should be wraped / re-wraped
-        func shouldWrapMultilineStatement(startIndex: Int, endIndex: Int) -> Bool {
-            // Only wrap if this line if longer than the max width,
-            // or if there is already at least one linebreak somewhere in the statement
+        /// Wraps / re-wraps a multi-line statement where each delimiter index
+        /// should be the first token on its line, if the statement
+        /// is longer than the max width or there is already a linebreak
+        /// adjacent to one of the delimiters
+        @discardableResult
+        func wrapMultilineStatement(
+            startIndex: Int,
+            delimiterIndicies: [Int],
+            endIndex: Int
+        ) -> Bool {
+            // ** Decide whether or not this statement needs to be wrapped / re-wrapped
             let range = startOfLine(at: startIndex) ... endIndex
             let length = tokens[range].map { $0.string }.joined().count
 
-            return (maxWidth > 0 && length > maxWidth)
-                || tokens[range].contains(where: { $0.isLinebreak })
-        }
+            // Only wrap if this line if longer than the max width...
+            let overMaximumWidth = maxWidth > 0 && length > maxWidth
 
-        /// Wraps a multi-line statement where each delimiter index
-        /// should be the first token on its line
-        func wrapMultilineStatement(startIndex: Int, delimiterIndicies: [Int]) {
+            // ... or if there is at least one delimiter currently adjacent to a linebreak,
+            // which means this statement is already being wrapped in some way
+            // and should be re-wrapped to the expected way if necessar
+            let delimitersAdjacentToLinebreak = delimiterIndicies.filter { delimiterIndex in
+                last(.nonSpaceOrComment, before: delimiterIndex)?.is(.linebreak) == true
+                    || next(.nonSpaceOrComment, after: delimiterIndex)?.is(.linebreak) == true
+            }.count
+
+            if !(overMaximumWidth || delimitersAdjacentToLinebreak > 0) {
+                return false
+            }
+
+            // ** Now that we know this is supposed to wrap,
+            //    make sure each delimiter is the start of a line
             let indent = indentForLine(at: startIndex) + options.indent
 
             for indexToWrap in delimiterIndicies.reversed() {
@@ -645,6 +661,8 @@ extension Formatter {
                     }
                 }
             }
+
+            return true
         }
 
         // -- wraptypealiases
@@ -681,10 +699,6 @@ extension Formatter {
                 lastIdentifierIndex = nextIdentifierIndex
             }
 
-            guard shouldWrapMultilineStatement(startIndex: typealiasIndex, endIndex: lastIdentifierIndex) else {
-                return
-            }
-
             // Decide which indicies to wrap at
             //  - We always wrap at each `&`
             //  - For `beforeFirst`, we also wrap before the `=`
@@ -698,10 +712,13 @@ extension Formatter {
                 return
             }
 
-            wrapMultilineStatement(
+            let didWrap = wrapMultilineStatement(
                 startIndex: typealiasIndex,
-                delimiterIndicies: wrapIndicies
+                delimiterIndicies: wrapIndicies,
+                endIndex: lastIdentifierIndex
             )
+
+            guard didWrap else { return }
 
             // If we're using `afterFirst` and there was unexpectedly a linebreak
             // between the `typealias` and the `=`, we need to remove it
@@ -718,9 +735,10 @@ extension Formatter {
 
         // --wrapternary
         forEach(.operator("?", .infix)) { conditionIndex, _ in
-            guard let expressionStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conditionIndex) else {
-                return
-            }
+            guard
+                options.wrapTernaryOperators != .default,
+                let expressionStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conditionIndex)
+            else { return }
 
             // Find the : operator that separates the true and false branches
             // of this ternary operator
@@ -756,13 +774,13 @@ extension Formatter {
 
             guard
                 let colonIndex = foundColonIndex,
-                let endOfElseExpression = endOfExpression(at: colonIndex, upTo: []),
-                shouldWrapMultilineStatement(startIndex: expressionStartIndex, endIndex: endOfElseExpression)
+                let endOfElseExpression = endOfExpression(at: colonIndex, upTo: [])
             else { return }
 
             wrapMultilineStatement(
                 startIndex: expressionStartIndex,
-                delimiterIndicies: [conditionIndex, colonIndex]
+                delimiterIndicies: [conditionIndex, colonIndex],
+                endIndex: endOfElseExpression
             )
         }
     }

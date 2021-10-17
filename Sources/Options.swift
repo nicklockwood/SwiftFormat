@@ -135,6 +135,15 @@ public enum EmptyBracesSpacing: String, CaseIterable {
     case linebreak
 }
 
+/// Wrapping behavior for multi-line ternary operators
+public enum TernaryOperatorWrapMode: String, CaseIterable {
+    /// Wraps ternary operators using the default `wrap` behavior,
+    /// which performs the minimum amount of wrapping necessary.
+    case `default`
+    /// Wraps long / multi-line ternary operators before each of the component operators
+    case beforeOperators = "before-operators"
+}
+
 /// Version number wrapper
 public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral, CustomStringConvertible {
     public let rawValue: String
@@ -336,6 +345,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var closingParenOnSameLine: Bool
     public var wrapReturnType: WrapReturnType
     public var wrapConditions: WrapMode
+    public var wrapTernaryOperators: TernaryOperatorWrapMode
     public var uppercaseHex: Bool
     public var uppercaseExponent: Bool
     public var decimalGrouping: Grouping
@@ -420,6 +430,7 @@ public struct FormatOptions: CustomStringConvertible {
                 closingParenOnSameLine: Bool = false,
                 wrapReturnType: WrapReturnType = .preserve,
                 wrapConditions: WrapMode = .preserve,
+                wrapTernaryOperators: TernaryOperatorWrapMode = .default,
                 uppercaseHex: Bool = true,
                 uppercaseExponent: Bool = false,
                 decimalGrouping: Grouping = .group(3, 6),
@@ -498,6 +509,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.closingParenOnSameLine = closingParenOnSameLine
         self.wrapReturnType = wrapReturnType
         self.wrapConditions = wrapConditions
+        self.wrapTernaryOperators = wrapTernaryOperators
         self.uppercaseHex = uppercaseHex
         self.uppercaseExponent = uppercaseExponent
         self.decimalGrouping = decimalGrouping

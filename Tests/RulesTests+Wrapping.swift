@@ -986,7 +986,7 @@ class WrappingTests: RulesTests {
             : longValueThatContainsBar
         """
 
-        let options = FormatOptions(maxWidth: 60)
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
@@ -1002,7 +1002,7 @@ class WrappingTests: RulesTests {
             : longValueThatContainsBar
         """
 
-        let options = FormatOptions(maxWidth: 60)
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
@@ -1017,7 +1017,7 @@ class WrappingTests: RulesTests {
             : barContainer.getBar(using: barProvider)
         """
 
-        let options = FormatOptions(maxWidth: 60)
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
@@ -1033,7 +1033,7 @@ class WrappingTests: RulesTests {
             : barContainer.getBar(using: barProvider)
         """
 
-        let options = FormatOptions(maxWidth: 60)
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
@@ -1048,7 +1048,7 @@ class WrappingTests: RulesTests {
             : (baazCondition ? c : d)
         """
 
-        let options = FormatOptions(maxWidth: 60)
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
@@ -1067,8 +1067,35 @@ class WrappingTests: RulesTests {
                 : longFalseBaazResult
         """
 
-        let options = FormatOptions(maxWidth: 60)
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["indent"])
+    }
+
+    func testNoWrapTernaryWrappedWithinChildExpression() {
+        let input = """
+        func foo() {
+            return _skipString(string) ? .token(
+                string, Location(source: input, range: startIndex ..< index)
+            ) : nil
+        }
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 0)
+        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+    }
+
+    func testNoWrapTernaryWrappedWithinChildExpression2() {
+        let input = """
+        let types: [PolygonType] = plane.isEqual(to: plane) ? [] : vertices.map {
+            let t = plane.normal.dot($0.position) - plane.w
+            let type: PolygonType = (t < -epsilon) ? .back : (t > epsilon) ? .front : .coplanar
+            polygonType = PolygonType(rawValue: polygonType.rawValue | type.rawValue)!
+            return type
+        }
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 0)
+        testFormatting(for: input, rule: FormatRules.wrap, options: options)
     }
 
     // MARK: - wrapArguments
@@ -1999,9 +2026,9 @@ class WrappingTests: RulesTests {
 
     func testNoMistakeTernaryExpressionForArguments() {
         let input = """
-        (foo
-            ? bar
-            : baz)
+        (foo ?
+            bar :
+            baz)
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, wrapParameters: .beforeFirst)
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,

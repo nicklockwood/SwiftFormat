@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.48.17](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.17) (2021-10-18)
+
+- Fixed bug where `trailingCommas` rule added comma to wrapped capture list with comment
+- Fixed indenting of closure with wrapped capture list
+- Fixed bug where `redundantArguments` rule stripped params used in pattern matching with inline let
+- Fixed bug where `redundantArguments` failed to detect shadowed param after tuple assignment
+- Fixed compilation error introduced when removing redundant parens with inner spaces
+
 ## [0.48.16](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.16) (2021-10-12)
 
 - Fixed unexpected indentation of next line after a trailing closure

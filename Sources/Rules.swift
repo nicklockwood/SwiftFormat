@@ -1753,13 +1753,11 @@ public struct _FormatRules {
                 let baseIndent = formatter.indentForLine(at: stringStartIndex)
                 let expectedIndent = baseIndent + formatter.options.indent
 
-                guard let stringEndIndex = formatter.endOfScope(at: stringStartIndex) else {
-                    return
-                }
-
-                if formatter.indentForLine(at: stringEndIndex) == expectedIndent {
-                    return
-                }
+                guard
+                    let stringEndIndex = formatter.endOfScope(at: stringStartIndex),
+                    // Preserve the default indentation if the opening """ is on a line by itself
+                    formatter.startOfLine(at: stringStartIndex, excludingIndent: true) != stringStartIndex
+                else { return }
 
                 for linebreakIndex in (stringStartIndex ..< stringEndIndex).reversed()
                     where formatter.tokens[linebreakIndex].isLinebreak

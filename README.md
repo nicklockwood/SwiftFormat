@@ -21,6 +21,7 @@ Table of Contents
     - [Sublime Text plugin](#sublime-text-plugin)
     - [Git pre-commit hook](#git-pre-commit-hook)
     - [On CI using Danger](#on-ci-using-danger)
+    - [Bazel build](#bazel-build)
 - [Configuration](#configuration)
     - [Options](#options)
     - [Rules](#rules)
@@ -375,6 +376,13 @@ To setup SwiftFormat to be used by your continuous integration system using [Dan
     ```
 
     **NOTE:** It is recommended to add the `swiftformat` binary to your project directory to ensure the same version is used each time (see the [Xcode build phase](#xcode-build-phase) instructions above).
+
+
+Bazel Build
+-----------
+
+If you use [Bazel](https://bazel.build/) to build your Swift projects and want to ensure that only properly formatted code is merged to your main branch, try [rules_swiftformat](https://github.com/cgrindel/rules_swiftformat). The repository contains Bazel rules and macros that format Swift source files using SwiftFormat, test that the formatted files exist in the workspace directory, and copy the formatted files to the workspace directory.
+
 
 Configuration
 -------------

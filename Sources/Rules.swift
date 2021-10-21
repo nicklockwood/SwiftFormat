@@ -2748,7 +2748,7 @@ public struct _FormatRules {
         }
     }
 
-    /// Remove redundant void return values for function declarations
+    /// Remove redundant void return values for function and closure declarations
     public let redundantVoidReturnType = FormatRule(
         help: "Remove explicit `Void` return type."
     ) { formatter in
@@ -2772,9 +2772,18 @@ public struct _FormatRules {
             default:
                 return
             }
-            guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{") else {
+
+            // If this is the explicit return type of a closure, it should
+            // always be safe to remove
+            if formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .keyword("in") {
+                formatter.removeTokens(in: i ..< formatter.index(of: .nonSpace, after: endIndex)!)
                 return
             }
+
+            guard
+                formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{")
+            else { return }
+
             guard let prevIndex = formatter.index(of: .endOfScope(")"), before: i),
                   let startIndex = formatter.index(of: .startOfScope("("), before: prevIndex),
                   let startToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex),

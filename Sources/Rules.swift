@@ -2804,7 +2804,8 @@ public struct _FormatRules {
 
     /// Remove redundant void return values for function and closure declarations
     public let redundantVoidReturnType = FormatRule(
-        help: "Remove explicit `Void` return type."
+        help: "Remove explicit `Void` return type.",
+        options: ["closurevoid"]
     ) { formatter in
         formatter.forEach(.operator("->", .infix)) { i, _ in
             guard var endIndex = formatter.index(of: .nonSpace, after: i) else { return }
@@ -2829,7 +2830,9 @@ public struct _FormatRules {
 
             // If this is the explicit return type of a closure, it should
             // always be safe to remove
-            if formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .keyword("in") {
+            if formatter.options.closureVoidReturn == .remove,
+               formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .keyword("in")
+            {
                 formatter.removeTokens(in: i ..< formatter.index(of: .nonSpace, after: endIndex)!)
                 return
             }

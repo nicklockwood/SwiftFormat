@@ -1376,6 +1376,10 @@ Option | Description
 
 Remove explicit `Void` return type.
 
+Option | Description
+--- | ---
+`--closurevoid` | Closure void returns: "remove" (default) or "preserve"
+
 <details>
 <summary>Examples</summary>
 

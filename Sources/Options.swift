@@ -144,6 +144,12 @@ public enum TernaryOperatorWrapMode: String, CaseIterable {
     case beforeOperators = "before-operators"
 }
 
+/// Whether or not to remove `-> Void` from closures
+public enum ClosureVoidReturn: String, CaseIterable {
+    case remove
+    case preserve
+}
+
 /// Version number wrapper
 public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral, CustomStringConvertible {
     public let rawValue: String
@@ -396,6 +402,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var emptyBracesSpacing: EmptyBracesSpacing
     public var acronyms: Set<String>
     public var indentStrings: Bool
+    public var closureVoidReturn: ClosureVoidReturn
 
     // Deprecated
     public var indentComments: Bool
@@ -482,6 +489,7 @@ public struct FormatOptions: CustomStringConvertible {
                 emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
                 acronyms: Set<String> = ["ID", "URL", "UUID"],
                 indentStrings: Bool = false,
+                closureVoidReturn: ClosureVoidReturn = .remove,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -562,6 +570,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.emptyBracesSpacing = emptyBracesSpacing
         self.acronyms = acronyms
         self.indentStrings = indentStrings
+        self.closureVoidReturn = closureVoidReturn
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

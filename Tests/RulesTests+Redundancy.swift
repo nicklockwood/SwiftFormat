@@ -1623,6 +1623,12 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
     }
 
+    func testNoRemoveRedundantVoidInClosureArgument() {
+        let input = "{ (foo: Bar) -> Void in foo() }"
+        let options = FormatOptions(closureVoidReturn: .preserve)
+        testFormatting(for: input, rule: FormatRules.redundantVoidReturnType, options: options)
+    }
+
     // MARK: - redundantReturn
 
     func testRemoveRedundantReturnInClosure() {

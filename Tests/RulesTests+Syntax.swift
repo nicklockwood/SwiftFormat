@@ -188,7 +188,7 @@ class SyntaxTests: RulesTests {
 
     func testAnonymousVoidArgumentNotConvertedToEmptyParens() {
         let input = "{ (_: Void) -> Void in }"
-        testFormatting(for: input, rule: FormatRules.void)
+        testFormatting(for: input, rule: FormatRules.void, exclude: ["redundantVoidReturnType"])
     }
 
     func testFuncWithAnonymousVoidArgumentNotStripped() {
@@ -231,7 +231,7 @@ class SyntaxTests: RulesTests {
     func testEmptyClosureReturnValueConvertedToVoid() {
         let input = "{ () -> () in }"
         let output = "{ () -> Void in }"
-        testFormatting(for: input, output, rule: FormatRules.void)
+        testFormatting(for: input, output, rule: FormatRules.void, exclude: ["redundantVoidReturnType"])
     }
 
     func testAnonymousVoidClosureNotChanged() {
@@ -317,7 +317,7 @@ class SyntaxTests: RulesTests {
         let input = "{ () -> Void in }"
         let output = "{ () -> () in }"
         let options = FormatOptions(useVoid: false)
-        testFormatting(for: input, output, rule: FormatRules.void, options: options)
+        testFormatting(for: input, output, rule: FormatRules.void, options: options, exclude: ["redundantVoidReturnType"])
     }
 
     func testNoConvertVoidSelfToTuple() {

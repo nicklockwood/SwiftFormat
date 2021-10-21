@@ -858,6 +858,12 @@ struct _Descriptors {
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
     )
+    let closureVoidReturn = OptionDescriptor(
+        argumentName: "closurevoid",
+        displayName: "Closure Void Return",
+        help: "Closure void returns: \"remove\" (default) or \"preserve\"",
+        keyPath: \.closureVoidReturn
+    )
 
     // MARK: - Internal
 

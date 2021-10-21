@@ -119,13 +119,13 @@ class SpacingTests: RulesTests {
     func testAddSpaceBetweenCaptureListAndArguments2() {
         let input = "{ [weak self]() -> Void in }"
         let output = "{ [weak self] () -> Void in }"
-        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens, exclude: ["redundantVoidReturnType"])
     }
 
     func testAddSpaceBetweenCaptureListAndArguments3() {
         let input = "{ [weak self]() throws -> Void in }"
         let output = "{ [weak self] () throws -> Void in }"
-        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens, exclude: ["redundantVoidReturnType"])
     }
 
     func testAddSpaceBetweenCaptureListAndArguments4() {
@@ -149,7 +149,7 @@ class SpacingTests: RulesTests {
     func testAddSpaceBetweenCaptureListAndArguments7() {
         let input = "Foo<Bar>(0) { [weak self]() -> Void in }"
         let output = "Foo<Bar>(0) { [weak self] () -> Void in }"
-        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens, exclude: ["redundantVoidReturnType"])
     }
 
     func testSpaceBetweenClosingParenAndOpenBrace() {

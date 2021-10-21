@@ -1611,9 +1611,16 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantVoidReturnType)
     }
 
-    func testNoRemoveRedundantVoidInClosureArguments() {
+    func testRemoveRedundantVoidInClosureArguments() {
         let input = "{ (foo: Bar) -> Void in foo() }"
-        testFormatting(for: input, rule: FormatRules.redundantVoidReturnType)
+        let output = "{ (foo: Bar) in foo() }"
+        testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
+    }
+
+    func testRemoveRedundantVoidInClosureArguments2() {
+        let input = "methodWithTrailingClosure { foo -> Void in foo() }"
+        let output = "methodWithTrailingClosure { foo in foo() }"
+        testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
     }
 
     // MARK: - redundantReturn

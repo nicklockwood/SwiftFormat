@@ -1762,6 +1762,12 @@ public struct _FormatRules {
                 for linebreakIndex in (stringStartIndex ..< stringEndIndex).reversed()
                     where formatter.tokens[linebreakIndex].isLinebreak
                 {
+                    // If this line is completely blank, do nothing
+                    //  - This prevents conflicts with the trailingSpace rule
+                    if formatter.nextToken(after: linebreakIndex)?.isLinebreak == true {
+                        continue
+                    }
+
                     let indentIndex = linebreakIndex + 1
                     if formatter.tokens[indentIndex].is(.space) {
                         formatter.replaceToken(at: indentIndex, with: .space(expectedIndent))

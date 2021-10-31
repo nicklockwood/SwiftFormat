@@ -2387,6 +2387,38 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    func testIndentMultilineStringWithBlankLine() {
+        let input = #"""
+        let generatedClass = """
+        import UIKit
+
+        class ViewController: UIViewController { }
+        """
+        """#
+
+        let output = #"""
+        let generatedClass = """
+            import UIKit
+
+            class ViewController: UIViewController { }
+            """
+        """#
+        let options = FormatOptions(indentStrings: true)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentMultilineStringPreservesBlankLines() {
+        let input = #"""
+        let generatedClass = """
+            import UIKit
+
+            class ViewController: UIViewController { }
+            """
+        """#
+        let options = FormatOptions(indentStrings: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testUnindentMultilineStringAtTopLevel() {
         let input = #"""
         let sql = """

@@ -1037,6 +1037,23 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
+    func testWrappedTernaryOperatorIndentsChainedCalls() {
+        let input = """
+        let ternary = condition
+            ? values
+                .map { $0.bar }
+                .filter { $0.hasFoo }
+                .last
+            : other.values
+                .compactMap { $0 }
+                .first?
+                .with(property: updatedValue)
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testWrapsSimpleNestedTernaryOperator() {
         let input = """
         let foo = fooCondition ? (barCondition ? a : b) : (baazCondition ? c : d)
@@ -1052,7 +1069,7 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
-    func testWrapsComplexNestedTernaryOperation() {
+    func testWrapsDoubleNestedTernaryOperation() {
         let input = """
         let foo = fooCondition ? barCondition ? longTrueBarResult : longFalseBarResult : baazCondition ? longTrueBaazResult : longFalseBaazResult
         """
@@ -1068,7 +1085,30 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["indent"])
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapsTripleNestedTernaryOperation() {
+        let input = """
+        let foo = fooCondition ? barCondition ? quuxCondition ? longTrueQuuxResult : longFalseQuuxResult : barCondition2 ? longTrueBarResult : longFalseBarResult : baazCondition ? longTrueBaazResult : longFalseBaazResult
+        """
+
+        let output = """
+        let foo = fooCondition
+            ? barCondition
+                ? quuxCondition
+                    ? longTrueQuuxResult
+                    : longFalseQuuxResult
+                : barCondition2
+                    ? longTrueBarResult
+                    : longFalseBarResult
+            : baazCondition
+                ? longTrueBaazResult
+                : longFalseBaazResult
+        """
+
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
     func testNoWrapTernaryWrappedWithinChildExpression() {

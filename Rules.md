@@ -51,6 +51,7 @@
 * [redundantType](#redundantType)
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
+* [sortDeclarations](#sortDeclarations)
 * [sortedImports](#sortedImports)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [spaceAroundBraces](#spaceAroundBraces)
@@ -1423,6 +1424,48 @@ Option | Description
 return;
 goto(fail)
 ```
+
+</details>
+<br/>
+
+## sortDeclarations
+
+Sorts the body of declarations with // swiftformat:sort
+and declarations between // swiftformat:sort:begin and
+// swiftformat:sort:end comments.
+
+<details>
+<summary>Examples</summary>
+
+``diff
+  // swiftformat:sort
+  enum FeatureFlags {
+-     case upsellB
+-     case fooFeature
+-     case barFeature
+-     case upsellA
++     case barFeature
++     case fooFeature
++     case upsellA
++     case upsellB
+  }
+
+  enum FeatureFlags {
+      // swiftformat:sort:begin
+-     case upsellB
+-     case fooFeature
+-     case barFeature
+-     case upsellA
++     case barFeature
++     case fooFeature
++     case upsellA
++     case upsellB
+      // swiftformat:sort:end
+
+      var anUnsortedProperty: Foo {
+          Foo()
+      }
+  }
 
 </details>
 <br/>

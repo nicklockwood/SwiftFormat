@@ -2905,4 +2905,191 @@ class OrganizationTests: RulesTests {
         """
         testFormatting(for: input, rule: FormatRules.modifierOrder)
     }
+
+    // MARK: - sortDeclarations
+
+    func testSortEnumBody() {
+        let input = """
+        // swiftformat:sort
+        enum FeatureFlags {
+            case upsellB
+            case fooFeature
+            case barFeature // Trailing comment -- bar feature
+            // Leading comment -- upsell A
+            case upsellA
+        }
+
+        enum NextType {
+            case foo
+            case bar
+        }
+        """
+
+        let output = """
+        // swiftformat:sort
+        enum FeatureFlags {
+            case barFeature // Trailing comment -- bar feature
+            case fooFeature
+            // Leading comment -- upsell A
+            case upsellA
+            case upsellB
+        }
+
+        enum NextType {
+            case foo
+            case bar
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortDeclarations)
+    }
+
+    func testNoSortUnannotatedType() {
+        let input = """
+        enum FeatureFlags {
+            case upsellB
+            case fooFeature
+            case barFeature
+            case upsellA
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.sortDeclarations)
+    }
+
+    func testTypeBodyWithBlankLines() {
+        let input = """
+        // swiftformat:sort
+        enum FeatureFlags {
+
+            case upsellB
+
+            case fooFeature
+
+            case barFeature
+
+            case upsellA
+
+        }
+        """
+
+        let output = """
+        // swiftformat:sort
+        enum FeatureFlags {
+
+            case barFeature
+
+            case fooFeature
+
+            case upsellA
+
+            case upsellB
+
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortDeclarations, exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+    }
+
+    func testSortClassWithMixedDeclarationTypes() {
+        let input = """
+        // swiftformat:sort
+        class Foo {
+            let quuxProperty = Quux()
+            let barProperty = Bar()
+
+            var fooComputedProperty: Foo {
+                Foo()
+            }
+
+            func baazFunction() -> Baaz {
+                Baaz()
+            }
+        }
+        """
+
+        let output = """
+        // swiftformat:sort
+        class Foo {
+            func baazFunction() -> Baaz {
+                Baaz()
+            }
+            let barProperty = Bar()
+
+            var fooComputedProperty: Foo {
+                Foo()
+            }
+
+            let quuxProperty = Quux()
+        }
+        """
+
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.sortDeclarations, FormatRules.consecutiveBlankLines],
+                       exclude: ["blankLinesBetweenScopes"])
+    }
+
+    func testSortBetweenDirectiveCommentsInType() {
+        let input = """
+        enum FeatureFlags {
+            // swiftformat:sort:begin
+            case upsellB
+            case fooFeature
+            case barFeature
+            case upsellA
+            // swiftformat:sort:end
+
+            var anUnsortedProperty: Foo {
+                Foo()
+            }
+        }
+        """
+
+        let output = """
+        enum FeatureFlags {
+            // swiftformat:sort:begin
+            case barFeature
+            case fooFeature
+            case upsellA
+            case upsellB
+            // swiftformat:sort:end
+
+            var anUnsortedProperty: Foo {
+                Foo()
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortDeclarations)
+    }
+
+    func testSortTopLevelDeclarations() {
+        let input = """
+        let anUnsortedGlobal = 0
+
+        // swiftformat:sort:begin
+        let sortThisGlobal = 1
+        public let thisGlobalIsSorted = 2
+        private let anotherSortedGlobal = 5
+        let sortAllOfThem = 8
+        // swiftformat:sort:end
+
+        let anotherUnsortedGlobal = 9
+        """
+
+        let output = """
+        let anUnsortedGlobal = 0
+
+        // swiftformat:sort:begin
+        private let anotherSortedGlobal = 5
+        let sortAllOfThem = 8
+        let sortThisGlobal = 1
+        public let thisGlobalIsSorted = 2
+        // swiftformat:sort:end
+
+        let anotherUnsortedGlobal = 9
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortDeclarations)
+    }
 }

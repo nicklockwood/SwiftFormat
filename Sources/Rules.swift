@@ -5634,7 +5634,7 @@ public struct _FormatRules {
         help: "Organizes declarations within class, struct, enum, actor, and extension bodies.",
         runOnceOnly: true,
         disabledByDefault: true,
-        orderAfter: ["extensionAccessControl", "redundantFileprivate", "sortDeclarations"],
+        orderAfter: ["extensionAccessControl", "redundantFileprivate"],
         options: ["categorymark", "markcategories", "beforemarks", "lifecycle", "organizetypes",
                   "structthreshold", "classthreshold", "enumthreshold", "extensionlength"],
         sharedOptions: ["lineaftermarks"]
@@ -5968,8 +5968,7 @@ public struct _FormatRules {
         Sorts the body of declarations with // swiftformat:sort
         and declarations between // swiftformat:sort:begin and
         // swiftformat:sort:end comments.
-        """,
-        runOnceOnly: true
+        """
     ) { formatter in
         formatter.forEachToken(
             where: { $0.isComment && $0.string.contains("swiftformat:sort") }
@@ -5996,7 +5995,12 @@ public struct _FormatRules {
 
             // For `:sort` directives, we sort the declarations
             // between the open and close brace of the following type
-            else if !commentToken.string.contains(":sort:") {
+            else if
+                !commentToken.string.contains(":sort:"),
+                // This part of the rule conficts with the organizeDeclarations rule.
+                // Instead, that rule manually implements support for the :sort directive.
+                !formatter.options.enabledRules.contains("organizeDeclarations")
+            {
                 guard
                     let typeOpenBrace = formatter.index(of: .startOfScope("{"), after: commentIndex),
                     let typeCloseBrace = formatter.endOfScope(at: typeOpenBrace),

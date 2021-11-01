@@ -1437,7 +1437,7 @@ and declarations between // swiftformat:sort:begin and
 <details>
 <summary>Examples</summary>
 
-``diff
+```diff
   // swiftformat:sort
   enum FeatureFlags {
 -     case upsellB
@@ -1466,6 +1466,7 @@ and declarations between // swiftformat:sort:begin and
           Foo()
       }
   }
+```
 
 </details>
 <br/>

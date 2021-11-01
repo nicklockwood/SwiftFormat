@@ -1347,7 +1347,7 @@ private struct Examples {
     """
 
     let sortDeclarations = """
-    ``diff
+    ```diff
       // swiftformat:sort
       enum FeatureFlags {
     -     case upsellB
@@ -1376,5 +1376,6 @@ private struct Examples {
               Foo()
           }
       }
+    ```
     """
 }

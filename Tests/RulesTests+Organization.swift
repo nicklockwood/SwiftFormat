@@ -2957,6 +2957,20 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.sortDeclarations)
     }
 
+    func testPreservesSortedBody() {
+        let input = """
+        // swiftformat:sort
+        enum FeatureFlags {
+            case barFeature
+            case fooFeature
+            case upsellA
+            case upsellB
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.sortDeclarations)
+    }
+
     func testTypeBodyWithBlankLines() {
         let input = """
         // swiftformat:sort
@@ -3091,5 +3105,77 @@ class OrganizationTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: FormatRules.sortDeclarations)
+    }
+
+    func testDoesntConflictWithOrganizeDeclarations() {
+        let input = """
+        // swiftformat:sort
+        enum FeatureFlags {
+            case barFeature
+            case fooFeature
+            case upsellA
+            case upsellB
+
+            // MARK: Internal
+
+            var anUnsortedProperty: Foo {
+                Foo()
+            }
+
+            var unsortedProperty: Foo {
+                Foo()
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.organizeDeclarations)
+    }
+
+    func testSortsWithinOrganizeDeclarations() {
+        let input = """
+        // swiftformat:sort
+        enum FeatureFlags {
+            case fooFeature
+            case barFeature
+            case upsellB
+            case upsellA
+
+            // MARK: Internal
+
+            var sortedProperty: Foo {
+                Foo()
+            }
+
+            var aSortedProperty: Foo {
+                Foo()
+            }
+        }
+        """
+
+        let output = """
+        // swiftformat:sort
+        enum FeatureFlags {
+            case barFeature
+            case fooFeature
+            case upsellA
+
+            case upsellB
+
+            // MARK: Internal
+
+            var aSortedProperty: Foo {
+                Foo()
+            }
+
+            var sortedProperty: Foo {
+                Foo()
+            }
+
+        }
+        """
+
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.organizeDeclarations, FormatRules.blankLinesBetweenScopes],
+                       exclude: ["blankLinesAtEndOfScope"])
     }
 }

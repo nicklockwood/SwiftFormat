@@ -1353,10 +1353,14 @@ private struct Examples {
     -     case upsellB
     -     case fooFeature
     -     case barFeature
-    -     case upsellA
+    -     case upsellA(
+    -         fooConfiguration: Foo,
+    -         barConfiguration: Bar)
     +     case barFeature
     +     case fooFeature
     +     case upsellA
+    +         fooConfiguration: Foo,
+    +         barConfiguration: Bar)
     +     case upsellB
       }
 
@@ -1365,10 +1369,14 @@ private struct Examples {
     -     case upsellB
     -     case fooFeature
     -     case barFeature
-    -     case upsellA
+    -     case upsellA(
+    -         fooConfiguration: Foo,
+    -         barConfiguration: Bar)
     +     case barFeature
     +     case fooFeature
     +     case upsellA
+    +         fooConfiguration: Foo,
+    +         barConfiguration: Bar)
     +     case upsellB
           // swiftformat:sort:end
 

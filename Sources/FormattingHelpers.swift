@@ -1462,7 +1462,7 @@ extension Formatter {
                        let rhsName = rhs.declaration.name,
                        lhsName != rhsName
                     {
-                        return lhsName < rhsName
+                        return lhsName.localizedCompare(rhsName) == .orderedAscending
                     }
 
                     // Respect the original declaration ordering when the categories and types are the same

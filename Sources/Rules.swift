@@ -6027,7 +6027,7 @@ public struct _FormatRules {
                         let rhsName = rhsDeclaration.name,
                         lhsName != rhsName
                     {
-                        return lhsName < rhsName
+                        return lhsName.localizedCompare(rhsName) == .orderedAscending
                     }
 
                     // Otherwise preserve the existing order

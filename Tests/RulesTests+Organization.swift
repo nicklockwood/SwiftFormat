@@ -2913,10 +2913,16 @@ class OrganizationTests: RulesTests {
         // swiftformat:sort
         enum FeatureFlags {
             case upsellB
-            case fooFeature
+            case fooFeature(
+                fooConfiguration: Foo,
+                barConfiguration: Bar
+            )
             case barFeature // Trailing comment -- bar feature
             // Leading comment -- upsell A
-            case upsellA
+            case upsellA(
+                fooConfiguration: Foo,
+                barConfiguration: Bar
+            )
         }
 
         enum NextType {
@@ -2929,9 +2935,15 @@ class OrganizationTests: RulesTests {
         // swiftformat:sort
         enum FeatureFlags {
             case barFeature // Trailing comment -- bar feature
-            case fooFeature
+            case fooFeature(
+                fooConfiguration: Foo,
+                barConfiguration: Bar
+            )
             // Leading comment -- upsell A
-            case upsellA
+            case upsellA(
+                fooConfiguration: Foo,
+                barConfiguration: Bar
+            )
             case upsellB
         }
 
@@ -3177,5 +3189,33 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, [output],
                        rules: [FormatRules.organizeDeclarations, FormatRules.blankLinesBetweenScopes],
                        exclude: ["blankLinesAtEndOfScope"])
+    }
+
+    func testSortDeclarationsUsesLocalizedCompare() {
+        let input = """
+        // swiftformat:sort
+        enum FeatureFlags {
+            case upsella
+            case upsellA
+            case upsellb
+            case upsellB
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.sortDeclarations)
+    }
+
+    func testOrganizeDeclarationsSortUsesLocalizedCompare() {
+        let input = """
+        // swiftformat:sort
+        enum FeatureFlags {
+            case upsella
+            case upsellA
+            case upsellb
+            case upsellB
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.organizeDeclarations)
     }
 }

@@ -402,12 +402,13 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         var inputURLs = [URL]()
         if let fileListPath = args["filelist"] {
             let fileListURL = try parsePath(fileListPath, for: "filelist", in: directory)
-            do {
-                let source = try String(contentsOf: fileListURL)
-                inputURLs += try parseFileList(source, in: fileListURL.deletingLastPathComponent().path)
-            } catch {
+            if !FileManager.default.fileExists(atPath: fileListURL.path) {
+                throw FormatError.reading("File not found at \(fileListURL.path)")
+            }
+            guard let source = try? String(contentsOf: fileListURL) else {
                 throw FormatError.options("Failed to read file list at \(fileListPath)")
             }
+            inputURLs += try parseFileList(source, in: fileListURL.deletingLastPathComponent().path)
         }
         var useStdin = false
         while let inputPath = args[String(inputURLs.count + 1)] {

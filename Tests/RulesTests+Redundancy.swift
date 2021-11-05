@@ -907,6 +907,20 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantObjc)
     }
 
+    func testObjcRemovedOnPrivateSetFunc() {
+        let input = """
+        @objcMembers class Foo: NSObject {
+            @objc private(set) func bar() {}
+        }
+        """
+        let output = """
+        @objcMembers class Foo: NSObject {
+            private(set) func bar() {}
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantObjc)
+    }
+
     // MARK: - redundantType
 
     func testVarRedundantTypeRemoval() {

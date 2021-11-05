@@ -4726,6 +4726,9 @@ public struct _FormatRules {
                      .keyword("protocol"), .keyword("struct"):
                     return
                 case .keyword("private"), .keyword("fileprivate"):
+                    if formatter.next(.nonSpaceOrComment, after: nextIndex) == .startOfScope("(") {
+                        break
+                    }
                     // Can't safely remove objc from private members
                     return
                 case let token where token.isAttribute:

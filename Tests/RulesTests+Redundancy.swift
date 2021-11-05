@@ -4039,6 +4039,19 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
+    func testSelfRemovalParsingBug() {
+        let input = """
+        func handleGenericError(_ error: Error) {
+            if let requestableError = error as? RequestableError,
+               case let .underlying(error as NSError) = requestableError,
+               error.code == NSURLErrorNotConnectedToInternet
+            {}
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // enable/disable
 
     func testDisableRemoveSelf() {

@@ -2960,7 +2960,8 @@ public struct _FormatRules {
                             removeSelf: explicitSelf != .insert,
                             onlyLocal: false
                         )
-                        while formatter.currentScope(at: index) == .startOfScope("["),
+                        while let scope = formatter.currentScope(at: index),
+                              [.startOfScope("["), .startOfScope("(")].contains(scope),
                               let endIndex = formatter.endOfScope(at: index)
                         {
                             // TODO: find less hacky workaround

@@ -26,13 +26,22 @@ extension Formatter {
         else {
             return false
         }
-        if let scopeStart = index(of: .startOfScope, before: i),
-           tokens[scopeStart] == .startOfScope("("),
-           case let .identifier(fn)? = last(.nonSpaceOrCommentOrLinebreak, before: scopeStart),
-           options.selfRequired.contains(fn) ||
-           fn == "expect" // Special case to support autoclosure arguments in the Nimble framework
-        {
-            return false
+        var index = i
+        loop: while let scopeStart = self.index(of: .startOfScope, before: index) {
+            switch tokens[scopeStart] {
+            case .startOfScope("["):
+                break
+            case .startOfScope("("):
+                if case let .identifier(fn)? = last(.nonSpaceOrCommentOrLinebreak, before: scopeStart),
+                   options.selfRequired.contains(fn) ||
+                   fn == "expect" // Special case to support autoclosure arguments in the Nimble framework
+                {
+                    return false
+                }
+            default:
+                break loop
+            }
+            index = scopeStart
         }
         removeTokens(in: i ..< nextIndex)
         return true

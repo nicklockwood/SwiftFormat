@@ -2415,6 +2415,36 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testNoRemoveNestedSelfInExpectFunction() {
+        let input = """
+        func testFoo() {
+            expect(Foo.validate(bar: self.bar)).to(equal(1))
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testNoRemoveNestedSelfInArrayInExpectFunction() {
+        let input = """
+        func testFoo() {
+            expect(Foo.validate(bar: [self.bar])).to(equal(1))
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testNoRemoveNestedSelfInSubscriptInExpectFunction() {
+        let input = """
+        func testFoo() {
+            expect(Foo.validations[self.bar]).to(equal(1))
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     func testNoRemoveSelfInExcludedFunction() {
         let input = """
         class Foo {

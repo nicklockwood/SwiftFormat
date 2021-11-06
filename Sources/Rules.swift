@@ -1596,20 +1596,26 @@ public struct _FormatRules {
                     }
 
                     // Don't indent line starting with dot if previous line was just a closing brace
-                    let lastToken = formatter.tokens[lastNonSpaceOrLinebreakIndex]
+                    var lastToken = formatter.tokens[lastNonSpaceOrLinebreakIndex]
                     if formatter.options.allmanBraces, nextToken == .startOfScope("{"),
                        formatter.isStartOfClosure(at: nextNonSpaceIndex)
                     {
                         // Don't indent further
                     } else if formatter.token(at: nextTokenIndex ?? -1) == .operator(".", .infix) {
-                        let lineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex)
-                        let startToken = formatter.tokens[
-                            formatter.index(of: .nonSpaceOrComment, after: lineStart - 1) ?? lineStart
-                        ]
-                        if formatter.options.ifdefIndent == .indent,
+                        var lineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex, excludingIndent: true)
+                        let startToken = formatter.token(at: lineStart)
+                        if let startToken = startToken, [
+                            .startOfScope("#if"), .keyword("#else"), .keyword("#elseif")
+                        ].contains(startToken) {
+                            if let index = formatter.index(of: .nonSpaceOrLinebreak, before: lineStart) {
+                                lastNonSpaceOrLinebreakIndex = index
+                                lineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex, excludingIndent: true)
+                            }
+                        }
+                        if formatter.token(at: lineStart) == .operator(".", .infix),
                            [.keyword("#else"), .keyword("#elseif")].contains(startToken)
                         {
-                            // Don't indent further
+                            indent = formatter.indentForLine(at: lineStart)
                         } else if formatter.tokens[lineStart ..< lastNonSpaceOrLinebreakIndex].allSatisfy({
                             $0.isEndOfScope || $0.isSpaceOrComment
                         }) {

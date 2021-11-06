@@ -1657,6 +1657,81 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testConditionalCompiledWrappedChainedFunctionIndent() {
+        let input = """
+        var body: some View {
+            VStack {
+                // some view
+            }
+            #if os(macOS)
+                .frame(minWidth: 200)
+            #endif
+        }
+        """
+        let output = """
+        var body: some View {
+            VStack {
+                // some view
+            }
+            #if os(macOS)
+            .frame(minWidth: 200)
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .indent)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testConditionalCompiledWrappedChainedFunctionWithIfdefNoIndent() {
+        let input = """
+        var body: some View {
+            VStack {
+                // some view
+            }
+            #if os(macOS)
+                .frame(minWidth: 200)
+            #endif
+        }
+        """
+        let output = """
+        var body: some View {
+            VStack {
+                // some view
+            }
+            #if os(macOS)
+            .frame(minWidth: 200)
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testConditionalCompiledWrappedChainedFunctionWithIfdefOutdent() {
+        let input = """
+        var body: some View {
+            VStack {
+                // some view
+            }
+        #if os(macOS)
+        .frame(minWidth: 200)
+        #endif
+        }
+        """
+        let output = """
+        var body: some View {
+            VStack {
+                // some view
+            }
+        #if os(macOS)
+            .frame(minWidth: 200)
+        #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .outdent)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
     func testChainedOrOperatorsInFunctionWithReturnOnNewLine() {
         let input = """
         func foo(lhs: Bool, rhs: Bool) -> Bool {
@@ -2190,6 +2265,20 @@ class IndentTests: RulesTests {
             func foo() {
                 Text("Hello")
                 #if os(iOS)
+                .font(.largeTitle)
+                #elseif os(macOS)
+                        .font(.headline)
+                #else
+                    .font(.headline)
+                #endif
+            }
+        }
+        """
+        let output = """
+        class Bar {
+            func foo() {
+                Text("Hello")
+                #if os(iOS)
                     .font(.largeTitle)
                 #elseif os(macOS)
                     .font(.headline)
@@ -2199,7 +2288,7 @@ class IndentTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
     // indent #if/#else/#elseif/#endif (mode: noindent)

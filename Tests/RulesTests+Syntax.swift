@@ -2217,21 +2217,23 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.preferDouble)
     }
 
+    // MARK: - blockComments
+
     func testBlockToLineCommentsOneLine() {
         let input = "foo = bar /* comment */"
         let output = "foo = bar // comment"
-        testFormatting(for: input, output, rule: FormatRules.blockToLineComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
 
     func testDocBlockToLineCommentsOneLine() {
         let input = "foo = bar /** doc comment */"
         let output = "foo = bar /// doc comment"
-        testFormatting(for: input, output, rule: FormatRules.blockToLineComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
 
     func testPreservesBlockCommentInSingleLineScope() {
         let input = "if foo { /* code */ }"
-        testFormatting(for: input, rule: FormatRules.blockToLineComments)
+        testFormatting(for: input, rule: FormatRules.blockComments)
     }
 
     func testBlockToLineCommentsMultiLine() {
@@ -2247,7 +2249,7 @@ class SyntaxTests: RulesTests {
         // bar
         //
         """
-        testFormatting(for: input, output, rule: FormatRules.blockToLineComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
 
     func testBlockToLineDocCommentsWithAsterisksOnEachLine() {
@@ -2263,7 +2265,7 @@ class SyntaxTests: RulesTests {
         /// not a standard comment.
         ///
         """
-        testFormatting(for: input, output, rule: FormatRules.blockToLineComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
 
     func testBlockToLineDocCommentsWithoutAsterisksOnEachLine() {
@@ -2279,7 +2281,7 @@ class SyntaxTests: RulesTests {
         /// not a standard comment.
         ///
         """
-        testFormatting(for: input, output, rule: FormatRules.blockToLineComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
 
     func testBlockToLineCommentsNested() {
@@ -2297,6 +2299,6 @@ class SyntaxTests: RulesTests {
         // a comment
         //
         """
-        testFormatting(for: input, output, rule: FormatRules.blockToLineComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
 }

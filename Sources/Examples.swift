@@ -1291,7 +1291,7 @@ private struct Examples {
     ```
     """
 
-    let blockToLineComments = """
+    let blockComments = """
     ```diff
     - /*
     -  * foo

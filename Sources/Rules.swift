@@ -5968,7 +5968,7 @@ public struct _FormatRules {
         }
     }
 
-    public let blockToLineComments = FormatRule(
+    public let blockComments = FormatRule(
         help: "Changes block comments to single line comments.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]
@@ -5999,12 +5999,12 @@ public struct _FormatRules {
 
                 // locate the end of this comment
                 // ignore nested comments
-                var startInd = i
-                var startLine = formatter.startOfLine(at: startInd)
-                var endInd = i + 1
+                var startIndex = i
+                var startLine = formatter.startOfLine(at: startIndex)
+                var endIndex = i + 1
                 var numComments = 1
                 while numComments > 0 {
-                    switch formatter.token(at: endInd) {
+                    switch formatter.token(at: endIndex) {
                     case .startOfScope("/*"):
                         numComments += 1
                     case .endOfScope("*/"):
@@ -6012,39 +6012,39 @@ public struct _FormatRules {
                     default:
                         break
                     }
-                    endInd += 1
+                    endIndex += 1
                 }
-                var endLine = formatter.endOfLine(at: endInd)
+                var endLine = formatter.endOfLine(at: endIndex)
 
                 // if there is code on the same line as a comment,
                 // move it to the next line
-                if endLine > endInd {
-                    formatter.insertLinebreak(at: endInd)
+                if endLine > endIndex {
+                    formatter.insertLinebreak(at: endIndex)
                 }
 
                 // remove /* and */
-                var ind = startInd
-                while ind <= endInd {
-                    switch formatter.token(at: ind) {
+                var index = startIndex
+                while index <= endIndex {
+                    switch formatter.token(at: index) {
                     case .startOfScope("/*"):
-                        formatter.removeToken(at: ind)
-                        ind -= 1
-                        endInd -= 1
+                        formatter.removeToken(at: index)
+                        index -= 1
+                        endIndex -= 1
                     case .endOfScope("*/"):
-                        formatter.removeToken(at: ind)
-                        ind -= 1
-                        endInd -= 1
+                        formatter.removeToken(at: index)
+                        index -= 1
+                        endIndex -= 1
                     default:
                         break
                     }
-                    ind += 1
+                    index += 1
                 }
 
                 // turn each line into a single line comment
                 var startOfLine = true
-                ind = startInd
-                while ind < endInd {
-                    if ind == formatter.startOfLine(at: ind) {
+                index = startIndex
+                while index < endIndex {
+                    if index == formatter.startOfLine(at: index) {
                         startOfLine = true
                     }
 
@@ -6057,23 +6057,23 @@ public struct _FormatRules {
                             lineCommentDelimiter = "//"
                         }
 
-                        formatter.insert(.identifier(lineCommentDelimiter), at: ind)
+                        formatter.insert(.identifier(lineCommentDelimiter), at: index)
 
-                        ind += 1
-                        endInd += 1
+                        index += 1
+                        endIndex += 1
                         startOfLine = false
                     }
-                    ind += 1
+                    index += 1
                 }
 
-                ind = startInd
-                while ind < endInd {
-                    switch formatter.token(at: ind) {
+                index = startIndex
+                while index < endIndex {
+                    switch formatter.token(at: index) {
                     // remove the *'s at the beginning of each comment if present
-                    case let .commentBody(ss):
+                    case let .commentBody(body):
                         var toRemove = 0
-                        var commentBody = Array(ss)
-                        while toRemove < ss.count, commentBody[toRemove] == " " || commentBody[toRemove] == "*" {
+                        var commentBody = Array(body)
+                        while toRemove < body.count, commentBody[toRemove] == " " || commentBody[toRemove] == "*" {
                             toRemove += 1
                         }
 
@@ -6083,8 +6083,8 @@ public struct _FormatRules {
                         // in the same /**, but not parsed as the same token).
                         let shouldInsertSpace: Bool
                         if isDocComment,
-                           ind == i + 1, // this * immediately follows the /*
-                           formatter.token(at: ind + 1)?.isLinebreak == true // this * is the last token on this line
+                           index == i + 1, // this * immediately follows the /*
+                           formatter.token(at: index + 1)?.isLinebreak == true // this * is the last token on this line
                         {
                             shouldInsertSpace = false
                         } else {
@@ -6092,18 +6092,18 @@ public struct _FormatRules {
                         }
 
                         formatter.replaceToken(
-                            at: ind,
-                            with: .commentBody((shouldInsertSpace ? " " : "") + String(ss.dropFirst(toRemove)))
+                            at: index,
+                            with: .commentBody((shouldInsertSpace ? " " : "") + String(body.dropFirst(toRemove)))
                         )
                     // remove any extra spaces
                     case .space(" "):
-                        formatter.removeToken(at: ind)
-                        ind -= 1
-                        endInd -= 1
+                        formatter.removeToken(at: index)
+                        index -= 1
+                        endIndex -= 1
                     default:
                         break
                     }
-                    ind += 1
+                    index += 1
                 }
             default:
                 break

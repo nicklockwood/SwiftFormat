@@ -8,7 +8,7 @@
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
 * [blankLinesBetweenScopes](#blankLinesBetweenScopes)
-* [blockToLineComments](#blockToLineComments)
+* [blockComments](#blockComments)
 * [braces](#braces)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
@@ -323,7 +323,7 @@ declarations.
 </details>
 <br/>
 
-## blockToLineComments
+## blockComments
 
 Changes block comments to single line comments.
 

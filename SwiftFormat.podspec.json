@@ -1,6 +1,6 @@
 {
   "name": "SwiftFormat",
-  "version": "0.48.18",
+  "version": "0.49.0",
   "license": {
     "type": "MIT",
     "file": "LICENSE.md"
@@ -10,7 +10,7 @@
   "authors": "Nick Lockwood",
   "source": {
     "git": "https://github.com/nicklockwood/SwiftFormat.git",
-    "tag": "0.48.18"
+    "tag": "0.49.0"
   },
   "default_subspecs": "Core",
   "subspecs": [
@@ -33,6 +33,6 @@
     "tvos": "11.0",
     "osx": "10.12"
   },
-  "swift_versions": "4.2",
+  "swift_versions": ["4.2", "5.0", "5.1", "5.2", "5.3", "5.4", "5.5"],
   "requires_arc": true
 }

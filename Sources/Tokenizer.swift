@@ -1427,7 +1427,8 @@ public func tokenize(_ source: String) -> [Token] {
         case ":", "=", "->":
             type = .infix
         case ".":
-            type = prevNonSpaceToken.isLvalue || prevNonSpaceToken.isAttribute ? .infix : .prefix
+            type = prevNonSpaceToken.isLvalue || prevNonSpaceToken.isAttribute ||
+                prevNonSpaceToken == .endOfScope("#endif") ? .infix : .prefix
         case "?":
             if prevToken.isSpaceOrCommentOrLinebreak {
                 // ? is a ternary operator, treat it as the start of a scope

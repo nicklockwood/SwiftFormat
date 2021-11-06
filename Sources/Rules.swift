@@ -1605,7 +1605,7 @@ public struct _FormatRules {
                         var lineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex, excludingIndent: true)
                         let startToken = formatter.token(at: lineStart)
                         if let startToken = startToken, [
-                            .startOfScope("#if"), .keyword("#else"), .keyword("#elseif")
+                            .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif")
                         ].contains(startToken) {
                             if let index = formatter.index(of: .nonSpaceOrLinebreak, before: lineStart) {
                                 lastNonSpaceOrLinebreakIndex = index
@@ -1613,7 +1613,7 @@ public struct _FormatRules {
                             }
                         }
                         if formatter.token(at: lineStart) == .operator(".", .infix),
-                           [.keyword("#else"), .keyword("#elseif")].contains(startToken)
+                           [.keyword("#else"), .keyword("#elseif"), .endOfScope("#endif")].contains(startToken)
                         {
                             indent = formatter.indentForLine(at: lineStart)
                         } else if formatter.tokens[lineStart ..< lastNonSpaceOrLinebreakIndex].allSatisfy({

@@ -2291,6 +2291,21 @@ class IndentTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
+    func testIndentIfDefPostfixMemberSyntax2() {
+        let input = """
+        class Bar {
+            func foo() {
+                Text("Hello")
+                #if os(iOS)
+                    .font(.largeTitle)
+                #endif
+                    .color(.red)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: noindent)
 
     func testIfEndifNoIndenting() {

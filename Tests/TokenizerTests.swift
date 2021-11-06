@@ -3685,6 +3685,39 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testIfdefPrefixDot() {
+        let input = """
+        foo
+        #if bar
+        .bar
+        #else
+        .baz
+        #endif
+        .quux
+        """
+        let output: [Token] = [
+            .identifier("foo"),
+            .linebreak("\n", 1),
+            .startOfScope("#if"),
+            .space(" "),
+            .identifier("bar"),
+            .linebreak("\n", 2),
+            .operator(".", .infix),
+            .identifier("bar"),
+            .linebreak("\n", 3),
+            .keyword("#else"),
+            .linebreak("\n", 4),
+            .operator(".", .infix),
+            .identifier("baz"),
+            .linebreak("\n", 5),
+            .endOfScope("#endif"),
+            .linebreak("\n", 6),
+            .operator(".", .infix),
+            .identifier("quux"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: linebreaks
 
     func testLF() {

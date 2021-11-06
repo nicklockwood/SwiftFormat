@@ -544,7 +544,8 @@ class IndentTests: RulesTests {
     func testIndentGuardCase() {
         let input = "{\nguard case .Foo = error else {}\n}"
         let output = "{\n    guard case .Foo = error else {}\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, output, rule: FormatRules.indent,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testIndentIfElse() {
@@ -1016,13 +1017,15 @@ class IndentTests: RulesTests {
 
     func testWrappedLineBeforeGuardElse() {
         let input = "guard let foo = bar\nelse { return }"
-        testFormatting(for: input, rule: FormatRules.indent, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.indent,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testWrappedLineAfterGuardElse() {
         // Don't indent because this case is handled by braces rule
         let input = "guard let foo = bar else\n{ return }"
-        testFormatting(for: input, rule: FormatRules.indent, exclude: ["elseOnSameLine", "conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.indent,
+                       exclude: ["elseOnSameLine", "wrapConditionalBodies"])
     }
 
     func testWrappedLineAfterComment() {
@@ -1044,7 +1047,8 @@ class IndentTests: RulesTests {
                   let bar = bar else { break }
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapMultilineStatementBraces", "conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.indent,
+                       exclude: ["wrapMultilineStatementBraces", "wrapConditionalBodies"])
     }
 
     func testConsecutiveWraps() {
@@ -1387,7 +1391,8 @@ class IndentTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: false)
-        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testSingleIndentTrailingClosureBody2() {
@@ -1401,7 +1406,8 @@ class IndentTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testDoubleIndentTrailingClosureBody() {
@@ -1416,7 +1422,8 @@ class IndentTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testDoubleIndentTrailingClosureBody2() {
@@ -1459,7 +1466,8 @@ class IndentTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["braces", "conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["braces", "wrapConditionalBodies"])
     }
 
     func testSingleIndentTrailingClosureBodyOfShortMethod() {
@@ -1470,7 +1478,8 @@ class IndentTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testNoDoubleIndentInInsideClosure() {
@@ -1480,7 +1489,8 @@ class IndentTests: RulesTests {
             baz
         })
         """
-        testFormatting(for: input, rule: FormatRules.indent, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: FormatRules.indent,
+                       exclude: ["trailingClosures"])
     }
 
     func testNoDoubleIndentInInsideClosure2() {
@@ -1580,7 +1590,8 @@ class IndentTests: RulesTests {
             .baz
         else { return }
         """
-        testFormatting(for: input, rule: FormatRules.indent, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.indent,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testChainedFunctionInGuardWithXcodeIndentation() {
@@ -1599,7 +1610,8 @@ class IndentTests: RulesTests {
         else { return }
         """
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, output, rule: FormatRules.indent,
+                       options: options, exclude: ["wrapConditionalBodies"])
     }
 
     func testChainedFunctionInGuardIndentation2() {
@@ -1613,7 +1625,8 @@ class IndentTests: RulesTests {
               yetAnotherBool
         else { return }
         """
-        testFormatting(for: input, rule: FormatRules.indent, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.indent,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testChainedFunctionInGuardWithXcodeIndentation2() {
@@ -1638,7 +1651,8 @@ class IndentTests: RulesTests {
         else { return }
         """
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, output, rule: FormatRules.indent,
+                       options: options, exclude: ["wrapConditionalBodies"])
     }
 
     func testWrappedChainedFunctionsWithNestedScopeIndent() {
@@ -2772,6 +2786,6 @@ class IndentTests: RulesTests {
         """
         let options = FormatOptions(indent: "\t", truncateBlankLines: false, tabWidth: 2)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
-                       exclude: ["consecutiveBlankLines", "conditionalBodiesOnNewline"])
+                       exclude: ["consecutiveBlankLines", "wrapConditionalBodies"])
     }
 }

@@ -15,42 +15,49 @@ class WrappingTests: RulesTests {
     func testElseOnSameLine() {
         let input = "if true {\n    1\n}\nelse { 2 }"
         let output = "if true {\n    1\n} else { 2 }"
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testElseOnSameLineOnlyAppliedToDanglingBrace() {
         let input = "if true { 1 }\nelse { 2 }"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testGuardNotAffectedByElseOnSameLine() {
         let input = "guard true\nelse { return }"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testElseOnSameLineDoesntEatPreviousStatement() {
         let input = "if true {}\nguard true else { return }"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testElseNotOnSameLineForAllman() {
         let input = "if true\n{\n    1\n} else { 2 }"
         let output = "if true\n{\n    1\n}\nelse { 2 }"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+                       options: options, exclude: ["wrapConditionalBodies"])
     }
 
     func testElseOnNextLineOption() {
         let input = "if true {\n    1\n} else { 2 }"
         let output = "if true {\n    1\n}\nelse { 2 }"
         let options = FormatOptions(elseOnNextLine: true)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+                       options: options, exclude: ["wrapConditionalBodies"])
     }
 
     func testGuardNotAffectedByElseOnSameLineForAllman() {
         let input = "guard true else { return }"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+                       options: options, exclude: ["wrapConditionalBodies"])
     }
 
     func testRepeatWhileNotOnSameLineForAllman() {
@@ -113,18 +120,21 @@ class WrappingTests: RulesTests {
 
     func testSingleLineGuardElseNotWrappedByDefault() {
         let input = "guard foo = bar else {}"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testSingleLineGuardElseNotUnwrappedByDefault() {
         let input = "guard foo = bar\nelse {}"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testSingleLineGuardElseWrappedByDefaultIfBracesOnNextLine() {
         let input = "guard foo = bar else\n{}"
         let output = "guard foo = bar\nelse {}"
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testMultilineGuardElseNotWrappedByDefault() {
@@ -183,20 +193,23 @@ class WrappingTests: RulesTests {
     func testSingleLineGuardElseNotWrapped() {
         let input = "guard foo = bar else {}"
         let options = FormatOptions(guardElsePosition: .nextLine)
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+                       options: options, exclude: ["wrapConditionalBodies"])
     }
 
     func testSingleLineGuardElseNotUnwrapped() {
         let input = "guard foo = bar\nelse {}"
         let options = FormatOptions(guardElsePosition: .nextLine)
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+                       options: options, exclude: ["wrapConditionalBodies"])
     }
 
     func testSingleLineGuardElseWrappedIfBracesOnNextLine() {
         let input = "guard foo = bar else\n{}"
         let output = "guard foo = bar\nelse {}"
         let options = FormatOptions(guardElsePosition: .nextLine)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+                       options: options, exclude: ["wrapConditionalBodies"])
     }
 
     func testMultilineGuardElseWrapped() {
@@ -267,7 +280,7 @@ class WrappingTests: RulesTests {
                        options: options)
     }
 
-    // MARK: - conditionalBodiesOnNewline
+    // MARK: - wrapConditionalBodies
 
     func testGuardReturnWraps() {
         let input = "guard let foo = bar else { return }"
@@ -276,17 +289,19 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testEmptyGuardReturnWithSpaceDoesNothing() {
         let input = "guard let foo = bar else { }"
-        testFormatting(for: input, rule: FormatRules.conditionalBodiesOnNewline, exclude: ["emptyBraces"])
+        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies,
+                       exclude: ["emptyBraces"])
     }
 
     func testEmptyGuardReturnWithoutSpaceDoesNothing() {
         let input = "guard let foo = bar else {}"
-        testFormatting(for: input, rule: FormatRules.conditionalBodiesOnNewline, exclude: ["emptyBraces"])
+        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies,
+                       exclude: ["emptyBraces"])
     }
 
     func testGuardReturnWithValueWraps() {
@@ -296,7 +311,7 @@ class WrappingTests: RulesTests {
             return baz
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testGuardBodyWithClosingBraceAlreadyOnNewlineWraps() {
@@ -309,7 +324,7 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testGuardContinueWithNoSpacesToCleanupWraps() {
@@ -319,7 +334,7 @@ class WrappingTests: RulesTests {
             continue
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testGuardReturnWrapsSemicolonDelimitedStatements() {
@@ -329,7 +344,7 @@ class WrappingTests: RulesTests {
             var baz = 0; let boo = 1; fatalError()
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testGuardReturnWrapsSemicolonDelimitedStatementsWithNoSpaces() {
@@ -339,7 +354,8 @@ class WrappingTests: RulesTests {
             var baz=0;let boo=1;fatalError()
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline, exclude: ["spaceAroundOperators"])
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies,
+                       exclude: ["spaceAroundOperators"])
     }
 
     func testGuardReturnOnNewlineUnchanged() {
@@ -348,7 +364,7 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testGuardCommentSameLineUnchanged() {
@@ -357,7 +373,7 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testGuardMultilineCommentSameLineUnchanged() {
@@ -367,7 +383,7 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testGuardTwoMultilineCommentsSameLine() {
@@ -377,7 +393,7 @@ class WrappingTests: RulesTests {
             return /* Test comment 2 */
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testNestedGuardElseIfStatementsPutOnNewline() {
@@ -391,7 +407,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testNestedGuardElseGuardStatementPutOnNewline() {
@@ -403,7 +419,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testGuardWithClosureOnlyWrapsElseBody() {
@@ -413,7 +429,7 @@ class WrappingTests: RulesTests {
             return true
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testIfElseReturnsWrap() {
@@ -427,7 +443,7 @@ class WrappingTests: RulesTests {
             return quux
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testIfElseBodiesWrap() {
@@ -441,7 +457,7 @@ class WrappingTests: RulesTests {
             quux
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testIfElsesWithClosuresDontWrapClosures() {
@@ -455,17 +471,19 @@ class WrappingTests: RulesTests {
             corge
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline)
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
     }
 
     func testEmptyIfElseBodiesWithSpaceDoNothing() {
         let input = "if foo { } else if baz { } else { }"
-        testFormatting(for: input, rule: FormatRules.conditionalBodiesOnNewline, exclude: ["emptyBraces"])
+        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies,
+                       exclude: ["emptyBraces"])
     }
 
     func testEmptyIfElseBodiesWithoutSpaceDoNothing() {
         let input = "if foo {} else if baz {} else {}"
-        testFormatting(for: input, rule: FormatRules.conditionalBodiesOnNewline, exclude: ["emptyBraces"])
+        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies,
+                       exclude: ["emptyBraces"])
     }
 
     func testGuardElseBraceStartingOnDifferentLine() {
@@ -480,7 +498,8 @@ class WrappingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline, exclude: ["braces", "indent", "elseOnSameLine"])
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies,
+                       exclude: ["braces", "indent", "elseOnSameLine"])
     }
 
     func testIfElseBracesStartingOnDifferentLines() {
@@ -506,7 +525,8 @@ class WrappingTests: RulesTests {
             return quux
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.conditionalBodiesOnNewline, exclude: ["braces", "indent", "elseOnSameLine"])
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies,
+                       exclude: ["braces", "indent", "elseOnSameLine"])
     }
 
     // MARK: - wrap
@@ -1894,7 +1914,8 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .preserve)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.wrapArguments,
+                       options: options, exclude: ["wrapConditionalBodies"])
     }
 
     // MARK: - --wrapArguments, --wrapParameter
@@ -2578,7 +2599,8 @@ class WrappingTests: RulesTests {
         guard let foo = bar,
               let baz = quux else { return }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testMultilineGuardBraceOnSameLineAsElse() {
@@ -2757,7 +2779,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.indent],
             options: FormatOptions(indent: "  ", wrapConditions: .beforeFirst),
-            exclude: ["conditionalBodiesOnNewline"]
+            exclude: ["wrapConditionalBodies"]
         )
     }
 
@@ -2781,7 +2803,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
             options: FormatOptions(indent: "  ", wrapConditions: .beforeFirst),
-            exclude: ["elseOnSameLine", "conditionalBodiesOnNewline"]
+            exclude: ["elseOnSameLine", "wrapConditionalBodies"]
         )
     }
 
@@ -2831,7 +2853,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.indent],
             options: FormatOptions(indent: "  ", wrapConditions: .afterFirst),
-            exclude: ["conditionalBodiesOnNewline"]
+            exclude: ["wrapConditionalBodies"]
         )
     }
 

@@ -284,7 +284,7 @@ private struct Examples {
     ```
     """
 
-    let conditionalBodiesOnNewline = """
+    let wrapConditionalBodies = """
     ```diff
     - guard let foo = bar else { return baz }
     + guard let foo = bar else {

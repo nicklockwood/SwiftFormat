@@ -374,7 +374,8 @@ class SyntaxTests: RulesTests {
 
     func testClosureArgumentAfterLinebreakInGuardNotMadeTrailing() {
         let input = "guard let foo =\n    bar({ /* some code */ })\nelse { return }"
-        testFormatting(for: input, rule: FormatRules.trailingClosures, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.trailingClosures,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testClosureMadeTrailingForNumericTupleMember() {
@@ -424,7 +425,8 @@ class SyntaxTests: RulesTests {
 
     func testParensAroundTrailingClosureInGuardCaseLetNotRemoved() {
         let input = "guard case let .foo(bar) = baz.filter({ $0 == quux }).isEmpty else {}"
-        testFormatting(for: input, rule: FormatRules.trailingClosures, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.trailingClosures,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testParensAroundTrailingClosureInWhereClauseLetNotRemoved() {
@@ -1446,7 +1448,8 @@ class SyntaxTests: RulesTests {
     func testGuardAndReplaced() {
         let input = "guard true && true\nelse { return }"
         let output = "guard true, true\nelse { return }"
-        testFormatting(for: input, output, rule: FormatRules.andOperator, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, output, rule: FormatRules.andOperator,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testWhileAndReplaced() {
@@ -1464,7 +1467,8 @@ class SyntaxTests: RulesTests {
     func testIfAndParensReplaced() {
         let input = "if true && (true && true) {}"
         let output = "if true, (true && true) {}"
-        testFormatting(for: input, output, rule: FormatRules.andOperator, exclude: ["redundantParens"])
+        testFormatting(for: input, output, rule: FormatRules.andOperator,
+                       exclude: ["redundantParens"])
     }
 
     func testIfFunctionAndReplaced() {

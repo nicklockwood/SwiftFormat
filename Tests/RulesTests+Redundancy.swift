@@ -1514,7 +1514,8 @@ class RedundancyTests: RulesTests {
 
     func testNoRemoveLetInGuard() {
         let input = "guard let _ = foo else {}"
-        testFormatting(for: input, rule: FormatRules.redundantLet, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.redundantLet,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testNoRemoveLetInWhile() {
@@ -1768,17 +1769,20 @@ class RedundancyTests: RulesTests {
 
     func testNoRemoveReturnInIfLetTry() {
         let input = "if let foo = try? bar() { return 5 }"
-        testFormatting(for: input, rule: FormatRules.redundantReturn, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testNoRemoveReturnInMultiIfLetTry() {
         let input = "if let foo = bar, let bar = baz { return 5 }"
-        testFormatting(for: input, rule: FormatRules.redundantReturn, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testNoRemoveReturnAfterMultipleAs() {
         let input = "if foo as? bar as? baz { return 5 }"
-        testFormatting(for: input, rule: FormatRules.redundantReturn, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testRemoveVoidReturn() {
@@ -1789,13 +1793,14 @@ class RedundancyTests: RulesTests {
 
     func testNoRemoveReturnAfterKeyPath() {
         let input = "func foo() { if bar == #keyPath(baz) { return 5 } }"
-        testFormatting(for: input, rule: FormatRules.redundantReturn, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testNoRemoveReturnAfterParentheses() {
         let input = "if let foo = (bar as? String) { return foo }"
         testFormatting(for: input, rule: FormatRules.redundantReturn,
-                       exclude: ["redundantParens", "conditionalBodiesOnNewline"])
+                       exclude: ["redundantParens", "wrapConditionalBodies"])
     }
 
     func testNoRemoveReturnInTupleVarGetter() {
@@ -2294,7 +2299,8 @@ class RedundancyTests: RulesTests {
 
     func testNoRemoveSelfInClosureInsideIf() {
         let input = "if foo { bar { self.baz() } }"
-        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.redundantSelf,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testNoRemoveSelfForErrorInCatch() {
@@ -2476,12 +2482,14 @@ class RedundancyTests: RulesTests {
 
     func testNoRemoveSelfInLocalVarPrecededByIfLetContainingClosure() {
         let input = "func foo() {\n    if let bar = 5 { baz { _ in } }\n    let quux = self.quux\n}"
-        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.redundantSelf,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testNoRemoveSelfForVarCreatedInGuardScope() {
         let input = "func foo() {\n    guard let bar = 5 else {}\n    let baz = self.bar\n}"
-        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.redundantSelf,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testRemoveSelfForVarCreatedInIfScope() {
@@ -3058,7 +3066,8 @@ class RedundancyTests: RulesTests {
             _ = self.myVar
         }) {}
         """
-        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.redundantSelf,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testSelfNotRemovedInDynamicMemberLookup() {
@@ -3165,7 +3174,8 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.redundantSelf,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testRedundantSelfParsingBug() {
@@ -3570,7 +3580,8 @@ class RedundancyTests: RulesTests {
     func testNoInsertSelfInIfCaseLet() {
         let input = "enum Foo {\n    case bar(Int)\n    var value: Int? {\n        if case let .bar(value) = self { return value }\n    }\n}"
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testNoInsertSelfForPatternLet() {

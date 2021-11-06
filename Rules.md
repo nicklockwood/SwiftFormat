@@ -9,7 +9,6 @@
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
 * [blankLinesBetweenScopes](#blankLinesBetweenScopes)
 * [braces](#braces)
-* [conditionalBodiesOnNewline](#conditionalBodiesOnNewline)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
 * [duplicateImports](#duplicateImports)
@@ -75,6 +74,7 @@
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
 * [wrapAttributes](#wrapAttributes)
+* [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
 * [wrapSwitchCases](#wrapSwitchCases)
@@ -349,30 +349,6 @@ Option | Description
 + else {
     // bar
   }
-```
-
-</details>
-<br/>
-
-## conditionalBodiesOnNewline
-
-Place the bodies of conditional statements on a newline after brace.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-- guard let foo = bar else { return baz }
-+ guard let foo = bar else {
-+     return baz
-+ }
-```
-
-```diff
-- if foo { return bar }
-+ if foo {
-+    return bar
-+ }
 ```
 
 </details>
@@ -1975,6 +1951,30 @@ Option | Description
 - enum Foo { }
 
 + @objc enum Foo {}
+```
+
+</details>
+<br/>
+
+## wrapConditionalBodies
+
+Wrap the bodies of inline conditional statements onto a new line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- guard let foo = bar else { return baz }
++ guard let foo = bar else {
++     return baz
++ }
+```
+
+```diff
+- if foo { return bar }
++ if foo {
++    return bar
++ }
 ```
 
 </details>

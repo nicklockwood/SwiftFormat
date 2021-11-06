@@ -345,12 +345,14 @@ class SpacingTests: RulesTests {
     func testSpaceAroundTrailingClosure() {
         let input = "if x{ y }else{ z }"
         let output = "if x { y } else { z }"
-        testFormatting(for: input, output, rule: FormatRules.spaceAroundBraces, exclude: ["conditionalBodiesOnNewline"])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundBraces,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testNoSpaceAroundClosureInsiderParens() {
         let input = "foo({ $0 == 5 })"
-        testFormatting(for: input, rule: FormatRules.spaceAroundBraces, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: FormatRules.spaceAroundBraces,
+                       exclude: ["trailingClosures"])
     }
 
     func testNoExtraSpaceAroundBracesAtStartOrEndOfFile() {

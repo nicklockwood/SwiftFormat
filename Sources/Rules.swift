@@ -1958,8 +1958,8 @@ public struct _FormatRules {
         }
     }
 
-    public let conditionalBodiesOnNewline = FormatRule(
-        help: "Place the bodies of conditional statements on a newline after brace.",
+    public let wrapConditionalBodies = FormatRule(
+        help: "Wrap the bodies of inline conditional statements onto a new line.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in

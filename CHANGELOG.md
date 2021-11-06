@@ -1,5 +1,25 @@
 # Change Log
 
+## [0.49.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.0) (2021-11-07)
+
+- The `redundantType` rule can now remove redundant types for properties initialized with literal values
+- The `redundantType` rule now removes types only for local variables by default (to aid compilation performance)
+- Added `assertionFailures` rule for automatically converting `assert(false, ...)` to `assertionFailure(...)`
+- Added `acronyms` rule to auto-capitalize acronyms (disabled by default)
+- Added `preferDouble` rule to replace `CGFloat` with `Double` on Swift 5.4 and above (disabled by default)
+- Added `wrapConditionalBodies` rule to unwrap single-line guard and if statements (disabled by default)
+- Added `blockComments` rule to replace multiline block comments with line comments (disabled by default)
+- Added `blankLinesBetweenImports` rule to remove blank lines between import statements(disabled by default)
+- Added `redundantClosure` rule to remove unnecessary closure wrappers
+- Added `--lineaftermarks` option to add/remove a blank line after `// MARK:` comments
+- Added `--markCategories` option for `organizeDeclarations` rule
+- Added `--wrapternary` option for controlling how ternary operators are wrapped
+- Added `--wraptypealiases` option for controlling how type aliases are wrapped
+- Added `--indentstrings` option for controlling how multiline strings are indented
+- Extended `redundantParens` rule to handle more cases
+- Extended `wrapMultilineStatementBraces` rule to handle more cases
+- Extended `redundantVoidReturnType` rule to apply to closure return values
+
 ## [0.48.18](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.18) (2021-11-06)
 
 - Fixed `redundantObjc` bug where `private(set)` prevented `@objc` attribute from being stripped

@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.48.18](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.18) (2021-11-06)
+
+- Fixed `redundantObjc` bug where `private(set)` prevented `@objc` attribute from being stripped
+- Fixed indenting of wrapped member chains in or after `#if`/`#else`/`#endif` blocks
+- The `--selfrequired` exclusion list is now applied to nested expressions within function's arguments
+- Fixed parsing bug in `redundantSelf` rule that raised spurious error about missing `}`
+- Fixed bug where error is `--filelist` files were incorrectly reported
+
 ## [0.48.17](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.17) (2021-10-18)
 
 - Fixed bug where `trailingCommas` rule added comma to wrapped capture list with comment

@@ -1900,9 +1900,11 @@ public struct _FormatRules {
             var useAllmanBraces = formatter.options.allmanBraces
 
             // When using `wrapMultilineStatementBraces`, we always use allman wrapping
-            // if the open brace follows a multi-line statement.
-            //  - First, we check if this brace follows any keyword that can have mutli-line stamenets
+            // if the open brace follows a multi-line statement (so the brace is on its own
+            // line, which keeps the main potion of the statement from blending in with the body).
             //
+            // First, we check if this brace follows any keyword that can have mutli-line statements,
+            // where the brace is on a separate line from the keyword.
             if formatter.options.wrapMultilineStatementBraces,
                let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i),
                let keywordIndex = formatter.indexOfLastSignificantKeyword(at: prevIndex + 1, excluding: ["where", "else", "case", "let", "var"]),

@@ -13,8 +13,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-// swiftformat:options --indent 2 --maxwidth 100 --wrapparameters afterfirst
-// swiftformat:disable sortedImports unusedArguments wrapMultilineStatementBraces
+// swiftformat:options --indent 2 --maxwidth 100 --wrapparameters afterfirst --multiline-stmt standard-braces-wrap
+// swiftformat:disable sortedImports unusedArguments
 
 import FirebaseFirestore
 import Foundation

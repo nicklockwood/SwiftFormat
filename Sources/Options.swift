@@ -342,6 +342,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var insertBlankLines: Bool
     public var removeBlankLines: Bool
     public var allmanBraces: Bool
+    public var wrapMultilineStatementBraces: Bool
     public var fileHeader: HeaderStrippingMode
     public var ifdefIndent: IndentMode
     public var wrapArguments: WrapMode
@@ -429,6 +430,7 @@ public struct FormatOptions: CustomStringConvertible {
                 insertBlankLines: Bool = true,
                 removeBlankLines: Bool = true,
                 allmanBraces: Bool = false,
+                wrapMultilineStatementBraces: Bool = true,
                 fileHeader: HeaderStrippingMode = .ignore,
                 ifdefIndent: IndentMode = .indent,
                 wrapArguments: WrapMode = .preserve,
@@ -510,6 +512,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.insertBlankLines = insertBlankLines
         self.removeBlankLines = removeBlankLines
         self.allmanBraces = allmanBraces
+        self.wrapMultilineStatementBraces = wrapMultilineStatementBraces
         self.fileHeader = fileHeader
         self.ifdefIndent = ifdefIndent
         self.wrapArguments = wrapArguments

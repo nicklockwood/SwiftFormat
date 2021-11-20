@@ -111,7 +111,6 @@ class LinebreakTests: RulesTests {
 
         \"\"\"
         """
-        print("testConsecutiveBlankLinesNoInterpolation input=\(input)")
         testFormatting(for: input, rule: FormatRules.consecutiveBlankLines)
     }
 
@@ -125,7 +124,6 @@ class LinebreakTests: RulesTests {
 
         \"\"\"
         """
-        print("testConsecutiveBlankLinesAfterInterpolation input=\(input)")
         testFormatting(for: input, rule: FormatRules.consecutiveBlankLines)
     }
 

@@ -892,7 +892,9 @@ public struct _FormatRules {
                 case .startOfScope where prevToken.isStringDelimiter, .stringBody:
                     return
                 default:
-                    break
+                    if formatter.isCurrentScopeMultilineString(at: i) {
+                        return
+                    }
                 }
             }
             if let nextIndex = formatter.index(of: .nonSpace, after: i) {

@@ -101,6 +101,34 @@ class LinebreakTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.consecutiveBlankLines, options: options)
     }
 
+    func testConsecutiveBlankLinesNoInterpolation() {
+        let input = """
+        \"\"\"
+        AAA
+        ZZZ
+
+
+
+        \"\"\"
+        """
+        print("testConsecutiveBlankLinesNoInterpolation input=\(input)")
+        testFormatting(for: input, rule: FormatRules.consecutiveBlankLines)
+    }
+
+    func testConsecutiveBlankLinesAfterInterpolation() {
+        let input = """
+        \"\"\"
+        AAA
+        \\(interpolated)
+
+
+
+        \"\"\"
+        """
+        print("testConsecutiveBlankLinesAfterInterpolation input=\(input)")
+        testFormatting(for: input, rule: FormatRules.consecutiveBlankLines)
+    }
+
     func testLintingConsecutiveBlankLinesReportsCorrectLine() {
         let input = "foo\n   \n\nbar"
         XCTAssertEqual(try lint(input, rules: [FormatRules.consecutiveBlankLines]), [

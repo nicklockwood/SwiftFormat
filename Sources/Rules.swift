@@ -1906,7 +1906,10 @@ public struct _FormatRules {
                case let .keyword(keyword) = formatter.tokens[keywordIndex],
                ["if", "for", "guard", "while", "switch", "func", "init", "subscript",
                 "extension", "class", "actor", "struct", "enum", "protocol"].contains(keyword),
-               formatter.indentForLine(at: prevIndex) > formatter.indentForLine(at: keywordIndex)
+               formatter.indentForLine(at: prevIndex) > formatter.indentForLine(at: keywordIndex),
+               // Verify that the open brace a `index` is actually the open brace paired with this keyword
+               let openBraceIndexAfterKeyword = formatter.index(of: .startOfScope("{"), after: keywordIndex),
+               i == openBraceIndexAfterKeyword
             {
                 useAllmanBraces = true
             }

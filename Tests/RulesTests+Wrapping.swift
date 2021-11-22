@@ -3154,6 +3154,53 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, [output], rules: [FormatRules.braces, FormatRules.indent])
     }
 
+    func testDoesntWrapTrailingClosureAfterSingleLineChainedMethodCall1() {
+        let input = """
+        guard foo else {
+            return
+        }
+
+        when(fulfilled: promise)
+            .then {
+                // chained closure body 1
+            }
+            .done {
+                // chained closure body 2
+            }
+            .catch {
+                // chained closure body 3
+            }
+            .finally {
+                // chained closure body 4
+            }
+        """
+
+        testFormatting(for: input, rules: [FormatRules.braces, FormatRules.indent])
+    }
+
+    func testDoesntWrapTrailingClosureAfterSingleLineChainedMethodCall2() {
+        let input = """
+        when(
+            fulfilled: promise,
+            otherArgument: foo)
+            .then {
+                // chained closure body 1
+            }
+            .done {
+                // chained closure body 2
+            }
+            .catch {
+                // chained closure body 3
+            }
+            .finally {
+                // chained closure body 4
+            }
+        """
+
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true)
+        testFormatting(for: input, rules: [FormatRules.braces, FormatRules.indent], options: options)
+    }
+
     // MARK: wrapConditions before-first
 
     func testWrapConditionsBeforeFirstPreservesMultilineStatements() {

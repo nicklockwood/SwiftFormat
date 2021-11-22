@@ -849,7 +849,7 @@ class WrappingTests: RulesTests {
             doSomething()
         }
         """
-        let options = FormatOptions(maxWidth: 42)
+        let options = FormatOptions(wrapMultilineStatementBraces: false, maxWidth: 42)
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
@@ -2823,6 +2823,27 @@ class WrappingTests: RulesTests {
         func method(
             foo: Int,
             bar: Int)
+        {
+            print("function body")
+        }
+        """
+        let options = FormatOptions(wrapMultilineStatementBraces: true)
+        testFormatting(for: input, [output], rules: [FormatRules.braces, FormatRules.indent], options: options,
+                       exclude: ["wrapArguments", "unusedArguments"])
+    }
+
+    func testMultilineThrowingFuncBraceOnNextLine() {
+        let input = """
+        func method(
+            foo: Int,
+            bar: Int) throws {
+            print("function body")
+        }
+        """
+        let output = """
+        func method(
+            foo: Int,
+            bar: Int) throws
         {
             print("function body")
         }

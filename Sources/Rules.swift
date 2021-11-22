@@ -1902,7 +1902,7 @@ public struct _FormatRules {
             // where the brace is on a separate line from the keyword.
             if formatter.options.wrapMultilineStatementBraces,
                let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i),
-               let keywordIndex = formatter.indexOfLastSignificantKeyword(at: prevIndex + 1, excluding: ["where", "else", "case", "let", "var"]),
+               let keywordIndex = formatter.indexOfLastSignificantKeyword(at: prevIndex + 1, excluding: ["where", "else", "case", "let", "var", "throws"]),
                case let .keyword(keyword) = formatter.tokens[keywordIndex],
                ["if", "for", "guard", "while", "switch", "func", "init", "subscript",
                 "extension", "class", "actor", "struct", "enum", "protocol"].contains(keyword),

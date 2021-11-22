@@ -298,7 +298,7 @@ class IndentTests: RulesTests {
                 self?.viewportLoggingRegistry.logViewportSessionEnd(with: viewportLoggingContext)
             }
         """
-        let options = FormatOptions(closingParenOnSameLine: true)
+        let options = FormatOptions(wrapMultilineStatementBraces: false, closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
@@ -373,8 +373,9 @@ class IndentTests: RulesTests {
             return viewController
         }
         """
+        let options = FormatOptions(wrapMultilineStatementBraces: false)
         testFormatting(for: input, rule: FormatRules.indent,
-                       exclude: ["braces", "wrapMultilineStatementBraces"])
+                       options: options, exclude: ["braces"])
     }
 
     func testIndentLineAfterIndentedInlineClosure() {
@@ -703,8 +704,8 @@ class IndentTests: RulesTests {
             init() {}
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent,
-                       exclude: ["wrapMultilineStatementBraces"])
+        let options = FormatOptions(wrapMultilineStatementBraces: false)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
     func testWrappedClassDeclarationLikeXcode() {
@@ -720,7 +721,7 @@ class IndentTests: RulesTests {
             init() {}
         }
         """
-        let options = FormatOptions(xcodeIndentation: true)
+        let options = FormatOptions(wrapMultilineStatementBraces: false, xcodeIndentation: true)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
@@ -758,7 +759,7 @@ class IndentTests: RulesTests {
             init() {}
         }
         """
-        let options = FormatOptions(xcodeIndentation: true)
+        let options = FormatOptions(wrapMultilineStatementBraces: false, xcodeIndentation: true)
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
@@ -1045,8 +1046,9 @@ class IndentTests: RulesTests {
                   let bar = bar else { break }
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent,
-                       exclude: ["wrapMultilineStatementBraces", "wrapConditionalBodies"])
+        let options = FormatOptions(wrapMultilineStatementBraces: false)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testConsecutiveWraps() {
@@ -1123,7 +1125,8 @@ class IndentTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["andOperator", "wrapMultilineStatementBraces"])
+        let options = FormatOptions(wrapMultilineStatementBraces: false)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["andOperator"])
     }
 
     func testWrappedEnumThatLooksLikeIf() {
@@ -1141,13 +1144,15 @@ class IndentTests: RulesTests {
     func testChainedClosureIndentsAfterIfCondition() {
         let input = "if foo {\nbar()\n.baz()\n}\n\nfoo\n.bar {\nbaz()\n}\n.bar {\nbaz()\n}"
         let output = "if foo {\n    bar()\n        .baz()\n}\n\nfoo\n    .bar {\n        baz()\n    }\n    .bar {\n        baz()\n    }"
-        testFormatting(for: input, output, rule: FormatRules.indent)
+        let options = FormatOptions(wrapMultilineStatementBraces: false)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
     func testChainedClosureIndentsAfterIfCondition2() {
         let input = "if foo {\nbar()\n.baz()\n}\n\nfoo\n.bar {\nbaz()\n}.bar {\nbaz()\n}"
         let output = "if foo {\n    bar()\n        .baz()\n}\n\nfoo\n    .bar {\n        baz()\n    }.bar {\n        baz()\n    }"
-        testFormatting(for: input, output, rule: FormatRules.indent)
+        let options = FormatOptions(wrapMultilineStatementBraces: false)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
     func testChainedClosureIndentsAfterVarDeclaration() {
@@ -1263,27 +1268,31 @@ class IndentTests: RulesTests {
     func testChainedFunctionsAfterAnIfStatement() {
         let input = "if foo {}\nbar\n.baz {\n}\n.quux()"
         let output = "if foo {}\nbar\n    .baz {\n    }\n    .quux()"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["emptyBraces"])
+        let options = FormatOptions(wrapMultilineStatementBraces: false)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["emptyBraces"])
     }
 
     func testIndentInsideWrappedIfStatementWithClosureCondition() {
         let input = "if foo({ 1 }) ||\nbar {\nbaz()\n}"
         let output = "if foo({ 1 }) ||\n    bar {\n    baz()\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["wrapMultilineStatementBraces"])
+        let options = FormatOptions(wrapMultilineStatementBraces: false)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
     func testIndentInsideWrappedClassDefinition() {
         let input = "class Foo\n: Bar {\nbaz()\n}"
         let output = "class Foo\n    : Bar {\n    baz()\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent,
-                       exclude: ["leadingDelimiters", "wrapMultilineStatementBraces"])
+        let options = FormatOptions(wrapMultilineStatementBraces: false)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options,
+                       exclude: ["leadingDelimiters"])
     }
 
     func testIndentInsideWrappedProtocolDefinition() {
         let input = "protocol Foo\n: Bar, Baz {\nbaz()\n}"
         let output = "protocol Foo\n    : Bar, Baz {\n    baz()\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent,
-                       exclude: ["leadingDelimiters", "wrapMultilineStatementBraces"])
+        let options = FormatOptions(wrapMultilineStatementBraces: false)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options,
+                       exclude: ["leadingDelimiters"])
     }
 
     func testIndentInsideWrappedVarStatement() {
@@ -1403,7 +1412,7 @@ class IndentTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapMultilineStatementBraces: false, wrapArguments: .disabled, closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["wrapConditionalBodies"])
     }
@@ -1419,7 +1428,7 @@ class IndentTests: RulesTests {
                 }
         }
         """
-        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapMultilineStatementBraces: false, wrapArguments: .disabled, closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["wrapConditionalBodies"])
     }
@@ -1435,7 +1444,7 @@ class IndentTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapMultilineStatementBraces: false, wrapArguments: .disabled, closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 

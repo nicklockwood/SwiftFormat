@@ -887,13 +887,8 @@ public struct _FormatRules {
             guard let prevIndex = formatter.index(of: .nonSpace, before: i, if: { $0.isLinebreak }) else {
                 return
             }
-            if let prevToken = formatter.last(.nonSpaceOrLinebreak, before: prevIndex) {
-                switch prevToken {
-                case .startOfScope where prevToken.isStringDelimiter, .stringBody:
-                    return
-                default:
-                    break
-                }
+            if let scope = formatter.currentScope(at: i), scope.isMultilineStringDelimiter {
+                return
             }
             if let nextIndex = formatter.index(of: .nonSpace, after: i) {
                 if formatter.tokens[nextIndex].isLinebreak {

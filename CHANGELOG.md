@@ -19,6 +19,7 @@
 - Extended `redundantParens` rule to handle more cases
 - Extended `wrapMultilineStatementBraces` rule to handle more cases
 - Extended `redundantVoidReturnType` rule to apply to closure return values
+- Fixed bug where `consecutiveBlankLines` rule would strip linebreaks inside multine string
 
 ## [0.48.18](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.48.18) (2021-11-06)
 

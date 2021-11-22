@@ -627,12 +627,3 @@ extension String {
         }
     }
 #endif
-
-extension Formatter {
-    func isCurrentScopeMultilineString(at tokenIndex: Int) -> Bool {
-        guard let scope = currentScope(at: tokenIndex), scope.isMultilineStringDelimiter else {
-            return false
-        }
-        return true
-    }
-}

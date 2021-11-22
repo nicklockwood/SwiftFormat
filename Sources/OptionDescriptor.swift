@@ -427,6 +427,14 @@ struct _Descriptors {
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
     )
+    let wrapMultilineStatementBraces = OptionDescriptor(
+        argumentName: "multiline-stmt",
+        displayName: "Muliline Statement Braces",
+        help: "\"wrap-braces\" (default) or \"standard-braces-wrap\"",
+        keyPath: \.wrapMultilineStatementBraces,
+        trueValues: ["wrap-braces"],
+        falseValues: ["standard-braces-wrap"]
+    )
     let fileHeader = OptionDescriptor(
         argumentName: "header",
         displayName: "Header",

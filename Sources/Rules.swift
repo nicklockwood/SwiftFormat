@@ -887,13 +887,8 @@ public struct _FormatRules {
             guard let prevIndex = formatter.index(of: .nonSpace, before: i, if: { $0.isLinebreak }) else {
                 return
             }
-            if let prevToken = formatter.last(.nonSpaceOrLinebreak, before: prevIndex) {
-                switch prevToken {
-                case .startOfScope where prevToken.isStringDelimiter, .stringBody:
-                    return
-                default:
-                    break
-                }
+            if let scope = formatter.currentScope(at: i), scope.isMultilineStringDelimiter {
+                return
             }
             if let nextIndex = formatter.index(of: .nonSpace, after: i) {
                 if formatter.tokens[nextIndex].isLinebreak {
@@ -5921,6 +5916,133 @@ public struct _FormatRules {
 
         let updatedTokens = declarations.flatMap { $0.tokens }
         formatter.replaceTokens(in: 0 ..< formatter.tokens.count, with: updatedTokens)
+    }
+
+    public let sortDeclarations = FormatRule(
+        help: """
+        Sorts the body of declarations with // swiftformat:sort
+        and declarations between // swiftformat:sort:begin and
+        // swiftformat:sort:end comments.
+        """
+    ) { formatter in
+        formatter.forEachToken(
+            where: { $0.isComment && $0.string.contains("swiftformat:sort") }
+        ) { commentIndex, commentToken in
+
+            let rangeToSort: ClosedRange<Int>
+            let numberOfLeadingLinebreaks: Int
+
+            // For `:sort:begin`, directives, we sort the declarations
+            // between the `:begin` and and `:end` comments
+            if commentToken.string.contains("swiftformat:sort:begin") {
+                guard
+                    let endCommentIndex = formatter.tokens[commentIndex...].firstIndex(where: {
+                        $0.isComment && $0.string.contains("swiftformat:sort:end")
+                    }),
+                    let sortRangeStart = formatter.index(of: .nonSpaceOrComment, after: commentIndex),
+                    let firstRangeToken = formatter.index(of: .nonLinebreak, after: sortRangeStart),
+                    let lastRangeToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: endCommentIndex - 2)
+                else { return }
+
+                rangeToSort = sortRangeStart ... lastRangeToken
+                numberOfLeadingLinebreaks = firstRangeToken - sortRangeStart
+            }
+
+            // For `:sort` directives, we sort the declarations
+            // between the open and close brace of the following type
+            else if
+                !commentToken.string.contains(":sort:"),
+                // This part of the rule conficts with the organizeDeclarations rule.
+                // Instead, that rule manually implements support for the :sort directive.
+                !formatter.options.enabledRules.contains("organizeDeclarations")
+            {
+                guard
+                    let typeOpenBrace = formatter.index(of: .startOfScope("{"), after: commentIndex),
+                    let typeCloseBrace = formatter.endOfScope(at: typeOpenBrace),
+                    let firstTypeBodyToken = formatter.index(of: .nonLinebreak, after: typeOpenBrace),
+                    let lastTypeBodyToken = formatter.index(of: .nonLinebreak, before: typeCloseBrace)
+                else { return }
+
+                rangeToSort = typeOpenBrace + 1 ... lastTypeBodyToken
+                numberOfLeadingLinebreaks = firstTypeBodyToken - typeOpenBrace - 1
+            } else {
+                return
+            }
+
+            var declarations = Formatter(Array(formatter.tokens[rangeToSort]))
+                .parseDeclarations()
+                .enumerated()
+                .sorted(by: { lhs, rhs -> Bool in
+                    let (lhsIndex, lhsDeclaration) = lhs
+                    let (rhsIndex, rhsDeclaration) = rhs
+
+                    // Primarily sort by name, to alphabetize
+                    if
+                        let lhsName = lhsDeclaration.name,
+                        let rhsName = rhsDeclaration.name,
+                        lhsName != rhsName
+                    {
+                        return lhsName.localizedCompare(rhsName) == .orderedAscending
+                    }
+
+                    // Otherwise preserve the existing order
+                    else {
+                        return lhsIndex < rhsIndex
+                    }
+
+                })
+                .map { $0.element }
+
+            // Make sure there's at least one newline between each declaration
+            for i in 0 ... (declarations.count - 2) {
+                let declaration = declarations[i]
+                let nextDeclaration = declarations[i + 1]
+
+                if declaration.tokens.last?.isLinebreak == false,
+                   nextDeclaration.tokens.first?.isLinebreak == false
+                {
+                    declarations[i + 1] = formatter.mapOpeningTokens(in: nextDeclaration) { openTokens in
+                        let openFormatter = Formatter(openTokens)
+                        openFormatter.insertLinebreak(at: 0)
+                        return openFormatter.tokens
+                    }
+                }
+            }
+
+            var sortedFormatter = Formatter(declarations.flatMap { $0.tokens })
+
+            // Make sure the type has the same number of leading line breaks
+            // as it did before sorting
+            if let currentLeadingLinebreakCount = sortedFormatter.tokens.firstIndex(where: { !$0.isLinebreak }) {
+                if numberOfLeadingLinebreaks != currentLeadingLinebreakCount {
+                    sortedFormatter.removeTokens(in: 0 ..< currentLeadingLinebreakCount)
+
+                    for _ in 0 ..< numberOfLeadingLinebreaks {
+                        sortedFormatter.insertLinebreak(at: 0)
+                    }
+                }
+
+            } else {
+                for _ in 0 ..< numberOfLeadingLinebreaks {
+                    sortedFormatter.insertLinebreak(at: 0)
+                }
+            }
+
+            // There are always expected to be zero trailing line breaks,
+            // so we remove any trailing line breaks
+            // (this is because `typeBodyRange` speficially ends before the first
+            // trailing linebreak)
+            while sortedFormatter.tokens.last?.isLinebreak == true {
+                sortedFormatter.removeLastToken()
+            }
+
+            if Array(formatter.tokens[rangeToSort]) != sortedFormatter.tokens {
+                formatter.replaceTokens(
+                    in: rangeToSort,
+                    with: sortedFormatter.tokens
+                )
+            }
+        }
     }
 
     public let assertionFailures = FormatRule(

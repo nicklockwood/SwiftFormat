@@ -13,8 +13,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-// swiftformat:options --indent 2 --maxwidth 100 --wrapparameters afterfirst
-// swiftformat:disable sortedImports unusedArguments wrapMultilineStatementBraces
+// swiftformat:options --indent 2 --maxwidth 100 --wrapparameters afterfirst --multiline-stmt standard-braces-wrap
+// swiftformat:disable sortedImports unusedArguments
 
 import FirebaseFirestore
 import Foundation
@@ -1155,7 +1155,8 @@ extension DecodingError {
   fileprivate static func _typeDescription(of value: Any) -> String {
     if value is NSNull {
       return "a null value"
-    } else if value is NSNumber /* FIXME: If swift-corelibs-foundation isn't updated to use NSNumber, this check will be necessary: || value is Int || value is Double */ {
+    } else if value is NSNumber {
+      // FIXME: If swift-corelibs-foundation isn't updated to use NSNumber, this check will be necessary: || value is Int || value is Double
       return "a number"
     } else if value is String {
       return "a string/data"

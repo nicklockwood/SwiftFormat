@@ -486,6 +486,7 @@ private func applyRules(
 
     // Infer shared options
     var options = options
+    options.enabledRules = Set(rules.map { $0.name })
     let sharedOptions = FormatRules
         .sharedOptionsForRules(rules)
         .compactMap { Descriptors.byName[$0] }

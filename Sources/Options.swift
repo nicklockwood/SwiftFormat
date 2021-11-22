@@ -403,6 +403,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var acronyms: Set<String>
     public var indentStrings: Bool
     public var closureVoidReturn: ClosureVoidReturn
+    public var enabledRules: Set<String>
 
     // Deprecated
     public var indentComments: Bool
@@ -490,6 +491,7 @@ public struct FormatOptions: CustomStringConvertible {
                 acronyms: Set<String> = ["ID", "URL", "UUID"],
                 indentStrings: Bool = false,
                 closureVoidReturn: ClosureVoidReturn = .remove,
+                organizeDeclarationsEnabled _: Bool = false,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -576,6 +578,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.ignoreConflictMarkers = ignoreConflictMarkers
         self.swiftVersion = swiftVersion
         self.fileInfo = fileInfo
+        enabledRules = []
     }
 
     public var useTabs: Bool {
@@ -591,6 +594,7 @@ public struct FormatOptions: CustomStringConvertible {
         let pairs = Mirror(reflecting: self).children.map { ($0!, $1) }
         var options = Dictionary(pairs, uniquingKeysWith: { $1 })
         options["fileInfo"] = nil // Special case
+        options["enabledRules"] = nil // Special case
         return options
     }
 

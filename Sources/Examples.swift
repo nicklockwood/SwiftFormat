@@ -1345,4 +1345,45 @@ private struct Examples {
     +                    quux: quux)
     ```
     """
+
+    let sortDeclarations = """
+    ```diff
+      // swiftformat:sort
+      enum FeatureFlags {
+    -     case upsellB
+    -     case fooFeature
+    -     case barFeature
+    -     case upsellA(
+    -         fooConfiguration: Foo,
+    -         barConfiguration: Bar)
+    +     case barFeature
+    +     case fooFeature
+    +     case upsellA
+    +         fooConfiguration: Foo,
+    +         barConfiguration: Bar)
+    +     case upsellB
+      }
+
+      enum FeatureFlags {
+          // swiftformat:sort:begin
+    -     case upsellB
+    -     case fooFeature
+    -     case barFeature
+    -     case upsellA(
+    -         fooConfiguration: Foo,
+    -         barConfiguration: Bar)
+    +     case barFeature
+    +     case fooFeature
+    +     case upsellA
+    +         fooConfiguration: Foo,
+    +         barConfiguration: Bar)
+    +     case upsellB
+          // swiftformat:sort:end
+
+          var anUnsortedProperty: Foo {
+              Foo()
+          }
+      }
+    ```
+    """
 }

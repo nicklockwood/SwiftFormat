@@ -413,6 +413,9 @@ public struct FormatOptions: CustomStringConvertible {
     public var swiftVersion: Version
     public var fileInfo: FileInfo
 
+    // Enabled rules
+    var enabledRules: Set<String> = []
+
     public static let `default` = FormatOptions()
 
     public init(lineAfterMarks: Bool = true,
@@ -591,6 +594,7 @@ public struct FormatOptions: CustomStringConvertible {
         let pairs = Mirror(reflecting: self).children.map { ($0!, $1) }
         var options = Dictionary(pairs, uniquingKeysWith: { $1 })
         options["fileInfo"] = nil // Special case
+        options["enabledRules"] = nil // Special case
         return options
     }
 

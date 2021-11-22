@@ -198,6 +198,62 @@ private struct Examples {
         // bar
       }
     ```
+
+    `--multiline-stmt wrap-braces` (default):
+
+    ```diff
+      if foo,
+    -   bar {
+        // ...
+      }
+
+      if foo,
+    +   bar
+    + {
+        // ...
+      }
+    ```
+
+    ```diff
+      guard foo,
+    -   bar else {
+        // ...
+      }
+
+      guard foo,
+    +   bar else
+    + {
+        // ...
+      }
+    ```
+
+    ```diff
+      func foo(
+        bar: Int,
+    -   baz: Int) {
+        // ...
+      }
+
+      func foo(
+        bar: Int,
+    +   baz: Int)
+    + {
+        // ...
+      }
+    ```
+
+    ```diff
+      class Foo: NSObject,
+    -   BarProtocol {
+        // ...
+      }
+
+      class Foo: NSObject,
+    +   BarProtocol
+    + {
+        // ...
+      }
+    ```
     """
 
     let consecutiveBlankLines = """
@@ -1063,62 +1119,6 @@ private struct Examples {
         baz,
     +   quuz
     + ]
-    ```
-    """
-
-    let wrapMultilineStatementBraces = """
-    ```diff
-      if foo,
-    -   bar {
-        // ...
-      }
-
-      if foo,
-    +   bar
-    + {
-        // ...
-      }
-    ```
-
-    ```diff
-      guard foo,
-    -   bar else {
-        // ...
-      }
-
-      guard foo,
-    +   bar else
-    + {
-        // ...
-      }
-    ```
-
-    ```diff
-      func foo(
-        bar: Int,
-    -   baz: Int) {
-        // ...
-      }
-
-      func foo(
-        bar: Int,
-    +   baz: Int)
-    + {
-        // ...
-      }
-    ```
-
-    ```diff
-      class Foo: NSObject,
-    -   BarProtocol {
-        // ...
-      }
-
-      class Foo: NSObject,
-    +   BarProtocol
-    + {
-        // ...
-      }
     ```
     """
 

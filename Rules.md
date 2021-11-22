@@ -80,7 +80,6 @@
 * [wrapAttributes](#wrapAttributes)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
-* [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
 * [wrapSwitchCases](#wrapSwitchCases)
 * [yodaConditions](#yodaConditions)
 
@@ -388,6 +387,7 @@ Wrap braces in accordance with selected style (K&R or Allman).
 Option | Description
 --- | ---
 `--allman` | Use allman indentation style: "true" or "false" (default)
+`--multiline-stmt` | "wrap-braces" (default) or "standard-braces-wrap"
 
 <details>
 <summary>Examples</summary>
@@ -407,6 +407,62 @@ Option | Description
   }
 + else {
     // bar
+  }
+```
+
+`--multiline-stmt wrap-braces` (default):
+
+```diff
+  if foo,
+-   bar {
+    // ...
+  }
+
+  if foo,
++   bar
++ {
+    // ...
+  }
+```
+
+```diff
+  guard foo,
+-   bar else {
+    // ...
+  }
+
+  guard foo,
++   bar else
++ {
+    // ...
+  }
+```
+
+```diff
+  func foo(
+    bar: Int,
+-   baz: Int) {
+    // ...
+  }
+
+  func foo(
+    bar: Int,
++   baz: Int)
++ {
+    // ...
+  }
+```
+
+```diff
+  class Foo: NSObject,
+-   BarProtocol {
+    // ...
+  }
+
+  class Foo: NSObject,
++   BarProtocol
++ {
+    // ...
   }
 ```
 
@@ -2138,70 +2194,6 @@ Writes one enum case per line.
   enum Foo {
 +   case bar
 +   case baz
-  }
-```
-
-</details>
-<br/>
-
-## wrapMultilineStatementBraces
-
-Wrap the opening brace of multiline statements.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  if foo,
--   bar {
-    // ...
-  }
-
-  if foo,
-+   bar
-+ {
-    // ...
-  }
-```
-
-```diff
-  guard foo,
--   bar else {
-    // ...
-  }
-
-  guard foo,
-+   bar else
-+ {
-    // ...
-  }
-```
-
-```diff
-  func foo(
-    bar: Int,
--   baz: Int) {
-    // ...
-  }
-
-  func foo(
-    bar: Int,
-+   baz: Int)
-+ {
-    // ...
-  }
-```
-
-```diff
-  class Foo: NSObject,
--   BarProtocol {
-    // ...
-  }
-
-  class Foo: NSObject,
-+   BarProtocol
-+ {
-    // ...
   }
 ```
 

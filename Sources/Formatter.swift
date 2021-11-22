@@ -76,7 +76,7 @@ public class Formatter: NSObject {
             return
         }
         let comment = String(comment[range.upperBound...])
-        guard let directive = ["disable", "enable", "options"].first(where: {
+        guard let directive = ["disable", "enable", "options", "sort"].first(where: {
             comment.hasPrefix($0)
         }) else {
             let parts = comment.components(separatedBy: ":")

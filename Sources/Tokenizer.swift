@@ -96,6 +96,7 @@ public enum TokenType {
 
     // NOT types
     case nonSpace
+    case nonLinebreak
     case nonSpaceOrComment
     case nonSpaceOrLinebreak
     case nonSpaceOrCommentOrLinebreak
@@ -341,6 +342,8 @@ public extension Token {
             return isError
         case .nonSpace:
             return !isSpace
+        case .nonLinebreak:
+            return !isLinebreak
         case .nonSpaceOrComment:
             return !isSpaceOrComment
         case .nonSpaceOrLinebreak:

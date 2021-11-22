@@ -1425,6 +1425,12 @@ extension Formatter {
             (declaration: $0, category: category(of: $0), type: type(of: $0))
         }
 
+        // If this type has a leading :sort directive, we sort alphabetically
+        // within the subcategories (where ordering is otherwise undefined)
+        let sortAlphabeticallyWithinSubcategories = typeDeclaration.open.contains(where: {
+            $0.isComment && $0.string.contains("swiftformat:sort") && !$0.string.contains(":sort:")
+        })
+
         /// Sorts the given categoried declarations based on their derived metadata
         func sortDeclarations(
             _ declarations: CategorizedDeclarations,
@@ -1456,6 +1462,16 @@ extension Formatter {
                        lhsTypeSortOrder != rhsTypeSortOrder
                     {
                         return lhsTypeSortOrder < rhsTypeSortOrder
+                    }
+
+                    // If this type had a :sort directive, we sort alphabetically
+                    // within the subcategories (where ordering is otherwise undefined)
+                    if sortAlphabeticallyWithinSubcategories,
+                       let lhsName = lhs.declaration.name,
+                       let rhsName = rhs.declaration.name,
+                       lhsName != rhsName
+                    {
+                        return lhsName.localizedCompare(rhsName) == .orderedAscending
                     }
 
                     // Respect the original declaration ordering when the categories and types are the same

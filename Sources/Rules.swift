@@ -3210,7 +3210,9 @@ public struct _FormatRules {
                         if scopeStack.last?.token == .startOfScope("(") {
                             scopeStack.removeLast()
                         }
-                        guard var startIndex = formatter.index(of: .startOfScope("{"), after: index) else {
+                        guard var startIndex = formatter.token(at: index) == .startOfScope("{") ?
+                            index : formatter.index(of: .startOfScope("{"), after: index)
+                        else {
                             return formatter.fatalError("Expected {", at: index)
                         }
                         while formatter.isStartOfClosure(at: startIndex) {

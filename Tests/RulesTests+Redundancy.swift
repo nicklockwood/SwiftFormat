@@ -3247,6 +3247,32 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testRedundantSelfParsingBug3() {
+        let input = """
+        final class ViewController {
+          private func bottomBarModels() -> [BarModeling] {
+            if let url = URL(string: "..."){
+              // ...
+            }
+
+            models.append(
+              Footer.barModel(
+                content: FooterContent(
+                  primaryTitleText: "..."),
+                style: style)
+                .setBehaviors { context in
+                  context.view.primaryButtonState = self.isLoading ? .waiting : .normal
+                  context.view.primaryActionHandler = { [weak self] _ in
+                    self?.acceptButtonWasTapped()
+                  }
+                })
+          }
+
+        }
+        """
+        XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf]))
+    }
+
     func testRedundantSelfWithStaticMethodAfterForLoop() {
         let input = """
         struct Foo {

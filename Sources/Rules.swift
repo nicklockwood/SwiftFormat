@@ -1587,7 +1587,9 @@ public struct _FormatRules {
                         if shouldIndentLeadingDotStatement,
                            formatter.next(.nonSpace, after: i) == .operator(".", .infix),
                            let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
-                           let startIndex = formatter.index(of: .nonSpace, after: formatter.startOfLine(at: prevIndex) - 1),
+                           case let lineStart = formatter.index(of: .linebreak, before: prevIndex + 1) ??
+                           formatter.startOfLine(at: prevIndex),
+                           let startIndex = formatter.index(of: .nonSpace, after: lineStart),
                            formatter.isStartOfStatement(at: startIndex) || (
                                (formatter.tokens[startIndex].isIdentifier || [
                                    .keyword("try"), .keyword("await"),

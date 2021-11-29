@@ -1513,6 +1513,62 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentChainedMethodsAfterTrailingClosure() {
+        let input = """
+        func foo() -> some View {
+            HStack(spacing: 0) {
+                foo()
+            }
+            .bar()
+            .baz()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentChainedMethodsAfterTrailingClosureWithXcodeIndentation() {
+        let input = """
+        func foo() -> some View {
+            HStack(spacing: 0) {
+                foo()
+            }
+            .bar()
+            .baz()
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentChainedMethodsAfterWrappedMethodAfterTrailingClosure() {
+        let input = """
+        func foo() -> some View {
+            HStack(spacing: 0) {
+                foo()
+            }
+            .bar(foo: 1,
+                 bar: baz ? 2 : 3),
+            .baz()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentChainedMethodsAfterWrappedMethodAfterTrailingClosureWithXcodeIndentation() {
+        let input = """
+        func foo() -> some View {
+            HStack(spacing: 0) {
+                foo()
+            }
+            .bar(foo: 1,
+                 bar: baz ? 2 : 3)
+            .baz()
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testChainedFunctionOnNewLineWithXcodeIndentation() {
         let input = """
         bar(a: "A", b: "B")
@@ -1638,6 +1694,7 @@ class IndentTests: RulesTests {
             yetAnotherBool
         else { return }
         """
+        // TODO: fix indent for `yetAnotherBool`
         let output = """
         guard aBool,
               anotherBool,

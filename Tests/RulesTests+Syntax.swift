@@ -2244,15 +2244,42 @@ class SyntaxTests: RulesTests {
          */
         """
         let output = """
-        //
         // foo
         // bar
-        //
         """
         testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
 
-    func testBlockToLineDocCommentsWithAsterisksOnEachLine() {
+    func testBlockCommentsWithoutBlankFirstLine() {
+        let input = """
+        /* foo
+         * bar
+         */
+        """
+        let output = """
+        // foo
+        // bar
+        """
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
+    }
+
+    func testBlockCommentsWithBlankLine() {
+        let input = """
+        /*
+         * foo
+         *
+         * bar
+         */
+        """
+        let output = """
+        // foo
+        //
+        // bar
+        """
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
+    }
+
+    func testBlockDocCommentsWithAsterisksOnEachLine() {
         let input = """
         /**
          * This is a documentation comment,
@@ -2260,15 +2287,13 @@ class SyntaxTests: RulesTests {
          */
         """
         let output = """
-        ///
         /// This is a documentation comment,
         /// not a standard comment.
-        ///
         """
         testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
 
-    func testBlockToLineDocCommentsWithoutAsterisksOnEachLine() {
+    func testBlockDocCommentsWithoutAsterisksOnEachLine() {
         let input = """
         /**
          This is a documentation comment,
@@ -2276,10 +2301,8 @@ class SyntaxTests: RulesTests {
          */
         """
         let output = """
-        ///
         /// This is a documentation comment,
         /// not a standard comment.
-        ///
         """
         testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
@@ -2293,11 +2316,63 @@ class SyntaxTests: RulesTests {
          */
         """
         let output = """
-        //
         // comment
-        //  inside
+        // inside
         // a comment
-        //
+        """
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
+    }
+
+    func testBlockCommentsIndentPreserved() {
+        let input = """
+        func foo() {
+            /*
+             foo
+             bar.
+             */
+        }
+        """
+        let output = """
+        func foo() {
+            // foo
+            // bar.
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
+    }
+
+    func testBlockCommentsIndentPreserved2() {
+        let input = """
+        func foo() {
+            /*
+             * foo
+             * bar.
+             */
+        }
+        """
+        let output = """
+        func foo() {
+            // foo
+            // bar.
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
+    }
+
+    func testBlockDocCommentsIndentPreserved() {
+        let input = """
+        func foo() {
+            /**
+             * foo
+             * bar.
+             */
+        }
+        """
+        let output = """
+        func foo() {
+            /// foo
+            /// bar.
+        }
         """
         testFormatting(for: input, output, rule: FormatRules.blockComments)
     }

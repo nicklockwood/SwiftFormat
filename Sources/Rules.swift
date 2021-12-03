@@ -5970,12 +5970,15 @@ public struct _FormatRules {
 
     public let blockComments = FormatRule(
         help: "Changes block comments to single line comments.",
-        disabledByDefault: true,
-        sharedOptions: ["linebreaks"]
+        disabledByDefault: true
     ) { formatter in
         formatter.forEachToken { i, token in
             switch token {
             case .startOfScope("/*"):
+                guard var endIndex = formatter.endOfScope(at: i) else {
+                    return formatter.fatalError("Expected */", at: i)
+                }
+
                 // We can only convert block comments to single-line comments
                 // if there are no non-comment tokens on the same line.
                 //  - For example, we can't convert `if foo { /* code */ }`
@@ -5983,127 +5986,100 @@ public struct _FormatRules {
                 //
                 // To guard against this, we verify that there is only
                 // comment or whitespace tokens on the remainder of this line
-                for indexOnLine in i ... formatter.endOfLine(at: i) {
-                    if formatter.token(at: indexOnLine)?.isSpaceOrCommentOrLinebreak == false {
-                        return
+                guard formatter.next(.nonSpace, after: endIndex)?.isLinebreak != false else {
+                    return
+                }
+
+                var isDocComment = false
+                func replaceCommentBody(at index: Int) -> Int {
+                    var delta = 0
+                    var space = ""
+                    if case let .space(s) = formatter.tokens[index] {
+                        formatter.removeToken(at: index)
+                        space = s
+                        delta -= 1
                     }
+                    if case let .commentBody(body)? = formatter.token(at: index) {
+                        let commentBody = body.drop(while: { $0 == "*" })
+                        let prefix = isDocComment ? "/" : ""
+                        if !prefix.isEmpty || !commentBody.isEmpty, !commentBody.hasPrefix(" ") {
+                            space += " "
+                        }
+                        formatter.replaceToken(
+                            at: index,
+                            with: .commentBody(prefix + space + commentBody)
+                        )
+                    } else if isDocComment {
+                        formatter.insert(.commentBody("/"), at: index)
+                        delta += 1
+                    }
+                    endIndex += delta
+                    return delta
                 }
 
-                // Determine whether this is a doc comment (/**) or a regular comment (/*)
-                let isDocComment: Bool
-                if formatter.token(at: i + 1)?.string.hasPrefix("*") == true {
-                    isDocComment = true
-                } else {
-                    isDocComment = false
-                }
-
-                // locate the end of this comment
-                // ignore nested comments
+                // Replace opening delimiter
                 var startIndex = i
-                var startLine = formatter.startOfLine(at: startIndex)
-                var endIndex = i + 1
-                var numComments = 1
-                while numComments > 0 {
-                    switch formatter.token(at: endIndex) {
-                    case .startOfScope("/*"):
-                        numComments += 1
-                    case .endOfScope("*/"):
-                        numComments -= 1
-                    default:
-                        break
-                    }
-                    endIndex += 1
+                let indent = formatter.indentForLine(at: i)
+                if case let .commentBody(body) = formatter.tokens[i + 1] {
+                    isDocComment = body.hasPrefix("*")
+                    let commentBody = body.drop(while: { $0 == "*" })
+                    formatter.replaceToken(at: i + 1, with: .commentBody("/" + commentBody))
                 }
-                var endLine = formatter.endOfLine(at: endIndex)
+                formatter.replaceToken(at: i, with: .startOfScope("//"))
+                if let nextToken = formatter.token(at: i + 1),
+                   nextToken.isSpaceOrLinebreak || nextToken.string == (isDocComment ? "/" : ""),
+                   let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i + 1),
+                   nextIndex > i + 2
+                {
+                    let range = i + 1 ..< nextIndex
+                    formatter.removeTokens(in: range)
+                    endIndex -= range.count
+                    startIndex = i + 1
+                    _ = replaceCommentBody(at: startIndex)
+                }
 
-                // if there is code on the same line as a comment,
-                // move it to the next line
-                if endLine > endIndex {
-                    formatter.insertLinebreak(at: endIndex)
+                // Replace ending delimiter
+                if let i = formatter.index(of: .nonSpace, before: endIndex, if: {
+                    $0.isLinebreak
+                }) {
+                    let range = i ... endIndex
+                    formatter.removeTokens(in: range)
+                    endIndex -= (range.count - 1)
                 }
 
                 // remove /* and */
-                var index = startIndex
+                var index = i
                 while index <= endIndex {
-                    switch formatter.token(at: index) {
+                    switch formatter.tokens[index] {
                     case .startOfScope("/*"):
                         formatter.removeToken(at: index)
-                        index -= 1
                         endIndex -= 1
+                        if formatter.tokens[index - 1].isSpace {
+                            formatter.removeToken(at: index - 1)
+                            index -= 1
+                            endIndex -= 1
+                        }
                     case .endOfScope("*/"):
                         formatter.removeToken(at: index)
-                        index -= 1
                         endIndex -= 1
-                    default:
-                        break
-                    }
-                    index += 1
-                }
-
-                // turn each line into a single line comment
-                var startOfLine = true
-                index = startIndex
-                while index < endIndex {
-                    if index == formatter.startOfLine(at: index) {
-                        startOfLine = true
-                    }
-
-                    // adds // if it's the beginning of the line
-                    if startOfLine {
-                        let lineCommentDelimiter: String
-                        if isDocComment {
-                            lineCommentDelimiter = "///"
-                        } else {
-                            lineCommentDelimiter = "//"
+                        if formatter.tokens[index - 1].isSpace {
+                            formatter.removeToken(at: index - 1)
+                            index -= 1
+                            endIndex -= 1
                         }
-
-                        formatter.insert(.identifier(lineCommentDelimiter), at: index)
-
+                    case .linebreak:
+                        endIndex += formatter.insertSpace(indent, at: index + 1)
+                        guard let i = formatter.index(of: .nonSpace, after: index) else {
+                            index += 1
+                            continue
+                        }
+                        index = i
+                        formatter.insert(.startOfScope("//"), at: index)
+                        var delta = 1 + replaceCommentBody(at: index + 1)
+                        index += delta
+                    default:
                         index += 1
-                        endIndex += 1
-                        startOfLine = false
                     }
-                    index += 1
-                }
-
-                index = startIndex
-                while index < endIndex {
-                    switch formatter.token(at: index) {
-                    // remove the *'s at the beginning of each comment if present
-                    case let .commentBody(body):
-                        var toRemove = 0
-                        var commentBody = Array(body)
-                        while toRemove < body.count, commentBody[toRemove] == " " || commentBody[toRemove] == "*" {
-                            toRemove += 1
-                        }
-
-                        // Insert a space when removing these leading *'s,
-                        // except when removing the first * following the /*
-                        // of a doc comment (these are visually combined
-                        // in the same /**, but not parsed as the same token).
-                        let shouldInsertSpace: Bool
-                        if isDocComment,
-                           index == i + 1, // this * immediately follows the /*
-                           formatter.token(at: index + 1)?.isLinebreak == true // this * is the last token on this line
-                        {
-                            shouldInsertSpace = false
-                        } else {
-                            shouldInsertSpace = true
-                        }
-
-                        formatter.replaceToken(
-                            at: index,
-                            with: .commentBody((shouldInsertSpace ? " " : "") + String(body.dropFirst(toRemove)))
-                        )
-                    // remove any extra spaces
-                    case .space(" "):
-                        formatter.removeToken(at: index)
-                        index -= 1
-                        endIndex -= 1
-                    default:
-                        break
-                    }
-                    index += 1
                 }
             default:
                 break

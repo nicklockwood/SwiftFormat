@@ -336,10 +336,8 @@ Changes block comments to single line comments.
 -  * bar
 -  */
 
-+ //
 + // foo
 + // bar
-+ //
 ```
 
 ```diff
@@ -348,10 +346,8 @@ Changes block comments to single line comments.
 -  * bar
 -  */
 
-+ ///
 + /// foo
 + /// bar
-+ ///
 ```
 
 </details>

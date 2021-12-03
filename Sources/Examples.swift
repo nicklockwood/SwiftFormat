@@ -1298,10 +1298,8 @@ private struct Examples {
     -  * bar
     -  */
 
-    + //
     + // foo
     + // bar
-    + //
     ```
 
     ```diff
@@ -1310,10 +1308,8 @@ private struct Examples {
     -  * bar
     -  */
 
-    + ///
     + /// foo
     + /// bar
-    + ///
     ```
     """
 }

@@ -690,13 +690,13 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testParseModifierOrderOption() throws {
-        let options = try Options(["modifierorder": "private(set),public"], in: "")
-        XCTAssertEqual(options.formatOptions?.modifierOrder, ["private(set)", "public"])
+        let options = try Options(["modifierorder": "private(set),public,unowned(unsafe)"], in: "")
+        XCTAssertEqual(options.formatOptions?.modifierOrder, ["private(set)", "public", "unowned(unsafe)"])
     }
 
     func testParseSpecifierOrderOption() throws {
-        let options = try Options(["specifierorder": "private(set),public"], in: "")
-        XCTAssertEqual(options.formatOptions?.modifierOrder, ["private(set)", "public"])
+        let options = try Options(["specifierorder": "private(set),public,unowned(unsafe)"], in: "")
+        XCTAssertEqual(options.formatOptions?.modifierOrder, ["private(set)", "public", "unowned(unsafe)"])
     }
 
     func testParseSwiftVersionOption() throws {

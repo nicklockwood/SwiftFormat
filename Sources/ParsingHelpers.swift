@@ -1726,6 +1726,9 @@ extension _FormatRules {
     // ACL setter modifiers
     static let aclSetterModifiers = aclModifiers.map { "\($0)(set)" }
 
+    // Ownership modifiers
+    static let ownershipModifiers = ["weak", "unowned", "unowned(safe)", "unowned(unsafe)"]
+
     // Modifier mapping (designed to match SwiftLint)
     static func mapModifiers(_ input: String) -> [String]? {
         switch input.lowercased() {
@@ -1738,7 +1741,7 @@ extension _FormatRules {
         case "typemethods":
             return [] // Not clear what this is for - legacy?
         case "owned":
-            return ["weak", "unowned"]
+            return ownershipModifiers
         default:
             return allModifiers.contains(input) ? [input] : nil
         }
@@ -1755,7 +1758,7 @@ extension _FormatRules {
         ["indirect"],
         ["isolated", "nonisolated"],
         ["lazy"],
-        ["weak", "unowned"],
+        ownershipModifiers,
         ["static", "class"],
         ["mutating", "nonmutating"],
         ["prefix", "infix", "postfix"],

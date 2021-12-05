@@ -2354,6 +2354,17 @@ public struct _FormatRules {
                         lastModifier = (string + "(set)", [Token](formatter.tokens[index ..< lastIndex]))
                         previousIndex = lastIndex
                         lastIndex = index
+                    } else if let containedToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
+                              case let .identifier(ident) = containedToken,
+                              ["safe", "unsafe"].contains(ident),
+                              let openParenIndex = formatter.index(of: .startOfScope("("), before: index),
+                              let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: openParenIndex),
+                              case let .identifier(string)? = formatter.token(at: index), string == "unowned"
+                    {
+                        lastModifier.map { modifiers[$0] = $1 }
+                        lastModifier = ("\(string)(\(ident))", [Token](formatter.tokens[index ..< lastIndex]))
+                        previousIndex = lastIndex
+                        lastIndex = index
                     } else {
                         break loop
                     }

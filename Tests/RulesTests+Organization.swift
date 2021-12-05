@@ -2852,6 +2852,12 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.modifierOrder)
     }
 
+    func testUnownedUnsafeModifierNotMangled() {
+        let input = "unowned(unsafe) lazy var foo"
+        let output = "lazy unowned(unsafe) var foo"
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder)
+    }
+
     func testPrivateRequiredStaticFuncModifiers() {
         let input = "required static private func foo()"
         let output = "private required static func foo()"

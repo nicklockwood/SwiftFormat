@@ -12,6 +12,10 @@ import XCTest
 private let projectDirectory = URL(fileURLWithPath: #file)
     .deletingLastPathComponent().deletingLastPathComponent()
 
+private let projectURL = projectDirectory
+    .appendingPathComponent("SwiftFormat.xcodeproj")
+    .appendingPathComponent("project.pbxproj")
+
 private let changeLogURL =
     projectDirectory.appendingPathComponent("CHANGELOG.md")
 
@@ -23,6 +27,13 @@ private let rulesURL =
 
 private let rulesFile =
     try! String(contentsOf: rulesURL, encoding: .utf8)
+
+private let swiftFormatVersion: String = {
+    let string = try! String(contentsOf: projectURL)
+    let start = string.range(of: "MARKETING_VERSION = ")!.upperBound
+    let end = string.range(of: ";", range: start ..< string.endIndex)!.lowerBound
+    return String(string[start ..< end])
+}()
 
 class MetadataTests: XCTestCase {
     // MARK: generate Rules.md
@@ -258,5 +269,9 @@ class MetadataTests: XCTestCase {
         let podspec = try! String(contentsOf: podspecURL, encoding: .utf8)
         XCTAssertTrue(podspec.contains("\"version\": \"\(SwiftFormat.version)\""), "Podspec version does not match latest release")
         XCTAssertTrue(podspec.contains("\"tag\": \"\(SwiftFormat.version)\""), "Podspec tag does not match latest release")
+    }
+
+    func testVersionConstantUpdated() {
+        XCTAssertEqual(SwiftFormat.version, swiftFormatVersion)
     }
 }

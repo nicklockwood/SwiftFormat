@@ -2329,7 +2329,10 @@ public struct _FormatRules {
                 return
             }
             var modifiers = [String: [Token]]()
-            var lastModifier: (String, [Token])?
+            var lastModifier: (name: String, tokens: [Token])?
+            func pushModifier() {
+                lastModifier.map { modifiers[$0.name] = $0.tokens }
+            }
             var lastIndex = i
             var previousIndex = lastIndex
             loop: while let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: lastIndex) {
@@ -2340,29 +2343,19 @@ public struct _FormatRules {
                     lastIndex = previousIndex
                     break loop
                 case let token where token.isModifierKeyword:
-                    lastModifier.map { modifiers[$0.0] = $0.1 }
+                    pushModifier()
                     lastModifier = (token.string, [Token](formatter.tokens[index ..< lastIndex]))
                     previousIndex = lastIndex
                     lastIndex = index
                 case .endOfScope(")"):
-                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) == .identifier("set"),
+                    if case let .identifier(param)? = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
                        let openParenIndex = formatter.index(of: .startOfScope("("), before: index),
                        let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: openParenIndex),
-                       case let .keyword(string)? = formatter.token(at: index), aclModifiers.contains(string)
+                       let token = formatter.token(at: index), token.isModifierKeyword
                     {
-                        lastModifier.map { modifiers[$0.0] = $0.1 }
-                        lastModifier = (string + "(set)", [Token](formatter.tokens[index ..< lastIndex]))
-                        previousIndex = lastIndex
-                        lastIndex = index
-                    } else if let containedToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
-                              case let .identifier(ident) = containedToken,
-                              ["safe", "unsafe"].contains(ident),
-                              let openParenIndex = formatter.index(of: .startOfScope("("), before: index),
-                              let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: openParenIndex),
-                              case let .identifier(string)? = formatter.token(at: index), string == "unowned"
-                    {
-                        lastModifier.map { modifiers[$0] = $1 }
-                        lastModifier = ("\(string)(\(ident))", [Token](formatter.tokens[index ..< lastIndex]))
+                        pushModifier()
+                        let modifier = token.string + (param == "set" ? "(set)" : "")
+                        lastModifier = (modifier, [Token](formatter.tokens[index ..< lastIndex]))
                         previousIndex = lastIndex
                         lastIndex = index
                     } else {
@@ -2373,7 +2366,7 @@ public struct _FormatRules {
                     break loop
                 }
             }
-            lastModifier.map { modifiers[$0.0] = $0.1 }
+            pushModifier()
             guard !modifiers.isEmpty else { return }
             var sortedModifiers = [Token]()
             for modifier in formatter.modifierOrder {

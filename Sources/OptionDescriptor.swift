@@ -706,7 +706,13 @@ struct _Descriptors {
         keyPath: \FormatOptions.modifierOrder,
         validate: {
             guard _FormatRules.mapModifiers($0) != nil else {
-                throw FormatError.options("'\($0)' is not a valid modifier")
+                let names = _FormatRules.allModifiers
+                    + _FormatRules.semanticModifierGroups
+                let error = "'\($0)' is not a valid modifier"
+                guard let match = $0.bestMatches(in: names).first else {
+                    throw FormatError.options(error)
+                }
+                throw FormatError.options("\(error) (did you mean '\(match)'?)")
             }
         }
     )

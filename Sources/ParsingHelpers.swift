@@ -1717,6 +1717,9 @@ extension _FormatRules {
         yearFormatter(Date())
     }()
 
+    // Swiftlint semantic modifier groups
+    static let semanticModifierGroups = ["acl", "setteracl", "mutators", "typemethods", "owned"]
+
     // All modifiers
     static let allModifiers = Set(defaultModifierOrder.flatMap { $0 })
 
@@ -1727,7 +1730,7 @@ extension _FormatRules {
     static let aclSetterModifiers = aclModifiers.map { "\($0)(set)" }
 
     // Ownership modifiers
-    static let ownershipModifiers = ["weak", "unowned", "unowned(safe)", "unowned(unsafe)"]
+    static let ownershipModifiers = ["weak", "unowned"]
 
     // Modifier mapping (designed to match SwiftLint)
     static func mapModifiers(_ input: String) -> [String]? {
@@ -1742,7 +1745,14 @@ extension _FormatRules {
             return [] // Not clear what this is for - legacy?
         case "owned":
             return ownershipModifiers
-        default:
+        case let input:
+            if allModifiers.contains(input) {
+                return [input]
+            }
+            guard let index = input.index(of: "(") else {
+                return nil
+            }
+            let input = String(input[..<index])
             return allModifiers.contains(input) ? [input] : nil
         }
     }

@@ -6143,7 +6143,7 @@ public struct _FormatRules {
                     formatter.removeTokens(in: range)
                     endIndex -= range.count
                     startIndex = i + 1
-                    _ = replaceCommentBody(at: startIndex)
+                    endIndex += replaceCommentBody(at: startIndex)
                 }
 
                 // Replace ending delimiter
@@ -6152,7 +6152,7 @@ public struct _FormatRules {
                 }) {
                     let range = i ... endIndex
                     formatter.removeTokens(in: range)
-                    endIndex -= (range.count - 1)
+                    endIndex -= range.count
                 }
 
                 // remove /* and */
@@ -6185,6 +6185,7 @@ public struct _FormatRules {
                         formatter.insert(.startOfScope("//"), at: index)
                         var delta = 1 + replaceCommentBody(at: index + 1)
                         index += delta
+                        endIndex += delta
                     default:
                         index += 1
                     }

@@ -2376,4 +2376,28 @@ class SyntaxTests: RulesTests {
         """
         testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
+
+    func testLongBlockCommentsWithoutPerLineMarkersFullyConverted() {
+        let input = """
+        /*
+            The beginnings of the lines in this multiline comment body
+            have only spaces in them. There are no asterisks, only spaces.
+
+            This should not cause the blockComments rule to convert only
+            part of the comment body and leave the rest hanging.
+
+            The comment must have at least this many lines to trigger the bug.
+        */
+        """
+        let output = """
+        // The beginnings of the lines in this multiline comment body
+        // have only spaces in them. There are no asterisks, only spaces.
+        //
+        // This should not cause the blockComments rule to convert only
+        // part of the comment body and leave the rest hanging.
+        //
+        // The comment must have at least this many lines to trigger the bug.
+        """
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
+    }
 }

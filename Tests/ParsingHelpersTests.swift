@@ -952,7 +952,7 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["bar"])
-        XCTAssertEqual(index, 10)
+        XCTAssertEqual(index, 5)
     }
 
     // MARK: parseDeclarations

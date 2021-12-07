@@ -3159,7 +3159,10 @@ public struct _FormatRules {
                 case .keyword("extension"), .keyword("struct"), .keyword("enum"), .keyword("class"), .keyword("actor"),
                      .keyword("where") where ["extension", "struct", "enum", "class", "actor"].contains(lastKeyword):
                     guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .keyword("import"),
-                          let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else { return }
+                          let scopeStart = formatter.index(of: .startOfScope("{"), after: index)
+                    else {
+                        return
+                    }
                     guard let nameToken = formatter.next(.identifier, after: index),
                           case let .identifier(name) = nameToken
                     else {
@@ -3576,7 +3579,6 @@ public struct _FormatRules {
                                  members: members, typeStack: &typeStack, membersByType: &membersByType,
                                  classMembersByType: &classMembersByType,
                                  usingDynamicLookup: usingDynamicLookup)
-                return
             } else {
                 index = bodyStartIndex + 1
                 processBody(at: &index,

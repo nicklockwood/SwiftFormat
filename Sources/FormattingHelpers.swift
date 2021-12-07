@@ -103,11 +103,20 @@ extension Formatter {
                         } else {
                             index = endIndex
                         }
-                        fallthrough
-                    case .number, .identifier:
                         index = max(index, nextIndex)
-                        if nextToken(after: index, where: {
+                        if next(.nonSpaceOrCommentOrLinebreak, after: index, if: {
                             $0 == .delimiter(",") || $0.isOperator(ofType: .infix)
+                        }) == nil {
+                            names.formUnion(locals)
+                            return
+                        }
+                        continue
+                    case .number, .identifier:
+                        index = nextIndex
+                        if next(.nonSpaceOrCommentOrLinebreak, after: index, if: {
+                            $0.isOperator(ofType: .infix) || [
+                                .delimiter(","), .startOfScope("["), .startOfScope("("),
+                            ].contains($0)
                         }) == nil {
                             names.formUnion(locals)
                             return

@@ -3466,6 +3466,27 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testSelfRemovalParsingBug() {
+        let input = """
+        extension Dictionary where Key == String {
+            func requiredValue<T>(for keyPath: String) throws -> T {
+                return keyPath as! T
+            }
+
+            func optionalValue<T>(for keyPath: String) throws -> T? {
+                guard let anyValue = self[keyPath] else {
+                    return nil
+                }
+                guard let value = anyValue as? T else {
+                    return nil
+                }
+                return value
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     func testShadowedStringValueNotRemovedInInit() {
         let input = """
         init() {
@@ -3510,14 +3531,19 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
-    func testShadowedFuncParamNotRemovedInInit() {
+    func testShadowedFuncParamRemovedInInit() {
         let input = """
         init() {
             let value = foo(self.value)
         }
         """
+        let output = """
+        init() {
+            let value = foo(value)
+        }
+        """
         let options = FormatOptions(swiftVersion: "5.4")
-        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
     }
 
     // explicitSelf = .insert
@@ -4295,7 +4321,18 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
-    func testSelfRemovalParsingBug() {
+    func testSelfNotRemovedInInitForSwift5_4() {
+        let input = """
+        init() {
+            let foo = 1234
+            self.bar = foo
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly, swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testSelfRemovalParsingBug2() {
         let input = """
         func handleGenericError(_ error: Error) {
             if let requestableError = error as? RequestableError,

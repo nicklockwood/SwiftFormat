@@ -639,13 +639,16 @@ public struct _FormatRules {
         help: "Remove redundant type from variable declarations.",
         options: ["redundanttype"]
     ) { formatter in
-        formatter.forEachToken(where: { token -> Bool in
-            token == .keyword("var") || token == .keyword("let")
-        }) { i, _ in
-            guard let colonIndex = formatter.index(after: i, where: {
+        formatter.forEach(.operator("=", .infix)) { i, _ in
+            guard let keyword = formatter.lastSignificantKeyword(at: i),
+                  ["var", "let"].contains(keyword)
+            else {
+                return
+            }
+            let equalsIndex = i
+            guard let colonIndex = formatter.index(before: i, where: {
                 [.delimiter(":"), .operator("=", .infix)].contains($0)
             }), formatter.tokens[colonIndex] == .delimiter(":"),
-            let equalsIndex = formatter.index(of: .operator("=", .infix), after: colonIndex),
             let typeEndIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
             else { return }
 

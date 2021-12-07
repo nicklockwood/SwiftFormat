@@ -1020,6 +1020,14 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
+    func testAllRedundantTypesRemovedInCommaDelimitedDeclaration() {
+        let input = "var foo: Int = 0, bar: Int = 0"
+        let output = "var foo = 0, bar = 0"
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
     func testRedundantTypeRemovalWithComment() {
         let input = "var view: UIView /* view */ = UIView()"
         let output = "var view /* view */ = UIView()"

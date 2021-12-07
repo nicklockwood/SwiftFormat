@@ -5,25 +5,67 @@ on:
   pull_request:
 jobs:
   macos:
-    runs-on: macos-10.14
+    strategy:
+      fail-fast: false
+      matrix:
+        macos:
+          - 10.14
+          - 10.15
+          - 11
+        xcode:
+          - latest-stable
+        include:
+          - macos: 11
+            xcode: latest
+    runs-on: macos-${{ matrix.macos }}
     steps:
+      - name: Select Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Build and Test
         run:
           xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test
-        env:
-          DEVELOPER_DIR: /Applications/Xcode_11.2.1.app/Contents/Developer
       - name: Codecov
-        run: bash <(curl -s https://codecov.io/bash) -t a47579fa-9a2a-4c48-b557-aa725c6b5f92
+        uses: codecov/codecov-action@v2
+        with:
+          # the token is optional for a public repo, but including it anyway
+          token: a47579fa-9a2a-4c48-b557-aa725c6b5f92
+          env_vars: MD_APPLE_SDK_ROOT,RUNNER_OS,RUNNER_ARCH
+
   linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        swiftver:
+          - swift:5.2
+          - swift:5.3
+          - swift:5.4
+          - swift:5.5
+          - swiftlang/swift:nightly-main
+        swiftos:
+          - focal
     runs-on: ubuntu-latest
-    container:
-      image: swift:5.2
+    container: 
+      image: ${{ format('{0}-{1}', matrix.swiftver, matrix.swiftos) }}
       options: --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Build and Test
-        run: swift test --enable-test-discovery
-
+        run: swift test --enable-test-discovery --enable-code-coverage
+      - name: Convert profdata to LCOV
+        run: |
+          llvm-cov export -format lcov \
+            --ignore-filename-regex='/(\.build|Tests|Sources|Snapshots|PerformanceTests)/' \
+            -instr-profile=$(dirname $(swift test --show-codecov-path))/default.profdata \
+            $(swift build --show-bin-path)/SwiftFormatPackageTests.xctest \
+            >SwiftFormat.lcov
+      - name: Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: a47579fa-9a2a-4c48-b557-aa725c6b5f92
+          files: SwiftFormat.lcov
+          env_vars: SWIFT_VERSION,SWIFT_PLATFORM,RUNNER_OS,RUNNER_ARCH

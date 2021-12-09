@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.49.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.1) (2021-12-09)
+
+- The `blockComments` rule now handles empty leading and trailing comment lines correctly
+- Fixed crash in `blockComments` rule
+- The `redundantType` rule now handles comma-delimited declarations correctly
+- Fixed spurious `self` removal when using `--self init-only` and `--swiftversion 5.4` or above
+- Added support for the `unowned(safe)` and `unowned(unsafe)` ownership modifiers
+- Fixed `wrapMultilineStatementBraces` error in SwiftFormat for Xcode app
+
 ## [0.49.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.0) (2021-12-04)
 
 - The `redundantType` rule can now remove redundant types for properties initialized with literal values

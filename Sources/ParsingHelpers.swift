@@ -1713,9 +1713,7 @@ extension _FormatRules {
     }()
 
     // Current year. Used by fileHeader rule
-    static var currentYear: String = {
-        yearFormatter(Date())
-    }()
+    static var currentYear: String = yearFormatter(Date())
 
     // Swiftlint semantic modifier groups
     static let semanticModifierGroups = ["acl", "setteracl", "mutators", "typemethods", "owned"]

@@ -6398,6 +6398,27 @@ public struct _FormatRules {
                     }
                 }
 
+                // If the closure calls a single function, which returns `Never`,
+                // then removing the closure will cause a compilation failure.
+                //  - We maintain a list of known functions that return `Never`.
+                //    We could expand this to be user-provided if necessary.
+                let knownFunctionsThatReturnNever: Set<String> = [
+                    "fatalError",
+                    "preconditionFailure",
+                ]
+
+                for identifierIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: identifierIndex)?.isIdentifier == true
+                {
+                    if
+                        indexIsWithinMainClosure(identifierIndex),
+                        let identifier = formatter.token(at: identifierIndex)?.string,
+                        knownFunctionsThatReturnNever.contains(identifier)
+                    {
+                        return
+                    }
+                }
+
                 // First we remove the spaces and linebreaks between the { } and the remainder of the closure body
                 //  - This requires a bit of bookkeeping, but makes sure we don't remove any
                 //    whitespace characters outside of the closure itself

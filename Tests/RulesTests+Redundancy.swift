@@ -5424,4 +5424,28 @@ class RedundancyTests: RulesTests {
 
         testFormatting(for: input, rule: FormatRules.redundantClosure)
     }
+
+    func testKeepsClosureThatCallsMethodThatReturnsNever() {
+        let input = """
+        lazy var foo: String = { fatalError("no default value has been set") }()
+        lazy var bar: String = { return preconditionFailure("no default value has been set") }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure,
+                       exclude: ["redundantReturn"])
+    }
+
+    func testRemovesClosureThatHasNestedFatalError() {
+        let input = """
+        lazy var foo = {
+            Foo(handle: { fatalError() })
+        }()
+        """
+
+        let output = """
+        lazy var foo = Foo(handle: { fatalError() })
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure)
+    }
 }

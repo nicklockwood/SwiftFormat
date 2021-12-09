@@ -309,9 +309,7 @@ private var _allDescriptors: [OptionDescriptor] = {
     return descriptors
 }()
 
-private var _descriptorsByName: [String: OptionDescriptor] = {
-    Dictionary(uniqueKeysWithValues: _allDescriptors.map { ($0.argumentName, $0) })
-}()
+private var _descriptorsByName: [String: OptionDescriptor] = Dictionary(uniqueKeysWithValues: _allDescriptors.map { ($0.argumentName, $0) })
 
 private let _formattingDescriptors: [OptionDescriptor] = {
     let internalDescriptors = Descriptors.internal.map { $0.argumentName }

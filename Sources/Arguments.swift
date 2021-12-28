@@ -633,10 +633,9 @@ func warningsForArguments(_ args: [String: String]) -> [String] {
                     return false
                 }
                 return rule.options.contains(arg) || rule.sharedOptions.contains(arg)
-            }) {
-                let expected = FormatRules.all.first(where: {
-                    $0.options.contains(arg)
-                })?.name ?? "associated"
+            }), let expected = FormatRules.all.first(where: {
+                $0.options.contains(arg)
+            })?.name {
                 warnings.append("--\(arg) option has no effect when \(expected) rule is disabled")
             }
         }

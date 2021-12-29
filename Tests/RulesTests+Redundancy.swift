@@ -3487,6 +3487,15 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testSelfRemovalParsingBug2() {
+        let input = """
+        if let test = value()["hi"] {
+            print("hi")
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     func testShadowedStringValueNotRemovedInInit() {
         let input = """
         init() {
@@ -4332,7 +4341,7 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
-    func testSelfRemovalParsingBug2() {
+    func testSelfRemovalParsingBug3() {
         let input = """
         func handleGenericError(_ error: Error) {
             if let requestableError = error as? RequestableError,

@@ -3212,7 +3212,7 @@ public struct _FormatRules {
                             removeSelf: explicitSelf != .insert,
                             onlyLocal: false
                         )
-                        while let scope = formatter.currentScope(at: index),
+                        while let scope = formatter.currentScope(at: index) ?? formatter.token(at: index),
                               [.startOfScope("["), .startOfScope("(")].contains(scope),
                               let endIndex = formatter.endOfScope(at: index)
                         {

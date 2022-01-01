@@ -108,6 +108,7 @@
 		C892E99427803D1200F16014 /* ParsingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */; };
 		C892E99527803D2300F16014 /* Inference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01045A90211988F100D2BE3D /* Inference.swift */; };
 		C892E99627803D4700F16014 /* FormattingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D3B28524E9C9C700888DE0 /* FormattingHelpers.swift */; };
+		C8CA19B12780628F00F669AB /* ProjectConfigurationFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CA19B02780628F00F669AB /* ProjectConfigurationFinder.swift */; };
 		E4083191202C049200CAF11D /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
 		E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5BE2025761D00C1BEDE /* UserSelection.swift */; };
 		E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */; };
@@ -262,6 +263,7 @@
 		C892E98127803B3C00F16014 /* ConfigurationFinderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationFinderService.swift; sourceTree = "<group>"; };
 		C892E98327803B4900F16014 /* ServiceDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceDelegate.swift; sourceTree = "<group>"; };
 		C892E98527803B5C00F16014 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		C8CA19B02780628F00F669AB /* ProjectConfigurationFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectConfigurationFinder.swift; sourceTree = "<group>"; };
 		E41CB5BE2025761D00C1BEDE /* UserSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSelection.swift; sourceTree = "<group>"; };
 		E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionTableCellView.swift; sourceTree = "<group>"; };
 		E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeTextTableCellView.swift; sourceTree = "<group>"; };
@@ -479,6 +481,7 @@
 				90F16AF91DA5ECBA00EB4EA1 /* Commands */,
 				90C4B6E41DA4B059009EB000 /* SourceEditorExtension.swift */,
 				90C4B6E21DA4B059009EB000 /* Supporting Files */,
+				C8CA19B02780628F00F669AB /* ProjectConfigurationFinder.swift */,
 			);
 			path = Extension;
 			sourceTree = "<group>";
@@ -949,6 +952,7 @@
 				90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */,
 				01A8320924EC7F7800A9D0EB /* FormattingHelpers.swift in Sources */,
 				018541CF1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift in Sources */,
+				C8CA19B12780628F00F669AB /* ProjectConfigurationFinder.swift in Sources */,
 				C892E98727803B7E00F16014 /* ConfigurationFinderServiceProtocol.swift in Sources */,
 				E4962DE1203F3CD500A02013 /* OptionsStore.swift in Sources */,
 				9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */,

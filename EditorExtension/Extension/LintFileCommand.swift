@@ -19,27 +19,38 @@ class LintFileCommand: NSObject, XCSourceEditorCommand {
         let sourceToFormat = invocation.buffer.completeBuffer
         let input = tokenize(sourceToFormat)
 
-        // Get rules
-        let rules = FormatRules.named(RulesStore().rules.compactMap {
-            $0.isEnabled ? $0.name : nil
-        })
+        let projectConfigurationFinder = ProjectConfigurationFinder()
+        projectConfigurationFinder.findProjectOptions { projectSpecificOptions in
+            let rules: [FormatRule]
+            var formatOptions: FormatOptions
 
-        // Get options
-        let store = OptionsStore()
-        var formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
-        formatOptions.indent = invocation.buffer.indentationString
-        formatOptions.tabWidth = invocation.buffer.tabWidth
-        formatOptions.swiftVersion = store.formatOptions.swiftVersion
+            if let options = projectSpecificOptions {
+                rules = (options.rules).map(Array.init).flatMap(FormatRules.named) ?? FormatRules.default
+                formatOptions = options.formatOptions ?? .default
+            } else {
+                // Get rules
+                rules = FormatRules.named(RulesStore().rules.compactMap {
+                    $0.isEnabled ? $0.name : nil
+                })
 
-        // Apply linting
-        do {
-            let changes = try lint(input, rules: rules, options: formatOptions)
-            if !changes.isEmpty {
-                return completionHandler(FormatCommandError.lintWarnings(changes))
+                // Get options
+                let store = OptionsStore()
+                formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
+                formatOptions.indent = invocation.buffer.indentationString
+                formatOptions.tabWidth = invocation.buffer.tabWidth
+                formatOptions.swiftVersion = store.formatOptions.swiftVersion
             }
-            return completionHandler(nil)
-        } catch {
-            return completionHandler(error)
+
+            // Apply linting
+            do {
+                let changes = try lint(input, rules: rules, options: formatOptions)
+                if !changes.isEmpty {
+                    return completionHandler(FormatCommandError.lintWarnings(changes))
+                }
+                return completionHandler(nil)
+            } catch {
+                return completionHandler(error)
+            }
         }
     }
 }

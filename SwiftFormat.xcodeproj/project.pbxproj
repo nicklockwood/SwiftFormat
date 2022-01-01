@@ -90,6 +90,24 @@
 		A3DF48252620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
 		A3DF48262620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
 		B9C4F55C2387FA3E0088DBEE /* SupportedContentUTIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */; };
+		C892E98027803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = C892E97F27803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift */; };
+		C892E98227803B3C00F16014 /* ConfigurationFinderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C892E98127803B3C00F16014 /* ConfigurationFinderService.swift */; };
+		C892E98427803B4900F16014 /* ServiceDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C892E98327803B4900F16014 /* ServiceDelegate.swift */; };
+		C892E98627803B5C00F16014 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C892E98527803B5C00F16014 /* main.swift */; };
+		C892E98727803B7E00F16014 /* ConfigurationFinderServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = C892E97F27803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift */; };
+		C892E98927803BD000F16014 /* EditorExtensionXPCService.xpc in Copy XPC Service */ = {isa = PBXBuildFile; fileRef = C892E96F27803A4C00F16014 /* EditorExtensionXPCService.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C892E98A27803C1200F16014 /* Arguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01045A982119979400D2BE3D /* Arguments.swift */; };
+		C892E98B27803C2700F16014 /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
+		C892E98C27803C2D00F16014 /* EnumAssociable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */; };
+		C892E98D27803C3700F16014 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
+		C892E98F27803C6D00F16014 /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
+		C892E99027803C7200F16014 /* Rules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */; };
+		C892E99127803CA800F16014 /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
+		C892E99227803CC800F16014 /* Globs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01BBD85821DAA2A000457380 /* Globs.swift */; };
+		C892E99327803CE000F16014 /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
+		C892E99427803D1200F16014 /* ParsingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */; };
+		C892E99527803D2300F16014 /* Inference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01045A90211988F100D2BE3D /* Inference.swift */; };
+		C892E99627803D4700F16014 /* FormattingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D3B28524E9C9C700888DE0 /* FormattingHelpers.swift */; };
 		E4083191202C049200CAF11D /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
 		E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5BE2025761D00C1BEDE /* UserSelection.swift */; };
 		E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */; };
@@ -163,6 +181,17 @@
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C892E98827803BC500F16014 /* Copy XPC Service */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
+			dstSubfolderSpec = 16;
+			files = (
+				C892E98927803BD000F16014 /* EditorExtensionXPCService.xpc in Copy XPC Service */,
+			);
+			name = "Copy XPC Service";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -227,6 +256,12 @@
 		90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandErrors.swift; sourceTree = "<group>"; };
 		A3DF48242620E03600F45A5F /* JSONReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONReporter.swift; sourceTree = "<group>"; };
 		B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedContentUTIs.swift; sourceTree = "<group>"; };
+		C892E96F27803A4C00F16014 /* EditorExtensionXPCService.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = EditorExtensionXPCService.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
+		C892E97727803A4C00F16014 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C892E97F27803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationFinderServiceProtocol.swift; sourceTree = "<group>"; };
+		C892E98127803B3C00F16014 /* ConfigurationFinderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationFinderService.swift; sourceTree = "<group>"; };
+		C892E98327803B4900F16014 /* ServiceDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceDelegate.swift; sourceTree = "<group>"; };
+		C892E98527803B5C00F16014 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		E41CB5BE2025761D00C1BEDE /* UserSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSelection.swift; sourceTree = "<group>"; };
 		E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionTableCellView.swift; sourceTree = "<group>"; };
 		E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeTextTableCellView.swift; sourceTree = "<group>"; };
@@ -287,6 +322,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C892E96C27803A4C00F16014 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -306,6 +348,7 @@
 				01A0EAA61D5DB4CF00A0A8E3 /* Sources */,
 				01A0EAB21D5DB4D000A0A8E3 /* Tests */,
 				018A47052200D3220012E41B /* PerformanceTests */,
+				C892E97027803A4C00F16014 /* EditorExtensionXPCService */,
 				90C4B6DE1DA4B059009EB000 /* Frameworks */,
 				01A0EAA51D5DB4CF00A0A8E3 /* Products */,
 			);
@@ -322,6 +365,7 @@
 				90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */,
 				90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */,
 				015AF2C51DC6A538008F0A8C /* SwiftFormatPerfTests.xctest */,
+				C892E96F27803A4C00F16014 /* EditorExtensionXPCService.xpc */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -477,6 +521,18 @@
 			name = Commands;
 			sourceTree = "<group>";
 		};
+		C892E97027803A4C00F16014 /* EditorExtensionXPCService */ = {
+			isa = PBXGroup;
+			children = (
+				C892E97727803A4C00F16014 /* Info.plist */,
+				C892E97F27803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift */,
+				C892E98127803B3C00F16014 /* ConfigurationFinderService.swift */,
+				C892E98327803B4900F16014 /* ServiceDelegate.swift */,
+				C892E98527803B5C00F16014 /* main.swift */,
+			);
+			path = EditorExtensionXPCService;
+			sourceTree = "<group>";
+		};
 		E4872117201D855C0014845E /* Source */ = {
 			isa = PBXGroup;
 			children = (
@@ -602,6 +658,7 @@
 				90C4B6DA1DA4B059009EB000 /* Frameworks */,
 				90C4B6DB1DA4B059009EB000 /* Resources */,
 				37D828AD24BF77DA0012FC0A /* Embed Frameworks */,
+				C892E98827803BC500F16014 /* Copy XPC Service */,
 			);
 			buildRules = (
 			);
@@ -611,6 +668,23 @@
 			productName = "Swift Formatter";
 			productReference = 90C4B6DD1DA4B059009EB000 /* SwiftFormat.appex */;
 			productType = "com.apple.product-type.xcode-extension";
+		};
+		C892E96E27803A4C00F16014 /* EditorExtensionXPCService */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C892E97E27803A4C00F16014 /* Build configuration list for PBXNativeTarget "EditorExtensionXPCService" */;
+			buildPhases = (
+				C892E96B27803A4C00F16014 /* Sources */,
+				C892E96C27803A4C00F16014 /* Frameworks */,
+				C892E96D27803A4C00F16014 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EditorExtensionXPCService;
+			productName = EditorExtensionXPCService;
+			productReference = C892E96F27803A4C00F16014 /* EditorExtensionXPCService.xpc */;
+			productType = "com.apple.product-type.xpc-service";
 		};
 /* End PBXNativeTarget section */
 
@@ -653,6 +727,10 @@
 						LastSwiftMigration = 0900;
 						ProvisioningStyle = Manual;
 					};
+					C892E96E27803A4C00F16014 = {
+						CreatedOnToolsVersion = 13.2;
+						LastSwiftMigration = 1320;
+					};
 				};
 			};
 			buildConfigurationList = 01A0EA9E1D5DB4CF00A0A8E3 /* Build configuration list for PBXProject "SwiftFormat" */;
@@ -674,6 +752,7 @@
 				01A0EAC91D5DB5F500A0A8E3 /* CommandLineTool */,
 				90C4B6C91DA4B04A009EB000 /* SwiftFormat for Xcode */,
 				90C4B6DC1DA4B059009EB000 /* Editor Extension */,
+				C892E96E27803A4C00F16014 /* EditorExtensionXPCService */,
 			);
 		};
 /* End PBXProject section */
@@ -710,6 +789,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		90C4B6DB1DA4B059009EB000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C892E96D27803A4C00F16014 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -863,6 +949,7 @@
 				90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */,
 				01A8320924EC7F7800A9D0EB /* FormattingHelpers.swift in Sources */,
 				018541CF1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift in Sources */,
+				C892E98727803B7E00F16014 /* ConfigurationFinderServiceProtocol.swift in Sources */,
 				E4962DE1203F3CD500A02013 /* OptionsStore.swift in Sources */,
 				9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */,
 				E487212A201E3DD50014845E /* RulesStore.swift in Sources */,
@@ -873,6 +960,29 @@
 				90F16AF81DA5EB4600EB4EA1 /* FormatFileCommand.swift in Sources */,
 				01ACAE08220CD916003F3CCF /* Examples.swift in Sources */,
 				9028F7861DA4B435009FE5B4 /* Rules.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C892E96B27803A4C00F16014 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C892E99627803D4700F16014 /* FormattingHelpers.swift in Sources */,
+				C892E99527803D2300F16014 /* Inference.swift in Sources */,
+				C892E99327803CE000F16014 /* SwiftFormat.swift in Sources */,
+				C892E98A27803C1200F16014 /* Arguments.swift in Sources */,
+				C892E99427803D1200F16014 /* ParsingHelpers.swift in Sources */,
+				C892E98B27803C2700F16014 /* Tokenizer.swift in Sources */,
+				C892E99127803CA800F16014 /* OptionDescriptor.swift in Sources */,
+				C892E98C27803C2D00F16014 /* EnumAssociable.swift in Sources */,
+				C892E98227803B3C00F16014 /* ConfigurationFinderService.swift in Sources */,
+				C892E99227803CC800F16014 /* Globs.swift in Sources */,
+				C892E98F27803C6D00F16014 /* Options.swift in Sources */,
+				C892E98427803B4900F16014 /* ServiceDelegate.swift in Sources */,
+				C892E98627803B5C00F16014 /* main.swift in Sources */,
+				C892E98D27803C3700F16014 /* Formatter.swift in Sources */,
+				C892E98027803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift in Sources */,
+				C892E99027803C7200F16014 /* Rules.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1301,6 +1411,78 @@
 			};
 			name = Release;
 		};
+		C892E97C27803A4C00F16014 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EditorExtensionXPCService/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = EditorExtensionXPCService;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Nick Lockwood. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.EditorExtensionXPCService";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C892E97D27803A4C00F16014 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EditorExtensionXPCService/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = EditorExtensionXPCService;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Nick Lockwood. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.EditorExtensionXPCService";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1363,6 +1545,15 @@
 			buildConfigurations = (
 				90C4B6ED1DA4B059009EB000 /* Debug */,
 				90C4B6EE1DA4B059009EB000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C892E97E27803A4C00F16014 /* Build configuration list for PBXNativeTarget "EditorExtensionXPCService" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C892E97C27803A4C00F16014 /* Debug */,
+				C892E97D27803A4C00F16014 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

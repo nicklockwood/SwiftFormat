@@ -8,6 +8,8 @@
 	<array>
 		<string>com.charcoaldesign.SwiftFormat</string>
 	</array>
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
 	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
 </dict>

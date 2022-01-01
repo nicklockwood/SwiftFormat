@@ -47,50 +47,61 @@ class FormatSelectionCommand: NSObject, XCSourceEditorCommand {
         let sourceToFormat = invocation.buffer.completeBuffer
         let input = tokenize(sourceToFormat)
 
-        // Get rules
-        let rules = FormatRules.named(RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
+        let projectConfigurationFinder = ProjectConfigurationFinder()
+        projectConfigurationFinder.findProjectOptions { projectSpecificOptions in
+            let rules: [FormatRule]
+            var formatOptions: FormatOptions
 
-        // Get options
-        let store = OptionsStore()
-        var formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
-        formatOptions.indent = invocation.buffer.indentationString
-        formatOptions.tabWidth = invocation.buffer.tabWidth
-        formatOptions.swiftVersion = store.formatOptions.swiftVersion
-        if formatOptions.requiresFileInfo {
-            formatOptions.fileHeader = .ignore
-        }
+            if let options = projectSpecificOptions {
+                rules = (options.rules).map(Array.init).flatMap(FormatRules.named) ?? FormatRules.default
+                formatOptions = options.formatOptions ?? .default
+            } else {
+                // Get rules
+                rules = FormatRules.named(RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
 
-        // Apply formatting for each range
-        var output = input
-        for selection in selections {
-            let startOffset = SourceOffset(selection.start), endOffset = SourceOffset(selection.end)
-            let start = tokenIndex(for: startOffset, in: output, tabWidth: formatOptions.tabWidth)
-            let end = tokenIndex(for: endOffset, in: output, tabWidth: formatOptions.tabWidth)
-            do {
-                output = try format(output, rules: rules, options: formatOptions, range: start ..< end)
-            } catch {
-                return completionHandler(error)
+                // Get options
+                let store = OptionsStore()
+                formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
+                formatOptions.indent = invocation.buffer.indentationString
+                formatOptions.tabWidth = invocation.buffer.tabWidth
+                formatOptions.swiftVersion = store.formatOptions.swiftVersion
             }
-        }
-        if output == input {
-            // No changes needed
+            if formatOptions.requiresFileInfo {
+                formatOptions.fileHeader = .ignore
+            }
+
+            // Apply formatting for each range
+            var output = input
+            for selection in selections {
+                let startOffset = SourceOffset(selection.start), endOffset = SourceOffset(selection.end)
+                let start = tokenIndex(for: startOffset, in: output, tabWidth: formatOptions.tabWidth)
+                let end = tokenIndex(for: endOffset, in: output, tabWidth: formatOptions.tabWidth)
+                do {
+                    output = try format(output, rules: rules, options: formatOptions, range: start ..< end)
+                } catch {
+                    return completionHandler(error)
+                }
+            }
+            if output == input {
+                // No changes needed
+                return completionHandler(nil)
+            }
+
+            // Remove all selections to avoid a crash when changing the contents of the buffer.
+            invocation.buffer.selections.removeAllObjects()
+
+            // Update buffer
+            invocation.buffer.completeBuffer = sourceCode(for: output)
+
+            // Restore selections
+            for selection in selections {
+                invocation.buffer.selections.add(XCSourceTextRange(
+                    start: invocation.buffer.newPosition(for: selection.start, in: output),
+                    end: invocation.buffer.newPosition(for: selection.end, in: output)
+                ))
+            }
+
             return completionHandler(nil)
         }
-
-        // Remove all selections to avoid a crash when changing the contents of the buffer.
-        invocation.buffer.selections.removeAllObjects()
-
-        // Update buffer
-        invocation.buffer.completeBuffer = sourceCode(for: output)
-
-        // Restore selections
-        for selection in selections {
-            invocation.buffer.selections.add(XCSourceTextRange(
-                start: invocation.buffer.newPosition(for: selection.start, in: output),
-                end: invocation.buffer.newPosition(for: selection.end, in: output)
-            ))
-        }
-
-        return completionHandler(nil)
     }
 }

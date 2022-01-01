@@ -42,45 +42,56 @@ class FormatFileCommand: NSObject, XCSourceEditorCommand {
         let sourceToFormat = invocation.buffer.completeBuffer
         let input = tokenize(sourceToFormat)
 
-        // Get rules
-        let rules = FormatRules.named(RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
+        let projectConfigurationFinder = ProjectConfigurationFinder()
+        projectConfigurationFinder.findProjectOptions { projectSpecificOptions in
+            let rules: [FormatRule]
+            var formatOptions: FormatOptions
 
-        // Get options
-        let store = OptionsStore()
-        var formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
-        formatOptions.indent = invocation.buffer.indentationString
-        formatOptions.tabWidth = invocation.buffer.tabWidth
-        formatOptions.swiftVersion = store.formatOptions.swiftVersion
-        if formatOptions.requiresFileInfo {
-            formatOptions.fileHeader = .ignore
-        }
+            if let options = projectSpecificOptions {
+                rules = (options.rules).map(Array.init).flatMap(FormatRules.named) ?? FormatRules.default
+                formatOptions = options.formatOptions ?? .default
+            } else {
+                // Get rules
+                rules = FormatRules.named(RulesStore().rules.compactMap { $0.isEnabled ? $0.name : nil })
 
-        let output: [Token]
-        do {
-            output = try format(input, rules: rules, options: formatOptions)
-        } catch {
-            return completionHandler(error)
-        }
-        if output == input {
-            // No changes needed
+                // Get options
+                let store = OptionsStore()
+                formatOptions = store.inferOptions ? inferFormatOptions(from: input) : store.formatOptions
+                formatOptions.indent = invocation.buffer.indentationString
+                formatOptions.tabWidth = invocation.buffer.tabWidth
+                formatOptions.swiftVersion = store.formatOptions.swiftVersion
+            }
+            if formatOptions.requiresFileInfo {
+                formatOptions.fileHeader = .ignore
+            }
+
+            let output: [Token]
+            do {
+                output = try format(input, rules: rules, options: formatOptions)
+            } catch {
+                return completionHandler(error)
+            }
+            if output == input {
+                // No changes needed
+                return completionHandler(nil)
+            }
+
+            // Remove all selections to avoid a crash when changing the contents of the buffer.
+            let selections = invocation.buffer.selections.compactMap { $0 as? XCSourceTextRange }
+            invocation.buffer.selections.removeAllObjects()
+
+            // Update buffer
+            invocation.buffer.completeBuffer = sourceCode(for: output)
+
+            // Restore selections
+            for selection in selections {
+                invocation.buffer.selections.add(XCSourceTextRange(
+                    start: invocation.buffer.newPosition(for: selection.start, in: output),
+                    end: invocation.buffer.newPosition(for: selection.end, in: output)
+                ))
+            }
+
             return completionHandler(nil)
         }
-
-        // Remove all selections to avoid a crash when changing the contents of the buffer.
-        let selections = invocation.buffer.selections.compactMap { $0 as? XCSourceTextRange }
-        invocation.buffer.selections.removeAllObjects()
-
-        // Update buffer
-        invocation.buffer.completeBuffer = sourceCode(for: output)
-
-        // Restore selections
-        for selection in selections {
-            invocation.buffer.selections.add(XCSourceTextRange(
-                start: invocation.buffer.newPosition(for: selection.start, in: output),
-                end: invocation.buffer.newPosition(for: selection.end, in: output)
-            ))
-        }
-
-        return completionHandler(nil)
     }
 }

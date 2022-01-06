@@ -6,6 +6,7 @@
 //  Copyright © 2022 Nick Lockwood. All rights reserved.
 //
 
+import AppKit
 import Foundation
 
 @objc class ConfigurationFinderService: NSObject, ConfigurationFinderServiceProtocol {
@@ -13,58 +14,39 @@ import Foundation
         case failedToFetchXcodeFilePath
         case failedToFindConfigurationFile
         case failedToParseConfigurationFile
+        case noAccessToAccessibilityAPI
     }
-    
+
     func findConfiguration(withReply reply: @escaping ([String: String]?) -> Void) {
-        getXcodeFrontWindowFileURL { result in
-            switch result {
-            case let .success(frontMostFileURL):
-                do {
-                    let configurationData = try self.findConfigurationFile(for: frontMostFileURL)
-                    let configuration = try parseConfigFile(configurationData)
-                    reply(configuration)
-                } catch {
-                    print(error)
-                    reply(nil)
-                }
-            case let .failure(error):
-                print(error)
-                reply(nil)
-            }
+        do {
+            let frontMostFileURL = try getXcodeFrontWindowFileURL()
+            let configurationData = try findConfigurationFile(for: frontMostFileURL)
+            let configuration = try parseConfigFile(configurationData)
+            reply(configuration)
+        } catch {
+            reply(nil)
         }
     }
-    
-    func getXcodeFrontWindowFileURL(onComplete: @escaping (Result<URL, Swift.Error>) -> Void) {
-        // usually returns the path to xcodeproj, xcworkspace or project root
-        let appleScript = """
-        tell application "Xcode"
-            return path of document of the first window
-        end tell
-        """
-        
-        // NSAppleScript is not used because it hangs the service when execute
-        let task = Process()
-        task.launchPath = "/usr/bin/osascript"
-        task.arguments = ["-e", appleScript]
-        let outpipe = Pipe()
-        task.standardOutput = outpipe
-        task.terminationHandler = { task in
+
+    func getXcodeFrontWindowFileURL() throws -> URL {
+        let activeXcodes = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.dt.Xcode")
+            .filter(\.isActive)
+
+        // fetch file path of the frontmost window of Xcode through Accessability API.
+        for xcode in activeXcodes {
+            let application = AXUIElementCreateApplication(xcode.processIdentifier)
             do {
-                if let data = try readToEnd(outpipe), let path = String(data: data, encoding: .utf8) {
-                    let trimmedNewLine = path.trimmingCharacters(in: .newlines)
-                    return onComplete(.success(URL(fileURLWithPath: trimmedNewLine)))
-                }
-                throw Error.failedToFetchXcodeFilePath
+                let frontmostWindow = try application.copyValue(key: kAXFocusedWindowAttribute, ofType: AXUIElement.self)
+                let path = try frontmostWindow.copyValue(key: kAXDocumentAttribute, ofType: String.self)
+                return URL(fileURLWithPath: path)
             } catch {
-                return onComplete(.failure(error))
+                if let axError = error as? AXError, axError == .apiDisabled {
+                    throw Error.noAccessToAccessibilityAPI
+                }
             }
         }
-        
-        do {
-            try task.run()
-        } catch {
-            return onComplete(.failure(error))
-        }
+
+        throw Error.failedToFetchXcodeFilePath
     }
 
     func findConfigurationFile(for fileURL: URL) throws -> Data {
@@ -82,10 +64,15 @@ import Foundation
     }
 }
 
-func readToEnd(_ pipe: Pipe) throws -> Data? {
-    if #available(macOS 10.15.4, *) {
-        return try pipe.fileHandleForReading.readToEnd()
-    } else {
-        return pipe.fileHandleForReading.readDataToEndOfFile()
+extension AXError: Error {}
+
+extension AXUIElement {
+    func copyValue<T>(key: String, ofType _: T.Type = T.self) throws -> T {
+        var value: AnyObject?
+        let error = AXUIElementCopyAttributeValue(self, key as CFString, &value)
+        if error == .success, let value = value as? T {
+            return value
+        }
+        throw error
     }
 }

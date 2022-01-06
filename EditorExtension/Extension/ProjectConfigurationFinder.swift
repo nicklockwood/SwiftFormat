@@ -20,9 +20,7 @@ private let connection: NSXPCConnection = {
 
 struct ProjectConfigurationFinder {
     func findProjectOptions(onCompletion: @escaping (Options?) -> Void) {
-        let service = connection.remoteObjectProxyWithErrorHandler {
-            print($0)
-        } as! ConfigurationFinderServiceProtocol
+        let service = connection.remoteObjectProxyWithErrorHandler { _ in } as! ConfigurationFinderServiceProtocol
         service.findConfiguration {
             if let c = $0, let options = try? Options(c, in: "") {
                 return onCompletion(options)

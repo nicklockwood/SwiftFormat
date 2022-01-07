@@ -65,14 +65,6 @@ import Foundation
     }
 }
 
-func readToEnd(_ pipe: Pipe) throws -> Data? {
-    if #available(macOS 10.15.4, *) {
-        return try pipe.fileHandleForReading.readToEnd()
-    } else {
-        return pipe.fileHandleForReading.readDataToEndOfFile()
-    }
-}
-
 extension AXError: Error {}
 
 extension AXUIElement {

@@ -43,7 +43,6 @@ import Foundation
                 if let axError = error as? AXError, axError == .apiDisabled {
                     throw Error.noAccessToAccessabilityAPI
                 }
-                continue
             }
         }
         

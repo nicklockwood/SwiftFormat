@@ -71,8 +71,8 @@ extension AXUIElement {
     func copyValue<T>(key: String, ofType: T.Type = T.self) throws -> T {
         var value: AnyObject?
         let error = AXUIElementCopyAttributeValue(self, key as CFString, &value)
-        if error == .success {
-            return value as! T
+        if error == .success, let value = value as? T {
+            return value
         }
         throw error
     }

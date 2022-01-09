@@ -16,18 +16,18 @@ import Foundation
         case failedToParseConfigurationFile
         case noAccessToAccessabilityAPI
     }
-    
+
     func findConfiguration(withReply reply: @escaping ([String: String]?) -> Void) {
         do {
-            let frontMostFileURL = try self.getXcodeFrontWindowFileURL()
-            let configurationData = try self.findConfigurationFile(for: frontMostFileURL)
+            let frontMostFileURL = try getXcodeFrontWindowFileURL()
+            let configurationData = try findConfigurationFile(for: frontMostFileURL)
             let configuration = try parseConfigFile(configurationData)
             reply(configuration)
         } catch {
             reply(nil)
         }
     }
-    
+
     func getXcodeFrontWindowFileURL() throws -> URL {
         let activeXcodes = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.dt.Xcode")
             .filter(\.isActive)
@@ -45,13 +45,13 @@ import Foundation
                 }
             }
         }
-        
+
         throw Error.failedToFetchXcodeFilePath
     }
-    
+
     func findConfigurationFile(for fileURL: URL) throws -> Data {
         var directoryURL = fileURL
-        
+
         while !directoryURL.pathComponents.contains("..") {
             defer { directoryURL.deleteLastPathComponent() }
             let fileURL = directoryURL.appendingPathComponent(swiftFormatConfigurationFile, isDirectory: false)
@@ -59,7 +59,7 @@ import Foundation
                 return try Data(contentsOf: fileURL)
             }
         }
-        
+
         throw Error.failedToFindConfigurationFile
     }
 }
@@ -67,7 +67,7 @@ import Foundation
 extension AXError: Error {}
 
 extension AXUIElement {
-    func copyValue<T>(key: String, ofType: T.Type = T.self) throws -> T {
+    func copyValue<T>(key: String, ofType _: T.Type = T.self) throws -> T {
         var value: AnyObject?
         let error = AXUIElementCopyAttributeValue(self, key as CFString, &value)
         if error == .success, let value = value as? T {

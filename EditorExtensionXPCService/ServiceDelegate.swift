@@ -10,7 +10,7 @@ import Foundation
 
 class ServiceDelegate: NSObject, NSXPCListenerDelegate {
     func listener(
-        _ listener: NSXPCListener,
+        _: NSXPCListener,
         shouldAcceptNewConnection newConnection: NSXPCConnection
     ) -> Bool {
         newConnection.exportedInterface = NSXPCInterface(

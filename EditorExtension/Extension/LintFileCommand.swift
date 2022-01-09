@@ -23,7 +23,7 @@ class LintFileCommand: NSObject, XCSourceEditorCommand {
         projectConfigurationFinder.findProjectOptions { projectSpecificOptions in
             let rules: [FormatRule]
             var formatOptions: FormatOptions
-            
+
             if let options = projectSpecificOptions {
                 rules = (options.rules).map(Array.init).flatMap(FormatRules.named) ?? FormatRules.default
                 formatOptions = options.formatOptions ?? .default

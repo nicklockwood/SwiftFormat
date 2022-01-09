@@ -46,12 +46,12 @@ class FormatSelectionCommand: NSObject, XCSourceEditorCommand {
         // Grab the file source to format
         let sourceToFormat = invocation.buffer.completeBuffer
         let input = tokenize(sourceToFormat)
-        
+
         let projectConfigurationFinder = ProjectConfigurationFinder()
         projectConfigurationFinder.findProjectOptions { projectSpecificOptions in
             let rules: [FormatRule]
             var formatOptions: FormatOptions
-            
+
             if let options = projectSpecificOptions {
                 rules = (options.rules).map(Array.init).flatMap(FormatRules.named) ?? FormatRules.default
                 formatOptions = options.formatOptions ?? .default

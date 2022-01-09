@@ -25,7 +25,7 @@ struct ProjectConfigurationFinder {
             if let c = $0, let options = try? Options(c, in: "") {
                 return onCompletion(options)
             }
-            
+
             return onCompletion(nil)
         }
     }

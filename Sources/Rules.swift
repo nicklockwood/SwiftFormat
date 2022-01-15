@@ -6295,6 +6295,28 @@ public struct _FormatRules {
                     }
                 }
 
+                // (5) if there is a method call immediately followed an identifier, as in:
+                //
+                //   method()
+                //   otherMethod()
+                //
+                // This can only be an issue in Void closures, because any non-Void closure
+                // would have to have a `return` statement following one of these method calls,
+                // which would be covered by heuristic #2 above.
+                for closingParenIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: closingParenIndex)?.string == ")"
+                {
+                    if indexIsWithinMainClosure(closingParenIndex),
+                       let nextNonWhitespace = formatter.index(
+                           of: .nonSpaceOrCommentOrLinebreak,
+                           after: closingParenIndex
+                       ),
+                       formatter.token(at: nextNonWhitespace)?.isIdentifier == true
+                    {
+                        return
+                    }
+                }
+
                 // This rule also doesn't support closures with an `in` token.
                 //  - We can't just remove this, because it could have important type information.
                 //    For example, `let double = { () -> Double in 100 }()` and `let double = 100` have different types.

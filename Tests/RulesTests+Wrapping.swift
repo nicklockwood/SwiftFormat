@@ -3201,6 +3201,87 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rules: [FormatRules.braces, FormatRules.indent], options: options)
     }
 
+    func testWrapsMultilineStatementConsistently1_issue_1115() {
+        let input = """
+        func aFunc(
+            one _: Int,
+            two _: Int) -> String {
+            "one"
+        }
+        """
+
+        let output = """
+        func aFunc(
+            one _: Int,
+            two _: Int)
+            -> String
+        {
+            "one"
+        }
+        """
+
+        let options = FormatOptions(
+            wrapMultilineStatementBraces: true,
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: true,
+            wrapReturnType: .ifMultiline
+        )
+
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.braces, FormatRules.indent, FormatRules.wrapArguments],
+                       options: options)
+    }
+
+    func testWrapsMultilineStatementConsistently2_issue_1115() {
+        let input = """
+        func aFunc(
+            one _: Int,
+            two _: Int) -> String {
+            "one"
+        }
+        """
+
+        let output = """
+        func aFunc(
+            one _: Int,
+            two _: Int
+        ) -> String {
+            "one"
+        }
+        """
+
+        let options = FormatOptions(
+            wrapMultilineStatementBraces: true,
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: false
+        )
+
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.braces, FormatRules.indent, FormatRules.wrapArguments],
+                       options: options)
+    }
+
+    func testWrapsMultilineStatementConsistently3_issue_1115() {
+        let input = """
+        func aFunc(
+            one _: Int,
+            two _: Int
+        ) -> String {
+            "one"
+        }
+        """
+
+        let options = FormatOptions(
+            wrapMultilineStatementBraces: true,
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: false
+        )
+
+        testFormatting(for: input,
+                       rules: [FormatRules.braces, FormatRules.indent, FormatRules.wrapArguments],
+                       options: options)
+    }
+
     // MARK: wrapConditions before-first
 
     func testWrapConditionsBeforeFirstPreservesMultilineStatements() {

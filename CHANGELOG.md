@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.49.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.2) (2021-01-16)
+
+- Fixed literal values being incorrectly removed by `redundantType` rule
+- Fixed `redundantSelf` rule removing `self` from shadowed variables after an `as`/`is` condition
+- Fixed bug where `redundantClosure` rule could break the build for certain `Void` closures
+- Fixed parsing error in function calls followed by a subscript
+- Fixed `blockComments` rule mangling code on next line after comment
+- The `redundantClosure` rule is no longer applied if closure calls a method that returns `Never`
+- Fixed meaningless warning for deprecated options
+
 ## [0.49.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.1) (2021-12-09)
 
 - The `blockComments` rule now handles empty leading and trailing comment lines correctly

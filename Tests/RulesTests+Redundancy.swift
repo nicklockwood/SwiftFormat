@@ -1327,6 +1327,34 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
+    func testRedundantTypeWithIntegerLiteralNotMangled() {
+        let input = "let foo: Int = 1.toFoo"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
+    func testRedundantTypeWithFloatLiteralNotMangled() {
+        let input = "let foo: Double = 1.0.toFoo"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
+    func testRedundantTypeWithArrayLiteralNotMangled() {
+        let input = "let foo: [Int] = [1].toFoo"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
+    func testRedundantTypeWithBoolLiteralNotMangled() {
+        let input = "let foo: Bool = false.toFoo"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
     // --redundanttype infer-locals-only
 
     func testRedundantTypeinferLocalsOnly() {

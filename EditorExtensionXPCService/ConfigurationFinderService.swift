@@ -14,7 +14,7 @@ import Foundation
         case failedToFetchXcodeFilePath
         case failedToFindConfigurationFile
         case failedToParseConfigurationFile
-        case noAccessToAccessabilityAPI
+        case noAccessToAccessibilityAPI
     }
 
     func findConfiguration(withReply reply: @escaping ([String: String]?) -> Void) {
@@ -41,7 +41,7 @@ import Foundation
                 return URL(fileURLWithPath: path)
             } catch {
                 if let axError = error as? AXError, axError == .apiDisabled {
-                    throw Error.noAccessToAccessabilityAPI
+                    throw Error.noAccessToAccessibilityAPI
                 }
             }
         }

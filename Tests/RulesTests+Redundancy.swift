@@ -1327,6 +1327,34 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
+    func testRedundantTypeWithIntegerLiteralNotMangled() {
+        let input = "let foo: Int = 1.toFoo"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
+    func testRedundantTypeWithFloatLiteralNotMangled() {
+        let input = "let foo: Double = 1.0.toFoo"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
+    func testRedundantTypeWithArrayLiteralNotMangled() {
+        let input = "let foo: [Int] = [1].toFoo"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
+    func testRedundantTypeWithBoolLiteralNotMangled() {
+        let input = "let foo: Bool = false.toFoo"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
     // --redundanttype infer-locals-only
 
     func testRedundantTypeinferLocalsOnly() {
@@ -5456,5 +5484,39 @@ class RedundancyTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: FormatRules.redundantClosure)
+    }
+
+    func testPreservesClosureWithMultipleVoidMethodCalls() {
+        let input = """
+        lazy var triggerSomething: Void = {
+            logger.trace("log some stuff before Triggering")
+            TriggerClass.triggerTheThing()
+            logger.trace("Finished triggering the thing")
+        }()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testRemovesClosureWithMultipleNestedVoidMethodCalls() {
+        let input = """
+        lazy var foo: Foo = {
+            Foo(handle: {
+                logger.trace("log some stuff before Triggering")
+                TriggerClass.triggerTheThing()
+                logger.trace("Finished triggering the thing")
+            })
+        }()
+        """
+
+        let output = """
+        lazy var foo: Foo = Foo(handle: {
+            logger.trace("log some stuff before Triggering")
+            TriggerClass.triggerTheThing()
+            logger.trace("Finished triggering the thing")
+        })
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, FormatRules.indent], exclude: ["redundantType"])
     }
 }

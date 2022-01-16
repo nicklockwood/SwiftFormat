@@ -645,6 +645,7 @@ public struct _FormatRules {
             else {
                 return
             }
+
             let equalsIndex = i
             guard let colonIndex = formatter.index(before: i, where: {
                 [.delimiter(":"), .operator("=", .infix)].contains($0)
@@ -653,13 +654,27 @@ public struct _FormatRules {
             else { return }
 
             // Check types match
-            var i = colonIndex, j = equalsIndex
+            var i = colonIndex, j = equalsIndex, wasValue = false
             while let typeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
                   typeIndex <= typeEndIndex,
                   let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: j)
             {
                 let typeToken = formatter.tokens[typeIndex]
-                guard typeToken == formatter.typeToken(forValueToken: formatter.tokens[valueIndex]) else {
+                let valueToken = formatter.tokens[valueIndex]
+                if !wasValue {
+                    switch valueToken {
+                    case _ where valueToken.isStringDelimiter, .number,
+                         .identifier("true"), .identifier("false"):
+                        if formatter.options.redundantType == .explicit {
+                            // We never remove the value in this case, so exit early
+                            return
+                        }
+                        wasValue = true
+                    default:
+                        break
+                    }
+                }
+                guard typeToken == formatter.typeToken(forValueToken: valueToken) else {
                     return
                 }
                 // Avoid introducing "inferred to have type 'Void'" warning
@@ -685,40 +700,32 @@ public struct _FormatRules {
                 return
             }
 
-            /// The implementation of RedundantType uses inferred or explicit,
-            /// potentially depending on the context.
-            enum RedundantTypeImplementation {
-                case inferred
-                case explicit
-            }
-
-            let implementation: RedundantTypeImplementation
-
+            // The implementation of RedundantType uses inferred or explicit,
+            // potentially depending on the context.
+            let isInferred: Bool
             switch formatter.options.redundantType {
             case .inferred:
-                implementation = .inferred
+                isInferred = true
             case .explicit:
-                implementation = .explicit
+                isInferred = false
             case .inferLocalsOnly:
                 switch formatter.declarationScope(at: i) {
                 case .global, .type:
-                    implementation = .explicit
+                    isInferred = false
                 case .local:
-                    implementation = .inferred
+                    isInferred = true
                 }
             }
 
-            switch implementation {
-            case .inferred:
+            if isInferred {
                 formatter.removeTokens(in: colonIndex ... typeEndIndex)
                 if formatter.tokens[colonIndex - 1].isSpace {
                     formatter.removeToken(at: colonIndex - 1)
                 }
-            case .explicit:
-                guard let valueStartIndex = formatter
-                    .index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-                    !formatter.isConditionalStatement(at: i)
-                else { break }
+            } else if !wasValue, let valueStartIndex = formatter
+                .index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+                !formatter.isConditionalStatement(at: i)
+            {
                 if formatter.nextToken(after: j) == .startOfScope("(") {
                     formatter.replaceTokens(in: valueStartIndex ... j, with: [.operator(".", .infix), .identifier("init")])
                 } else if
@@ -6381,6 +6388,28 @@ public struct _FormatRules {
                     where formatter.token(at: equalsIndex)?.string == "="
                 {
                     if indexIsWithinMainClosure(equalsIndex) {
+                        return
+                    }
+                }
+
+                // (5) if there is a method call immediately followed an identifier, as in:
+                //
+                //   method()
+                //   otherMethod()
+                //
+                // This can only be an issue in Void closures, because any non-Void closure
+                // would have to have a `return` statement following one of these method calls,
+                // which would be covered by heuristic #2 above.
+                for closingParenIndex in closureStartIndex ... closureEndIndex
+                    where formatter.token(at: closingParenIndex)?.string == ")"
+                {
+                    if indexIsWithinMainClosure(closingParenIndex),
+                       let nextNonWhitespace = formatter.index(
+                           of: .nonSpaceOrCommentOrLinebreak,
+                           after: closingParenIndex
+                       ),
+                       formatter.token(at: nextNonWhitespace)?.isIdentifier == true
+                    {
                         return
                     }
                 }

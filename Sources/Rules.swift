@@ -6169,7 +6169,10 @@ public struct _FormatRules {
 
                 // remove /* and */
                 var index = i
-                while index <= endIndex {
+                if formatter.tokens[endIndex] == .endOfScope("*/") {
+                    endIndex += 1
+                }
+                while index < endIndex {
                     switch formatter.tokens[index] {
                     case .startOfScope("/*"):
                         formatter.removeToken(at: index)

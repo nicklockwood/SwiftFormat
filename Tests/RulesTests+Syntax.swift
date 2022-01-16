@@ -2400,4 +2400,56 @@ class SyntaxTests: RulesTests {
         """
         testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
+
+    func testBlockCommentImmediatelyFollowedByCode() {
+        let input = """
+        /**
+          foo
+
+          bar
+        */
+        func foo() {}
+        """
+        let output = """
+        /// foo
+        ///
+        /// bar
+        func foo() {}
+        """
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
+    }
+
+    func testBlockCommentImmediatelyFollowedByCode2() {
+        let input = """
+        /* foo
+           bar */
+        func foo() {}
+        """
+        let output = """
+        // foo
+        // bar
+        func foo() {}
+        """
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
+    }
+
+    func testBlockCommentFollowedByBlankLine() {
+        let input = """
+        /**
+          foo
+
+          bar
+        */
+
+        func foo() {}
+        """
+        let output = """
+        /// foo
+        ///
+        /// bar
+
+        func foo() {}
+        """
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
+    }
 }

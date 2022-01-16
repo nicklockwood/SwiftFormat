@@ -115,7 +115,8 @@ extension Formatter {
                         index = nextIndex
                         if next(.nonSpaceOrCommentOrLinebreak, after: index, if: {
                             $0.isOperator(ofType: .infix) || [
-                                .delimiter(","), .startOfScope("["), .startOfScope("("),
+                                .keyword("is"), .keyword("as"), .delimiter(","),
+                                .startOfScope("["), .startOfScope("("),
                             ].contains($0)
                         }) == nil {
                             names.formUnion(locals)

@@ -3227,6 +3227,15 @@ class RedundancyTests: RulesTests {
                        exclude: ["wrapConditionalBodies"])
     }
 
+    func testNoRemoveSelfInAssignmentInsideIfAsStatement() {
+        let input = """
+        if let foo = foo as? Foo, let bar = baz {
+            self.bar = bar
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     func testRedundantSelfParsingBug() {
         let input = """
         private class Foo {

@@ -815,6 +815,17 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(index, 28)
     }
 
+    func testProcessDeclaredVariablesInIfLetAs() {
+        let formatter = Formatter(tokenize("""
+        if let foo = foo as? String, let bar = baz {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo", "bar"])
+        XCTAssertEqual(index, 22)
+    }
+
     func testProcessCaseDeclaredVariablesInIfLetCommaCase() {
         let formatter = Formatter(tokenize("""
         if let foo = bar(), case .bar(var baz) = quux {}

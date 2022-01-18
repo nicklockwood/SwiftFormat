@@ -2421,6 +2421,28 @@ class SyntaxTests: RulesTests {
 
     func testBlockCommentImmediatelyFollowedByCode2() {
         let input = """
+        /**
+         Line 1.
+
+         Line 2.
+
+         Line 3.
+         */
+        foo(bar)
+        """
+        let output = """
+        /// Line 1.
+        ///
+        /// Line 2.
+        ///
+        /// Line 3.
+        foo(bar)
+        """
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
+    }
+
+    func testBlockCommentImmediatelyFollowedByCode3() {
+        let input = """
         /* foo
            bar */
         func foo() {}

@@ -6133,7 +6133,6 @@ public struct _FormatRules {
                         formatter.insert(.commentBody("/"), at: index)
                         delta += 1
                     }
-                    endIndex += delta
                     return delta
                 }
 
@@ -6169,10 +6168,7 @@ public struct _FormatRules {
 
                 // remove /* and */
                 var index = i
-                if formatter.tokens[endIndex] == .endOfScope("*/") {
-                    endIndex += 1
-                }
-                while index < endIndex {
+                while index <= endIndex {
                     switch formatter.tokens[index] {
                     case .startOfScope("/*"):
                         formatter.removeToken(at: index)

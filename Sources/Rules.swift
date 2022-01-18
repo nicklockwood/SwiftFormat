@@ -2721,6 +2721,22 @@ public struct _FormatRules {
                     break
                 }
             }
+            // Crude check for Result Builder
+            var i = i
+            while let startIndex = formatter.index(of: .startOfScope("{"), before: i) {
+                guard let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
+                                                      before: startIndex)
+                else {
+                    break
+                }
+                if case let .identifier(name) = formatter.tokens[prevIndex],
+                   let firstChar = name.first.map(String.init),
+                   firstChar == firstChar.uppercased()
+                {
+                    return
+                }
+                i = prevIndex
+            }
             formatter.removeTokens(in: prevIndex ..< nextNonSpaceIndex)
         }
     }

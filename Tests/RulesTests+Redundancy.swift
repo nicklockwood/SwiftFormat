@@ -1559,6 +1559,16 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantLet)
     }
 
+    func testNoRemoveLetInViewBuilder() {
+        let input = """
+        HStack {
+            let _ = print("Hi")
+            Text("Some text")
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantLet)
+    }
+
     // MARK: - redundantPattern
 
     func testRemoveRedundantPatternInIfCase() {

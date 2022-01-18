@@ -2696,6 +2696,19 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testNoRemoveSelfInInterpolatedStringInExcludedFunction() {
+        let input = """
+        class Foo {
+            let foo = 1
+            func testFoo() {
+                log("\\(self.foo)")
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["log"])
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     func testNoMistakeProtocolClassModifierForClassFunction() {
         let input = "protocol Foo: class {}\nfunc bar() {}"
         XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf]))

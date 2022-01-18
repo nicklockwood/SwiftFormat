@@ -38,7 +38,10 @@ extension Formatter {
                 {
                     return false
                 }
-            default:
+            case let token:
+                if token.isStringDelimiter {
+                    break
+                }
                 break loop
             }
             index = scopeStart

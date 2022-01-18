@@ -3236,6 +3236,16 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testNoRemoveSelfInAssignmentInsideIfLetWithPostfixOperator() {
+        let input = """
+        if let foo = baz?.foo, let bar = baz?.bar {
+            self.foo = foo
+            self.bar = bar
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     func testRedundantSelfParsingBug() {
         let input = """
         private class Foo {

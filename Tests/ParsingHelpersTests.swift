@@ -826,6 +826,17 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(index, 22)
     }
 
+    func testProcessDeclaredVariablesInIfLetWithPostfixOperator() {
+        let formatter = Formatter(tokenize("""
+        if let foo = baz?.foo, let bar = baz?.bar {}
+        """))
+        var index = 2
+        var names = Set<String>()
+        formatter.processDeclaredVariables(at: &index, names: &names)
+        XCTAssertEqual(names, ["foo", "bar"])
+        XCTAssertEqual(index, 23)
+    }
+
     func testProcessCaseDeclaredVariablesInIfLetCommaCase() {
         let formatter = Formatter(tokenize("""
         if let foo = bar(), case .bar(var baz) = quux {}
@@ -963,7 +974,7 @@ class ParsingHelpersTests: XCTestCase {
         var names = Set<String>()
         formatter.processDeclaredVariables(at: &index, names: &names)
         XCTAssertEqual(names, ["bar"])
-        XCTAssertEqual(index, 5)
+        XCTAssertEqual(index, 10)
     }
 
     // MARK: parseDeclarations

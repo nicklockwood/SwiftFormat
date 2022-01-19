@@ -1007,6 +1007,13 @@ extension Formatter {
         return false
     }
 
+    func isLabel(at i: Int) -> Bool {
+        guard case .identifier = token(at: i) else {
+            return false
+        }
+        return next(.nonSpaceOrCommentOrLinebreak, after: i) == .delimiter(":")
+    }
+
     func isParameterList(at i: Int) -> Bool {
         assert([.startOfScope("("), .startOfScope("<")].contains(tokens[i]))
         guard let endIndex = endOfScope(at: i),

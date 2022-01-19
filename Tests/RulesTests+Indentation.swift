@@ -1921,6 +1921,32 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testIndentLinewrappedMultipleTrailingClosures() {
+        let input = """
+        UIView.animate(withDuration: 0) {
+            fromView.transform = .identity
+        }
+        completion: { finished in
+            context.completeTransition(finished)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentLinewrappedMultipleTrailingClosures2() {
+        let input = """
+        func foo() {
+            UIView.animate(withDuration: 0) {
+                fromView.transform = .identity
+            }
+            completion: { finished in
+                context.completeTransition(finished)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent comments
 
     func testCommentIndenting() {

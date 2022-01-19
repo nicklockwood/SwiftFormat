@@ -1066,7 +1066,13 @@ public struct _FormatRules {
                             break outer
                         }
                     default:
-                        break
+                        if formatter.isLabel(at: nextNonCommentIndex), let colonIndex
+                            = formatter.index(of: .delimiter(":"), after: nextNonCommentIndex),
+                            formatter.next(.nonSpaceOrCommentOrLinebreak, after: colonIndex)
+                            == .startOfScope("{")
+                        {
+                            break outer
+                        }
                     }
                 }
                 switch formatter.tokens[nextTokenIndex] {
@@ -1699,7 +1705,9 @@ public struct _FormatRules {
                        formatter.isStartOfClosure(at: nextNonSpaceIndex)
                     {
                         // Don't indent further
-                    } else if formatter.token(at: nextTokenIndex ?? -1) == .operator(".", .infix) {
+                    } else if formatter.token(at: nextTokenIndex ?? -1) == .operator(".", .infix) ||
+                        formatter.isLabel(at: nextTokenIndex ?? -1)
+                    {
                         var lineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex, excludingIndent: true)
                         let startToken = formatter.token(at: lineStart)
                         if let startToken = startToken, [
@@ -1784,6 +1792,11 @@ public struct _FormatRules {
                         }
                     }
                 default:
+                    if formatter.isLabel(at: nextNonSpaceIndex),
+                       formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .endOfScope("}")
+                    {
+                        break
+                    }
                     formatter.insertSpaceIfEnabled(indent, at: i + 1)
                 }
 

@@ -409,7 +409,7 @@ class LinebreakTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
     }
 
-    func testNoBlankLineBetweenChainedClosureIndents() {
+    func testNoBlankLineBetweenChainedClosures() {
         let input = """
         foo {
             doFoo()
@@ -424,6 +424,39 @@ class LinebreakTests: RulesTests {
         }
         """
         testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+    }
+
+    func testNoBlankLineBetweenTrailingClosures() {
+        let input = """
+        UIView.animate(withDuration: 0) {
+            fromView.transform = .identity
+        }
+        completion: { finished in
+            context.completeTransition(finished)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+    }
+
+    func testBlankLineBetweenTrailingClosureAndLabelledLoop() {
+        let input = """
+        UIView.animate(withDuration: 0) {
+            fromView.transform = .identity
+        }
+        completion: for foo in bar {
+            print(foo)
+        }
+        """
+        let output = """
+        UIView.animate(withDuration: 0) {
+            fromView.transform = .identity
+        }
+
+        completion: for foo in bar {
+            print(foo)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenScopes)
     }
 
     // MARK: - blankLinesAroundMark

@@ -27,6 +27,11 @@
 		015AF2CA1DC6A58C008F0A8C /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015AF2C91DC6A58C008F0A8C /* PerformanceTests.swift */; };
 		018541CF1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018541CE1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift */; };
 		018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018E82741D62E730008CA0F8 /* TokenizerTests.swift */; };
+		0196EC8B279C4E1D00FDDECF /* ConfigurationFinderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0196EC85279C4E1D00FDDECF /* ConfigurationFinderService.swift */; };
+		0196EC8C279C4E1D00FDDECF /* ServiceDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0196EC86279C4E1D00FDDECF /* ServiceDelegate.swift */; };
+		0196EC8D279C4E1D00FDDECF /* ConfigurationFinderServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0196EC87279C4E1D00FDDECF /* ConfigurationFinderServiceProtocol.swift */; };
+		0196EC8E279C4E1D00FDDECF /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0196EC89279C4E1D00FDDECF /* main.swift */; };
+		0196EC92279C4F4F00FDDECF /* ConfigurationFinderServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0196EC87279C4E1D00FDDECF /* ConfigurationFinderServiceProtocol.swift */; };
 		01A0EAA81D5DB4CF00A0A8E3 /* SwiftFormat.h in Headers */ = {isa = PBXBuildFile; fileRef = 01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		01A0EAAF1D5DB4D000A0A8E3 /* SwiftFormat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */; };
 		01A0EAB41D5DB4D000A0A8E3 /* RulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */; };
@@ -90,11 +95,6 @@
 		A3DF48252620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
 		A3DF48262620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
 		B9C4F55C2387FA3E0088DBEE /* SupportedContentUTIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */; };
-		C892E98027803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = C892E97F27803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift */; };
-		C892E98227803B3C00F16014 /* ConfigurationFinderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C892E98127803B3C00F16014 /* ConfigurationFinderService.swift */; };
-		C892E98427803B4900F16014 /* ServiceDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C892E98327803B4900F16014 /* ServiceDelegate.swift */; };
-		C892E98627803B5C00F16014 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C892E98527803B5C00F16014 /* main.swift */; };
-		C892E98727803B7E00F16014 /* ConfigurationFinderServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = C892E97F27803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift */; };
 		C892E98927803BD000F16014 /* EditorExtensionXPCService.xpc in Copy XPC Service */ = {isa = PBXBuildFile; fileRef = C892E96F27803A4C00F16014 /* EditorExtensionXPCService.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C892E98A27803C1200F16014 /* Arguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01045A982119979400D2BE3D /* Arguments.swift */; };
 		C892E98B27803C2700F16014 /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
@@ -209,6 +209,12 @@
 		015AF2C91DC6A58C008F0A8C /* PerformanceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
 		018541CE1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "XCSourceTextBuffer+SwiftFormat.swift"; sourceTree = "<group>"; };
 		018E82741D62E730008CA0F8 /* TokenizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenizerTests.swift; sourceTree = "<group>"; };
+		0196EC85279C4E1D00FDDECF /* ConfigurationFinderService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigurationFinderService.swift; sourceTree = "<group>"; };
+		0196EC86279C4E1D00FDDECF /* ServiceDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServiceDelegate.swift; sourceTree = "<group>"; };
+		0196EC87279C4E1D00FDDECF /* ConfigurationFinderServiceProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigurationFinderServiceProtocol.swift; sourceTree = "<group>"; };
+		0196EC88279C4E1D00FDDECF /* SwiftFormatter.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = SwiftFormatter.entitlements; sourceTree = "<group>"; };
+		0196EC89279C4E1D00FDDECF /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		0196EC8A279C4E1D00FDDECF /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftFormat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftFormat.h; sourceTree = "<group>"; };
 		01A0EAA91D5DB4CF00A0A8E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -258,11 +264,6 @@
 		A3DF48242620E03600F45A5F /* JSONReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONReporter.swift; sourceTree = "<group>"; };
 		B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedContentUTIs.swift; sourceTree = "<group>"; };
 		C892E96F27803A4C00F16014 /* EditorExtensionXPCService.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = EditorExtensionXPCService.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
-		C892E97727803A4C00F16014 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		C892E97F27803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationFinderServiceProtocol.swift; sourceTree = "<group>"; };
-		C892E98127803B3C00F16014 /* ConfigurationFinderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationFinderService.swift; sourceTree = "<group>"; };
-		C892E98327803B4900F16014 /* ServiceDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceDelegate.swift; sourceTree = "<group>"; };
-		C892E98527803B5C00F16014 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C8CA19B02780628F00F669AB /* ProjectConfigurationFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectConfigurationFinder.swift; sourceTree = "<group>"; };
 		E41CB5BE2025761D00C1BEDE /* UserSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSelection.swift; sourceTree = "<group>"; };
 		E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionTableCellView.swift; sourceTree = "<group>"; };
@@ -342,6 +343,27 @@
 			path = PerformanceTests;
 			sourceTree = "<group>";
 		};
+		0196EC84279C4E1D00FDDECF /* XPCService */ = {
+			isa = PBXGroup;
+			children = (
+				0196EC85279C4E1D00FDDECF /* ConfigurationFinderService.swift */,
+				0196EC86279C4E1D00FDDECF /* ServiceDelegate.swift */,
+				0196EC87279C4E1D00FDDECF /* ConfigurationFinderServiceProtocol.swift */,
+				0196EC89279C4E1D00FDDECF /* main.swift */,
+				0196EC91279C4EBC00FDDECF /* Supporting Files */,
+			);
+			path = XPCService;
+			sourceTree = "<group>";
+		};
+		0196EC91279C4EBC00FDDECF /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				0196EC8A279C4E1D00FDDECF /* Info.plist */,
+				0196EC88279C4E1D00FDDECF /* SwiftFormatter.entitlements */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 		01A0EA9A1D5DB4CF00A0A8E3 = {
 			isa = PBXGroup;
 			children = (
@@ -350,7 +372,6 @@
 				01A0EAA61D5DB4CF00A0A8E3 /* Sources */,
 				01A0EAB21D5DB4D000A0A8E3 /* Tests */,
 				018A47052200D3220012E41B /* PerformanceTests */,
-				C892E97027803A4C00F16014 /* EditorExtensionXPCService */,
 				90C4B6DE1DA4B059009EB000 /* Frameworks */,
 				01A0EAA51D5DB4CF00A0A8E3 /* Products */,
 			);
@@ -478,10 +499,10 @@
 				90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */,
 				018541CE1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift */,
 				B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */,
-				90F16AF91DA5ECBA00EB4EA1 /* Commands */,
-				90C4B6E41DA4B059009EB000 /* SourceEditorExtension.swift */,
-				90C4B6E21DA4B059009EB000 /* Supporting Files */,
 				C8CA19B02780628F00F669AB /* ProjectConfigurationFinder.swift */,
+				90C4B6E41DA4B059009EB000 /* SourceEditorExtension.swift */,
+				90F16AF91DA5ECBA00EB4EA1 /* Commands */,
+				90C4B6E21DA4B059009EB000 /* Supporting Files */,
 			);
 			path = Extension;
 			sourceTree = "<group>";
@@ -501,6 +522,7 @@
 				01D8980621A7F4B7005075E1 /* Shared */,
 				90C4B6CB1DA4B04A009EB000 /* Application */,
 				90C4B6E11DA4B059009EB000 /* Extension */,
+				0196EC84279C4E1D00FDDECF /* XPCService */,
 			);
 			path = EditorExtension;
 			sourceTree = "<group>";
@@ -522,18 +544,6 @@
 				0142C76F23C3FB6D005D5832 /* LintFileCommand.swift */,
 			);
 			name = Commands;
-			sourceTree = "<group>";
-		};
-		C892E97027803A4C00F16014 /* EditorExtensionXPCService */ = {
-			isa = PBXGroup;
-			children = (
-				C892E97727803A4C00F16014 /* Info.plist */,
-				C892E97F27803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift */,
-				C892E98127803B3C00F16014 /* ConfigurationFinderService.swift */,
-				C892E98327803B4900F16014 /* ServiceDelegate.swift */,
-				C892E98527803B5C00F16014 /* main.swift */,
-			);
-			path = EditorExtensionXPCService;
 			sourceTree = "<group>";
 		};
 		E4872117201D855C0014845E /* Source */ = {
@@ -946,6 +956,7 @@
 				01A95BD2225BEDE300744931 /* ParsingHelpers.swift in Sources */,
 				90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */,
 				0142C77023C3FB6D005D5832 /* LintFileCommand.swift in Sources */,
+				0196EC92279C4F4F00FDDECF /* ConfigurationFinderServiceProtocol.swift in Sources */,
 				E4E4D3CC2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */,
@@ -953,7 +964,6 @@
 				01A8320924EC7F7800A9D0EB /* FormattingHelpers.swift in Sources */,
 				018541CF1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift in Sources */,
 				C8CA19B12780628F00F669AB /* ProjectConfigurationFinder.swift in Sources */,
-				C892E98727803B7E00F16014 /* ConfigurationFinderServiceProtocol.swift in Sources */,
 				E4962DE1203F3CD500A02013 /* OptionsStore.swift in Sources */,
 				9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */,
 				E487212A201E3DD50014845E /* RulesStore.swift in Sources */,
@@ -971,6 +981,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0196EC8D279C4E1D00FDDECF /* ConfigurationFinderServiceProtocol.swift in Sources */,
+				0196EC8C279C4E1D00FDDECF /* ServiceDelegate.swift in Sources */,
 				C892E99627803D4700F16014 /* FormattingHelpers.swift in Sources */,
 				C892E99527803D2300F16014 /* Inference.swift in Sources */,
 				C892E99327803CE000F16014 /* SwiftFormat.swift in Sources */,
@@ -979,14 +991,12 @@
 				C892E98B27803C2700F16014 /* Tokenizer.swift in Sources */,
 				C892E99127803CA800F16014 /* OptionDescriptor.swift in Sources */,
 				C892E98C27803C2D00F16014 /* EnumAssociable.swift in Sources */,
-				C892E98227803B3C00F16014 /* ConfigurationFinderService.swift in Sources */,
+				0196EC8E279C4E1D00FDDECF /* main.swift in Sources */,
 				C892E99227803CC800F16014 /* Globs.swift in Sources */,
 				C892E98F27803C6D00F16014 /* Options.swift in Sources */,
-				C892E98427803B4900F16014 /* ServiceDelegate.swift in Sources */,
-				C892E98627803B5C00F16014 /* main.swift in Sources */,
 				C892E98D27803C3700F16014 /* Formatter.swift in Sources */,
-				C892E98027803B2E00F16014 /* ConfigurationFinderServiceProtocol.swift in Sources */,
 				C892E99027803C7200F16014 /* Rules.swift in Sources */,
+				0196EC8B279C4E1D00FDDECF /* ConfigurationFinderService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1309,7 +1319,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = EditorExtension/Application/Info.plist;
@@ -1339,7 +1349,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = EditorExtension/Application/Info.plist;
@@ -1424,14 +1434,16 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = EditorExtension/XPCService/SwiftFormatter.entitlements;
 				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = EditorExtensionXPCService/Info.plist;
+				INFOPLIST_FILE = EditorExtension/XPCService/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = EditorExtensionXPCService;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Nick Lockwood. All rights reserved.";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1445,10 +1457,11 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.EditorExtensionXPCService";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = Debug;
 		};
@@ -1461,14 +1474,16 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = EditorExtension/XPCService/SwiftFormatter.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 8VQKF583ED;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = EditorExtensionXPCService/Info.plist;
+				INFOPLIST_FILE = EditorExtension/XPCService/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = EditorExtensionXPCService;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2022 Nick Lockwood. All rights reserved.";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1481,9 +1496,10 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.EditorExtensionXPCService";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = Release;
 		};

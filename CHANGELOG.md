@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.49.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.3) (2021-01-26)
+
+- Fixed required `let` being removed inside View Builders
+- Fixed `blockComments` rule mangling code on next line after comment (really this time)
+- Fixed unsafe removal of `self` inside `if` statements containing postfix operators
+- Fixed `--selfrequired` behavior inside interpolated strings
+- Fixed indenting of labelled trailing closures
+
 ## [0.49.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.2) (2021-01-16)
 
 - Fixed literal values being incorrectly removed by `redundantType` rule

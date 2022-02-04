@@ -727,8 +727,14 @@ private extension UnicodeScalarView {
         guard read("\"") else {
             return nil
         }
-        let multiline = readString("\"\"")
-        return .startOfScope(multiline ? "\"\"\"" : "\"")
+        let start = self
+        if readString("\"\"") {
+            if first != "#" {
+                return .startOfScope("\"\"\"")
+            }
+            self = start
+        }
+        return .startOfScope("\"")
     }
 
     mutating func parseStartOfScope() -> Token? {

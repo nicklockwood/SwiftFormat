@@ -529,9 +529,9 @@ class TokenizerTests: XCTestCase {
     func testRawStringContainingJustASingleUnescapedQuote() {
         let input = "#\"\"\"#"
         let output: [Token] = [
-            .startOfScope("#\"\"\""),
-            .stringBody("#"),
-            .error(""),
+            .startOfScope("#\""),
+            .stringBody("\""),
+            .endOfScope("\"#"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

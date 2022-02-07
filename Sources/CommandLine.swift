@@ -641,11 +641,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                     )
                     if let outputURL = outputURL, !useStdout {
                         if (try? String(contentsOf: outputURL)) != output, !dryrun {
-                            do {
-                                try output.write(to: outputURL, atomically: true, encoding: .utf8)
-                            } catch {
-                                throw FormatError.writing("Failed to write file \(outputURL.path)")
-                            }
+                            try write(output, to: outputURL)
                         }
                     } else {
                         // Write to stdout
@@ -733,6 +729,19 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
         print("error: \(errorMessage)", as: .error)
         return .error
+    }
+}
+
+func write(_ output: String, to file: URL) throws {
+    do {
+        let fm = FileManager.default
+        let attributes = try? fm.attributesOfItem(atPath: file.path)
+        try output.write(to: file, atomically: true, encoding: .utf8)
+        if let created = attributes?[.creationDate] {
+            try? fm.setAttributes([.creationDate: created], ofItemAtPath: file.path)
+        }
+    } catch {
+        throw FormatError.writing("Failed to write file \(file.path)")
     }
 }
 
@@ -983,20 +992,16 @@ func processInput(_ inputURLs: [URL],
                         showConfigurationWarnings(options)
                     }
                 } else {
-                    do {
-                        if verbose {
-                            print("Writing \(outputURL.path)", as: .info)
-                        }
-                        try output.write(to: outputURL, atomically: true, encoding: .utf8)
-                        return {
-                            outputFlags.filesChecked += 1
-                            outputFlags.filesFailed += 1
-                            outputFlags.filesWritten += 1
-                            cache?[cacheKey] = cacheValue
-                            showConfigurationWarnings(options)
-                        }
-                    } catch {
-                        throw FormatError.writing("Failed to write file \(outputURL.path), \(error)")
+                    if verbose {
+                        print("Writing \(outputURL.path)", as: .info)
+                    }
+                    try write(output, to: outputURL)
+                    return {
+                        outputFlags.filesChecked += 1
+                        outputFlags.filesFailed += 1
+                        outputFlags.filesWritten += 1
+                        cache?[cacheKey] = cacheValue
+                        showConfigurationWarnings(options)
                     }
                 }
             } catch {

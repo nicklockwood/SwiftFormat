@@ -174,6 +174,14 @@ class CommandLineTests: XCTestCase {
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--rules"), .ok)
     }
 
+    func testEnableOverridesDisableAll() {
+        CLI.print = { message, _ in
+            XCTAssertFalse(message.contains("wrap (disabled)"))
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path,
+                               with: "--disable all --enable wrap --rules"), .ok)
+    }
+
     // MARK: quiet mode
 
     func testQuietModeNoOutput() {

@@ -446,7 +446,13 @@ Alternatively, you can use the line continuation character `\` to wrap a single 
     redundantSelf
 ```
 
-To avoid automatically opting-in to new rules when SwiftFormat is updated, use the`--rules` argument to *only* enable the rules you specify:
+To avoid automatically opting-in to new rules when SwiftFormat is updated, you can disable all rules using:
+
+```bash
+--disable all
+```
+
+And then individually enable just the rules you want. Alternatively, use the`--rules` argument to *only* enable the rules you specify:
 
 ```bash
 --rules indent,linebreaks

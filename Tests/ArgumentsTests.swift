@@ -722,6 +722,13 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(rules, ["strongOutlets"])
     }
 
+    func testParseAllRule() throws {
+        let rules = try parseRules("all")
+        XCTAssertEqual(rules, FormatRules.all.compactMap {
+            $0.isDeprecated ? nil : $0.name
+        })
+    }
+
     func testParseInvalidRuleThrows() {
         XCTAssertThrowsError(try parseRules("strongOutlet")) { error in
             XCTAssertEqual("\(error)", "Unknown rule 'strongOutlet'. Did you mean 'strongOutlets'?")

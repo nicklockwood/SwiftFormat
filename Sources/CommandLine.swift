@@ -203,9 +203,9 @@ func printHelp(as type: CLI.OutputType) {
     SwiftFormat has a number of rules that can be enabled or disabled. By default
     most rules are enabled. Use --rules to display all enabled/disabled rules.
 
-    --rules            The list of rules to apply. Pass nothing to print all rules
-    --disable          A list of format rules to be disabled (comma-delimited)
-    --enable           A list of disabled rules to be re-enabled (comma-delimited)
+    --rules            The list of rules to apply. Pass nothing to print rules list
+    --disable          Comma-delimited list of format rules to be disabled, or "all"
+    --enable           Comma-delimited list of rules to be enabled, or "all"
     --lintonly         A list of rules to be enabled only when using --lint mode
 
     SwiftFormat's rules can be configured using options. A given option may affect

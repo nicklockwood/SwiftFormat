@@ -3351,6 +3351,18 @@ class RedundancyTests: RulesTests {
         XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf]))
     }
 
+    func testRedundantSelfParsingBug4() {
+        let input = """
+        func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+            guard let row: Row = promotionSections[indexPath.section][indexPath.row] else { return UITableViewCell() }
+            let cell = tableView.dequeueReusable(RowTableViewCell.self, forIndexPath: indexPath)
+            cell.update(row: row)
+            return cell
+        }
+        """
+        XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf]))
+    }
+
     func testRedundantSelfWithStaticMethodAfterForLoop() {
         let input = """
         struct Foo {

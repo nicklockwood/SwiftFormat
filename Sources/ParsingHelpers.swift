@@ -408,7 +408,8 @@ extension Formatter {
         }
         if isConditionalStatement(at: i) {
             if let endIndex = endOfScope(at: i),
-               next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") ||
+               [.startOfScope("("), .operator(".", .infix)]
+               .contains(next(.nonSpaceOrComment, after: endIndex) ?? .space("")) ||
                next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{")
             {
                 return true
@@ -594,9 +595,14 @@ extension Formatter {
             return nil
         }
 
-        func isAfterBrace(_ index: Int) -> Bool {
-            guard let braceIndex = lastIndex(of: .endOfScope("}"), in: index ..< i) else {
+        func isAfterBrace(_ index: Int, _ i: Int) -> Bool {
+            guard let braceIndex = lastIndex(of: .endOfScope("}"), in: index ..< i),
+                  let startIndex = self.index(of: .startOfScope("{"), before: braceIndex)
+            else {
                 return false
+            }
+            if isStartOfClosure(at: startIndex) {
+                return isAfterBrace(index, startIndex)
             }
             return self.index(of: .nonSpaceOrCommentOrLinebreak, in: braceIndex + 1 ..< i) != nil
         }
@@ -613,12 +619,15 @@ extension Formatter {
                 return prevIndex
             case let .keyword(name) where
                 ["if", "guard", "while", "for", "case", "catch"].contains(name):
-                return isAfterBrace(prevIndex) ? nil : prevIndex
+                return isAfterBrace(prevIndex, i) ? nil : prevIndex
             default:
                 return nil
             }
         case "if", "guard", "while", "for", "case", "where", "switch":
-            return isAfterBrace(index) ? nil : index
+            if isAfterBrace(index, i) {
+                return nil
+            }
+            return index
         default:
             return nil
         }

@@ -582,6 +582,15 @@ class ParensTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantParens)
     }
 
+    func testParensNotRemovedBeforeIfBody5() {
+        let input = """
+        if currentProducts != newProducts.map { $0.id }.sorted() {
+            self?.products.accept(newProducts)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
     func testParensNotRemovedBeforeIfBodyAfterTry() {
         let input = "if let foo = try bar() { /* some code */ }"
         testFormatting(for: input, rule: FormatRules.redundantParens)

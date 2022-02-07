@@ -447,6 +447,14 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 25))
     }
 
+    func testClosureInsideIfCondition2() {
+        let formatter = Formatter(tokenize("""
+        if foo == bar.map { $0.baz }.sorted() {}
+        """))
+        XCTAssert(formatter.isStartOfClosure(at: 10))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 22))
+    }
+
     func testClosureAfterGenericType() {
         let formatter = Formatter(tokenize("let foo = Foo<String> {}"))
         XCTAssert(formatter.isStartOfClosure(at: 11))

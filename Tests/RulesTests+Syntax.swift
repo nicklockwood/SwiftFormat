@@ -2307,6 +2307,36 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.blockComments)
     }
 
+    func testBlockCommentWithBulletPoints() {
+        let input = """
+        /*
+         This is a list of nice colors:
+
+         * green
+         * blue
+         * red
+
+         Yellow is also great.
+         */
+
+        /*
+         * Another comment.
+         */
+        """
+        let output = """
+        // This is a list of nice colors:
+        //
+        // * green
+        // * blue
+        // * red
+        //
+        // Yellow is also great.
+
+        // Another comment.
+        """
+        testFormatting(for: input, output, rule: FormatRules.blockComments)
+    }
+
     func testBlockCommentsNested() {
         let input = """
         /*

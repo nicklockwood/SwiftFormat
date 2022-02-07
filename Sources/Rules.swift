@@ -6140,6 +6140,7 @@ public struct _FormatRules {
                 }
 
                 var isDocComment = false
+                var stripLeadingStars = true
                 func replaceCommentBody(at index: Int) -> Int {
                     var delta = 0
                     var space = ""
@@ -6149,14 +6150,21 @@ public struct _FormatRules {
                         delta -= 1
                     }
                     if case let .commentBody(body)? = formatter.token(at: index) {
-                        let commentBody = body.drop(while: { $0 == "*" })
+                        var body = Substring(body)
+                        if stripLeadingStars {
+                            if body.hasPrefix("*") {
+                                body = body.drop(while: { $0 == "*" })
+                            } else {
+                                stripLeadingStars = false
+                            }
+                        }
                         let prefix = isDocComment ? "/" : ""
-                        if !prefix.isEmpty || !commentBody.isEmpty, !commentBody.hasPrefix(" ") {
+                        if !prefix.isEmpty || !body.isEmpty, !body.hasPrefix(" ") {
                             space += " "
                         }
                         formatter.replaceToken(
                             at: index,
-                            with: .commentBody(prefix + space + commentBody)
+                            with: .commentBody(prefix + space + body)
                         )
                     } else if isDocComment {
                         formatter.insert(.commentBody("/"), at: index)

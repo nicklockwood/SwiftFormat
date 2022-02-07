@@ -448,4 +448,24 @@ class BracesTests: RulesTests {
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: FormatRules.braces, options: options)
     }
+
+    func testEmptyAllmanIfElseBraces() {
+        let input = """
+        if true {
+
+        } else {
+
+        }
+        """
+        let output = """
+        if true
+        {}
+        else
+        {}
+        """
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, [output], rules: [
+            FormatRules.braces, FormatRules.emptyBraces, FormatRules.elseOnSameLine,
+        ], options: options)
+    }
 }

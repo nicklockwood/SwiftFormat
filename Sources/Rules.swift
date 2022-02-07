@@ -4772,7 +4772,7 @@ public struct _FormatRules {
             }) else {
                 return
             }
-            if let token = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex),
+            if let token = formatter.next(.nonSpaceOrComment, after: closingIndex),
                [.keyword("else"), .keyword("catch")].contains(token)
             {
                 return

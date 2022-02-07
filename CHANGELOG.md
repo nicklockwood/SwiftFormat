@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.49.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.4) (2021-02-07)
+
+- Fixed creation date being modified on formatted files
+- Fixed case where a closure inside an if condition was mistaken for the body
+- Fixed `blockComments` rule removing leading `*`s used as bullet points
+- Fixed bug when parsing a raw string containing three consecutive unescaped quotes
+- Fixed spurious warning about unused `--wrapparameters` option
+- Fixed edge case when using `--allman` indenting
+
 ## [0.49.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.3) (2021-01-26)
 
 - Fixed required `let` being removed inside View Builders

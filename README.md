@@ -623,6 +623,13 @@ By default, `--lint` will only report lines that require formatting, but you can
 
 If you would prefer not to see a warning for each and every formatting change, you can use the `--quiet` flag to suppress all output except errors.
 
+Sometimes you may wish to autoformat some rules, but only lint others. To do that, use the `--lintonly` option in your config file to specify rules that should only be applied in `--lint` mode:
+
+```
+--rules braces,indent
+--lintonly trailingClosures,unusedArguments
+```
+
 
 Error codes
 -----------

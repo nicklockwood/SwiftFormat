@@ -482,11 +482,6 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             }
             args[descriptor.argumentName] = value
         }
-        // Special case for wrapParameters
-        let argumentName = Descriptors.wrapParameters.argumentName
-        if args[argumentName] == WrapMode.default.rawValue {
-            args[argumentName] = args[Descriptors.wrapArguments.argumentName]
-        }
     }
     if options.lint {
         args["lint"] = ""

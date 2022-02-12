@@ -1326,6 +1326,20 @@ private struct Examples {
     ```
     """
 
+    let closureImplicitSelf = """
+    ```diff
+    - DispatchQueue.main.async {
+    -     self.performFoo()
+    -     self.performBar()
+    -     self.performBaaz()
+    + DispatchQueue.main.async { [self] in
+    +     performFoo()
+    +     performBar()
+    +     performBaaz()
+      }
+    ```
+    """
+
     let redundantClosure = """
     ```diff
     - let foo = { Foo() }()

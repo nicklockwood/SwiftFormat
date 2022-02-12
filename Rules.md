@@ -11,6 +11,7 @@
 * [blankLinesBetweenScopes](#blankLinesBetweenScopes)
 * [blockComments](#blockComments)
 * [braces](#braces)
+* [closureImplicitSelf](#closureImplicitSelf)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
 * [duplicateImports](#duplicateImports)
@@ -459,6 +460,32 @@ Option | Description
 +   BarProtocol
 + {
     // ...
+  }
+```
+
+</details>
+<br/>
+
+## closureImplicitSelf
+
+Capture self explicitly to enable implicit self in the closure body.
+
+Option | Description
+--- | ---
+`--selfcount` | Threshold for when to prefer [self] capture. Defaults to 2.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- DispatchQueue.main.async {
+-     self.performFoo()
+-     self.performBar()
+-     self.performBaaz()
++ DispatchQueue.main.async { [self] in
++     performFoo()
++     performBar()
++     performBaaz()
   }
 ```
 

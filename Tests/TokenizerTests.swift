@@ -1195,11 +1195,11 @@ class TokenizerTests: XCTestCase {
     }
 
     #if os(macOS)
-    func testEmoji() {
-        let input = "🙃"
-        let output: [Token] = [.identifier("🙃")]
-        XCTAssertEqual(tokenize(input), output)
-    }
+        func testEmoji() {
+            let input = "🙃"
+            let output: [Token] = [.identifier("🙃")]
+            XCTAssertEqual(tokenize(input), output)
+        }
     #endif
 
     func testBacktickEscapedClass() {

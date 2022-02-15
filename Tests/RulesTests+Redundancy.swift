@@ -3018,7 +3018,7 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["closureImplicitSelf"])
     }
 
     func testSelfNotRemovedWhenPropertyIsKeyword() {
@@ -5577,5 +5577,207 @@ class RedundancyTests: RulesTests {
     func testKeepsClosureThatThrowsError() {
         let input = "let foo = try bar ?? { throw NSError() }()"
         testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    // MARK: - closureImplicitSelf
+
+    func testRemovesExplicitSelf() {
+        let input = """
+        methodWithClosureArgument {
+            self.foo = newValue
+            self.bar = newValue
+            print(self.baaz)
+        }
+        """
+
+        let output = """
+        methodWithClosureArgument { [self] in
+            foo = newValue
+            bar = newValue
+            print(baaz)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.closureImplicitSelf, options: options)
+    }
+
+    func testRemovesExplicitSelfInClosureWithArguments() {
+        let input = """
+        methodWithClosureArgument { foo, bar in
+            self.foo = newValue
+            self.bar = newValue
+            print(self.baaz)
+        }
+        """
+
+        let output = """
+        methodWithClosureArgument { [self] foo, bar in
+            foo = newValue
+            bar = newValue
+            print(baaz)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.closureImplicitSelf, options: options)
+    }
+
+    func testKeepsExplicitSelfWhenNotRedundant() {
+        let input = """
+        methodWithClosureArgument {
+            print(self)
+            print(self)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, rule: FormatRules.closureImplicitSelf, options: options)
+    }
+
+    func testUpdatesExistingCaptureList() {
+        let input = """
+        methodWithClosureArgument { [foo] in
+            print(foo)
+            self.bar = newValue
+            self.baaz = newValue
+        }
+        """
+
+        let output = """
+        methodWithClosureArgument { [self, foo] in
+            print(foo)
+            bar = newValue
+            baaz = newValue
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.closureImplicitSelf, options: options)
+    }
+
+    func testNoUpdateCaptureListIfWeakSelfAlreadyPresent() {
+        let input = """
+        methodWithClosureArgument { [weak self] in
+            guard let self = self else {
+                return
+            }
+
+            self.bar = newValue
+            self.baaz = newValue
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, rule: FormatRules.closureImplicitSelf, options: options)
+    }
+
+    func testNoUpdateCaptureListIfStrongSelfAlreadyPresent() {
+        let input = """
+        methodWithClosureArgument { [self] in
+            self.bar = newValue
+            self.baaz = newValue
+        }
+        """
+
+        let output = """
+        methodWithClosureArgument { [self] in
+            bar = newValue
+            baaz = newValue
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.closureImplicitSelf, options: options)
+    }
+
+    func testNoUpdateCaptureListIfUnownedSelfAlreadyPresent() {
+        let input = """
+        methodWithClosureArgument { [unowned self] in
+            self.bar = newValue
+            self.baaz = newValue
+        }
+
+        methodWithClosureArgument { [unowned(unsafe) self] in
+            self.bar = newValue
+            self.baaz = newValue
+        }
+        """
+
+        let output = """
+        methodWithClosureArgument { [unowned self] in
+            bar = newValue
+            baaz = newValue
+        }
+
+        methodWithClosureArgument { [unowned(unsafe) self] in
+            bar = newValue
+            baaz = newValue
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.closureImplicitSelf, options: options)
+    }
+
+    func testAddsSelfCaptureToInnerClosure() {
+        let input = """
+        outerMethodWithClosureArgument {
+            innerMethodWithClosureArgument {
+                self.foo = newValue
+                self.bar = newValue
+            }
+        }
+        """
+
+        let output = """
+        outerMethodWithClosureArgument {
+            innerMethodWithClosureArgument { [self] in
+                foo = newValue
+                bar = newValue
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.closureImplicitSelf, options: options)
+    }
+
+    func testCustomSelfCountThreshold() {
+        let input = """
+        methodWithClosureArgument {
+            self.foo = newValue
+            self.bar = newValue
+            self.baaz = newValue
+        }
+        """
+
+        let options = FormatOptions(explicitSelfCount: 5, swiftVersion: "5.3")
+        testFormatting(for: input, rule: FormatRules.closureImplicitSelf, options: options)
+    }
+
+    func testKeepsSingleExplicitSelfByDefault() {
+        let input = """
+        methodWithClosureArgument {
+            self.foo = newValue
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, rule: FormatRules.closureImplicitSelf, options: options)
+    }
+
+    func testDisabledInSwift5_2() {
+        let input = """
+        methodWithClosureArgument {
+            self.foo = newValue
+            self.bar = newValue
+            print(self.baaz)
+        }
+        """
+
+        // The behavior used by this rule was added in 5.3 https://github.com/apple/swift-evolution/blob/main/proposals/0269-implicit-self-explicit-capture.md
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, rule: FormatRules.closureImplicitSelf, options: options)
     }
 }

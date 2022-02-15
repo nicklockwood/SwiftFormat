@@ -1568,7 +1568,7 @@ class SyntaxTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.andOperator)
+        testFormatting(for: input, rule: FormatRules.andOperator, exclude: ["closureImplicitSelf"])
     }
 
     func testReplaceAndInViewBuilderInSwift5_3() {

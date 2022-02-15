@@ -403,6 +403,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var acronyms: Set<String>
     public var indentStrings: Bool
     public var closureVoidReturn: ClosureVoidReturn
+    public var explicitSelfCount: Int
 
     // Deprecated
     public var indentComments: Bool
@@ -493,6 +494,7 @@ public struct FormatOptions: CustomStringConvertible {
                 acronyms: Set<String> = ["ID", "URL", "UUID"],
                 indentStrings: Bool = false,
                 closureVoidReturn: ClosureVoidReturn = .remove,
+                explicitSelfCount: Int = 2,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -574,6 +576,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.acronyms = acronyms
         self.indentStrings = indentStrings
         self.closureVoidReturn = closureVoidReturn
+        self.explicitSelfCount = explicitSelfCount
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

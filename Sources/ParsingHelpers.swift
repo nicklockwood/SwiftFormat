@@ -593,6 +593,25 @@ extension Formatter {
         return false
     }
 
+    /// Whether or not the given index is within the main closure body (e.g. _not_
+    /// in a nested closure) of the closure that starts at the given index
+    func isInMainClosureBody(index: Int, closureStartIndex: Int) -> Bool {
+        let startOfScopeAtIndex: Int
+        if token(at: index)?.isStartOfScope == true {
+            startOfScopeAtIndex = index
+        } else {
+            startOfScopeAtIndex = self.index(of: .startOfScope, before: index) ?? closureStartIndex
+        }
+
+        if isStartOfClosure(at: startOfScopeAtIndex) {
+            return startOfScopeAtIndex == closureStartIndex
+        } else if token(at: startOfScopeAtIndex)?.isStartOfScope == true {
+            return isInMainClosureBody(index: startOfScopeAtIndex - 1, closureStartIndex: closureStartIndex)
+        } else {
+            return false
+        }
+    }
+
     func isAccessorKeyword(at i: Int, checkKeyword: Bool = true) -> Bool {
         guard !checkKeyword ||
             ["get", "set", "willSet", "didSet"].contains(token(at: i)?.string ?? ""),

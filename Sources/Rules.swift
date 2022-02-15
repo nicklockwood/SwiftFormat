@@ -6471,24 +6471,6 @@ public struct _FormatRules {
                // because removing them could break the build.
                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex) != closureEndIndex
             {
-                // Whether this is within the closure, but not within a child closure of the main closure
-                func indexIsWithinMainClosure(_ index: Int) -> Bool {
-                    let startOfScopeAtIndex: Int
-                    if formatter.token(at: index)?.isStartOfScope == true {
-                        startOfScopeAtIndex = index
-                    } else {
-                        startOfScopeAtIndex = formatter.index(of: .startOfScope, before: index) ?? closureStartIndex
-                    }
-
-                    if formatter.isStartOfClosure(at: startOfScopeAtIndex) {
-                        return startOfScopeAtIndex == closureStartIndex
-                    } else if formatter.token(at: startOfScopeAtIndex)?.isStartOfScope == true {
-                        return indexIsWithinMainClosure(startOfScopeAtIndex - 1)
-                    } else {
-                        return false
-                    }
-                }
-
                 // Some heuristics to determine if this is a multi-statement closure:
 
                 // (1) any statement-forming scope (mostly just { and #if)
@@ -6502,7 +6484,7 @@ public struct _FormatRules {
                     if startOfScope != .startOfScope("("), // Method calls / other parents are fine
                        startOfScope != .startOfScope("\""), // Strings are fine
                        startOfScope != .startOfScope("\"\"\""), // Strings are fine
-                       indexIsWithinMainClosure(startOfScopeIndex),
+                       formatter.isInMainClosureBody(index: startOfScopeIndex, closureStartIndex: closureStartIndex),
                        !formatter.isStartOfClosure(at: startOfScopeIndex)
                     {
                         return
@@ -6516,7 +6498,7 @@ public struct _FormatRules {
                 {
                     let isAtStartOfClosure = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: returnIndex) == closureStartIndex
 
-                    if indexIsWithinMainClosure(returnIndex),
+                    if formatter.isInMainClosureBody(index: returnIndex, closureStartIndex: closureStartIndex),
                        !isAtStartOfClosure
                     {
                         return
@@ -6531,7 +6513,7 @@ public struct _FormatRules {
                     let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: semicolonIndex) ?? semicolonIndex
                     let isAtEndOfLine = formatter.startOfLine(at: semicolonIndex) != formatter.startOfLine(at: nextTokenIndex)
 
-                    if indexIsWithinMainClosure(semicolonIndex), !isAtEndOfLine {
+                    if formatter.isInMainClosureBody(index: semicolonIndex, closureStartIndex: closureStartIndex), !isAtEndOfLine {
                         return
                     }
                 }
@@ -6540,7 +6522,7 @@ public struct _FormatRules {
                 for equalsIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: equalsIndex)?.string == "="
                 {
-                    if indexIsWithinMainClosure(equalsIndex) {
+                    if formatter.isInMainClosureBody(index: equalsIndex, closureStartIndex: closureStartIndex) {
                         return
                     }
                 }
@@ -6556,7 +6538,7 @@ public struct _FormatRules {
                 for closingParenIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: closingParenIndex)?.string == ")"
                 {
-                    if indexIsWithinMainClosure(closingParenIndex),
+                    if formatter.isInMainClosureBody(index: closingParenIndex, closureStartIndex: closureStartIndex),
                        let nextNonWhitespace = formatter.index(
                            of: .nonSpaceOrCommentOrLinebreak,
                            after: closingParenIndex
@@ -6575,7 +6557,7 @@ public struct _FormatRules {
                 for inIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: inIndex) == .keyword("in")
                 {
-                    if indexIsWithinMainClosure(inIndex) {
+                    if formatter.isInMainClosureBody(index: inIndex, closureStartIndex: closureStartIndex) {
                         return
                     }
                 }
@@ -6587,7 +6569,7 @@ public struct _FormatRules {
                 for i in closureStartIndex ... closureEndIndex {
                     switch formatter.tokens[i] {
                     case .identifier("fatalError"), .identifier("preconditionFailure"), .keyword("throw"):
-                        if indexIsWithinMainClosure(i) {
+                        if formatter.isInMainClosureBody(index: i, closureStartIndex: closureStartIndex) {
                             return
                         }
                     default:
@@ -6630,6 +6612,103 @@ public struct _FormatRules {
 
                     formatter.removeToken(at: returnIndex)
                 }
+            }
+        }
+    }
+
+    public let closureImplicitSelf = FormatRule(
+        help: """
+        Capture self explicitly to enable implicit self in the closure body.
+        """,
+        disabledByDefault: true,
+        options: ["selfcount"]
+    ) { formatter in
+        formatter.forEach(.startOfScope("{")) { closureStartIndex, _ in
+            guard
+                formatter.options.swiftVersion >= "5.3",
+                formatter.isStartOfClosure(at: closureStartIndex),
+                let closureEndIndex = formatter.endOfScope(at: closureStartIndex)
+            else { return }
+
+            // Check whether or not there's already a self capture in the capture list
+            var alreadyHasSelfCapture = false
+
+            if let startOfCaptureList = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
+               formatter.token(at: startOfCaptureList) == .startOfScope("["),
+               let endOfCaptureList = formatter.endOfScope(at: startOfCaptureList),
+               let selfCaptureIndex = formatter.index(of: .identifier("self"), after: startOfCaptureList),
+               selfCaptureIndex < endOfCaptureList
+            {
+                if formatter.last(.nonSpaceOrCommentOrLinebreak, before: selfCaptureIndex)?.string == "weak" {
+                    // weak self captures don't enable implicit self, so if the closure
+                    // is already using `weak self` then there's nothing to do here.
+                    // Maybe one day...... https://github.com/apple/swift-evolution/pull/1506
+                    return
+                } else {
+                    alreadyHasSelfCapture = true
+                }
+            }
+
+            // Find instances of `self.` in the closure body
+            var explicitSelfIndices = [(selfKeyword: Int, dot: Int)]()
+            for explicitSelfIndex in closureStartIndex ... closureEndIndex {
+                if
+                    formatter.token(at: explicitSelfIndex)?.string == "self",
+                    formatter.isInMainClosureBody(index: explicitSelfIndex, closureStartIndex: closureStartIndex),
+                    let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: explicitSelfIndex),
+                    formatter.token(at: dotIndex)?.string == "."
+                {
+                    explicitSelfIndices.append((explicitSelfIndex, dotIndex))
+                }
+            }
+
+            guard
+                !explicitSelfIndices.isEmpty,
+                // By default we only add an explicit self capture
+                // if there are multiple `self.`s in the closure body
+                explicitSelfIndices.count >= formatter.options.explicitSelfCount
+            else { return }
+
+            // remove all of the `self.`s
+            for (explicitSelfIndex, dotIndex) in explicitSelfIndices.reversed() {
+                formatter.removeToken(at: dotIndex)
+                formatter.removeToken(at: explicitSelfIndex)
+            }
+
+            /// If the closure already has a self capture that enables implicit self,
+            /// then there's no more work to do
+            if alreadyHasSelfCapture {
+                return
+            }
+
+            // If the closure already has a capture list, add self to it
+            if let startOfCaptureList = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
+               formatter.token(at: startOfCaptureList) == .startOfScope("[")
+            {
+                let closureImplicitSelf = tokenize("self, ")
+                formatter.insert(closureImplicitSelf, at: startOfCaptureList + 1)
+                return
+            }
+
+            // Otherwise we have to add a capture list.
+            // If the closure doesn't have any arguments (and doesn't have an `in` keyword yet),
+            // then we also have to add that.
+            var closureHasInKeyword = false
+            for inIndex in closureStartIndex ... closureEndIndex {
+                if formatter.token(at: inIndex) == .keyword("in"),
+                   formatter.isInMainClosureBody(index: inIndex, closureStartIndex: closureStartIndex)
+                {
+                    closureHasInKeyword = true
+                    break
+                }
+            }
+
+            if closureHasInKeyword {
+                let captureList = tokenize(" [self]")
+                formatter.insert(captureList, at: closureStartIndex + 1)
+            } else {
+                let captureList = tokenize(" [self] in")
+                formatter.insert(captureList, at: closureStartIndex + 1)
             }
         }
     }

@@ -868,6 +868,12 @@ struct _Descriptors {
         help: "Closure void returns: \"remove\" (default) or \"preserve\"",
         keyPath: \.closureVoidReturn
     )
+    let explicitSelfCount = OptionDescriptor(
+        argumentName: "selfcount",
+        displayName: "Explicit Self Count",
+        help: "Threshold for when to prefer [self] capture. Defaults to 2.",
+        keyPath: \.explicitSelfCount
+    )
 
     // MARK: - Internal
 

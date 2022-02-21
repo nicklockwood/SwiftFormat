@@ -1817,6 +1817,11 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.typeSugar)
     }
 
+    func testArrayDeclarationNotConvertedToSugar() {
+        let input = "struct Array<Element> {}"
+        testFormatting(for: input, rule: FormatRules.typeSugar)
+    }
+
     // dictionaries
 
     func testDictionaryTypeConvertedToSugar() {

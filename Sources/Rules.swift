@@ -5127,20 +5127,19 @@ public struct _FormatRules {
                     return
                 }
             }
-            func dropSwiftNamespaceIfPresent() {
-                if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: typeIndex, if: {
-                    $0.isOperator(".")
-                }), let swiftTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: dotIndex, if: {
-                    $0 == .identifier("Swift")
-                }) {
-                    formatter.removeTokens(in: swiftTokenIndex ..< typeIndex)
+            if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: typeIndex) {
+                switch prevToken {
+                case .keyword("struct"), .keyword("class"), .keyword("actor"),
+                     .keyword("enum"), .keyword("protocol"), .keyword("typealias"):
+                    return
+                default:
+                    break
                 }
             }
             switch formatter.tokens[typeIndex] {
             case .identifier("Array"):
                 formatter.replaceTokens(in: typeIndex ... endIndex, with:
                     [.startOfScope("[")] + formatter.tokens[typeStart ... typeEnd] + [.endOfScope("]")])
-                dropSwiftNamespaceIfPresent()
             case .identifier("Dictionary"):
                 guard let commaIndex = formatter.index(of: .delimiter(","), in: typeStart ..< typeEnd) else {
                     return
@@ -5148,7 +5147,6 @@ public struct _FormatRules {
                 formatter.replaceToken(at: commaIndex, with: .delimiter(":"))
                 formatter.replaceTokens(in: typeIndex ... endIndex, with:
                     [.startOfScope("[")] + formatter.tokens[typeStart ... typeEnd] + [.endOfScope("]")])
-                dropSwiftNamespaceIfPresent()
             case .identifier("Optional"):
                 if formatter.options.shortOptionals == .exceptProperties,
                    let lastKeyword = formatter.lastSignificantKeyword(at: i),
@@ -5171,9 +5169,16 @@ public struct _FormatRules {
                 }
                 typeTokens.append(.operator("?", .postfix))
                 formatter.replaceTokens(in: typeIndex ... endIndex, with: typeTokens)
-                dropSwiftNamespaceIfPresent()
             default:
                 return
+            }
+            // Drop leading Swift. namespace
+            if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: typeIndex, if: {
+                $0.isOperator(".")
+            }), let swiftTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: dotIndex, if: {
+                $0 == .identifier("Swift")
+            }) {
+                formatter.removeTokens(in: swiftTokenIndex ..< typeIndex)
             }
         }
     }

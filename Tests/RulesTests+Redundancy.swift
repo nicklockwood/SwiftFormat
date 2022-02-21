@@ -5573,4 +5573,9 @@ class RedundancyTests: RulesTests {
 
         testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, FormatRules.indent], exclude: ["redundantType"])
     }
+
+    func testKeepsClosureThatThrowsError() {
+        let input = "let foo = try bar ?? { throw NSError() }()"
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
 }

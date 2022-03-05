@@ -118,24 +118,17 @@ public func enumerateFiles(withInputURL inputURL: URL,
 
     let queue = concurrent ? DispatchQueue.global(qos: .userInitiated) : completionQueue
 
-    func wasSkipped(_ inputURL: URL, with options: Options) -> Bool {
-        guard options.shouldSkipFile(inputURL) else {
-            return false
-        }
-        if let handler = skipped {
-            do {
-                onComplete(try handler(inputURL, inputURL, options))
-            } catch {
-                onComplete { throw error }
-            }
-        }
-        return true
-    }
-
     func resolveInputURL(_ inputURL: URL, options: Options) -> (URL, ResourceValues, Options)? {
         let fileOptions = options.fileOptions ?? .default
         let inputURL = inputURL.standardizedFileURL
-        if wasSkipped(inputURL, with: options) {
+        if options.shouldSkipFile(inputURL) {
+            if let handler = skipped {
+                do {
+                    onComplete(try handler(inputURL, inputURL, options))
+                } catch {
+                    onComplete { throw error }
+                }
+            }
             return nil
         }
         do {
@@ -145,9 +138,6 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     if fileOptions.followSymlinks {
                         guard let resolvedURL = try? URL(resolvingAliasFileAt: inputURL) else {
                             throw FormatError.options("Could not resolve alias at \(inputURL.path)")
-                        }
-                        if wasSkipped(resolvedURL, with: options) {
-                            return nil
                         }
                         return resolveInputURL(resolvedURL, options: options)
                     } else {
@@ -161,9 +151,6 @@ public func enumerateFiles(withInputURL inputURL: URL,
             if resourceValues.isSymbolicLink == true {
                 if fileOptions.followSymlinks {
                     let resolvedURL = inputURL.resolvingSymlinksInPath()
-                    if wasSkipped(resolvedURL, with: options) {
-                        return nil
-                    }
                     return resolveInputURL(resolvedURL, options: options)
                 } else {
                     if let handler = skipped {
@@ -192,9 +179,6 @@ public func enumerateFiles(withInputURL inputURL: URL,
         let fileOptions = options.fileOptions ?? .default
         if resourceValues.isRegularFile == true {
             if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
-                if wasSkipped(inputURL, with: options) {
-                    return
-                }
                 let fileInfo = FileInfo(
                     filePath: resourceValues.path,
                     creationDate: resourceValues.creationDate
@@ -208,9 +192,6 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 }
             }
         } else if resourceValues.isDirectory == true {
-            if wasSkipped(inputURL, with: options) {
-                return
-            }
             var options = options
             do {
                 try processDirectory(inputURL, with: &options, logger: logger)

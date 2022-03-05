@@ -628,14 +628,8 @@ public struct FileOptions {
 
     public func shouldSkipFile(_ inputURL: URL) -> Bool {
         let path = inputURL.standardizedFileURL.path
-        for excluded in excludedGlobs {
-            guard excluded.matches(path) else {
-                continue
-            }
-            if unexcludedGlobs.contains(where: { $0.matches(path) }) {
-                return false
-            }
-            return true
+        for excluded in excludedGlobs where excluded.matches(path) {
+            return !unexcludedGlobs.contains(where: { $0.matches(path) })
         }
         return false
     }

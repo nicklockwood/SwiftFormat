@@ -40,11 +40,27 @@ class MetadataTests: XCTestCase {
 
     // NOTE: if test fails, just run it again locally to update rules file
     func testGenerateRulesDocumentation() throws {
-        var result = "# Rules\n"
-        for rule in FormatRules.all {
-            let annotation = rule.isDeprecated ? " *(deprecated)*" : ""
-            result += "\n* [\(rule.name)\(annotation)](#\(rule.name))"
+        var result = "# Default Rules (enabled by default)\n"
+        for rule in FormatRules.default {
+            result += "\n* [\(rule.name)](#\(rule.name))"
         }
+
+        result += "\n\n# Opt-in Rules (disabled by default)\n"
+        for rule in FormatRules.named(FormatRules.disabledByDefault) {
+            guard !rule.isDeprecated else {
+                continue
+            }
+            result += "\n* [\(rule.name)](#\(rule.name))"
+        }
+
+        let deprecatedRules = FormatRules.all.filter { $0.isDeprecated }
+        if !deprecatedRules.isEmpty {
+            result += "\n\n# Deprecated Rules (do not use)\n"
+            for rule in deprecatedRules {
+                result += "\n* [\(rule.name)](#\(rule.name))"
+            }
+        }
+
         result += "\n\n----------"
         for rule in FormatRules.all {
             result += "\n\n## \(rule.name)\n\n\(rule.help)"

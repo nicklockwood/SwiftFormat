@@ -1,6 +1,16 @@
 # Change Log
 
-## [0.49.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.4) (2021-02-07)
+## [0.49.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.5) (2022-03-06)
+
+- Fixed bug where `redundantClosure` incorrectly inlined throwing closures
+- Fixed bug where in `--exclude` path matching failed when using `--stdinpath`
+- Fixed a bug with `typeSugar` rule when overriding stdlib types locally in your code
+- Multiline statement braces are now unwrapped if `wrapMultilineStatementBraces` disabled
+- Added `// swiftformat:sort` directive to sort declarations by name
+- You can now use `--disable all` or `--enable all` as shorthand for all rules
+- The rules in the `Rules.md` file are now grouped by their default/enabled status
+
+## [0.49.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.4) (2022-02-07)
 
 - Fixed creation date being modified on formatted files
 - Fixed case where a closure inside an if condition was mistaken for the body
@@ -9,7 +19,7 @@
 - Fixed spurious warning about unused `--wrapparameters` option
 - Fixed edge case when using `--allman` indenting
 
-## [0.49.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.3) (2021-01-26)
+## [0.49.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.3) (2022-01-26)
 
 - Fixed required `let` being removed inside View Builders
 - Fixed `blockComments` rule mangling code on next line after comment (really this time)
@@ -17,7 +27,7 @@
 - Fixed `--selfrequired` behavior inside interpolated strings
 - Fixed indenting of labelled trailing closures
 
-## [0.49.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.2) (2021-01-16)
+## [0.49.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.2) (2022-01-16)
 
 - Fixed literal values being incorrectly removed by `redundantType` rule
 - Fixed `redundantSelf` rule removing `self` from shadowed variables after an `as`/`is` condition

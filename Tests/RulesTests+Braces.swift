@@ -276,6 +276,37 @@ class BracesTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.braces)
     }
 
+    func testBraceUnwrappedIfWrapMultilineStatementBracesRuleDisabled() {
+        let input = """
+        if let foo = bar,
+           let baz = quux
+        {
+            return nil
+        }
+        """
+        let output = """
+        if let foo = bar,
+           let baz = quux {
+            return nil
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.braces,
+                       exclude: ["wrapMultilineStatementBraces"])
+    }
+
+    func testBraceNotUnwrappedIfWrapMultilineStatementBracesRuleDisabled() {
+        let input = """
+        if let foo = bar,
+           let baz = quux
+        {
+            return nil
+        }
+        """
+        testFormatting(for: input, rules: [
+            FormatRules.braces, FormatRules.wrapMultilineStatementBraces,
+        ])
+    }
+
     // allman style
 
     func testKnRBracesAreConverted() {

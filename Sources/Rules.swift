@@ -1956,8 +1956,8 @@ public struct _FormatRules {
                 }
 
                 // Avoid conflicts with wrapMultilineStatementBraces
-                // TODO: find a better solution for this
-                if let keywordIndex =
+                let ruleName = FormatRules.wrapMultilineStatementBraces.name
+                if formatter.options.enabledRules.contains(ruleName), let keywordIndex =
                     formatter.indexOfLastSignificantKeyword(at: prevIndex + 1, excluding: ["where"]),
                     case let .keyword(keyword) = formatter.tokens[keywordIndex],
                     ["if", "for", "guard", "while", "switch", "func", "init", "subscript",

@@ -33,6 +33,8 @@ import Foundation
 
 #if os(macOS)
     import Darwin.POSIX
+#elseif os(Windows)
+    import ucrt
 #else
     import Glibc
 #endif

@@ -170,7 +170,7 @@ swift version is set to 4.1 or above.
 
 ## assertionFailures
 
-Changes all instances of assert(false, ...) to assertionFailure(...) 
+Changes all instances of assert(false, ...) to assertionFailure(...)
 and precondition(false, ...) to preconditionFailure(...).
 
 <details>
@@ -1993,6 +1993,8 @@ Option | Description
 ## wrap
 
 Wrap lines that exceed the specified maximum width.
+
+_note: wrapping is currently NOT supported for comments or string literals._
 
 Option | Description
 --- | ---

@@ -6087,18 +6087,21 @@ public struct _FormatRules {
                 })
                 .map { $0.element }
 
-            // Make sure there's at least one newline between each declaration
-            for i in 0 ... max(0, declarations.count - 2) {
-                let declaration = declarations[i]
-                let nextDeclaration = declarations[i + 1]
+            // Avoid crashing when an enum only has one case
+            if (declarations.count - 2) >= 0 {
+                // Make sure there's at least one newline between each declaration
+                for i in 0 ... (declarations.count - 2) {
+                    let declaration = declarations[i]
+                    let nextDeclaration = declarations[i + 1]
 
-                if declaration.tokens.last?.isLinebreak == false,
-                   nextDeclaration.tokens.first?.isLinebreak == false
-                {
-                    declarations[i + 1] = formatter.mapOpeningTokens(in: nextDeclaration) { openTokens in
-                        let openFormatter = Formatter(openTokens)
-                        openFormatter.insertLinebreak(at: 0)
-                        return openFormatter.tokens
+                    if declaration.tokens.last?.isLinebreak == false,
+                       nextDeclaration.tokens.first?.isLinebreak == false
+                    {
+                        declarations[i + 1] = formatter.mapOpeningTokens(in: nextDeclaration) { openTokens in
+                            let openFormatter = Formatter(openTokens)
+                            openFormatter.insertLinebreak(at: 0)
+                            return openFormatter.tokens
+                        }
                     }
                 }
             }

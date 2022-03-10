@@ -6054,7 +6054,8 @@ public struct _FormatRules {
                     let typeOpenBrace = formatter.index(of: .startOfScope("{"), after: commentIndex),
                     let typeCloseBrace = formatter.endOfScope(at: typeOpenBrace),
                     let firstTypeBodyToken = formatter.index(of: .nonLinebreak, after: typeOpenBrace),
-                    let lastTypeBodyToken = formatter.index(of: .nonLinebreak, before: typeCloseBrace)
+                    let lastTypeBodyToken = formatter.index(of: .nonLinebreak, before: typeCloseBrace),
+                    lastTypeBodyToken > typeOpenBrace
                 else { return }
 
                 rangeToSort = typeOpenBrace + 1 ... lastTypeBodyToken
@@ -6088,7 +6089,7 @@ public struct _FormatRules {
                 .map { $0.element }
 
             // Make sure there's at least one newline between each declaration
-            for i in 0 ... (declarations.count - 2) {
+            for i in 0 ..< max(0, declarations.count - 1) {
                 let declaration = declarations[i]
                 let nextDeclaration = declarations[i + 1]
 

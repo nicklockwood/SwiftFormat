@@ -2962,24 +2962,16 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.sortDeclarations)
     }
 
-// Test does not succeed, as input equals output
-//    func testSortEnumBodyWithOnlyOneCase() {
-//        let input = """
-//        // swiftformat:sort
-//        enum FeatureFlags {
-//            case upsellB
-//        }
-//        """
-//
-//        let output = """
-//        // swiftformat:sort
-//        enum FeatureFlags {
-//            case upsellB
-//        }
-//        """
-//
-//        testFormatting(for: input, output, rule: FormatRules.sortDeclarations)
-//    }
+    func testSortEnumBodyWithOnlyOneCase() {
+        let input = """
+        // swiftformat:sort
+        enum FeatureFlags {
+            case upsellB
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.sortDeclarations)
+    }
 
     func testNoSortUnannotatedType() {
         let input = """

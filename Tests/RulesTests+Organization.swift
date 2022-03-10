@@ -2973,6 +2973,16 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.sortDeclarations)
     }
 
+    func testSortEnumBodyWithoutCase() {
+        let input = """
+        // swiftformat:sort
+        enum FeatureFlags {
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.sortDeclarations)
+    }
+
     func testNoSortUnannotatedType() {
         let input = """
         enum FeatureFlags {

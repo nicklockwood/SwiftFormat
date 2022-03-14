@@ -6054,7 +6054,7 @@ public struct _FormatRules {
             // between the open and close brace of the following type
             else if
                 !commentToken.string.contains(":sort:"),
-                // This part of the rule conficts with the organizeDeclarations rule.
+                // This part of the rule conflicts with the organizeDeclarations rule.
                 // Instead, that rule manually implements support for the :sort directive.
                 !formatter.options.enabledRules.contains(FormatRules.organizeDeclarations.name)
             {
@@ -6133,7 +6133,7 @@ public struct _FormatRules {
 
             // There are always expected to be zero trailing line breaks,
             // so we remove any trailing line breaks
-            // (this is because `typeBodyRange` speficially ends before the first
+            // (this is because `typeBodyRange` specifically ends before the first
             // trailing linebreak)
             while sortedFormatter.tokens.last?.isLinebreak == true {
                 sortedFormatter.removeLastToken()

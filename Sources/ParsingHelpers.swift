@@ -38,7 +38,7 @@ public extension Formatter {
         return index
     }
 
-    /// Whether or not the two indicies represent tokens on the same line
+    /// Whether or not the two indices represent tokens on the same line
     func onSameLine(_ lhs: Int, _ rhs: Int) -> Bool {
         return startOfLine(at: lhs) == startOfLine(at: rhs)
     }
@@ -1739,7 +1739,7 @@ extension Formatter {
 }
 
 extension _FormatRules {
-    // Short date formater. Used by fileHeader rule
+    // Short date formatter. Used by fileHeader rule
     static var shortDateFormatter: (Date) -> String = {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
@@ -1747,7 +1747,7 @@ extension _FormatRules {
         return { formatter.string(from: $0) }
     }()
 
-    // Year formater. Used by fileHeader rule
+    // Year formatter. Used by fileHeader rule
     static var yearFormatter: (Date) -> String = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy"

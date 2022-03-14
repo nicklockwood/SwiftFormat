@@ -891,9 +891,9 @@
 ## [0.37.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.37.0) (2018-12-17)
 
 - Added `isEmpty` rule, which converts instances of `if foo.count == 0 {}` to `if foo.isEmpty` (disabled by default)
-- Added `redundantLetError` rule, which removes `let error` from `catch let error {}` because it's implict
+- Added `redundantLetError` rule, which removes `let error` from `catch let error {}` because it's implicit
 - The `todos` rule now converts `/// MARK:` to `// MARK:`, as the former isn't recognized by Xcode
-- Fixed problem with the peformance tests target not building locally in Xcode 10.1
+- Fixed problem with the performance tests target not building locally in Xcode 10.1
 
 ## [0.36.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.36.0) (2018-12-15)
 
@@ -1017,7 +1017,7 @@
 - Added `swiftformat:disable all` and `swiftformat:enable all` directives
 - Fixed a bug where redundant parens were not always removed correctly
 - Fixed errors when parsing custom operators such as `<>`, `|>` or `<<>>`
-- Fixed divide-by-zero crash when specifiying number groupings with a value of zero
+- Fixed divide-by-zero crash when specifying number groupings with a value of zero
 - Rules are now always applied in alphabetical order to ensure consistency
 - Fixed the `--conflictmarkers` command-line option
 
@@ -1194,7 +1194,7 @@
 ## [0.29.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.29.0) (2017-06-20)
 
 - Changed specifier order from `private(set) public` to `public private(set)`
-- Added `redundantInit` rule to remove explict `init` references where they aren't needed
+- Added `redundantInit` rule to remove explicit `init` references where they aren't needed
 - Fixed indentation of class declarations with protocols wrapped onto multiple lines
 
 ## [0.28.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.28.6) (2017-05-31)

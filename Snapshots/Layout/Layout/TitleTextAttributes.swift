@@ -2,7 +2,7 @@
 
 import UIKit
 
-// Common attributes shared by any view with a titleTextAttributes porperty
+// Common attributes shared by any view with a titleTextAttributes property
 // The purpose of this protocol is to ensure consistent support between components
 @objc protocol TitleTextAttributes {
     var titleColor: UIColor? { get set }

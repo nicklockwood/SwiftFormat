@@ -130,7 +130,7 @@ class LayoutLoader {
     private var _constants: [String: Any] = [:]
     private var _strings: [String: String]?
 
-    /// Used for protecting operations that must not be interupted by a reload.
+    /// Used for protecting operations that must not be interrupted by a reload.
     /// Any reload attempts that happen inside the block will be ignored
     static func atomic<T>(_ protected: () throws -> T) rethrows -> T {
         queue.sync { reloadLock += 1 }

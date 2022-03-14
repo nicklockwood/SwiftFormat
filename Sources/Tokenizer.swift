@@ -139,7 +139,7 @@ public enum Token: Equatable {
 }
 
 private extension Token {
-    /// Test if token matchs type of another token
+    /// Test if token matches type of another token
     func hasType(of token: Token) -> Bool {
         switch (self, token) {
         case (.number, .number),

@@ -34,7 +34,7 @@ class UIKitSymbols: XCTestCase {
 
         // Filter views
         // These lists are longer than the actual list of view we support
-        // but the advantage of thie approach is that new classes added in
+        // but the advantage of this approach is that new classes added in
         // future iOS releases will be picked up automatically
         let whitelist = [
             "AVPlayerViewController",

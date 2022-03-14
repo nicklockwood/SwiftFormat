@@ -1592,7 +1592,7 @@ Layout exposes this using the `items` expression. You can set this to an array o
 <UISegmentedControl items="'First', 'Second', 'Third'"/>
 ```
 
-This works for strings, however there is no way to specify image literals inside an array in a Layout expression currently, so to use images for your segement items you will need to create them programmatically in Swift and pass them to the layout as constants or state variables:
+This works for strings, however there is no way to specify image literals inside an array in a Layout expression currently, so to use images for your segment items you will need to create them programmatically in Swift and pass them to the layout as constants or state variables:
 
 ```xml
 <UISegmentedControl items="hello, world"/>

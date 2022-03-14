@@ -6046,7 +6046,7 @@ public struct _FormatRules {
             // between the open and close brace of the following type
             else if
                 !commentToken.string.contains(":sort:"),
-                // This part of the rule conficts with the organizeDeclarations rule.
+                // This part of the rule conflicts with the organizeDeclarations rule.
                 // Instead, that rule manually implements support for the :sort directive.
                 !formatter.options.enabledRules.contains(FormatRules.organizeDeclarations.name)
             {
@@ -6125,7 +6125,7 @@ public struct _FormatRules {
 
             // There are always expected to be zero trailing line breaks,
             // so we remove any trailing line breaks
-            // (this is because `typeBodyRange` speficially ends before the first
+            // (this is because `typeBodyRange` specifically ends before the first
             // trailing linebreak)
             while sortedFormatter.tokens.last?.isLinebreak == true {
                 sortedFormatter.removeLastToken()
@@ -6576,7 +6576,7 @@ public struct _FormatRules {
             }
 
             // Find instances of `self.` in the closure body
-            var explicitSelfIndicies = [(selfKeyword: Int, dot: Int)]()
+            var explicitSelfIndices = [(selfKeyword: Int, dot: Int)]()
             for explicitSelfIndex in closureStartIndex ... closureEndIndex {
                 if
                     formatter.token(at: explicitSelfIndex)?.string == "self",
@@ -6584,24 +6584,24 @@ public struct _FormatRules {
                     let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: explicitSelfIndex),
                     formatter.token(at: dotIndex)?.string == "."
                 {
-                    explicitSelfIndicies.append((explicitSelfIndex, dotIndex))
+                    explicitSelfIndices.append((explicitSelfIndex, dotIndex))
                 }
             }
 
             guard
-                !explicitSelfIndicies.isEmpty,
+                !explicitSelfIndices.isEmpty,
                 // By default we only add an explicit self capture
                 // if there are multiple `self.`s in the closure body
-                explicitSelfIndicies.count >= formatter.options.explicitSelfCount
+                explicitSelfIndices.count >= formatter.options.explicitSelfCount
             else { return }
 
             // remove all of the `self.`s
-            for (explicitSelfIndex, dotIndex) in explicitSelfIndicies.reversed() {
+            for (explicitSelfIndex, dotIndex) in explicitSelfIndices.reversed() {
                 formatter.removeToken(at: dotIndex)
                 formatter.removeToken(at: explicitSelfIndex)
             }
 
-            /// If the closure already has a self capture that enables implcit self,
+            /// If the closure already has a self capture that enables implicit self,
             /// then there's no more work to do
             if alreadyHasSelfCapture {
                 return

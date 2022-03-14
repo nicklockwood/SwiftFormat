@@ -77,7 +77,7 @@ class OptionDescriptorTests: XCTestCase {
     ///
     /// - Parameters:
     ///   - descriptor: OptionDescriptor being tested
-    ///   - keyPath: to the FormatOptions property that is beeing validated
+    ///   - keyPath: to the FormatOptions property that is being validated
     ///   - expectations: Array of expectations for different inputs
     ///   - invalid: Invalid FormatOptions value, which should yield the defaultArgument value
     ///   - testName: for assertion clarity

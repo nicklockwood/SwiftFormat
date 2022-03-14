@@ -7,7 +7,7 @@ open class LayoutViewController: UIViewController, LayoutLoading {
     /// Called immediately after the layoutNode is set. Will not be called
     /// in the event of an error, or if layoutNode is set to nil
     open func layoutDidLoad(_: LayoutNode) {
-        // Mimic old behaviour if not overriden
+        // Mimic old behaviour if not overridden
         layoutDidLoad()
     }
 

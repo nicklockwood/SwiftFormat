@@ -1119,7 +1119,7 @@ struct LayoutExpression {
         guard let expression = LayoutExpression(interpolatedStringExpression: urlExpression, for: node) else {
             return nil
         }
-        // TODO: should empty string return nil instead of URL with empy path?
+        // TODO: should empty string return nil instead of URL with empty path?
         self.init(
             evaluate: {
                 let parts = try expression.evaluate() as! [Any]

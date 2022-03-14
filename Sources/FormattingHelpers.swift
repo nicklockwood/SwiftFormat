@@ -628,7 +628,7 @@ extension Formatter {
         @discardableResult
         func wrapMultilineStatement(
             startIndex: Int,
-            delimiterIndicies: [Int],
+            delimiterIndices: [Int],
             endIndex: Int
         ) -> Bool {
             // ** Decide whether or not this statement needs to be wrapped / re-wrapped
@@ -640,8 +640,8 @@ extension Formatter {
 
             // ... or if there is at least one delimiter currently adjacent to a linebreak,
             // which means this statement is already being wrapped in some way
-            // and should be re-wrapped to the expected way if necessar
-            let delimitersAdjacentToLinebreak = delimiterIndicies.filter { delimiterIndex in
+            // and should be re-wrapped to the expected way if necessary
+            let delimitersAdjacentToLinebreak = delimiterIndices.filter { delimiterIndex in
                 last(.nonSpaceOrComment, before: delimiterIndex)?.is(.linebreak) == true
                     || next(.nonSpaceOrComment, after: delimiterIndex)?.is(.linebreak) == true
             }.count
@@ -654,7 +654,7 @@ extension Formatter {
             //    make sure each delimiter is the start of a line
             let indent = indentForLine(at: startIndex) + options.indent
 
-            for indexToWrap in delimiterIndicies.reversed() {
+            for indexToWrap in delimiterIndices.reversed() {
                 // if this item isn't already on its own line, then wrap it
                 if last(.nonSpaceOrComment, before: indexToWrap)?.is(.linebreak) == false {
                     // Remove the space immediately before this token if present,
@@ -687,7 +687,7 @@ extension Formatter {
                 let equalsIndex = index(of: .operator("=", .infix), after: typealiasIndex),
                 // Any type can follow the equals index of a typealias,
                 // but we're specifically looking to wrap lengthy composite protocols.
-                //  - Valid composite protocols are stricly _only_ identifiers
+                //  - Valid composite protocols are strictly _only_ identifiers
                 //    separated by `&` tokens. Protocols can't be generic,
                 //    so we know that this typealias can't be generic.
                 //  - `&` tokens in types are also _only valid_ for composite protocol types,
@@ -702,7 +702,7 @@ extension Formatter {
             // Parse through to the end of the composite protocol type
             // so we know how long it is (and where the &s are)
             var lastIdentifierIndex = firstIdentifierIndex
-            var andTokenIndicies = [Int]()
+            var andTokenIndices = [Int]()
 
             while
                 let nextAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastIdentifierIndex),
@@ -710,26 +710,26 @@ extension Formatter {
                 let nextIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextAndIndex),
                 tokens[nextIdentifierIndex].isIdentifier
             {
-                andTokenIndicies.append(nextAndIndex)
+                andTokenIndices.append(nextAndIndex)
                 lastIdentifierIndex = nextIdentifierIndex
             }
 
-            // Decide which indicies to wrap at
+            // Decide which indices to wrap at
             //  - We always wrap at each `&`
             //  - For `beforeFirst`, we also wrap before the `=`
-            let wrapIndicies: [Int]
+            let wrapIndices: [Int]
             switch options.wrapTypealiases {
             case .afterFirst:
-                wrapIndicies = andTokenIndicies
+                wrapIndices = andTokenIndices
             case .beforeFirst:
-                wrapIndicies = [equalsIndex] + andTokenIndicies
+                wrapIndices = [equalsIndex] + andTokenIndices
             case .default, .disabled, .preserve:
                 return
             }
 
             let didWrap = wrapMultilineStatement(
                 startIndex: typealiasIndex,
-                delimiterIndicies: wrapIndicies,
+                delimiterIndices: wrapIndices,
                 endIndex: lastIdentifierIndex
             )
 
@@ -794,7 +794,7 @@ extension Formatter {
 
             wrapMultilineStatement(
                 startIndex: expressionStartIndex,
-                delimiterIndicies: [conditionIndex, colonIndex],
+                delimiterIndices: [conditionIndex, colonIndex],
                 endIndex: endOfElseExpression
             )
         }
@@ -1102,7 +1102,7 @@ extension Formatter {
             }
 
             // Enum cases don't fit into any of the other categories,
-            // so they should go in the intial top section.
+            // so they should go in the initial top section.
             //  - The user can also provide other declaration types to place in this category
             if keyword == "case" || options.beforeMarks.contains(keyword) {
                 return .beforeMarks
@@ -1276,7 +1276,7 @@ extension Formatter {
             searchIndex -= 1
         }
 
-        // Make sure there are atleast two newlines,
+        // Make sure there are at least two newlines,
         // so we get a blank line between individual declaration types
         while numberOfTrailingLinebreaks < 2 {
             parser.insertLinebreak(at: parser.tokens.count)
@@ -1523,7 +1523,7 @@ extension Formatter {
 
             // Whether or not the two given declaration orderings preserve
             // the same synthesized memberwise initializer
-            func preservesSynthesizedMemberwiseInitiaizer(
+            func preservesSynthesizedMemberwiseInitializer(
                 _ lhs: CategorizedDeclarations,
                 _ rhs: CategorizedDeclarations
             ) -> Bool {
@@ -1538,7 +1538,7 @@ extension Formatter {
                 return lhsPropertiesOrder == rhsPropertiesOrder
             }
 
-            if !preservesSynthesizedMemberwiseInitiaizer(categorizedDeclarations, sortedDeclarations) {
+            if !preservesSynthesizedMemberwiseInitializer(categorizedDeclarations, sortedDeclarations) {
                 // If sorting by category and by type could cause compilation failures
                 // by not correctly preserving the synthesized memberwise initializer,
                 // try to sort _only_ by category (so we can try to preserve the correct category separators)
@@ -1546,7 +1546,7 @@ extension Formatter {
 
                 // If sorting _only_ by category still changes the synthesized memberwise initializer,
                 // then there's nothing we can do to organize this struct.
-                if !preservesSynthesizedMemberwiseInitiaizer(categorizedDeclarations, sortedDeclarations) {
+                if !preservesSynthesizedMemberwiseInitializer(categorizedDeclarations, sortedDeclarations) {
                     return typeDeclaration
                 }
             }

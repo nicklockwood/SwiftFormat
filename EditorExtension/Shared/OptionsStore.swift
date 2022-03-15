@@ -101,7 +101,7 @@ struct OptionsStore {
     }
 
     var options: [SavedOption] {
-        return try! load().map(SavedOption.init)
+        return try! load().map { try SavedOption((id: $0, arg: $1)) }
     }
 
     func save(_ option: SavedOption) {

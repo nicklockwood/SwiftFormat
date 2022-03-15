@@ -97,7 +97,7 @@ And then run it using:
 $ mint run swiftformat
 ```
 
-Or if you prefer, you can check out and build SwiftFormat manually on macOS or Linux as follows:
+Or if you prefer, you can check out and build SwiftFormat manually on macOS, Linux or Windows as follows:
 
 ```bash
 $ git clone https://github.com/nicklockwood/SwiftFormat
@@ -722,7 +722,7 @@ FAQ
 
 *Q. What platforms does SwiftFormat support?*
 
-> A. SwiftFormat works on macOS 10.13 (High Sierra) and above, and also runs on Ubuntu Linux.
+> A. SwiftFormat works on macOS 10.13 (High Sierra) and above, and also runs on Ubuntu Linux and Windows.
 
 
 *Q. What versions of Swift are supported?*

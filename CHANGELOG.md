@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.49.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.6) (2022-03-15)
+
+- Fixed bug where `redundantParens` rule removed required parens in `any` type expressions
+- Fixed whitespace behavior around `some`/`any` keywords
+- Fixed crash when `// swiftformat:sort` was applied to an enum with only one case
+- SwiftFormat can now be built on Windows
+
 ## [0.49.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.5) (2022-03-06)
 
 - Fixed bug where `redundantClosure` incorrectly inlined throwing closures

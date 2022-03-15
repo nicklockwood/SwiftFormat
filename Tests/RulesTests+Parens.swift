@@ -418,6 +418,38 @@ class ParensTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantParens, exclude: ["void"])
     }
 
+    func testRequiredParensNotRemovedAroundOptionalAnyType() {
+        let input = "let foo: (any Foo)?"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testRequiredParensNotRemovedAroundAnyTypeSelf() {
+        let input = "let foo = (any Foo).self"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testRequiredParensNotRemovedAroundAnyTypeType() {
+        let input = "let foo: (any Foo).Type"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testRequiredParensNotRemovedAroundAnyComposedMetatype() {
+        let input = "let foo: any (A & B).Type"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensRemovedAroundAnyType() {
+        let input = "let foo: (any Foo)"
+        let output = "let foo: any Foo"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensRemovedAroundAnyTypeInsideArray() {
+        let input = "let foo: [(any Foo)]"
+        let output = "let foo: [any Foo]"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
     func testRedundantParensRemovedAroundOptionalClosureType() {
         let input = "let foo = ((() -> ()))?"
         let output = "let foo = (() -> ())?"

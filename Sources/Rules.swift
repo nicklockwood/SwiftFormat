@@ -2487,8 +2487,8 @@ public struct _FormatRules {
                 isClosure = false
             }
             let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
-            let token = formatter.token(at: previousIndex) ?? .space("")
-            switch token {
+            let prevToken = formatter.token(at: previousIndex) ?? .space("")
+            switch prevToken {
             case _ where isClosure:
                 if formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) == closingIndex ||
                     formatter.index(of: .delimiter(":"), in: i + 1 ..< closingIndex) != nil ||
@@ -2527,12 +2527,12 @@ public struct _FormatRules {
             case .delimiter(","), .endOfScope, .keyword:
                 let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) ?? .space("")
                 guard formatter.index(of: .endOfScope("}"), before: closingIndex) == nil,
-                      ![.endOfScope("}"), .endOfScope(">")].contains(token) ||
+                      ![.endOfScope("}"), .endOfScope(">")].contains(prevToken) ||
                       ![.startOfScope("{"), .delimiter(",")].contains(nextToken)
                 else {
                     return
                 }
-                let string = token.string
+                let string = prevToken.string
                 if ![.startOfScope("{"), .delimiter(","), .startOfScope(":")].contains(nextToken),
                    !(string == "for" && nextToken == .keyword("in")),
                    !(string == "guard" && nextToken == .keyword("else"))
@@ -2565,7 +2565,7 @@ public struct _FormatRules {
                     closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
                     innerParens = nil
                 }
-                if token == .startOfScope("("),
+                if prevToken == .startOfScope("("),
                    formatter.last(.nonSpaceOrComment, before: previousIndex) == .identifier("Selector")
                 {
                     return
@@ -2594,10 +2594,9 @@ public struct _FormatRules {
                 guard formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex,
                       formatter.index(in: i + 1 ..< closingIndex, where: {
                           switch $0 {
-                          case .operator(_, .none):
-                              return true
-                          case .operator(_, .infix), .keyword("as"), .keyword("is"), .keyword("try"):
-                              switch token {
+                          case .operator(_, .infix), .identifier("any"), .identifier("some"),
+                               .keyword("as"), .keyword("is"), .keyword("try"):
+                              switch prevToken {
                               // TODO: add option to always strip parens in this case (or only for boolean operators?)
                               case .operator("=", .infix) where $0 == .operator("->", .infix):
                                   break
@@ -2619,13 +2618,14 @@ public struct _FormatRules {
                                   return false
                               }
                           case .operator(_, .postfix):
-                              switch token {
+                              switch prevToken {
                               case .operator(_, .prefix), .keyword("as"), .keyword("is"):
                                   return true
                               default:
                                   return false
                               }
-                          case .delimiter(","), .delimiter(":"), .delimiter(";"), .startOfScope("{"):
+                          case .delimiter(","), .delimiter(":"), .delimiter(";"),
+                               .operator(_, .none), .startOfScope("{"):
                               return true
                           default:
                               return false

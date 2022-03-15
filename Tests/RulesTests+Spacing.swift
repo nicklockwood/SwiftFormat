@@ -58,6 +58,24 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
+    func testSpaceBetweenParenAndAny() {
+        let input = "func any ()"
+        let output = "func any()"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
+    func testSpaceBetweenParenAndAnyType() {
+        let input = "let foo: any(A & B).Type"
+        let output = "let foo: any (A & B).Type"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
+    func testSpaceBetweenParenAndSomeType() {
+        let input = "func foo() -> some(A & B).Type"
+        let output = "func foo() -> some (A & B).Type"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
     func testNoSpaceBetweenParenAndInit() {
         let input = "init ()"
         let output = "init()"

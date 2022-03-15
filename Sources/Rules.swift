@@ -209,30 +209,38 @@ public struct _FormatRules {
             }
         }
 
-        formatter.forEach(.startOfScope("(")) { i, token in
-            guard let prevToken = formatter.token(at: i - 1) else {
+        formatter.forEach(.startOfScope("(")) { i, _ in
+            let index = i - 1
+            guard let prevToken = formatter.token(at: index) else {
                 return
             }
             switch prevToken {
-            case let .keyword(string) where spaceAfter(string, index: i - 1):
+            case let .keyword(string) where spaceAfter(string, index: index):
                 fallthrough
-            case .endOfScope("]") where formatter.isInClosureArguments(at: i - 1),
-                 .endOfScope(")") where formatter.isAttribute(at: i - 1):
+            case .endOfScope("]") where formatter.isInClosureArguments(at: index),
+                 .endOfScope(")") where formatter.isAttribute(at: index),
+                 .identifier("some") where formatter.isType(at: index),
+                 .identifier("any") where formatter.isType(at: index):
                 formatter.insert(.space(" "), at: i)
             case .space:
-                if let token = formatter.token(at: i - 2) {
-                    switch token {
-                    case let .keyword(string) where !spaceAfter(string, index: i - 2):
-                        fallthrough
-                    case .identifier, .number:
-                        fallthrough
-                    case .endOfScope("}"), .endOfScope(">"),
-                         .endOfScope("]") where !formatter.isInClosureArguments(at: i - 2),
-                         .endOfScope(")") where !formatter.isAttribute(at: i - 2):
-                        formatter.removeToken(at: i - 1)
-                    default:
-                        break
-                    }
+                let index = i - 2
+                guard let token = formatter.token(at: index) else {
+                    return
+                }
+                switch token {
+                case .identifier("some") where formatter.isType(at: index),
+                     .identifier("any") where formatter.isType(at: index):
+                    break
+                case let .keyword(string) where !spaceAfter(string, index: index):
+                    fallthrough
+                case .number, .identifier:
+                    fallthrough
+                case .endOfScope("}"), .endOfScope(">"),
+                     .endOfScope("]") where !formatter.isInClosureArguments(at: index),
+                     .endOfScope(")") where !formatter.isAttribute(at: index):
+                    formatter.removeToken(at: i - 1)
+                default:
+                    break
                 }
             default:
                 break

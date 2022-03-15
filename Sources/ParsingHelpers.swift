@@ -236,6 +236,33 @@ enum ScopeType {
 }
 
 extension Formatter {
+    func isType(at index: Int) -> Bool {
+        guard let prevIndex = self.index(
+            of: .nonSpaceOrCommentOrLinebreak,
+            before: index
+        ) else {
+            return false
+        }
+        switch tokens[prevIndex] {
+        case .operator("->", .infix), .startOfScope("<"),
+             .keyword("is"), .keyword("as"):
+            return true
+        case .delimiter(":"), .delimiter(","):
+            // Check for type declaration
+            if let scopeType = scopeType(at: index) {
+                return scopeType.isType
+            }
+            if let token = last(.keyword, before: index),
+               [.keyword("let"), .keyword("var")].contains(token)
+            {
+                return true
+            }
+            fallthrough
+        default:
+            return scopeType(at: index)?.isType ?? false
+        }
+    }
+
     func scopeType(at index: Int) -> ScopeType? {
         guard let token = token(at: index) else {
             return nil
@@ -279,9 +306,8 @@ extension Formatter {
                             if last(.keyword, before: scopeStart) == .keyword("func") {
                                 isType = true
                                 break
-                            } else {
-                                fallthrough
                             }
+                            fallthrough
                         case .startOfScope("["):
                             guard let type = scopeType(at: scopeStart) else {
                                 return nil

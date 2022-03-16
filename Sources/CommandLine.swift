@@ -553,7 +553,11 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                         return URL(fileURLWithPath: cachePath)
                     }
                 #endif
-                return FileManager.default.temporaryDirectory
+                if #available(macOS 10.12, *) {
+                    return FileManager.default.temporaryDirectory
+                } else {
+                    return URL(fileURLWithPath: "/var/tmp/")
+                }
             }().appendingPathComponent("com.charcoaldesign.swiftformat")
             do {
                 try manager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true, attributes: nil)

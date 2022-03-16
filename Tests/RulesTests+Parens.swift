@@ -418,6 +418,35 @@ class ParensTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantParens, exclude: ["void"])
     }
 
+    func testRequiredParensNotRemovedAroundOptionalRange() {
+        let input = "let foo = (2...)?"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensRemovedAroundOptionalUnwrap() {
+        let input = "let foo = (bar!)+5"
+        testFormatting(for: input, rule: FormatRules.redundantParens,
+                       exclude: ["spaceAroundOperators"])
+    }
+
+    func testRedundantParensRemovedAroundOptionalOptional() {
+        let input = "let foo: (Int?)?"
+        let output = "let foo: Int??"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensRemovedAroundOptionalOptional2() {
+        let input = "let foo: (Int!)?"
+        let output = "let foo: Int!?"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensRemovedAroundOptionalOptional3() {
+        let input = "let foo: (Int?)!"
+        let output = "let foo: Int?!"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
     func testRequiredParensNotRemovedAroundOptionalAnyType() {
         let input = "let foo: (any Foo)?"
         testFormatting(for: input, rule: FormatRules.redundantParens)

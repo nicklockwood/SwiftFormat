@@ -2470,11 +2470,11 @@ public struct _FormatRules {
                 closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
                 innerParens = nestedParens(in: i ... closingIndex)
             }
-            let isClosure: Bool
+            var isClosure = false
             let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) ?? .space("")
-            if [.operator("->", .infix), .keyword("throws"), .keyword("rethrows"), .keyword("async"),
-                .identifier("async"), .keyword("in")].contains(nextToken)
-            {
+            switch nextToken {
+            case .operator("->", .infix), .keyword("throws"), .keyword("rethrows"),
+                 .keyword("async"), .identifier("async"), .keyword("in"):
                 guard let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
                     return
                 }
@@ -2483,8 +2483,14 @@ public struct _FormatRules {
                 if !isClosure, nextToken != .keyword("in") {
                     return // It's a closure type or function declaration
                 }
-            } else {
-                isClosure = false
+            case .operator:
+                if case let .operator(inner, _)? = formatter.last(.nonSpace, before: closingIndex),
+                   !["?", "!"].contains(inner)
+                {
+                    return
+                }
+            default:
+                break
             }
             let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
             let prevToken = formatter.token(at: previousIndex) ?? .space("")

@@ -219,8 +219,8 @@ public struct _FormatRules {
                 fallthrough
             case .endOfScope("]") where formatter.isInClosureArguments(at: index),
                  .endOfScope(")") where formatter.isAttribute(at: index),
-                 .identifier("some") where formatter.isType(at: index),
-                 .identifier("any") where formatter.isType(at: index):
+                 .identifier("some") where formatter.isPositionType(at: index),
+                 .identifier("any") where formatter.isPositionType(at: index):
                 formatter.insert(.space(" "), at: i)
             case .space:
                 let index = i - 2
@@ -228,8 +228,8 @@ public struct _FormatRules {
                     return
                 }
                 switch token {
-                case .identifier("some") where formatter.isType(at: index),
-                     .identifier("any") where formatter.isType(at: index):
+                case .identifier("some") where formatter.isPositionType(at: index),
+                     .identifier("any") where formatter.isPositionType(at: index):
                     break
                 case let .keyword(string) where !spaceAfter(string, index: index):
                     fallthrough
@@ -874,8 +874,10 @@ public struct _FormatRules {
             {
                 formatter.replaceToken(at: i, with: .keyword("enum"))
 
-                if let finalIndex = formatter.indexOfModifier("final", forTypeAt: i) {
-                    formatter.removeTokens(in: finalIndex ... finalIndex + 1)
+                if let finalIndex = formatter.indexOfModifier("final", forDeclarationAt: i),
+                   let nextIndex = formatter.index(of: .nonSpace, after: finalIndex)
+                {
+                    formatter.removeTokens(in: finalIndex ..< nextIndex)
                 }
             }
         }

@@ -1523,4 +1523,41 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.spaceEquivalentToTokens(from: 0, upTo: tokens.count),
                        "          ")
     }
+
+    // MARK: startOfConditionalStatement
+
+    func testIfTreatedAsConditional() {
+        let formatter = Formatter(tokenize("if bar == baz {}"))
+        for i in formatter.tokens.indices.dropLast(2) {
+            XCTAssertEqual(formatter.startOfConditionalStatement(at: i), 0)
+        }
+    }
+
+    func testIfLetTreatedAsConditional() {
+        let formatter = Formatter(tokenize("if let bar = baz {}"))
+        for i in formatter.tokens.indices.dropLast(2) {
+            XCTAssertEqual(formatter.startOfConditionalStatement(at: i), 0)
+        }
+    }
+
+    func testGuardLetTreatedAsConditional() {
+        let formatter = Formatter(tokenize("guard let foo = bar else {}"))
+        for i in formatter.tokens.indices.dropLast(4) {
+            XCTAssertEqual(formatter.startOfConditionalStatement(at: i), 0)
+        }
+    }
+
+    func testLetNotTreatedAsConditional() {
+        let formatter = Formatter(tokenize("let foo = bar, bar = baz"))
+        for i in formatter.tokens.indices {
+            XCTAssertNil(formatter.startOfConditionalStatement(at: i))
+        }
+    }
+
+    func testEnumCaseNotTreatedAsConditional() {
+        let formatter = Formatter(tokenize("enum Foo { case bar }"))
+        for i in formatter.tokens.indices {
+            XCTAssertNil(formatter.startOfConditionalStatement(at: i))
+        }
+    }
 }

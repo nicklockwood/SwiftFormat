@@ -629,7 +629,7 @@ extension Formatter {
     /// If the token at the specified index is part of a conditional statement, returns the index of the first
     /// token in the statement (e.g. `if`, `guard`, `while`, etc.), otherwise returns nil
     func startOfConditionalStatement(at i: Int) -> Int? {
-        guard let index = indexOfLastSignificantKeyword(at: i) else {
+        guard var index = indexOfLastSignificantKeyword(at: i) else {
             return nil
         }
 
@@ -643,6 +643,14 @@ extension Formatter {
                 return isAfterBrace(index, startIndex)
             }
             return self.index(of: .nonSpaceOrCommentOrLinebreak, in: braceIndex + 1 ..< i) != nil
+        }
+
+        if tokens[index] == .keyword("case"), let i = self.index(
+            of: .nonSpaceOrCommentOrLinebreak,
+            before: index,
+            if: { $0 != .delimiter(",") }
+        ) {
+            index = i
         }
 
         switch tokens[index].string {

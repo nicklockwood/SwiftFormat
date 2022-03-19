@@ -74,6 +74,7 @@ private func print(_ message: String, as type: CLI.OutputType = .info) {
     }
 }
 
+// Print warnings and return true if any was an actual error
 private func printWarnings(_ errors: [Error]) -> Bool {
     var containsError = false
     for error in errors {
@@ -605,7 +606,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
         }
 
         enum Status {
-            case idle, started, finished(Error?)
+            case idle, started, finished(ExitCode)
         }
 
         var input: String?
@@ -616,7 +617,7 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 input = (input ?? "") + line
             }
             guard let input = input else {
-                status = .finished(nil)
+                status = .finished(.ok)
                 return
             }
             do {
@@ -625,44 +626,54 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                     let tokens = tokenize(input)
                     options.formatOptions = inferFormatOptions(from: tokens)
                     try serializeOptions(options, to: outputURL)
+                    status = .finished(.ok)
                 } else {
                     printRunningMessage()
-                    var shouldSkip = false
                     if let stdinURL = options.formatOptions?.fileInfo.filePath.map(URL.init(fileURLWithPath:)) {
-                        do {
-                            try gatherOptions(&options, for: stdinURL, with: { print($0, as: .info) })
-                            shouldSkip = options.shouldSkipFile(stdinURL)
-                        } catch {
-                            if printWarnings([error]) {
-                                status = .finished(error)
-                                return
-                            }
+                        try gatherOptions(&options, for: stdinURL, with: { print($0, as: .info) })
+                        if options.shouldSkipFile(stdinURL) {
+                            print(input, as: .raw)
+                            status = .finished(.ok)
+                            return
                         }
                     }
-                    let output = shouldSkip ? input : try applyRules(
+                    let output = try applyRules(
                         input, options: options, lineRange: lineRange,
                         verbose: verbose, lint: lint, reporter: reporter
                     )
                     if let outputURL = outputURL, !useStdout {
-                        if (try? String(contentsOf: outputURL)) != output, !dryrun {
+                        if !dryrun, (try? String(contentsOf: outputURL)) != output {
                             try write(output, to: outputURL)
                         }
                     } else {
                         // Write to stdout
-                        print(output, as: .raw)
+                        print(dryrun ? input : output, as: .raw)
                     }
-                    print("Swiftformat completed successfully.", as: .success)
+                    let exitCode: ExitCode
+                    if lint, output != input {
+                        print("Source input did not pass lint check.", as: .error)
+                        exitCode = lenient ? .ok : .lintFailure
+                    } else {
+                        print("SwiftFormat completed successfully.", as: .success)
+                        exitCode = .ok
+                    }
+                    status = .finished(exitCode)
                 }
-                status = .finished(nil)
             } catch {
-                status = .finished(error)
+                if printWarnings([error]) {
+                    status = .finished(.error)
+                } else {
+                    status = .finished(.ok)
+                }
+                // Ensure input isn't lost
+                print(input, as: .raw)
             }
         }
 
         if useStdin {
             processFromStdin()
-            if case let .finished(error) = status, let fatalError = error {
-                throw fatalError
+            if case let .finished(exitCode) = status {
+                return exitCode
             }
             return .ok
         } else if inputURLs.isEmpty {
@@ -677,11 +688,8 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
             // If no input received by now, assume none is coming
             if input != nil {
                 while start.timeIntervalSinceNow > -30 {
-                    if case let .finished(error) = status {
-                        if let error = error {
-                            throw error
-                        }
-                        break
+                    if case let .finished(exitCode) = status {
+                        return exitCode
                     }
                 }
             } else if args["inferoptions"] != nil {

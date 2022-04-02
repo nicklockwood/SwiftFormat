@@ -1396,4 +1396,18 @@ private struct Examples {
       }
     ```
     """
+
+    let redundantOptionalBinding = """
+    ```diff
+    - if let foo = foo {
+    + if let foo {
+          print(foo)
+      }
+
+    - guard let self = self else {
+    + guard let self else {
+          return
+      }
+    ```
+    """
 }

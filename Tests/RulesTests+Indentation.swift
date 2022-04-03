@@ -169,12 +169,12 @@ class IndentTests: RulesTests {
 
     func testUnindentClosingParenAroundBraces() {
         let input = """
-        foo(success: {
+        quux(success: {
             self.bar()
                 })
         """
         let output = """
-        foo(success: {
+        quux(success: {
             self.bar()
         })
         """
@@ -204,14 +204,22 @@ class IndentTests: RulesTests {
 
     func testIndentClosureArguments() {
         let input = """
-        foo(bar: {
-                print(bar)
-            },
-            baz: {
-                print(baz)
-            })
+        quux(bar: {
+          print(bar)
+        },
+        baz: {
+          print(baz)
+        })
         """
-        testFormatting(for: input, rule: FormatRules.indent)
+        let output = """
+        quux(bar: {
+                 print(bar)
+             },
+             baz: {
+                 print(baz)
+             })
+        """
+        testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
     func testIndentClosureArguments2() {
@@ -506,8 +514,34 @@ class IndentTests: RulesTests {
     }
 
     func testIndentMultilineSwitchCaseCommentsCorrectly() {
-        let input = "switch x {\n/*\n * comment\n */\ncase y:\nbreak\n/*\n * comment\n */\ndefault:\nbreak\n}"
-        let output = "switch x {\n/*\n * comment\n */\ncase y:\n    break\n/*\n * comment\n */\ndefault:\n    break\n}"
+        let input = """
+        switch x {
+        /*
+         * comment
+         */
+        case y:
+        break
+        /*
+         * comment
+         */
+        default:
+        break
+        }
+        """
+        let output = """
+        switch x {
+        /*
+         * comment
+         */
+        case y:
+            break
+        /*
+         * comment
+         */
+        default:
+            break
+        }
+        """
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
@@ -1296,7 +1330,14 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
-    func testIndentEnumDictionaryKeysAndValues() {
+    func testIndentWrappedStringDictionaryKeysAndValues() {
+        let input = "[\n\"foo\":\n\"bar\",\n\"baz\":\n\"quux\",\n]"
+        let output = "[\n    \"foo\":\n        \"bar\",\n    \"baz\":\n        \"quux\",\n]"
+        let options = FormatOptions(wrapCollections: .disabled)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentWrappedEnumDictionaryKeysAndValues() {
         let input = "[\n.foo:\n.bar,\n.baz:\n.quux,\n]"
         let output = "[\n    .foo:\n        .bar,\n    .baz:\n        .quux,\n]"
         let options = FormatOptions(wrapCollections: .disabled)
@@ -1578,7 +1619,7 @@ class IndentTests: RulesTests {
                 foo()
             }
             .bar(foo: 1,
-                 bar: baz ? 2 : 3),
+                 bar: baz ? 2 : 3)
             .baz()
         }
         """

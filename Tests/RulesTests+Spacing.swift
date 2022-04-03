@@ -578,8 +578,8 @@ class SpacingTests: RulesTests {
     }
 
     func testSpaceAtStartOfLine() {
-        let input = "foo\n    ,bar"
-        let output = "foo\n    , bar"
+        let input = "print(foo\n      ,bar)"
+        let output = "print(foo\n      , bar)"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators,
                        exclude: ["leadingDelimiters"])
     }

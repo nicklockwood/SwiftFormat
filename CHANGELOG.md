@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.49.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.7) (2022-04-03)
+
+- Redundant `self` is now correctly removed in `if let` assignments
+- Fixed infinite recursion bug that would cause formatting to time out for some inputs
+- Lint failure now returns an error code when using stdin, matching behavior for file inputs
+- Fixed bug where parens were incorrectly removed around optional ranges
+- Updated `unusedParens` rule for new shorthand `if let` syntax in Swift 5.7
+- Updated indenting of function chains to match latest Xcode behavior
+- Fixed build error on macOS 10.11 and earlier
+
 ## [0.49.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.6) (2022-03-15)
 
 - Fixed bug where `redundantParens` rule removed required parens in `any` type expressions

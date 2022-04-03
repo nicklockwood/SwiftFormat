@@ -5229,6 +5229,38 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.unusedArguments)
     }
 
+    func testShadowedIfLetNotMarkedAsUnused() {
+        let input = """
+        func method(_ foo: Int?, _ bar: String?) {
+            if let foo = foo, let bar = bar {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testShorthandIfLetNotMarkedAsUnused() {
+        let input = """
+        func method(_ foo: Int?, _ bar: String?) {
+            if let foo, let bar {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testShorthandLetMarkedAsUnused() {
+        let input = """
+        func method(_ foo: Int?, _ bar: Int?) {
+            var foo, bar: Int?
+        }
+        """
+        let output = """
+        func method(_: Int?, _: Int?) {
+            var foo, bar: Int?
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

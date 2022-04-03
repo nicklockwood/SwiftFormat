@@ -3671,6 +3671,16 @@ public struct _FormatRules {
             var locals = Set<String>()
             var tempLocals = Set<String>()
             func pushLocals() {
+                if isDeclaration, isConditional {
+                    for name in tempLocals {
+                        if let index = argNames.index(of: name),
+                           !locals.contains(name)
+                        {
+                            argNames.remove(at: index)
+                            associatedData.remove(at: index)
+                        }
+                    }
+                }
                 wasDeclaration = isDeclaration
                 isDeclaration = false
                 locals.formUnion(tempLocals)
@@ -3731,12 +3741,9 @@ public struct _FormatRules {
                     if isConditional {
                         wasDeclaration = false
                     }
-                    if wasDeclaration {
-                        pushLocals()
-                        isDeclaration = true
-                    } else {
-                        pushLocals()
-                    }
+                    let _wasDeclaration = wasDeclaration
+                    pushLocals()
+                    isDeclaration = _wasDeclaration
                 case .delimiter(";"):
                     pushLocals()
                     wasDeclaration = false

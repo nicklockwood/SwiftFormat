@@ -2940,6 +2940,51 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testRedundantSelfRemovedAfterConditionalLet() {
+        let input = """
+        class Foo {
+            var bar: Int?
+            var baz: Bool
+
+            func foo() {
+                if let bar = bar, self.baz {
+                    // ...
+                }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: Int?
+            var baz: Bool
+
+            func foo() {
+                if let bar = bar, baz {
+                    // ...
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
+    func testNonRedundantSelfNotRemovedAfterConditionalLet() {
+        let input = """
+        class Foo {
+            var bar: Int?
+            var baz: Bool
+
+            func foo() {
+                let baz = 5
+                if let bar = bar, self.baz {
+                    // ...
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     func testRedundantSelfDoesntGetStuckIfNoParensFound() {
         let input = "init<T>_ foo: T {}"
         testFormatting(for: input, rule: FormatRules.redundantSelf,

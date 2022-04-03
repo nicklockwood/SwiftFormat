@@ -60,7 +60,17 @@ extension Formatter {
         var locals = Set<String>()
         while let token = token(at: index) {
             outer: switch token {
-            case .identifier where last(.nonSpace, before: index)?.isOperator == false:
+            case let .identifier(name) where last(.nonSpace, before: index)?.isOperator == false:
+                if name == "self", removeSelf, isEnabled, let nextIndex = self.index(
+                    of: .nonSpaceOrCommentOrLinebreak,
+                    after: index, if: { $0 == .operator(".", .infix) }
+                ), case .identifier? = next(
+                    .nonSpaceOrComment,
+                    after: nextIndex
+                ) {
+                    _ = self.removeSelf(at: index, exclude: names.union(locals))
+                    break
+                }
                 switch next(.nonSpaceOrCommentOrLinebreak, after: index) {
                 case .delimiter(":")? where !scopeIndexStack.isEmpty, .operator(".", _)?:
                     break outer

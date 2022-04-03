@@ -1739,7 +1739,9 @@ public struct _FormatRules {
                                 indent = formatter.indentForLine(at: lastNonSpaceOrLinebreakIndex)
                             }
                             if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
-                                formatter.options.xcodeIndentation, lastToken != .endOfScope("}")
+                                formatter.options.xcodeIndentation, ![
+                                    .endOfScope("}"), .endOfScope(")")
+                                ].contains(lastToken)
                             {
                                 indent += formatter.options.indent
                             }

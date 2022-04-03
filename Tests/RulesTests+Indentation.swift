@@ -1198,14 +1198,8 @@ class IndentTests: RulesTests {
         })
         .buttonStyle(bar())
         """
-        let output = """
-        Button(action: {
-            print("foo")
-        })
-            .buttonStyle(bar())
-        """
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
     func testWrappedClosureIndentAfterAssignment() {
@@ -1511,6 +1505,43 @@ class IndentTests: RulesTests {
         .baz
         """
         testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentChainedPropertiesAfterFunctionCallWithXcodeIndentation() {
+        let input = """
+        let foo = Foo(
+            bar: baz
+        )
+        .bar
+        .baz
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentChainedPropertiesAfterFunctionCall2() {
+        let input = """
+        let foo = Foo({
+            print("")
+        })
+        .bar
+        .baz
+        """
+        testFormatting(for: input, rule: FormatRules.indent,
+                       exclude: ["trailingClosures"])
+    }
+
+    func testIndentChainedPropertiesAfterFunctionCallWithXcodeIndentation2() {
+        let input = """
+        let foo = Foo({
+            print("")
+        })
+        .bar
+        .baz
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["trailingClosures"])
     }
 
     func testIndentChainedMethodsAfterTrailingClosure() {

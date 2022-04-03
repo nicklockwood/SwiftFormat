@@ -634,15 +634,23 @@ extension Formatter {
         }
 
         func isAfterBrace(_ index: Int, _ i: Int) -> Bool {
-            guard let braceIndex = lastIndex(of: .endOfScope("}"), in: index ..< i),
-                  let startIndex = self.index(of: .startOfScope("{"), before: braceIndex)
-            else {
+            if let scopeStart = lastIndex(of: .startOfScope, in: index ..< i) {
+                return isAfterBrace(index, scopeStart)
+            }
+            guard let braceIndex = lastIndex(
+                of: .endOfScope("}"),
+                in: index ..< i
+            ) else {
                 return false
             }
-            if isStartOfClosure(at: startIndex) {
-                return isAfterBrace(index, startIndex)
+            guard let nextToken = next(.nonSpaceOrComment, after: braceIndex),
+                  !nextToken.isOperator(ofType: .infix),
+                  !nextToken.isOperator(ofType: .postfix),
+                  nextToken != .startOfScope("(")
+            else {
+                return isAfterBrace(index, braceIndex)
             }
-            return self.index(of: .nonSpaceOrCommentOrLinebreak, in: braceIndex + 1 ..< i) != nil
+            return true
         }
 
         if tokens[index] == .keyword("case"), let i = self.index(

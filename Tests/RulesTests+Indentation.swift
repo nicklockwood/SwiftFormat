@@ -1179,8 +1179,32 @@ class IndentTests: RulesTests {
     }
 
     func testChainedClosureIndentsAfterIfCondition2() {
-        let input = "if foo {\nbar()\n.baz()\n}\n\nfoo\n.bar {\nbaz()\n}.bar {\nbaz()\n}"
-        let output = "if foo {\n    bar()\n        .baz()\n}\n\nfoo\n    .bar {\n        baz()\n    }.bar {\n        baz()\n    }"
+        let input = """
+        if foo {
+        bar()
+        .baz()
+        }
+
+        foo
+        .bar {
+        baz()
+        }.bar {
+        baz()
+        }
+        """
+        let output = """
+        if foo {
+            bar()
+                .baz()
+        }
+
+        foo
+            .bar {
+                baz()
+            }.bar {
+                baz()
+            }
+        """
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
